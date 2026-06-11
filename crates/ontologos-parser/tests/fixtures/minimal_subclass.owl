@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<Ontology xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://example.org/test"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     ontologyIRI="http://example.org/test">
+    <Prefix name="" IRI="http://example.org/test#"/>
+    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Declaration>
+        <Class IRI="#A"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#B"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#C"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#hasPart"/>
+    </Declaration>
+    <SubClassOf>
+        <Class IRI="#A"/>
+        <Class IRI="#B"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#C"/>
+        <ObjectSomeValuesFrom>
+            <ObjectProperty IRI="#hasPart"/>
+            <Class IRI="#B"/>
+        </ObjectSomeValuesFrom>
+    </SubClassOf>
+</Ontology>

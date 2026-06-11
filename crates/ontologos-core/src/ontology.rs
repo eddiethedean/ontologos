@@ -5,6 +5,7 @@ use crate::entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 use crate::error::{Error, Result};
 use crate::graph::{AxiomIndex, AxiomStore};
 use crate::iri::{validate_iri, InternPool, IriId};
+use crate::parse_meta::ParseMeta;
 
 /// In-memory ontology with interned IRIs, typed entities, and indexed axioms.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,6 +14,8 @@ pub struct Ontology {
     pub(crate) entities: EntityRegistry,
     pub(crate) axioms: AxiomStore,
     pub(crate) index: AxiomIndex,
+    #[doc(hidden)]
+    pub parse_meta: Option<ParseMeta>,
 }
 
 impl Default for Ontology {
@@ -30,6 +33,7 @@ impl Ontology {
             entities: EntityRegistry::new(),
             axioms: AxiomStore::new(),
             index: AxiomIndex::new(),
+            parse_meta: None,
         }
     }
 
@@ -41,9 +45,20 @@ impl Ontology {
 
     /// Load an ontology from a file path.
     ///
-    /// File parsing is available in v0.2 via `ontologos-parser`.
+    /// Use [`ontologos_parser::load_ontology`] for OWL/RDF file loading.
     pub fn from_file(_path: impl AsRef<Path>) -> Result<Self> {
         Err(Error::ParseNotAvailable)
+    }
+
+    /// Parse metadata from the last file load (not present for JSON/builder ontologies).
+    #[must_use]
+    pub fn parse_meta(&self) -> Option<&ParseMeta> {
+        self.parse_meta.as_ref()
+    }
+
+    /// Attach parse metadata (used by `ontologos-parser`).
+    pub fn set_parse_meta(&mut self, meta: ParseMeta) {
+        self.parse_meta = Some(meta);
     }
 
     /// Number of registered entities.

@@ -142,6 +142,18 @@ impl AxiomIndex {
             Axiom::TransitiveObjectProperty(property) => {
                 self.transitive_properties.insert(*property);
             }
+            Axiom::SubClassOfExistential {
+                subclass,
+                property,
+                filler,
+            } => {
+                push_unique(self.subclass_of.entry(*subclass).or_default(), *filler);
+                push_unique(self.property_ranges.entry(*property).or_default(), *filler);
+                let _ = property;
+            }
+            Axiom::SymmetricObjectProperty(_)
+            | Axiom::ReflexiveObjectProperty(_)
+            | Axiom::FunctionalObjectProperty(_) => {}
             Axiom::EquivalentClasses(classes) => {
                 for i in 0..classes.len() {
                     for j in (i + 1)..classes.len() {

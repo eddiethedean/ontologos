@@ -79,10 +79,10 @@ fn rejects_oversized_json_input() {
 }
 
 #[test]
-fn detect_profile_returns_not_implemented() {
+fn detect_profile_succeeds_on_empty_ontology() {
     let ontology = Ontology::default();
-    let err = detect_profile(&ontology).expect_err("stub");
-    assert!(matches!(err, ontologos_profile::Error::NotImplemented));
+    let report = detect_profile(&ontology).expect("detect");
+    assert!(report.detected.is_some());
 }
 
 #[test]

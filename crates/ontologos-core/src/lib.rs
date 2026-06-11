@@ -29,6 +29,7 @@ mod graph;
 mod iri;
 mod limits;
 mod ontology;
+mod parse_meta;
 mod reasoner;
 mod serialize;
 
@@ -39,6 +40,7 @@ pub use graph::{AxiomIndex, AxiomStore};
 pub use iri::{InternPool, IriId};
 pub use limits::Limits;
 pub use ontology::{Ontology, OntologyBuilder};
+pub use parse_meta::{OwlConstruct, ParseMeta};
 pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
 
 #[cfg(test)]

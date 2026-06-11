@@ -1,39 +1,54 @@
 # Benchmarks
 
-Benchmark ontology corpora for integration and conformance testing. Ontology files are **not** committed to the repository.
+Benchmark ontology corpora for integration and conformance testing.
+
+| Corpus | Source | In repo? | CI |
+|--------|--------|----------|-----|
+| **Pizza** | [owlcs/pizza-ontology](https://github.com/owlcs/pizza-ontology) | Downloaded | Yes (`download.sh`) |
+| **Family** | [rexster family.swrl.owl](https://github.com/martinhbramwell/Monetary-Ontology-Walkabout/blob/master/rexster/extension/example/src/main/resources/data/family.swrl.owl) | Vendored (`family.owl`) | Checksum verified |
+| GALEN, GO, SNOMED | See manifest | Manual | Optional `#[ignore]` stress tests |
+
+SHA-256 pins live in [`checksums.sha256`](checksums.sha256).
 
 ## Manifest
 
 See [manifest.toml](manifest.toml) for the canonical list of ontologies, expected OWL profiles, source URLs, and licenses.
 
-## Criterion benchmarks (v0.1)
+## Downloading OWL corpora
 
-Run the in-memory serialize/deserialize benchmark:
+```bash
+./benchmarks/scripts/download.sh
+```
+
+This fetches Pizza and verifies checksums. `family.owl` is committed; refresh from upstream with:
+
+```bash
+./benchmarks/scripts/download.sh --update-family
+# then update benchmarks/checksums.sha256 if the file changed
+```
+
+GALEN, Gene Ontology, and SNOMED subsets require manual download (see manifest notes).
+
+## Integration tests
+
+| Test | When it runs |
+|------|----------------|
+| `manifest_integration.rs` | Always (Pizza + Family) |
+| `corpus_stress.rs` | `cargo test -- --ignored` when large files are present |
+
+```bash
+# Default CI-equivalent run
+./benchmarks/scripts/download.sh
+cargo test -p ontologos-parser
+
+# Optional stress (after manual download)
+cargo test -p ontologos-parser --test corpus_stress -- --ignored
+```
+
+## Criterion benchmarks (v0.1)
 
 ```bash
 cargo bench -p ontologos-core
 ```
 
-This measures JSON round-trip for a synthetic 10k-axiom ontology. Results are written under `target/criterion/`.
-
-## Downloading OWL corpora
-
-Create the data directory and download ontologies:
-
-```bash
-mkdir -p benchmarks/data
-
-# Pizza (EL, ~800 axioms)
-curl -L -o benchmarks/data/pizza.owl \
-  "https://raw.githubusercontent.com/owlcs/pizza-ontology/master/pizza.owl"
-
-# Family (RL, small)
-curl -L -o benchmarks/data/family.owl \
-  "https://raw.githubusercontent.com/owlcs/pizza-ontology/master/examples/family.owl"
-```
-
-GALEN, Gene Ontology, and SNOMED subsets require manual download or tooling (see manifest notes). A download script will be added in v0.2.
-
-## Integration tests (v0.2+)
-
-Integration tests will read `manifest.toml` and skip when `local_path` files are absent.
+Results are written under `target/criterion/`.

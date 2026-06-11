@@ -1,0 +1,8 @@
+Prefix(:=<http://example.org/test#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+
+Ontology(<http://example.org/test>
+  Declaration(Class(:A))
+  Declaration(Class(:B))
+  SubClassOf(:A :B)
+)

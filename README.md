@@ -10,13 +10,13 @@ A modular Rust ontology reasoner **in early development**.
 
 **Display name:** OntoLogos · **Crates:** `ontologos-*` · **CLI binary:** `ontologos`
 
-**v0.1 (today):** in-memory ontology data model ([`ontologos-core`](crates/ontologos-core)) — build ontologies in Rust or load JSON v2 snapshots.
+**v0.2 (today):** OWL file parsing and profile detection via [`ontologos-parser`](crates/ontologos-parser) and [`ontologos-profile`](crates/ontologos-profile), plus the v0.1 in-memory model ([`ontologos-core`](crates/ontologos-core)).
 
-**Planned:** OWL file parsing (v0.2), profile detection (v0.2), RDFS/RL/EL reasoning (v0.3–v0.5), CLI and Python bindings.
+**Planned:** RDFS/RL/EL reasoning (v0.3–v0.5), full CLI workflows, Python bindings.
 
 If you need OWL classification today, use Protégé with HermiT or ELK. If you want to embed a Rust ontology graph or evaluate the architecture, start below.
 
-## What works in v0.1
+## What works in v0.2
 
 | Feature | Status |
 |---------|--------|
@@ -24,10 +24,11 @@ If you need OWL classification today, use Protégé with HermiT or ELK. If you w
 | `OntologyBuilder` programmatic construction | Available |
 | JSON snapshot v2 (`to_json` / `from_json`) | Available |
 | Axiom indexes (subclass, subproperty, equivalence, …) | Available |
-| OWL file loading (`.owl`, `.ttl`, …) | v0.2 |
-| Profile detection | v0.2 |
+| OWL file loading (`.owl`, `.rdf`, `.ttl`, `.ofn`) | Available |
+| Profile detection (EL / RL / QL / DL) | Available |
+| `ontologos profile` CLI | Available |
 | RDFS / RL / EL reasoning | v0.3–v0.5 |
-| CLI subcommands beyond load | v0.2+ |
+| `classify` / `materialize` / `explain` CLI | v0.3+ |
 | Python bindings | v0.9 |
 
 ## Install (library)
@@ -38,7 +39,9 @@ From [crates.io](https://crates.io/crates/ontologos-core):
 
 ```toml
 [dependencies]
-ontologos-core = "0.1.0"
+ontologos-core = "0.2.0"
+ontologos-parser = "0.2.0"
+ontologos-profile = "0.2.0"
 ```
 
 Python bindings (pre-release placeholder on [PyPI](https://pypi.org/project/ontologos/)):
@@ -47,7 +50,7 @@ Python bindings (pre-release placeholder on [PyPI](https://pypi.org/project/onto
 pip install ontologos
 ```
 
-Reasoning APIs are not functional until v0.2+; see [ROADMAP.md](ROADMAP.md).
+File loading and profile detection work in v0.2; classification and materialization remain on the roadmap — see [ROADMAP.md](ROADMAP.md).
 
 From this repository:
 
@@ -93,15 +96,15 @@ fn main() -> Result<(), Error> {
 }
 ```
 
-`Ontology::from_file` returns `Error::ParseNotAvailable` until v0.2 parser support.
+Load OWL files with `ontologos_parser::load_ontology` (or `ontologos profile` on the CLI).
 
 ## Workspace
 
 | Crate | Description | Status |
 |-------|-------------|--------|
-| `ontologos-core` | Core data model, ontology graph, and reasoner API | **v0.1** |
-| `ontologos-parser` | OWL/RDF parsers (horned-owl integration) | Stub |
-| `ontologos-profile` | OWL profile detection and diagnostics | Stub |
+| `ontologos-core` | Core data model, ontology graph, and reasoner API | **v0.2** |
+| `ontologos-parser` | OWL/RDF parsers (horned-owl integration) | **v0.2** |
+| `ontologos-profile` | OWL profile detection and diagnostics | **v0.2** |
 | `ontologos-rdfs` | RDFS reasoning engine | Stub |
 | `ontologos-rl` | OWL RL forward-chaining rules | Stub |
 | `ontologos-el` | OWL EL classification | Stub |
@@ -110,23 +113,23 @@ fn main() -> Result<(), Error> {
 | `ontologos-cli` | `ontologos` command-line tool | Stub |
 | `ontologos-py` | Python bindings via PyO3 | Stub |
 
-Only `ontologos-core` is published to crates.io in v0.1.0.
+`ontologos-core`, `ontologos-parser`, and `ontologos-profile` are published to crates.io in v0.2.0.
 
-## CLI (stub until v0.2)
-
-The binary builds, but all subcommands fail at ontology load today:
+## CLI
 
 ```bash
 cargo build -p ontologos-cli --release
-./target/release/ontologos profile test.owl
-# error: ontology file parsing is not available until v0.2
+./target/release/ontologos profile benchmarks/data/pizza.owl
+# detected profile: El
+
+./target/release/ontologos --format json profile benchmarks/data/family.owl
 ```
 
-Planned commands: `profile`, `classify`, `materialize`, `explain` — see [ROADMAP.md](ROADMAP.md).
+`classify`, `materialize`, and `explain` remain stubs until v0.3+ — see [ROADMAP.md](ROADMAP.md).
 
 ## Python API (v0.9+)
 
-Python bindings are stubbed; file loading requires v0.2.
+Python bindings load ontologies via `ontologos_parser::load_ontology`; reasoning APIs remain stubbed.
 
 ## Documentation
 

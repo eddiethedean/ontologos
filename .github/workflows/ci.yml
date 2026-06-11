@@ -18,6 +18,8 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+      - name: Download benchmark corpora
+        run: ./benchmarks/scripts/download.sh
       - name: Format
         run: cargo fmt --all -- --check
       - name: Clippy

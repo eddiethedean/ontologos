@@ -8,7 +8,7 @@ See [landscape-2023.md](internal/research/landscape-2023.md) for the full 2023�
 
 | Capability | OntoLogos v0.1 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|----------------|-----|--------|----------|------------|----------|---------|
-| Load OWL files | No (v0.2) | Yes | Yes | Yes | Yes | Yes | Yes |
+| Load OWL files | Yes (v0.2) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL EL classification | No (v0.5) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
 | OWL RL reasoning | No (v0.4) | No | Partial | Partial | **Yes** | No | Via plugin |
 | RDFS materialization | No (v0.3) | No | Yes | Yes | Partial | No | Yes |

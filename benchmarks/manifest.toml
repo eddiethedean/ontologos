@@ -4,22 +4,22 @@
 [[ontology]]
 name = "pizza"
 expected_profile = "EL"
-source_url = "https://raw.githubusercontent.com/owlcs/pizza-ontology/master/pizza.owl"
+source_url = "https://github.com/owlcs/pizza-ontology/raw/refs/heads/master/pizza.owl"
 license = "CC-BY-4.0"
 format = "owl+xml"
-axiom_count_approx = 800
+axiom_count_approx = 1056
 local_path = "benchmarks/data/pizza.owl"
 notes = "Classic OWL tutorial ontology; primary EL conformance corpus."
 
 [[ontology]]
 name = "family"
 expected_profile = "RL"
-source_url = "https://raw.githubusercontent.com/owlcs/pizza-ontology/master/examples/family.owl"
-license = "CC-BY-4.0"
-format = "owl+xml"
-axiom_count_approx = 50
+source_url = "https://github.com/martinhbramwell/Monetary-Ontology-Walkabout/raw/master/rexster/extension/example/src/main/resources/data/family.swrl.owl"
+license = "unspecified (tutorial example)"
+format = "rdf+xml"
+axiom_count_approx = 57
 local_path = "benchmarks/data/family.owl"
-notes = "Small family relationships ontology; good RL smoke test."
+notes = "Classic Protégé family ontology (rexster example); vendored in-repo. RL profile via subproperties, domains/ranges, and property characteristics."
 
 [[ontology]]
 name = "galen"

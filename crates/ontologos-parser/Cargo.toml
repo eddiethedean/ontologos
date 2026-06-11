@@ -8,9 +8,13 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "OWL/RDF parsers for OntoLogos"
-publish = false
+publish = true
 
 [dependencies]
 ontologos-core = { workspace = true }
 horned-owl = { workspace = true }
+oxrdfio = "0.2"
 thiserror = { workspace = true }
+
+[dev-dependencies]
+ontologos-profile = { workspace = true }

@@ -32,11 +32,15 @@ pub enum Error {
     /// Axiom validation failed (wrong kinds, unknown IRI in JSON, degenerate operands).
     #[error("invalid axiom: {0}")]
     InvalidAxiom(String),
-    /// File parsing is not available until v0.2.
+    /// File parsing is not available on `ontologos-core` alone.
     ///
-    /// Use [`Ontology::from_json`](crate::Ontology::from_json) or the builder API instead.
-    #[error("ontology file parsing is not available until v0.2; use Ontology::from_json or the builder API")]
+    /// Use [`Ontology::from_json`](crate::Ontology::from_json), the builder API, or
+    /// `ontologos_parser::load_ontology`.
+    #[error("ontology file parsing is not available on ontologos-core; use ontologos_parser::load_ontology")]
     ParseNotAvailable,
+    /// OWL file parse error from `ontologos-parser`.
+    #[error("parse error: {0}")]
+    Parse(String),
     /// Serialization or deserialization failed (bad JSON, limits, format version).
     #[error("serialization error: {0}")]
     Serialization(String),

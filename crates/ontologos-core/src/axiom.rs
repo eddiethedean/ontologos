@@ -61,6 +61,21 @@ pub enum Axiom {
     },
     /// Transitive object property declaration.
     TransitiveObjectProperty(EntityId),
+    /// EL pattern: `SubClassOf(C, ObjectSomeValuesFrom(p, D))` with named class `D`.
+    SubClassOfExistential {
+        /// The subclass.
+        subclass: EntityId,
+        /// The object property.
+        property: EntityId,
+        /// The filler class.
+        filler: EntityId,
+    },
+    /// Symmetric object property declaration.
+    SymmetricObjectProperty(EntityId),
+    /// Reflexive object property declaration.
+    ReflexiveObjectProperty(EntityId),
+    /// Functional object property declaration.
+    FunctionalObjectProperty(EntityId),
 }
 
 impl Axiom {
@@ -134,8 +149,20 @@ impl Axiom {
                     "right property",
                 )?;
             }
-            Self::TransitiveObjectProperty(property) => {
+            Self::TransitiveObjectProperty(property)
+            | Self::SymmetricObjectProperty(property)
+            | Self::ReflexiveObjectProperty(property)
+            | Self::FunctionalObjectProperty(property) => {
                 require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
+            }
+            Self::SubClassOfExistential {
+                subclass,
+                property,
+                filler,
+            } => {
+                require_kind(registry, *subclass, EntityKind::Class, "subclass")?;
+                require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
+                require_kind(registry, *filler, EntityKind::Class, "filler")?;
             }
         }
         Ok(())
@@ -153,6 +180,10 @@ impl Axiom {
             Self::SubObjectPropertyOf { .. } => "SubObjectPropertyOf",
             Self::InverseObjectProperties { .. } => "InverseObjectProperties",
             Self::TransitiveObjectProperty(_) => "TransitiveObjectProperty",
+            Self::SubClassOfExistential { .. } => "SubClassOfExistential",
+            Self::SymmetricObjectProperty(_) => "SymmetricObjectProperty",
+            Self::ReflexiveObjectProperty(_) => "ReflexiveObjectProperty",
+            Self::FunctionalObjectProperty(_) => "FunctionalObjectProperty",
         }
     }
 }

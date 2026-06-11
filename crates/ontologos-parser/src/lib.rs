@@ -1,10 +1,16 @@
 //! OWL and RDF syntax parsers for OntoLogos.
 
 mod error;
+mod limits;
 mod load;
+mod map;
+mod read;
+mod report;
 
 pub use error::{Error, Result};
-pub use load::{load_ontology, validate_load_path};
+pub use limits::ParseLimits;
+pub use load::{load_ontology, load_ontology_with_limits, validate_load_path};
+pub use read::detect_turtle_from_bytes;
 
 /// Supported ontology serialization formats.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,11 +26,14 @@ pub enum Format {
 pub fn detect_format_from_bytes(header: &[u8]) -> Option<Format> {
     let text = std::str::from_utf8(header).ok()?;
     let trimmed = text.trim_start();
-    if trimmed.contains("owl:Ontology") || trimmed.contains("<owl:Ontology") {
-        return Some(Format::OwlXml);
-    }
     if trimmed.contains("rdf:RDF") || trimmed.contains("<rdf:RDF") {
         return Some(Format::RdfXml);
+    }
+    if trimmed.contains("<Ontology ") || trimmed.contains(":Ontology ") {
+        return Some(Format::OwlXml);
+    }
+    if detect_turtle_from_bytes(header) {
+        return Some(Format::Turtle);
     }
     None
 }
@@ -33,7 +42,7 @@ pub fn detect_format_from_bytes(header: &[u8]) -> Option<Format> {
 #[must_use]
 pub fn detect_format(path: &std::path::Path) -> Option<Format> {
     match path.extension()?.to_str()? {
-        "owl" => Some(Format::OwlXml),
+        "owl" => sniff_xml_format(path).or(Some(Format::OwlXml)),
         "xml" => sniff_xml_format(path),
         "rdf" => Some(Format::RdfXml),
         "ttl" | "turtle" => Some(Format::Turtle),
@@ -74,7 +83,7 @@ mod tests {
 
     #[test]
     fn detect_format_from_bytes_owl_xml() {
-        let header = br#"<?xml version="1.0"?><owl:Ontology/>"#;
+        let header = br#"<?xml version="1.0"?><Ontology xmlns="http://www.w3.org/2002/07/owl#"/>"#;
         assert_eq!(detect_format_from_bytes(header), Some(Format::OwlXml));
     }
 

@@ -1,0 +1,4 @@
+# SHA-256 pins for downloaded benchmark corpora.
+# Verify with: shasum -a 256 -c benchmarks/checksums.sha256
+0de2cd4df0bc09dfd9403df46ae7aa9d26ec31c32cc9a59c514f459c312a751c  pizza.owl
+6801d19656461f3ae5d030471cd8c196a4a01dea0f755ece6e424837e474ab41  family.owl

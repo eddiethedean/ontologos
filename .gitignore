@@ -18,5 +18,6 @@ dist/
 *.swo
 .DS_Store
 
-# Test artifacts
-/benchmarks/data/
+# Test artifacts (large downloads; family.owl is vendored)
+/benchmarks/data/*
+!/benchmarks/data/family.owl

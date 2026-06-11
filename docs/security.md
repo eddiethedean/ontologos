@@ -47,9 +47,17 @@ Rejected:
 
 ## File loading (v0.2+)
 
-`ontologos_parser::validate_load_path` canonicalizes paths and rejects traversal outside an optional base directory. `load_ontology` validates the path before calling `Ontology::from_file`.
+`ontologos_parser::validate_load_path` canonicalizes paths and rejects traversal outside an optional base directory. `load_ontology` validates the path, enforces [`ParseLimits`](https://docs.rs/ontologos-parser/latest/ontologos_parser/struct.ParseLimits.html), then parses via horned-owl.
 
-Until v0.2, file parsing returns `Error::ParseNotAvailable`; path validation still runs.
+### Default parse limits
+
+| Limit | Default | Purpose |
+|-------|---------|---------|
+| `max_file_bytes` | 64 MiB | Cap ontology file size on disk |
+| `max_axioms` | 10,000,000 | Cap stored axioms during mapping |
+| `max_entities` | 1,000,000 | Cap registered entities during mapping |
+
+Use `load_ontology_with_limits` for untrusted uploads.
 
 ## Reporting issues
 

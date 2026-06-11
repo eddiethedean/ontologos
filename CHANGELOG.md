@@ -7,9 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-11
+
 ### Added
 
-- PyPI package **`ontologos`** (0.1.0 pre-release placeholder): maturin build, `python/ontologos` package, publish script
+- **`ontologos-parser`**: OWL/XML, RDF/XML, OWL Functional Syntax, and Turtle loading via horned-owl; `ParseLimits`; `ParseMeta` on loaded ontologies
+- **`ontologos-profile`**: EL / RL / QL / DL profile detection with diagnostics
+- New axiom variants: `SubClassOfExistential`, `SymmetricObjectProperty`, `ReflexiveObjectProperty`, `FunctionalObjectProperty`
+- Parser fixtures and manifest-driven integration tests (Pizza, Family)
+- `benchmarks/scripts/download.sh` for benchmark corpus download
+
+### Changed
+
+- `ontologos profile` loads OWL files and reports detected profile
+- `ontologos_parser::load_ontology` is the supported file-load API (`Ontology::from_file` remains a stub on `ontologos-core`)
+- Pizza/Family benchmark corpora: Family ontology vendored in-repo; Pizza downloaded from owlcs/pizza-ontology
+
+### Published
+
+- [ontologos-parser](https://crates.io/crates/ontologos-parser) and [ontologos-profile](https://crates.io/crates/ontologos-profile) on crates.io
 
 ## [0.1.0] - 2026-06-11
 
@@ -42,5 +58,6 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/eddiethedean/ontologos/releases/tag/v0.2.0
 [0.1.0]: https://github.com/eddiethedean/ontologos/releases/tag/v0.1.0

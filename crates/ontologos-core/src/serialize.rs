@@ -51,6 +51,14 @@ enum SnapshotAxiom {
         right: String,
     },
     TransitiveObjectProperty(String),
+    SubClassOfExistential {
+        subclass: String,
+        property: String,
+        filler: String,
+    },
+    SymmetricObjectProperty(String),
+    ReflexiveObjectProperty(String),
+    FunctionalObjectProperty(String),
 }
 
 impl Ontology {
@@ -250,6 +258,24 @@ fn axiom_to_snapshot(axiom: &Axiom, ontology: &Ontology) -> Result<SnapshotAxiom
         Axiom::TransitiveObjectProperty(property) => {
             SnapshotAxiom::TransitiveObjectProperty(entity_iri(ontology, *property)?)
         }
+        Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        } => SnapshotAxiom::SubClassOfExistential {
+            subclass: entity_iri(ontology, *subclass)?,
+            property: entity_iri(ontology, *property)?,
+            filler: entity_iri(ontology, *filler)?,
+        },
+        Axiom::SymmetricObjectProperty(property) => {
+            SnapshotAxiom::SymmetricObjectProperty(entity_iri(ontology, *property)?)
+        }
+        Axiom::ReflexiveObjectProperty(property) => {
+            SnapshotAxiom::ReflexiveObjectProperty(entity_iri(ontology, *property)?)
+        }
+        Axiom::FunctionalObjectProperty(property) => {
+            SnapshotAxiom::FunctionalObjectProperty(entity_iri(ontology, *property)?)
+        }
     })
 }
 
@@ -295,6 +321,24 @@ fn snapshot_axiom_to_axiom(snapshot: &SnapshotAxiom, ontology: &Ontology) -> Res
         },
         SnapshotAxiom::TransitiveObjectProperty(property) => {
             Axiom::TransitiveObjectProperty(resolve_entity(ontology, property)?)
+        }
+        SnapshotAxiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        } => Axiom::SubClassOfExistential {
+            subclass: resolve_entity(ontology, subclass)?,
+            property: resolve_entity(ontology, property)?,
+            filler: resolve_entity(ontology, filler)?,
+        },
+        SnapshotAxiom::SymmetricObjectProperty(property) => {
+            Axiom::SymmetricObjectProperty(resolve_entity(ontology, property)?)
+        }
+        SnapshotAxiom::ReflexiveObjectProperty(property) => {
+            Axiom::ReflexiveObjectProperty(resolve_entity(ontology, property)?)
+        }
+        SnapshotAxiom::FunctionalObjectProperty(property) => {
+            Axiom::FunctionalObjectProperty(resolve_entity(ontology, property)?)
         }
     })
 }

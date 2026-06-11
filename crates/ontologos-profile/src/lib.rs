@@ -1,19 +1,28 @@
 //! OWL profile detection and diagnostics.
 
+mod construct;
+mod detect;
+mod rules;
+pub mod scanner;
+
 use ontologos_core::Ontology;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+pub use construct::OwlConstruct;
+pub use detect::detect_profile;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("profile detection not yet implemented")]
-    NotImplemented,
+    #[error("profile detection failed: {0}")]
+    Message(String),
 }
 
 /// Detected OWL 2 profile.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum OwlProfile {
     El,
     Rl,
@@ -35,7 +44,8 @@ pub struct ProfileReport {
     pub diagnostics: Vec<ProfileDiagnostic>,
 }
 
-/// Detect the most specific OWL profile supported by the ontology.
-pub fn detect_profile(_ontology: &Ontology) -> Result<ProfileReport> {
-    Err(Error::NotImplemented)
+/// Resolve profile from ontology for reasoner configuration helpers.
+#[must_use]
+pub fn profile_from_ontology(ontology: &Ontology) -> Option<OwlProfile> {
+    detect_profile(ontology).ok().and_then(|r| r.detected)
 }
