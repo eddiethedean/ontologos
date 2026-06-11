@@ -7,11 +7,15 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "Core data model and reasoner API for OntoLogos"
+description = "In-memory OWL ontology data model — interned IRIs, typed axioms, and JSON v2 snapshots"
 readme = "../../README.md"
+keywords = ["owl", "ontology", "reasoner", "semantic-web", "knowledge-graph"]
+categories = ["science", "data-structures"]
+documentation = "https://docs.rs/ontologos-core"
 
 [package.metadata.docs.rs]
 all-features = false
+rustdoc-args = ["--cfg", "docsrs"]
 
 [[example]]
 name = "pizza_builder"

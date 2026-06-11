@@ -57,5 +57,5 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 ## Where is the API reference?
 
 - In-source rustdoc: `cargo doc -p ontologos-core --open`
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core) after crates.io publish
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core)
 - Error catalog: [docs/reference/errors.md](docs/reference/errors.md)

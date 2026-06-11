@@ -57,11 +57,29 @@ See [ROADMAP.md](ROADMAP.md) for milestone ownership.
 
 ## Releases
 
+### v0.1.0 checklist
+
+Before tagging `v0.1.0` (or any release):
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace --locked
+cargo publish -p ontologos-core --dry-run
+```
+
+Then:
+
+1. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated version section and empty `[Unreleased]`.
+2. Commit release prep on `main`.
+3. Create an annotated tag: `git tag -a v0.1.0 -m "OntoLogos v0.1.0"`
+4. Push commit and tag: `git push origin main && git push origin v0.1.0`
+5. The [release workflow](.github/workflows/release.yml) publishes `ontologos-core` when the tag is pushed (requires `CARGO_REGISTRY_TOKEN` secret).
+6. Create a GitHub Release from [`.github/release/v0.1.0.md`](.github/release/v0.1.0.md) (or the matching version file).
+
 - **crates.io:** v0.1 publishes `ontologos-core` only via [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh)
 - **Tags:** Release tags follow semver (`v0.1.0`, …)
 - **CHANGELOG:** [Keep a Changelog](https://keepachangelog.com/) format in [CHANGELOG.md](CHANGELOG.md)
-
-Maintainers: tag after merging release prep, then run the release workflow or publish script.
 
 ## Questions
 

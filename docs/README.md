@@ -33,7 +33,7 @@ Welcome to OntoLogos documentation. Start here if you are new to the project.
 |----------|-------------|
 | [reference/errors.md](reference/errors.md) | `ontologos_core::Error` catalog |
 | [../SPEC.md](../SPEC.md) | Technical specification (status-tagged) |
-| [docs.rs/ontologos-core](https://docs.rs/ontologos-core) | Rust API (after publish) |
+| [docs.rs/ontologos-core](https://docs.rs/ontologos-core) | Rust API |
 
 ## Project meta
 

@@ -1,6 +1,8 @@
 # OntoLogos
 
 [![CI](https://github.com/eddiethedean/ontologos/actions/workflows/ci.yml/badge.svg)](https://github.com/eddiethedean/ontologos/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/ontologos-core.svg)](https://crates.io/crates/ontologos-core)
+[![docs.rs](https://docs.rs/ontologos-core/badge.svg)](https://docs.rs/ontologos-core)
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
 ![Rust](https://img.shields.io/badge/rust-1.78%2B-orange)
 
@@ -32,11 +34,11 @@ If you need OWL classification today, use Protégé with HermiT or ELK. If you w
 
 Requires **Rust 1.78+**.
 
-From crates.io (after first publish):
+From [crates.io](https://crates.io/crates/ontologos-core):
 
 ```toml
 [dependencies]
-ontologos-core = "0.1"
+ontologos-core = "0.1.0"
 ```
 
 From this repository:
@@ -46,7 +48,7 @@ git clone https://github.com/eddiethedean/ontologos.git
 cd ontologos
 ```
 
-API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core) (after publish)
+API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core)
 
 ## Quick start (5 minutes)
 
