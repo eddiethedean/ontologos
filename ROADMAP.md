@@ -2,28 +2,51 @@
 
 Ontologos is a Rust-native ontology reasoner built to replace JVM-bound reasoning workflows with an embeddable engine, CLI, Python bindings, and future IDE integration.
 
-This document tracks phased delivery toward **1.0**. For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
+Releases follow semantic versioning. **0.x** builds capability toward **1.0**; **1.x** hardens and extends the stable API; **2.0** introduces full OWL DL reasoning.
 
-## Status
+For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-| Phase | Status |
-|-------|--------|
-| Phase 0 – Research | Not started |
-| Phase 1 – Core Platform | **In progress** (workspace skeleton landed) |
-| Phase 2 – RDFS Engine | Not started |
-| Phase 3 – OWL RL Engine | Not started |
-| Phase 4 – OWL EL Classifier | Not started |
-| Phase 5 – Explanation Engine | Not started |
-| Phase 6 – Incremental Reasoning | Not started |
-| Phase 7 – Language Server | Not started |
-| Phase 8 – Python Ecosystem | Not started |
-| Phase 9 – 1.0 Release | Not started |
+## Release overview
 
-**Current milestone:** repository skeleton with all workspace crates, CLI wiring, CI, and stub APIs.
+| Version | Theme | Status |
+|---------|-------|--------|
+| **0.1** | Research & core data model | **In progress** |
+| **0.2** | Parsing & profile detection | Planned |
+| **0.3** | RDFS engine | Planned |
+| **0.4** | OWL RL engine | Planned |
+| **0.5** | OWL EL classifier & query | Planned |
+| **0.6** | Explanation engine | Planned |
+| **0.7** | Incremental reasoning | Planned |
+| **0.8** | Language server (Ontocode) | Planned |
+| **0.9** | Python ecosystem | Planned |
+| **1.0** | Stable release | Planned |
+| **1.1+** | Post-1.0 improvements | Planned |
+| **2.0** | Full OWL DL | Planned |
+
+**Current milestone:** workspace skeleton landed (crates, CLI wiring, CI, release workflow, stub APIs). Targeting **v0.1.0** next.
+
+```mermaid
+flowchart LR
+  subgraph preRelease [0.x pre-release]
+    v01[0.1 Core]
+    v02[0.2 Parser]
+    v03[0.3 RDFS]
+    v04[0.4 RL]
+    v05[0.5 EL]
+    v06[0.6 Explain]
+    v07[0.7 Incremental]
+    v08[0.8 LSP]
+    v09[0.9 Python]
+    v01 --> v02 --> v03 --> v04 --> v05 --> v06 --> v07 --> v08 --> v09
+  end
+  v09 --> v10[1.0 Stable]
+  v10 --> v11[1.x Improvements]
+  v11 --> v20[2.0 OWL DL]
+```
 
 ---
 
-## Ecosystem Vision
+## Ecosystem vision
 
 Ontologos is the reasoning layer in a broader Rust ontology stack:
 
@@ -46,7 +69,7 @@ Ontologos is the reasoning layer in a broader Rust ontology stack:
 4. Enable IDE-native ontology development
 5. Support large ontology repositories
 
-### Non-Goals (1.x)
+### Non-goals (1.x)
 
 - Full OWL 2 DL parity with HermiT
 - Distributed reasoning
@@ -54,31 +77,19 @@ Ontologos is the reasoning layer in a broader Rust ontology stack:
 
 ---
 
-## Phase 0 – Research
+# 0.x — Pre-release
 
-Establish the technical foundation before engine implementation.
+## v0.1 — Research & core data model
 
-### Deliverables
+Establish the technical foundation and in-memory ontology representation all engines share.
 
-- [ ] OWL 2 standards review
-- [ ] HermiT architecture study
-- [ ] ELK architecture study
-- [ ] RDFox evaluation
-- [ ] Benchmark corpus assembled under `benchmarks/`
+### Research
 
-### Benchmark Ontologies
-
-- Pizza
-- Family
-- GALEN
-- Gene Ontology
-- SNOMED subsets
-
----
-
-## Phase 1 – Core Platform
-
-Build the shared data model, parsers, and profile detection that all engines depend on.
+- [ ] OWL 2 standards review (`docs/research/owl2.md`)
+- [ ] HermiT architecture study (`docs/research/hermit.md`)
+- [ ] ELK architecture study (`docs/research/elk.md`)
+- [ ] RDFox evaluation (`docs/research/rdfox.md`)
+- [ ] Benchmark corpus manifest under `benchmarks/` (Pizza, Family, GALEN, Gene Ontology, SNOMED subsets)
 
 ### `ontologos-core`
 
@@ -90,6 +101,18 @@ Build the shared data model, parsers, and profile detection that all engines dep
 - [ ] Serialization layer
 
 **Performance target:** ontology load under 500ms for medium ontologies with stable allocation patterns.
+
+### Exit criteria
+
+- Research notes committed under `docs/research/`
+- Benchmark manifest documents sources and expected profiles
+- Core model stores interned IRIs, entities, and axioms with unit tests
+
+---
+
+## v0.2 — Parsing & profile detection
+
+Load real ontologies from disk and detect which OWL profile they fall into.
 
 ### `ontologos-parser`
 
@@ -111,13 +134,13 @@ Build the shared data model, parsers, and profile detection that all engines dep
 
 ### Exit criteria
 
-- Load real ontologies from disk into the core model
-- Profile command returns accurate detection and diagnostics
+- `Ontology::from_file` loads benchmark ontologies into the core model
+- `ontologos profile` returns accurate detection and diagnostics
 - Unit tests for parser, core model, and profile detector
 
 ---
 
-## Phase 2 – RDFS Engine
+## v0.3 — RDFS engine
 
 **Crate:** `ontologos-rdfs`
 
@@ -134,18 +157,18 @@ Build the shared data model, parsers, and profile detection that all engines dep
 
 - [ ] Reasoning report
 - [ ] Materialized graph (`ontologos materialize`)
-- [ ] Explanation traces (initial)
+- [ ] Initial explanation traces
 
 **Complexity goal:** O(n log n)
 
 ### Exit criteria
 
-- Pass RDFS conformance tests
+- RDFS conformance tests pass
 - Materialize command produces correct inferences on benchmark ontologies
 
 ---
 
-## Phase 3 – OWL RL Engine
+## v0.4 — OWL RL engine
 
 **Crate:** `ontologos-rl`
 
@@ -174,9 +197,9 @@ Build the shared data model, parsers, and profile detection that all engines dep
 
 ---
 
-## Phase 4 – OWL EL Classifier
+## v0.5 — OWL EL classifier & query
 
-**Crate:** `ontologos-el`
+**Crates:** `ontologos-el`, `ontologos-query`
 
 ### Features
 
@@ -186,12 +209,12 @@ Build the shared data model, parsers, and profile detection that all engines dep
 - [ ] Intersections
 - [ ] Unsatisfiable class detection
 - [ ] Equivalent class detection
+- [ ] Query API (subsumption, direct subclasses)
 
 ### Deliverables
 
 - [ ] Class hierarchy output
-- [ ] Incremental classification support
-- [ ] Query API in `ontologos-query` (subsumption, direct subclasses)
+- [ ] `ontologos classify` produces taxonomy on EL benchmarks
 
 ### Exit criteria
 
@@ -200,7 +223,7 @@ Build the shared data model, parsers, and profile detection that all engines dep
 
 ---
 
-## Phase 5 – Explanation Engine
+## v0.6 — Explanation engine
 
 **Crate:** `ontologos-explain`
 
@@ -215,12 +238,12 @@ Build the shared data model, parsers, and profile detection that all engines dep
 
 ### Exit criteria
 
-- Explain command returns valid proof trees for benchmark inferences
+- `ontologos explain` returns valid proof trees for benchmark inferences
 - Explanations integrate with RDFS, RL, and EL engines
 
 ---
 
-## Phase 6 – Incremental Reasoning
+## v0.7 — Incremental reasoning
 
 ### Capabilities
 
@@ -234,7 +257,7 @@ Build the shared data model, parsers, and profile detection that all engines dep
 
 ---
 
-## Phase 7 – Language Server Integration
+## v0.8 — Language server (Ontocode)
 
 Support **Ontocode** with live reasoning feedback.
 
@@ -251,7 +274,7 @@ Support **Ontocode** with live reasoning feedback.
 
 ---
 
-## Phase 8 – Python Ecosystem
+## v0.9 — Python ecosystem
 
 **Crate:** `ontologos-py` (published as `ontologos` on PyPI)
 
@@ -270,7 +293,9 @@ Support **Ontocode** with live reasoning feedback.
 
 ---
 
-## Phase 9 – 1.0 Release
+# 1.0 — Stable release
+
+Gate for production use. All 0.x capabilities integrated, tested, and documented.
 
 ### Requirements
 
@@ -297,23 +322,62 @@ Support **Ontocode** with live reasoning feedback.
 
 ---
 
-## Beyond 1.0 (2.x)
+# 1.x — Post-1.0 improvements
 
-Deferred to a future major release:
+Incremental releases after 1.0 that preserve API stability.
 
-- Hypertableau engine
-- Nominals
-- Cardinality restrictions
-- Datatype reasoning
-- Full OWL DL support
+## v1.1 — Performance & benchmarks
+
+- [ ] Criterion benchmarks in CI with regression tracking
+- [ ] Published benchmark results for all standard corpora
+- [ ] Memory profiling and allocation improvements
+
+## v1.2 — CLI & export polish
+
+- [ ] YAML output format
+- [ ] Richer text reporting for classify and explain
+- [ ] `--watch` mode for incremental reasoning (if not shipped in 0.7)
+
+## v1.3 — Ontocode integration
+
+- [ ] Stable LSP protocol surface
+- [ ] Ontocode extension published to VS Code marketplace
+- [ ] Hover and diagnostic conformance tests
+
+## v1.4 — Python maturity
+
+- [ ] Windows wheel support
+- [ ] Type stubs (py.typed)
+- [ ] Polars and pandas DataFrame export for taxonomies
+
+Future 1.x releases will be scoped based on community feedback after 1.0.
 
 ---
 
-## Success Metrics
+# 2.0 — Full OWL DL
+
+Major release introducing OWL 2 DL reasoning beyond the 1.x profile scope.
+
+### Features
+
+- [ ] Hypertableau engine
+- [ ] Nominals
+- [ ] Cardinality restrictions
+- [ ] Datatype reasoning
+- [ ] Full OWL DL support
+
+### Non-goals carried forward
+
+- Distributed reasoning
+- Triple store replacement
+
+---
+
+## Success metrics
 
 ### Technical
 
-- 90%+ test coverage
+- 90%+ test coverage (from 1.0 onward)
 - Full benchmark suite passing
 - Zero JVM dependency in the reasoning path
 

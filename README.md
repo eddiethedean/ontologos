@@ -64,7 +64,7 @@ r.classify()
 
 ## Documentation
 
-- [ROADMAP.md](ROADMAP.md) — phased delivery plan and current status
+- [ROADMAP.md](ROADMAP.md) — versioned release plan (0.1 → 1.0 → 2.0)
 - [SPEC.md](SPEC.md) — technical specification
 - [PLAN.md](PLAN.md) — background and ecosystem vision
 
