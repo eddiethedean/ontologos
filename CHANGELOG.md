@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- PyPI package **`ontologos`** (0.1.0 pre-release placeholder): maturin build, `python/ontologos` package, publish script
+
 ## [0.1.0] - 2026-06-11
 
 First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/crates/ontologos-core) only; engine crates remain workspace-internal until implemented.

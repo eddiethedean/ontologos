@@ -2,33 +2,54 @@
 
 Honest positioning for evaluators. OntoLogos v0.1 is **not** a drop-in HermiT replacement.
 
+See [landscape-2023.md](internal/research/landscape-2023.md) for the full 2023–2026 reasoner survey.
+
 ## Maturity matrix
 
-| Capability | OntoLogos v0.1 | HermiT / ELK | Protégé | owlready2 |
-|------------|----------------|---------------|---------|-----------|
-| Load OWL files | No (v0.2) | Yes | Yes | Yes |
-| OWL EL classification | No (v0.5) | Yes (ELK) | Via plugin | Yes |
-| OWL RL reasoning | No (v0.4) | Partial | Via plugin | Partial |
-| RDFS materialization | No (v0.3) | Yes | Yes | Yes |
-| Embeddable Rust API | **Yes** | JVM only | Desktop IDE | Python |
-| In-memory graph + JSON | **Yes** | No | No | Yes |
-| Explanations | No (v0.6) | Yes (HermiT) | Yes | Limited |
-| Production-ready | **Pre-release** | Yes | Yes | Yes |
+| Capability | OntoLogos v0.1 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+|------------|----------------|-----|--------|----------|------------|----------|---------|
+| Load OWL files | No (v0.2) | Yes | Yes | Yes | Yes | Yes | Yes |
+| OWL EL classification | No (v0.5) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
+| OWL RL reasoning | No (v0.4) | No | Partial | Partial | **Yes** | No | Via plugin |
+| RDFS materialization | No (v0.3) | No | Yes | Yes | Partial | No | Yes |
+| OWL DL | No (2.0) | No | Yes (stagnant) | **Yes** | No | No | Via plugin |
+| Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
+| Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |
+| Hybrid EL+DL routing | No (v1.5) | No | No | Internal | No | No | MORe plugin |
+| Explanations | No (v0.6) | Yes | Yes | Partial | Limited | No | Yes |
+| Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
+
+## Maintenance landscape
+
+Most JVM DL reasoners (HermiT, Pellet, FaCT++) have had **little or no development since ~2015–2020** ([Abicht 2023](https://arxiv.org/abs/2309.06888)). ELK and Konclude remain the maintained performance leaders for EL and DL respectively. This is a core motivation for OntoLogos.
+
+## Rust alternatives
+
+| Project | Strength | OntoLogos difference |
+|---------|----------|----------------------|
+| **whelk-rs** | OWL EL in Rust | EL only; no RL/DL/CLI/Python stack |
+| **reasonable** | OWL RL in Rust | RL only; triple/Datalog model |
+| **horned-owl** | OWL parse/manipulate | No reasoner; OntoLogos partner for v0.2 |
+
+OntoLogos targets a **unified multi-profile workspace** with MORe-style hybrid routing (v1.5), not a single-profile library.
 
 ## When to use OntoLogos today
 
 - Embedding an ontology **data model** in Rust
 - Evaluating the architecture and roadmap
-- Contributing to an open-source Rust reasoner
+- Contributing to a maintained open-source Rust reasoner stack
 
 ## When to use incumbents
 
-- **Protégé + HermiT/ELK:** interactive OWL editing and classification today
-- **owlready2:** Python-centric OWL workflows with reasoning via Pellet/HermiT
-- **RDFox:** high-performance DLS reasoning and materialization (commercial)
+- **ELK / whelk-rs:** EL classification today (SNOMED, GO, OBO)
+- **reasonable:** RL materialization in Rust/Python today
+- **Konclude:** full DL batch reasoning today (CLI/OWLlink)
+- **Protégé + HermiT/ELK:** interactive OWL editing (note HermiT maintenance risk)
+- **owlready2:** Python-centric OWL workflows with JVM reasoning backends
+- **RDFox:** high-performance commercial RL/DLS materialization
 
 ## OntoLogos target (1.0)
 
-Replace JVM-bound **batch** reasoning in Rust/Python pipelines with native EL/RL/RDFS engines, CLI, and IDE integration (Ontocode). Full OWL DL deferred to 2.0.
+Replace JVM-bound **batch** reasoning in Rust/Python pipelines with native EL/RL/RDFS engines, CLI, and IDE integration (Ontocode). Conformance measured against **ELK + whelk-rs** (EL) and **reasonable** (RL). Full OWL DL in 2.0, architected after **Konclude** hybrid design rather than a legacy HermiT port.
 
-See [ROADMAP.md](../ROADMAP.md) for milestone dates.
+See [ROADMAP.md](../ROADMAP.md) for milestone sequencing and exit criteria.

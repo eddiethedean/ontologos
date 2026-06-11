@@ -41,6 +41,14 @@ From [crates.io](https://crates.io/crates/ontologos-core):
 ontologos-core = "0.1.0"
 ```
 
+Python bindings (pre-release placeholder on [PyPI](https://pypi.org/project/ontologos/)):
+
+```bash
+pip install ontologos
+```
+
+Reasoning APIs are not functional until v0.2+; see [ROADMAP.md](ROADMAP.md).
+
 From this repository:
 
 ```bash
@@ -123,7 +131,7 @@ Python bindings are stubbed; file loading requires v0.2.
 ## Documentation
 
 - [docs/README.md](docs/README.md) — documentation index and learning path
-- [ROADMAP.md](ROADMAP.md) — versioned release plan (0.1 → 1.0 → 2.0)
+- [ROADMAP.md](ROADMAP.md) — versioned release plan (0.1 → 1.0 → 1.9 → 2.0)
 - [CHANGELOG.md](CHANGELOG.md) — release history
 - [CONTRIBUTING.md](CONTRIBUTING.md) — development workflow
 - [FAQ.md](FAQ.md) — common questions

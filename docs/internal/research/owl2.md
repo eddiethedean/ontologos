@@ -34,3 +34,6 @@ OWL 2 (Web Ontology Language) is a W3C family of ontology languages with formal 
 2. **Profile detection (v0.2)** walks axioms and flags constructs outside EL/RL/RDFS; use `AxiomIndex::by_kind` for fast scans.
 3. **Engine selection** maps `Profile::Auto` to the most specific detected profile, falling back to RDFS when only RDFS constructs are present.
 4. **Defer DL constructs** (nominals, universal restrictions, cardinality) to v2.0; profile detector should emit diagnostics, not errors, for unsupported constructs.
+5. **Hybrid ontologies are the norm** — real corpora (GALEN, OBO) are mostly EL with occasional expressive axioms. MORe-style module routing (v1.5) is required; single-profile Auto selection is insufficient. See [more.md](more.md).
+6. **Do not depend on OWL API** — it anchors the JVM stack OntoLogos replaces; use horned-owl for parsing only.
+7. **Maintenance landscape** — incumbent JVM DL reasoners are largely stagnant; ELK and Konclude remain the maintained references. See [landscape-2023.md](landscape-2023.md).

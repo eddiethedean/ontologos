@@ -38,3 +38,5 @@ Rules are indexed by head predicate for efficient matching.
 3. **Parallel rule execution** in `RlEngine::saturate()` should partition work by rule batch; `ReasonerConfig::parallelism` controls thread count.
 4. **Materialization output** is a set of derived axioms/triples layered on the TBox/ABox; RDFS engine (v0.3) shares the same materialization pattern.
 5. **Do not build a triple store** — OntoLogos reasons over in-memory ontologies; OntoIndex handles query/index at scale.
+6. **Open RL reference** — [reasonable](https://github.com/gtfierro/reasonable) (Rust, DataFrog) is the practical open benchmark for RL materialization; compare v0.4 output against reasonable + OWLRL, not only RDFox.
+7. **MORe integration** — RDFox is used inside MORe for RL modules; validates MORe-style hybrid routing in v1.5. See [more.md](more.md).

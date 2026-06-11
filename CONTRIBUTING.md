@@ -74,10 +74,31 @@ Then:
 2. Commit release prep on `main`.
 3. Create an annotated tag: `git tag -a v0.1.0 -m "OntoLogos v0.1.0"`
 4. Push commit and tag: `git push origin main && git push origin v0.1.0`
-5. The [release workflow](.github/workflows/release.yml) publishes `ontologos-core` when the tag is pushed (requires `CARGO_REGISTRY_TOKEN` secret).
+5. The [release workflow](.github/workflows/release.yml) runs when the tag is pushed (requires GitHub secrets below).
 6. Create a GitHub Release from [`.github/release/v0.1.0.md`](.github/release/v0.1.0.md) (or the matching version file).
 
-- **crates.io:** v0.1 publishes `ontologos-core` only via [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh)
+### Release secrets
+
+| Secret | Purpose |
+|--------|---------|
+| `CARGO_REGISTRY_TOKEN` | Publish Rust crates to [crates.io](https://crates.io) |
+| `PYPI_API_TOKEN` | Publish the `ontologos` Python package to [PyPI](https://pypi.org/project/ontologos/) |
+
+Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire account or project `ontologos`). Add it in the repo under **Settings → Secrets and variables → Actions**.
+
+On each release tag, CI publishes:
+
+- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (v0.1: `ontologos-core` only)
+- **PyPI** — `ontologos` via [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh) (`maturin`, Linux wheel + sdist)
+
+Bump `version` in [crates/ontologos-py/pyproject.toml](crates/ontologos-py/pyproject.toml) and [python/ontologos/__init__.py](crates/ontologos-py/python/ontologos/__init__.py) to match the workspace version before tagging.
+
+Manual PyPI publish (optional):
+
+```bash
+PYPI_API_TOKEN=pypi-... ./.github/scripts/publish-pypi.sh
+```
+
 - **Tags:** Release tags follow semver (`v0.1.0`, …)
 - **CHANGELOG:** [Keep a Changelog](https://keepachangelog.com/) format in [CHANGELOG.md](CHANGELOG.md)
 

@@ -34,7 +34,7 @@ impl PyReasoner {
 }
 
 #[pymodule]
-fn ontologos(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _ontologos(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyReasoner>()?;
     Ok(())
 }

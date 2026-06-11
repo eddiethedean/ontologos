@@ -17,4 +17,8 @@ crate-type = ["cdylib"]
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }
-pyo3 = { workspace = true }
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+[features]
+default = ["extension-module"]
+extension-module = ["pyo3/extension-module"]

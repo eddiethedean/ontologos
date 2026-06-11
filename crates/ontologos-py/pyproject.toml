@@ -1,0 +1,38 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "ontologos"
+version = "0.1.0"
+description = "Python bindings for the OntoLogos OWL reasoner (pre-release)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT OR Apache-2.0" }
+authors = [{ name = "Odo Matthews", email = "odosmatthews@gmail.com" }]
+keywords = ["owl", "ontology", "reasoner", "semantic-web", "description-logic"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/eddiethedean/ontologos"
+Repository = "https://github.com/eddiethedean/ontologos"
+Documentation = "https://github.com/eddiethedean/ontologos#readme"
+"Bug Tracker" = "https://github.com/eddiethedean/ontologos/issues"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+module-name = "ontologos._ontologos"

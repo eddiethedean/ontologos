@@ -2,7 +2,9 @@
 
 ## Overview
 
-HermiT is a tableau-based OWL 2 DL reasoner written in Java. It is the reference implementation for many OWL tools and provides complete DL classification, consistency checking, and explanation generation.
+HermiT is a tableau-based OWL 2 DL reasoner written in Java. It was the reference DL reasoner for Protégé and many OWL tools. As of 2023–2026 it is **largely unmaintained** (last meaningful release ~2020; [Abicht 2023](https://arxiv.org/abs/2309.06888) classifies it as abandoned) but still bundled in Protégé 5.6.x.
+
+**OntoLogos DL strategy:** use HermiT as a **secondary conformance cross-check** where it still runs; primary DL architecture and benchmarks should follow **Konclude** (hybrid saturation + tableau). See [konclude.md](konclude.md) and [landscape-2023.md](landscape-2023.md).
 
 ## Architecture
 
