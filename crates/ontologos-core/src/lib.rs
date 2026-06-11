@@ -28,12 +28,13 @@ mod integration_tests {
     use super::*;
 
     #[test]
-    fn reasoner_builder_constructs() {
+    fn classify_returns_not_implemented() {
         let ontology = Ontology::default();
         let reasoner = Reasoner::builder()
             .profile(Profile::El)
             .build(ontology)
             .expect("build");
-        assert_eq!(reasoner.profile(), Profile::El);
+        assert_eq!(reasoner.classify().unwrap_err(), Error::NotImplemented);
+        assert_eq!(reasoner.ontology().entity_count(), 0);
     }
 }

@@ -217,8 +217,10 @@ mod tests {
             .build()
             .expect("build");
 
-        assert_eq!(ontology.entity_count(), 2);
-        assert_eq!(ontology.axiom_count(), 1);
+        let a = ontology.lookup_entity("http://example.org/A").expect("A");
+        let b = ontology.lookup_entity("http://example.org/B").expect("B");
+        assert_eq!(ontology.direct_superclasses(a), &[b]);
+        assert_eq!(ontology.direct_subclasses(b), &[a]);
     }
 
     #[test]

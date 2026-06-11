@@ -101,11 +101,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn round_trip_json() {
+    fn round_trip_json_preserves_semantics() {
         let ontology = Ontology::builder()
             .class("http://example.org/Pizza")
             .expect("class")
             .class("http://example.org/Food")
+            .expect("class")
+            .object_property("http://example.org/hasTopping")
+            .expect("property")
+            .class("http://example.org/Topping")
             .expect("class")
             .subclass_of("http://example.org/Pizza", "http://example.org/Food")
             .expect("subclass")
@@ -114,9 +118,15 @@ mod tests {
 
         let json = ontology.to_json().expect("to_json");
         let restored = Ontology::from_json(&json).expect("from_json");
-        assert_eq!(restored.entity_count(), ontology.entity_count());
-        assert_eq!(restored.axiom_count(), ontology.axiom_count());
-        assert_eq!(restored.iri_count(), ontology.iri_count());
+        assert_eq!(restored, ontology);
+
+        let pizza = restored
+            .lookup_entity("http://example.org/Pizza")
+            .expect("pizza");
+        let food = restored
+            .lookup_entity("http://example.org/Food")
+            .expect("food");
+        assert_eq!(restored.direct_superclasses(pizza), &[food]);
     }
 
     #[test]
@@ -124,5 +134,43 @@ mod tests {
         let json = r#"{"format_version":99,"iris":[],"entities":[],"axioms":[]}"#;
         let err = Ontology::from_json(json).expect_err("version");
         assert!(matches!(err, Error::Serialization(_)));
+    }
+
+    #[test]
+    fn rejects_invalid_json_syntax() {
+        let err = Ontology::from_json("{not json").expect_err("json");
+        assert!(matches!(err, Error::Serialization(_)));
+    }
+
+    #[test]
+    fn rejects_unknown_iri_index() {
+        let json = r#"{
+            "format_version": 1,
+            "iris": ["http://example.org/A"],
+            "entities": [{"iri_index": 99, "kind": "Class"}],
+            "axioms": []
+        }"#;
+        let err = Ontology::from_json(json).expect_err("iri");
+        assert!(matches!(err, Error::Serialization(_)));
+    }
+
+    #[test]
+    fn rejects_axiom_with_unknown_entity() {
+        let json = r#"{
+            "format_version": 1,
+            "iris": ["http://example.org/A", "http://example.org/B"],
+            "entities": [
+                {"iri_index": 1, "kind": "Class"},
+                {"iri_index": 2, "kind": "Class"}
+            ],
+            "axioms": [
+                {"SubClassOf": {"subclass": 0, "superclass": 99}}
+            ]
+        }"#;
+        let err = Ontology::from_json(json).expect_err("entity");
+        assert!(
+            matches!(err, Error::InvalidAxiom(_) | Error::UnknownEntity(_)),
+            "unexpected error: {err:?}"
+        );
     }
 }

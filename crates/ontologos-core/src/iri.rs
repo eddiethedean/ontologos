@@ -159,4 +159,27 @@ mod tests {
         let id = pool.intern("urn:example:animal").expect("intern");
         assert_eq!(pool.resolve(id).expect("resolve"), "urn:example:animal");
     }
+
+    #[test]
+    fn rejects_empty_iri() {
+        assert!(validate_iri("").is_err());
+    }
+
+    #[test]
+    fn rejects_whitespace_iri() {
+        assert!(validate_iri("http://example.org/a b").is_err());
+    }
+
+    #[test]
+    fn get_returns_none_for_unknown() {
+        let pool = InternPool::new();
+        assert!(pool.get("http://example.org/missing").is_none());
+    }
+
+    #[test]
+    fn resolve_unknown_id_errors() {
+        let pool = InternPool::new();
+        let err = pool.resolve(IriId::from_index(1)).expect_err("unknown id");
+        assert!(matches!(err, Error::InvalidIri(_)));
+    }
 }

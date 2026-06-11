@@ -142,6 +142,34 @@ mod tests {
         let err = registry
             .get_or_register(iri, EntityKind::Individual)
             .expect_err("mismatch");
-        assert!(matches!(err, Error::EntityKindMismatch { .. }));
+        assert!(matches!(
+            err,
+            Error::EntityKindMismatch {
+                expected: EntityKind::Individual,
+                found: EntityKind::Class,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn unknown_entity_errors() {
+        let registry = EntityRegistry::new();
+        let err = registry.entity(EntityId(0)).expect_err("unknown");
+        assert_eq!(err, Error::UnknownEntity(EntityId(0)));
+    }
+
+    #[test]
+    fn reregister_same_kind_returns_stable_id() {
+        let mut pool = InternPool::new();
+        let iri = pool.intern("http://example.org/A").expect("intern");
+        let mut registry = EntityRegistry::new();
+        let first = registry
+            .get_or_register(iri, EntityKind::Class)
+            .expect("register");
+        let second = registry
+            .get_or_register(iri, EntityKind::Class)
+            .expect("register");
+        assert_eq!(first, second);
     }
 }

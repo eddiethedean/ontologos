@@ -160,38 +160,171 @@ mod tests {
     use super::*;
     use crate::iri::InternPool;
 
-    fn class(registry: &mut EntityRegistry, pool: &mut InternPool, iri: &str) -> EntityId {
-        let iri_id = pool.intern(iri).expect("intern");
-        registry
-            .get_or_register(iri_id, EntityKind::Class)
-            .expect("register")
+    struct Fixture {
+        pool: InternPool,
+        registry: EntityRegistry,
+    }
+
+    impl Fixture {
+        fn new() -> Self {
+            Self {
+                pool: InternPool::new(),
+                registry: EntityRegistry::new(),
+            }
+        }
+
+        fn class(&mut self, iri: &str) -> EntityId {
+            let iri_id = self.pool.intern(iri).expect("intern");
+            self.registry
+                .get_or_register(iri_id, EntityKind::Class)
+                .expect("register")
+        }
+
+        fn object_property(&mut self, iri: &str) -> EntityId {
+            let iri_id = self.pool.intern(iri).expect("intern");
+            self.registry
+                .get_or_register(iri_id, EntityKind::ObjectProperty)
+                .expect("register")
+        }
     }
 
     #[test]
     fn validates_subclass_of() {
-        let mut pool = InternPool::new();
-        let mut registry = EntityRegistry::new();
-        let a = class(&mut registry, &mut pool, "http://ex.org/A");
-        let b = class(&mut registry, &mut pool, "http://ex.org/B");
-        let axiom = Axiom::SubClassOf {
+        let mut fx = Fixture::new();
+        let a = fx.class("http://ex.org/A");
+        let b = fx.class("http://ex.org/B");
+        Axiom::SubClassOf {
             subclass: a,
             superclass: b,
-        };
-        axiom.validate(&registry).expect("valid");
+        }
+        .validate(&fx.registry)
+        .expect("valid");
     }
 
     #[test]
-    fn rejects_wrong_kind() {
-        let mut pool = InternPool::new();
-        let mut registry = EntityRegistry::new();
-        let iri = pool.intern("http://ex.org/p").expect("intern");
-        let prop = registry
-            .get_or_register(iri, EntityKind::ObjectProperty)
-            .expect("register");
-        let axiom = Axiom::SubClassOf {
+    fn rejects_subclass_of_wrong_kind() {
+        let mut fx = Fixture::new();
+        let prop = fx.object_property("http://ex.org/p");
+        let err = Axiom::SubClassOf {
             subclass: prop,
             superclass: prop,
-        };
-        assert!(axiom.validate(&registry).is_err());
+        }
+        .validate(&fx.registry)
+        .expect_err("wrong kind");
+        assert!(matches!(err, Error::InvalidAxiom(_)));
+    }
+
+    #[test]
+    fn validates_equivalent_classes() {
+        let mut fx = Fixture::new();
+        let a = fx.class("http://ex.org/A");
+        let b = fx.class("http://ex.org/B");
+        Axiom::EquivalentClasses(vec![a, b])
+            .validate(&fx.registry)
+            .expect("valid");
+    }
+
+    #[test]
+    fn rejects_equivalent_classes_too_few() {
+        let mut fx = Fixture::new();
+        let a = fx.class("http://ex.org/A");
+        let err = Axiom::EquivalentClasses(vec![a])
+            .validate(&fx.registry)
+            .expect_err("too few");
+        assert!(matches!(err, Error::InvalidAxiom(_)));
+    }
+
+    #[test]
+    fn validates_disjoint_classes() {
+        let mut fx = Fixture::new();
+        let a = fx.class("http://ex.org/A");
+        let b = fx.class("http://ex.org/B");
+        Axiom::DisjointClasses(vec![a, b])
+            .validate(&fx.registry)
+            .expect("valid");
+    }
+
+    #[test]
+    fn validates_object_property_domain() {
+        let mut fx = Fixture::new();
+        let prop = fx.object_property("http://ex.org/p");
+        let domain = fx.class("http://ex.org/D");
+        Axiom::ObjectPropertyDomain {
+            property: prop,
+            domain,
+        }
+        .validate(&fx.registry)
+        .expect("valid");
+    }
+
+    #[test]
+    fn rejects_domain_with_class_as_property() {
+        let mut fx = Fixture::new();
+        let not_prop = fx.class("http://ex.org/C");
+        let domain = fx.class("http://ex.org/D");
+        let err = Axiom::ObjectPropertyDomain {
+            property: not_prop,
+            domain,
+        }
+        .validate(&fx.registry)
+        .expect_err("wrong kind");
+        assert!(matches!(err, Error::InvalidAxiom(_)));
+    }
+
+    #[test]
+    fn validates_object_property_range() {
+        let mut fx = Fixture::new();
+        let prop = fx.object_property("http://ex.org/p");
+        let range = fx.class("http://ex.org/R");
+        Axiom::ObjectPropertyRange {
+            property: prop,
+            range,
+        }
+        .validate(&fx.registry)
+        .expect("valid");
+    }
+
+    #[test]
+    fn validates_sub_object_property_of() {
+        let mut fx = Fixture::new();
+        let sub = fx.object_property("http://ex.org/sub");
+        let sup = fx.object_property("http://ex.org/super");
+        Axiom::SubObjectPropertyOf {
+            sub_property: sub,
+            super_property: sup,
+        }
+        .validate(&fx.registry)
+        .expect("valid");
+    }
+
+    #[test]
+    fn validates_inverse_object_properties() {
+        let mut fx = Fixture::new();
+        let left = fx.object_property("http://ex.org/left");
+        let right = fx.object_property("http://ex.org/right");
+        Axiom::InverseObjectProperties { left, right }
+            .validate(&fx.registry)
+            .expect("valid");
+    }
+
+    #[test]
+    fn validates_transitive_object_property() {
+        let mut fx = Fixture::new();
+        let prop = fx.object_property("http://ex.org/trans");
+        Axiom::TransitiveObjectProperty(prop)
+            .validate(&fx.registry)
+            .expect("valid");
+    }
+
+    #[test]
+    fn rejects_unknown_entity_reference() {
+        let fx = Fixture::new();
+        let err = Axiom::SubClassOf {
+            subclass: EntityId(0),
+            superclass: EntityId(1),
+        }
+        .validate(&fx.registry)
+        .expect_err("unknown");
+        assert!(matches!(err, Error::UnknownEntity(_)));
     }
 }
