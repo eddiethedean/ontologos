@@ -33,10 +33,22 @@ pub struct RlEngine {
     parallelism: usize,
 }
 
+const MAX_PARALLELISM: usize = 64;
+
 impl RlEngine {
     #[must_use]
     pub fn new(parallelism: usize) -> Self {
         Self { parallelism }
+    }
+
+    /// Validate parallelism is within supported bounds.
+    pub fn try_new(parallelism: usize) -> Result<Self> {
+        if parallelism == 0 || parallelism > MAX_PARALLELISM {
+            return Err(Error::Core(CoreError::Message(format!(
+                "parallelism must be in 1..={MAX_PARALLELISM}, got {parallelism}"
+            ))));
+        }
+        Ok(Self { parallelism })
     }
 
     /// Run forward chaining until saturation.
@@ -44,5 +56,17 @@ impl RlEngine {
         let _ = ontology;
         let _ = self.parallelism;
         Err(Error::NotImplemented)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn try_new_rejects_invalid_parallelism() {
+        assert!(RlEngine::try_new(0).is_err());
+        assert!(RlEngine::try_new(65).is_err());
+        assert!(RlEngine::try_new(1).is_ok());
     }
 }

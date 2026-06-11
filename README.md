@@ -1,4 +1,4 @@
-# Ontologos
+# OntoLogos
 
 A modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification.
 

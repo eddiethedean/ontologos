@@ -3,7 +3,8 @@
 //! v0.1: loads ontologies via `Ontology::from_file`, which returns an error until
 //! v0.2 parser support. Use programmatic construction or JSON deserialization from Rust.
 
-use ontologos_core::{Ontology, Reasoner};
+use ontologos_core::Reasoner;
+use ontologos_parser::load_ontology;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 
@@ -17,8 +18,8 @@ struct PyReasoner {
 impl PyReasoner {
     #[new]
     fn new(path: &str) -> PyResult<Self> {
-        let ontology =
-            Ontology::from_file(path).map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+        let ontology = load_ontology(std::path::Path::new(path))
+            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
         let reasoner = Reasoner::builder()
             .build(ontology)
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;

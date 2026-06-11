@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- JSON snapshot format bumped to **version 2** (IRI-keyed entities and axioms; v1 rejected for untrusted input)
+- Hardened deserialization: resource limits, `deny_unknown_fields`, duplicate entity/axiom handling
+- IRI validation: allowlist (`http`, `https`, `urn`), reject control characters and dangerous schemes
+- `detect_profile` returns `Err(NotImplemented)` instead of empty success
+- CLI: propagate emit errors, human-readable `--format text`, removed `--format yaml`
+- File loading routed through `ontologos-parser::load_ontology` with path validation
 - Hardened test suite: semantic JSON round-trip, `add_axiom` index wiring, axiom/IRI/entity edge cases, parser format detection, CLI smoke test
 
 ### Added

@@ -786,6 +786,7 @@ dependencies = [
  "clap",
  "ontologos-core",
  "ontologos-explain",
+ "ontologos-parser",
  "ontologos-profile",
  "ontologos-rdfs",
  "predicates",
@@ -799,6 +800,8 @@ name = "ontologos-core"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "ontologos-parser",
+ "ontologos-profile",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -845,6 +848,7 @@ name = "ontologos-py"
 version = "0.1.0"
 dependencies = [
  "ontologos-core",
+ "ontologos-parser",
  "pyo3",
 ]
 

@@ -1,10 +1,12 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use ontologos_core::{Ontology, Reasoner};
+use ontologos_core::Reasoner;
 use ontologos_explain::explain;
-use ontologos_profile::detect_profile;
+use ontologos_parser::load_ontology;
+use ontologos_profile::{detect_profile, ProfileReport};
 use ontologos_rdfs::RdfsEngine;
+use serde::Serialize;
 use thiserror::Error;
 
 #[derive(Debug, Parser)]
@@ -34,7 +36,6 @@ enum Command {
 enum OutputFormat {
     Text,
     Json,
-    Yaml,
 }
 
 #[derive(Debug, Error)]
@@ -42,13 +43,13 @@ enum CliError {
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),
     #[error(transparent)]
+    Parser(#[from] ontologos_parser::Error),
+    #[error(transparent)]
     Profile(#[from] ontologos_profile::Error),
     #[error(transparent)]
     Rdfs(#[from] ontologos_rdfs::Error),
     #[error(transparent)]
     Explain(#[from] ontologos_explain::Error),
-    #[error("yaml output not yet implemented")]
-    YamlNotImplemented,
 }
 
 fn main() {
@@ -60,7 +61,7 @@ fn main() {
 
 fn run() -> Result<(), CliError> {
     let cli = Cli::parse();
-    let ontology = Ontology::from_file(match &cli.command {
+    let ontology = load_ontology(match &cli.command {
         Command::Profile { ontology }
         | Command::Classify { ontology }
         | Command::Materialize { ontology }
@@ -70,16 +71,19 @@ fn run() -> Result<(), CliError> {
     match cli.command {
         Command::Profile { .. } => {
             let report = detect_profile(&ontology)?;
-            emit(cli.format, &report)?;
+            match cli.format {
+                OutputFormat::Text => println!("{}", format_profile_text(&report)),
+                OutputFormat::Json => emit_json(&report)?,
+            }
         }
         Command::Classify { .. } => {
             let reasoner = Reasoner::builder().build(ontology)?;
             reasoner.classify()?;
-            emit(cli.format, &serde_json::json!({ "status": "classified" }))?;
+            emit_status(cli.format, "classified")?;
         }
         Command::Materialize { .. } => {
             RdfsEngine::new().materialize(&ontology)?;
-            emit(cli.format, &serde_json::json!({ "status": "materialized" }))?;
+            emit_status(cli.format, "materialized")?;
         }
         Command::Explain { .. } => {
             let graph = explain(&ontology)?;
@@ -90,17 +94,42 @@ fn run() -> Result<(), CliError> {
     Ok(())
 }
 
-fn emit<T: serde::Serialize>(format: OutputFormat, value: &T) -> Result<(), CliError> {
+fn emit_status(format: OutputFormat, status: &str) -> Result<(), CliError> {
     match format {
-        OutputFormat::Text => println!(
-            "{}",
-            serde_json::to_string_pretty(value).unwrap_or_default()
-        ),
-        OutputFormat::Json => println!(
-            "{}",
-            serde_json::to_string_pretty(value).unwrap_or_default()
-        ),
-        OutputFormat::Yaml => return Err(CliError::YamlNotImplemented),
+        OutputFormat::Text => println!("status: {status}"),
+        OutputFormat::Json => emit_json(&serde_json::json!({ "status": status }))?,
     }
     Ok(())
+}
+
+fn emit_json<T: Serialize>(value: &T) -> Result<(), CliError> {
+    let json = serde_json::to_string_pretty(value)
+        .map_err(|e| CliError::Core(ontologos_core::Error::Serialization(e.to_string())))?;
+    println!("{json}");
+    Ok(())
+}
+
+fn emit<T: Serialize>(format: OutputFormat, value: &T) -> Result<(), CliError> {
+    match format {
+        OutputFormat::Text => println!("(use --format json for structured output)"),
+        OutputFormat::Json => emit_json(value)?,
+    }
+    Ok(())
+}
+
+fn format_profile_text(report: &ProfileReport) -> String {
+    let detected = report
+        .detected
+        .map(|p| format!("{p:?}"))
+        .unwrap_or_else(|| "none".into());
+    let mut lines = vec![format!("detected profile: {detected}")];
+    if report.diagnostics.is_empty() {
+        lines.push("diagnostics: none".into());
+    } else {
+        lines.push("diagnostics:".into());
+        for diag in &report.diagnostics {
+            lines.push(format!("  - {}: {}", diag.construct, diag.message));
+        }
+    }
+    lines.join("\n")
 }

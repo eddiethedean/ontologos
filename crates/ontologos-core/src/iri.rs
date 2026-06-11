@@ -4,6 +4,7 @@ use std::num::NonZeroU32;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, Result};
+use crate::limits::Limits;
 
 /// Stable identifier for an interned IRI string.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -14,10 +15,17 @@ impl IriId {
     ///
     /// # Panics
     ///
-    /// Panics if `index` is zero.
+    /// Panics if `index` is zero. Prefer [`try_from_index`](Self::try_from_index) on untrusted input.
     #[must_use]
     pub fn from_index(index: u32) -> Self {
         Self(NonZeroU32::new(index).expect("IriId index must be non-zero"))
+    }
+
+    /// Fallible constructor for untrusted indices.
+    pub fn try_from_index(index: u32) -> Result<Self> {
+        NonZeroU32::new(index)
+            .map(Self)
+            .ok_or_else(|| Error::InvalidIri("IriId index must be non-zero".into()))
     }
 
     /// One-based index into the intern pool.
@@ -61,7 +69,12 @@ impl InternPool {
 
     /// Intern an absolute IRI, returning an existing id if already present.
     pub fn intern(&mut self, iri: &str) -> Result<IriId> {
-        validate_iri(iri)?;
+        self.intern_with_limit(iri, Limits::default().max_iri_len)
+    }
+
+    /// Intern an IRI with a custom maximum length.
+    pub fn intern_with_limit(&mut self, iri: &str, max_len: usize) -> Result<IriId> {
+        validate_iri_with_max_len(iri, max_len)?;
 
         if let Some(&id) = self.index.get(iri) {
             return Ok(id);
@@ -94,32 +107,59 @@ impl InternPool {
     }
 }
 
-/// Validate that `iri` is an absolute IRI (http/https URN or other scheme with `:`).
+const ALLOWED_SCHEMES: &[&str] = &["http", "https", "urn"];
+
+/// Validate that `iri` is an absolute IRI with an allowed scheme.
 pub fn validate_iri(iri: &str) -> Result<()> {
+    validate_iri_with_max_len(iri, Limits::default().max_iri_len)
+}
+
+/// Validate an IRI with a custom maximum length.
+pub fn validate_iri_with_max_len(iri: &str, max_len: usize) -> Result<()> {
     if iri.is_empty() {
         return Err(Error::InvalidIri("IRI must not be empty".into()));
+    }
+
+    if iri.len() > max_len {
+        return Err(Error::InvalidIri(format!(
+            "IRI exceeds maximum length of {max_len} bytes"
+        )));
+    }
+
+    if iri.chars().any(|c| c.is_ascii_control()) {
+        return Err(Error::InvalidIri(format!(
+            "IRI contains control characters: {iri}"
+        )));
     }
 
     if iri.contains(' ') {
         return Err(Error::InvalidIri(format!("IRI contains whitespace: {iri}")));
     }
 
-    // Accept http(s), urn, and other RFC 3987 scheme-based IRIs.
-    if let Some((scheme, rest)) = iri.split_once(':') {
-        if scheme.is_empty() || rest.is_empty() {
-            return Err(Error::InvalidIri(format!("invalid IRI scheme: {iri}")));
-        }
-        if scheme
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '-' || c == '.')
-        {
-            return Ok(());
-        }
+    let Some((scheme, rest)) = iri.split_once(':') else {
+        return Err(Error::InvalidIri(format!(
+            "IRI must be absolute (scheme:...): {iri}"
+        )));
+    };
+
+    if scheme.is_empty() || rest.is_empty() {
+        return Err(Error::InvalidIri(format!("invalid IRI scheme: {iri}")));
     }
 
-    Err(Error::InvalidIri(format!(
-        "IRI must be absolute (scheme:...): {iri}"
-    )))
+    if !scheme
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '-' || c == '.')
+    {
+        return Err(Error::InvalidIri(format!("invalid IRI scheme: {iri}")));
+    }
+
+    if !ALLOWED_SCHEMES.contains(&scheme) {
+        return Err(Error::InvalidIri(format!(
+            "IRI scheme '{scheme}' is not allowed (allowed: http, https, urn)"
+        )));
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -168,6 +208,21 @@ mod tests {
     #[test]
     fn rejects_whitespace_iri() {
         assert!(validate_iri("http://example.org/a b").is_err());
+    }
+
+    #[test]
+    fn rejects_javascript_scheme() {
+        assert!(validate_iri("javascript:alert(1)").is_err());
+    }
+
+    #[test]
+    fn rejects_control_characters() {
+        assert!(validate_iri("http://example.org/\u{0009}").is_err());
+    }
+
+    #[test]
+    fn try_from_index_rejects_zero() {
+        assert!(IriId::try_from_index(0).is_err());
     }
 
     #[test]

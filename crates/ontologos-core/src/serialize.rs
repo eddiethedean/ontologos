@@ -1,26 +1,56 @@
 use serde::{Deserialize, Serialize};
 
 use crate::axiom::Axiom;
-use crate::entity::EntityKind;
+use crate::entity::{EntityId, EntityKind};
 use crate::error::{Error, Result};
-use crate::iri::IriId;
+use crate::limits::Limits;
 use crate::ontology::Ontology;
 
-const FORMAT_VERSION: u32 = 1;
+const FORMAT_VERSION: u32 = 2;
 
-/// JSON snapshot format for ontology round-trip.
+/// JSON snapshot format for ontology round-trip (format version 2).
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct OntologySnapshot {
     format_version: u32,
-    iris: Vec<String>,
     entities: Vec<SnapshotEntity>,
-    axioms: Vec<Axiom>,
+    axioms: Vec<SnapshotAxiom>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct SnapshotEntity {
-    iri_index: u32,
+    iri: String,
     kind: EntityKind,
+}
+
+/// Axiom representation using IRI strings in JSON.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+enum SnapshotAxiom {
+    SubClassOf {
+        subclass: String,
+        superclass: String,
+    },
+    EquivalentClasses(Vec<String>),
+    DisjointClasses(Vec<String>),
+    ObjectPropertyDomain {
+        property: String,
+        domain: String,
+    },
+    ObjectPropertyRange {
+        property: String,
+        range: String,
+    },
+    SubObjectPropertyOf {
+        sub_property: String,
+        super_property: String,
+    },
+    InverseObjectProperties {
+        left: String,
+        right: String,
+    },
+    TransitiveObjectProperty(String),
 }
 
 impl Ontology {
@@ -30,33 +60,70 @@ impl Ontology {
         serde_json::to_string_pretty(&snapshot).map_err(|e| Error::Serialization(e.to_string()))
     }
 
-    /// Deserialize an ontology from a JSON string.
+    /// Deserialize an ontology from a JSON string using default resource limits.
     pub fn from_json(json: &str) -> Result<Self> {
-        let snapshot: OntologySnapshot =
+        Self::from_json_with_limits(json, Limits::default())
+    }
+
+    /// Deserialize an ontology from a JSON string with custom resource limits.
+    pub fn from_json_with_limits(json: &str, limits: Limits) -> Result<Self> {
+        if json.len() > limits.max_json_bytes {
+            return Err(Error::Serialization(format!(
+                "JSON input exceeds maximum size of {} bytes",
+                limits.max_json_bytes
+            )));
+        }
+
+        let value: serde_json::Value =
             serde_json::from_str(json).map_err(|e| Error::Serialization(e.to_string()))?;
-        Self::from_snapshot(snapshot)
+
+        let format_version = value
+            .get("format_version")
+            .and_then(serde_json::Value::as_u64)
+            .ok_or_else(|| Error::Serialization("missing format_version".into()))?;
+
+        if format_version == 1 {
+            return Err(Error::Serialization(
+                "format_version 1 is not supported for untrusted input; use format_version 2"
+                    .into(),
+            ));
+        }
+
+        if format_version != u64::from(FORMAT_VERSION) {
+            return Err(Error::Serialization(format!(
+                "unsupported format_version: {format_version}"
+            )));
+        }
+
+        let snapshot: OntologySnapshot =
+            serde_json::from_value(value).map_err(|e| Error::Serialization(e.to_string()))?;
+        Self::from_snapshot(snapshot, limits)
     }
 
     fn to_snapshot(&self) -> Result<OntologySnapshot> {
-        let iris: Vec<String> = self.iris.iter().map(str::to_owned).collect();
         let entities = self
             .entities
             .iter()
-            .map(|(_, record)| SnapshotEntity {
-                iri_index: record.iri.index(),
-                kind: record.kind,
+            .map(|(_, record)| -> Result<SnapshotEntity> {
+                Ok(SnapshotEntity {
+                    iri: self.iris.resolve(record.iri)?.to_owned(),
+                    kind: record.kind,
+                })
             })
-            .collect();
-        let axioms = self.axioms.iter().map(|(_, axiom)| axiom.clone()).collect();
+            .collect::<Result<Vec<_>>>()?;
+        let axioms = self
+            .axioms
+            .iter()
+            .map(|(_, axiom)| axiom_to_snapshot(axiom, self))
+            .collect::<Result<Vec<_>>>()?;
         Ok(OntologySnapshot {
             format_version: FORMAT_VERSION,
-            iris,
             entities,
             axioms,
         })
     }
 
-    fn from_snapshot(snapshot: OntologySnapshot) -> Result<Self> {
+    fn from_snapshot(snapshot: OntologySnapshot, limits: Limits) -> Result<Self> {
         if snapshot.format_version != FORMAT_VERSION {
             return Err(Error::Serialization(format!(
                 "unsupported format_version: {}",
@@ -64,36 +131,149 @@ impl Ontology {
             )));
         }
 
+        if snapshot.entities.len() > limits.max_entities {
+            return Err(Error::Serialization(format!(
+                "entity count exceeds maximum of {}",
+                limits.max_entities
+            )));
+        }
+
+        if snapshot.axioms.len() > limits.max_axioms {
+            return Err(Error::Serialization(format!(
+                "axiom count exceeds maximum of {}",
+                limits.max_axioms
+            )));
+        }
+
         let mut ontology = Self::new();
-
-        // Pre-intern IRIs in order so indices match.
-        for iri in &snapshot.iris {
-            ontology.iris.intern(iri)?;
-        }
-
-        if ontology.iris.len() != snapshot.iris.len() {
-            return Err(Error::Serialization(
-                "IRI table length mismatch after interning".into(),
-            ));
-        }
+        let mut seen_iris = std::collections::HashSet::new();
 
         for entity in snapshot.entities {
-            let iri = IriId::from_index(entity.iri_index);
-            if ontology.iris.resolve(iri).is_err() {
+            if !seen_iris.insert(entity.iri.clone()) {
                 return Err(Error::Serialization(format!(
-                    "entity references unknown iri_index: {}",
-                    entity.iri_index
+                    "duplicate entity IRI in snapshot: {}",
+                    entity.iri
                 )));
             }
-            ontology.entities.get_or_register(iri, entity.kind)?;
+            let iri_id = ontology
+                .iris
+                .intern_with_limit(&entity.iri, limits.max_iri_len)?;
+            let iri_str = ontology.iris.resolve(iri_id)?;
+            ontology
+                .entities
+                .get_or_register(iri_id, iri_str, entity.kind)?;
         }
 
         for axiom in snapshot.axioms {
+            let axiom = snapshot_axiom_to_axiom(&axiom, &ontology)?;
             ontology.add_axiom(axiom)?;
         }
 
         Ok(ontology)
     }
+}
+
+fn entity_iri(ontology: &Ontology, id: EntityId) -> Result<String> {
+    let record = ontology.entity(id)?;
+    Ok(ontology.iris.resolve(record.iri)?.to_owned())
+}
+
+fn resolve_entity(ontology: &Ontology, iri: &str) -> Result<EntityId> {
+    ontology
+        .try_lookup_entity(iri)?
+        .ok_or_else(|| Error::InvalidAxiom(format!("unknown entity IRI in axiom: {iri}")))
+}
+
+fn axiom_to_snapshot(axiom: &Axiom, ontology: &Ontology) -> Result<SnapshotAxiom> {
+    Ok(match axiom {
+        Axiom::SubClassOf {
+            subclass,
+            superclass,
+        } => SnapshotAxiom::SubClassOf {
+            subclass: entity_iri(ontology, *subclass)?,
+            superclass: entity_iri(ontology, *superclass)?,
+        },
+        Axiom::EquivalentClasses(classes) => SnapshotAxiom::EquivalentClasses(
+            classes
+                .iter()
+                .map(|id| entity_iri(ontology, *id))
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        Axiom::DisjointClasses(classes) => SnapshotAxiom::DisjointClasses(
+            classes
+                .iter()
+                .map(|id| entity_iri(ontology, *id))
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        Axiom::ObjectPropertyDomain { property, domain } => SnapshotAxiom::ObjectPropertyDomain {
+            property: entity_iri(ontology, *property)?,
+            domain: entity_iri(ontology, *domain)?,
+        },
+        Axiom::ObjectPropertyRange { property, range } => SnapshotAxiom::ObjectPropertyRange {
+            property: entity_iri(ontology, *property)?,
+            range: entity_iri(ontology, *range)?,
+        },
+        Axiom::SubObjectPropertyOf {
+            sub_property,
+            super_property,
+        } => SnapshotAxiom::SubObjectPropertyOf {
+            sub_property: entity_iri(ontology, *sub_property)?,
+            super_property: entity_iri(ontology, *super_property)?,
+        },
+        Axiom::InverseObjectProperties { left, right } => SnapshotAxiom::InverseObjectProperties {
+            left: entity_iri(ontology, *left)?,
+            right: entity_iri(ontology, *right)?,
+        },
+        Axiom::TransitiveObjectProperty(property) => {
+            SnapshotAxiom::TransitiveObjectProperty(entity_iri(ontology, *property)?)
+        }
+    })
+}
+
+fn snapshot_axiom_to_axiom(snapshot: &SnapshotAxiom, ontology: &Ontology) -> Result<Axiom> {
+    Ok(match snapshot {
+        SnapshotAxiom::SubClassOf {
+            subclass,
+            superclass,
+        } => Axiom::SubClassOf {
+            subclass: resolve_entity(ontology, subclass)?,
+            superclass: resolve_entity(ontology, superclass)?,
+        },
+        SnapshotAxiom::EquivalentClasses(classes) => Axiom::EquivalentClasses(
+            classes
+                .iter()
+                .map(|iri| resolve_entity(ontology, iri))
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        SnapshotAxiom::DisjointClasses(classes) => Axiom::DisjointClasses(
+            classes
+                .iter()
+                .map(|iri| resolve_entity(ontology, iri))
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        SnapshotAxiom::ObjectPropertyDomain { property, domain } => Axiom::ObjectPropertyDomain {
+            property: resolve_entity(ontology, property)?,
+            domain: resolve_entity(ontology, domain)?,
+        },
+        SnapshotAxiom::ObjectPropertyRange { property, range } => Axiom::ObjectPropertyRange {
+            property: resolve_entity(ontology, property)?,
+            range: resolve_entity(ontology, range)?,
+        },
+        SnapshotAxiom::SubObjectPropertyOf {
+            sub_property,
+            super_property,
+        } => Axiom::SubObjectPropertyOf {
+            sub_property: resolve_entity(ontology, sub_property)?,
+            super_property: resolve_entity(ontology, super_property)?,
+        },
+        SnapshotAxiom::InverseObjectProperties { left, right } => Axiom::InverseObjectProperties {
+            left: resolve_entity(ontology, left)?,
+            right: resolve_entity(ontology, right)?,
+        },
+        SnapshotAxiom::TransitiveObjectProperty(property) => {
+            Axiom::TransitiveObjectProperty(resolve_entity(ontology, property)?)
+        }
+    })
 }
 
 #[cfg(test)]
@@ -117,6 +297,7 @@ mod tests {
             .expect("build");
 
         let json = ontology.to_json().expect("to_json");
+        assert!(json.contains("\"format_version\": 2"));
         let restored = Ontology::from_json(&json).expect("from_json");
         assert_eq!(restored, ontology);
 
@@ -130,8 +311,20 @@ mod tests {
     }
 
     #[test]
+    fn rejects_format_version_1() {
+        let json = r#"{
+            "format_version": 1,
+            "iris": ["http://example.org/A"],
+            "entities": [{"iri_index": 1, "kind": "Class"}],
+            "axioms": []
+        }"#;
+        let err = Ontology::from_json(json).expect_err("v1");
+        assert!(matches!(err, Error::Serialization(_)));
+    }
+
+    #[test]
     fn rejects_unsupported_format_version() {
-        let json = r#"{"format_version":99,"iris":[],"entities":[],"axioms":[]}"#;
+        let json = r#"{"format_version":99,"entities":[],"axioms":[]}"#;
         let err = Ontology::from_json(json).expect_err("version");
         assert!(matches!(err, Error::Serialization(_)));
     }
@@ -143,34 +336,55 @@ mod tests {
     }
 
     #[test]
-    fn rejects_unknown_iri_index() {
+    fn rejects_unknown_entity_iri_in_axiom() {
         let json = r#"{
-            "format_version": 1,
-            "iris": ["http://example.org/A"],
-            "entities": [{"iri_index": 99, "kind": "Class"}],
+            "format_version": 2,
+            "entities": [
+                {"iri": "http://example.org/A", "kind": "Class"},
+                {"iri": "http://example.org/B", "kind": "Class"}
+            ],
+            "axioms": [
+                {"SubClassOf": {"subclass": "http://example.org/A", "superclass": "http://example.org/Missing"}}
+            ]
+        }"#;
+        let err = Ontology::from_json(json).expect_err("entity");
+        assert!(matches!(err, Error::InvalidAxiom(_)));
+    }
+
+    #[test]
+    fn rejects_duplicate_entity_iris() {
+        let json = r#"{
+            "format_version": 2,
+            "entities": [
+                {"iri": "http://example.org/A", "kind": "Class"},
+                {"iri": "http://example.org/A", "kind": "Class"}
+            ],
             "axioms": []
         }"#;
-        let err = Ontology::from_json(json).expect_err("iri");
+        let err = Ontology::from_json(json).expect_err("dup");
         assert!(matches!(err, Error::Serialization(_)));
     }
 
     #[test]
-    fn rejects_axiom_with_unknown_entity() {
+    fn rejects_unknown_snapshot_fields() {
         let json = r#"{
-            "format_version": 1,
-            "iris": ["http://example.org/A", "http://example.org/B"],
-            "entities": [
-                {"iri_index": 1, "kind": "Class"},
-                {"iri_index": 2, "kind": "Class"}
-            ],
-            "axioms": [
-                {"SubClassOf": {"subclass": 0, "superclass": 99}}
-            ]
+            "format_version": 2,
+            "entitys": [],
+            "entities": [],
+            "axioms": []
         }"#;
-        let err = Ontology::from_json(json).expect_err("entity");
-        assert!(
-            matches!(err, Error::InvalidAxiom(_) | Error::UnknownEntity(_)),
-            "unexpected error: {err:?}"
-        );
+        let err = Ontology::from_json(json).expect_err("typo");
+        assert!(matches!(err, Error::Serialization(_)));
+    }
+
+    #[test]
+    fn rejects_oversized_json() {
+        let limits = Limits {
+            max_json_bytes: 10,
+            ..Limits::default()
+        };
+        let json = r#"{"format_version":2,"entities":[],"axioms":[]}"#;
+        let err = Ontology::from_json_with_limits(json, limits).expect_err("size");
+        assert!(matches!(err, Error::Serialization(_)));
     }
 }

@@ -11,6 +11,7 @@ mod entity;
 mod error;
 mod graph;
 mod iri;
+mod limits;
 mod ontology;
 mod reasoner;
 mod serialize;
@@ -20,6 +21,7 @@ pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 pub use error::{Error, Result};
 pub use graph::{AxiomIndex, AxiomStore};
 pub use iri::{InternPool, IriId};
+pub use limits::Limits;
 pub use ontology::{Ontology, OntologyBuilder};
 pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
 
@@ -36,5 +38,18 @@ mod integration_tests {
             .expect("build");
         assert_eq!(reasoner.classify().unwrap_err(), Error::NotImplemented);
         assert_eq!(reasoner.ontology().entity_count(), 0);
+    }
+
+    #[test]
+    fn reasoner_rejects_invalid_parallelism() {
+        let ontology = Ontology::default();
+        let err = Reasoner::builder()
+            .config(ReasonerConfig {
+                parallelism: 0,
+                ..ReasonerConfig::default()
+            })
+            .build(ontology)
+            .expect_err("parallelism");
+        assert!(matches!(err, Error::Message(_)));
     }
 }

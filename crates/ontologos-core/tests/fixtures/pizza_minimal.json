@@ -1,28 +1,22 @@
 {
-  "format_version": 1,
-  "iris": [
-    "http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza",
-    "http://www.w3.org/2002/07/owl#Thing",
-    "http://www.co-ode.org/ontologies/pizza/pizza.owl#hasTopping",
-    "http://www.co-ode.org/ontologies/pizza/pizza.owl#PizzaTopping"
-  ],
+  "format_version": 2,
   "entities": [
-    { "iri_index": 1, "kind": "Class" },
-    { "iri_index": 2, "kind": "Class" },
-    { "iri_index": 3, "kind": "ObjectProperty" },
-    { "iri_index": 4, "kind": "Class" }
+    { "iri": "http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza", "kind": "Class" },
+    { "iri": "http://www.w3.org/2002/07/owl#Thing", "kind": "Class" },
+    { "iri": "http://www.co-ode.org/ontologies/pizza/pizza.owl#hasTopping", "kind": "ObjectProperty" },
+    { "iri": "http://www.co-ode.org/ontologies/pizza/pizza.owl#PizzaTopping", "kind": "Class" }
   ],
   "axioms": [
     {
       "SubClassOf": {
-        "subclass": 0,
-        "superclass": 1
+        "subclass": "http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza",
+        "superclass": "http://www.w3.org/2002/07/owl#Thing"
       }
     },
     {
       "ObjectPropertyRange": {
-        "property": 2,
-        "range": 3
+        "property": "http://www.co-ode.org/ontologies/pizza/pizza.owl#hasTopping",
+        "range": "http://www.co-ode.org/ontologies/pizza/pizza.owl#PizzaTopping"
       }
     }
   ]

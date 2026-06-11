@@ -1,6 +1,8 @@
 use crate::error::{Error, Result};
 use crate::ontology::Ontology;
 
+const MAX_PARALLELISM: usize = 64;
+
 /// OWL profile selected for reasoning.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Profile {
@@ -66,6 +68,12 @@ impl ReasonerBuilder {
 
     /// Build a reasoner over the given ontology.
     pub fn build(self, ontology: Ontology) -> Result<Reasoner> {
+        if self.config.parallelism == 0 || self.config.parallelism > MAX_PARALLELISM {
+            return Err(Error::Message(format!(
+                "parallelism must be in 1..={MAX_PARALLELISM}, got {}",
+                self.config.parallelism
+            )));
+        }
         Ok(Reasoner {
             ontology,
             profile: self.profile,
@@ -75,6 +83,7 @@ impl ReasonerBuilder {
 }
 
 /// Main reasoner facade over profile-specific engines.
+#[derive(Debug)]
 pub struct Reasoner {
     ontology: Ontology,
     profile: Profile,

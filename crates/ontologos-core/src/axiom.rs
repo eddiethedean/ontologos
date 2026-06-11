@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use serde::{Deserialize, Serialize};
 
 use crate::entity::{EntityId, EntityKind, EntityRegistry};
@@ -78,6 +80,17 @@ impl Axiom {
                         "equivalent/disjoint classes require at least two operands".into(),
                     ));
                 }
+                if classes.len() > crate::limits::MAX_CLASS_OPERANDS {
+                    return Err(Error::InvalidAxiom(format!(
+                        "equivalent/disjoint classes exceed maximum operand count of {}",
+                        crate::limits::MAX_CLASS_OPERANDS
+                    )));
+                }
+                if classes.iter().copied().collect::<HashSet<_>>().len() < 2 {
+                    return Err(Error::InvalidAxiom(
+                        "equivalent/disjoint classes require at least two distinct operands".into(),
+                    ));
+                }
                 for id in classes {
                     require_kind(registry, *id, EntityKind::Class, "class operand")?;
                 }
@@ -108,6 +121,11 @@ impl Axiom {
                 )?;
             }
             Self::InverseObjectProperties { left, right } => {
+                if left == right {
+                    return Err(Error::InvalidAxiom(
+                        "property cannot be inverse of itself".into(),
+                    ));
+                }
                 require_kind(registry, *left, EntityKind::ObjectProperty, "left property")?;
                 require_kind(
                     registry,
@@ -176,14 +194,14 @@ mod tests {
         fn class(&mut self, iri: &str) -> EntityId {
             let iri_id = self.pool.intern(iri).expect("intern");
             self.registry
-                .get_or_register(iri_id, EntityKind::Class)
+                .get_or_register(iri_id, iri, EntityKind::Class)
                 .expect("register")
         }
 
         fn object_property(&mut self, iri: &str) -> EntityId {
             let iri_id = self.pool.intern(iri).expect("intern");
             self.registry
-                .get_or_register(iri_id, EntityKind::ObjectProperty)
+                .get_or_register(iri_id, iri, EntityKind::ObjectProperty)
                 .expect("register")
         }
     }
@@ -314,6 +332,29 @@ mod tests {
         Axiom::TransitiveObjectProperty(prop)
             .validate(&fx.registry)
             .expect("valid");
+    }
+
+    #[test]
+    fn rejects_equivalent_classes_with_duplicate_operands() {
+        let mut fx = Fixture::new();
+        let a = fx.class("http://ex.org/A");
+        let err = Axiom::EquivalentClasses(vec![a, a])
+            .validate(&fx.registry)
+            .expect_err("dup");
+        assert!(matches!(err, Error::InvalidAxiom(_)));
+    }
+
+    #[test]
+    fn rejects_inverse_to_self() {
+        let mut fx = Fixture::new();
+        let prop = fx.object_property("http://ex.org/p");
+        let err = Axiom::InverseObjectProperties {
+            left: prop,
+            right: prop,
+        }
+        .validate(&fx.registry)
+        .expect_err("self");
+        assert!(matches!(err, Error::InvalidAxiom(_)));
     }
 
     #[test]

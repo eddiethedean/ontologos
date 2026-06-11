@@ -83,12 +83,17 @@ impl EntityRegistry {
     }
 
     /// Register a new entity or return the existing id if the IRI is already registered.
-    pub fn get_or_register(&mut self, iri: IriId, kind: EntityKind) -> Result<EntityId> {
+    pub fn get_or_register(
+        &mut self,
+        iri: IriId,
+        iri_str: &str,
+        kind: EntityKind,
+    ) -> Result<EntityId> {
         if let Some(&existing) = self.by_iri.get(&iri) {
             let record = &self.entities[existing.0 as usize];
             if record.kind != kind {
                 return Err(Error::EntityKindMismatch {
-                    iri: format!("IriId({})", iri.index()),
+                    iri: iri_str.to_owned(),
                     expected: kind,
                     found: record.kind,
                 });
@@ -125,10 +130,28 @@ mod tests {
         let iri = pool.intern("http://example.org/A").expect("intern");
         let mut registry = EntityRegistry::new();
         let id = registry
-            .get_or_register(iri, EntityKind::Class)
+            .get_or_register(iri, "http://example.org/A", EntityKind::Class)
             .expect("register");
         assert_eq!(registry.entity_by_iri(iri), Some(id));
         assert_eq!(registry.entity(id).expect("entity").kind, EntityKind::Class);
+    }
+
+    #[test]
+    fn kind_mismatch_includes_iri_string() {
+        let mut pool = InternPool::new();
+        let iri = pool.intern("http://example.org/A").expect("intern");
+        let mut registry = EntityRegistry::new();
+        registry
+            .get_or_register(iri, "http://example.org/A", EntityKind::Class)
+            .expect("register");
+        let err = registry
+            .get_or_register(iri, "http://example.org/A", EntityKind::Individual)
+            .expect_err("mismatch");
+        if let Error::EntityKindMismatch { iri, .. } = err {
+            assert_eq!(iri, "http://example.org/A");
+        } else {
+            panic!("expected EntityKindMismatch");
+        }
     }
 
     #[test]
@@ -137,10 +160,10 @@ mod tests {
         let iri = pool.intern("http://example.org/A").expect("intern");
         let mut registry = EntityRegistry::new();
         registry
-            .get_or_register(iri, EntityKind::Class)
+            .get_or_register(iri, "http://example.org/A", EntityKind::Class)
             .expect("register");
         let err = registry
-            .get_or_register(iri, EntityKind::Individual)
+            .get_or_register(iri, "http://example.org/A", EntityKind::Individual)
             .expect_err("mismatch");
         assert!(matches!(
             err,
@@ -165,10 +188,10 @@ mod tests {
         let iri = pool.intern("http://example.org/A").expect("intern");
         let mut registry = EntityRegistry::new();
         let first = registry
-            .get_or_register(iri, EntityKind::Class)
+            .get_or_register(iri, "http://example.org/A", EntityKind::Class)
             .expect("register");
         let second = registry
-            .get_or_register(iri, EntityKind::Class)
+            .get_or_register(iri, "http://example.org/A", EntityKind::Class)
             .expect("register");
         assert_eq!(first, second);
     }

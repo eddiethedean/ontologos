@@ -53,6 +53,7 @@ fn add_axiom_subproperty_updates_index() {
         .expect("axiom");
 
     assert_eq!(ontology.index().direct_superproperties(sub), &[sup]);
+    assert_eq!(ontology.direct_subproperties(sup), &[sub]);
 }
 
 #[test]
@@ -91,6 +92,23 @@ fn add_axiom_range_updates_index() {
         .expect("axiom");
 
     assert_eq!(ontology.index().ranges_of(prop), &[range]);
+}
+
+#[test]
+fn add_axiom_equivalence_updates_index() {
+    let mut ontology = Ontology::new();
+    let a = ontology
+        .entity_id("http://ex.org/A", EntityKind::Class)
+        .expect("A");
+    let b = ontology
+        .entity_id("http://ex.org/B", EntityKind::Class)
+        .expect("B");
+    ontology
+        .add_axiom(Axiom::EquivalentClasses(vec![a, b]))
+        .expect("axiom");
+
+    let equiv = ontology.equivalents_of(a).expect("equiv");
+    assert!(equiv.contains(&b));
 }
 
 #[test]

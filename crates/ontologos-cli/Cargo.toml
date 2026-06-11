@@ -18,6 +18,7 @@ path = "src/main.rs"
 [dependencies]
 clap = { workspace = true }
 ontologos-core = { workspace = true }
+ontologos-parser = { workspace = true }
 ontologos-explain = { workspace = true }
 ontologos-profile = { workspace = true }
 ontologos-rdfs = { workspace = true }

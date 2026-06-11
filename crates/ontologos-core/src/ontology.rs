@@ -4,7 +4,7 @@ use crate::axiom::{Axiom, AxiomId};
 use crate::entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 use crate::error::{Error, Result};
 use crate::graph::{AxiomIndex, AxiomStore};
-use crate::iri::{InternPool, IriId};
+use crate::iri::{validate_iri, InternPool, IriId};
 
 /// In-memory ontology with interned IRIs, typed entities, and indexed axioms.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -96,14 +96,25 @@ impl Ontology {
     /// Look up an entity by IRI string, registering it if absent.
     pub fn entity_id(&mut self, iri: &str, kind: EntityKind) -> Result<EntityId> {
         let iri_id = self.iris.intern(iri)?;
-        self.entities.get_or_register(iri_id, kind)
+        let iri_str = self.iris.resolve(iri_id)?;
+        self.entities.get_or_register(iri_id, iri_str, kind)
+    }
+
+    /// Look up an entity id by IRI string, validating the IRI format.
+    pub fn try_lookup_entity(&self, iri: &str) -> Result<Option<EntityId>> {
+        validate_iri(iri)?;
+        Ok(self
+            .iris
+            .get(iri)
+            .and_then(|iri_id| self.entities.entity_by_iri(iri_id)))
     }
 
     /// Look up an entity id by IRI string without registering.
+    ///
+    /// Returns `None` for invalid IRIs or unknown entities.
     #[must_use]
     pub fn lookup_entity(&self, iri: &str) -> Option<EntityId> {
-        let iri_id = self.iris.get(iri)?;
-        self.entities.entity_by_iri(iri_id)
+        self.try_lookup_entity(iri).ok().flatten()
     }
 
     /// Get an entity record by id.
@@ -126,6 +137,36 @@ impl Ontology {
     #[must_use]
     pub fn direct_subclasses(&self, class: EntityId) -> &[EntityId] {
         self.index.direct_subclasses(class)
+    }
+
+    /// Direct declared super-properties of a property.
+    #[must_use]
+    pub fn direct_superproperties(&self, property: EntityId) -> &[EntityId] {
+        self.index.direct_superproperties(property)
+    }
+
+    /// Direct declared sub-properties of a property.
+    #[must_use]
+    pub fn direct_subproperties(&self, property: EntityId) -> &[EntityId] {
+        self.index.direct_subproperties(property)
+    }
+
+    /// Declared equivalent classes for a class.
+    #[must_use]
+    pub fn equivalents_of(&self, class: EntityId) -> Option<&std::collections::HashSet<EntityId>> {
+        self.index.equivalents_of(class)
+    }
+
+    /// Declared disjoint classes for a class.
+    #[must_use]
+    pub fn disjoint_with(&self, class: EntityId) -> Option<&std::collections::HashSet<EntityId>> {
+        self.index.disjoint_with(class)
+    }
+
+    /// Declared inverse object property, if any.
+    #[must_use]
+    pub fn inverse_of(&self, property: EntityId) -> Option<EntityId> {
+        self.index.inverse_of(property)
     }
 
     /// Add a validated axiom, updating indexes.
@@ -227,5 +268,14 @@ mod tests {
     fn from_file_returns_parse_not_available() {
         let err = Ontology::from_file("any.owl").expect_err("should fail");
         assert_eq!(err, Error::ParseNotAvailable);
+    }
+
+    #[test]
+    fn try_lookup_entity_rejects_invalid_iri() {
+        let ontology = Ontology::new();
+        let err = ontology
+            .try_lookup_entity("relative/path")
+            .expect_err("invalid");
+        assert!(matches!(err, Error::InvalidIri(_)));
     }
 }

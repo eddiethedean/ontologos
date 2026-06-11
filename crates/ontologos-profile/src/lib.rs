@@ -36,10 +36,6 @@ pub struct ProfileReport {
 }
 
 /// Detect the most specific OWL profile supported by the ontology.
-pub fn detect_profile(ontology: &Ontology) -> Result<ProfileReport> {
-    let _ = ontology;
-    Ok(ProfileReport {
-        detected: None,
-        diagnostics: Vec::new(),
-    })
+pub fn detect_profile(_ontology: &Ontology) -> Result<ProfileReport> {
+    Err(Error::NotImplemented)
 }
