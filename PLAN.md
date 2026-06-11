@@ -1,15 +1,18 @@
 
-# Ontologos Plan Document
+# OntoLogos Plan Document
+
+> **Note:** [ROADMAP.md](ROADMAP.md) is the **canonical** release plan (semver 0.1 → 2.0).
+> This document retains background and ecosystem vision. For current milestone status, use ROADMAP.
 
 ## Executive Summary
 
-Ontologos is a Rust-native ontology reasoner designed to eliminate JVM dependencies for ontology development workflows while providing a modern embeddable API, CLI, Python bindings, and future IDE integration through Ontocode.
+OntoLogos is a Rust-native ontology reasoner designed to eliminate JVM dependencies for ontology development workflows while providing a modern embeddable API, CLI, Python bindings, and future IDE integration through Ontocode.
 
 ## Vision
 
 Build the foundation of a complete Rust ontology ecosystem:
 
-- Ontologos: Reasoning engine
+- OntoLogos: Reasoning engine
 - OntoIndex: Ontology query/index engine
 - Ontocode: VS Code extension
 - OntoHub: Registry and collaboration platform
@@ -34,15 +37,17 @@ Build the foundation of a complete Rust ontology ecosystem:
 
 # Roadmap
 
-## Phase 0 – Research
+See [ROADMAP.md](ROADMAP.md) for the authoritative semver release plan.
+
+## Phase 0 – Research (complete)
 
 ### Deliverables
 
-- OWL 2 standards review
-- HermiT architecture study
-- ELK architecture study
-- RDFox evaluation
-- Benchmark corpus
+- OWL 2 standards review → [docs/internal/research/owl2.md](docs/internal/research/owl2.md)
+- HermiT architecture study → [docs/internal/research/hermit.md](docs/internal/research/hermit.md)
+- ELK architecture study → [docs/internal/research/elk.md](docs/internal/research/elk.md)
+- RDFox evaluation → [docs/internal/research/rdfox.md](docs/internal/research/rdfox.md)
+- Benchmark corpus → [benchmarks/manifest.toml](benchmarks/manifest.toml)
 
 ### Benchmark Ontologies
 
@@ -54,24 +59,24 @@ Build the foundation of a complete Rust ontology ecosystem:
 
 ---
 
-## Phase 1 – Core Platform
+## Phase 1 – Core Platform (v0.1 complete)
 
 ### ontologos-core
 
-Features:
+Features (shipped):
 
 - IRI intern pool
 - Axiom model
 - Ontology graph
 - Entity registry
-- Serialization layer
+- JSON v2 serialization layer
 
-Performance Targets:
+Performance targets:
 
-- <500ms ontology load for medium ontologies
 - Stable memory allocation patterns
+- Criterion bench for 10k-axiom serialize/deserialize
 
-### ontologos-parser
+### ontologos-parser (v0.2)
 
 Features:
 
@@ -79,150 +84,8 @@ Features:
 - OWL/XML
 - RDF/XML
 - Turtle
-- Functional Syntax
-
-### ontologos-profile
-
-Detect:
-
-- OWL EL
-- OWL RL
-- OWL QL
-- OWL DL
-
-Output diagnostics explaining unsupported constructs.
+- Functional syntax
 
 ---
 
-## Phase 2 – RDFS Engine
-
-Implement:
-
-- SubClassOf
-- SubPropertyOf
-- Domain
-- Range
-- Type propagation
-- Transitive closure
-
-Deliverables:
-
-- Reasoning report
-- Materialized graph
-- Explanation traces
-
----
-
-## Phase 3 – OWL RL Engine
-
-Implement rule-based reasoning.
-
-Rules:
-
-- equivalentClass
-- equivalentProperty
-- sameAs
-- inverseOf
-- transitiveProperty
-- symmetricProperty
-- disjointness
-
-Performance Goals:
-
-- Million-triple datasets
-- Parallel rule execution
-
----
-
-## Phase 4 – OWL EL Classifier
-
-Features:
-
-- Taxonomy generation
-- Existential restrictions
-- Intersections
-- Unsatisfiable class detection
-- Equivalent class detection
-
-Deliverables:
-
-- Hierarchy explorer
-- Incremental classification
-
----
-
-## Phase 5 – Explanation Engine
-
-Support:
-
-- Why inferred?
-- Why inconsistent?
-- Proof trees
-- Minimal justification extraction
-
----
-
-## Phase 6 – Incremental Reasoning
-
-Capabilities:
-
-- File watch mode
-- Delta reasoning
-- IDE integration APIs
-
----
-
-## Phase 7 – Language Server Integration
-
-Support Ontocode.
-
-Features:
-
-- Live diagnostics
-- Autocomplete
-- Hover explanations
-- Consistency warnings
-
----
-
-## Phase 8 – Python Ecosystem
-
-Package:
-
-- ontologos-python
-
-Features:
-
-- pandas integration
-- polars integration
-- notebook workflows
-
----
-
-## Phase 9 – 1.0 Release
-
-Requirements:
-
-- Stable API
-- Stable CLI
-- Documentation
-- Benchmarks
-- CI/CD
-- Conformance suite
-
----
-
-# Success Metrics
-
-Technical:
-
-- 90%+ test coverage
-- Full benchmark suite
-- No JVM dependency
-
-Community:
-
-- Crates.io adoption
-- Python adoption
-- VS Code integration users
-
+For remaining phases, see [ROADMAP.md](ROADMAP.md).

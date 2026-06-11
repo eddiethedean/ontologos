@@ -7,7 +7,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "OWL/RDF parsers for Ontologos"
+description = "OWL/RDF parsers for OntoLogos"
 publish = false
 
 [dependencies]

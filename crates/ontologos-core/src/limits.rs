@@ -1,4 +1,7 @@
 /// Resource limits for ontology JSON deserialization.
+///
+/// Use with [`Ontology::from_json_with_limits`](crate::Ontology::from_json_with_limits)
+/// when parsing untrusted input. See the [security guide](https://github.com/eddiethedean/ontologos/blob/main/docs/security.md).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Limits {
     /// Maximum JSON input size in bytes.

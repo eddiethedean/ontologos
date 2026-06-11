@@ -26,7 +26,7 @@ HermiT is a tableau-based OWL 2 DL reasoner written in Java. It is the reference
 - Heavy JVM overhead and object allocation on load
 - Strong on expressive ontologies; overkill for EL/RL-only corpora
 
-## Implications for Ontologos
+## Implications for OntoLogos
 
 1. **Do not replicate HermiT in 1.x** — full DL tableau is explicitly a 2.0 goal per ROADMAP.
 2. **Borrow taxonomy output shape**: class hierarchy as `(sub, super)` pairs, equivalence classes, unsatisfiable set — this becomes `ontologos-el::Taxonomy` and query API in v0.5.

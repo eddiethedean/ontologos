@@ -1,9 +1,13 @@
 
-# Ontologos Technical Specification
+# OntoLogos Technical Specification
+
+> **Document status:** Mixed. Sections marked **(v0.1)** are implemented in `ontologos-core`.
+> Unmarked engine, CLI, and Python sections are **planned** — see [ROADMAP.md](ROADMAP.md).
+> Last reviewed: 2026-06-11
 
 ## Overview
 
-Ontologos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification.
+OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.1 implements the core data model and JSON v2 serialization only.**
 
 ---
 
@@ -14,21 +18,21 @@ Ontologos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS re
 ```text
 ontologos/
 ├── crates/
-│   ├── ontologos-core
-│   ├── ontologos-parser
-│   ├── ontologos-profile
-│   ├── ontologos-rdfs
-│   ├── ontologos-rl
-│   ├── ontologos-el
-│   ├── ontologos-query
-│   ├── ontologos-explain
-│   ├── ontologos-cli
-│   └── ontologos-py
+│   ├── ontologos-core      (v0.1)
+│   ├── ontologos-parser    (stub → v0.2)
+│   ├── ontologos-profile   (stub → v0.2)
+│   ├── ontologos-rdfs      (stub → v0.3)
+│   ├── ontologos-rl        (stub → v0.4)
+│   ├── ontologos-el        (stub → v0.5)
+│   ├── ontologos-query     (stub → v0.5)
+│   ├── ontologos-explain   (stub → v0.6)
+│   ├── ontologos-cli       (stub → v0.2+)
+│   └── ontologos-py        (stub → v0.9)
 ```
 
 ---
 
-# Core Data Model
+# Core Data Model (v0.1)
 
 ## Entity Types
 
@@ -42,9 +46,9 @@ pub enum EntityKind {
 }
 ```
 
-## Axiom Types
+## Axiom Types (v0.1)
 
-Supported:
+Supported in storage and validation:
 
 - SubClassOf
 - EquivalentClasses
@@ -55,33 +59,57 @@ Supported:
 - InverseObjectProperties
 - TransitiveObjectProperty
 
----
+## JSON Serialization (v0.1)
 
-# Reasoner API
+- Format version **2** only for `from_json`
+- IRI-keyed entities and axioms
+- See [docs/json-snapshot-v2.md](docs/json-snapshot-v2.md)
 
-```rust
-let ontology = Ontology::from_file("pizza.owl")?;
-
-let reasoner = Reasoner::builder()
-    .profile(Profile::Auto)
-    .build(ontology)?;
-
-reasoner.classify()?;
-```
-
-Builder Options:
+## Builder API (v0.1)
 
 ```rust
-pub struct ReasonerConfig {
-    pub incremental: bool,
-    pub explanations: bool,
-    pub parallelism: usize,
+use ontologos_core::{Error, Ontology};
+
+fn main() -> Result<(), Error> {
+    let ontology = Ontology::builder()
+        .class("http://example.org/Pizza")?
+        .class("http://example.org/Food")?
+        .subclass_of("http://example.org/Pizza", "http://example.org/Food")?
+        .build()?;
+    Ok(())
 }
 ```
 
 ---
 
-# RDFS Engine
+# Reasoner API (planned)
+
+**Status:** `Reasoner::classify()` returns `Error::NotImplemented` in v0.1.
+
+```rust
+// Planned (v0.2+ load, v0.5 classify):
+let ontology = Ontology::from_file("pizza.owl")?; // v0.2
+
+let reasoner = Reasoner::builder()
+    .profile(Profile::Auto)
+    .build(ontology)?;
+
+reasoner.classify()?; // v0.5
+```
+
+Builder options (v0.1 struct exists; validation enforced):
+
+```rust
+pub struct ReasonerConfig {
+    pub incremental: bool,
+    pub explanations: bool,
+    pub parallelism: usize, // must be 1..=64
+}
+```
+
+---
+
+# RDFS Engine (planned v0.3)
 
 Algorithms:
 
@@ -89,13 +117,11 @@ Algorithms:
 - Property propagation
 - Type propagation
 
-Complexity Goal:
-
-- O(n log n)
+Complexity goal: O(n log n)
 
 ---
 
-# OWL RL Engine
+# OWL RL Engine (planned v0.4)
 
 Implementation:
 
@@ -103,15 +129,9 @@ Implementation:
 - Rule indexing
 - Parallel execution
 
-Storage:
-
-```rust
-HashMap<EntityId, Vec<TripleId>>
-```
-
 ---
 
-# OWL EL Engine
+# OWL EL Engine (planned v0.5)
 
 Algorithms:
 
@@ -127,9 +147,9 @@ Outputs:
 
 ---
 
-# Explanation Engine
+# Explanation Engine (planned v0.6)
 
-Proof Graph
+Proof graph:
 
 ```rust
 pub struct ProofNode {
@@ -146,9 +166,11 @@ Features:
 
 ---
 
-# CLI Specification
+# CLI Specification (planned)
 
-Commands
+**Status:** Binary builds; all subcommands fail at ontology load until v0.2.
+
+Commands:
 
 ```bash
 ontologos profile ontology.owl
@@ -157,63 +179,54 @@ ontologos materialize ontology.owl
 ontologos explain ontology.owl
 ```
 
-Outputs:
+Outputs (v0.1 CLI):
 
-- text
-- json
-- yaml
+- `text` — human-readable
+- `json` — structured
+
+(YAML removed; was never implemented.)
 
 ---
 
-# Python Bindings
+# Python Bindings (planned v0.9)
 
-Examples
+**Status:** Stub only; `Reasoner("ontology.owl")` fails at load until v0.2.
 
 ```python
 from ontologos import Reasoner
 
 r = Reasoner("ontology.owl")
-
 r.classify()
 ```
 
 ---
 
-# Performance Targets
+# Performance Targets (1.0)
 
-Small Ontologies:
+| Ontology size | Classification target |
+|---------------|----------------------|
+| Small | < 100ms |
+| Medium | < 1s |
+| Large | < 10s |
 
-- <100ms classification
-
-Medium:
-
-- <1 second
-
-Large:
-
-- <10 seconds
+v0.1 Criterion bench: `cargo bench -p ontologos-core` (serialize/deserialize).
 
 ---
 
 # Testing Strategy
 
-Unit Tests
+**v0.1:**
 
-- parser
-- profile detector
-- rule engine
+- Unit and integration tests in `ontologos-core`
+- Security regression tests
+- Criterion benchmark for 10k-axiom JSON round-trip
 
-Integration Tests
+**Planned:**
 
-- benchmark ontologies
-
-Conformance
-
-- OWL profile suites
-
-Coverage Target
-
-- 90%+
+- Parser, profile, engine unit tests
+- Benchmark ontology integration (see `benchmarks/manifest.toml`)
+- OWL profile conformance suites
+- 90%+ coverage target at 1.0
 
 ---
 

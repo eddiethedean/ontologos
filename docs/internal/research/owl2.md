@@ -2,11 +2,11 @@
 
 ## Overview
 
-OWL 2 (Web Ontology Language) is a W3C family of ontology languages with formal semantics. Ontologos targets profile-restricted subsets rather than full OWL 2 DL in the 1.x line.
+OWL 2 (Web Ontology Language) is a W3C family of ontology languages with formal semantics. OntoLogos targets profile-restricted subsets rather than full OWL 2 DL in the 1.x line.
 
 ## Key constructs
 
-| Construct | Semantics | Ontologos engine |
+| Construct | Semantics | OntoLogos engine |
 |-----------|-----------|-------------------|
 | `owl:Class`, `rdfs:subClassOf` | Class taxonomy | RDFS (v0.3), EL (v0.5) |
 | `owl:ObjectProperty`, `rdfs:subPropertyOf` | Property hierarchy | RDFS (v0.3) |
@@ -28,7 +28,7 @@ OWL 2 (Web Ontology Language) is a W3C family of ontology languages with formal 
 | **QL** | Query rewriting over DB | SPARQL-oriented (OntoIndex scope) |
 | **DL** | Full expressivity | Tableau (HermiT-style, 2.0) |
 
-## Implications for Ontologos
+## Implications for OntoLogos
 
 1. **Core axiom model (v0.1)** should store the RL/RDFS axiom shapes listed in SPEC.md as structured enums with `EntityId` references, not OWL API-style nested class expressions yet.
 2. **Profile detection (v0.2)** walks axioms and flags constructs outside EL/RL/RDFS; use `AxiomIndex::by_kind` for fast scans.

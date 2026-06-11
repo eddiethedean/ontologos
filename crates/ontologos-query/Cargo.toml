@@ -7,7 +7,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "Query interface for Ontologos ontologies"
+description = "Query interface for OntoLogos ontologies"
 publish = false
 
 [dependencies]

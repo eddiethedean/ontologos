@@ -1,8 +1,24 @@
-//! Core data model and reasoner API for Ontologos.
+//! Core data model and reasoner API for OntoLogos.
 //!
 //! v0.1 provides an in-memory ontology representation with interned IRIs,
-//! typed entities, structured axioms, secondary indexes, and JSON serialization.
+//! typed entities, structured axioms, secondary indexes, and JSON v2 serialization.
 //! OWL file parsing is available in v0.2 via `ontologos-parser`.
+//!
+//! # Quick example
+//!
+//! ```
+//! use ontologos_core::{Error, Ontology};
+//!
+//! fn main() -> Result<(), Error> {
+//!     let ontology = Ontology::builder()
+//!         .class("http://example.org/Pizza")?
+//!         .class("http://example.org/Food")?
+//!         .subclass_of("http://example.org/Pizza", "http://example.org/Food")?
+//!         .build()?;
+//!     assert_eq!(ontology.axiom_count(), 1);
+//!     Ok(())
+//! }
+//! ```
 
 #![warn(missing_docs)]
 

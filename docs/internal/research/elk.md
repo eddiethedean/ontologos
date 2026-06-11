@@ -27,7 +27,7 @@ ELK is a polynomial-time OWL 2 EL classifier. It uses completion rules to satura
 - Handles ontologies with millions of classes (e.g. SNOMED subsets, GO)
 - Written in Java; still faster than general DL reasoners on EL ontologies
 
-## Implications for Ontologos
+## Implications for OntoLogos
 
 1. **`ontologos-el` (v0.5)** should implement ELK-style completion rules, not tableau.
 2. **Core indexes** from v0.1 (`subclass_of`, `superclass_of`) are the seed data for saturation; EL engine adds derived edges to a separate inference store or materialized overlay.

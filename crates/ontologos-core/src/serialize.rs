@@ -54,18 +54,41 @@ enum SnapshotAxiom {
 }
 
 impl Ontology {
-    /// Serialize the ontology to a JSON string.
+    /// Serialize the ontology to a JSON string (format version 2).
     pub fn to_json(&self) -> Result<String> {
         let snapshot = self.to_snapshot()?;
         serde_json::to_string_pretty(&snapshot).map_err(|e| Error::Serialization(e.to_string()))
     }
 
-    /// Deserialize an ontology from a JSON string using default resource limits.
+    /// Deserialize an ontology from a JSON string using default [`Limits`](crate::Limits).
+    ///
+    /// Accepts format version 2 only. Format v1 is rejected.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ontologos_core::Ontology;
+    ///
+    /// let json = r#"{
+    ///     "format_version": 2,
+    ///     "entities": [
+    ///         {"iri": "http://example.org/A", "kind": "Class"},
+    ///         {"iri": "http://example.org/B", "kind": "Class"}
+    ///     ],
+    ///     "axioms": [
+    ///         {"SubClassOf": {"subclass": "http://example.org/A", "superclass": "http://example.org/B"}}
+    ///     ]
+    /// }"#;
+    /// let ontology = Ontology::from_json(json).expect("load");
+    /// assert_eq!(ontology.axiom_count(), 1);
+    /// ```
     pub fn from_json(json: &str) -> Result<Self> {
         Self::from_json_with_limits(json, Limits::default())
     }
 
-    /// Deserialize an ontology from a JSON string with custom resource limits.
+    /// Deserialize an ontology with custom resource [`Limits`](crate::Limits).
+    ///
+    /// Prefer this over [`from_json`](Self::from_json) for untrusted input.
     pub fn from_json_with_limits(json: &str, limits: Limits) -> Result<Self> {
         if json.len() > limits.max_json_bytes {
             return Err(Error::Serialization(format!(

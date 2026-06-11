@@ -1,6 +1,6 @@
-# Ontologos Roadmap
+# OntoLogos Roadmap
 
-Ontologos is a Rust-native ontology reasoner built to replace JVM-bound reasoning workflows with an embeddable engine, CLI, Python bindings, and future IDE integration.
+OntoLogos is a Rust-native ontology reasoner built to replace JVM-bound reasoning workflows with an embeddable engine, CLI, Python bindings, and future IDE integration.
 
 Releases follow semantic versioning. **0.x** builds capability toward **1.0**; **1.x** hardens and extends the stable API; **2.0** introduces full OWL DL reasoning.
 
@@ -48,11 +48,11 @@ flowchart LR
 
 ## Ecosystem vision
 
-Ontologos is the reasoning layer in a broader Rust ontology stack:
+OntoLogos is the reasoning layer in a broader Rust ontology stack:
 
 | Project | Role |
 |---------|------|
-| **Ontologos** | Reasoning engine |
+| **OntoLogos** | Reasoning engine |
 | **OntoIndex** | Ontology query and index engine |
 | **Ontocode** | VS Code extension |
 | **OntoHub** | Registry and collaboration platform |
@@ -85,10 +85,10 @@ Establish the technical foundation and in-memory ontology representation all eng
 
 ### Research
 
-- [x] OWL 2 standards review (`docs/research/owl2.md`)
-- [x] HermiT architecture study (`docs/research/hermit.md`)
-- [x] ELK architecture study (`docs/research/elk.md`)
-- [x] RDFox evaluation (`docs/research/rdfox.md`)
+- [x] OWL 2 standards review (`docs/internal/research/owl2.md`)
+- [x] HermiT architecture study (`docs/internal/research/hermit.md`)
+- [x] ELK architecture study (`docs/internal/research/elk.md`)
+- [x] RDFox evaluation (`docs/internal/research/rdfox.md`)
 - [x] Benchmark corpus manifest under `benchmarks/` (Pizza, Family, GALEN, Gene Ontology, SNOMED subsets)
 
 ### `ontologos-core`
@@ -104,7 +104,7 @@ Establish the technical foundation and in-memory ontology representation all eng
 
 ### Exit criteria
 
-- Research notes committed under `docs/research/`
+- Research notes committed under `docs/internal/research/`
 - Benchmark manifest documents sources and expected profiles
 - Core model stores interned IRIs, entities, and axioms with unit tests
 
@@ -270,7 +270,7 @@ Support **Ontocode** with live reasoning feedback.
 
 ### Exit criteria
 
-- Ontocode prototype consumes Ontologos APIs for at least diagnostics and hover
+- Ontocode prototype consumes OntoLogos APIs for at least diagnostics and hover
 
 ---
 

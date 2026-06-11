@@ -1,4 +1,4 @@
-//! OWL and RDF syntax parsers for Ontologos.
+//! OWL and RDF syntax parsers for OntoLogos.
 
 mod error;
 mod load;

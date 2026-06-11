@@ -7,7 +7,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "Python bindings for Ontologos"
+description = "Python bindings for OntoLogos"
 publish = false
 
 [lib]

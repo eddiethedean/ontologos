@@ -7,7 +7,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "OWL profile detection for Ontologos"
+description = "OWL profile detection for OntoLogos"
 publish = false
 
 [dependencies]

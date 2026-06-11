@@ -7,7 +7,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "Command-line interface for Ontologos"
+description = "Command-line interface for OntoLogos"
 publish = false
 default-run = "ontologos"
 

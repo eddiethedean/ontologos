@@ -31,10 +31,10 @@ Rules are indexed by head predicate for efficient matching.
 - Commercial license; not embeddable in open-source Rust projects
 - Validates that rule indexing + parallel forward chaining is the right RL strategy
 
-## Implications for Ontologos
+## Implications for OntoLogos
 
 1. **`ontologos-rl` (v0.4)** should use forward chaining with rule indexing, not tableau.
 2. **`TripleIndex`** (`HashMap<EntityId, Vec<TripleId>>`) indexes inferred triples by subject for O(1) rule matching — aligns with RDFox's head-predicate indexing.
 3. **Parallel rule execution** in `RlEngine::saturate()` should partition work by rule batch; `ReasonerConfig::parallelism` controls thread count.
 4. **Materialization output** is a set of derived axioms/triples layered on the TBox/ABox; RDFS engine (v0.3) shares the same materialization pattern.
-5. **Do not build a triple store** — Ontologos reasons over in-memory ontologies; OntoIndex handles query/index at scale.
+5. **Do not build a triple store** — OntoLogos reasons over in-memory ontologies; OntoIndex handles query/index at scale.

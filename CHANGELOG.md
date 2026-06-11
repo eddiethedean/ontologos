@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-06-11
 
 ### Changed
 
@@ -19,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Research notes under `docs/research/` (OWL 2, HermiT, ELK, RDFox)
+- Adoption documentation: CONTRIBUTING, FAQ, docs index, JSON v2 schema, security guide, error reference, comparison guide, runnable `pizza_builder` example
+
+- Research notes under `docs/internal/research/` (OWL 2, HermiT, ELK, RDFox)
 - Benchmark ontology manifest at `benchmarks/manifest.toml`
 - `ontologos-core` in-memory ontology model:
   - `InternPool` / `IriId` for deduplicated absolute IRIs

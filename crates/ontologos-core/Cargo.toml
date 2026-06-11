@@ -7,8 +7,15 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "Core data model and reasoner API for Ontologos"
+description = "Core data model and reasoner API for OntoLogos"
 readme = "../../README.md"
+
+[package.metadata.docs.rs]
+all-features = false
+
+[[example]]
+name = "pizza_builder"
+path = "examples/pizza_builder.rs"
 
 [dependencies]
 thiserror = { workspace = true }

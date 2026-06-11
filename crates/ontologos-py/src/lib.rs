@@ -1,4 +1,4 @@
-//! Python bindings for Ontologos.
+//! Python bindings for OntoLogos.
 //!
 //! v0.1: loads ontologies via `Ontology::from_file`, which returns an error until
 //! v0.2 parser support. Use programmatic construction or JSON deserialization from Rust.
@@ -8,7 +8,7 @@ use ontologos_parser::load_ontology;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 
-/// Python wrapper around the Ontologos reasoner.
+/// Python wrapper around the OntoLogos reasoner.
 #[pyclass(name = "Reasoner")]
 struct PyReasoner {
     reasoner: Reasoner,

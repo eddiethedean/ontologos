@@ -101,6 +101,9 @@ impl Ontology {
     }
 
     /// Look up an entity id by IRI string, validating the IRI format.
+    ///
+    /// Returns `Err([Error::InvalidIri](crate::Error::InvalidIri))` for malformed IRIs,
+    /// `Ok(None)` if the IRI is valid but not registered, or `Ok(Some(id))` on success.
     pub fn try_lookup_entity(&self, iri: &str) -> Result<Option<EntityId>> {
         validate_iri(iri)?;
         Ok(self

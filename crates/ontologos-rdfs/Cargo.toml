@@ -7,7 +7,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "RDFS reasoning engine for Ontologos"
+description = "RDFS reasoning engine for OntoLogos"
 publish = false
 
 [dependencies]

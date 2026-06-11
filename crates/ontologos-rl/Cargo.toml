@@ -7,7 +7,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description = "OWL RL rule-based reasoning engine for Ontologos"
+description = "OWL RL rule-based reasoning engine for OntoLogos"
 publish = false
 
 [dependencies]
