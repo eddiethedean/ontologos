@@ -1,4 +1,21 @@
 //! OWL and RDF syntax parsers for OntoLogos.
+//!
+//! v0.2 loads OWL/XML, RDF/XML, Turtle, and OWL Functional Syntax into
+//! [`ontologos_core::Ontology`] via [`load_ontology`].
+//!
+//! # Example
+//!
+//! ```no_run
+//! use ontologos_parser::load_ontology;
+//!
+//! let ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
+//! println!("axioms: {}", ontology.axiom_count());
+//! # Ok::<(), ontologos_parser::Error>(())
+//! ```
+//!
+//! See [load guide](https://github.com/eddiethedean/ontologos/blob/main/docs/getting-started/load-owl-file.md).
+
+#![warn(missing_docs)]
 
 mod error;
 mod limits;
@@ -15,9 +32,13 @@ pub use read::detect_turtle_from_bytes;
 /// Supported ontology serialization formats.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Format {
+    /// OWL/XML syntax.
     OwlXml,
+    /// RDF/XML syntax.
     RdfXml,
+    /// Turtle / RDF Turtle.
     Turtle,
+    /// OWL Functional Syntax (`.ofn`, `.func`).
     Functional,
 }
 

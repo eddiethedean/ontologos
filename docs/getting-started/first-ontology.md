@@ -1,11 +1,11 @@
 # First Ontology
 
-This guide walks through building a small ontology with the v0.1 API.
+This guide walks through building a small ontology with the builder API.
 
 ## Prerequisites
 
 - Rust 1.78+
-- Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos)
+- Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos) (for examples)
 
 ## Run the example
 
@@ -44,6 +44,7 @@ fn main() -> Result<(), Error> {
 
 ## Next steps
 
-- [JSON snapshots](../json-snapshot-v2.md) — hand-author or load snapshot files
-- [Error reference](../reference/errors.md) — interpret failures
-- [ROADMAP](../../ROADMAP.md) — OWL file loading in v0.2
+- [Load an OWL file](load-owl-file.md) — parse real ontologies (v0.2)
+- [Profile detection](../guides/profile-detection.md)
+- [JSON snapshots](../json-snapshot-v2.md)
+- [Error reference](../reference/errors.md)

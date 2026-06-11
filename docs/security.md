@@ -1,6 +1,6 @@
 # Security Considerations
 
-OntoLogos v0.1 handles untrusted input primarily through **JSON deserialization** and **path validation** (for future file loading). This document describes defaults and recommended practices.
+OntoLogos v0.2 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
 
 ## JSON snapshots
 
@@ -59,6 +59,8 @@ Rejected:
 
 Use `load_ontology_with_limits` for untrusted uploads.
 
+Skipped axioms and parser warnings are recorded in `ParseMeta` but do not fail the load. Review `parse_meta.warnings` when accepting user-supplied ontologies.
+
 ## Reporting issues
 
 Report security vulnerabilities privately to the maintainer via GitHub security advisories or email listed in crate metadata.
@@ -66,4 +68,5 @@ Report security vulnerabilities privately to the maintainer via GitHub security 
 ## Related
 
 - [JSON snapshot v2](json-snapshot-v2.md)
+- [Load an OWL file](getting-started/load-owl-file.md)
 - [Error reference](reference/errors.md)

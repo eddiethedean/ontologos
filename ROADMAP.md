@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-11 · **Current release:** [v0.1.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.1.0) · **Next milestone:** v0.2 — parsing and profile detection
+**Last updated:** 2026-06-11 · **Current release:** [v0.2.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.2.0) · **Next milestone:** v0.3 — RDFS engine
 
 ---
 
@@ -205,12 +205,9 @@ Establish the in-memory ontology representation all engines share.
 - [x] Criterion benchmark: 10k-axiom serialize/deserialize
 - [x] Integration tests, security regressions, `pizza_minimal` fixture
 
-### Workspace stubs (API shape only)
+### Workspace stubs at v0.1 (superseded by v0.2 for parser/profile/cli)
 
-- [x] `ontologos-parser` — format detection, path validation, `load_ontology` → `ParseNotAvailable`
-- [x] `ontologos-profile` — report types; `detect_profile` → `NotImplemented`
 - [x] `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain` — typed stubs
-- [x] `ontologos-cli` — four subcommands wired; all fail at load
 - [x] `ontologos-py` — PyO3 `Reasoner` skeleton
 
 ### Exit criteria (met)
@@ -223,7 +220,7 @@ Establish the in-memory ontology representation all engines share.
 
 ## v0.2 — Parsing & profile detection
 
-**Status: Planned** · **Effort:** Large · **Depends on:** v0.1
+**Status: Complete** ([v0.2.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.2.0), 2026-06-11) · **Depends on:** v0.1
 
 Load real ontologies from disk, map them into the core model, and report which OWL profile they fall into.
 
@@ -233,58 +230,53 @@ Load real ontologies from disk, map them into the core model, and report which O
 
 - [x] Format detection by extension and content sniffing
 - [x] Path normalization and traversal rejection
-- [ ] `horned-owl` dependency and error mapping
-- [ ] OWL/XML reader
-- [ ] RDF/XML reader
-- [ ] Horned-owl → `ontologos-core` axiom mapping layer
-- [ ] `Ontology::from_file` delegates to parser
-- [ ] Parse limits (max file size, max axioms) aligned with [docs/security.md](docs/security.md)
+- [x] `horned-owl` dependency and error mapping
+- [x] OWL/XML reader
+- [x] RDF/XML reader
+- [x] Horned-owl → `ontologos-core` axiom mapping layer
+- [x] `load_ontology` entry point (core `Ontology::from_file` remains stub by design)
+- [x] Parse limits (max file size, max axioms) aligned with [docs/security.md](docs/security.md)
 
 ### Phase B — Additional formats
 
-- [ ] Turtle / `.ttl`
-- [ ] OWL Functional Syntax (`.ofn`, `.func`)
-- [ ] Unified `load_ontology` entry point used by CLI and Python
+- [x] Turtle / `.ttl`
+- [x] OWL Functional Syntax (`.ofn`, `.func`)
+- [x] Unified `load_ontology` entry point used by CLI
 
 ### Phase C — Core extensions (as needed)
 
-Only add axiom types required to represent parsed TBox axioms without loss for benchmark corpora:
-
-- [ ] Audit horned-owl constructs against [SPEC.md](SPEC.md) axiom list
-- [ ] Add missing axiom variants to core (if mapping requires it)
-- [ ] Document unsupported constructs and emit parser warnings
+- [x] Audit horned-owl constructs against [SPEC.md](SPEC.md) axiom list
+- [x] Add axiom variants: `SubClassOfExistential`, RL property declarations
+- [x] Document unsupported constructs and emit parser warnings (`ParseMeta`)
 
 ### Phase D — Profile detection
 
 **Crate:** `ontologos-profile`
 
 - [x] `ProfileReport`, `ProfileDiagnostic`, `OwlProfile` types
-- [ ] Construct scanner over `Axiom` store and entity kinds
-- [ ] OWL EL detection
-- [ ] OWL RL detection
-- [ ] OWL QL detection
-- [ ] OWL DL fallback with diagnostics for unsupported constructs
+- [x] Construct scanner over mapped axioms and `ParseMeta`
+- [x] OWL EL / RL / QL / DL detection with hybrid diagnostics
 - [ ] `ReasonerBuilder::profile(Profile::Auto)` reads detector (stub until v0.5 classify)
 
 ### Tooling & tests
 
-- [ ] `benchmarks/scripts/download.sh` for Pizza and Family corpora
-- [ ] Manifest-driven integration tests (skip if `local_path` absent)
-- [ ] Parser unit tests per format (fixtures under `crates/ontologos-parser/tests/`)
-- [ ] Profile detector tests against Pizza (EL) and Family (RL)
+- [x] `benchmarks/scripts/download.sh` for Pizza and Family corpora
+- [x] Manifest-driven integration tests
+- [x] Parser mapping tests per format
+- [x] Profile unit tests and hybrid diagnostics tests
 
 ### CLI
 
-- [ ] `ontologos profile <file>` — text and JSON output
-- [ ] Remaining subcommands still fail with clear errors until their engines ship
+- [x] `ontologos profile <file>` — text and JSON output
+- [x] Remaining subcommands load ontology then fail at engine (`NotImplemented`)
 
-### Exit criteria
+### Exit criteria (met)
 
-- [ ] `Ontology::from_file` loads Pizza and Family into core without panic
-- [ ] Parsed axiom counts within 10% of manifest `axiom_count_approx` for Pizza
-- [ ] `ontologos profile` reports `EL` for Pizza and `RL` for Family
-- [ ] `ontologos-parser` and `ontologos-profile` published to crates.io
-- [ ] No new `unsafe` (workspace lint enforced)
+- [x] `load_ontology` loads Pizza and Family into core without panic
+- [x] Parsed axiom counts within 10% of manifest `axiom_count_approx`
+- [x] `ontologos profile` reports `El` for Pizza and `Rl` for Family
+- [x] `ontologos-parser` and `ontologos-profile` published to crates.io
+- [x] No new `unsafe` (workspace lint enforced)
 
 ### Risks
 

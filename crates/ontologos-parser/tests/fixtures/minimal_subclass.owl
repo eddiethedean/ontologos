@@ -6,26 +6,26 @@
     <Prefix name="" IRI="http://example.org/test#"/>
     <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
     <Declaration>
-        <Class IRI="#A"/>
+        <Class IRI="http://example.org/test#A"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#B"/>
+        <Class IRI="http://example.org/test#B"/>
     </Declaration>
     <Declaration>
-        <Class IRI="#C"/>
+        <Class IRI="http://example.org/test#C"/>
     </Declaration>
     <Declaration>
-        <ObjectProperty IRI="#hasPart"/>
+        <ObjectProperty IRI="http://example.org/test#hasPart"/>
     </Declaration>
     <SubClassOf>
-        <Class IRI="#A"/>
-        <Class IRI="#B"/>
+        <Class IRI="http://example.org/test#A"/>
+        <Class IRI="http://example.org/test#B"/>
     </SubClassOf>
     <SubClassOf>
-        <Class IRI="#C"/>
+        <Class IRI="http://example.org/test#C"/>
         <ObjectSomeValuesFrom>
-            <ObjectProperty IRI="#hasPart"/>
-            <Class IRI="#B"/>
+            <ObjectProperty IRI="http://example.org/test#hasPart"/>
+            <Class IRI="http://example.org/test#B"/>
         </ObjectSomeValuesFrom>
     </SubClassOf>
 </Ontology>

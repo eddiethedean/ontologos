@@ -2,27 +2,40 @@
 
 ## Why does `Ontology::from_file` fail?
 
-v0.1 ships the in-memory data model only. File parsing lands in **v0.2** via `ontologos-parser`. Until then, use:
+`Ontology::from_file` on `ontologos-core` intentionally returns `Error::ParseNotAvailable` to keep the core crate free of parser dependencies.
 
-- `Ontology::builder()` for programmatic construction
-- `Ontology::from_json()` for JSON v2 snapshots
+**Load OWL/RDF files with `ontologos-parser`:**
 
-The error is `Error::ParseNotAvailable`, not a bug.
+```rust
+use ontologos_parser::load_ontology;
+
+let ontology = load_ontology(path::Path::new("ontology.owl"))?;
+```
+
+Or use the CLI: `ontologos profile ontology.owl`
+
+See [Load an OWL file](docs/getting-started/load-owl-file.md).
 
 ## Which crate should I depend on?
 
-For v0.1, depend on **`ontologos-core`** only:
+For **v0.2**, typical workflows use:
 
 ```toml
 [dependencies]
-ontologos-core = "0.1"
+ontologos-core = "0.2"
+ontologos-parser = "0.2"   # OWL/RDF file loading
+ontologos-profile = "0.2"  # EL / RL / QL / DL detection
 ```
 
-Other workspace crates (`ontologos-parser`, `ontologos-el`, …) are stubs or internal until their roadmap milestones complete. There is no umbrella `ontologos` crate on crates.io.
+Depend on **`ontologos-core` only** if you build ontologies programmatically or from JSON snapshots.
+
+There is no umbrella `ontologos` crate on crates.io. The CLI binary is built from `ontologos-cli` in this repository.
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Not for reasoning.** OntoLogos v0.1 does not classify ontologies or load OWL files. Use Protégé with HermiT or ELK for production OWL workflows. OntoLogos is for early adopters embedding the Rust data model or tracking the roadmap.
+**Not for reasoning.** v0.2 loads OWL files and detects profiles but does not classify or materialize inferences. Use Protégé with HermiT or ELK for production OWL reasoning workflows.
+
+OntoLogos is for early adopters who want to embed the Rust data model, load ontologies natively, or follow the [roadmap](ROADMAP.md).
 
 ## Why was my JSON rejected?
 
@@ -33,9 +46,17 @@ Common causes:
 - **Unknown entity IRI in axioms** — declare all entities before referencing them in axioms
 - **Size limits** — default max JSON size is 16 MiB; see [security.md](docs/security.md)
 
-## Why does the CLI say "parsing is not available"?
+## Why does Pizza detect as EL but diagnostics mention DL constructs?
 
-The CLI binary is wired but ontology loading requires the v0.2 parser. All subcommands fail at load until then.
+Profile **classification** uses mapped TBox shapes (`parse_meta.profile_constructs`). **Diagnostics** also flag constructs observed in the full parse that fall outside the detected profile. Pizza is detected as **EL** based on mapped axioms, while diagnostics may list constructs such as `ObjectAllValuesFrom` seen in the source but not stored in core.
+
+See [Profile detection](docs/guides/profile-detection.md).
+
+## Why doesn't `ontology.axiom_count()` match Protégé's axiom count?
+
+The parser maps a subset of OWL constructs into the core model. Complex class expressions, ABox axioms, and many property axioms are scanned for profile detection but **skipped** during mapping. `axiom_count()` is **mapper output**, not raw OWL logical axiom count.
+
+See [Troubleshooting](docs/guides/troubleshooting.md) and [Supported constructs](docs/reference/supported-constructs.md).
 
 ## What is the difference between ROADMAP.md and PLAN.md?
 
@@ -43,19 +64,36 @@ The CLI binary is wired but ontology loading requires the v0.2 parser. All subco
 
 ## Is OntoLogos the same as Ontologos?
 
-**Display name:** OntoLogos. **Crate and command names:** `ontologos-*` and `ontologos` (lowercase, no camel case).
+**Display name:** OntoLogos. **Crate and command names:** `ontologos-*` and `ontologos` (lowercase).
 
 ## How do I load the pizza test fixture?
+
+**From JSON (no download):**
 
 ```rust
 let json = include_str!("../tests/fixtures/pizza_minimal.json");
 let ontology = Ontology::from_json(json)?;
 ```
 
+**From OWL (benchmark corpus):**
+
+```bash
+./benchmarks/scripts/download.sh
+```
+
+```rust
+let ontology = ontologos_parser::load_ontology(path::Path::new("benchmarks/data/pizza.owl"))?;
+```
+
 Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- In-source rustdoc: `cargo doc -p ontologos-core --open`
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile)
+- Local: `cargo doc -p ontologos-core --open`
 - Error catalog: [docs/reference/errors.md](docs/reference/errors.md)
+- CLI: [docs/reference/cli.md](docs/reference/cli.md)
+
+## Does `pip install ontologos` work?
+
+The PyPI package is an **alpha placeholder** (v0.2). It exposes version metadata only; OWL loading and reasoning APIs ship in later milestones (see [Python README](crates/ontologos-py/README.md)). Use the Rust crates for v0.2 workflows.

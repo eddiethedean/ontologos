@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+use ontologos_core::OwlConstruct;
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, OwlProfile};
 
@@ -7,6 +8,7 @@ struct ManifestEntry {
     name: &'static str,
     local_path: &'static str,
     expected_profile: OwlProfile,
+    /// Expected mapped axiom count from the parser mapper (not raw OWL logical axiom count).
     axiom_count_approx: usize,
 }
 
@@ -15,6 +17,7 @@ const ENTRIES: &[ManifestEntry] = &[
         name: "pizza",
         local_path: "benchmarks/data/pizza.owl",
         expected_profile: OwlProfile::El,
+        // Mapper output count; see benchmarks/manifest.toml and benchmarks/README.md.
         axiom_count_approx: 1056,
     },
     ManifestEntry {
@@ -54,9 +57,24 @@ fn manifest_corpus_load_and_profile() {
         let high = entry.axiom_count_approx + tolerance;
         assert!(
             (low..=high).contains(&count),
-            "{} axiom count {count} outside {} ±10%",
+            "{} axiom count {count} outside {} ±10% (mapper output, not raw OWL logical count)",
             entry.name,
             entry.axiom_count_approx
+        );
+
+        let meta = ontology
+            .parse_meta()
+            .unwrap_or_else(|| panic!("{} missing parse_meta", entry.name));
+        assert_eq!(
+            meta.mapped_axiom_count, count,
+            "{} mapped_axiom_count should match axiom_count",
+            entry.name
+        );
+        assert_eq!(
+            meta.mapped_axiom_count + meta.skipped_axiom_count,
+            meta.logical_axiom_count,
+            "{} mapped + skipped should equal logical",
+            entry.name
         );
 
         let report = detect_profile(&ontology).expect("profile");
@@ -66,5 +84,39 @@ fn manifest_corpus_load_and_profile() {
             "{} profile mismatch",
             entry.name
         );
+
+        match entry.name {
+            "pizza" => {
+                assert!(
+                    meta.constructs.contains(&OwlConstruct::ObjectAllValuesFrom)
+                        || meta.constructs.contains(&OwlConstruct::ObjectUnionOf),
+                    "pizza source should contain DL constructs in parse_meta.constructs"
+                );
+                assert!(
+                    !report.diagnostics.is_empty(),
+                    "pizza should report source-only diagnostics under hybrid profile contract"
+                );
+            }
+            "family" => {
+                assert!(
+                    meta.profile_constructs
+                        .contains(&OwlConstruct::SymmetricObjectProperty)
+                        || meta
+                            .profile_constructs
+                            .contains(&OwlConstruct::TransitiveObjectProperty)
+                        || meta
+                            .profile_constructs
+                            .contains(&OwlConstruct::ReflexiveObjectProperty),
+                    "family profile_constructs should contain RL markers"
+                );
+                for diag in &report.diagnostics {
+                    assert!(
+                        diag.message.contains("observed in source"),
+                        "family diagnostics should be source-only under hybrid contract: {diag:?}"
+                    );
+                }
+            }
+            _ => {}
+        }
     }
 }

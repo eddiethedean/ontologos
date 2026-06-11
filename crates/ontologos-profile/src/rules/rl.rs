@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use crate::ProfileDiagnostic;
 use ontologos_core::OwlConstruct;
 
-const RL_FORBIDDEN: &[OwlConstruct] = &[
+pub(crate) const RL_FORBIDDEN: &[OwlConstruct] = &[
     OwlConstruct::ObjectComplementOf,
     OwlConstruct::ObjectOneOf,
     OwlConstruct::ObjectHasValue,

@@ -33,19 +33,33 @@ GALEN, Gene Ontology, and SNOMED subsets require manual download (see manifest n
 
 | Test | When it runs |
 |------|----------------|
-| `manifest_integration.rs` | Always (Pizza + Family) |
+| `mapping_fixtures.rs` | Always (synthetic minimal fixtures, all formats) |
+| `manifest_integration.rs` | Always (Pizza + Family; requires `download.sh`) |
 | `corpus_stress.rs` | `cargo test -- --ignored` when large files are present |
+
+### Hybrid profile contract
+
+Profile **classification** uses mapped TBox shapes (`parse_meta.profile_constructs`). **Diagnostics** also report constructs seen in the full parse (`parse_meta.constructs`) that fall outside the detected profile—for example Pizza is detected as **EL** but diagnostics mention DL constructs such as `ObjectAllValuesFrom` that were not mapped into core.
+
+Manifest `axiom_count` values (e.g. Pizza `1056`) are **mapper output** counts (`ontology.axiom_count()` / `mapped_axiom_count`), not raw OWL logical axiom totals from the source file.
+
+### Local testing
 
 ```bash
 # Default CI-equivalent run
 ./benchmarks/scripts/download.sh
+cargo fmt --all
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+
+# Parser integration only
 cargo test -p ontologos-parser
 
 # Optional stress (after manual download)
 cargo test -p ontologos-parser --test corpus_stress -- --ignored
 ```
 
-## Criterion benchmarks (v0.1)
+## Criterion benchmarks
 
 ```bash
 cargo bench -p ontologos-core

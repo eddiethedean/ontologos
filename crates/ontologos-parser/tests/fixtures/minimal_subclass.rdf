@@ -9,4 +9,13 @@
         <rdfs:subClassOf rdf:resource="http://example.org/test#B"/>
     </owl:Class>
     <owl:Class rdf:about="http://example.org/test#B"/>
+    <owl:Class rdf:about="http://example.org/test#C">
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://example.org/test#hasPart"/>
+                <owl:someValuesFrom rdf:resource="http://example.org/test#B"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    <owl:ObjectProperty rdf:about="http://example.org/test#hasPart"/>
 </rdf:RDF>

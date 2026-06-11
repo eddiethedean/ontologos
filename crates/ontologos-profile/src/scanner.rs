@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use ontologos_core::{Ontology, OwlConstruct};
 
-/// Collect OWL constructs for profile detection from mapped axioms and profile flags.
+/// Collect OWL constructs used for profile **classification** (mapped TBox shapes).
 pub fn scan_constructs(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
     if let Some(meta) = ontology.parse_meta() {
         if !meta.profile_constructs.is_empty() {
@@ -15,6 +15,14 @@ pub fn scan_constructs(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
         note_axiom_construct(axiom, &mut constructs);
     }
     constructs
+}
+
+/// Full construct set from parse-time scanning (includes skipped/unmapped shapes).
+pub fn source_constructs(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
+    ontology
+        .parse_meta()
+        .map(|meta| meta.constructs.clone())
+        .unwrap_or_default()
 }
 
 fn note_axiom_construct(axiom: &ontologos_core::Axiom, constructs: &mut BTreeSet<OwlConstruct>) {

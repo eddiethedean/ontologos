@@ -10,11 +10,11 @@ A modular Rust ontology reasoner **in early development**.
 
 **Display name:** OntoLogos · **Crates:** `ontologos-*` · **CLI binary:** `ontologos`
 
-**v0.2 (today):** OWL file parsing and profile detection via [`ontologos-parser`](crates/ontologos-parser) and [`ontologos-profile`](crates/ontologos-profile), plus the v0.1 in-memory model ([`ontologos-core`](crates/ontologos-core)).
+**v0.2 (today):** OWL file parsing and profile detection via [`ontologos-parser`](crates/ontologos-parser) and [`ontologos-profile`](crates/ontologos-profile), plus the in-memory model ([`ontologos-core`](crates/ontologos-core)).
 
-**Planned:** RDFS/RL/EL reasoning (v0.3–v0.5), full CLI workflows, Python bindings.
+**Planned:** RDFS/RL/EL reasoning (v0.3–v0.5), full CLI workflows, Python bindings (v0.9).
 
-If you need OWL classification today, use Protégé with HermiT or ELK. If you want to embed a Rust ontology graph or evaluate the architecture, start below.
+If you need OWL classification today, use Protégé with HermiT or ELK. If you want to embed a Rust ontology graph, load OWL files, or evaluate the architecture, start below.
 
 ## What works in v0.2
 
@@ -29,7 +29,7 @@ If you need OWL classification today, use Protégé with HermiT or ELK. If you w
 | `ontologos profile` CLI | Available |
 | RDFS / RL / EL reasoning | v0.3–v0.5 |
 | `classify` / `materialize` / `explain` CLI | v0.3+ |
-| Python bindings | v0.9 |
+| Python bindings (full API) | v0.9 |
 
 ## Install (library)
 
@@ -44,40 +44,25 @@ ontologos-parser = "0.2.0"
 ontologos-profile = "0.2.0"
 ```
 
-Python bindings (pre-release placeholder on [PyPI](https://pypi.org/project/ontologos/)):
-
-```bash
-pip install ontologos
-```
-
-File loading and profile detection work in v0.2; classification and materialization remain on the roadmap — see [ROADMAP.md](ROADMAP.md).
-
 From this repository:
 
 ```bash
 git clone https://github.com/eddiethedean/ontologos.git
 cd ontologos
+./benchmarks/scripts/download.sh   # for Pizza corpus examples
 ```
 
-API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core)
+API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core) · [parser](https://docs.rs/ontologos-parser) · [profile](https://docs.rs/ontologos-profile)
+
+> **Python:** `pip install ontologos` is an alpha placeholder only — use Rust crates for v0.2 workflows. See [crates/ontologos-py/README.md](crates/ontologos-py/README.md).
 
 ## Quick start (5 minutes)
+
+### Builder + JSON
 
 ```bash
 cargo run -p ontologos-core --example pizza_builder
 ```
-
-Expected output (abbreviated):
-
-```text
-Pizza direct superclasses: [EntityId(1)]
-Superclass matches Thing: true
-Entities: 4
-Axioms: 2
-Round-trip equal: true
-```
-
-### Library usage
 
 ```rust
 use ontologos_core::{Error, Ontology};
@@ -96,7 +81,25 @@ fn main() -> Result<(), Error> {
 }
 ```
 
-Load OWL files with `ontologos_parser::load_ontology` (or `ontologos profile` on the CLI).
+### Load OWL + detect profile (v0.2)
+
+```bash
+./benchmarks/scripts/download.sh
+cargo build -p ontologos-cli --release
+./target/release/ontologos profile benchmarks/data/pizza.owl
+```
+
+```rust
+use ontologos_parser::load_ontology;
+use ontologos_profile::detect_profile;
+
+let ontology = load_ontology(path)?;
+let report = detect_profile(&ontology)?;
+```
+
+Profile **classification** uses mapped TBox shapes; **diagnostics** may list constructs seen in the source but not stored in core — see [docs/guides/profile-detection.md](docs/guides/profile-detection.md).
+
+Or run: `cargo run -p ontologos-parser --example load_and_profile`
 
 ## Workspace
 
@@ -110,7 +113,7 @@ Load OWL files with `ontologos_parser::load_ontology` (or `ontologos profile` on
 | `ontologos-el` | OWL EL classification | Stub |
 | `ontologos-query` | Query interface over classified ontologies | Stub |
 | `ontologos-explain` | Proof graphs and explanation export | Stub |
-| `ontologos-cli` | `ontologos` command-line tool | Stub |
+| `ontologos-cli` | `ontologos` command-line tool | **Partial** (`profile` only) |
 | `ontologos-py` | Python bindings via PyO3 | Stub |
 
 `ontologos-core`, `ontologos-parser`, and `ontologos-profile` are published to crates.io in v0.2.0.
@@ -125,24 +128,16 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos --format json profile benchmarks/data/family.owl
 ```
 
-`classify`, `materialize`, and `explain` remain stubs until v0.3+ — see [ROADMAP.md](ROADMAP.md).
-
-## Python API (v0.9+)
-
-Python bindings load ontologies via `ontologos_parser::load_ontology`; reasoning APIs remain stubbed.
+`classify`, `materialize`, and `explain` load the ontology then return `NotImplemented` until v0.3+ — see [ROADMAP.md](ROADMAP.md).
 
 ## Documentation
 
-- [docs/README.md](docs/README.md) — documentation index and learning path
-- [ROADMAP.md](ROADMAP.md) — versioned release plan (0.1 → 1.0 → 1.9 → 2.0)
-- [CHANGELOG.md](CHANGELOG.md) — release history
-- [CONTRIBUTING.md](CONTRIBUTING.md) — development workflow
-- [FAQ.md](FAQ.md) — common questions
-- [SPEC.md](SPEC.md) — technical specification (status-tagged)
-- [docs/json-snapshot-v2.md](docs/json-snapshot-v2.md) — JSON snapshot format
-- [docs/security.md](docs/security.md) — untrusted input guidance
-- [docs/comparison.md](docs/comparison.md) — vs HermiT, ELK, and others
-- [docs/internal/research/](docs/internal/research/) — maintainer research notes
+| Section | Link |
+|---------|------|
+| **Getting started** | [docs/README.md](docs/README.md) |
+| **Guides** | [Load OWL](docs/getting-started/load-owl-file.md) · [Profile detection](docs/guides/profile-detection.md) · [Security](docs/security.md) |
+| **Reference** | [Errors](docs/reference/errors.md) · [CLI](docs/reference/cli.md) · [JSON v2](docs/json-snapshot-v2.md) |
+| **Project** | [ROADMAP](ROADMAP.md) · [CHANGELOG](CHANGELOG.md) · [CONTRIBUTING](CONTRIBUTING.md) · [FAQ](FAQ.md) |
 
 ## License
 

@@ -1,13 +1,13 @@
 
 # OntoLogos Technical Specification
 
-> **Document status:** Mixed. Sections marked **(v0.1)** are implemented in `ontologos-core`.
-> Unmarked engine, CLI, and Python sections are **planned** — see [ROADMAP.md](ROADMAP.md).
+> **Document status:** Mixed. Sections marked **(v0.1)** / **(v0.2)** reflect shipped crates.
+> Engine, full CLI, and Python sections beyond profile detection are **planned** — see [ROADMAP.md](ROADMAP.md).
 > Last reviewed: 2026-06-11
 
 ## Overview
 
-OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.1 implements the core data model and JSON v2 serialization only.**
+OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.2 ships the core data model, JSON v2 serialization, OWL file loading, and profile detection.**
 
 ---
 
@@ -18,15 +18,15 @@ OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS re
 ```text
 ontologos/
 ├── crates/
-│   ├── ontologos-core      (v0.1)
-│   ├── ontologos-parser    (stub → v0.2)
-│   ├── ontologos-profile   (stub → v0.2)
+│   ├── ontologos-core      (v0.1+)
+│   ├── ontologos-parser    (v0.2)
+│   ├── ontologos-profile   (v0.2)
 │   ├── ontologos-rdfs      (stub → v0.3)
 │   ├── ontologos-rl        (stub → v0.4)
 │   ├── ontologos-el        (stub → v0.5)
 │   ├── ontologos-query     (stub → v0.5)
 │   ├── ontologos-explain   (stub → v0.6)
-│   ├── ontologos-cli       (stub → v0.2+)
+│   ├── ontologos-cli       (partial — profile in v0.2)
 │   └── ontologos-py        (stub → v0.9)
 ```
 
@@ -46,11 +46,12 @@ pub enum EntityKind {
 }
 ```
 
-## Axiom Types (v0.1)
+## Axiom Types (v0.1–v0.2)
 
 Supported in storage and validation:
 
 - SubClassOf
+- SubClassOfExistential *(v0.2)*
 - EquivalentClasses
 - DisjointClasses
 - ObjectPropertyDomain
@@ -58,6 +59,21 @@ Supported in storage and validation:
 - SubObjectPropertyOf
 - InverseObjectProperties
 - TransitiveObjectProperty
+- SymmetricObjectProperty *(v0.2)*
+- ReflexiveObjectProperty *(v0.2)*
+- FunctionalObjectProperty *(v0.2)*
+
+## File loading (v0.2)
+
+- `ontologos_parser::load_ontology` — OWL/XML, RDF/XML, Turtle, OWL Functional Syntax
+- `ParseMeta` on loaded ontologies: `constructs`, `profile_constructs`, `warnings`, axiom counts
+- `Ontology::from_file` on core remains `ParseNotAvailable` (parser dependency isolation)
+
+## Profile detection (v0.2)
+
+- `ontologos_profile::detect_profile` — EL / RL / QL / DL classification
+- Hybrid contract: classify on `profile_constructs`; diagnostics include source-only constructs outside detected profile
+- See [docs/guides/profile-detection.md](docs/guides/profile-detection.md)
 
 ## JSON Serialization (v0.1)
 
@@ -87,8 +103,8 @@ fn main() -> Result<(), Error> {
 **Status:** `Reasoner::classify()` returns `Error::NotImplemented` in v0.1.
 
 ```rust
-// Planned (v0.2+ load, v0.5 classify):
-let ontology = Ontology::from_file("pizza.owl")?; // v0.2
+// v0.2 load, v0.5 classify:
+let ontology = ontologos_parser::load_ontology(path::Path::new("pizza.owl"))?;
 
 let reasoner = Reasoner::builder()
     .profile(Profile::Auto)
@@ -166,20 +182,20 @@ Features:
 
 ---
 
-# CLI Specification (planned)
+# CLI Specification
 
-**Status:** Binary builds; all subcommands fail at ontology load until v0.2.
+**Status:** `profile` works in v0.2; other subcommands load then fail at engine stubs.
 
 Commands:
 
 ```bash
 ontologos profile ontology.owl
-ontologos classify ontology.owl
-ontologos materialize ontology.owl
-ontologos explain ontology.owl
+ontologos classify ontology.owl    # NotImplemented
+ontologos materialize ontology.owl # NotImplemented
+ontologos explain ontology.owl     # NotImplemented
 ```
 
-Outputs (v0.1 CLI):
+Outputs:
 
 - `text` — human-readable
 - `json` — structured
@@ -190,7 +206,7 @@ Outputs (v0.1 CLI):
 
 # Python Bindings (planned v0.9)
 
-**Status:** Stub only; `Reasoner("ontology.owl")` fails at load until v0.2.
+**Status:** Alpha placeholder on PyPI; Rust v0.2 APIs not yet exposed in Python.
 
 ```python
 from ontologos import Reasoner
@@ -215,16 +231,17 @@ v0.1 Criterion bench: `cargo bench -p ontologos-core` (serialize/deserialize).
 
 # Testing Strategy
 
-**v0.1:**
+**v0.1–v0.2:**
 
-- Unit and integration tests in `ontologos-core`
+- Unit and integration tests in `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-cli`
 - Security regression tests
+- Manifest-driven corpus tests (Pizza, Family)
+- Mapping fixtures per OWL format
 - Criterion benchmark for 10k-axiom JSON round-trip
 
 **Planned:**
 
-- Parser, profile, engine unit tests
-- Benchmark ontology integration (see `benchmarks/manifest.toml`)
+- Engine unit tests (RDFS, RL, EL)
 - OWL profile conformance suites
 - 90%+ coverage target at 1.0
 

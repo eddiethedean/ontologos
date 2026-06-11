@@ -399,4 +399,72 @@ mod tests {
         .expect_err("unknown");
         assert!(matches!(err, Error::UnknownEntity(_)));
     }
+
+    #[test]
+    fn validates_subclass_of_existential() {
+        let mut fx = Fixture::new();
+        let subclass = fx.class("http://ex.org/C");
+        let property = fx.object_property("http://ex.org/hasPart");
+        let filler = fx.class("http://ex.org/B");
+        Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        }
+        .validate(&fx.registry)
+        .expect("valid");
+    }
+
+    #[test]
+    fn rejects_subclass_of_existential_wrong_kinds() {
+        let mut fx = Fixture::new();
+        let subclass = fx.class("http://ex.org/C");
+        let property = fx.class("http://ex.org/not-a-property");
+        let filler = fx.class("http://ex.org/B");
+        let err = Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        }
+        .validate(&fx.registry)
+        .expect_err("wrong kind");
+        assert!(matches!(err, Error::InvalidAxiom(_)));
+    }
+
+    #[test]
+    fn validates_symmetric_object_property() {
+        let mut fx = Fixture::new();
+        let prop = fx.object_property("http://ex.org/symmetric");
+        Axiom::SymmetricObjectProperty(prop)
+            .validate(&fx.registry)
+            .expect("valid");
+    }
+
+    #[test]
+    fn validates_reflexive_object_property() {
+        let mut fx = Fixture::new();
+        let prop = fx.object_property("http://ex.org/reflexive");
+        Axiom::ReflexiveObjectProperty(prop)
+            .validate(&fx.registry)
+            .expect("valid");
+    }
+
+    #[test]
+    fn validates_functional_object_property() {
+        let mut fx = Fixture::new();
+        let prop = fx.object_property("http://ex.org/functional");
+        Axiom::FunctionalObjectProperty(prop)
+            .validate(&fx.registry)
+            .expect("valid");
+    }
+
+    #[test]
+    fn rejects_rl_property_axiom_with_class_entity() {
+        let mut fx = Fixture::new();
+        let not_prop = fx.class("http://ex.org/C");
+        let err = Axiom::SymmetricObjectProperty(not_prop)
+            .validate(&fx.registry)
+            .expect_err("wrong kind");
+        assert!(matches!(err, Error::InvalidAxiom(_)));
+    }
 }

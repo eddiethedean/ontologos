@@ -123,3 +123,59 @@ fn add_axiom_transitive_updates_index() {
 
     assert!(ontology.index().transitive_properties().contains(&prop));
 }
+
+#[test]
+fn add_axiom_subclass_of_existential_indexes_filler_as_superclass() {
+    let mut ontology = Ontology::new();
+    let subclass = ontology
+        .entity_id("http://ex.org/C", EntityKind::Class)
+        .expect("subclass");
+    let property = ontology
+        .entity_id("http://ex.org/hasPart", EntityKind::ObjectProperty)
+        .expect("property");
+    let filler = ontology
+        .entity_id("http://ex.org/B", EntityKind::Class)
+        .expect("filler");
+    ontology
+        .add_axiom(Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        })
+        .expect("axiom");
+
+    assert_eq!(ontology.direct_superclasses(subclass), &[filler]);
+    assert_eq!(ontology.index().ranges_of(property), &[filler]);
+    assert_eq!(ontology.index().by_kind("SubClassOfExistential").len(), 1);
+}
+
+#[test]
+fn add_axiom_symmetric_reflexive_functional_property_axioms() {
+    let mut ontology = Ontology::new();
+    let symmetric = ontology
+        .entity_id("http://ex.org/symmetric", EntityKind::ObjectProperty)
+        .expect("symmetric");
+    let reflexive = ontology
+        .entity_id("http://ex.org/reflexive", EntityKind::ObjectProperty)
+        .expect("reflexive");
+    let functional = ontology
+        .entity_id("http://ex.org/functional", EntityKind::ObjectProperty)
+        .expect("functional");
+
+    ontology
+        .add_axiom(Axiom::SymmetricObjectProperty(symmetric))
+        .expect("symmetric");
+    ontology
+        .add_axiom(Axiom::ReflexiveObjectProperty(reflexive))
+        .expect("reflexive");
+    ontology
+        .add_axiom(Axiom::FunctionalObjectProperty(functional))
+        .expect("functional");
+
+    assert_eq!(ontology.index().by_kind("SymmetricObjectProperty").len(), 1);
+    assert_eq!(ontology.index().by_kind("ReflexiveObjectProperty").len(), 1);
+    assert_eq!(
+        ontology.index().by_kind("FunctionalObjectProperty").len(),
+        1
+    );
+}

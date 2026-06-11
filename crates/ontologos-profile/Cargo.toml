@@ -8,7 +8,11 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "OWL profile detection for OntoLogos"
+documentation = "https://docs.rs/ontologos-profile"
 publish = true
+
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 ontologos-core = { workspace = true }

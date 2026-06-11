@@ -1,14 +1,15 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos v0.1 is **not** a drop-in HermiT replacement.
+Honest positioning for evaluators. OntoLogos v0.2 is **not** a drop-in HermiT replacement.
 
 See [landscape-2023.md](internal/research/landscape-2023.md) for the full 2023–2026 reasoner survey.
 
 ## Maturity matrix
 
-| Capability | OntoLogos v0.1 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+| Capability | OntoLogos v0.2 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|----------------|-----|--------|----------|------------|----------|---------|
-| Load OWL files | Yes (v0.2) | Yes | Yes | Yes | Yes | Yes | Yes |
+| Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
+| OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
 | OWL EL classification | No (v0.5) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
 | OWL RL reasoning | No (v0.4) | No | Partial | Partial | **Yes** | No | Via plugin |
 | RDFS materialization | No (v0.3) | No | Yes | Yes | Partial | No | Yes |
@@ -18,6 +19,8 @@ See [landscape-2023.md](internal/research/landscape-2023.md) for the full 2023�
 | Hybrid EL+DL routing | No (v1.5) | No | No | Internal | No | No | MORe plugin |
 | Explanations | No (v0.6) | Yes | Yes | Partial | Limited | No | Yes |
 | Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
+
+v0.2 maps a **subset** of TBox axioms into core; complex expressions are scanned for profile diagnostics but not stored. See [supported-constructs.md](reference/supported-constructs.md).
 
 ## Maintenance landscape
 
@@ -29,13 +32,14 @@ Most JVM DL reasoners (HermiT, Pellet, FaCT++) have had **little or no developme
 |---------|----------|----------------------|
 | **whelk-rs** | OWL EL in Rust | EL only; no RL/DL/CLI/Python stack |
 | **reasonable** | OWL RL in Rust | RL only; triple/Datalog model |
-| **horned-owl** | OWL parse/manipulate | No reasoner; OntoLogos partner for v0.2 |
+| **horned-owl** | OWL parse/manipulate | No reasoner; OntoLogos uses it for v0.2 parsing |
 
 OntoLogos targets a **unified multi-profile workspace** with MORe-style hybrid routing (v1.5), not a single-profile library.
 
 ## When to use OntoLogos today
 
 - Embedding an ontology **data model** in Rust
+- Loading OWL files and detecting profiles natively
 - Evaluating the architecture and roadmap
 - Contributing to a maintained open-source Rust reasoner stack
 

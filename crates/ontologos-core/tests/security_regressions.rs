@@ -1,6 +1,6 @@
 use ontologos_core::{Error, Limits, Ontology};
 use ontologos_parser::validate_load_path;
-use ontologos_profile::detect_profile;
+use ontologos_profile::{detect_profile, OwlProfile};
 
 #[test]
 fn rejects_format_version_1_snapshot() {
@@ -82,7 +82,7 @@ fn rejects_oversized_json_input() {
 fn detect_profile_succeeds_on_empty_ontology() {
     let ontology = Ontology::default();
     let report = detect_profile(&ontology).expect("detect");
-    assert!(report.detected.is_some());
+    assert_eq!(report.detected, Some(OwlProfile::Ql));
 }
 
 #[test]

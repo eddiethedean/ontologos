@@ -6,4 +6,12 @@
 
 :A a owl:Class .
 :B a owl:Class .
+:C a owl:Class .
+:hasPart a owl:ObjectProperty .
+
 :A rdfs:subClassOf :B .
+:C rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty :hasPart ;
+    owl:someValuesFrom :B
+] .

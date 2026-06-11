@@ -454,4 +454,78 @@ mod tests {
         let err = Ontology::from_json_with_limits(json, limits).expect_err("size");
         assert!(matches!(err, Error::Serialization(_)));
     }
+
+    #[test]
+    fn round_trip_subclass_of_existential() {
+        let ontology = Ontology::builder()
+            .class("http://example.org/C")
+            .expect("class")
+            .class("http://example.org/B")
+            .expect("class")
+            .object_property("http://example.org/hasPart")
+            .expect("property")
+            .build()
+            .expect("build");
+        let mut ontology = ontology;
+        let c = ontology.lookup_entity("http://example.org/C").expect("C");
+        let b = ontology.lookup_entity("http://example.org/B").expect("B");
+        let has_part = ontology
+            .lookup_entity("http://example.org/hasPart")
+            .expect("hasPart");
+        ontology
+            .add_axiom(crate::axiom::Axiom::SubClassOfExistential {
+                subclass: c,
+                property: has_part,
+                filler: b,
+            })
+            .expect("axiom");
+
+        let json = ontology.to_json().expect("to_json");
+        let restored = Ontology::from_json(&json).expect("from_json");
+        assert_eq!(restored.axiom_count(), 1);
+        assert_eq!(restored.direct_superclasses(c), &[b]);
+    }
+
+    #[test]
+    fn round_trip_rl_property_axiom_variants() {
+        let mut ontology = Ontology::builder()
+            .object_property("http://example.org/symmetric")
+            .expect("symmetric")
+            .object_property("http://example.org/reflexive")
+            .expect("reflexive")
+            .object_property("http://example.org/functional")
+            .expect("functional")
+            .build()
+            .expect("build");
+
+        let symmetric = ontology
+            .lookup_entity("http://example.org/symmetric")
+            .expect("symmetric");
+        let reflexive = ontology
+            .lookup_entity("http://example.org/reflexive")
+            .expect("reflexive");
+        let functional = ontology
+            .lookup_entity("http://example.org/functional")
+            .expect("functional");
+
+        ontology
+            .add_axiom(crate::axiom::Axiom::SymmetricObjectProperty(symmetric))
+            .expect("symmetric");
+        ontology
+            .add_axiom(crate::axiom::Axiom::ReflexiveObjectProperty(reflexive))
+            .expect("reflexive");
+        ontology
+            .add_axiom(crate::axiom::Axiom::FunctionalObjectProperty(functional))
+            .expect("functional");
+
+        let json = ontology.to_json().expect("to_json");
+        let restored = Ontology::from_json(&json).expect("from_json");
+        assert_eq!(restored.axiom_count(), 3);
+        assert_eq!(restored.index().by_kind("SymmetricObjectProperty").len(), 1);
+        assert_eq!(restored.index().by_kind("ReflexiveObjectProperty").len(), 1);
+        assert_eq!(
+            restored.index().by_kind("FunctionalObjectProperty").len(),
+            1
+        );
+    }
 }

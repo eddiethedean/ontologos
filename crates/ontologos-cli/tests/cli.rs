@@ -9,34 +9,16 @@ fn fixture(name: &str) -> std::path::PathBuf {
         .join(name)
 }
 
+fn repo_root() -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .expect("repo root")
+}
+
 #[test]
 fn profile_succeeds_on_minimal_fixture() {
     let path = fixture("minimal_subclass.owl");
-    Command::cargo_bin("ontologos")
-        .expect("ontologos binary")
-        .args(["profile", path.to_str().expect("path")])
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("detected profile:"));
-}
-
-#[test]
-fn profile_json_includes_detected_field() {
-    let path = fixture("minimal_subclass.owl");
-    Command::cargo_bin("ontologos")
-        .expect("ontologos binary")
-        .args(["--format", "json", "profile", path.to_str().expect("path")])
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("\"detected\""));
-}
-
-#[test]
-fn profile_pizza_when_data_present() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/pizza.owl");
-    if !path.exists() {
-        return;
-    }
     Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args(["profile", path.to_str().expect("path")])
@@ -46,15 +28,58 @@ fn profile_pizza_when_data_present() {
 }
 
 #[test]
-fn profile_family_when_data_present() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/family.owl");
-    if !path.exists() {
-        return;
-    }
+fn profile_json_includes_detected_field() {
+    let path = fixture("minimal_subclass.owl");
+    let output = Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args(["--format", "json", "profile", path.to_str().expect("path")])
+        .assert()
+        .success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
+    assert!(stdout.contains("\"detected\":\"EL\"") || stdout.contains("\"detected\": \"EL\""));
+}
+
+#[test]
+fn profile_pizza_corpus() {
+    let path = repo_root().join("benchmarks/data/pizza.owl");
+    assert!(
+        path.exists(),
+        "missing pizza corpus at {} (run ./benchmarks/scripts/download.sh)",
+        path.display()
+    );
+    let output = Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args(["profile", path.to_str().expect("path")])
+        .assert()
+        .success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
+    assert!(stdout.contains("detected profile: El"));
+    assert!(stdout.contains("diagnostics:"));
+    assert!(
+        !stdout.contains("diagnostics: none"),
+        "pizza should report hybrid source diagnostics"
+    );
+}
+
+#[test]
+fn profile_family_corpus() {
+    let path = repo_root().join("benchmarks/data/family.owl");
+    assert!(path.exists(), "missing family corpus at {}", path.display());
     Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args(["profile", path.to_str().expect("path")])
         .assert()
         .success()
         .stdout(predicate::str::contains("detected profile: Rl"));
+}
+
+#[test]
+fn profile_missing_file_fails() {
+    let path = fixture("missing.owl");
+    Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args(["profile", path.to_str().expect("path")])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("error").or(predicate::str::contains("Error")));
 }

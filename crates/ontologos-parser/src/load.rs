@@ -109,13 +109,4 @@ mod tests {
             .expect_err("traversal");
         assert!(matches!(err, Error::Parse(_)));
     }
-
-    #[test]
-    fn load_minimal_subclass_fixture() {
-        let path =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/minimal_subclass.owl");
-        let ontology = load_ontology(&path).expect("load fixture");
-        assert!(ontology.axiom_count() >= 1);
-        assert!(ontology.parse_meta().is_some());
-    }
 }

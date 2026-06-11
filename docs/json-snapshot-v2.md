@@ -1,6 +1,6 @@
 # JSON Snapshot Format v2
 
-OntoLogos serializes ontologies to JSON for storage and interchange. **v0.1 uses format version 2 only** for untrusted input; v1 is rejected.
+OntoLogos serializes ontologies to JSON for storage and interchange. **Format version 2 only** for untrusted input; v1 is rejected.
 
 ## Top-level schema
 
@@ -56,6 +56,10 @@ Axioms use IRI strings (not numeric entity IDs). Supported variants:
 | `SubObjectPropertyOf` | `{ "sub_property": "...", "super_property": "..." }` |
 | `InverseObjectProperties` | `{ "left": "...", "right": "..." }` |
 | `TransitiveObjectProperty` | `"..."` (property IRI string) |
+| `SubClassOfExistential` | `{ "subclass": "...", "property": "...", "filler": "..." }` *(v0.2)* |
+| `SymmetricObjectProperty` | `"..."` *(v0.2)* |
+| `ReflexiveObjectProperty` | `"..."` *(v0.2)* |
+| `FunctionalObjectProperty` | `"..."` *(v0.2)* |
 
 Every IRI referenced in an axiom must match an entity declared in `entities`.
 

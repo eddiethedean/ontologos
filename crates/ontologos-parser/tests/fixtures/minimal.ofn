@@ -4,5 +4,8 @@ Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Ontology(<http://example.org/test>
   Declaration(Class(:A))
   Declaration(Class(:B))
+  Declaration(Class(:C))
+  Declaration(ObjectProperty(:hasPart))
   SubClassOf(:A :B)
+  SubClassOf(:C ObjectSomeValuesFrom(:hasPart :B))
 )
