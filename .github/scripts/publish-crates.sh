@@ -3,18 +3,21 @@ set -euo pipefail
 
 # Publish workspace crates in dependency order. crates.io index propagation
 # can lag behind uploads, so each crate is retried before failing the job.
+#
+# v0.1.0: only ontologos-core is published. Uncomment additional crates as they
+# reach implementation milestones (see ROADMAP.md).
 
 CRATES=(
   ontologos-core
-  ontologos-parser
-  ontologos-profile
-  ontologos-rdfs
-  ontologos-rl
-  ontologos-el
-  ontologos-query
-  ontologos-explain
-  ontologos-cli
-  ontologos-py
+  # ontologos-parser
+  # ontologos-profile
+  # ontologos-rdfs
+  # ontologos-rl
+  # ontologos-el
+  # ontologos-query
+  # ontologos-explain
+  # ontologos-cli
+  # ontologos-py
 )
 
 publish_crate() {

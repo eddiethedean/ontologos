@@ -17,56 +17,56 @@ A modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, expl
 | `ontologos-cli` | `ontologos` command-line tool |
 | `ontologos-py` | Python bindings via PyO3 |
 
+## Status (v0.1)
+
+**v0.1** delivers the in-memory core data model (`ontologos-core`). OWL file loading, profile detection, and reasoning land in **v0.2+**. See [ROADMAP.md](ROADMAP.md).
+
 ## Quick start
 
 ```bash
-# Build the workspace
 cargo build
-
-# Run the CLI
-cargo run -p ontologos-cli -- profile path/to/ontology.owl
-
-# Run tests
-cargo test --workspace
+cargo test -p ontologos-core
 ```
 
-## CLI
+## Rust API (v0.1)
 
-```bash
-ontologos profile ontology.owl
-ontologos classify ontology.owl
-ontologos materialize ontology.owl
-ontologos explain ontology.owl
-```
-
-Output formats: `--format text|json|yaml` (yaml pending).
-
-## Rust API
+Build an ontology programmatically or load from JSON:
 
 ```rust
-use ontologos_core::{Ontology, Profile, Reasoner};
+use ontologos_core::Ontology;
 
-let ontology = Ontology::from_file("pizza.owl")?;
-let reasoner = Reasoner::builder()
-    .profile(Profile::Auto)
-    .build(ontology)?;
-reasoner.classify()?;
+let ontology = Ontology::builder()
+    .class("http://example.org/Pizza")?
+    .class("http://example.org/Food")?
+    .subclass_of("http://example.org/Pizza", "http://example.org/Food")?
+    .build()?;
+
+let json = ontology.to_json()?;
+let restored = Ontology::from_json(&json)?;
 ```
 
-## Python API
+`Ontology::from_file` returns an error until v0.2 parser support.
 
-```python
-from ontologos import Reasoner
+## CLI (v0.2+)
 
-r = Reasoner("ontology.owl")
-r.classify()
+The CLI is wired but requires parser and engine implementations:
+
+```bash
+ontologos profile ontology.owl   # v0.2
+ontologos classify ontology.owl  # v0.5
 ```
+
+## Python API (v0.9+)
+
+Python bindings are stubbed; file loading requires v0.2.
 
 ## Documentation
 
 - [ROADMAP.md](ROADMAP.md) — versioned release plan (0.1 → 1.0 → 2.0)
+- [CHANGELOG.md](CHANGELOG.md) — release history
 - [SPEC.md](SPEC.md) — technical specification
 - [PLAN.md](PLAN.md) — background and ecosystem vision
+- [docs/research/](docs/research/) — OWL 2 and reasoner architecture notes
 
 ## License
 

@@ -4,18 +4,25 @@ use crate::ontology::Ontology;
 /// OWL profile selected for reasoning.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Profile {
+    /// Detect the most specific supported profile automatically.
     #[default]
     Auto,
+    /// RDFS reasoning only.
     Rdfs,
+    /// OWL RL rule-based reasoning.
     Rl,
+    /// OWL EL completion-based classification.
     El,
 }
 
 /// Configuration options for the reasoner builder.
 #[derive(Debug, Clone)]
 pub struct ReasonerConfig {
+    /// Enable incremental re-classification when axioms change.
     pub incremental: bool,
+    /// Record explanations for inferences.
     pub explanations: bool,
+    /// Number of threads for parallel rule execution.
     pub parallelism: usize,
 }
 
@@ -37,23 +44,27 @@ pub struct ReasonerBuilder {
 }
 
 impl ReasonerBuilder {
+    /// Create a builder with default configuration.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Set the OWL profile for reasoning.
     #[must_use]
     pub fn profile(mut self, profile: Profile) -> Self {
         self.profile = profile;
         self
     }
 
+    /// Set reasoner configuration options.
     #[must_use]
     pub fn config(mut self, config: ReasonerConfig) -> Self {
         self.config = config;
         self
     }
 
+    /// Build a reasoner over the given ontology.
     pub fn build(self, ontology: Ontology) -> Result<Reasoner> {
         Ok(Reasoner {
             ontology,
@@ -71,21 +82,25 @@ pub struct Reasoner {
 }
 
 impl Reasoner {
+    /// Create a new reasoner builder.
     #[must_use]
     pub fn builder() -> ReasonerBuilder {
         ReasonerBuilder::new()
     }
 
+    /// The configured OWL profile.
     #[must_use]
     pub fn profile(&self) -> Profile {
         self.profile
     }
 
+    /// The reasoner configuration.
     #[must_use]
     pub fn config(&self) -> &ReasonerConfig {
         &self.config
     }
 
+    /// Borrow the loaded ontology.
     #[must_use]
     pub fn ontology(&self) -> &Ontology {
         &self.ontology

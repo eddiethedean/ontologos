@@ -1,0 +1,62 @@
+# Ontologos benchmark ontology manifest
+# Large files are not committed; download to local_path before running integration tests.
+
+[[ontology]]
+name = "pizza"
+expected_profile = "EL"
+source_url = "https://raw.githubusercontent.com/owlcs/pizza-ontology/master/pizza.owl"
+license = "CC-BY-4.0"
+format = "owl+xml"
+axiom_count_approx = 800
+local_path = "benchmarks/data/pizza.owl"
+notes = "Classic OWL tutorial ontology; primary EL conformance corpus."
+
+[[ontology]]
+name = "family"
+expected_profile = "RL"
+source_url = "https://raw.githubusercontent.com/owlcs/pizza-ontology/master/examples/family.owl"
+license = "CC-BY-4.0"
+format = "owl+xml"
+axiom_count_approx = 50
+local_path = "benchmarks/data/family.owl"
+notes = "Small family relationships ontology; good RL smoke test."
+
+[[ontology]]
+name = "galen"
+expected_profile = "EL"
+source_url = "https://www.co-ode.org/ontologies/galen/galen.owl"
+license = "GPL-2.0"
+format = "owl+xml"
+axiom_count_approx = 23000
+local_path = "benchmarks/data/galen.owl"
+notes = "Medical ontology; EL stress test. Download may require manual mirror."
+
+[[ontology]]
+name = "go"
+expected_profile = "EL"
+source_url = "http://purl.obolibrary.org/obo/go.owl"
+license = "CC-BY-4.0"
+format = "owl+xml"
+axiom_count_approx = 500000
+local_path = "benchmarks/data/go.owl"
+notes = "Gene Ontology; large EL corpus. Use subset for CI (see go-subset entry)."
+
+[[ontology]]
+name = "go-subset"
+expected_profile = "EL"
+source_url = "http://purl.obolibrary.org/obo/go.owl"
+license = "CC-BY-4.0"
+format = "owl+xml"
+axiom_count_approx = 10000
+local_path = "benchmarks/data/go-subset.owl"
+notes = "Trimmed GO extract for CI; generate with ROBOT filter (v0.2 tooling)."
+
+[[ontology]]
+name = "snomed-subset"
+expected_profile = "EL"
+source_url = "https://github.com/IHTSDO/snomed-owl-tooling"
+license = "SNOMED-CT license (restricted)"
+format = "owl+xml"
+axiom_count_approx = 350000
+local_path = "benchmarks/data/snomed-subset.owl"
+notes = "SNOMED CT requires license agreement; use public RF2-to-OWL subset only."

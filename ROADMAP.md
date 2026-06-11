@@ -10,7 +10,7 @@ For architecture and API details, see [SPEC.md](SPEC.md). For background and eco
 
 | Version | Theme | Status |
 |---------|-------|--------|
-| **0.1** | Research & core data model | **In progress** |
+| **0.1** | Research & core data model | **Complete** |
 | **0.2** | Parsing & profile detection | Planned |
 | **0.3** | RDFS engine | Planned |
 | **0.4** | OWL RL engine | Planned |
@@ -23,7 +23,7 @@ For architecture and API details, see [SPEC.md](SPEC.md). For background and eco
 | **1.1+** | Post-1.0 improvements | Planned |
 | **2.0** | Full OWL DL | Planned |
 
-**Current milestone:** workspace skeleton landed (crates, CLI wiring, CI, release workflow, stub APIs). Targeting **v0.1.0** next.
+**Current milestone:** v0.1 core data model complete. Next: **v0.2** parsing and profile detection.
 
 ```mermaid
 flowchart LR
@@ -85,20 +85,20 @@ Establish the technical foundation and in-memory ontology representation all eng
 
 ### Research
 
-- [ ] OWL 2 standards review (`docs/research/owl2.md`)
-- [ ] HermiT architecture study (`docs/research/hermit.md`)
-- [ ] ELK architecture study (`docs/research/elk.md`)
-- [ ] RDFox evaluation (`docs/research/rdfox.md`)
-- [ ] Benchmark corpus manifest under `benchmarks/` (Pizza, Family, GALEN, Gene Ontology, SNOMED subsets)
+- [x] OWL 2 standards review (`docs/research/owl2.md`)
+- [x] HermiT architecture study (`docs/research/hermit.md`)
+- [x] ELK architecture study (`docs/research/elk.md`)
+- [x] RDFox evaluation (`docs/research/rdfox.md`)
+- [x] Benchmark corpus manifest under `benchmarks/` (Pizza, Family, GALEN, Gene Ontology, SNOMED subsets)
 
 ### `ontologos-core`
 
 - [x] Workspace crate and stub API (`Ontology`, `Reasoner`, `EntityKind`, axiom types)
-- [ ] IRI intern pool
-- [ ] Full axiom model
-- [ ] Ontology graph
-- [ ] Entity registry
-- [ ] Serialization layer
+- [x] IRI intern pool
+- [x] Full axiom model
+- [x] Ontology graph
+- [x] Entity registry
+- [x] Serialization layer
 
 **Performance target:** ontology load under 500ms for medium ontologies with stable allocation patterns.
 

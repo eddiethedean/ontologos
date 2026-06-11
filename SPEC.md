@@ -24,7 +24,7 @@ ontologos/
 │   ├── ontologos-explain
 │   ├── ontologos-cli
 │   └── ontologos-py
-``
+```
 
 ---
 

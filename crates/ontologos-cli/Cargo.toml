@@ -8,6 +8,7 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Command-line interface for Ontologos"
+publish = false
 default-run = "ontologos"
 
 [[bin]]
