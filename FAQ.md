@@ -18,14 +18,15 @@ See [Load an OWL file](docs/getting-started/load-owl-file.md).
 
 ## Which crate should I depend on?
 
-For **v0.3**, typical workflows use:
+For **v0.4**, typical workflows use:
 
 ```toml
 [dependencies]
-ontologos-core = "0.3"
-ontologos-parser = "0.3"   # OWL/RDF file loading
-ontologos-profile = "0.3"  # EL / RL / QL / DL detection
-ontologos-rdfs = "0.3"     # RDFS materialization
+ontologos-core = "0.4.0"
+ontologos-parser = "0.4.0"   # OWL/RDF file loading
+ontologos-profile = "0.4.0"  # EL / RL / QL / DL detection
+ontologos-rdfs = "0.4.0"     # RDFS materialization
+ontologos-rl = "0.4.0"       # OWL RL saturation
 ```
 
 Depend on **`ontologos-core` only** if you build ontologies programmatically or from JSON snapshots.
@@ -34,9 +35,9 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Not for full OWL classification.** v0.3 loads OWL files, detects profiles, and materializes RDFS TBox inferences (`ontologos materialize` or `ontologos_rdfs::RdfsEngine`). OWL EL/RL classification is not yet available — use Protégé with HermiT or ELK for production OWL reasoning workflows.
+**Not for full OWL DL classification.** v0.4 loads OWL files, detects profiles, materializes RDFS TBox inferences, and saturates OWL RL ontologies via `ontologos-rl` (library) or Python `profile="rl"`. The CLI `classify` and `materialize` commands remain RDFS-only until v0.5. OWL EL taxonomy classification is not yet available — use Protégé with HermiT or ELK for production OWL DL workflows.
 
-OntoLogos is for early adopters who want to embed the Rust data model, load ontologies natively, or follow the [roadmap](ROADMAP.md).
+OntoLogos is for early adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](ROADMAP.md).
 
 ## Why was my JSON rejected?
 
@@ -55,7 +56,7 @@ See [Profile detection](docs/guides/profile-detection.md).
 
 ## Why doesn't `ontology.axiom_count()` match Protégé's axiom count?
 
-The parser maps a subset of OWL constructs into the core model. Complex class expressions, ABox axioms, and many property axioms are scanned for profile detection but **skipped** during mapping. `axiom_count()` is **mapper output**, not raw OWL logical axiom count.
+The parser maps a subset of OWL constructs into the core model. Complex class expressions, many data-property axioms, and some property axioms are scanned for profile detection but **skipped** during mapping. Named ABox axioms (`ClassAssertion`, `ObjectPropertyAssertion`, `SameIndividual`, `DifferentIndividuals`) are mapped in v0.4. `axiom_count()` is **mapper output**, not raw OWL logical axiom count.
 
 See [Troubleshooting](docs/guides/troubleshooting.md) and [Supported constructs](docs/reference/supported-constructs.md).
 
@@ -90,11 +91,11 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl)
 - Local: `cargo doc -p ontologos-core --open`
 - Error catalog: [docs/reference/errors.md](docs/reference/errors.md)
 - CLI: [docs/reference/cli.md](docs/reference/cli.md)
 
 ## Does `pip install ontologos` work?
 
-The PyPI package is an **alpha placeholder** (v0.3). It installs, reports its version, and `Reasoner(path)` loads an OWL file via the Rust parser. `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; the default profile returns not-implemented until OWL EL/RL classification ships in v0.5. Profile detection, materialize CLI, and full Python APIs ship in later milestones (see [Python README](crates/ontologos-py/README.md)). Use the Rust crates for full v0.3 workflows.
+The PyPI package is an **alpha** release (v0.4.0). It installs, reports its version, and `Reasoner(path)` loads an OWL file via the Rust parser. `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; `Reasoner(path, profile="rl").classify()` runs OWL RL saturation. The default profile returns not-implemented until OWL EL taxonomy classification ships in v0.5. Profile detection, CLI RL routing, and full Python APIs ship in later milestones (see [Python README](crates/ontologos-py/README.md)). Use the Rust crates for full v0.4 workflows.

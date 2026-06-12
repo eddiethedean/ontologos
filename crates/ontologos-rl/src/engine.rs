@@ -6,6 +6,9 @@ use crate::rules::{apply_batch_a, apply_batch_b, RuleContext};
 use crate::triple_index::TripleIndex;
 
 /// OWL RL forward-chaining engine with optional parallel execution.
+///
+/// `parallelism` controls the rayon thread pool size for parallel domain/range
+/// candidate expansion in ABox type rules. Use `1` for fully sequential execution.
 #[derive(Debug)]
 pub struct RlEngine {
     parallelism: usize,
@@ -15,12 +18,10 @@ pub struct RlEngine {
 const MAX_PARALLELISM: usize = 64;
 
 impl RlEngine {
+    /// Create an engine with the given parallelism (panics if out of bounds).
     #[must_use]
     pub fn new(parallelism: usize) -> Self {
-        Self {
-            parallelism,
-            record_traces: false,
-        }
+        Self::try_new(parallelism).expect("parallelism must be in 1..=64")
     }
 
     /// Validate parallelism is within supported bounds.

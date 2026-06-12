@@ -1,6 +1,6 @@
 # Contributing to OntoLogos
 
-Thank you for your interest in contributing. OntoLogos is in early development (v0.3); high-impact contributions include RL/EL engines, tests, and documentation.
+Thank you for your interest in contributing. OntoLogos is in early development (v0.4); high-impact contributions include EL engine, tests, and documentation.
 
 ## Prerequisites
 
@@ -33,10 +33,11 @@ CI runs the following on every push to `main` (see [.github/workflows/ci.yml](.g
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
+cargo test -p ontologos-conformance
 cargo build -p ontologos-cli --release
 ```
 
-Run all five locally before submitting.
+Run all locally before submitting.
 
 ## Pull request guidelines
 
@@ -53,6 +54,8 @@ Run all five locally before submitting.
 | `crates/ontologos-core/` | Data model |
 | `crates/ontologos-parser/` | OWL/RDF file loading (v0.2) |
 | `crates/ontologos-profile/` | Profile detection (v0.2) |
+| `crates/ontologos-rdfs/` | RDFS engine (v0.3) |
+| `crates/ontologos-rl/` | OWL RL engine (v0.4) |
 | `docs/` | User and reference documentation |
 | `docs/internal/research/` | Maintainer research notes |
 | `benchmarks/` | Benchmark ontology manifest and corpora |
@@ -63,29 +66,32 @@ See [ROADMAP.md](ROADMAP.md) for milestone ownership.
 
 ### Release checklist
 
-Before tagging a release (e.g. `v0.3.0`):
+Before tagging a release (e.g. `v0.4.0`):
 
 ```bash
 ./benchmarks/scripts/download.sh
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace --locked
+cargo test -p ontologos-conformance --locked
 cargo publish -p ontologos-core --dry-run
 cargo publish -p ontologos-profile --dry-run
 cargo publish -p ontologos-parser --dry-run
-cargo publish -p ontologos-rdfs --dry-run --allow-dirty
+cargo publish -p ontologos-rdfs --dry-run
+cargo publish -p ontologos-rl --dry-run --allow-dirty
 ```
 
 Use `--allow-dirty` only for local dry-runs before commit; release CI publishes from a clean tagged checkout.
 
 Then:
 
-1. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated version section and empty `[Unreleased]`.
-2. Commit release prep on `main`.
-3. Create an annotated tag: `git tag -a v0.3.0 -m "OntoLogos v0.3.0"`
-4. Push commit and tag: `git push origin main && git push origin v0.3.0`
-5. The [release workflow](.github/workflows/release.yml) runs when the tag is pushed (requires GitHub secrets below).
-6. Create a GitHub Release from [`.github/release/v0.3.0.md`](.github/release/v0.3.0.md) (or the matching version file).
+1. Bump `version` in [crates/ontologos-py/pyproject.toml](crates/ontologos-py/pyproject.toml) and [python/ontologos/__init__.py](crates/ontologos-py/python/ontologos/__init__.py) to match the workspace version.
+2. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated version section and empty `[Unreleased]`.
+3. Commit release prep on `main`.
+4. Create an annotated tag: `git tag -a v0.4.0 -m "OntoLogos v0.4.0"`
+5. Push commit and tag: `git push origin main && git push origin v0.4.0`
+6. The [release workflow](.github/workflows/release.yml) runs when the tag is pushed (requires GitHub secrets below).
+7. Create a GitHub Release from [`.github/release/v0.4.0.md`](.github/release/v0.4.0.md) (or the matching version file).
 
 ### Release secrets
 
@@ -98,18 +104,10 @@ Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire
 
 On each release tag, CI publishes:
 
-- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (v0.3: `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, in dependency order)
+- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (v0.4: `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, in dependency order)
 - **PyPI** — `ontologos` via [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh) (`maturin`, Linux wheel + sdist)
 
-Bump `version` in [crates/ontologos-py/pyproject.toml](crates/ontologos-py/pyproject.toml) and [python/ontologos/__init__.py](crates/ontologos-py/python/ontologos/__init__.py) to match the workspace version before tagging.
-
-Manual PyPI publish (optional):
-
-```bash
-PYPI_API_TOKEN=pypi-... ./.github/scripts/publish-pypi.sh
-```
-
-- **Tags:** Release tags follow semver (`v0.3.0`, …)
+- **Tags:** Release tags follow semver (`v0.4.0`, …)
 - **CHANGELOG:** [Keep a Changelog](https://keepachangelog.com/) format in [CHANGELOG.md](CHANGELOG.md)
 
 ## Questions

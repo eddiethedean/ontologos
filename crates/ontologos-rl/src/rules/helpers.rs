@@ -108,7 +108,7 @@ pub(crate) fn transitive_subproperties(ontology: &Ontology, property: EntityId) 
     out
 }
 
-/// Partition work across a rayon pool when `parallelism > 1`.
+/// Partition work across a rayon pool sized to `parallelism` when `parallelism > 1`.
 pub(crate) fn map_parallel<T, R, F>(parallelism: usize, items: Vec<T>, f: F) -> Vec<R>
 where
     T: Send,
@@ -122,7 +122,13 @@ where
     #[cfg(feature = "parallel")]
     {
         use rayon::prelude::*;
-        return items.into_par_iter().map(f).collect();
+        use rayon::ThreadPoolBuilder;
+
+        let pool = ThreadPoolBuilder::new()
+            .num_threads(parallelism)
+            .build()
+            .expect("thread pool");
+        pool.install(|| items.into_par_iter().map(f).collect())
     }
 
     #[cfg(not(feature = "parallel"))]

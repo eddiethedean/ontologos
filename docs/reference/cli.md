@@ -17,7 +17,7 @@ cargo build -p ontologos-cli --release
 
 ## Subcommands
 
-| Command | v0.3 status | Description |
+| Command | v0.4 status | Description |
 |---------|-------------|-------------|
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
 | `materialize <file>` | **Works** | RDFS TBox materialization with report |
@@ -26,7 +26,7 @@ cargo build -p ontologos-cli --release
 
 All commands load the ontology via `ontologos_parser::load_ontology` first.
 
-`classify` and `materialize` both run the RDFS engine in v0.3; use either for inference counts. OWL EL/RL classification ships in v0.5.
+`classify` and `materialize` both run the RDFS engine only. OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5.
 
 ## `profile` output
 

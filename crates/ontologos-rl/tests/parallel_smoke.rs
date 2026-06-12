@@ -53,5 +53,5 @@ fn parallel_produces_same_saturation_as_sequential() {
         .expect("engine")
         .saturate(&mut par)
         .expect("par");
-    assert_eq!(seq.axiom_count(), par.axiom_count());
+    assert_eq!(seq, par);
 }

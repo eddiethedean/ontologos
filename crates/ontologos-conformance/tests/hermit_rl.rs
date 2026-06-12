@@ -144,7 +144,9 @@ fn equivalent_class_instances_share_types() {
         .expect("build");
 
     let car = ontology.lookup_entity(&iri("Car")).expect("Car");
-    let automobile = ontology.lookup_entity(&iri("Automobile")).expect("Automobile");
+    let automobile = ontology
+        .lookup_entity(&iri("Automobile"))
+        .expect("Automobile");
     ontology
         .add_axiom(Axiom::EquivalentClasses(vec![car, automobile]))
         .expect("equiv");
@@ -192,16 +194,28 @@ fn reflexive_and_same_as_expand_property_instances() {
     saturate(&mut ontology);
 
     assert!(assert_object_property_assertion(
-        &ontology, &iri("a"), &iri("r"), &iri("b")
+        &ontology,
+        &iri("a"),
+        &iri("r"),
+        &iri("b")
     ));
     assert!(assert_object_property_assertion(
-        &ontology, &iri("b"), &iri("r"), &iri("a")
+        &ontology,
+        &iri("b"),
+        &iri("r"),
+        &iri("a")
     ));
     assert!(assert_object_property_assertion(
-        &ontology, &iri("a"), &iri("r"), &iri("a")
+        &ontology,
+        &iri("a"),
+        &iri("r"),
+        &iri("a")
     ));
     assert!(assert_object_property_assertion(
-        &ontology, &iri("b"), &iri("r"), &iri("b")
+        &ontology,
+        &iri("b"),
+        &iri("r"),
+        &iri("b")
     ));
 }
 
@@ -227,7 +241,10 @@ fn individual_property_retrieval() {
     saturate(&mut ontology);
 
     assert!(assert_object_property_assertion(
-        &ontology, &iri("c"), &iri("r"), &iri("d")
+        &ontology,
+        &iri("c"),
+        &iri("r"),
+        &iri("d")
     ));
 }
 
@@ -326,7 +343,10 @@ fn property_assertion_propagates_along_subproperty() {
     saturate(&mut ontology);
 
     assert!(assert_object_property_assertion(
-        &ontology, &iri("a"), &iri("s"), &iri("b")
+        &ontology,
+        &iri("a"),
+        &iri("s"),
+        &iri("b")
     ));
 }
 
@@ -356,7 +376,10 @@ fn inverse_property_assertion() {
     saturate(&mut ontology);
 
     assert!(assert_object_property_assertion(
-        &ontology, &iri("b"), &iri("q"), &iri("a")
+        &ontology,
+        &iri("b"),
+        &iri("q"),
+        &iri("a")
     ));
 }
 
@@ -383,7 +406,10 @@ fn symmetric_property_assertion() {
     saturate(&mut ontology);
 
     assert!(assert_object_property_assertion(
-        &ontology, &iri("b"), &iri("p"), &iri("a")
+        &ontology,
+        &iri("b"),
+        &iri("p"),
+        &iri("a")
     ));
 }
 
@@ -414,7 +440,10 @@ fn transitive_property_assertion_chain() {
     saturate(&mut ontology);
 
     assert!(assert_object_property_assertion(
-        &ontology, &iri("a"), &iri("t"), &iri("c")
+        &ontology,
+        &iri("a"),
+        &iri("t"),
+        &iri("c")
     ));
 }
 
@@ -531,9 +560,7 @@ fn disjoint_classes_on_individual_report_clash() {
         .add_axiom(Axiom::DisjointClasses(vec![a, b]))
         .expect("disjoint");
 
-    let report = RlEngine::new(1)
-        .saturate(&mut ontology)
-        .expect("saturate");
+    let report = RlEngine::new(1).saturate(&mut ontology).expect("saturate");
 
     assert!(!report.clashes.is_empty());
 }

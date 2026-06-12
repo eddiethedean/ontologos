@@ -51,7 +51,9 @@ Skipped axioms increment `parse_meta.skipped_axiom_count` and append to `parse_m
 
 ## OWL RL saturation scope (v0.4)
 
-`RlEngine::saturate` runs RDFS materialization first, then RL TBox/ABox rules (equivalence, property characteristics, existentials, type/property propagation, `sameAs`, disjoint clash detection). See [`ontologos-rl`](../../crates/ontologos-rl/README.md).
+`RlEngine::saturate` runs RDFS materialization first, then RL TBox/ABox rules (equivalence, property characteristics, existentials, type/property propagation, `sameAs`, clash detection). See [`ontologos-rl`](../../crates/ontologos-rl/README.md).
+
+**Clash detection (v0.4):** direct disjoint class pairs on an individual's types; `sameAs` / `differentFrom` inconsistency within a `sameAs` cluster. Functional-property duplicate values, asymmetric reverse pairs, and disjointness via subclass closure are not yet reported.
 
 ## Profile detection input
 

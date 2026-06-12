@@ -59,9 +59,9 @@ cd ontologos
 ./benchmarks/scripts/download.sh   # for Pizza corpus examples
 ```
 
-API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core) · [parser](https://docs.rs/ontologos-parser) · [profile](https://docs.rs/ontologos-profile) · [rdfs](https://docs.rs/ontologos-rdfs)
+API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core) · [parser](https://docs.rs/ontologos-parser) · [profile](https://docs.rs/ontologos-profile) · [rdfs](https://docs.rs/ontologos-rdfs) · [rl](https://docs.rs/ontologos-rl)
 
-> **Python:** `pip install ontologos` is an alpha package — `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; the default profile is not implemented until v0.5. Full Python APIs ship in v0.9. See [crates/ontologos-py/README.md](crates/ontologos-py/README.md).
+> **Python:** `pip install ontologos` is an alpha package — `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; `profile="rl"` runs OWL RL saturation. The default profile is not implemented until v0.5. Full Python APIs ship in v0.9. See [crates/ontologos-py/README.md](crates/ontologos-py/README.md).
 
 ## Quick start (5 minutes)
 
@@ -88,7 +88,7 @@ fn main() -> Result<(), Error> {
 }
 ```
 
-### Load OWL + materialize (v0.3)
+### Load OWL + materialize
 
 ```bash
 ./benchmarks/scripts/download.sh
@@ -115,19 +115,19 @@ Or run: `cargo run -p ontologos-parser --example load_and_profile`
 
 | Crate | Description | Status |
 |-------|-------------|--------|
-| `ontologos-core` | Core data model, ontology graph, and reasoner API | **v0.3** |
-| `ontologos-parser` | OWL/RDF parsers (horned-owl integration) | **v0.3** |
-| `ontologos-profile` | OWL profile detection and diagnostics | **v0.3** |
-| `ontologos-rdfs` | RDFS reasoning engine | **v0.3** |
-| `ontologos-rl` | OWL RL forward-chaining rules | Stub |
-| `ontologos-el` | OWL EL classification | Stub |
-| `ontologos-query` | Query interface over classified ontologies | Stub |
-| `ontologos-explain` | Proof graphs and explanation export | Stub |
+| `ontologos-core` | Core data model, ontology graph, and reasoner API | **v0.4** |
+| `ontologos-parser` | OWL/RDF parsers (horned-owl integration) | **v0.4** |
+| `ontologos-profile` | OWL profile detection and diagnostics | **v0.4** |
+| `ontologos-rdfs` | RDFS reasoning engine | **v0.4** |
+| `ontologos-rl` | OWL RL forward-chaining rules | **v0.4** |
+| `ontologos-el` | OWL EL classification | Stub (v0.5) |
+| `ontologos-query` | Query interface over classified ontologies | Stub (v0.5) |
+| `ontologos-explain` | Proof graphs and explanation export | Stub (v0.6) |
 | `ontologos-cli` | `ontologos` command-line tool | **Partial** (`profile`, `materialize`, `classify` RDFS) |
 | `ontologos-conformance` | HermiT-ported conformance tests (workspace-only) | Dev harness |
-| `ontologos-py` | Python bindings via PyO3 | Stub |
+| `ontologos-py` | Python bindings via PyO3 | Alpha (`profile=rdfs` / `rl`) |
 
-**v0.3.1** publishes [`ontologos-core`](https://crates.io/crates/ontologos-core), [`ontologos-parser`](https://crates.io/crates/ontologos-parser), [`ontologos-profile`](https://crates.io/crates/ontologos-profile), and [`ontologos-rdfs`](https://crates.io/crates/ontologos-rdfs) to crates.io.
+**v0.4.0** publishes [`ontologos-core`](https://crates.io/crates/ontologos-core), [`ontologos-parser`](https://crates.io/crates/ontologos-parser), [`ontologos-profile`](https://crates.io/crates/ontologos-profile), [`ontologos-rdfs`](https://crates.io/crates/ontologos-rdfs), and [`ontologos-rl`](https://crates.io/crates/ontologos-rl) to crates.io.
 
 ## CLI
 
@@ -138,7 +138,7 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos classify benchmarks/data/family.owl
 ```
 
-`classify` runs RDFS materialization in v0.3; OWL EL/RL classification and `explain` ship in v0.5/v0.6 — see [ROADMAP.md](ROADMAP.md).
+`classify` and `materialize` run RDFS materialization only; OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5; `explain` in v0.6 — see [ROADMAP.md](ROADMAP.md).
 
 ## Documentation
 

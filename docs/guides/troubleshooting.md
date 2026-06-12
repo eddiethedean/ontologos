@@ -21,7 +21,7 @@ Pizza is not committed to the repo (gitignored). Run `./benchmarks/scripts/downl
 
 `ontology.axiom_count()` is the number of axioms **stored in core** after mapping, not the raw OWL logical axiom count in the source file.
 
-The parser skips complex class expressions, most ABox axioms, and many property axiom shapes. Skipped items appear in `parse_meta.skipped_axiom_count` and `parse_meta.warnings`.
+The parser skips complex class expressions, many data-property axioms, and some property axiom shapes. Named ABox axioms (`ClassAssertion`, `ObjectPropertyAssertion`, `SameIndividual`, `DifferentIndividuals`) are mapped in v0.4. Skipped items appear in `parse_meta.skipped_axiom_count` and `parse_meta.warnings`.
 
 Benchmark manifest values (e.g. Pizza `658`) are mapper output targets, documented in [benchmarks/README.md](../../benchmarks/README.md).
 
@@ -51,10 +51,10 @@ Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology l
 
 ## `classify` / `explain` behavior
 
-In v0.3, **`classify`** and **`materialize`** both run RDFS TBox materialization and emit the same inference report (`status` differs). OWL EL/RL classification ships in v0.5; **`explain`** in v0.6.
+In v0.4, CLI **`classify`** and **`materialize`** both run RDFS TBox materialization and emit the same inference report (`status` differs). OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5; **`explain`** in v0.6.
 
-Library users: call `ontologos_rdfs::classify_reasoner` for `Profile::Rdfs`. `Reasoner::classify()` returns a delegate hint for `Profile::Rdfs` and `NotImplemented` for `Profile::Auto` / `El` / `Rl`. See [CLI reference](../reference/cli.md) and [errors.md](../reference/errors.md).
+Library users: call `ontologos_rdfs::classify_reasoner` for `Profile::Rdfs`; `ontologos_rl::classify_reasoner` for `Profile::Rl`. `Reasoner::classify()` returns a delegate hint for `Profile::Rdfs` / `Profile::Rl` and `NotImplemented` for `Profile::Auto` / `El`. See [CLI reference](../reference/cli.md) and [errors.md](../reference/errors.md).
 
 ## RDFS does not expand `EquivalentClasses`
 
-v0.3 RDFS materializes `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance only. Named `EquivalentClasses` axioms are stored but not expanded into mutual subsumption (planned for RL/EL engines). `rdf:type` propagation requires ABox support (v1.6).
+v0.4 RDFS materializes `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance only. Named `EquivalentClasses` axioms are expanded into mutual subsumption by `ontologos-rl` during saturation. ABox `rdf:type` propagation is handled by RL rules when using `ontologos-rl` or Python `profile="rl"`.

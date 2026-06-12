@@ -84,20 +84,17 @@ pub fn assert_subproperty(
 }
 
 /// Assert `individual` has an asserted or inferred class type `class` (direct or via `subClassOf`).
-pub fn assert_typed(
-    ontology: &ontologos_core::Ontology,
-    individual: &str,
-    class: &str,
-) -> bool {
+pub fn assert_typed(ontology: &ontologos_core::Ontology, individual: &str, class: &str) -> bool {
     let Some(ind) = ontology.lookup_entity(individual) else {
         return false;
     };
     let Some(class_id) = ontology.lookup_entity(class) else {
         return false;
     };
-    ontology.classes_of(ind).iter().any(|&c| {
-        c == class_id || assert_subsumed_by_id(ontology, c, class_id)
-    })
+    ontology
+        .classes_of(ind)
+        .iter()
+        .any(|&c| c == class_id || assert_subsumed_by_id(ontology, c, class_id))
 }
 
 /// Assert an `ObjectPropertyAssertion` is present after materialization.

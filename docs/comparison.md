@@ -1,17 +1,17 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos v0.3 is **not** a drop-in HermiT replacement.
+Honest positioning for evaluators. OntoLogos v0.4 is **not** a drop-in HermiT replacement.
 
 See [landscape-2023.md](internal/research/landscape-2023.md) for the full 2023–2026 reasoner survey.
 
 ## Maturity matrix
 
-| Capability | OntoLogos v0.3 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+| Capability | OntoLogos v0.4 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|----------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
 | OWL EL classification | No (v0.5) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
-| OWL RL reasoning | No (v0.4) | No | Partial | Partial | **Yes** | No | Via plugin |
+| OWL RL reasoning | **Yes** (library/Python) | No | Partial | Partial | **Yes** | No | Via plugin |
 | RDFS materialization | Yes (TBox) | No | Yes | Yes | Partial | No | Yes |
 | OWL DL | No (2.0) | No | Yes (stagnant) | **Yes** | No | No | Via plugin |
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
@@ -20,7 +20,9 @@ See [landscape-2023.md](internal/research/landscape-2023.md) for the full 2023�
 | Explanations | No (v0.6) | Yes | Yes | Partial | Limited | No | Yes |
 | Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
 
-v0.2 maps a **subset** of TBox axioms into core; complex expressions are scanned for profile diagnostics but not stored. See [supported-constructs.md](reference/supported-constructs.md).
+CLI `classify` and `materialize` remain RDFS-only until v0.5; OWL RL saturation is available via `ontologos-rl` (Rust library) or Python `profile="rl"`.
+
+v0.4 maps a **subset** of TBox and named ABox axioms into core; complex expressions are scanned for profile diagnostics but not stored. See [supported-constructs.md](reference/supported-constructs.md).
 
 ## Maintenance landscape
 
@@ -40,13 +42,14 @@ OntoLogos targets a **unified multi-profile workspace** with MORe-style hybrid r
 
 - Embedding an ontology **data model** in Rust
 - Loading OWL files and detecting profiles natively
+- OWL RL saturation via `ontologos-rl` or Python `profile="rl"`
 - Evaluating the architecture and roadmap
 - Contributing to a maintained open-source Rust reasoner stack
 
 ## When to use incumbents
 
 - **ELK / whelk-rs:** EL classification today (SNOMED, GO, OBO)
-- **reasonable:** RL materialization in Rust/Python today
+- **reasonable:** RL materialization in Rust/Python today (mature triple-store model)
 - **Konclude:** full DL batch reasoning today (CLI/OWLlink)
 - **Protégé + HermiT/ELK:** interactive OWL editing (note HermiT maintenance risk)
 - **owlready2:** Python-centric OWL workflows with JVM reasoning backends

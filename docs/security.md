@@ -1,6 +1,6 @@
 # Security Considerations
 
-OntoLogos v0.3 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
+OntoLogos v0.4 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
 
 ## JSON snapshots
 

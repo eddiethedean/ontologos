@@ -2,7 +2,7 @@
 
 RDFS TBox materialization for [OntoLogos](https://github.com/eddiethedean/ontologos): transitive `subClassOf` / `subPropertyOf`, and object-property domain/range inheritance along the property hierarchy.
 
-**v0.3 scope:** TBox rules only. Does not expand `EquivalentClasses`, data properties, or `rdf:type` (ABox deferred to v1.6).
+**v0.4 scope:** TBox rules only. Does not expand `EquivalentClasses` or data properties. ABox `rdf:type` propagation and equivalent-class expansion are handled by [`ontologos-rl`](../ontologos-rl).
 
 ```rust
 use ontologos_parser::load_ontology;

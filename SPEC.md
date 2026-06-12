@@ -1,8 +1,8 @@
 
 # OntoLogos Technical Specification
 
-> **Document status:** Mixed. Sections marked **(v0.1)** / **(v0.2)** / **(v0.3)** reflect shipped crates.
-> Full OWL classification, explanations, and Python bindings beyond placeholders are **planned** — see [ROADMAP.md](ROADMAP.md).
+> **Document status:** Mixed. Sections marked **(v0.1)** / **(v0.2)** / **(v0.3)** / **(v0.4)** reflect shipped crates.
+> OWL EL taxonomy classification, explanations, and full Python bindings are **planned** — see [ROADMAP.md](ROADMAP.md).
 > Last reviewed: 2026-06-12
 
 ## Overview
@@ -26,8 +26,8 @@ ontologos/
 │   ├── ontologos-el        (stub → v0.5)
 │   ├── ontologos-query     (stub → v0.5)
 │   ├── ontologos-explain   (stub → v0.6)
-│   ├── ontologos-cli       (partial — profile, materialize, classify/RDFS in v0.3)
-│   └── ontologos-py        (stub → v0.9)
+│   ├── ontologos-cli       (partial — profile, materialize, classify/RDFS)
+│   └── ontologos-py        (alpha — load, profile=rdfs/rl → v0.9 full API)
 ```
 
 ---
@@ -46,7 +46,7 @@ pub enum EntityKind {
 }
 ```
 
-## Axiom Types (v0.1–v0.2)
+## Axiom Types (v0.1–v0.4)
 
 Supported in storage and validation:
 
@@ -62,6 +62,12 @@ Supported in storage and validation:
 - SymmetricObjectProperty *(v0.2)*
 - ReflexiveObjectProperty *(v0.2)*
 - FunctionalObjectProperty *(v0.2)*
+- AsymmetricObjectProperty *(v0.4)*
+- EquivalentObjectProperties *(v0.4)*
+- ClassAssertion *(v0.4)*
+- ObjectPropertyAssertion *(v0.4)*
+- SameIndividual *(v0.4)*
+- DifferentIndividuals *(v0.4)*
 
 ## File loading (v0.2)
 
@@ -98,7 +104,7 @@ fn main() -> Result<(), Error> {
 
 ---
 
-# Reasoner API (planned)
+# Reasoner API (v0.1 facade, v0.3+ delegate hints)
 
 **Status:** `Reasoner::classify(&mut self)` returns `Error::NotImplemented` for EL/Auto until v0.5 and `Error::Message` (delegate hint) for `Profile::Rdfs` / `Profile::Rl`. Use `ontologos_rdfs` or `ontologos_rl` profile crates for materialization.
 
@@ -197,14 +203,14 @@ Features:
 
 # CLI Specification
 
-**Status:** `profile`, `materialize`, and `classify` (RDFS) work in v0.3.1; `classify` and `materialize` emit the same inference report (`status` differs). `explain` loads then fails at engine stub.
+**Status:** `profile`, `materialize`, and `classify` (RDFS) work in v0.4; `classify` and `materialize` emit the same inference report (`status` differs). OWL RL saturation is via `ontologos-rl` (library) or Python `profile="rl"`. CLI profile routing for RL ships in v0.5. `explain` loads then fails at engine stub.
 
 Commands:
 
 ```bash
 ontologos profile ontology.owl
-ontologos materialize ontology.owl # v0.3+
-ontologos classify ontology.owl    # RDFS materialization (v0.3; OWL EL/RL in v0.5)
+ontologos materialize ontology.owl # RDFS (v0.3+)
+ontologos classify ontology.owl    # RDFS materialization; OWL EL taxonomy in v0.5
 ontologos explain ontology.owl     # NotImplemented (v0.6)
 ```
 
@@ -217,18 +223,22 @@ Outputs:
 
 ---
 
-# Python Bindings (planned v0.9)
+# Python Bindings (alpha v0.4, full API v0.9)
 
-**Status:** Alpha on PyPI; v0.3 exposes load + RDFS materialization only.
+**Status:** Alpha on PyPI; v0.4 exposes load, RDFS materialization, and OWL RL saturation.
 
 ```python
 from ontologos import Reasoner
 
-# RDFS materialization (v0.3)
+# RDFS materialization
 r = Reasoner("ontology.owl", profile="rdfs")
 r.classify()
 
-# Default profile raises not-implemented until OWL EL/RL (v0.5)
+# OWL RL saturation
+r = Reasoner("family.owl", profile="rl")
+r.classify()
+
+# Default profile raises not-implemented until OWL EL taxonomy (v0.5)
 ```
 
 ---
