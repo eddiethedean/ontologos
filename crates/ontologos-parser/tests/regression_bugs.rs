@@ -13,7 +13,6 @@ fn fixture(name: &str) -> std::path::PathBuf {
 
 /// Parser should report entity kind mismatch, not "complex operands" skip.
 #[test]
-#[ignore = "bug #2: parser swallows EntityKindMismatch"]
 fn class_assertion_kind_clash_surfaces_entity_kind_mismatch() {
     let ontology = load_ontology(&fixture("class_individual_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
