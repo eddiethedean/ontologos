@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      pypi_only:
+        description: "Skip verify and crates.io (PyPI wheels + upload only)"
+        type: boolean
+        default: true
 
 env:
   CARGO_TERM_COLOR: always
@@ -11,6 +17,7 @@ env:
 jobs:
   verify:
     name: Verify release
+    if: github.event_name == 'push' || !inputs.pypi_only
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,6 +59,7 @@ jobs:
 
   publish-crates:
     name: Publish Rust crates
+    if: github.event_name == 'push'
     needs: verify
     runs-on: ubuntu-latest
     steps:
@@ -69,11 +77,16 @@ jobs:
   pypi-linux:
     name: PyPI wheels (Linux ${{ matrix.target }})
     needs: verify
-    runs-on: ubuntu-latest
+    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped')
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64, aarch64]
+        include:
+          - target: x86_64
+            runs-on: ubuntu-latest
+          - target: aarch64
+            runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
 
@@ -99,6 +112,7 @@ jobs:
   pypi-macos:
     name: PyPI wheels (macOS ${{ matrix.target }})
     needs: verify
+    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped')
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -128,6 +142,7 @@ jobs:
   pypi-windows:
     name: PyPI wheels (Windows ${{ matrix.target }})
     needs: verify
+    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped')
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -157,6 +172,7 @@ jobs:
   pypi-sdist:
     name: PyPI sdist
     needs: verify
+    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -176,6 +192,11 @@ jobs:
   publish-pypi:
     name: Publish PyPI package
     needs: [publish-crates, pypi-linux, pypi-macos, pypi-windows, pypi-sdist]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      (needs.publish-crates.result == 'success' || needs.publish-crates.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
