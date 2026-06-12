@@ -11,6 +11,7 @@ members = [
     "crates/ontologos-explain",
     "crates/ontologos-cli",
     "crates/ontologos-py",
+    "crates/ontologos-conformance",
 ]
 
 [workspace.package]

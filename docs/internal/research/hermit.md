@@ -35,3 +35,7 @@ HermiT is a tableau-based OWL 2 DL reasoner written in Java. It was the referenc
 3. **Borrow explanation model**: proof trees with rule name + premises map directly to `ProofNode` in `ontologos-explain` (v0.6).
 4. **Incremental reasoning (v0.7)** should track axiom dependencies like HermiT's index, keyed by `EntityId` and `AxiomId` from the core model.
 5. **EL classification (v0.5)** should follow ELK-style completion rather than tableau for the EL profile.
+
+## Local source checkout
+
+HermiT Java sources can live at `HermiT/` (gitignored) for conformance porting. See [hermit-replacement.md](hermit-replacement.md) and [tests/hermit/README.md](../../../tests/hermit/README.md).

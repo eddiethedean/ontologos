@@ -796,6 +796,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ontologos-conformance"
+version = "0.3.0"
+dependencies = [
+ "ontologos-conformance",
+ "ontologos-core",
+ "ontologos-parser",
+ "ontologos-rdfs",
+]
+
+[[package]]
 name = "ontologos-core"
 version = "0.3.0"
 dependencies = [

@@ -1,0 +1,19 @@
+[package]
+name = "ontologos-conformance"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "HermiT and OWL conformance test harness for OntoLogos"
+publish = false
+
+[dependencies]
+ontologos-core = { workspace = true }
+ontologos-parser = { workspace = true }
+ontologos-rdfs = { workspace = true }
+
+[dev-dependencies]
+ontologos-conformance = { path = "." }

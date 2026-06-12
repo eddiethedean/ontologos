@@ -1,0 +1,90 @@
+# HermiT → OntoLogos conformance catalog
+# Tier A: always run in CI (logic inlined in ontologos-conformance)
+# Tier B: requires local HermiT/ checkout (#[ignore] unless ONTOLOGOS_HERMIT_ROOT set)
+
+[[case]]
+id = "ReasonerTest.testSubsumption1"
+tier = "A"
+milestone = "0.3"
+engine = "rdfs"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testSubsumption1"
+rust_test = "subsumption1_transitive_subclass"
+notes = "Student ⊑ Person ⊑ Animal via RDFS subClassOf closure"
+
+[[case]]
+id = "OWLLinkTest.testUpdatesBuffered"
+tier = "A"
+milestone = "0.3"
+engine = "rdfs"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.OWLLinkTest"
+source_method = "testUpdatesBuffered"
+rust_test = "owllink_update_hierarchy_buffered"
+notes = "A ⊑ B ⊑ C chain; HermiT hierarchy golden in res/OWLLink/updateHierarchy.txt"
+
+[[case]]
+id = "OWLLinkTest.testUpdatesNonBuffered"
+tier = "A"
+milestone = "0.3"
+engine = "rdfs"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.OWLLinkTest"
+source_method = "testUpdatesNonBuffered"
+rust_test = "owllink_update_hierarchy_non_buffered"
+notes = "Same axioms as buffered test; OntoLogos has no buffered reasoner yet — RDFS only"
+
+[[case]]
+id = "reasoner.res.OWLLink.owl"
+tier = "B"
+milestone = "0.2"
+engine = "parser"
+status = "ported"
+fixture_glob = "reasoner/res/OWLLink/*.owl"
+rust_test = "hermit_owllink_owl_fixtures_load"
+notes = "Parser smoke — UTF-8 OWLLink files load; ISO-8859-1 RDF/XML skipped (known horned-owl limit)"
+
+[[case]]
+id = "ClassificationTest.testPizza"
+tier = "B"
+milestone = "0.5"
+engine = "el"
+status = "planned"
+fixture = "reasoner/res/pizza.xml"
+control = "reasoner/res/pizza.xml.txt"
+rust_test = "hermit_classification_pizza_taxonomy"
+notes = "Golden taxonomy text from HermiT; enable when ontologos-el ships"
+
+[[case]]
+id = "ClassificationTest.testWine"
+tier = "B"
+milestone = "0.5"
+engine = "el"
+status = "planned"
+fixture = "reasoner/res/wine.xml"
+control = "reasoner/res/wine.xml.txt"
+
+[[case]]
+id = "owl_wg_tests.EntailmentTest"
+tier = "B"
+milestone = "1.0"
+engine = "dl"
+status = "planned"
+notes = "OWL 2 WG approved entailment tests — port subset after DL engine"
+
+[[case]]
+id = "RulesTest"
+tier = "C"
+milestone = "none"
+engine = "swrl"
+status = "deferred"
+notes = "SWRL / DLSafeRule — out of scope for OntoLogos 1.x"
+
+[[case]]
+id = "structural.ClausificationTest"
+tier = "B"
+milestone = "2.0"
+engine = "dl"
+status = "planned"
+notes = "Internal DL clause shape — port when ontologos-dl clausifier exists"

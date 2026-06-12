@@ -6,7 +6,9 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-12 · **Current release:** [v0.3.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0) · **Next milestone:** v0.4 — OWL RL engine
+**Last updated:** 2026-06-12 · **Current release:** [v0.3.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0) (tag pending) · **Next milestone:** v0.4 — OWL RL engine
+
+**On `main` since v0.3.0 prep:** RDFS/classify polish, DL profile diagnostics, [HermiT replacement matrix](docs/internal/research/hermit-replacement.md), and `ontologos-conformance` with Tier-A HermiT test ports.
 
 ---
 
@@ -31,7 +33,7 @@ Checklists use GitHub task syntax (`- [x]` / `- [ ]`) so progress is visible in 
 | **0.2** | Parsing & profiles | `+parser`, `+profile` | `profile` | `+parser`, `+profile` |
 | **0.3** | RDFS engine | `+rdfs` | `materialize`, `classify` (RDFS) | `+rdfs` |
 | **0.4** | OWL RL engine | `+rl` | — | `+rl` |
-| **0.5** | OWL EL & query | `+el`, `+query` | `classify` | `+el`, `+query` |
+| **0.5** | OWL EL & query | `+el`, `+query` | `classify` (OWL EL/RL) | `+el`, `+query` |
 | **0.6** | Explanations | `+explain` | `explain` | `+explain` |
 | **0.7** | Incremental reasoning | core, engines | — | — |
 | **0.8** | LSP surface (Ontocode) | core API extensions | — | — |
@@ -48,7 +50,7 @@ Checklists use GitHub task syntax (`- [x]` / `- [ ]`) so progress is visible in 
 | **1.9** | DL foundations | `ontologos-dl` (preview) | `classify --profile dl-preview` | TBD |
 | **2.0** | Full OWL DL | `ontologos-dl` (stable) | `classify --profile dl` | `ontologos-dl` |
 
-Workspace-internal crates (`ontologos-cli`) are not published; they consume the library crates above.
+Workspace-internal crates (`ontologos-cli`, `ontologos-conformance`) are not published; they consume the library crates above.
 
 ```mermaid
 flowchart TB
@@ -74,6 +76,8 @@ flowchart TB
     py[ontologos-py]
   end
 
+  conformance[ontologos-conformance]
+
   core --> parser
   parser --> profile
   core --> rdfs
@@ -86,6 +90,7 @@ flowchart TB
   profile --> cli
   parser --> cli
   rdfs --> cli
+  rdfs --> conformance
   el --> cli
   explain --> cli
   core --> py
@@ -101,6 +106,7 @@ flowchart TB
 3. **Benchmark-gated** — Each engine milestone must pass its corpus in [benchmarks/manifest.toml](benchmarks/manifest.toml) before release.
 4. **Security by default** — Untrusted input (files, JSON) goes through validation and resource limits ([docs/security.md](docs/security.md)).
 5. **Incremental publish** — Crates ship to crates.io when their API is stable enough for the milestone; the workspace may contain stubs earlier.
+6. **Conformance by profile** — Replace HermiT/ELK incrementally per OWL profile (RDFS → RL → EL → DL), not via a monolithic port. HermiT Java tests are the reference catalog; Konclude is the DL performance north star ([hermit-replacement.md](docs/internal/research/hermit-replacement.md)).
 
 ---
 
@@ -116,8 +122,40 @@ These run alongside version milestones and are not tied to a single release.
 | OWL corpus manifest | **Complete** | Extend as engines land |
 | Corpus download script | **Complete** | `benchmarks/scripts/download.sh` |
 | Manifest-driven integration tests | **Complete** | Skip when `local_path` missing |
-| Engine conformance suites | Planned (v0.3+) | Pizza, Family, GALEN, GO-subset |
+| RDFS corpus conformance (Family, Pizza) | **Complete** (v0.3) | Extend per engine |
+| HermiT test port harness (`ontologos-conformance`) | **In progress** | Tier A in CI; Tier B with local `HermiT/` |
+| HermiT replacement matrix | **Complete** | [hermit-replacement.md](docs/internal/research/hermit-replacement.md) |
+| Engine conformance suites (ELK, reasonable, Konclude) | Planned (v0.4+) | Profile-specific baselines |
 | Criterion regression tracking in CI | Planned (v1.1) | Fail on >5% regression |
+
+### HermiT conformance porting
+
+Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Catalog: [tests/hermit/manifest.toml](tests/hermit/manifest.toml).
+
+| Tier | Runs in CI | HermiT source | OntoLogos milestone |
+|------|------------|---------------|---------------------|
+| **A** | Yes | Logic inlined (no checkout) | **0.3** RDFS — `ReasonerTest.testSubsumption1`, `OWLLinkTest` hierarchy |
+| **B** | `#[ignore]` locally | Fixture files under `HermiT/project/test/` | **0.2** parser smoke; **0.5** `ClassificationTest` goldens |
+| **C** | Manual / release gate | HermiT JAR + Konclude CLI | **1.9–2.0** DL benchmarks |
+
+**Ported (Tier A, v0.3):**
+
+- [x] `ontologos-conformance` crate and `assert_subsumed` helper
+- [x] `subsumption1_transitive_subclass` ← `ReasonerTest.testSubsumption1`
+- [x] `owllink_update_hierarchy_*` ← `OWLLinkTest` buffered/non-buffered (RDFS fragment)
+
+**Next ports:**
+
+- [ ] `ReasonerTest.testSubsumption2/3` — equivalent classes + existentials (**0.4** RL / **0.5** EL)
+- [ ] `ClassificationTest` (pizza, wine, galen taxonomy `.txt` goldens) — **0.5** EL
+- [ ] `owl_wg_tests` approved entailment subset — **1.0**
+- [ ] `structural/ClausificationTest` — **2.0** DL internal
+- [ ] SWRL `RulesTest` — **deferred** (out of scope 1.x)
+
+**Known gaps from HermiT fixture survey:**
+
+- [ ] ISO-8859-1 RDF/XML (65 OWLLink files) — horned-owl UTF-8 only; transcode or alternate reader
+- [ ] Complex OWLLink ontologies (`9.owl`, `situation.owl`) — parser/mapping follow-up
 
 ### Security & limits
 
@@ -187,6 +225,7 @@ Establish the in-memory ontology representation all engines share.
 
 - [x] OWL 2 standards review → [docs/internal/research/owl2.md](docs/internal/research/owl2.md)
 - [x] HermiT architecture study → [docs/internal/research/hermit.md](docs/internal/research/hermit.md)
+- [x] HermiT replacement matrix → [docs/internal/research/hermit-replacement.md](docs/internal/research/hermit-replacement.md)
 - [x] ELK architecture study → [docs/internal/research/elk.md](docs/internal/research/elk.md)
 - [x] RDFox evaluation → [docs/internal/research/rdfox.md](docs/internal/research/rdfox.md)
 - [x] Reasoner landscape survey → [docs/internal/research/landscape-2023.md](docs/internal/research/landscape-2023.md)
@@ -283,6 +322,7 @@ Load real ontologies from disk, map them into the core model, and report which O
 | Risk | Mitigation |
 |------|------------|
 | `horned-owl` construct coverage gaps | Map supported axioms first; diagnostics for the rest |
+| ISO-8859-1 RDF/XML (HermiT OWLLink corpus) | Skip in survey tests; transcode fixtures or add reader (see HermiT track) |
 | Large files (GO) exhaust memory | Parse limits; CI uses `go-subset` only |
 | Complex class expressions in EL corpora | Store for profile detection; full EL reasoning is v0.5 |
 
@@ -290,7 +330,7 @@ Load real ontologies from disk, map them into the core model, and report which O
 
 ## v0.3 — RDFS engine
 
-**Status: Complete** (v0.3.0, 2026-06-12) · **Effort:** Medium · **Depends on:** v0.2
+**Status: Complete** (v0.3.0, 2026-06-12; tag/publish pending) · **Effort:** Medium · **Depends on:** v0.2
 
 **Crate:** `ontologos-rdfs`
 
@@ -316,11 +356,21 @@ First reasoning engine. Implements RDFS entailment over the core axiom model.
 - [x] `ontologos classify <file>` — RDFS materialization via `Profile::Rdfs`
 - [x] Initial inference traces (feeds v0.6 explain)
 
+### Conformance & polish (on `main`, pre-tag)
+
+- [x] DL profile diagnostics when mapped constructs rule out EL/RL (Pizza corpus)
+- [x] `classify_reasoner` + CLI/Python `classify` for `Profile::Rdfs`
+- [x] Parser security: path prefix bypass, entity-limit axiom drop, datatype/class same IRI
+- [x] HermiT Tier-A RDFS ports in `ontologos-conformance`
+- [ ] `cargo test -p ontologos-conformance` in CI
+- [ ] Tag and publish **v0.3.0** to crates.io
+
 ### Exit criteria
 
 - [x] RDFS conformance tests pass on Family corpus
 - [x] Materialized Pizza ontology is a strict superset of parsed axioms
-- [x] `ontologos-rdfs` published to crates.io
+- [x] HermiT Tier-A RDFS ports pass (`ontologos-conformance`)
+- [ ] `ontologos-rdfs` published to crates.io (pending tag)
 
 ---
 
@@ -347,6 +397,11 @@ Forward-chaining OWL RL rules on top of RDFS materialization.
 - [ ] `TripleIndex` rule indexing (`HashMap<EntityId, Vec<…>>`)
 - [ ] Parallel rule batches via `ReasonerConfig::parallelism`
 - [ ] `Reasoner::classify` with `Profile::Rl` delegates here
+
+### Conformance
+
+- [ ] Port HermiT `ReasonerTest` RL-relevant subsumption cases (`testSubsumption2/3` partial)
+- [ ] Add RL cases to [tests/hermit/manifest.toml](tests/hermit/manifest.toml)
 
 ### Exit criteria
 
@@ -389,16 +444,22 @@ Completion-based EL classification — the primary use case for biomedical ontol
 
 ### CLI
 
-- [ ] `ontologos classify <file>` — taxonomy summary (text + JSON)
+- [ ] `ontologos classify <file>` — OWL taxonomy summary (text + JSON); RDFS path shipped in v0.3
 - [ ] `--profile el|rl|rdfs|auto` routes to correct engine
+
+### Conformance
+
+- [ ] Port HermiT `ClassificationTest` (pizza, wine, galen `.xml` + `.xml.txt` goldens) — Tier B
+- [ ] `assert_hierarchies` equivalent: taxonomy text or structured `(sub, super)` pairs vs golden file
 
 ### Exit criteria
 
 - [ ] Pizza EL taxonomy matches **ELK** and **[whelk-rs](https://github.com/INCATools/whelk-rs)** reference output (modulo ordering)
+- [ ] HermiT `ClassificationTest.testPizza` golden hierarchy agrees with `ontologos-el` (secondary check)
 - [ ] GALEN or `go-subset` classifies within performance budget (< 10s for subset)
 - [ ] `ontologos-el` and `ontologos-query` published to crates.io
 
-> **Research:** ELK is the maintained EL gold standard; whelk-rs is the Rust conformance peer. Do not use HermiT as EL benchmark.
+> **Research:** ELK is the maintained EL gold standard; whelk-rs is the Rust conformance peer. HermiT `ClassificationTest` is a **secondary** taxonomy cross-check, not the EL performance baseline.
 
 ---
 
@@ -510,7 +571,8 @@ All 0.x capabilities integrated, tested, documented, and semver-stable.
 - [ ] CLI: `profile`, `classify`, `materialize`, `explain` fully functional
 - [ ] docs.rs complete for every published crate
 - [ ] Benchmark suite with published results in [benchmarks/README.md](benchmarks/README.md)
-- [ ] OWL profile conformance suite green in CI
+- [ ] OWL profile conformance suite green in CI (`ontologos-conformance` Tier A + benchmark corpora)
+- [ ] HermiT Tier-B ports for EL/RL classification goldens
 - [ ] Automated crates.io + PyPI release workflow
 - [x] MSRV policy documented (currently 1.88+; driven by `horned-owl` 1.4)
 
@@ -761,7 +823,8 @@ Scaffolding for full DL without committing to 2.0 API stability. Users opt in vi
 - [ ] Dependency index keyed by `EntityId` / `AxiomId` (derivation tracking for unsat cache + explain)
 - [ ] Tableau expansion core (branching, clash detection, blocking)
 - [ ] Taxonomy extraction from saturated tableau
-- [ ] **Konclude CLI** + HermiT reference harness in `benchmarks/`
+- [ ] **Konclude CLI** + HermiT JAR reference harness in `benchmarks/` (extends `ontologos-conformance` Tier C)
+- [ ] Port HermiT `structural/ClausificationTest` as DL internal regression suite
 
 ### Preview fragment (ALCH + nominals subset)
 

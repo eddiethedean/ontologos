@@ -12,10 +12,7 @@ pub fn dl_diagnostics(constructs: &BTreeSet<OwlConstruct>) -> Vec<ProfileDiagnos
         for diag in el_diagnostics(constructs) {
             if seen.insert(diag.construct.clone()) {
                 diagnostics.push(ProfileDiagnostic {
-                    message: format!(
-                        "{} (mapped axiom rules out OWL 2 EL)",
-                        diag.message
-                    ),
+                    message: format!("{} (mapped axiom rules out OWL 2 EL)", diag.message),
                     ..diag
                 });
             }
@@ -26,10 +23,7 @@ pub fn dl_diagnostics(constructs: &BTreeSet<OwlConstruct>) -> Vec<ProfileDiagnos
         for diag in rl_diagnostics(constructs) {
             if seen.insert(diag.construct.clone()) {
                 diagnostics.push(ProfileDiagnostic {
-                    message: format!(
-                        "{} (mapped axiom rules out OWL 2 RL)",
-                        diag.message
-                    ),
+                    message: format!("{} (mapped axiom rules out OWL 2 RL)", diag.message),
                     ..diag
                 });
             }
@@ -54,7 +48,6 @@ pub fn dl_diagnostics(constructs: &BTreeSet<OwlConstruct>) -> Vec<ProfileDiagnos
 pub fn skipped_only_dl_diagnostic() -> ProfileDiagnostic {
     ProfileDiagnostic {
         construct: "SkippedAxioms".into(),
-        message: "source contains constructs but no mapped TBox axioms; classified as DL"
-            .into(),
+        message: "source contains constructs but no mapped TBox axioms; classified as DL".into(),
     }
 }
