@@ -61,6 +61,14 @@ pub(crate) fn classes_are_disjoint(
     false
 }
 
+/// Smallest entity id in the equivalence class of `class` (for clash deduplication).
+pub(crate) fn canonical_equiv_rep(ontology: &Ontology, class: EntityId) -> EntityId {
+    expand_equivalent_classes(ontology, class)
+        .into_iter()
+        .min_by_key(|id| id.0)
+        .unwrap_or(class)
+}
+
 pub(crate) fn expand_equivalent_properties(
     ontology: &Ontology,
     property: EntityId,
