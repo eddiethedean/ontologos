@@ -36,6 +36,57 @@ struct Mapper<'a> {
     limits: ParseLimits,
 }
 
+#[derive(Copy, Clone)]
+enum NamedLookup {
+    Resolved(EntityId),
+    RegistrationFailed,
+    NotNamed,
+}
+
+impl NamedLookup {
+    fn resolved_id(&self) -> Option<EntityId> {
+        match self {
+            Self::Resolved(id) => Some(*id),
+            Self::RegistrationFailed | Self::NotNamed => None,
+        }
+    }
+
+    fn is_resolved(&self) -> bool {
+        matches!(self, Self::Resolved(_))
+    }
+}
+
+#[derive(Copy, Clone)]
+struct ExistentialRestrictionLookup {
+    prop: NamedLookup,
+    filler: NamedLookup,
+}
+
+impl ExistentialRestrictionLookup {
+    fn resolved(&self) -> Option<(EntityId, EntityId)> {
+        Some((self.prop.resolved_id()?, self.filler.resolved_id()?))
+    }
+
+    fn lookups(&self) -> [NamedLookup; 2] {
+        [self.prop, self.filler]
+    }
+}
+
+fn collect_resolved(lookups: &[NamedLookup]) -> Option<Vec<EntityId>> {
+    let mut ids = Vec::with_capacity(lookups.len());
+    for lookup in lookups {
+        ids.push(lookup.resolved_id()?);
+    }
+    Some(ids)
+}
+
+fn named_lookup_from_register(result: Option<EntityId>) -> NamedLookup {
+    match result {
+        Some(id) => NamedLookup::Resolved(id),
+        None => NamedLookup::RegistrationFailed,
+    }
+}
+
 impl Mapper<'_> {
     fn visit(&mut self, annotated: &AnnotatedComponent<RcStr>) {
         match &annotated.component {
@@ -175,7 +226,11 @@ impl Mapper<'_> {
         self.scan_class_expression(sub);
         self.scan_class_expression(sup);
 
-        if let (Some(sub_id), Some(sup_id)) = (self.named_class(sub), self.named_class(sup)) {
+        let sub_lookup = self.named_class(sub);
+        let sup_lookup = self.named_class(sup);
+        let existential = self.try_existential_restriction(sup);
+
+        if let (Some(sub_id), Some(sup_id)) = (sub_lookup.resolved_id(), sup_lookup.resolved_id()) {
             self.report
                 .meta
                 .note_construct(OwlConstruct::SubClassOfNamed);
@@ -187,7 +242,7 @@ impl Mapper<'_> {
         }
 
         if let (Some(sub_id), Some((prop_id, filler_id))) =
-            (self.named_class(sub), self.existential_restriction(sup))
+            (sub_lookup.resolved_id(), existential.resolved())
         {
             self.report
                 .meta
@@ -200,15 +255,18 @@ impl Mapper<'_> {
             return;
         }
 
-        if self.named_class(sub).is_some()
-            && matches!(sup, ClassExpression::ObjectIntersectionOf(_))
-        {
+        if sub_lookup.is_resolved() && matches!(sup, ClassExpression::ObjectIntersectionOf(_)) {
             self.report
                 .meta
                 .note_construct(OwlConstruct::SubClassOfIntersection);
         }
 
-        self.skip("SubClassOf with complex class expression not mapped in v0.2");
+        let mut lookups = vec![sub_lookup, sup_lookup];
+        lookups.extend(existential.lookups());
+        self.skip_if_unmapped(
+            &lookups,
+            "SubClassOf with complex class expression not mapped in v0.2",
+        );
     }
 
     fn map_equivalent_classes(&mut self, classes: &[ClassExpression<RcStr>]) {
@@ -218,10 +276,14 @@ impl Mapper<'_> {
         for ce in classes {
             self.scan_class_expression(ce);
         }
-        if let Some(ids) = self.all_named_classes(classes) {
+        let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
+        if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::EquivalentClasses(ids));
         } else {
-            self.skip("EquivalentClasses with complex operands not mapped in v0.2");
+            self.skip_if_unmapped(
+                &lookups,
+                "EquivalentClasses with complex operands not mapped in v0.2",
+            );
         }
     }
 
@@ -232,10 +294,14 @@ impl Mapper<'_> {
         for ce in classes {
             self.scan_class_expression(ce);
         }
-        if let Some(ids) = self.all_named_classes(classes) {
+        let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
+        if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::DisjointClasses(ids));
         } else {
-            self.skip("DisjointClasses with complex operands not mapped in v0.2");
+            self.skip_if_unmapped(
+                &lookups,
+                "DisjointClasses with complex operands not mapped in v0.2",
+            );
         }
     }
 
@@ -255,16 +321,20 @@ impl Mapper<'_> {
                 self.skip("SubObjectPropertyChain not mapped in v0.2");
             }
             SubObjectPropertyExpression::ObjectPropertyExpression(sub_ope) => {
-                if let (Some(sub_id), Some(sup_id)) = (
-                    self.named_object_property(sub_ope),
-                    self.named_object_property(sup),
-                ) {
+                let sub_lookup = self.named_object_property(sub_ope);
+                let sup_lookup = self.named_object_property(sup);
+                if let (Some(sub_id), Some(sup_id)) =
+                    (sub_lookup.resolved_id(), sup_lookup.resolved_id())
+                {
                     self.push_axiom(Axiom::SubObjectPropertyOf {
                         sub_property: sub_id,
                         super_property: sup_id,
                     });
                 } else {
-                    self.skip("SubObjectPropertyOf with non-named property not mapped in v0.2");
+                    self.skip_if_unmapped(
+                        &[sub_lookup, sup_lookup],
+                        "SubObjectPropertyOf with non-named property not mapped in v0.2",
+                    );
                 }
             }
         }
@@ -278,21 +348,20 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::InverseObjectProperties);
-        match (
-            self.register_object_property(left),
-            self.register_object_property(right),
-        ) {
-            (Ok(left_id), Ok(right_id)) => {
-                self.push_axiom(Axiom::InverseObjectProperties {
-                    left: left_id,
-                    right: right_id,
-                });
-            }
-            (Err(err), _) | (_, Err(err)) => {
-                self.skip(&format!(
-                    "InverseObjectProperties registration failed: {err}"
-                ));
-            }
+        let left_lookup = named_lookup_from_register(self.register_or_warn_object_property(left));
+        let right_lookup = named_lookup_from_register(self.register_or_warn_object_property(right));
+        if let (Some(left_id), Some(right_id)) =
+            (left_lookup.resolved_id(), right_lookup.resolved_id())
+        {
+            self.push_axiom(Axiom::InverseObjectProperties {
+                left: left_id,
+                right: right_id,
+            });
+        } else {
+            self.skip_if_unmapped(
+                &[left_lookup, right_lookup],
+                "InverseObjectProperties with unmapped operands not mapped in v0.2",
+            );
         }
     }
 
@@ -306,15 +375,20 @@ impl Mapper<'_> {
             .note_construct(OwlConstruct::ObjectPropertyDomain);
         self.scan_object_property_expression(ope);
         self.scan_class_expression(ce);
+        let prop_lookup = self.named_object_property(ope);
+        let domain_lookup = self.named_class(ce);
         if let (Some(prop_id), Some(domain_id)) =
-            (self.named_object_property(ope), self.named_class(ce))
+            (prop_lookup.resolved_id(), domain_lookup.resolved_id())
         {
             self.push_axiom(Axiom::ObjectPropertyDomain {
                 property: prop_id,
                 domain: domain_id,
             });
         } else {
-            self.skip("ObjectPropertyDomain with complex operands not mapped in v0.2");
+            self.skip_if_unmapped(
+                &[prop_lookup, domain_lookup],
+                "ObjectPropertyDomain with complex operands not mapped in v0.2",
+            );
         }
     }
 
@@ -328,15 +402,20 @@ impl Mapper<'_> {
             .note_construct(OwlConstruct::ObjectPropertyRange);
         self.scan_object_property_expression(ope);
         self.scan_class_expression(ce);
+        let prop_lookup = self.named_object_property(ope);
+        let range_lookup = self.named_class(ce);
         if let (Some(prop_id), Some(range_id)) =
-            (self.named_object_property(ope), self.named_class(ce))
+            (prop_lookup.resolved_id(), range_lookup.resolved_id())
         {
             self.push_axiom(Axiom::ObjectPropertyRange {
                 property: prop_id,
                 range: range_id,
             });
         } else {
-            self.skip("ObjectPropertyRange with complex operands not mapped in v0.2");
+            self.skip_if_unmapped(
+                &[prop_lookup, range_lookup],
+                "ObjectPropertyRange with complex operands not mapped in v0.2",
+            );
         }
     }
 
@@ -344,10 +423,14 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::TransitiveObjectProperty);
-        if let Some(prop_id) = self.named_object_property(ope) {
+        let prop_lookup = self.named_object_property(ope);
+        if let Some(prop_id) = prop_lookup.resolved_id() {
             self.push_axiom(Axiom::TransitiveObjectProperty(prop_id));
         } else {
-            self.skip("TransitiveObjectProperty with non-named property not mapped in v0.2");
+            self.skip_if_unmapped(
+                &[prop_lookup],
+                "TransitiveObjectProperty with non-named property not mapped in v0.2",
+            );
         }
     }
 
@@ -355,10 +438,14 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::SymmetricObjectProperty);
-        if let Some(prop_id) = self.named_object_property(ope) {
+        let prop_lookup = self.named_object_property(ope);
+        if let Some(prop_id) = prop_lookup.resolved_id() {
             self.push_axiom(Axiom::SymmetricObjectProperty(prop_id));
         } else {
-            self.skip("SymmetricObjectProperty with non-named property not mapped in v0.2");
+            self.skip_if_unmapped(
+                &[prop_lookup],
+                "SymmetricObjectProperty with non-named property not mapped in v0.2",
+            );
         }
     }
 
@@ -366,10 +453,14 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::ReflexiveObjectProperty);
-        if let Some(prop_id) = self.named_object_property(ope) {
+        let prop_lookup = self.named_object_property(ope);
+        if let Some(prop_id) = prop_lookup.resolved_id() {
             self.push_axiom(Axiom::ReflexiveObjectProperty(prop_id));
         } else {
-            self.skip("ReflexiveObjectProperty with non-named property not mapped in v0.2");
+            self.skip_if_unmapped(
+                &[prop_lookup],
+                "ReflexiveObjectProperty with non-named property not mapped in v0.2",
+            );
         }
     }
 
@@ -377,10 +468,14 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::FunctionalObjectProperty);
-        if let Some(prop_id) = self.named_object_property(ope) {
+        let prop_lookup = self.named_object_property(ope);
+        if let Some(prop_id) = prop_lookup.resolved_id() {
             self.push_axiom(Axiom::FunctionalObjectProperty(prop_id));
         } else {
-            self.skip("FunctionalObjectProperty with non-named property not mapped in v0.2");
+            self.skip_if_unmapped(
+                &[prop_lookup],
+                "FunctionalObjectProperty with non-named property not mapped in v0.2",
+            );
         }
     }
 
@@ -388,10 +483,14 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::AsymmetricObjectProperty);
-        if let Some(prop_id) = self.named_object_property(ope) {
+        let prop_lookup = self.named_object_property(ope);
+        if let Some(prop_id) = prop_lookup.resolved_id() {
             self.push_axiom(Axiom::AsymmetricObjectProperty(prop_id));
         } else {
-            self.skip("AsymmetricObjectProperty with non-named property not mapped in v0.4");
+            self.skip_if_unmapped(
+                &[prop_lookup],
+                "AsymmetricObjectProperty with non-named property not mapped in v0.4",
+            );
         }
     }
 
@@ -402,10 +501,17 @@ impl Mapper<'_> {
         for ope in properties {
             self.scan_object_property_expression(ope);
         }
-        if let Some(ids) = self.all_named_object_properties(properties) {
+        let lookups: Vec<_> = properties
+            .iter()
+            .map(|ope| self.named_object_property(ope))
+            .collect();
+        if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::EquivalentObjectProperties(ids));
         } else {
-            self.skip("EquivalentObjectProperties with non-named operands not mapped in v0.4");
+            self.skip_if_unmapped(
+                &lookups,
+                "EquivalentObjectProperties with non-named operands not mapped in v0.4",
+            );
         }
     }
 
@@ -414,15 +520,20 @@ impl Mapper<'_> {
             .meta
             .note_construct(OwlConstruct::ClassAssertion);
         self.scan_class_expression(ce);
+        let class_lookup = self.named_class(ce);
+        let individual_lookup = self.named_individual(individual);
         if let (Some(class_id), Some(individual_id)) =
-            (self.named_class(ce), self.named_individual(individual))
+            (class_lookup.resolved_id(), individual_lookup.resolved_id())
         {
             self.push_axiom(Axiom::ClassAssertion {
                 individual: individual_id,
                 class: class_id,
             });
         } else {
-            self.skip("ClassAssertion with complex operands not mapped in v0.4");
+            self.skip_if_unmapped(
+                &[class_lookup, individual_lookup],
+                "ClassAssertion with complex operands not mapped in v0.4",
+            );
         }
     }
 
@@ -436,10 +547,13 @@ impl Mapper<'_> {
             .meta
             .note_construct(OwlConstruct::ObjectPropertyAssertion);
         self.scan_object_property_expression(ope);
+        let property_lookup = self.named_object_property(ope);
+        let from_lookup = self.named_individual(from);
+        let to_lookup = self.named_individual(to);
         if let (Some(property_id), Some(subject_id), Some(object_id)) = (
-            self.named_object_property(ope),
-            self.named_individual(from),
-            self.named_individual(to),
+            property_lookup.resolved_id(),
+            from_lookup.resolved_id(),
+            to_lookup.resolved_id(),
         ) {
             self.push_axiom(Axiom::ObjectPropertyAssertion {
                 subject: subject_id,
@@ -447,7 +561,10 @@ impl Mapper<'_> {
                 object: object_id,
             });
         } else {
-            self.skip("ObjectPropertyAssertion with complex operands not mapped in v0.4");
+            self.skip_if_unmapped(
+                &[property_lookup, from_lookup, to_lookup],
+                "ObjectPropertyAssertion with complex operands not mapped in v0.4",
+            );
         }
     }
 
@@ -455,10 +572,17 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::IndividualEquality);
-        if let Some(ids) = self.all_named_individuals(individuals) {
+        let lookups: Vec<_> = individuals
+            .iter()
+            .map(|individual| self.named_individual(individual))
+            .collect();
+        if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::SameIndividual(ids));
         } else {
-            self.skip("SameIndividual with anonymous individuals not mapped in v0.4");
+            self.skip_if_unmapped(
+                &lookups,
+                "SameIndividual with anonymous individuals not mapped in v0.4",
+            );
         }
     }
 
@@ -466,10 +590,17 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::IndividualEquality);
-        if let Some(ids) = self.all_named_individuals(individuals) {
+        let lookups: Vec<_> = individuals
+            .iter()
+            .map(|individual| self.named_individual(individual))
+            .collect();
+        if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::DifferentIndividuals(ids));
         } else {
-            self.skip("DifferentIndividuals with anonymous individuals not mapped in v0.4");
+            self.skip_if_unmapped(
+                &lookups,
+                "DifferentIndividuals with anonymous individuals not mapped in v0.4",
+            );
         }
     }
 
@@ -501,6 +632,17 @@ impl Mapper<'_> {
     fn skip(&mut self, message: &str) {
         self.report.meta.skipped_axiom_count += 1;
         self.report.meta.warn(message);
+    }
+
+    fn skip_if_unmapped(&mut self, lookups: &[NamedLookup], message: &str) {
+        if lookups
+            .iter()
+            .any(|lookup| matches!(lookup, NamedLookup::RegistrationFailed))
+        {
+            self.report.meta.skipped_axiom_count += 1;
+        } else {
+            self.skip(message);
+        }
     }
 
     fn note_profile_axiom(&mut self, axiom: &Axiom) {
@@ -667,73 +809,47 @@ impl Mapper<'_> {
         }
     }
 
-    fn named_class(&mut self, ce: &ClassExpression<RcStr>) -> Option<EntityId> {
+    fn named_class(&mut self, ce: &ClassExpression<RcStr>) -> NamedLookup {
         match ce {
-            ClassExpression::Class(class) => self.register_class(class).ok(),
-            _ => None,
+            ClassExpression::Class(class) => {
+                named_lookup_from_register(self.register_or_warn_class(class))
+            }
+            _ => NamedLookup::NotNamed,
         }
     }
 
-    fn all_named_classes(&mut self, classes: &[ClassExpression<RcStr>]) -> Option<Vec<EntityId>> {
-        let mut ids = Vec::with_capacity(classes.len());
-        for ce in classes {
-            ids.push(self.named_class(ce)?);
-        }
-        Some(ids)
-    }
-
-    fn existential_restriction(
+    fn try_existential_restriction(
         &mut self,
         ce: &ClassExpression<RcStr>,
-    ) -> Option<(EntityId, EntityId)> {
+    ) -> ExistentialRestrictionLookup {
         match ce {
-            ClassExpression::ObjectSomeValuesFrom { ope, bce } => {
-                let prop_id = self.named_object_property(ope)?;
-                let filler_id = self.named_class(bce)?;
-                Some((prop_id, filler_id))
-            }
-            _ => None,
+            ClassExpression::ObjectSomeValuesFrom { ope, bce } => ExistentialRestrictionLookup {
+                prop: self.named_object_property(ope),
+                filler: self.named_class(bce),
+            },
+            _ => ExistentialRestrictionLookup {
+                prop: NamedLookup::NotNamed,
+                filler: NamedLookup::NotNamed,
+            },
         }
     }
 
-    fn named_object_property(&mut self, ope: &ObjectPropertyExpression<RcStr>) -> Option<EntityId> {
+    fn named_object_property(&mut self, ope: &ObjectPropertyExpression<RcStr>) -> NamedLookup {
         match ope {
             ObjectPropertyExpression::ObjectProperty(prop) => {
-                self.register_object_property(prop).ok()
+                named_lookup_from_register(self.register_or_warn_object_property(prop))
             }
-            ObjectPropertyExpression::InverseObjectProperty(_) => None,
+            ObjectPropertyExpression::InverseObjectProperty(_) => NamedLookup::NotNamed,
         }
     }
 
-    fn all_named_object_properties(
-        &mut self,
-        properties: &[ObjectPropertyExpression<RcStr>],
-    ) -> Option<Vec<EntityId>> {
-        let mut ids = Vec::with_capacity(properties.len());
-        for ope in properties {
-            ids.push(self.named_object_property(ope)?);
-        }
-        Some(ids)
-    }
-
-    fn named_individual(&mut self, individual: &Individual<RcStr>) -> Option<EntityId> {
+    fn named_individual(&mut self, individual: &Individual<RcStr>) -> NamedLookup {
         match individual {
-            Individual::Named(NamedIndividual(iri)) => self
-                .register_entity(iri_of(iri), EntityKind::Individual)
-                .ok(),
-            Individual::Anonymous(_) => None,
+            Individual::Named(NamedIndividual(iri)) => named_lookup_from_register(
+                self.register_or_warn_entity(iri_of(iri), EntityKind::Individual),
+            ),
+            Individual::Anonymous(_) => NamedLookup::NotNamed,
         }
-    }
-
-    fn all_named_individuals(
-        &mut self,
-        individuals: &[Individual<RcStr>],
-    ) -> Option<Vec<EntityId>> {
-        let mut ids = Vec::with_capacity(individuals.len());
-        for individual in individuals {
-            ids.push(self.named_individual(individual)?);
-        }
-        Some(ids)
     }
 }
 
@@ -773,5 +889,27 @@ mod tests {
         }
         assert_eq!(ontology.entity_count(), 2);
         assert_eq!(ontology.axiom_count(), 1);
+    }
+
+    #[test]
+    fn class_assertion_kind_mismatch_warns_without_complex_operands_skip() {
+        use std::path::Path;
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/class_individual_kind_clash.ttl");
+        let ontology = crate::load_ontology(&path).expect("load");
+        let meta = ontology.parse_meta().expect("parse_meta");
+
+        assert!(
+            meta.warnings
+                .iter()
+                .any(|w| w.contains("entity kind mismatch")),
+            "expected kind mismatch warning, got: {:?}",
+            meta.warnings
+        );
+        assert!(
+            !meta.warnings.iter().any(|w| w.contains("complex operands")),
+            "should not mislabel kind clash as unmapped complex expression"
+        );
     }
 }
