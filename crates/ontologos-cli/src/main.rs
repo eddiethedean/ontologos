@@ -124,10 +124,15 @@ fn emit_parse_meta_text(format: OutputFormat, parse_meta: &ParseMetaSummary) {
     }
 }
 
+fn skip_clean_parse_meta(meta: &&ParseMetaSummary) -> bool {
+    meta.omit_from_json()
+}
+
 #[derive(Serialize)]
 struct ProfileCliOutput<'a> {
     #[serde(flatten)]
     report: &'a ProfileReport,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
 
@@ -140,6 +145,7 @@ struct InferenceCliOutput<'a> {
     inferred_by_rule: &'a std::collections::BTreeMap<ontologos_rdfs::RdfsRule, usize>,
     #[serde(skip_serializing_if = "inference_traces_empty")]
     traces: &'a [ontologos_rdfs::InferenceRecord],
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
 
@@ -147,6 +153,7 @@ struct InferenceCliOutput<'a> {
 struct ExplainCliOutput<'a> {
     #[serde(flatten)]
     graph: &'a ProofGraph,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
 

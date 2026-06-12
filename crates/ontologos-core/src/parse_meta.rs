@@ -148,6 +148,11 @@ impl ParseMetaSummary {
         self.skipped_axiom_count > 0 || !self.warnings.is_empty()
     }
 
+    /// Omit from JSON output when parsing produced no warnings or skipped axioms.
+    pub fn omit_from_json(&self) -> bool {
+        !self.has_issues()
+    }
+
     /// Print parse summary and warnings to stderr (CLI text mode).
     pub fn emit_stderr(&self) {
         if !self.has_issues() {
