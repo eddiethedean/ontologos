@@ -8,7 +8,7 @@
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
-//! let report = RlEngine::new(1)?.saturate(&mut ontology)?;
+//! let report = RlEngine::new(1).saturate(&mut ontology)?;
 //! println!("inferred {}", report.inferred_total());
 //! # Ok(())
 //! # }

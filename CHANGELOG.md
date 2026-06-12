@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Profile detection: mapped ABox constructs are allowed under OWL RL (family corpus → RL)
 - Python `profile="rl"` routes through `ontologos_rl::classify_reasoner`
 - `Reasoner::classify()` with `Profile::Rl` returns delegate hint (use `ontologos_rl`)
+- CLI `classify` prints stderr note that it runs RDFS only; `explain` hidden from `--help` until v0.6
+
+### Documentation
+
+- Read the Docs site with adoption-focused guides (crates.io quick start, RDFS tutorial, capability matrix, glossary, performance, production integration)
+- FAQ and onboarding fixes; README slimmed for evaluators
+- MkDocs strict build enforced in CI
 
 ### Published
 

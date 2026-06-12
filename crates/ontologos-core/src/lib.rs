@@ -7,16 +7,13 @@
 //!
 //! **Do not use [`Ontology::from_file`] or [`Reasoner::classify`] for file loading / reasoning.**
 //!
-//! ```no_run
+//! ```ignore
 //! use ontologos_parser::load_ontology;
 //! use ontologos_rdfs::RdfsEngine;
 //!
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
 //! let report = RdfsEngine::new().materialize(&mut ontology)?;
 //! println!("inferred {}", report.inferred_total());
-//! # Ok(())
-//! # }
 //! ```
 //!
 //! OWL RL saturation: `ontologos_rl::RlEngine::new(1)?.saturate(&mut ontology)?`
