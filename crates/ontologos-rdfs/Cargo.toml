@@ -8,17 +8,16 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "RDFS reasoning engine for OntoLogos"
+description = "RDFS materialization facade over reasonable for OntoLogos"
 readme = "README.md"
 keywords = ["owl", "ontology", "rdfs", "reasoner", "semantic-web"]
 categories = ["science"]
 publish = true
 
-[package.metadata.docs.rs]
-all-features = true
-
 [dependencies]
 ontologos-core = { workspace = true }
+ontologos-bridge = { workspace = true }
+reasonable = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 

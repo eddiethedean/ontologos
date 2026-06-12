@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashSet};
 
-use ontologos_core::{AxiomId, EntityId, InferenceTrace, TraceConclusion, TraceStep};
+use ontologos_core::{AxiomId, EntityId, InferenceTrace};
 use serde::Serialize;
 
 /// OWL RL rule that produced an inference.
@@ -102,20 +102,4 @@ impl MaterializationReport {
         self.final_axiom_count
             .saturating_sub(self.initial_axiom_count)
     }
-}
-
-pub(crate) fn push_trace(
-    trace: &mut InferenceTrace,
-    rule: RlRule,
-    premises: Vec<AxiomId>,
-    conclusion: AxiomId,
-) {
-    trace.push(TraceStep {
-        rule: rule.as_str().to_string(),
-        premises: premises
-            .into_iter()
-            .map(|id| ontologos_core::TracePremise::Axiom { id })
-            .collect(),
-        conclusion: TraceConclusion::Axiom { id: conclusion },
-    });
 }

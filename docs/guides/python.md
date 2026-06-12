@@ -1,6 +1,12 @@
 # Python Guide
 
-Alpha Python bindings for OntoLogos v0.5 via PyO3 (`pip install ontologos`).
+Alpha Python bindings for OntoLogos v0.6 via PyO3 (`pip install ontologos`).
+
+OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
+(`ontologos-el` → whelk, `ontologos-rl` / `ontologos-rdfs` → reasonable). Power users who need
+direct engine access can use upstream crates ([reasonable](https://crates.io/crates/reasonable),
+[whelk-rs](https://github.com/INCATools/whelk-rs)) or horned-owl for parsing-only workflows.
+OntoLogos adds profile detection, the unified `Ontology` model, security limits, CLI, and wheels.
 
 ## Install
 
@@ -95,16 +101,26 @@ Read-only dict after load:
 | `skipped_axiom_count` | `int` | Logical components not mapped |
 | `logical_axiom_count` | `int` | Mapped + skipped |
 
-## Limitations (v0.5 alpha)
+## Limitations (v0.6 alpha)
 
-| Capability | Rust v0.5 | Python v0.5 |
+| Capability | Rust v0.6 | Python v0.6 |
 |------------|-----------|-------------|
-| Load OWL files | Yes | Yes |
+| Load OWL files | Yes (horned-owl) | Yes |
 | Profile detection | Yes | Via `"auto"` only |
-| RDFS / RL / EL classify | Yes | Yes |
-| Per-rule RL report | Yes | Counts only |
+| RDFS / RL / EL classify | Yes (reasonable / whelk) | Yes |
+| Per-rule RL/RDFS traces | No (reasonable has no trace API) | No |
+| EL rule traces | No (whelk adapter; taxonomy only) | No |
 | Export saturated ontology | Yes (in-process) | No |
-| Query API | Yes (`ontologos-query`) | No |
+| Query API | Yes (`ontologos-query`, petgraph) | No |
+
+## When to use upstream crates directly
+
+| Goal | Prefer |
+|------|--------|
+| OWL RL saturation on oxrdf triples | `reasonable` |
+| OWL EL on horned-owl ontologies | `whelk` |
+| Parse OWL/RDF only | `horned-owl` |
+| One CLI, Python package, profile routing, core model | **OntoLogos** |
 
 ## Errors
 

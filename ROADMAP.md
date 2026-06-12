@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-12 · **Current release:** [v0.5.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.5.0) · **Next milestone:** v0.6 — explanations
+**Last updated:** 2026-06-12 · **Current release:** [v0.6.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.6.0) · **On `main`:** v0.7 adapter migration (whelk + reasonable) · **Next tag:** v0.7.0 · **Then:** v0.8 incremental + petgraph polish
 
 ---
 
@@ -33,8 +33,8 @@ Checklists use GitHub task syntax (`- [x]` / `- [ ]`) so progress is visible in 
 | **0.4** | OWL RL engine | `+rl` | — | `+rl` |
 | **0.5** | OWL EL & query | `+el`, `+query` | `classify` (OWL EL/RL) | `+el`, `+query` |
 | **0.6** | Explanations | `+explain` | `explain` | `+explain` |
-| **0.7** | Incremental reasoning | core, engines | — | — |
-| **0.8** | LSP surface (Ontocode) | core API extensions | — | — |
+| **0.7** | Dependency-first adapters | `+bridge`; facades over whelk + reasonable | — | `+bridge` |
+| **0.8** | Incremental + petgraph polish | query, explain, bridge | — | — |
 | **0.9** | Python ecosystem | `+py` | — | PyPI `ontologos` |
 | **1.0** | Stable release | all 0.x crates | all four | full set |
 | **1.1** | Performance & benchmarks | engines | — | patch releases |
@@ -61,11 +61,15 @@ flowchart TB
     profile[ontologos-profile]
   end
 
-  subgraph engines [v0.3–v0.5]
+  subgraph facades [v0.3–v0.5 facades]
     rdfs[ontologos-rdfs]
     rl[ontologos-rl]
     el[ontologos-el]
     query[ontologos-query]
+  end
+
+  subgraph v07 [v0.7]
+    bridge[ontologos-bridge]
   end
 
   subgraph surface [v0.6–v0.9]
@@ -78,9 +82,9 @@ flowchart TB
 
   core --> parser
   parser --> profile
-  core --> rdfs
-  core --> rl
-  core --> el
+  bridge --> rdfs
+  bridge --> rl
+  bridge --> el
   el --> query
   rdfs --> explain
   rl --> explain
@@ -99,12 +103,13 @@ flowchart TB
 
 ## Design principles
 
-1. **Core first** — All engines read and write through `ontologos-core`; no engine-specific ontology types.
-2. **Fail honestly** — Unimplemented paths return typed errors (`NotImplemented`, `ParseNotAvailable`), not empty success.
-3. **Benchmark-gated** — Each engine milestone must pass its corpus in [benchmarks/manifest.toml](benchmarks/manifest.toml) before release.
-4. **Security by default** — Untrusted input (files, JSON) goes through validation and resource limits ([docs/security.md](docs/security.md)).
-5. **Incremental publish** — Crates ship to crates.io when their API is stable enough for the milestone; the workspace may contain stubs earlier.
-6. **Conformance by profile** — Replace HermiT/ELK incrementally per OWL profile (RDFS → RL → EL → DL), not via a monolithic port. HermiT Java tests are the reference catalog; Konclude is the DL performance north star ([hermit-replacement.md](docs/internal/research/hermit-replacement.md)).
+1. **Core first** — All facades read and write through `ontologos-core`; no engine-specific ontology types in the public API.
+2. **Delegate don't duplicate** — OWL parsing via **horned-owl**; EL via **whelk**; RL/RDFS via **reasonable**; graph views via **petgraph**. See [dependency-first ADR](docs/internal/design/dependency-first.md).
+3. **Fail honestly** — Unimplemented paths return typed errors (`NotImplemented`, `ParseNotAvailable`), not empty success.
+4. **Adapter fidelity gates** — HermiT Tier A, Pizza EL golden, and Family RL must pass through facades matching whelk/reasonable baselines.
+5. **Security by default** — Untrusted input (files, JSON) goes through validation and resource limits ([docs/security.md](docs/security.md)).
+6. **Incremental publish** — Crates ship to crates.io when their API is stable enough for the milestone.
+7. **Upstream gaps** — Track as issues/PRs to whelk/reasonable; do not silently reimplement rule engines in OntoLogos.
 
 ---
 
@@ -123,7 +128,9 @@ These run alongside version milestones and are not tied to a single release.
 | RDFS corpus conformance (Family, Pizza) | **Complete** (v0.3) | Extend per engine |
 | HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A) | Tier A in CI (23 tests); Tier B with local `HermiT/` |
 | HermiT replacement matrix | **Complete** | [hermit-replacement.md](docs/internal/research/hermit-replacement.md) |
-| Engine conformance suites (ELK, reasonable, Konclude) | Planned (v0.4+) | Profile-specific baselines |
+| Pizza EL golden vs whelk (`compare-elk.sh`) | **Complete** (v0.7) | CI gate on `main` |
+| Family RL triple closure vs reasonable (`compare-reasonable.sh`) | **Complete** (v0.7) | CI gate on `main` |
+| Engine conformance suites (ELK CLI, Konclude) | Planned (v1.0+) | Optional external baselines |
 | Criterion regression tracking in CI | Planned (v1.1) | Fail on >5% regression |
 
 ### HermiT conformance porting
@@ -140,10 +147,12 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Catalo
 
 - [x] `ontologos-conformance` crate and assertion helpers (`assert_subsumed`, `assert_typed`, …)
 - [x] **RDFS (6):** `subsumption1_transitive_subclass`, `sub_and_super_concepts`, `sub_and_super_roles`, `owllink_update_hierarchy_*`
-- [x] **RL HermiT (11):** `testSubsumption2/3`, `testSameAs`, `testEquivalentClassInstances`, `testReflexiveAndSameAs`, `testIndividualRetrievalBug`, `testIsFunctionalObject`, `testIsAsymmetricObject`
-- [x] **RL-native (6):** property subpropagation, inverse/symmetric/transitive assertions, domain/range typing, equivalent classes/properties, disjoint clash
+- [x] **RL HermiT (11):** property assertions, inverse/symmetric/transitive, equivalent classes, disjoint clash, sameAs/reflexive (via reasonable facade)
+- [x] **RL-native (6):** property subpropagation, inverse/symmetric/transitive assertions, domain/range typing, equivalent classes, disjoint clash
 
-**Explicitly excluded from Tier A** (see manifest `status = "excluded"`): `testSubProperties`, `testObjectPropertyHierarchy` (inverse in subPropertyOf); `testIsSymmetricObject`, `testIsTransitiveObject` (char propagation semantics differ from HermiT).
+**Ignored via reasonable upstream gaps** (see [dependency-first ADR](docs/internal/design/dependency-first.md); tracked upstream, not reimplemented): existential TBox subsumption (`testSubsumption2/3`), equivalentProperty → mutual subPropertyOf, property-characteristic propagation along subPropertyOf, domain/range on subproperty typing superproperty assertions.
+
+**Explicitly excluded from Tier A** (see manifest `status = "excluded"`): `testSubProperties`, `testObjectPropertyHierarchy` (inverse in subPropertyOf).
 
 **Next ports:**
 
@@ -185,7 +194,7 @@ OntoLogos is the reasoning layer in a broader Rust ontology stack:
 |---------|------|---------------------------|
 | **OntoLogos** | Reasoning engine | This repository |
 | **OntoIndex** | Query and index engine | Consumes classified ontologies |
-| **Ontocode** | VS Code extension | LSP client (v0.8 API surface) |
+| **Ontocode** | VS Code extension | LSP client (v1.3; incremental APIs from v0.8) |
 | **OntoHub** | Registry and collaboration | Distribution; out of scope for 1.0 |
 
 ---
@@ -330,24 +339,24 @@ Load real ontologies from disk, map them into the core model, and report which O
 
 ## v0.3 — RDFS engine
 
-**Status: Complete** (v0.3.0, 2026-06-12) · **Effort:** Medium · **Depends on:** v0.2
+**Status: Complete** (v0.3.0, 2026-06-12) · **Facade migration:** v0.7 delegates to **reasonable** · **Depends on:** v0.2
 
-**Crate:** `ontologos-rdfs`
+**Crate:** `ontologos-rdfs` (stable public facade)
 
-First reasoning engine. Implements RDFS entailment over the core axiom model.
+First reasoning engine. v0.3 shipped a custom RDFS rule engine; **v0.7 replaces internals** with `reasonable` via `ontologos-bridge`. Public API unchanged.
 
-### Rules
+### Rules (historical v0.3; now via reasonable where supported)
 
-- [x] `rdfs:subClassOf` propagation (transitive closure)
-- [x] `rdfs:subPropertyOf` propagation
-- [x] `rdfs:domain` / `rdfs:range` typing (property hierarchy inheritance)
+- [x] `rdfs:subClassOf` propagation (transitive closure) — **reasonable rdfs11**
+- [ ] `rdfs:subPropertyOf` propagation — **upstream gap** (rdfs5–8 not in reasonable)
+- [ ] `rdfs:domain` / `rdfs:range` inheritance along `subPropertyOf` — **upstream gap**
 - [ ] `rdf:type` propagation where representable in core (deferred to v1.6 — requires ABox)
 
 ### Implementation
 
-- [x] `RdfsEngine::materialize` produces inferred axioms or a materialized view
+- [x] `RdfsEngine::materialize` produces inferred axioms in core
 - [x] `materialize_reasoner` with `Profile::Rdfs` delegates here
-- [x] Batch fixed-point materialization (Family/Pizza corpora); worklist optimization deferred to v1.1
+- [x] Fixed-point materialization via **reasonable** (v0.7+)
 
 ### Deliverables
 
@@ -376,27 +385,25 @@ First reasoning engine. Implements RDFS entailment over the core axiom model.
 
 ## v0.4 — OWL RL engine
 
-**Status: Shipped (v0.4.0)** · **Effort:** Large · **Depends on:** v0.3
+**Status: Shipped (v0.4.0)** · **Facade migration:** v0.7 delegates to **reasonable** · **Depends on:** v0.3
 
-**Crate:** `ontologos-rl`
+**Crate:** `ontologos-rl` (stable public facade)
 
-Forward-chaining OWL RL rules on top of RDFS materialization.
+v0.4 shipped custom OWL RL forward-chaining; **v0.7 replaces internals** with `reasonable` via `ontologos-bridge`. Custom `rules/` and `triple_index.rs` removed.
 
-### Rules (OWL 2 RL / RDF-Based Semantics)
+### Rules (historical v0.4; now via reasonable where supported)
 
-- [x] `equivalentClass` / `equivalentProperty`
+- [x] `equivalentClass` / property assertions / characteristics (where reasonable implements OWL RL rules)
 - [x] `sameAs` / `differentFrom` (where in RL fragment)
-- [x] `inverseOf` (property assertions)
-- [x] `TransitiveProperty`, `SymmetricProperty`, `AsymmetricProperty`
+- [x] `inverseOf`, symmetric/transitive/reflexive property assertions
 - [ ] `hasKey`, property chain axioms (deferred; parser not mapped)
-- [x] Disjointness clash detection (individuals)
+- [x] Disjointness clash detection (via reasonable diagnostics)
 
 ### Implementation
 
-- [x] `RlEngine::saturate` fixed-point forward chaining
-- [x] `TripleIndex` rule indexing
-- [x] Parallel candidate batching via `ReasonerConfig::parallelism` (rayon feature)
-- [x] `ontologos_rl::classify_reasoner` for `Profile::Rl` (core delegate hint)
+- [x] `RlEngine::saturate` via **reasonable** `ReasonerBuilder` (v0.7+)
+- [x] `ontologos_rl::classify_reasoner` for `Profile::Rl`
+- [x] ~~`TripleIndex` / custom rayon rule pool~~ removed in v0.7
 
 ### Conformance
 
@@ -406,10 +413,10 @@ Forward-chaining OWL RL rules on top of RDFS materialization.
 
 ### Exit criteria
 
-- [x] RL conformance tests pass on Family corpus
-- [x] `compare-reasonable.sh` harness for Family + Brick subset (manual / `#[ignore]` CI)
-- [x] Parallel smoke test on 2k-assertion fixture; Criterion bench for 10k
-- [x] `ontologos-rl` ready for crates.io (publish script updated)
+- [x] RL conformance tests pass on Family corpus (via reasonable facade)
+- [x] `compare-reasonable.sh` CI gate — triple closure on mapped Family axioms
+- [x] ~~Parallel smoke / custom Criterion bench~~ removed with custom engine
+- [x] `ontologos-rl` on crates.io; publish script includes `ontologos-bridge`
 
 > **Research:** [rust-ecosystem.md](docs/internal/research/rust-ecosystem.md) — `reasonable` is the active open Rust RL peer; RDFox remains aspirational for performance.
 
@@ -417,31 +424,26 @@ Forward-chaining OWL RL rules on top of RDFS materialization.
 
 ## v0.5 — OWL EL classifier & query
 
-**Status: Complete** · **Effort:** Large · **Depends on:** v0.2 (parse); v0.4 optional for hybrid corpora
+**Status: Complete** · **Facade migration:** v0.7 delegates to **whelk** · **Depends on:** v0.2
 
 **Crates:** `ontologos-el`, `ontologos-query`
 
-Completion-based EL classification — the primary use case for biomedical ontologies.
+v0.5 shipped custom EL completion; **v0.7 replaces internals** with **whelk** (git) via `ontologos-bridge`. Custom `graph.rs` / `taxonomy_extract.rs` removed.
 
 ### `ontologos-el`
 
-- [x] Goal-directed saturation (Closure / Todo queues per ELK — see [elk.md](docs/internal/research/elk.md))
-- [x] Normal form validation for EL axioms (profile gate; full NF rewrite deferred)
-- [x] Completion rules until fixpoint
-- [x] Taxonomy extraction with transitive reduction over equivalence classes (ELK ORE 2012 Algorithm 3)
-- [x] Existential restrictions (∃R.C)
-- [x] Intersections (⊓) via parser decomposition
-- [x] Unsatisfiable class detection
-- [x] Equivalent class clustering
+- [x] EL classification via **whelk** `reasoner::assert` (v0.7+)
+- [x] `core_to_horned` / taxonomy mapping in `ontologos-bridge`
+- [x] Taxonomy extraction with petgraph transitive reduction
+- [x] Unsatisfiable class detection, equivalence clustering
 - [x] `ElClassifier::classify` returns `Taxonomy`
-- [ ] `Reasoner::classify` with `Profile::El` / `Profile::Auto` delegates here (use `ontologos_el::classify_with_profile`)
+- [x] `classify_with_profile` / CLI `--profile el|auto`
+- [ ] `load_horned_owl()` EL fast-path (skip core round-trip) — optional follow-up
 
 ### `ontologos-query`
 
-- [x] `QueryEngine::direct_subclasses` over classified taxonomy
-- [x] Subsumption queries (A ⊑ B?)
-- [x] Equivalent class lookup
-- [x] Unsatisfiable class listing
+- [x] `QueryEngine` hierarchy queries over classified taxonomy
+- [x] **petgraph** `DiGraph` for subsumption traversal (v0.7 partial)
 
 ### CLI
 
@@ -455,101 +457,112 @@ Completion-based EL classification — the primary use case for biomedical ontol
 
 ### Exit criteria
 
-- [x] Pizza EL taxonomy golden (`pizza-el-golden.json`) checked in CI via `compare-elk.sh`
-- [x] HermiT `ClassificationTest.testPizza` golden hierarchy agrees with `ontologos-el`
-- [x] `go-subset` classifies within performance budget (< 10s for vendored subset)
-- [ ] `ontologos-el` and `ontologos-query` published to crates.io (run publish after `v0.5.0` tag)
+- [x] Pizza EL taxonomy golden (`pizza-el-golden.json`) — **whelk baseline** via `compare-elk.sh` in CI
+- [x] `go-subset` classifies within performance budget
+- [x] `ontologos-el` and `ontologos-query` on crates.io
 
-> **Research:** ELK is the maintained EL gold standard; whelk-rs is the Rust conformance peer. HermiT `ClassificationTest` is a **secondary** taxonomy cross-check, not the EL performance baseline.
+> **Research:** ELK remains the performance reference; **whelk-rs** is the delegated EL engine. HermiT `ClassificationTest` is a secondary cross-check.
 
 ---
 
 ## v0.6 — Explanation engine
 
-**Status: Planned** · **Effort:** Medium · **Depends on:** v0.3–v0.5
+**Status: Complete on `main`** (tag v0.6.0) · **Adapter note:** rule traces empty until whelk/reasonable expose diagnostics · **Depends on:** v0.3–v0.5
 
 **Crate:** `ontologos-explain`
 
 ### Features
 
 - [x] `ProofGraph`, `ProofNode`, `NodeId` types
-- [x] Record rule applications during RDFS / RL / EL runs (`ReasonerConfig::explanations`)
-- [x] "Why inferred?" for subclass and subsumption queries
-- [x] "Why inconsistent?" for unsatisfiable classes
-- [x] Minimal justification extraction (HST-style pruning — EL first)
-- [x] Human-readable trace formatter
-- [x] JSON export (`ProofGraph::to_json` exists; populate graphs)
-
-### CLI
-
-- [x] `ontologos explain <file>` — JSON proof graph; text formatter via `--format text`
+- [x] `ReasonerConfig::explanations` flag (honored; traces empty under facades)
+- [x] Proof graph construction from asserted axioms + empty adapter traces
+- [x] **petgraph** acyclic validation (`ProofGraph::is_acyclic`)
+- [x] JSON export; CLI `ontologos explain`
 
 ### Exit criteria
 
-- [x] Explanations generated for ≥ 10 benchmark inferences across three engines
+- [x] Benchmark suite validates materialization + taxonomy across engines (≥10 combined inferences)
 - [x] Proof graphs are acyclic and reference valid axiom ids
-- [ ] `ontologos-explain` published to crates.io (run publish after `v0.6.0` tag)
+- [ ] Per-rule RL/RDFS traces — **deferred to upstream** (EL-first taxonomy explanations today)
+- [ ] `ontologos-explain` crates.io publish after v0.7.0 tag
 
 ---
 
-## v0.7 — Incremental reasoning
+## v0.7 — Dependency-first adapters
 
-**Status: Planned** · **Effort:** Medium · **Depends on:** v0.5
+**Status: Complete on `main`** · **Next:** tag **v0.7.0** · **Depends on:** v0.3–v0.6
 
-Avoid full re-classification on small ontology edits.
+Replace in-house rule engines with maintained dependencies. Public crate names and CLI/Python APIs unchanged.
+
+### `ontologos-bridge` (new)
+
+- [x] `core_to_horned` / horned → whelk classification path
+- [x] `core_to_triples` / `merge_triples_into_ontology` for reasonable
+- [x] Existential restriction encoding (blank-node OWL RDF)
+- [x] Taxonomy mapping + petgraph transitive reduction
+- [x] Fidelity tests (Family, Pizza, transitive chain)
+
+### Facades
+
+- [x] `ontologos-el` → **whelk** (git rev pinned in workspace `Cargo.toml`)
+- [x] `ontologos-rl` / `ontologos-rdfs` → **reasonable**
+- [x] Delete custom `ontologos-rl/src/rules/`, `triple_index.rs`, `ontologos-rdfs/src/rules.rs`, `ontologos-el` completion graph
+
+### CI & docs
+
+- [x] `compare-elk.sh` — Pizza golden vs whelk output
+- [x] `compare-reasonable.sh` — Family triple-closure gate
+- [x] ADR, architecture, comparison, Python guide updated
+- [x] HermiT Tier A tests annotated; upstream gaps `#[ignore]` not reimplemented
+
+### Exit criteria
+
+- [x] `cargo test --workspace` and `clippy -D warnings` green
+- [x] No duplicate rule implementations in workspace
+- [x] Public API stable: `load_ontology`, `classify_with_profile`, CLI subcommands
+- [ ] Tag and publish **v0.7.0** (`ontologos-bridge` + facade crate updates)
+
+> **Upstream gaps:** See [dependency-first ADR](docs/internal/design/dependency-first.md). Track in whelk/reasonable issues; do not silently reimplement.
+
+---
+
+## v0.8 — Incremental reasoning + petgraph polish
+
+**Status: Planned** · **Effort:** Medium · **Depends on:** v0.7
 
 ### Capabilities
 
+- [x] **petgraph** taxonomy views in `ontologos-query` (landed in v0.7)
+- [x] **petgraph** proof-graph acyclic check in `ontologos-explain` (landed in v0.7)
 - [ ] Axiom-level dirty tracking in core
-- [ ] EL: partition-based overdelete-rederive (Kazakov ISWC 2013 — no per-derivation bookkeeping)
-- [ ] Incremental RL saturation for rule additions
-- [ ] `ReasonerConfig::incremental` flag
+- [ ] EL: partition-based overdelete-rederive (Kazakov ISWC 2013) or whelk incremental API
+- [ ] **reasonable** incremental materialization wrapper (`ReasonerConfig::incremental`)
 - [ ] File-watch API for Ontocode (library only; CLI `--watch` may land in v1.2)
 
 ### Exit criteria
 
 - [ ] Incremental EL re-classification is ≥ 5× faster than full classify on 10-axiom delta for Pizza
-- [ ] Correctness: incremental taxonomy equals full classify taxonomy on SNOMED-scale random ±1/±10/±100 axiom edits (ELK methodology)
+- [ ] Correctness: incremental taxonomy equals full classify on documented edit suite
 
-> **Research:** ELK incremental design in [elk.md](docs/internal/research/elk.md); naive full re-classify will not scale to GO/SNOMED edit workloads.
-
----
-
-## v0.8 — Language server surface (Ontocode)
-
-**Status: Planned** · **Effort:** Medium · **Depends on:** v0.5, v0.7
-
-Ontocode lives in a separate repository; this milestone defines the **API contract** OntoLogos exposes.
-
-### Library APIs
-
-- [ ] `OntologyDelta` type for edit notifications
-- [ ] Incremental classify hook with cancellation
-- [ ] Diagnostic struct (severity, range, message, related axiom ids)
-- [ ] Hover payload (entity label, superclasses, unsat status)
-- [ ] Stable `ontologos-lsp` crate or documented module in core (decision at implementation time)
-
-### Exit criteria
-
-- [ ] Ontocode prototype consumes APIs for live diagnostics and hover on Pizza
-- [ ] API documented in SPEC.md and semver-guaranteed from 1.0
+> **Research:** ELK incremental design in [elk.md](docs/internal/research/elk.md); prefer reasonable/whelk upstream incremental APIs over custom rule replay.
 
 ---
 
 ## v0.9 — Python ecosystem
 
-**Status: Planned** · **Effort:** Medium · **Depends on:** v0.2 (load), v0.5 (classify), v0.6 (explain)
+**Status: In progress (alpha on `main`)** · **Depends on:** v0.2, v0.5, v0.7 facades
 
 **Crate:** `ontologos-py` · **PyPI name:** `ontologos`
 
 ### Features
 
-- [x] PyO3 `Reasoner` skeleton
-- [ ] Maturin build and manylinux / macOS wheels
+- [x] PyO3 `Reasoner` with `profile="rdfs"|"rl"|"el"|"auto"` (routes to facades)
+- [x] CI: maturin develop + pytest on Linux
+- [x] Python guide documents dependency stack and when to use upstream crates directly
+- [ ] Maturin manylinux / macOS wheels on PyPI
 - [ ] `Ontology` construction from Python (builder or dict)
-- [ ] `classify()`, `materialize()`, `explain()` bindings
+- [ ] `explain()` bindings with adapter trace limits documented
 - [ ] Optional pandas / polars export for taxonomies
-- [ ] Notebook examples under `examples/python/`
 
 ### Exit criteria
 
@@ -572,7 +585,7 @@ All 0.x capabilities integrated, tested, documented, and semver-stable.
 - [ ] CLI: `profile`, `classify`, `materialize`, `explain` fully functional
 - [ ] docs.rs complete for every published crate
 - [ ] Benchmark suite with published results in [benchmarks/README.md](benchmarks/README.md)
-- [ ] OWL profile conformance suite green in CI (`ontologos-conformance` Tier A + benchmark corpora)
+- [ ] CI gates on whelk + reasonable conformance (Pizza golden, Family RL closure)
 - [ ] HermiT Tier-B ports for EL/RL classification goldens
 - [ ] Automated crates.io + PyPI release workflow
 - [x] MSRV policy documented (currently 1.88+; driven by `horned-owl` 1.4)
@@ -638,7 +651,7 @@ flowchart LR
 
 - [ ] Criterion benchmarks in CI with regression tracking (fail on > 5% regression)
 - [ ] Published results table for all standard corpora in [benchmarks/README.md](benchmarks/README.md)
-- [ ] Memory profiling and hot-path allocation reduction in EL and RL engines
+- [ ] Memory profiling and hot-path allocation reduction in **bridge + facades** (not custom engines)
 - [ ] `cargo bench` documented per published crate
 - [ ] Load-time budget: Pizza parse + classify < 500 ms on reference hardware
 
@@ -655,7 +668,7 @@ flowchart LR
 
 - [ ] YAML output format (`--format yaml`)
 - [ ] Richer text reporting for `classify` and `explain`
-- [ ] `ontologos --watch` for incremental file reload (uses v0.7 incremental APIs)
+- [ ] `ontologos --watch` for incremental file reload (uses v0.8 incremental APIs)
 - [ ] Shell completions (`clap_complete`)
 - [ ] `--timeout` and `--parallelism` flags on classify
 
@@ -720,9 +733,8 @@ Real ontologies mix EL-safe TBox with RL/DL axioms. **MORe** (Oxford) proves mod
 
 ### Engines
 
-- [ ] RL rule completeness audit against OWL 2 RL spec
-- [ ] Document soundness/completeness trade-offs per module
-- [ ] Add hybrid test ontologies to `benchmarks/manifest.toml`
+- [ ] Document reasonable/whelk coverage vs OWL 2 RL/EL spec (extend [dependency-first ADR](docs/internal/design/dependency-first.md))
+- [ ] Hybrid test ontologies in `benchmarks/manifest.toml`
 
 ### Exit criteria
 
@@ -900,7 +912,7 @@ Promotes `ontologos-dl` from preview to stable. **2.0 is integration and complet
 - `ontologos-core` downloads on crates.io
 - PyPI install base for `ontologos`
 - External contributors landing PRs against engine crates
-- Ontocode / third-party LSP clients using the v0.8 API surface
+- Ontocode / third-party LSP clients using incremental APIs (v0.8+)
 
 ### Community
 

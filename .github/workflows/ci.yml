@@ -30,6 +30,8 @@ jobs:
         run: ./benchmarks/scripts/compare-elk.sh
       - name: HermiT conformance (Tier A)
         run: cargo test -p ontologos-conformance
+      - name: Reasonable RL adapter conformance
+        run: ./benchmarks/scripts/compare-reasonable.sh
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
 

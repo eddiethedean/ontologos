@@ -1,7 +1,5 @@
 use ontologos_core::{Axiom, Ontology, Profile, Reasoner};
-use ontologos_rl::{
-    classify_reasoner, materialize_reasoner, MaterializationReport, RlEngine, RlRule,
-};
+use ontologos_rl::{classify_reasoner, materialize_reasoner, MaterializationReport, RlEngine};
 
 const NS: &str = "http://example.org/";
 
@@ -32,12 +30,8 @@ fn eq_class_sub_infers_mutual_subsumption() {
 
     let report = saturate(&mut ontology);
     assert!(
-        report
-            .inferred_by_rule
-            .get(&RlRule::EqClassSub)
-            .copied()
-            .unwrap_or(0)
-            >= 1
+        report.inferred_total() >= 1,
+        "expected equivalent class propagation"
     );
 
     let a = ontology.lookup_entity(&format!("{NS}A")).expect("A");

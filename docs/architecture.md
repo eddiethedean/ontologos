@@ -1,49 +1,61 @@
 # Architecture Overview
 
-OntoLogos is a Cargo workspace of profile-specific reasoning crates layered on a shared in-memory ontology model. This page is for adopters evaluating integration — see [SPEC.md](project/spec.md) for detailed API status tags.
+OntoLogos is a dependency-first orchestration workspace: unified embed API, profile detection, CLI, Python bindings, and conformance harnesses built on maintained Rust OWL crates. See [dependency-first ADR](internal/design/dependency-first.md).
 
 ## Crate dependency graph
 
 ```mermaid
 flowchart TB
-  core[ontologos_core]
-  parser[ontologos_parser]
-  profile[ontologos_profile]
-  rdfs[ontologos_rdfs]
-  rl[ontologos_rl]
-  el[ontologos_el]
-  query[ontologos_query]
-  explain[ontologos_explain stub]
-  cli[ontologos_cli]
-  py[ontologos_py]
-  conformance[ontologos_conformance]
+  subgraph surfaces [Surfaces]
+    cli[ontologos_cli]
+    py[ontologos_py]
+    query[ontologos_query]
+    explain[ontologos_explain]
+  end
 
-  core --> parser
+  subgraph orchestration [Orchestration]
+    core[ontologos_core]
+    parser[ontologos_parser]
+    profile[ontologos_profile]
+    bridge[ontologos_bridge]
+    rdfs[ontologos_rdfs facade]
+    rl[ontologos_rl facade]
+    el[ontologos_el facade]
+  end
+
+  subgraph external [External engines]
+    horned[horned_owl]
+    whelk[whelk git]
+    reasonable[reasonable]
+    petgraph[petgraph]
+  end
+
+  parser --> horned
+  parser --> core
   parser --> profile
-  core --> rdfs
-  rdfs --> rl
-  core --> el
-  core --> query
-  core --> explain
-  parser --> cli
-  profile --> cli
-  rdfs --> cli
-  el --> cli
-  rl --> cli
-  explain --> cli
-  parser --> py
-  rdfs --> py
-  rl --> py
-  el --> py
-  rl --> conformance
-  rdfs --> conformance
-  el --> conformance
-  parser --> conformance
+  bridge --> horned
+  bridge --> whelk
+  bridge --> reasonable
+  bridge --> core
+  el --> bridge
+  rl --> bridge
+  rdfs --> bridge
+  query --> petgraph
+  explain --> petgraph
+  cli --> profile
+  cli --> el
+  cli --> rl
+  cli --> rdfs
+  cli --> explain
+  py --> el
+  py --> rl
+  py --> rdfs
+  core --> serde
 ```
 
-Published to crates.io (v0.5): `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`.
+Published to crates.io: `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`.
 
-Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-explain` (stub), `ontologos-py` (also on PyPI).
+Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`.
 
 ## Data flow
 
@@ -59,29 +71,34 @@ flowchart LR
     ontology[Ontology]
   end
 
-  subgraph engines [Engines]
-    rdfsEng[RdfsEngine]
-    rlEng[RlEngine]
-    elEng[ElClassifier]
+  subgraph adapters [Adapters]
+    bridgeHorned[core to horned_owl]
+    bridgeTriples[core to oxrdf]
+  end
+
+  subgraph engines [Delegated engines]
+    whelkEng[whelk classify]
+    reasonableEng[reasonable reason]
   end
 
   builder --> ontology
   json --> ontology
   owl --> parser[load_ontology] --> ontology
   ontology --> profileDet[detect_profile]
-  ontology --> rdfsEng
-  rdfsEng --> rlEng
-  ontology --> elEng
+  ontology --> bridgeHorned --> whelkEng
+  whelkEng --> taxonomy[Taxonomy]
+  ontology --> bridgeTriples --> reasonableEng
+  reasonableEng --> saturated[Ontology plus inferred axioms]
 ```
 
 1. **Construct or load** an `Ontology` (builder, JSON, or parser).
 2. **Optionally detect profile** with `ontologos_profile::detect_profile`.
-3. **Run an engine** that mutates the ontology in place (RDFS/RL) or returns a `Taxonomy` (EL).
-4. **Query** via `ontologos-query` or indexes on `Ontology`.
+3. **Run a facade** — EL returns `Taxonomy` via whelk; RL/RDFS materialize via reasonable into the same `Ontology`.
+4. **Query** via `ontologos-query` (petgraph-backed hierarchy views).
 
 ## Core model (`ontologos-core`)
 
-Single in-memory representation:
+Single embed-facing representation:
 
 | Component | Role |
 |-----------|------|
@@ -90,58 +107,64 @@ Single in-memory representation:
 | `AxiomStore` | Structured TBox and ABox axioms |
 | `AxiomIndex` | Secondary indexes for traversal |
 | `ParseMeta` | Parser scan metadata (optional) |
-| `Taxonomy` | EL classification output (subsumptions, equivalences, unsatisfiable) |
+| `Taxonomy` | EL classification output |
 
 Serialization: JSON snapshot v2 (`to_json` / `from_json`).
 
-**Deliberate split:** `Ontology::from_file` returns `ParseNotAvailable` so `ontologos-core` has no parser dependency. File loading lives in `ontologos-parser`.
+**Deliberate split:** `Ontology::from_file` returns `ParseNotAvailable`. File loading lives in `ontologos-parser`.
+
+## Bridge (`ontologos-bridge`)
+
+Owns conversions between models:
+
+| Module | Direction |
+|--------|-----------|
+| `horned` | `Ontology` ↔ horned-owl `SetOntology` |
+| `triples` | `Ontology` ↔ oxrdf triples for reasonable |
+| `whelk` | whelk `ReasonerState` → core `Taxonomy` |
+| `taxonomy` | Transitive reduction via petgraph |
+
+## Engine facades
+
+| Profile | Facade crate | Delegates to |
+|---------|--------------|--------------|
+| RDFS | `ontologos-rdfs` | `reasonable` (RDFS rules subset of RL) |
+| OWL RL | `ontologos-rl` | `reasonable` |
+| OWL EL | `ontologos-el` | `whelk` via horned-owl |
+| Query | `ontologos-query` | petgraph over `Taxonomy` |
+| Explain | `ontologos-explain` | petgraph proof graphs; EL-first traces |
 
 ## Reasoner facade
 
-`Reasoner` in core is a configuration wrapper around `Ontology`:
+`Reasoner` in core is a configuration wrapper. Use profile crates for actual work:
 
-| `Profile` | `Reasoner::classify()` in core | Use instead |
-|-----------|-------------------------------|-------------|
-| `Auto` | `NotImplemented` | `ontologos_el::classify_with_profile` |
-| `El` | `NotImplemented` | `ontologos_el::classify_reasoner` or `ElClassifier` |
-| `Rdfs` | Delegate hint (`Error::Message`) | `ontologos_rdfs::materialize_reasoner` |
-| `Rl` | Delegate hint | `ontologos_rl::classify_reasoner` |
-
-CLI and Python call `ontologos_el::classify_with_profile` for routed classification.
-
-## Engine layering
-
-| Engine | Crate | Scope |
-|--------|-------|-------|
-| RDFS | `ontologos-rdfs` | TBox: `subClassOf`/`subPropertyOf` closure, domain/range inheritance |
-| OWL RL | `ontologos-rl` | RDFS pass + RL TBox/ABox rules until saturation |
-| OWL EL | `ontologos-el` | Completion-based taxonomy (`ElClassifier`) |
-| Query | `ontologos-query` | Taxonomy queries (`is_subsumed`, `direct_subclasses`, …) |
-
-RL always runs RDFS first inside `RlEngine::saturate`.
+| `Profile` | Use |
+|-----------|-----|
+| `Auto` | `ontologos_el::classify_with_profile` |
+| `El` | `ontologos_el::ElClassifier` |
+| `Rdfs` | `ontologos_rdfs::materialize_reasoner` |
+| `Rl` | `ontologos_rl::classify_reasoner` |
 
 ## CLI surface
 
-`ontologos-cli` wires parser, profile detection, RDFS, RL, and EL:
-
 - `profile` — detect OWL profile
 - `classify --profile auto|el|rl|rdfs` — routed classification
-- `materialize` — explicit RDFS materialization
+- `materialize` — RDFS materialization via reasonable
+- `explain` — proof graphs (EL-first for RL)
 
 ## Design choices
 
 | Choice | Rationale |
 |--------|-----------|
-| No umbrella `ontologos` crate | Depend only on what you need; smaller dependency trees |
-| Core/parser split | Embed data model without OWL parse stack |
-| In-place materialization | RDFS/RL engines add axioms to the same `Ontology` |
-| EL taxonomy overlay | EL classification returns `Taxonomy` without mutating asserted axioms |
-| Partial OWL mapping | Map named TBox/ABox shapes; scan rest for profile diagnostics |
-| Batch fixed-point engines | Saturation loops until no new axioms (not incremental yet) |
+| Delegate don't duplicate | whelk and reasonable are maintained peers |
+| Stable facade crate names | Semver and docs.rs URLs unchanged |
+| Core stays embed boundary | No re-export of horned-owl/reasonable types |
+| petgraph for views only | Not a second completion engine |
+| Adapter fidelity gates | HermiT Tier A + reasonable/whelk baselines in CI |
 
 ## Related
 
 - [Choosing an API](guides/choosing-an-api.md)
 - [Supported constructs](reference/supported-constructs.md)
+- [Comparison with other tools](comparison.md)
 - [SPEC.md](project/spec.md)
-- [Roadmap summary](project/roadmap-summary.md)

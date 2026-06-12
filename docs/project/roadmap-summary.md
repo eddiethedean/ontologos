@@ -1,37 +1,37 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Current release:** [v0.6.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.6.0) · **Next milestone:** v0.7 — incremental reasoning.
+OntoLogos follows [semantic versioning](https://semver.org/). **Current release:** [v0.6.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.6.0) · **On `main`:** v0.7 dependency-first adapters · **Next tag:** v0.7.0
 
-## Shipped (v0.4)
+## Shipped through v0.6
 
 | Area | Status |
 |------|--------|
 | Core data model, JSON v2, ABox | Available |
-| OWL/RDF parser, profile detection | Available |
-| RDFS materialization | Available (library + CLI) |
-| OWL RL saturation | Available (library + Python) |
-| CLI `profile`, `materialize` | Available |
-| Python alpha (`profile="rdfs"` / `"rl"`) | Available |
+| OWL/RDF parser (horned-owl), profile detection | Available |
+| RDFS / RL / EL facades (stable crate names) | Available |
+| CLI `profile`, `materialize`, `classify`, `explain` | Available |
+| Python alpha (`profile="rdfs"` / `"rl"` / `"el"` / `"auto"`) | Available |
+
+## v0.7 on `main` (pending tag)
+
+Dependency-first orchestration: **whelk** (EL), **reasonable** (RL/RDFS), **ontologos-bridge**, petgraph query/explain views. Custom in-house rule engines removed. CI gates: Pizza EL golden, Family RL triple closure.
 
 ## Next releases
 
 | Version | Theme | Key deliverables |
 |---------|-------|------------------|
-| **0.5** | OWL EL & query | `ontologos-el`, `ontologos-query`, CLI RL routing, real `classify` |
-| **0.6** | Explanations | `ontologos-explain`, CLI `explain` |
-| **0.7** | Incremental reasoning | Delta updates across engines |
-| **0.9** | Python ecosystem | Full PyPI API |
-| **1.0** | Stable release | All 0.x crates, polished CLI |
-| **2.0** | Full OWL DL | `ontologos-dl` stable |
-
-## v0.5 documentation plan
-
-See [v0.5 documentation plan](v0.5-docs-plan.md) for the doc updates scheduled with the EL release (CLI RL routing, `classify` rename/alias, EL guides).
+| **0.7.0** | Adapter release | Tag + publish `ontologos-bridge`; facade crates |
+| **0.8** | Incremental + petgraph polish | reasonable incremental wrapper; EL delta classify |
+| **0.9** | Python ecosystem | PyPI wheels, full bindings |
+| **1.0** | Stable release | Semver-stable facades; documented upstream gaps |
+| **1.3** | Ontocode / LSP | IDE integration |
+| **1.5+** | Hybrid routing | MORe-style whelk + reasonable modules |
+| **2.0** | Full OWL DL | Extend whelk/horned-owl kernel |
 
 ## Full roadmap
 
-Exit criteria, crate publish policy, and detailed checklists live in the repository:
+Exit criteria, upstream gap policy, and detailed checklists:
 
 **[ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md)**
 
-Historical ecosystem vision (Ontocode, OntoHub): [PLAN.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/PLAN.md) — not current scope.
+Architecture and adapter policy: [dependency-first ADR](../internal/design/dependency-first.md). Long-term vision (Ontocode, OntoHub): [PLAN.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/PLAN.md).

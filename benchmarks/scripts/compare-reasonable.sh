@@ -1,49 +1,33 @@
 #!/usr/bin/env bash
-# Compare ontologos-rl saturation output against the `reasonable` OWL RL reasoner CLI.
-# Optional CI harness — requires `reasonable` on PATH and a built `ontologos` binary.
+# Compare ontologos-rl saturation against the `reasonable` engine (library path).
+# CI gate: runs the Rust harness that diffs triple closures on mapped core axioms.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-DATA="${ROOT}/benchmarks/data"
-ONTOLOGOS="${ONTOLOGOS_BIN:-${ROOT}/target/release/ontologos}"
+cd "${ROOT}"
 
-if ! command -v reasonable >/dev/null 2>&1; then
-  echo "reasonable CLI not found on PATH; install from https://github.com/gtfierro/reasonable" >&2
-  exit 1
-fi
+echo "==> ontologos-rl vs reasonable (family.owl triple closure)"
+cargo test -p ontologos-rl family_rl_closure_matches_reasonable --locked -- --nocapture
 
-if [[ ! -x "${ONTOLOGOS}" ]]; then
-  echo "ontologos binary not found at ${ONTOLOGOS}; run: cargo build -p ontologos-cli --release" >&2
-  exit 1
-fi
-
-compare_corpus() {
-  local name="$1"
-  local file="$2"
-  echo "==> ${name}"
-  local tmp
-  tmp="$(mktemp -d)"
-  trap 'rm -rf "${tmp}"' RETURN
-
-  # Export normalized axiom counts via JSON materialize (RL path when profile detects RL).
-  "${ONTOLOGOS}" --format json materialize "${file}" >"${tmp}/ontologos.json"
-  reasonable materialize "${file}" >"${tmp}/reasonable.ttl" 2>/dev/null || {
-    echo "reasonable materialize failed for ${file}" >&2
-    return 1
-  }
-
-  local onto_count reasonable_lines
-  onto_count="$(jq '.final_axiom_count // .axiom_count // empty' "${tmp}/ontologos.json")"
-  reasonable_lines="$(wc -l <"${tmp}/reasonable.ttl" | tr -d ' ')"
-
-  echo "  ontologos final_axiom_count: ${onto_count:-unknown}"
-  echo "  reasonable materialized lines: ${reasonable_lines}"
-  echo "  (full triple diff not automated in v0.4 — inspect ${tmp} manually)"
-}
-
-compare_corpus "family" "${DATA}/family.owl"
-if [[ -f "${DATA}/brick-subset.ttl" ]]; then
-  compare_corpus "brick-subset" "${DATA}/brick-subset.ttl"
+if command -v reasonable >/dev/null 2>&1; then
+  ONTOLOGOS="${ONTOLOGOS_BIN:-${ROOT}/target/release/ontologos}"
+  DATA="${ROOT}/benchmarks/data"
+  if [[ -x "${ONTOLOGOS}" && -f "${DATA}/family.owl" ]]; then
+    echo "==> optional CLI smoke (family.owl axiom counts)"
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "${tmp}"' RETURN
+    "${ONTOLOGOS}" --format json materialize "${DATA}/family.owl" >"${tmp}/ontologos.json"
+    reasonable materialize "${DATA}/family.owl" >"${tmp}/reasonable.ttl" 2>/dev/null || true
+    if command -v jq >/dev/null 2>&1; then
+      onto_count="$(jq '.final_axiom_count // empty' "${tmp}/ontologos.json")"
+      echo "  ontologos final_axiom_count: ${onto_count:-unknown}"
+    fi
+    if [[ -f "${tmp}/reasonable.ttl" ]]; then
+      echo "  reasonable materialized lines: $(wc -l <"${tmp}/reasonable.ttl" | tr -d ' ')"
+    fi
+  fi
+else
+  echo "reasonable CLI not on PATH (optional); library harness passed."
 fi
 
 echo "Done."

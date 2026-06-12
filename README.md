@@ -6,17 +6,19 @@
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
 ![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)
 
-Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materialization and OWL RL saturation.
+Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
+**whelk** (EL), **reasonable** (RL/RDFS), and **horned-owl** (parsing) through stable facades.
 
-**Status:** v0.5 — OWL EL taxonomy classification, OWL RL saturation, and RDFS materialization. **Not** full OWL DL / HermiT replacement.
+**Status:** v0.6 — dependency-first adapters over whelk + reasonable. **Not** full OWL DL / HermiT replacement.
 
 | You need… | Use today |
 |-----------|-----------|
 | Embed ontology graph in Rust | `ontologos-core` |
-| Load `.owl` / `.ttl` files | `ontologos-parser` |
-| RDFS TBox inferences | `ontologos-rdfs` or CLI `materialize` |
-| OWL RL saturation | `ontologos-rl` or CLI/Python `profile="rl"` |
-| OWL EL taxonomy | `ontologos-el` or CLI/Python `profile="el"` |
+| Load `.owl` / `.ttl` files | `ontologos-parser` (horned-owl) |
+| RDFS TBox inferences | `ontologos-rdfs` → reasonable |
+| OWL RL saturation | `ontologos-rl` → reasonable |
+| OWL EL taxonomy | `ontologos-el` → whelk |
+| Engine adapters / conversions | `ontologos-bridge` |
 
 **5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.5.0)
 
@@ -108,11 +110,12 @@ cargo build -p ontologos-cli --release
 | Crate | Description | Published |
 |-------|-------------|-----------|
 | `ontologos-core` | Data model, builder, JSON v2 | crates.io |
-| `ontologos-parser` | OWL/RDF loading | crates.io |
+| `ontologos-bridge` | core ↔ horned-owl/oxrdf/whelk adapters | crates.io |
+| `ontologos-parser` | OWL/RDF loading (horned-owl) | crates.io |
 | `ontologos-profile` | Profile detection | crates.io |
-| `ontologos-rdfs` | RDFS materialization | crates.io |
-| `ontologos-rl` | OWL RL saturation | crates.io |
-| `ontologos-el` | OWL EL classification | crates.io |
+| `ontologos-rdfs` | RDFS facade → reasonable | crates.io |
+| `ontologos-rl` | OWL RL facade → reasonable | crates.io |
+| `ontologos-el` | OWL EL facade → whelk | crates.io |
 | `ontologos-query` | Taxonomy queries | crates.io |
 | `ontologos-cli` | CLI binary | Source-build only |
 | `ontologos-py` | Python bindings | PyPI (alpha) |

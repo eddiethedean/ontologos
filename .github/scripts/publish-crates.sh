@@ -8,6 +8,7 @@ set -euo pipefail
 
 CRATES=(
   ontologos-core
+  ontologos-bridge
   ontologos-profile
   ontologos-parser
   ontologos-rdfs

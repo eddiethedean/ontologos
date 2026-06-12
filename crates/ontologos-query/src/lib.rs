@@ -1,21 +1,11 @@
-//! Query interface over classified ontologies.
-//!
-//! # Example
-//!
-//! ```
-//! use ontologos_core::{EntityId, Ontology, Taxonomy};
-//! use ontologos_query::QueryEngine;
-//!
-//! let ontology = Ontology::default();
-//! let taxonomy = Taxonomy::default();
-//! let engine = QueryEngine::new(&ontology, &taxonomy);
-//! assert!(engine.unsatisfiable_classes().is_empty());
-//! ```
+//! Query interface over classified ontologies (petgraph-backed hierarchy views).
 
-#![warn(missing_docs)]
+mod graph;
 
 use ontologos_core::{EntityId, Ontology, Taxonomy};
 use thiserror::Error;
+
+pub use graph::TaxonomyGraph;
 
 /// Result type for query operations.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -23,10 +13,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Query errors.
 #[derive(Debug, Error)]
 pub enum Error {
-    /// Entity id is missing or not a class.
     #[error("unknown entity {0:?}")]
     UnknownEntity(EntityId),
-    /// Core ontology error.
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),
 }
@@ -36,35 +24,35 @@ pub enum Error {
 pub struct QueryEngine<'a> {
     ontology: &'a Ontology,
     taxonomy: &'a Taxonomy,
+    graph: TaxonomyGraph,
 }
 
 impl<'a> QueryEngine<'a> {
-    /// Create a query engine over `ontology` and its `taxonomy`.
     #[must_use]
     pub fn new(ontology: &'a Ontology, taxonomy: &'a Taxonomy) -> Self {
-        Self { ontology, taxonomy }
+        Self {
+            ontology,
+            taxonomy,
+            graph: TaxonomyGraph::from_taxonomy(taxonomy),
+        }
     }
 
-    /// Return direct subclasses of the given class in the reduced taxonomy.
     pub fn direct_subclasses(&self, class: EntityId) -> Result<Vec<EntityId>> {
         self.ensure_class(class)?;
-        Ok(self.taxonomy.direct_subclasses(class))
+        Ok(self.graph.direct_subclasses(class))
     }
 
-    /// Return direct superclasses of the given class in the reduced taxonomy.
     pub fn direct_superclasses(&self, class: EntityId) -> Result<Vec<EntityId>> {
         self.ensure_class(class)?;
-        Ok(self.taxonomy.direct_superclasses(class))
+        Ok(self.graph.direct_superclasses(class))
     }
 
-    /// Whether `sub` is subsumed by `sup` in the taxonomy.
     pub fn is_subsumed(&self, sub: EntityId, sup: EntityId) -> Result<bool> {
         self.ensure_class(sub)?;
         self.ensure_class(sup)?;
-        Ok(self.taxonomy.is_subsumed(sub, sup))
+        Ok(self.graph.is_subsumed(sub, sup))
     }
 
-    /// Return the equivalence cluster containing `class`, if any.
     pub fn equivalent_classes(&self, class: EntityId) -> Result<Option<Vec<EntityId>>> {
         self.ensure_class(class)?;
         Ok(self
@@ -73,12 +61,10 @@ impl<'a> QueryEngine<'a> {
             .map(<[EntityId]>::to_vec))
     }
 
-    /// List classes inferred unsatisfiable (⊥).
     pub fn unsatisfiable_classes(&self) -> Vec<EntityId> {
         self.taxonomy.unsatisfiable.clone()
     }
 
-    /// Resolve an entity IRI to its id.
     pub fn lookup(&self, iri: &str) -> Option<EntityId> {
         self.ontology.lookup_entity(iri)
     }

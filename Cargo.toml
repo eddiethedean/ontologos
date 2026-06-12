@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/ontologos-core",
+    "crates/ontologos-bridge",
     "crates/ontologos-parser",
     "crates/ontologos-profile",
     "crates/ontologos-rdfs",
@@ -31,9 +32,15 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 clap = { version = "4", features = ["derive"] }
 horned-owl = "1.4"
+reasonable = "0.4"
+oxrdf = "0.3"
+petgraph = "0.7"
+rayon = "1"
+whelk = { git = "https://github.com/INCATools/whelk-rs", rev = "701710d58b6039794bc5a4348880d813eecf2bbb" }
 pyo3 = { version = "0.23" }
 
 ontologos-core = { path = "crates/ontologos-core", version = "0.6.0" }
+ontologos-bridge = { path = "crates/ontologos-bridge", version = "0.6.0" }
 ontologos-parser = { path = "crates/ontologos-parser", version = "0.6.0" }
 ontologos-profile = { path = "crates/ontologos-profile", version = "0.6.0" }
 ontologos-rdfs = { path = "crates/ontologos-rdfs", version = "0.6.0" }

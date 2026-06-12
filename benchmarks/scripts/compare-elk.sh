@@ -15,6 +15,10 @@ fi
 cargo run --quiet -p ontologos-cli --release -- --profile el --format json classify "${PIZZA}" > /tmp/ontologos-pizza-el.json
 
 if [[ -f "${GOLDEN}" ]]; then
+  if [[ "${UPDATE_GOLDEN:-0}" == "1" ]]; then
+    cp /tmp/ontologos-pizza-el.json "${GOLDEN}"
+    echo "updated ${GOLDEN}"
+  else
   python3 - <<'PY'
 import json, sys
 from pathlib import Path
@@ -31,6 +35,7 @@ if missing or extra:
     sys.exit(1)
 print(f"ok: {len(a)} subsumptions match golden")
 PY
+  fi
 else
   echo "no golden file at ${GOLDEN}; run with UPDATE_GOLDEN=1 to create"
   if [[ "${UPDATE_GOLDEN:-0}" == "1" ]]; then

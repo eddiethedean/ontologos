@@ -1,99 +1,101 @@
-use std::collections::HashSet;
-
+use ontologos_bridge::{core_to_triples, merge_triples_into_ontology};
 use ontologos_core::Ontology;
-use ontologos_rdfs::RdfsEngine;
+use reasonable::reasoner::ReasonerBuilder;
 
 use crate::report::MaterializationReport;
-use crate::rules::{apply_batch_a, apply_batch_b, RuleContext};
-use crate::triple_index::TripleIndex;
 
-/// OWL RL forward-chaining engine with optional parallel execution.
-///
-/// `parallelism` controls the rayon thread pool size for parallel domain/range
-/// candidate expansion in ABox type rules. Use `1` for fully sequential execution.
+/// OWL RL facade over the `reasonable` engine.
 #[derive(Debug)]
 pub struct RlEngine {
-    parallelism: usize,
-    record_traces: bool,
+    _record_traces: bool,
 }
 
-const MAX_PARALLELISM: usize = 64;
-
 impl RlEngine {
-    /// Create an engine with the given parallelism (panics if out of bounds).
+    /// Create an engine (`parallelism` is accepted for API compatibility; reasonable manages parallelism internally).
     #[must_use]
-    pub fn new(parallelism: usize) -> Self {
-        Self::try_new(parallelism).expect("parallelism must be in 1..=64")
+    pub fn new(_parallelism: usize) -> Self {
+        Self {
+            _record_traces: false,
+        }
     }
 
-    /// Validate parallelism is within supported bounds.
+    /// Validate configuration (always succeeds for the reasonable adapter).
     pub fn try_new(parallelism: usize) -> crate::Result<Self> {
-        if parallelism == 0 || parallelism > MAX_PARALLELISM {
+        if parallelism == 0 || parallelism > 64 {
             return Err(crate::Error::Core(ontologos_core::Error::Message(format!(
-                "parallelism must be in 1..={MAX_PARALLELISM}, got {parallelism}"
+                "parallelism must be in 1..=64, got {parallelism}"
             ))));
         }
-        Ok(Self {
-            parallelism,
-            record_traces: false,
-        })
+        Ok(Self::new(parallelism))
     }
 
-    /// Enable recording of individual inference traces (for explain v0.6).
+    /// Enable trace recording (no-op for reasonable; traces remain empty until upstream support lands).
     #[must_use]
     pub fn with_traces(mut self, enabled: bool) -> Self {
-        self.record_traces = enabled;
+        self._record_traces = enabled;
         self
     }
 
-    /// Run RDFS materialization then OWL RL saturation until fixed point.
+    /// Saturate `ontology` via reasonable and merge inferred axioms back into core.
     pub fn saturate(&self, ontology: &mut Ontology) -> crate::Result<MaterializationReport> {
         let initial_axiom_count = ontology.axiom_count();
-        let rdfs_report = RdfsEngine::new()
-            .with_traces(self.record_traces)
-            .materialize(ontology)
-            .map_err(|e| match e {
-                ontologos_rdfs::Error::Core(core) => crate::Error::Core(core),
-                ontologos_rdfs::Error::WrongProfile { expected, actual } => {
-                    crate::Error::WrongProfile { expected, actual }
-                }
-            })?;
-        let rdfs_inferred = rdfs_report.inferred_total();
+        let triples = core_to_triples(ontology).map_err(crate::Error::Bridge)?;
+        let mut reasoner = ReasonerBuilder::new()
+            .with_triples(triples)
+            .build()
+            .map_err(crate::Error::Reasonable)?;
+        reasoner.reason_full();
+        let output = reasoner.view_output().to_vec();
+        let diagnostics = reasoner.diagnostics();
+        let merge = merge_triples_into_ontology(ontology, &output, diagnostics)
+            .map_err(crate::Error::Bridge)?;
 
-        let mut report = MaterializationReport {
+        Ok(MaterializationReport {
             initial_axiom_count,
             final_axiom_count: ontology.axiom_count(),
-            rdfs_inferred,
+            rdfs_inferred: 0,
             inferred_by_rule: std::collections::BTreeMap::new(),
-            trace: rdfs_report.trace.clone(),
-            clashes: Vec::new(),
-            disjoint_clash_keys: HashSet::new(),
-            same_as_clash_keys: HashSet::new(),
-        };
+            trace: ontologos_core::InferenceTrace::new(),
+            clashes: merge.clashes,
+            disjoint_clash_keys: std::collections::HashSet::new(),
+            same_as_clash_keys: std::collections::HashSet::new(),
+        })
+    }
+}
 
-        let mut index = TripleIndex::from_ontology(ontology);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ontologos_core::{Axiom, EntityKind};
 
-        loop {
-            let before = ontology.axiom_count();
-            let parallelism = self.parallelism;
-            let record_traces = self.record_traces;
-            let mut ctx = RuleContext {
-                ontology,
-                index: &mut index,
-                report: &mut report,
-                record_traces,
-                parallelism,
-                asserted_axiom_count: initial_axiom_count,
-            };
-            apply_batch_a(&mut ctx)?;
-            apply_batch_b(&mut ctx)?;
-            if ontology.axiom_count() == before {
-                break;
-            }
-            index.sync_from_ontology(ontology);
-        }
+    #[test]
+    fn saturates_subclass_chain() {
+        let mut ontology = Ontology::new();
+        let a = ontology
+            .entity_id("http://ex.org/A", EntityKind::Class)
+            .unwrap();
+        let b = ontology
+            .entity_id("http://ex.org/B", EntityKind::Class)
+            .unwrap();
+        let c = ontology
+            .entity_id("http://ex.org/C", EntityKind::Class)
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::SubClassOf {
+                subclass: a,
+                superclass: b,
+            })
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::SubClassOf {
+                subclass: b,
+                superclass: c,
+            })
+            .unwrap();
 
-        report.final_axiom_count = ontology.axiom_count();
-        Ok(report)
+        let report = RlEngine::new(1).saturate(&mut ontology).unwrap();
+        assert!(
+            report.inferred_total() >= 1 || report.final_axiom_count > report.initial_axiom_count
+        );
     }
 }

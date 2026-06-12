@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use ontologos_core::{AxiomId, InferenceTrace, TraceConclusion, TraceStep};
+use ontologos_core::{AxiomId, InferenceTrace};
 use serde::Serialize;
 
 /// RDFS TBox rule that produced an inference.
@@ -57,20 +57,4 @@ impl MaterializationReport {
         self.final_axiom_count
             .saturating_sub(self.initial_axiom_count)
     }
-}
-
-pub(crate) fn push_trace(
-    trace: &mut InferenceTrace,
-    rule: RdfsRule,
-    premises: Vec<AxiomId>,
-    conclusion: AxiomId,
-) {
-    trace.push(TraceStep {
-        rule: rule.as_str().to_string(),
-        premises: premises
-            .into_iter()
-            .map(|id| ontologos_core::TracePremise::Axiom { id })
-            .collect(),
-        conclusion: TraceConclusion::Axiom { id: conclusion },
-    });
 }

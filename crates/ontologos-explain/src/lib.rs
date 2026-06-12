@@ -84,6 +84,25 @@ impl ProofGraph {
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }
+
+    /// Whether premise links form a directed acyclic graph (petgraph validation).
+    #[must_use]
+    pub fn is_acyclic(&self) -> bool {
+        use petgraph::algo::is_cyclic_directed;
+        use petgraph::graph::DiGraph;
+
+        let mut graph = DiGraph::<(), ()>::new();
+        let indices = vec![graph.add_node(()); self.nodes.len()];
+        for (i, node) in self.nodes.iter().enumerate() {
+            for &premise in &node.premises {
+                let p = premise.0 as usize;
+                if p < indices.len() {
+                    graph.add_edge(indices[p], indices[i], ());
+                }
+            }
+        }
+        !is_cyclic_directed(&graph)
+    }
 }
 
 /// Collect inference trace with explanations enabled on `reasoner`'s ontology.

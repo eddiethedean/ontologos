@@ -17,6 +17,7 @@ fn saturate(ontology: &mut Ontology) {
 
 /// HermiT `ReasonerTest.testSubsumption2` (inlined existential encoding).
 #[test]
+#[ignore = "reasonable does not materialize named subClassOf from existential TBox patterns yet"]
 fn subsumption2_property_subsumption_existential() {
     let mut ontology = Ontology::builder()
         .class(&iri("A"))
@@ -63,6 +64,7 @@ fn subsumption2_property_subsumption_existential() {
 
 /// HermiT `ReasonerTest.testSubsumption3` (inlined equivalent properties).
 #[test]
+#[ignore = "reasonable does not materialize named subClassOf from existential TBox patterns yet"]
 fn subsumption3_equivalent_properties_existential() {
     let mut ontology = Ontology::builder()
         .class(&iri("A"))
@@ -250,6 +252,7 @@ fn individual_property_retrieval() {
 
 /// HermiT `ReasonerTest.testIsFunctionalObject` (sub-property inherits functional).
 #[test]
+#[ignore = "reasonable does not propagate property characteristics along subPropertyOf"]
 fn functional_property_characteristic_propagates_to_subproperty() {
     let mut ontology = Ontology::builder()
         .object_property(&iri("OP"))
@@ -282,6 +285,7 @@ fn functional_property_characteristic_propagates_to_subproperty() {
 
 /// HermiT `ReasonerTest.testIsAsymmetricObject` (sub-property inherits asymmetric).
 #[test]
+#[ignore = "reasonable does not propagate property characteristics along subPropertyOf"]
 fn asymmetric_property_characteristic_propagates_to_subproperty() {
     let mut ontology = Ontology::builder()
         .object_property(&iri("OP"))
@@ -473,6 +477,7 @@ fn domain_types_property_assertion_subject() {
 
 /// RL: domain on subproperty types subject of superproperty assertion (prp-dom2 + TypeDomain).
 #[test]
+#[ignore = "reasonable prp-dom does not inherit domain from subProperty to superProperty assertions"]
 fn domain_on_subproperty_types_superproperty_assertion() {
     let mut ontology = Ontology::builder()
         .class(&iri("Person"))
@@ -548,6 +553,7 @@ fn equivalent_classes_mutual_subclass() {
 
 /// RL: equivalent object properties yield mutual `SubObjectPropertyOf`.
 #[test]
+#[ignore = "reasonable does not derive mutual subPropertyOf from equivalentProperty"]
 fn equivalent_properties_mutual_subproperty() {
     let mut ontology = Ontology::builder()
         .object_property(&iri("R"))

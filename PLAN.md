@@ -1,13 +1,25 @@
 # OntoLogos Plan Document
 
 > **Canonical release plan:** [ROADMAP.md](ROADMAP.md) — semver milestones, exit criteria, crate publish policy.
-> **This document** is historical background and long-term ecosystem vision (Ontocode, OntoHub). Do not treat it as current shipped scope.
+> **This document** is historical background and long-term ecosystem vision (Ontocode, OntoHub). For **current shipped scope and milestone status**, use ROADMAP.md and [dependency-first ADR](docs/internal/design/dependency-first.md).
+
+## Current status (2026-06-12)
+
+| Milestone | Status |
+|-----------|--------|
+| **v0.6.0** | Tagged — explanations, CLI, Python alpha |
+| **v0.7 adapters** | **Complete on `main`** — `ontologos-bridge`; EL → whelk; RL/RDFS → reasonable; custom rule engines removed |
+| **Next tag** | **v0.7.0** — publish bridge + facade updates |
+| **v0.8** | Incremental reasoning + petgraph polish |
+| **v0.9** | Python wheels / PyPI maturity |
+
+OntoLogos no longer ships in-house EL completion or RL/RDFS rule engines. Adapter fidelity gates: Pizza EL golden (whelk), Family RL closure (reasonable), HermiT Tier A through facades (with documented upstream gaps ignored, not reimplemented).
 
 ## Executive Summary
 
 OntoLogos is a Rust-native ontology reasoner designed to eliminate JVM dependencies for ontology development workflows while providing a modern embeddable API, CLI, Python bindings, and future IDE integration through Ontocode.
 
-**Research update (2026-06):** A survey of the OWL 2 reasoner landscape ([landscape-2023.md](docs/internal/research/landscape-2023.md)) confirms that most JVM DL reasoners (HermiT, Pellet, FaCT++) are **no longer actively maintained**, while **ELK** (EL) and **Konclude** (DL) remain the performance references. Rust peers **whelk-rs** (EL) and **reasonable** (RL) already exist — OntoLogos differentiates by shipping a **maintained, modular, multi-profile stack** (MORe-style hybrid routing in 1.5+) rather than being first-to-Rust.
+**Research update (2026-06):** A survey of the OWL 2 reasoner landscape ([landscape-2023.md](docs/internal/research/landscape-2023.md)) confirms that most JVM DL reasoners (HermiT, Pellet, FaCT++) are **no longer actively maintained**, while **ELK** (EL) and **Konclude** (DL) remain the performance references. Rust peers **whelk-rs** (EL) and **reasonable** (RL) already exist — OntoLogos differentiates by shipping a **maintained orchestration layer** (unified API, CLI, Python, MORe-style hybrid routing in 1.5+) **on top of** those crates rather than reimplementing their rule engines.
 
 ## Vision
 
@@ -66,13 +78,13 @@ Real biomedical ontologies are **mostly EL with occasional expressive axioms**. 
 - **whelk-rs** — experimental EL classifier (INCATools / OBO community)
 - **reasonable** — active OWL RL reasoner with Python bindings
 
-OntoLogos competes on **unified profiles + CLI + Python + Ontocode + hybrid routing**, not on being the only Rust option.
+OntoLogos competes on **unified profiles + CLI + Python + Ontocode + hybrid routing**, delegating EL to **whelk** and RL/RDFS to **reasonable** (see [dependency-first ADR](docs/internal/design/dependency-first.md)).
 
 ### Revelation 5 — ELK implementation details matter
 
 ELK uses goal-directed Closure/Todo saturation, parallel rules, ELK-specific taxonomy transitive reduction, partition-based incremental classification **without bookkeeping**, and built-in explanations. Naive completion or full re-classify will not match ELK on SNOMED/GO-scale corpora.
 
-**Plan impact:** v0.5 EL engine and v0.7 incremental must follow Kazakov et al. literature (see [elk.md](docs/internal/research/elk.md)).
+**Plan impact:** EL classification delegates to **whelk** (v0.7+); incremental EL (v0.8) should follow Kazakov et al. via whelk/ELK-style algorithms or upstream incremental APIs — not a custom completion engine in OntoLogos.
 
 ### Revelation 6 — IDE path over Protégé plugin
 
@@ -80,10 +92,11 @@ HermiT's stagnation as the default Protégé reasoner increases value for **Onto
 
 ### Architectural decisions (from research)
 
-1. **Parse with horned-owl; reason with ontologos-*** — do not re-export OWL API types.
-2. **Conformance harnesses** — ELK/whelk-rs (EL), reasonable/OWLRL (RL), Konclude CLI (DL preview/2.0).
-3. **2.0 engine** — Konclude-style coupled saturation + tableau, not HermiT-only port.
+1. **Parse with horned-owl; classify with whelk; materialize with reasonable** — facades in `ontologos-*` crates; conversions in `ontologos-bridge`; do not re-export upstream types.
+2. **Conformance harnesses** — adapter output must match whelk (EL) and reasonable (RL); Konclude CLI for DL preview/2.0.
+3. **2.0 engine** — Konclude-style coupled saturation + tableau, extending whelk/horned-owl kernel — not a greenfield HermiT port.
 4. **Benchmark manifest** — add hybrid test ontologies for v1.5 (EL + sparse DL axioms).
+5. **Upstream gaps** — track in whelk/reasonable issues; do not silently reimplement (see [dependency-first ADR](docs/internal/design/dependency-first.md)).
 
 ### Research deliverables
 
@@ -101,6 +114,19 @@ HermiT's stagnation as the default Protégé reasoner increases value for **Onto
 # Roadmap
 
 See [ROADMAP.md](ROADMAP.md) for the authoritative semver release plan.
+
+### Dependency-first migration (v0.7 — complete on `main`)
+
+| Deliverable | Engine | Status |
+|-------------|--------|--------|
+| `ontologos-bridge` | core ↔ horned-owl / oxrdf / whelk | Done |
+| `ontologos-el` facade | whelk (git) | Done |
+| `ontologos-rl` / `ontologos-rdfs` facades | reasonable | Done |
+| petgraph query/explain views | petgraph | Partial (v0.7); polish in v0.8 |
+| CI: `compare-elk.sh`, `compare-reasonable.sh` | whelk + reasonable baselines | Done |
+| Custom rule engines removed | — | Done |
+
+**Not in OntoLogos scope:** RDFS rdfs5–8 inheritance, RL existential TBox subsumption between named classes, per-rule explanation traces — tracked as upstream gaps until whelk/reasonable implement them.
 
 ## Phase 0 – Research (complete)
 
@@ -155,7 +181,7 @@ Features:
 
 ---
 
-For remaining phases (0.2–0.9, 1.1–1.9, 2.0), see [ROADMAP.md](ROADMAP.md).
+For remaining phases (0.8–0.9, 1.0, 1.1–1.9, 2.0), see [ROADMAP.md](ROADMAP.md).
 
 ## Phase 2 – Post-1.0 ladder (1.1 → 2.0)
 

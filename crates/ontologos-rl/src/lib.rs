@@ -1,4 +1,4 @@
-//! OWL RL forward-chaining rule engine.
+//! OWL RL forward-chaining facade over [`reasonable`](https://crates.io/crates/reasonable).
 //!
 //! # Start here — load a file and saturate
 //!
@@ -13,19 +13,14 @@
 //! # Ok(())
 //! # }
 //! ```
-//!
-//! Via [`Reasoner`](ontologos_core::Reasoner): use [`classify_reasoner`] — not [`Reasoner::classify`](ontologos_core::Reasoner::classify).
 
 mod engine;
 mod reasoner;
 mod report;
-mod rules;
-mod triple_index;
 
 pub use engine::RlEngine;
 pub use reasoner::{classify_reasoner, materialize_reasoner};
 pub use report::{InferenceRecord, MaterializationReport, RlRule};
-pub use triple_index::TripleIndex;
 
 use ontologos_core::Error as CoreError;
 use thiserror::Error;
@@ -41,6 +36,10 @@ pub enum Error {
     },
     #[error(transparent)]
     Core(#[from] CoreError),
+    #[error(transparent)]
+    Bridge(#[from] ontologos_bridge::Error),
+    #[error(transparent)]
+    Reasonable(#[from] reasonable::error::ReasonableError),
 }
 
 #[cfg(test)]

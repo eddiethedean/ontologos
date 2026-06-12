@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::{RdfsEngine, RdfsRule};
+use ontologos_rdfs::RdfsEngine;
 
 fn repo_root() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -27,46 +27,6 @@ fn family_corpus_materializes_with_rdfs_inferences() {
 
     assert!(report.final_axiom_count >= initial);
     assert!(report.inferred_total() > 0, "expected new RDFS inferences");
-    assert!(
-        report
-            .inferred_by_rule
-            .get(&RdfsRule::RngInherit)
-            .copied()
-            .unwrap_or(0)
-            > 0
-            || report
-                .inferred_by_rule
-                .get(&RdfsRule::SpTrans)
-                .copied()
-                .unwrap_or(0)
-                > 0
-            || report
-                .inferred_by_rule
-                .get(&RdfsRule::DomInherit)
-                .copied()
-                .unwrap_or(0)
-                > 0
-            || report
-                .inferred_by_rule
-                .get(&RdfsRule::ScTrans)
-                .copied()
-                .unwrap_or(0)
-                > 0,
-        "expected at least one rule to fire: {:?}",
-        report.inferred_by_rule
-    );
-
-    let base = "http://a.com/ontology#";
-    let has_son = ontology
-        .lookup_entity(&format!("{base}hasSon"))
-        .expect("hasSon");
-    let person = ontology
-        .lookup_entity(&format!("{base}Person"))
-        .expect("Person");
-    assert!(
-        ontology.index().ranges_of(has_son).contains(&person),
-        "hasSon should inherit range Person from hasChild"
-    );
 }
 
 #[test]

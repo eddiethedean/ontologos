@@ -71,6 +71,7 @@ nav:
       - Security: security.md
   - Reference:
       - Architecture: architecture.md
+      - Dependency-first ADR: internal/design/dependency-first.md
       - CLI: reference/cli.md
       - Errors: reference/errors.md
       - Supported constructs: reference/supported-constructs.md

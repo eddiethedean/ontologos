@@ -1,114 +1,94 @@
 {
   "status": "classified",
-  "subsumption_count": 84,
+  "subsumption_count": 100,
   "subsumptions": [
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PetitPoisTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PrinceCarlo",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Siciliana",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HamTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#UnclosedPizza",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SpicyTopping",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Napoletana",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ChickenTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
     ],
     [
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MozzarellaTopping",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HerbSpiceTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GarlicTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Mild",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Spiciness"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#RosemaryTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HerbSpiceTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SpicyPizzaEquivalent",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#LaReine",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaBase",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Food"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#AnchoviesTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FishTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Margherita",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ValuePartition",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetarianPizza",
+      "http://www.w3.org/2002/07/owl#Thing"
     ],
     [
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Spiciness",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ValuePartition"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SweetPepperTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseyVegetableTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseyVegetableTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#TobascoPepperSauce",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SauceTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Soho",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
     ],
     [
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#American",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Giardiniera",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#DeepPanBase",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaBase"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PrawnsTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FishTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Veneziana",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SpinachTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Hot",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Spiciness"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FruitTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#LeekTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FourCheesesTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Pizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GarlicTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SundriedTomatoTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#TomatoTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PrinceCarlo",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PineKernels",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NutTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#QuattroFormaggi",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#RedOnionTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#OnionTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#IceCream",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Food"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ChickenTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
     ],
     [
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FruttiDiMare",
@@ -119,199 +99,43 @@
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Food"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#RosemaryTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HerbSpiceTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FourSeasons",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#JalapenoPepperTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#TomatoTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#RocketTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SultanaTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FruitTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SlicedTomatoTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#TomatoTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Mushroom",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ThinAndCrispyBase",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaBase"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GreenPepperTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaBase",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Food"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#AsparagusTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ParmesanTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GorgonzolaTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Napoletana",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Soho",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MixedSeafoodTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FishTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#TobascoPepperSauce",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SauceTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ArtichokeTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FishTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PeperoniSausageTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CaperTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NutTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Fiorentina",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ParmaHamTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HamTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Medium",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Spiciness"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#UnclosedPizza",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CajunSpiceTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HerbSpiceTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HotSpicedBeefTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PolloAdAstra",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HamTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Parmense",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Rosa",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PeperonataTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping"
     ],
     [
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SauceTopping",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GreenPepperTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Margherita",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#AnchoviesTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FishTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Food",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#DomainConcept"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HotGreenPepperTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GreenPepperTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseyVegetableTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
-    ],
-    [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseyVegetableTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GoatsCheeseTopping",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MushroomTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#RealItalianPizza",
+      "http://www.w3.org/2002/07/owl#Thing"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Caprina",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#InterestingPizza",
+      "http://www.w3.org/2002/07/owl#Thing"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Food"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FourCheesesTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#OliveTopping",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#IceCream",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Pizza"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#AmericanHot",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NutTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Cajun",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
     ],
     [
@@ -319,42 +143,276 @@
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GoatsCheeseTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FishTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Mushroom",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#RocketTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PineKernels",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NutTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PeperoniSausageTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SpicyPizza",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SweetPepperTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#OnionTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#RedOnionTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#OnionTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ParmesanTopping",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Cajun",
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PrawnsTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FishTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Food"
     ],
     [
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SloppyGiuseppe",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#LaReine",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CaperTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NonVegetarianPizza",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#OliveTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Siciliana",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
     ],
     [
-      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#OnionTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Fiorentina",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Parmense",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatyPizza",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#QuattroFormaggi",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PolloAdAstra",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ThinAndCrispyBase",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaBase"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PeperonataTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetarianPizzaEquivalent1",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GorgonzolaTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SlicedTomatoTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#TomatoTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#TomatoTopping",
       "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FruitTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#JalapenoPepperTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PepperTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Medium",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Spiciness"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#LeekTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PetitPoisTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SpinachTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#AmericanHot",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SundriedTomatoTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#TomatoTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Pizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetarianTopping",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Hot",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Spiciness"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MushroomTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Mild",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Spiciness"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Caprina",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Country",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Veneziana",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ArtichokeTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CajunSpiceTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HerbSpiceTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HerbSpiceTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#DeepPanBase",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaBase"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ThinAndCrispyPizza",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#ParmaHamTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HamTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HotSpicedBeefTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseyPizza",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetarianPizzaEquivalent2",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#DomainConcept",
+      "http://www.w3.org/2002/07/owl#Thing"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#CheeseTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#PizzaTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HotGreenPepperTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#GreenPepperTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Giardiniera",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#AsparagusTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#VegetableTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FourSeasons",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#NamedPizza"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#Food",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#DomainConcept"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MixedSeafoodTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FishTopping"
+    ],
+    [
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#SultanaTopping",
+      "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#FruitTopping"
     ]
   ],
   "equivalences": [],
   "unsatisfiable": [],
   "parse_meta": {
     "warnings": [
-      "EquivalentClasses with complex operands not mapped in v0.2",
-      "EquivalentClasses with complex operands not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
       "EquivalentClasses with complex operands not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
-      "EquivalentClasses with complex operands not mapped in v0.2",
       "EquivalentClasses with complex operands not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
+      "EquivalentClasses with complex operands not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
       "EquivalentClasses with complex operands not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
@@ -362,9 +420,25 @@
       "SubClassOf with complex class expression not mapped in v0.2",
       "InverseFunctionalObjectProperty not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "EquivalentClasses with complex operands not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "EquivalentClasses with complex operands not mapped in v0.2",
+      "EquivalentClasses with complex operands not mapped in v0.2",
+      "EquivalentClasses with complex operands not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
       "InverseFunctionalObjectProperty not mapped in v0.2",
       "EquivalentClasses with complex operands not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
+      "EquivalentClasses with complex operands not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "SubClassOf with complex class expression not mapped in v0.2",
+      "EquivalentClasses with complex operands not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
@@ -374,20 +448,10 @@
       "SubClassOf with complex class expression not mapped in v0.2",
       "EquivalentClasses with complex operands not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
-      "EquivalentClasses with complex operands not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
-      "EquivalentClasses with complex operands not mapped in v0.2",
-      "EquivalentClasses with complex operands not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
-      "EquivalentClasses with complex operands not mapped in v0.2",
       "InverseFunctionalObjectProperty not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
       "EquivalentClasses with complex operands not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
-      "SubClassOf with complex class expression not mapped in v0.2",
       "SubClassOf with complex class expression not mapped in v0.2"
     ],
     "mapped_axiom_count": 666,

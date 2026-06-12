@@ -1,5 +1,5 @@
 [package]
-name = "ontologos-rl"
+name = "ontologos-bridge"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,27 +8,19 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "OWL RL facade over reasonable for OntoLogos"
-readme = "README.md"
-keywords = ["owl", "ontology", "owl-rl", "reasoner", "semantic-web"]
+description = "Model adapters between ontologos-core, horned-owl, whelk, and reasonable"
+keywords = ["owl", "ontology", "adapter", "reasoner"]
 categories = ["science"]
 publish = true
 
-[package.metadata.docs.rs]
-all-features = true
-
 [dependencies]
 ontologos-core = { workspace = true }
-ontologos-bridge = { workspace = true }
+horned-owl = { workspace = true }
 reasonable = { workspace = true }
-serde = { workspace = true }
+whelk = { workspace = true }
+oxrdf = { workspace = true }
+petgraph = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
 ontologos-parser = { workspace = true }
-ontologos-rdfs = { workspace = true }
-oxrdf = { workspace = true }
-
-[[example]]
-name = "rl_saturation"
-path = "examples/rl_saturation.rs"

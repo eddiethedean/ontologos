@@ -1,25 +1,8 @@
-//! RDFS reasoning via graph closure and property propagation.
-//!
-//! # Start here — load a file and materialize
-//!
-//! ```no_run
-//! use ontologos_parser::load_ontology;
-//! use ontologos_rdfs::RdfsEngine;
-//!
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
-//! let report = RdfsEngine::new().materialize(&mut ontology)?;
-//! println!("inferred {}", report.inferred_total());
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! Via [`Reasoner`](ontologos_core::Reasoner): use [`classify_reasoner`] — not [`Reasoner::classify`](ontologos_core::Reasoner::classify).
+//! RDFS reasoning facade over [`reasonable`](https://crates.io/crates/reasonable).
 
 mod engine;
 mod reasoner;
 mod report;
-mod rules;
 
 pub use engine::RdfsEngine;
 pub use reasoner::{classify_reasoner, materialize_reasoner};
@@ -39,4 +22,8 @@ pub enum Error {
     },
     #[error(transparent)]
     Core(#[from] CoreError),
+    #[error(transparent)]
+    Bridge(#[from] ontologos_bridge::Error),
+    #[error(transparent)]
+    Reasonable(#[from] reasonable::error::ReasonableError),
 }

@@ -1,64 +1,66 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos v0.5 is **not** a drop-in HermiT replacement.
+Honest positioning for evaluators. OntoLogos is **not** a drop-in HermiT replacement. From v0.7 onward it **orchestrates** `whelk` (EL) and `reasonable` (RL/RDFS) behind a unified API.
 
-See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full 2023–2026 reasoner survey.
+See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
 
 ## Maturity matrix
 
-| Capability | OntoLogos v0.5 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
-|------------|----------------|-----|--------|----------|------------|----------|---------|
+| Capability | OntoLogos v0.7+ | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+|------------|-----------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
-| OWL EL classification | **Yes** | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
-| OWL RL reasoning | **Yes** (library/CLI/Python) | No | Partial | Partial | **Yes** | No | Via plugin |
-| RDFS materialization | Yes (TBox) | No | Yes | Yes | Partial | No | Yes |
+| OWL EL classification | **Yes** (via whelk) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
+| OWL RL reasoning | **Yes** (via reasonable) | No | Partial | Partial | **Yes** | No | Via plugin |
+| RDFS materialization | **Yes** (via reasonable) | No | Yes | Yes | Partial | No | Yes |
 | OWL DL | No (2.0) | No | Yes (stagnant) | **Yes** | No | No | Via plugin |
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
+| Unified multi-profile CLI/Python | **Yes** | No | No | No | RL only | EL only | Via plugins |
 | Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |
-| Hybrid EL+DL routing | No (v1.5) | No | No | Internal | No | No | MORe plugin |
-| Explanations | No (v0.6) | Yes | Yes | Partial | Limited | No | Yes |
+| Hybrid EL+DL routing | Planned (v1.5) | No | No | Internal | No | No | MORe plugin |
+| Explanations | EL-first (v0.6+) | Yes | Yes | Partial | Limited | No | Yes |
 | Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
 
-CLI `classify --profile auto|el|rl|rdfs` routes to EL taxonomy, RL saturation, or RDFS materialization. Use `materialize` for explicit RDFS.
+CLI `classify --profile auto|el|rl|rdfs` routes to whelk (EL), reasonable (RL/RDFS). Use `materialize` for explicit RDFS.
 
-v0.5 maps a **subset** of TBox and named ABox axioms into core; complex expressions are scanned for profile diagnostics but not stored. See [supported-constructs.md](reference/supported-constructs.md).
+## What OntoLogos adds over raw dependencies
 
-## Maintenance landscape
+| You need… | Use upstream directly | Use OntoLogos |
+|-----------|----------------------|---------------|
+| RL materialization only | `reasonable` crate or PyPI | Profile routing + core model + CLI |
+| EL classification only | `whelk` + horned-owl | Taxonomy API + query + JSON v2 |
+| Parse OWL safely | horned-owl + your limits | `ontologos-parser` with `ParseLimits` |
+| One CLI for all profiles | Multiple tools | `ontologos classify --profile auto` |
+| Python batch pipeline | `reasonable` / `py-whelk` separately | `pip install ontologos` unified facade |
 
-Most JVM DL reasoners (HermiT, Pellet, FaCT++) have had **little or no development since ~2015–2020** ([Abicht 2023](https://arxiv.org/abs/2309.06888)). ELK and Konclude remain the maintained performance leaders for EL and DL respectively. This is a core motivation for OntoLogos.
+## Rust dependencies (not competitors)
 
-## Rust alternatives
+| Project | Role in OntoLogos |
+|---------|-------------------|
+| **horned-owl** | Parsing and EL bridge model |
+| **whelk-rs** | OWL EL engine (git dependency) |
+| **reasonable** | OWL RL and RDFS engine |
+| **petgraph** | Taxonomy and proof-graph algorithms |
 
-| Project | Strength | OntoLogos difference |
-|---------|----------|----------------------|
-| **whelk-rs** | OWL EL in Rust | EL only; no RL/DL/CLI/Python stack |
-| **reasonable** | OWL RL in Rust | RL only; triple/Datalog model |
-| **horned-owl** | OWL parse/manipulate | No reasoner; OntoLogos uses it for v0.2 parsing |
+OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid routing (v1.5), not reimplementing EL/RL rule engines.
 
-OntoLogos targets a **unified multi-profile workspace** with MORe-style hybrid routing (v1.5), not a single-profile library.
+## When to use OntoLogos
 
-## When to use OntoLogos today
+- Embedding an ontology **data model** in Rust with profile routing
+- Loading OWL files, detecting profiles, and classifying in one workspace
+- CLI or Python batch workflows across EL and RL
+- Contributing to a unified open-source Rust ontology stack
 
-- Embedding an ontology **data model** in Rust
-- Loading OWL files and detecting profiles natively
-- OWL RL saturation via `ontologos-rl` or Python `profile="rl"`
-- Evaluating the architecture and roadmap
-- Contributing to a maintained open-source Rust reasoner stack
+## When to use incumbents directly
 
-## When to use incumbents
-
-- **ELK / whelk-rs:** EL classification today (SNOMED, GO, OBO)
-- **reasonable:** RL materialization in Rust/Python today (mature triple-store model)
-- **Konclude:** full DL batch reasoning today (CLI/OWLlink)
-- **Protégé + HermiT/ELK:** interactive OWL editing (note HermiT maintenance risk)
-- **owlready2:** Python-centric OWL workflows with JVM reasoning backends
-- **RDFox:** high-performance commercial RL/DLS materialization
+- **ELK / whelk-rs:** EL-only workflows; maximum EL performance tuning
+- **reasonable:** RL-only; triple-store or incremental materialization without core model
+- **Konclude:** full DL batch reasoning today
+- **Protégé + HermiT/ELK:** interactive OWL editing
+- **owlready2:** Python-centric workflows with JVM backends
 
 ## OntoLogos target (1.0)
 
-Replace JVM-bound **batch** reasoning in Rust/Python pipelines with native EL/RL/RDFS engines, CLI, and IDE integration (Ontocode). Conformance measured against **ELK + whelk-rs** (EL) and **reasonable** (RL). Full OWL DL in 2.0, architected after **Konclude** hybrid design rather than a legacy HermiT port.
+Replace JVM-bound **batch** reasoning in Rust/Python pipelines via facade APIs over whelk + reasonable, with CLI, Python, and Ontocode integration. Full OWL DL in 2.0 extends the whelk/horned-owl kernel rather than a greenfield rewrite.
 
-See [Roadmap summary](project/roadmap-summary.md) for milestone sequencing and exit criteria.
-
-For HermiT-ported test coverage and known gaps, see [Conformance coverage](reference/conformance.md).
+See [Roadmap summary](project/roadmap-summary.md) and [dependency-first ADR](internal/design/dependency-first.md).
