@@ -15,6 +15,3 @@ publish = true
 ontologos-core = { workspace = true }
 petgraph = { workspace = true }
 thiserror = { workspace = true }
-
-[dev-dependencies]
-ontologos-el = { workspace = true }

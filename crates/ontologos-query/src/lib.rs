@@ -80,7 +80,7 @@ impl<'a> QueryEngine<'a> {
 
 #[cfg(test)]
 mod tests {
-    use ontologos_core::{Axiom, EntityKind, Ontology};
+    use ontologos_core::{Axiom, EntityKind, Ontology, Taxonomy};
 
     use super::*;
 
@@ -100,9 +100,10 @@ mod tests {
             })
             .unwrap();
 
-        let taxonomy = ontologos_el::ElClassifier::new()
-            .classify(&ontology)
-            .expect("classify");
+        let taxonomy = Taxonomy {
+            subsumptions: vec![(a, b)],
+            ..Taxonomy::default()
+        };
         let engine = QueryEngine::new(&ontology, &taxonomy);
         let subs = engine.direct_subclasses(b).expect("subs");
         assert!(subs.contains(&a));
@@ -133,9 +134,10 @@ mod tests {
             })
             .unwrap();
 
-        let taxonomy = ontologos_el::ElClassifier::new()
-            .classify(&ontology)
-            .expect("classify");
+        let taxonomy = Taxonomy {
+            subsumptions: vec![(a, b), (b, c)],
+            ..Taxonomy::default()
+        };
         let engine = QueryEngine::new(&ontology, &taxonomy);
         assert!(engine.is_subsumed(a, c).expect("subsumed"));
     }

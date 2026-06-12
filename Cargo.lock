@@ -960,7 +960,6 @@ name = "ontologos-query"
 version = "0.6.0"
 dependencies = [
  "ontologos-core",
- "ontologos-el",
  "petgraph",
  "thiserror 2.0.18",
 ]
