@@ -19,6 +19,8 @@ Pizza is not committed to the repo (gitignored). Run `./benchmarks/scripts/downl
 
 ## Axiom count does not match Protégé
 
+See the dedicated walkthrough: [Protégé vs OntoLogos axiom counts](protege-axiom-counts.md).
+
 `ontology.axiom_count()` is the number of axioms **stored in core** after mapping, not the raw OWL logical axiom count in the source file.
 
 The parser skips complex class expressions, many data-property axioms, and some property axiom shapes. Named ABox axioms (`ClassAssertion`, `ObjectPropertyAssertion`, `SameIndividual`, `DifferentIndividuals`) are mapped in v0.4. Skipped items appear in `parse_meta.skipped_axiom_count` and `parse_meta.warnings`.

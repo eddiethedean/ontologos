@@ -2,9 +2,49 @@
 
 Five-minute success paths for common goals.
 
-## I want to try it now
+## Crates.io only (no clone)
 
-1. Clone the repo and download benchmarks:
+Use any OWL file on disk — no repository clone or benchmark download required.
+
+```bash
+cargo new ontologos-demo && cd ontologos-demo
+```
+
+Add to `Cargo.toml`:
+
+```toml
+[dependencies]
+ontologos-core = "0.4.0"
+ontologos-parser = "0.4.0"
+ontologos-rdfs = "0.4.0"
+```
+
+`src/main.rs`:
+
+```rust
+use ontologos_parser::load_ontology;
+use ontologos_rdfs::RdfsEngine;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
+    let report = RdfsEngine::new().materialize(&mut ontology)?;
+    println!(
+        "inferred {} axioms ({} → {})",
+        report.inferred_total(),
+        report.initial_axiom_count,
+        report.final_axiom_count
+    );
+    Ok(())
+}
+```
+
+Place your OWL file at `ontology.owl`, then `cargo run`.
+
+For OWL RL saturation, add `ontologos-rl = "0.4.0"` and see [OWL RL saturation](owl-rl-saturation.md).
+
+## I want to try it from a clone
+
+1. Clone and download benchmarks:
 
    ```bash
    git clone https://github.com/eddiethedean/ontologos.git
@@ -23,7 +63,12 @@ Five-minute success paths for common goals.
    ```bash
    cargo build -p ontologos-cli --release
    ./target/release/ontologos profile benchmarks/data/family.owl
+   ./target/release/ontologos materialize benchmarks/data/family.owl
    ```
+
+## I want RDFS materialization
+
+Follow [RDFS materialization](rdfs-materialization.md). Prefer CLI **`materialize`** over **`classify`** — both run the same engine in v0.4.
 
 ## I want OWL RL saturation (v0.4 headline feature)
 
@@ -33,6 +78,8 @@ Follow [OWL RL saturation](owl-rl-saturation.md) or run:
 cargo run -p ontologos-rl --example rl_saturation
 ```
 
+OWL RL is **not** available in the CLI until v0.5 — use the library or Python `profile="rl"`.
+
 ## I'm integrating in Rust
 
 Read [Choosing an API](../guides/choosing-an-api.md) then the guide for your workflow:
@@ -41,7 +88,7 @@ Read [Choosing an API](../guides/choosing-an-api.md) then the guide for your wor
 |------|-------|
 | Build ontologies in code | [First ontology](first-ontology.md) |
 | Load OWL files | [Load an OWL file](load-owl-file.md) |
-| RDFS materialization | [Load an OWL file](load-owl-file.md) + `ontologos-rdfs` |
+| RDFS materialization | [RDFS materialization](rdfs-materialization.md) |
 | OWL RL saturation | [OWL RL saturation](owl-rl-saturation.md) |
 | JSON snapshots | [JSON snapshot v2](../json-snapshot-v2.md) |
 
@@ -53,6 +100,13 @@ See [Comparison with existing tools](../comparison.md) and [Conformance coverage
 
 ```bash
 pip install ontologos
+```
+
+```python
+from ontologos import Reasoner
+
+# Always set profile= — default "auto" fails in v0.4
+Reasoner("ontology.owl", profile="rdfs").classify()
 ```
 
 See [Python guide](../guides/python.md).

@@ -133,4 +133,4 @@ RL always runs RDFS first inside `RlEngine::saturate`.
 - [Choosing an API](guides/choosing-an-api.md)
 - [Supported constructs](reference/supported-constructs.md)
 - [SPEC.md](project/spec.md)
-- [ROADMAP.md](project/roadmap.md)
+- [Roadmap summary](project/roadmap-summary.md)

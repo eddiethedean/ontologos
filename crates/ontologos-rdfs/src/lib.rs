@@ -1,24 +1,20 @@
 //! RDFS reasoning via graph closure and property propagation.
 //!
-//! # Example
+//! # Start here — load a file and materialize
 //!
-//! ```
-//! use ontologos_core::Ontology;
+//! ```no_run
+//! use ontologos_parser::load_ontology;
 //! use ontologos_rdfs::RdfsEngine;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let mut ontology = Ontology::builder()
-//!     .class("http://example.org/A")?
-//!     .class("http://example.org/B")?
-//!     .class("http://example.org/C")?
-//!     .subclass_of("http://example.org/A", "http://example.org/B")?
-//!     .subclass_of("http://example.org/B", "http://example.org/C")?
-//!     .build()?;
+//! let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
 //! let report = RdfsEngine::new().materialize(&mut ontology)?;
-//! assert!(report.inferred_total() >= 1);
+//! println!("inferred {}", report.inferred_total());
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! Via [`Reasoner`](ontologos_core::Reasoner): use [`classify_reasoner`] — not [`Reasoner::classify`](ontologos_core::Reasoner::classify).
 
 mod engine;
 mod reasoner;

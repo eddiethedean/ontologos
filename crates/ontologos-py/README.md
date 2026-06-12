@@ -4,6 +4,8 @@ Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a
 
 **Alpha package (v0.4.0).** See the full guide: **[docs/guides/python.md](../../docs/guides/python.md)**.
 
+> **Always pass `profile=`** — `Reasoner(path)` without a profile uses `"auto"`, which fails in v0.4.
+
 | Capability | Rust v0.4 | Python v0.4 |
 |------------|-----------|-------------|
 | In-memory ontology model | Yes (`ontologos-core`) | No |
@@ -25,6 +27,7 @@ import ontologos
 
 print(ontologos.__version__)
 
+# Always set profile= — default "auto" fails in v0.4
 reasoner = ontologos.Reasoner("ontology.owl", profile="rdfs")
 reasoner.classify()
 

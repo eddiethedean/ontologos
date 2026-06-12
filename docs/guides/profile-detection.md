@@ -93,4 +93,4 @@ Corpus files: run `./benchmarks/scripts/download.sh`. Expected counts are **mapp
 
 - [Supported constructs](../reference/supported-constructs.md)
 - [Troubleshooting](troubleshooting.md)
-- [ROADMAP.md](../project/roadmap.md) — reasoning engines and milestones
+- [Roadmap summary](../project/roadmap-summary.md) — reasoning engines and milestones

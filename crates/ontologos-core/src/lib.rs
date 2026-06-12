@@ -1,10 +1,27 @@
 //! Core data model and reasoner API for OntoLogos.
 //!
-//! v0.1 provides an in-memory ontology representation with interned IRIs,
+//! v0.4 provides an in-memory ontology representation with interned IRIs,
 //! typed entities, structured axioms, secondary indexes, and JSON v2 serialization.
-//! OWL file parsing is available in v0.2 via `ontologos-parser`.
 //!
-//! # Quick example
+//! # Start here — load and reason
+//!
+//! **Do not use [`Ontology::from_file`] or [`Reasoner::classify`] for file loading / reasoning.**
+//!
+//! ```no_run
+//! use ontologos_parser::load_ontology;
+//! use ontologos_rdfs::RdfsEngine;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
+//! let report = RdfsEngine::new().materialize(&mut ontology)?;
+//! println!("inferred {}", report.inferred_total());
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! OWL RL saturation: `ontologos_rl::RlEngine::new(1)?.saturate(&mut ontology)?`
+//!
+//! # Builder-only (no parser)
 //!
 //! ```
 //! use ontologos_core::{Error, Ontology};

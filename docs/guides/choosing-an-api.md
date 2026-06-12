@@ -112,7 +112,9 @@ let mut reasoner = Reasoner::builder().profile(Profile::Rdfs).build(ontology)?;
 classify_reasoner(&mut reasoner)?;
 ```
 
-CLI: `ontologos materialize` or `ontologos classify` (both RDFS only).
+CLI: `ontologos materialize` or `ontologos classify` (both RDFS only — prefer `materialize`).
+
+See [RDFS materialization](../getting-started/rdfs-materialization.md).
 
 ### OWL RL saturation
 

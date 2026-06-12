@@ -15,6 +15,8 @@ docs_dir: docs
 exclude_docs: |
   internal/research/
   README.md
+  project/overview.md
+  project/roadmap.md
 
 theme:
   name: material
@@ -53,14 +55,19 @@ nav:
       - getting-started/index.md
       - First ontology: getting-started/first-ontology.md
       - Load an OWL file: getting-started/load-owl-file.md
+      - RDFS materialization: getting-started/rdfs-materialization.md
       - OWL RL saturation: getting-started/owl-rl-saturation.md
   - Guides:
       - Choosing an API: guides/choosing-an-api.md
       - Profile detection: guides/profile-detection.md
       - Python: guides/python.md
+      - Glossary: guides/glossary.md
+      - Protégé axiom counts: guides/protege-axiom-counts.md
+      - Performance: guides/performance.md
+      - Production integration: guides/production-integration.md
       - Troubleshooting: guides/troubleshooting.md
-      - Security: security.md
       - Comparison: comparison.md
+      - Security: security.md
   - Reference:
       - Architecture: architecture.md
       - CLI: reference/cli.md
@@ -81,16 +88,16 @@ nav:
       - v0.3.0 to v0.3.1: migration/v0.3.0-to-v0.3.1.md
       - v0.3.x to v0.4.0: migration/v0.3.x-to-v0.4.0.md
   - Project:
-      - Overview: project/overview.md
       - FAQ: project/faq.md
-      - Roadmap: project/roadmap.md
+      - Roadmap summary: project/roadmap-summary.md
       - Changelog: project/changelog.md
       - Contributing: project/contributing.md
+      - Documentation build: readthedocs.md
       - Technical spec: project/spec.md
       - Benchmarks: project/benchmarks.md
+      - v0.5 docs plan: project/v0.5-docs-plan.md
       - Security policy: project/security-policy.md
       - Code of conduct: project/code-of-conduct.md
-  - Read the Docs setup: readthedocs.md
 
 markdown_extensions:
   - admonition

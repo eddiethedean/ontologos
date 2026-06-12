@@ -44,7 +44,7 @@ Output directory: `site/` (gitignored).
 1. Add or edit Markdown under `docs/`.
 2. Register the page in [`mkdocs.yml`](https://github.com/eddiethedean/ontologos/blob/main/mkdocs.yml) `nav` (required for discoverability).
 3. Prefer links relative to `docs/` (e.g. `guides/python.md`), not `../` paths to the repository root.
-4. Root-level files (`README.md`, `ROADMAP.md`, …) are included via wrappers in [project/overview.md](project/overview.md) — edit the source file at the repo root, not the wrapper.
+4. Root-level files (`README.md`, `ROADMAP.md`, …) are included via wrappers or linked from [Roadmap summary](project/roadmap-summary.md) — edit the source file at the repo root when updating release plans.
 
 ## CI
 

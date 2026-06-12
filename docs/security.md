@@ -52,7 +52,7 @@ Rejected:
 - `load_ontology` — no sandbox base (trusted local paths)
 - `load_ontology_in(base, path)` — constrain loads to stay under `base` (untrusted uploads)
 
-Both validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/latest/ontologos_parser/struct.ParseLimits.html), then parse via horned-owl.
+Both validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/0.4.0/ontologos_parser/struct.ParseLimits.html), then parse via horned-owl.
 
 ### Default parse limits
 

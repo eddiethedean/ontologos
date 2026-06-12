@@ -2,7 +2,7 @@
 
 ## `ontologos_core::Error`
 
-Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/latest/ontologos_core/enum.Error.html).
+Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.4.0/ontologos_core/enum.Error.html).
 
 ### `InvalidIri`
 
@@ -52,7 +52,7 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/latest/o
 
 **Recovery:** Use `ontologos profile`, `ontologos materialize`, or `ontologos classify` (RDFS) for CLI workflows. In library code: `ontologos_rdfs::classify_reasoner` with `Profile::Rdfs`; `ontologos_rl::classify_reasoner` with `Profile::Rl`. Python: `Reasoner(path, profile="rdfs")` or `profile="rl"`. For OWL EL taxonomy classification, wait for v0.5 or use an external reasoner (HermiT/ELK).
 
-Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/latest/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
+Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/0.4.0/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
 
 ### `OntologyNotLoaded`
 

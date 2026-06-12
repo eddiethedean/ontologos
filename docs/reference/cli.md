@@ -40,22 +40,20 @@ Pre-built release binaries are not attached to GitHub Releases today (crates.io 
 |---------|-------------|-------------|
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
 | `materialize <file>` | **Works** | RDFS TBox materialization with report |
-| `classify <file>` | **RDFS only** | RDFS materialization via reasoner (`Profile::Rdfs`); same inference report as `materialize` with `status: classified` |
-| `explain <file>` | **Stub** | Loads file then returns `explanation generation not yet implemented` (v0.6) |
+| `classify <file>` | **RDFS only** | RDFS materialization via reasoner (`Profile::Rdfs`); same inference report as `materialize` with `status: classified`. Prints stderr note — prefer `materialize`. |
+| `explain <file>` | **Hidden (v0.6)** | Not shown in `--help` until v0.6; returns not implemented if invoked |
 
 All commands load the ontology via `ontologos_parser::load_ontology` first.
 
 `classify` and `materialize` both run the RDFS engine only. OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5.
 
-### `explain` (stub)
+### `explain` (v0.6)
 
-Running `ontologos explain file.owl` loads the ontology successfully, then fails with:
+The `explain` subcommand is **hidden from `--help`** until v0.6. If invoked directly, it loads the ontology then fails with:
 
 ```text
 error: explanation generation not yet implemented
 ```
-
-Exit code `1`. Do not use this command in automation until v0.6.
 
 ## `profile` output
 

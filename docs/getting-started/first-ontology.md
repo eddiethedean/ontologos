@@ -5,7 +5,9 @@ This guide walks through building a small ontology with the builder API.
 ## Prerequisites
 
 - Rust 1.88+
-- Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos) (for examples)
+- Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos) (for examples), or use the [crates.io quick start](../getting-started/index.md#cratesio-only-no-clone)
+
+Unfamiliar with OWL terms (TBox, ABox, materialization)? See the [Glossary](../guides/glossary.md).
 
 ## Run the example
 

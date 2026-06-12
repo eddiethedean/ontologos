@@ -36,7 +36,7 @@ pip install -r docs/requirements.txt
 NO_MKDOCS_2_WARNING=1 mkdocs serve
 ```
 
-See [docs/readthedocs.md](docs/readthedocs.md) for import instructions and local builds.
+See [docs/readthedocs.md](docs/readthedocs.md) for import instructions and local builds (also linked from [Contributing](project/contributing.md)).
 
 ## Checks before opening a PR
 
@@ -76,7 +76,7 @@ Run all locally before submitting.
 | `docs/internal/research/` | Maintainer research notes |
 | `benchmarks/` | Benchmark ontology manifest and corpora |
 
-See [ROADMAP.md](ROADMAP.md) for milestone ownership.
+See [Roadmap summary](docs/project/roadmap-summary.md) (full checklist: [ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md)).
 
 ## Releases
 
@@ -128,4 +128,6 @@ On each release tag, CI publishes:
 
 ## Questions
 
-Open a GitHub issue for bugs, feature requests, or design questions. Check [FAQ.md](FAQ.md) first.
+Open a [GitHub issue](https://github.com/eddiethedean/ontologos/issues) for bugs, feature requests, or design questions. Check [FAQ.md](FAQ.md) and [Troubleshooting](docs/guides/troubleshooting.md) first.
+
+There is no Discord or mailing list — GitHub Issues is the primary support channel for v0.4.

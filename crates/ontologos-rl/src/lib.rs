@@ -1,22 +1,20 @@
 //! OWL RL forward-chaining rule engine.
 //!
-//! # Example
+//! # Start here — load a file and saturate
 //!
-//! ```
-//! use ontologos_core::Ontology;
+//! ```no_run
+//! use ontologos_parser::load_ontology;
 //! use ontologos_rl::RlEngine;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let mut ontology = Ontology::builder()
-//!     .class("http://example.org/A")?
-//!     .class("http://example.org/B")?
-//!     .subclass_of("http://example.org/A", "http://example.org/B")?
-//!     .build()?;
-//! let report = RlEngine::new(1).saturate(&mut ontology)?;
-//! assert!(report.inferred_total() >= 0);
+//! let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
+//! let report = RlEngine::new(1)?.saturate(&mut ontology)?;
+//! println!("inferred {}", report.inferred_total());
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! Via [`Reasoner`](ontologos_core::Reasoner): use [`classify_reasoner`] — not [`Reasoner::classify`](ontologos_core::Reasoner::classify).
 
 mod engine;
 mod reasoner;

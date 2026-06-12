@@ -1,8 +1,7 @@
-
 # OntoLogos Plan Document
 
-> **Note:** [ROADMAP.md](ROADMAP.md) is the **canonical** release plan (semver 0.1 → 2.0), including crate publish policy, CLI unlock schedule, exit criteria, and cross-cutting tracks.
-> This document retains background and ecosystem vision. For current milestone status, use ROADMAP.
+> **Canonical release plan:** [ROADMAP.md](ROADMAP.md) — semver milestones, exit criteria, crate publish policy.
+> **This document** is historical background and long-term ecosystem vision (Ontocode, OntoHub). Do not treat it as current shipped scope.
 
 ## Executive Summary
 

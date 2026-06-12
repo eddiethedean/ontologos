@@ -10,7 +10,13 @@ use serde::Serialize;
 use thiserror::Error;
 
 #[derive(Debug, Parser)]
-#[command(name = "ontologos", about = "Modular Rust ontology reasoner")]
+#[command(
+    name = "ontologos",
+    about = "Modular Rust ontology reasoner",
+    after_help = "v0.4 capabilities: profile (detect), materialize (RDFS), classify (RDFS only — not OWL taxonomy). \
+                  OWL RL saturation: ontologos-rl library or Python profile=\"rl\". \
+                  Docs: https://ontologos.readthedocs.io/en/latest/reference/cli/"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -24,11 +30,12 @@ struct Cli {
 enum Command {
     /// Detect the OWL profile of an ontology
     Profile { ontology: PathBuf },
-    /// Run RDFS TBox materialization (not OWL EL/DL taxonomy classification; v0.5)
+    /// Run RDFS TBox materialization (NOT OWL EL/DL taxonomy classification — prefer `materialize`)
     Classify { ontology: PathBuf },
-    /// Materialize RDFS TBox inferences
+    /// Materialize RDFS TBox inferences (recommended for RDFS in v0.4)
     Materialize { ontology: PathBuf },
-    /// Explain inferences (stub until v0.6 — returns not implemented)
+    /// Explain inferences (not available until v0.6)
+    #[command(hide = true)]
     Explain { ontology: PathBuf },
 }
 
@@ -77,6 +84,10 @@ fn run() -> Result<(), CliError> {
             }
         }
         Command::Classify { ontology } => {
+            eprintln!(
+                "note: `classify` runs RDFS materialization only (not OWL taxonomy classification). \
+                 Prefer `materialize` for RDFS. OWL RL: use ontologos-rl or Python profile=\"rl\"."
+            );
             let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);

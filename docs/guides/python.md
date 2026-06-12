@@ -2,6 +2,10 @@
 
 Alpha Python bindings for OntoLogos v0.4 via PyO3 (`pip install ontologos`).
 
+!!! danger "Always set profile="
+    `Reasoner(path)` defaults to `profile="auto"`, which **fails** in v0.4 with `reasoning not yet implemented`.
+    Always pass `profile="rdfs"` or `profile="rl"`.
+
 ## Install
 
 Requires **Python 3.10+**. Pre-built wheels are published to PyPI for common Linux targets on release; other platforms may build from source (requires Rust toolchain + maturin).
@@ -113,4 +117,4 @@ See [Error reference](../reference/errors.md) for Rust-side details.
 - [Choosing an API](choosing-an-api.md)
 - [OWL RL saturation](../getting-started/owl-rl-saturation.md)
 - [Rust Python crate README](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-py/README.md)
-- [ROADMAP](../project/roadmap.md) — Python maturity in v0.9 / 1.4
+- [Roadmap summary](../project/roadmap-summary.md) — Python maturity in v0.9 / 1.4

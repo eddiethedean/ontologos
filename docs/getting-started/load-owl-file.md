@@ -120,6 +120,7 @@ See [Security](../security.md).
 
 ## Next steps
 
+- [RDFS materialization](rdfs-materialization.md)
 - [OWL RL saturation](owl-rl-saturation.md)
 - [Profile detection](../guides/profile-detection.md)
 - [Troubleshooting](../guides/troubleshooting.md)
