@@ -7,9 +7,8 @@
 
 | Milestone | Status |
 |-----------|--------|
-| **v0.6.0** | Tagged — explanations, CLI, Python alpha |
-| **v0.7 adapters** | **Complete on `main`** — `ontologos-bridge`; EL → whelk; RL/RDFS → reasonable; custom rule engines removed |
-| **Next tag** | **v0.7.0** — publish bridge + facade updates |
+| **v0.6.0** | **Release candidate on `main`** — explanations, `ontologos-bridge`, EL → whelk, RL/RDFS → reasonable, Python 0.6.0 |
+| **Next tag** | **v0.6.0** (pending) — publish bridge + explain + facade updates |
 | **v0.8** | Incremental reasoning + petgraph polish |
 | **v0.9** | Python wheels / PyPI maturity |
 

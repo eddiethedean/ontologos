@@ -136,4 +136,5 @@ All failures surface as `RuntimeError` with a string message. Common messages:
 
 - [Getting started](../getting-started/index.md)
 - [OWL EL classification](../getting-started/owl-el-classification.md)
+- [Migration v0.5 → v0.6](../migration/v0.5.x-to-v0.6.0.md)
 - [Migration v0.4 → v0.5](../migration/v0.4.x-to-v0.5.0.md)

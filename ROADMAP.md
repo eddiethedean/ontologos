@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-12 · **Current release:** [v0.6.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.6.0) · **On `main`:** v0.7 adapter migration (whelk + reasonable) · **Next tag:** v0.7.0 · **Then:** v0.8 incremental + petgraph polish
+**Last updated:** 2026-06-12 · **Latest on crates.io:** [v0.5.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.5.0) · **Next tag:** **v0.6.0** (pending) · **On `main`:** v0.6.0 release candidate (explain + dependency-first adapters)
 
 ---
 
@@ -484,13 +484,13 @@ v0.5 shipped custom EL completion; **v0.7 replaces internals** with **whelk** (g
 - [x] Benchmark suite validates materialization + taxonomy across engines (≥10 combined inferences)
 - [x] Proof graphs are acyclic and reference valid axiom ids
 - [ ] Per-rule RL/RDFS traces — **deferred to upstream** (EL-first taxonomy explanations today)
-- [ ] `ontologos-explain` crates.io publish after v0.7.0 tag
+- [ ] `ontologos-explain` and `ontologos-bridge` crates.io publish with **v0.6.0** tag
 
 ---
 
 ## v0.7 — Dependency-first adapters
 
-**Status: Complete on `main`** · **Next:** tag **v0.7.0** · **Depends on:** v0.3–v0.6
+**Status: Complete on `main`** · **Ships in:** **v0.6.0** · **Depends on:** v0.3–v0.6
 
 Replace in-house rule engines with maintained dependencies. Public crate names and CLI/Python APIs unchanged.
 
@@ -520,7 +520,7 @@ Replace in-house rule engines with maintained dependencies. Public crate names a
 - [x] `cargo test --workspace` and `clippy -D warnings` green
 - [x] No duplicate rule implementations in workspace
 - [x] Public API stable: `load_ontology`, `classify_with_profile`, CLI subcommands
-- [ ] Tag and publish **v0.7.0** (`ontologos-bridge` + facade crate updates)
+- [ ] Tag and publish **v0.6.0** (`ontologos-bridge`, `ontologos-explain`, facade crate updates)
 
 > **Upstream gaps:** See [dependency-first ADR](docs/internal/design/dependency-first.md). Track in whelk/reasonable issues; do not silently reimplement.
 

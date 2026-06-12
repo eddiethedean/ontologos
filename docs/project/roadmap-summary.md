@@ -1,26 +1,30 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Current release:** [v0.6.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.6.0) · **On `main`:** v0.7 dependency-first adapters · **Next tag:** v0.7.0
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest on crates.io:** [v0.5.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.5.0) · **Next tag:** **v0.6.0** (pending) · **On `main`:** v0.6.0 release candidate
 
-## Shipped through v0.6
+## Shipped through v0.5 (crates.io)
 
 | Area | Status |
 |------|--------|
 | Core data model, JSON v2, ABox | Available |
 | OWL/RDF parser (horned-owl), profile detection | Available |
 | RDFS / RL / EL facades (stable crate names) | Available |
-| CLI `profile`, `materialize`, `classify`, `explain` | Available |
+| CLI `profile`, `materialize`, `classify` | Available |
 | Python alpha (`profile="rdfs"` / `"rl"` / `"el"` / `"auto"`) | Available |
 
-## v0.7 on `main` (pending tag)
+## v0.6.0 on `main` (pending tag)
 
-Dependency-first orchestration: **whelk** (EL), **reasonable** (RL/RDFS), **ontologos-bridge**, petgraph query/explain views. Custom in-house rule engines removed. CI gates: Pizza EL golden, Family RL triple closure.
+| Area | Status |
+|------|--------|
+| **`ontologos-explain`** + CLI `explain` | Ready |
+| **`ontologos-bridge`**; EL → whelk; RL/RDFS → reasonable | Ready |
+| petgraph query/explain views | Ready |
+| CI: Pizza EL golden, Family RL triple closure | Ready |
 
 ## Next releases
 
 | Version | Theme | Key deliverables |
 |---------|-------|------------------|
-| **0.7.0** | Adapter release | Tag + publish `ontologos-bridge`; facade crates |
 | **0.8** | Incremental + petgraph polish | reasonable incremental wrapper; EL delta classify |
 | **0.9** | Python ecosystem | PyPI wheels, full bindings |
 | **1.0** | Stable release | Semver-stable facades; documented upstream gaps |
@@ -28,10 +32,4 @@ Dependency-first orchestration: **whelk** (EL), **reasonable** (RL/RDFS), **onto
 | **1.5+** | Hybrid routing | MORe-style whelk + reasonable modules |
 | **2.0** | Full OWL DL | Extend whelk/horned-owl kernel |
 
-## Full roadmap
-
-Exit criteria, upstream gap policy, and detailed checklists:
-
-**[ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md)**
-
-Architecture and adapter policy: [dependency-first ADR](../internal/design/dependency-first.md). Long-term vision (Ontocode, OntoHub): [PLAN.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/PLAN.md).
+See [ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md) for full milestone detail.

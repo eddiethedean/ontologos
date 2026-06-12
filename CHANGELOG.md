@@ -12,22 +12,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`ontologos-explain`**: `ProofGraph`, `build_proof_graph`, `explain_with_profile`, `explain_rdfs`/`explain_rl`/`explain_el`
+- **`ontologos-bridge`**: core ↔ horned-owl/oxrdf/whelk/reasonable adapters (published crate)
 - **`InferenceTrace`** / **`TraceStep`** in `ontologos-core` for engine-agnostic explanation traces
-- EL completion trace recording (`ElRule`, instrumented `CompletionGraph`)
 - Query APIs: `explain_subsumption`, `explain_unsatisfiable` with EL-first HST pruning
 - Human-readable `render_text` formatter for proof graphs
 - CLI `ontologos explain --profile auto|el|rl|rdfs` (JSON + text output)
-- Conformance: `explain_benchmarks.rs` (≥10 inferences across RDFS, RL, EL)
+- Conformance: `explain_benchmarks.rs`; Pizza EL golden vs whelk (`compare-elk.sh`); Family RL triple closure vs reasonable (`compare-reasonable.sh`)
+- **petgraph** taxonomy views in `ontologos-query` and proof-graph acyclic checks in `ontologos-explain`
+- RDFS `MaterializationReport::clashes` forwarded from reasonable diagnostics
 
 ### Changed
 
+- **Dependency-first adapters:** `ontologos-el` → **whelk**; `ontologos-rdfs` / `ontologos-rl` → **reasonable**; parsing remains **horned-owl**
+- Custom in-tree EL completion, RDFS/RL rule engines, and RL `TripleIndex` removed; public facade crate names unchanged
 - RDFS/RL `MaterializationReport.traces` renamed to `.trace` (`InferenceTrace`)
-- RL saturation merges RDFS traces into the combined RL trace
-- `ReasonerConfig::explanations` honored on RL classify routes
+- `ReasonerConfig::explanations` honored on classify routes (traces empty until upstream exposes rule diagnostics)
+- Pizza EL golden baseline regenerated from whelk; HermiT RL/RDFS tests document reasonable upstream gaps via `#[ignore]`
 
 ### Fixed
 
-- RL report previously dropped RDFS inference traces during saturation
+- **Bridge merge:** `owl:sameAs`, `owl:disjointWith`, and `owl:differentFrom` no longer mis-map as property assertions
+- **Bridge merge:** existential blank-node IDs include filler; restriction triples reconstruct `SubClassOfExistential`
+- **Bridge export:** `DisjointClasses` and `DifferentIndividuals` mapped to horned-owl (no longer silently dropped)
+- Reflexive `sameAs` triples from reasonable skipped on merge (avoids invalid `SameIndividual` axioms)
+- RL report previously dropped RDFS inference traces during saturation (pre-adapter)
+
+### Documentation
+
+- [Dependency-first ADR](docs/internal/design/dependency-first.md)
+- [Migration v0.5.x → v0.6.0](docs/migration/v0.5.x-to-v0.6.0.md)
+- Updated architecture, comparison, ROADMAP, and Python guide for adapter stack
+
+### Breaking
+
+- Per-rule `MaterializationReport::inferred_by_rule` counts are empty when using the reasonable adapter (upstream does not expose rule-level diagnostics yet)
+- EL classification returns `Taxonomy` without mutating the ontology; RL/RDFS saturation merges inferred axioms into core
 
 ## [0.5.0] - 2026-06-12
 

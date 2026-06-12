@@ -57,6 +57,9 @@ jobs:
       - name: HermiT conformance (Tier A)
         run: cargo test -p ontologos-conformance --locked
 
+      - name: Reasonable RL adapter conformance
+        run: ./benchmarks/scripts/compare-reasonable.sh
+
   publish-crates:
     name: Publish Rust crates
     if: github.event_name == 'push'

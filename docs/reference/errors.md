@@ -2,7 +2,7 @@
 
 ## `ontologos_core::Error`
 
-Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.5.0/ontologos_core/enum.Error.html).
+Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.6.0/ontologos_core/enum.Error.html).
 
 ### `InvalidIri`
 
@@ -50,7 +50,7 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.5.0/on
 
 **Recovery:** Core `Reasoner::classify()` does not dispatch to profile engines — use `ontologos_el::classify_with_profile`, `ontologos_rdfs::materialize_reasoner`, or `ontologos_rl::classify_reasoner`. CLI: `ontologos classify --profile auto|el|rl|rdfs`. Python: `Reasoner(path, profile="auto")` routes via `classify_with_profile` (v0.5+).
 
-Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/0.5.0/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
+Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/0.6.0/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
 
 ### `OntologyNotLoaded`
 

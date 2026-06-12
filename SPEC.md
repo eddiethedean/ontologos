@@ -1,13 +1,12 @@
 
 # OntoLogos Technical Specification
 
-> **Document status:** Mixed. Sections marked **(v0.1)** / **(v0.2)** / **(v0.3)** / **(v0.4)** / **(v0.5)** reflect shipped crates.
-> Explanations and full Python bindings remain **planned** — see [ROADMAP.md](ROADMAP.md).
+> **Document status:** Mixed. Sections marked **(v0.1)** … **(v0.5)** reflect earlier shipped crates; **v0.6** adds explain + dependency-first adapters.
 > Last reviewed: 2026-06-12
 
 ## Overview
 
-OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.5 ships OWL EL classification (`ontologos-el`), taxonomy queries (`ontologos-query`), CLI profile routing, and Python `profile="el"`/`"auto"`.** v0.4 added ABox in core and OWL RL saturation (`ontologos-rl`); v0.2–v0.3 added parsing, profile detection, and RDFS.
+OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, and explanation generation. **v0.6 ships `ontologos-explain`, `ontologos-bridge`, and dependency-first facades over whelk (EL) and reasonable (RL/RDFS).** v0.5 added EL classification, taxonomy queries, and CLI profile routing; v0.4 added ABox and OWL RL saturation.
 
 ---
 
@@ -25,9 +24,10 @@ ontologos/
 │   ├── ontologos-rl        (v0.4)
 │   ├── ontologos-el        (v0.5)
 │   ├── ontologos-query     (v0.5)
+│   ├── ontologos-bridge    (v0.6)
 │   ├── ontologos-explain   (v0.6)
-│   ├── ontologos-cli       (v0.5 — profile, materialize, classify with routing)
-│   └── ontologos-py        (alpha v0.5 — load, profile=rdfs/rl/el/auto)
+│   ├── ontologos-cli       (v0.5+ — profile, materialize, classify, explain)
+│   └── ontologos-py        (alpha v0.6 — load, profile=rdfs/rl/el/auto)
 ```
 
 ---

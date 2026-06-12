@@ -1,12 +1,12 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos is **not** a drop-in HermiT replacement. From v0.7 onward it **orchestrates** `whelk` (EL) and `reasonable` (RL/RDFS) behind a unified API.
+Honest positioning for evaluators. OntoLogos is **not** a drop-in HermiT replacement. From v0.6 onward it **orchestrates** `whelk` (EL) and `reasonable` (RL/RDFS) behind a unified API.
 
 See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
 
 ## Maturity matrix
 
-| Capability | OntoLogos v0.7+ | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+| Capability | OntoLogos v0.6+ | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|-----------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
