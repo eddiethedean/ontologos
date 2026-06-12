@@ -23,11 +23,11 @@ Pizza is not committed to the repo (gitignored). Run `./benchmarks/scripts/downl
 
 The parser skips complex class expressions, most ABox axioms, and many property axiom shapes. Skipped items appear in `parse_meta.skipped_axiom_count` and `parse_meta.warnings`.
 
-Benchmark manifest values (e.g. Pizza `1056`) are mapper output targets, documented in [benchmarks/README.md](../../benchmarks/README.md).
+Benchmark manifest values (e.g. Pizza `658`) are mapper output targets, documented in [benchmarks/README.md](../../benchmarks/README.md).
 
-## Pizza is EL but diagnostics mention DL constructs
+## Pizza is DL with mapped-construct diagnostics
 
-Expected under the [hybrid profile contract](profile-detection.md). Detection uses mapped axioms; diagnostics flag constructs seen in the source outside the detected profile.
+Expected for the current Pizza corpus: mapped axioms include both EL shapes (existentials) and constructs outside EL (e.g. inverse properties), so detection reports **DL** with diagnostics explaining which mapped constructs rule out EL/RL. Source-only constructs may also appear under the [hybrid profile contract](profile-detection.md).
 
 ## `Ontology::from_file` returns `ParseNotAvailable`
 
@@ -45,6 +45,6 @@ Common causes: `format_version: 1`, invalid IRI, unknown entity in axiom, size l
 
 Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology loads with whatever axioms could be mapped.
 
-## `classify` / `explain` not implemented
+## `classify` / `explain` behavior
 
-OWL EL classification and explanations ship in v0.5–v0.6. **`materialize`** is available in v0.3 via the RDFS engine. See [CLI reference](../reference/cli.md).
+In v0.3, **`classify`** and **`materialize`** both run RDFS TBox materialization. OWL EL/RL classification ships in v0.5; **`explain`** in v0.6. Library users with `Profile::Auto` / `El` / `Rl` still get `NotImplemented` from `Reasoner::classify()`. See [CLI reference](../reference/cli.md).

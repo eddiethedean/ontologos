@@ -305,6 +305,32 @@ fn reasoner_classify_rdfs_profile_materializes() {
 }
 
 #[test]
+fn sc_trans_infers_long_transitive_chain() {
+    let mut builder = Ontology::builder();
+    let labels = ["A", "B", "C", "D", "E"];
+    for label in labels {
+        builder = builder.class(&format!("{NS}{label}")).expect(label);
+    }
+    let mut ontology = builder
+        .subclass_of(&format!("{NS}A"), &format!("{NS}B"))
+        .expect("A sub B")
+        .subclass_of(&format!("{NS}B"), &format!("{NS}C"))
+        .expect("B sub C")
+        .subclass_of(&format!("{NS}C"), &format!("{NS}D"))
+        .expect("C sub D")
+        .subclass_of(&format!("{NS}D"), &format!("{NS}E"))
+        .expect("D sub E")
+        .build()
+        .expect("build");
+
+    materialize(&mut ontology);
+
+    let a = ontology.lookup_entity(&format!("{NS}A")).expect("A");
+    let e = ontology.lookup_entity(&format!("{NS}E")).expect("E");
+    assert!(ontology.direct_superclasses(a).contains(&e));
+}
+
+#[test]
 fn classify_reasoner_non_rdfs_returns_not_implemented() {
     let ontology = Ontology::default();
     let mut reasoner = Reasoner::builder()

@@ -29,7 +29,7 @@ Checklists use GitHub task syntax (`- [x]` / `- [ ]`) so progress is visible in 
 |---------|-------|-----------------|--------------|-----------|
 | **0.1** | Core data model | `ontologos-core` | *(load fails)* | `ontologos-core` |
 | **0.2** | Parsing & profiles | `+parser`, `+profile` | `profile` | `+parser`, `+profile` |
-| **0.3** | RDFS engine | `+rdfs` | `materialize` | `+rdfs` |
+| **0.3** | RDFS engine | `+rdfs` | `materialize`, `classify` (RDFS) | `+rdfs` |
 | **0.4** | OWL RL engine | `+rl` | — | `+rl` |
 | **0.5** | OWL EL & query | `+el`, `+query` | `classify` | `+el`, `+query` |
 | **0.6** | Explanations | `+explain` | `explain` | `+explain` |
@@ -274,7 +274,7 @@ Load real ontologies from disk, map them into the core model, and report which O
 
 - [x] `load_ontology` loads Pizza and Family into core without panic
 - [x] Parsed axiom counts within 10% of manifest `axiom_count_approx`
-- [x] `ontologos profile` reports `El` for Pizza and `Rl` for Family
+- [x] `ontologos profile` reports expected profiles for Pizza (`Dl` as of v0.3 mapper) and `Rl` for Family
 - [x] `ontologos-parser` and `ontologos-profile` published to crates.io
 - [x] No new `unsafe` (workspace lint enforced)
 
@@ -313,6 +313,7 @@ First reasoning engine. Implements RDFS entailment over the core axiom model.
 
 - [x] Materialization report (counts of new axioms by rule)
 - [x] `ontologos materialize <file>` — text status and JSON summary
+- [x] `ontologos classify <file>` — RDFS materialization via `Profile::Rdfs`
 - [x] Initial inference traces (feeds v0.6 explain)
 
 ### Exit criteria

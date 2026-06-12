@@ -4,7 +4,7 @@ mod profile;
 mod ql;
 mod rl;
 
-pub use dl::dl_diagnostics;
+pub use dl::{dl_diagnostics, skipped_only_dl_diagnostic};
 pub use el::{el_diagnostics, satisfies_el};
 pub use profile::source_only_diagnostics;
 pub use ql::{ql_diagnostics, satisfies_ql};

@@ -21,3 +21,6 @@ dist/
 # Test artifacts (large downloads; family.owl is vendored)
 /benchmarks/data/*
 !/benchmarks/data/family.owl
+
+# Local HermiT reference checkout (not part of OntoLogos)
+/HermiT/

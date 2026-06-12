@@ -121,8 +121,12 @@ impl Reasoner {
     }
 
     /// Run classification over the loaded ontology.
-    pub fn classify(&self) -> Result<()> {
-        let _ = &self.ontology;
+    ///
+    /// For `Profile::Rdfs`, use `ontologos_rdfs::classify_reasoner` until core
+    /// delegates to profile engines in a later release. EL/RL/Auto return
+    /// [`Error::NotImplemented`] in v0.3.
+    pub fn classify(&mut self) -> Result<()> {
+        let _ = &mut self.ontology;
         let _ = self.profile;
         let _ = &self.config;
         Err(Error::NotImplemented)

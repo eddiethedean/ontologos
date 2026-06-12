@@ -4,7 +4,7 @@ use ontologos_core::{Ontology, OwlConstruct};
 
 use crate::rules::{
     dl_diagnostics, el_diagnostics, ql_diagnostics, rl_diagnostics, satisfies_el, satisfies_ql,
-    satisfies_rl, source_only_diagnostics,
+    satisfies_rl, skipped_only_dl_diagnostic, source_only_diagnostics,
 };
 use crate::scanner::{scan_constructs, source_constructs};
 use crate::{OwlProfile, ProfileDiagnostic, ProfileReport, Result};
@@ -83,7 +83,13 @@ fn merge_diagnostics(
         OwlProfile::Ql => ql_diagnostics(mapped),
         OwlProfile::El => el_diagnostics(mapped),
         OwlProfile::Rl => rl_diagnostics(mapped),
-        OwlProfile::Dl => dl_diagnostics(mapped),
+        OwlProfile::Dl => {
+            let mut dl = dl_diagnostics(mapped);
+            if dl.is_empty() && should_escalate_skipped_only_from_sets(mapped, source) {
+                dl.push(skipped_only_dl_diagnostic());
+            }
+            dl
+        }
     };
 
     diagnostics.extend(source_only_diagnostics(detected, source, mapped));
@@ -98,7 +104,13 @@ fn should_escalate_skipped_only(ontology: &Ontology) -> bool {
     let Some(meta) = ontology.parse_meta() else {
         return false;
     };
-    !meta.constructs.is_empty()
-        && meta.profile_constructs.is_empty()
+    should_escalate_skipped_only_from_sets(&meta.profile_constructs, &meta.constructs)
         && meta.skipped_axiom_count > 0
+}
+
+fn should_escalate_skipped_only_from_sets(
+    profile_constructs: &BTreeSet<OwlConstruct>,
+    source_constructs: &BTreeSet<OwlConstruct>,
+) -> bool {
+    !source_constructs.is_empty() && profile_constructs.is_empty()
 }

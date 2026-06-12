@@ -25,7 +25,7 @@ def test_reasoner_import() -> None:
     assert ontologos.Reasoner is not None
 
 
-def test_classify_not_implemented() -> None:
+def test_classify_not_implemented_for_auto_profile() -> None:
     import pytest
     from ontologos import Reasoner
 
@@ -33,3 +33,11 @@ def test_classify_not_implemented() -> None:
     reasoner = Reasoner(str(FIXTURE))
     with pytest.raises(RuntimeError, match="reasoning not yet implemented"):
         reasoner.classify()
+
+
+def test_classify_rdfs_profile_materializes() -> None:
+    from ontologos import Reasoner
+
+    assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
+    reasoner = Reasoner(str(FIXTURE), profile="rdfs")
+    reasoner.classify()

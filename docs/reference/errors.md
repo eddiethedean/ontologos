@@ -46,10 +46,11 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/latest/o
 
 | API / CLI | Message (typical) |
 |-----------|-------------------|
-| `Reasoner::classify()` / CLI `classify` (non-RDFS profile) | `reasoning not yet implemented` |
+| `Reasoner::classify()` with `Profile::Auto` / `El` / `Rl` | `reasoning not yet implemented` |
+| Python `Reasoner(path)` default profile | `reasoning not yet implemented` |
 | CLI `explain` | `explanation generation not yet implemented` |
 
-**Recovery:** Use `ontologos profile` and `ontologos materialize` for v0.3 RDFS workflows; use `ontologos_rdfs::classify_reasoner` with `Profile::Rdfs` in library code. For OWL EL/RL classification, wait for the roadmap milestone or use an external reasoner (HermiT/ELK).
+**Recovery:** Use `ontologos profile`, `ontologos materialize`, or `ontologos classify` (RDFS) for v0.3 workflows; use `ontologos_rdfs::classify_reasoner` with `Profile::Rdfs` in library code. Python: `Reasoner(path, profile="rdfs")`. For OWL EL/RL classification, wait for the roadmap milestone or use an external reasoner (HermiT/ELK).
 
 ### `OntologyNotLoaded`
 

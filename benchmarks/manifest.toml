@@ -9,7 +9,7 @@ license = "CC-BY-4.0"
 format = "owl+xml"
 axiom_count_approx = 658
 local_path = "benchmarks/data/pizza.owl"
-notes = "Classic OWL tutorial ontology; primary EL conformance corpus."
+notes = "Classic OWL tutorial ontology; DL after mapped inverse/functional axioms; RDFS materialization corpus."
 
 [[ontology]]
 name = "family"

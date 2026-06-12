@@ -97,4 +97,4 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Does `pip install ontologos` work?
 
-The PyPI package is an **alpha placeholder** (v0.3). It installs, reports its version, and `Reasoner(path)` loads an OWL file via the Rust parser — but `classify()` returns not-implemented until v0.5. Profile detection, materialize, and full Python APIs ship in later milestones (see [Python README](crates/ontologos-py/README.md)). Use the Rust crates for v0.3 workflows.
+The PyPI package is an **alpha placeholder** (v0.3). It installs, reports its version, and `Reasoner(path)` loads an OWL file via the Rust parser. `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; the default profile returns not-implemented until OWL EL/RL classification ships in v0.5. Profile detection, materialize CLI, and full Python APIs ship in later milestones (see [Python README](crates/ontologos-py/README.md)). Use the Rust crates for full v0.3 workflows.

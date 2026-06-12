@@ -8,7 +8,10 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "RDFS reasoning engine for OntoLogos"
+readme = "README.md"
 documentation = "https://docs.rs/ontologos-rdfs"
+keywords = ["owl", "ontology", "rdfs", "reasoner", "semantic-web"]
+categories = ["science"]
 publish = true
 
 [package.metadata.docs.rs]

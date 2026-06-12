@@ -13,16 +13,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`ontologos-rdfs`**: TBox RDFS materialization (`subClassOf` / `subPropertyOf` closure, domain/range inheritance)
 - `MaterializationReport` with per-rule inference counts and optional traces
-- `materialize_reasoner(&mut Reasoner)` for `Profile::Rdfs`
+- `materialize_reasoner(&mut Reasoner)` and `classify_reasoner(&mut Reasoner)` for `Profile::Rdfs`
 - `Reasoner::ontology_mut()` for in-place materialization
 - `OntologyBuilder::property_domain` / `property_range` helpers
-- RDFS unit tests and Family/Pizza corpus conformance tests
+- RDFS unit tests (including long transitive chains) and Family/Pizza corpus conformance tests
 - `ontologos materialize` CLI with text and JSON report output
+- DL profile diagnostics explaining mapped constructs that rule out EL/RL
+- Python `Reasoner(path, profile="rdfs")` for RDFS materialization via `classify()`
 
 ### Changed
 
 - `RdfsEngine::materialize` now takes `&mut Ontology` and returns a structured report
+- `Reasoner::classify` now takes `&mut self` (delegates to `ontologos-rdfs` from CLI/Python for `Profile::Rdfs`)
+- `ontologos classify` runs RDFS materialization (OWL EL/RL classification remains v0.5)
 - Workspace version bumped to 0.3.0
+
+### Fixed
+
+- Parser path sandbox: reject prefix-bypass paths (`uploads_base` vs `uploads_base_evil`)
+- Parser mapping: allow axioms at entity limit; `DeclareDatatype` no longer blocks class with same IRI
+- RDFS inference traces now record premise axiom ids
+- Profile detection docs and Pizza corpus expectations aligned with DL classification (658 mapped axioms)
 
 ### Published
 

@@ -44,10 +44,10 @@ Profile detection uses two construct sets from `ParseMeta`:
 
 **Example — Pizza ontology:**
 
-- **Detected:** `El` (mapped axioms fit EL)
-- **Diagnostics:** may list `ObjectAllValuesFrom`, `ObjectUnionOf`, etc. observed in the source but not mapped into core
+- **Detected:** `Dl` (mapped axioms mix EL and RL shapes — e.g. existentials plus inverse/functional properties)
+- **Diagnostics:** list mapped constructs that rule out EL and/or RL, plus any source-only constructs not stored in core
 
-This is intentional: classification reflects what the reasoner can use from the core model; diagnostics flag constructs still present in the file.
+Classification reflects what the reasoner can use from the core model; diagnostics explain profile boundaries.
 
 ## Profiles
 
@@ -64,11 +64,15 @@ This is intentional: classification reflects what the reasoner can use from the 
 
 ```json
 {
-  "detected": "EL",
+  "detected": "DL",
   "diagnostics": [
     {
-      "construct": "ObjectAllValuesFrom",
-      "message": "construct observed in source but outside detected El profile (not mapped to core)"
+      "construct": "InverseObjectProperties",
+      "message": "construct is outside OWL 2 EL (mapped axiom rules out OWL 2 EL)"
+    },
+    {
+      "construct": "SubClassOfExistential",
+      "message": "construct is outside OWL 2 RL (mapped axiom rules out OWL 2 RL)"
     }
   ]
 }

@@ -21,7 +21,7 @@ cargo build -p ontologos-cli --release
 |---------|-------------|-------------|
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
 | `materialize <file>` | **Works** | RDFS TBox materialization with report |
-| `classify <file>` | Stub | Loads file; `Reasoner::classify` → `NotImplemented` |
+| `classify <file>` | **RDFS** | Loads file; RDFS materialization via `classify_reasoner` (`Profile::Rdfs`) |
 | `explain <file>` | Stub | Loads file; explain → `NotImplemented` |
 
 All commands load the ontology via `ontologos_parser::load_ontology` first.
@@ -98,7 +98,7 @@ Errors print to stderr: `error: ...`
 ./target/release/ontologos profile benchmarks/data/pizza.owl
 ./target/release/ontologos --format json profile benchmarks/data/family.owl
 ./target/release/ontologos materialize benchmarks/data/family.owl
-./target/release/ontologos classify benchmarks/data/pizza.owl   # exits 1 (NotImplemented)
+./target/release/ontologos classify benchmarks/data/family.owl  # RDFS materialization (status: classified)
 ```
 
 ## Related

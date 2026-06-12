@@ -92,12 +92,10 @@ fn manifest_corpus_load_and_profile() {
                         || meta.constructs.contains(&OwlConstruct::ObjectUnionOf),
                     "pizza source should contain DL constructs in parse_meta.constructs"
                 );
-                if report.detected == Some(OwlProfile::El) {
-                    assert!(
-                        !report.diagnostics.is_empty(),
-                        "pizza classified as El should report source-only diagnostics under hybrid profile contract"
-                    );
-                }
+                assert!(
+                    !report.diagnostics.is_empty(),
+                    "pizza classified as Dl should report why mapped constructs rule out EL/RL"
+                );
             }
             "family" => {
                 assert!(

@@ -54,16 +54,14 @@ fn profile_pizza_corpus() {
         .success();
     let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
     assert!(
-        stdout.contains("detected profile: El") || stdout.contains("detected profile: Dl"),
-        "pizza profile should be El or Dl after EL rule expansion: {stdout}"
+        stdout.contains("detected profile: Dl"),
+        "pizza profile should be Dl (mapped EL+RL mix): {stdout}"
     );
-    if stdout.contains("detected profile: El") {
-        assert!(stdout.contains("diagnostics:"));
-        assert!(
-            !stdout.contains("diagnostics: none"),
-            "pizza classified as El should report hybrid source diagnostics"
-        );
-    }
+    assert!(stdout.contains("diagnostics:"));
+    assert!(
+        !stdout.contains("diagnostics: none"),
+        "pizza classified as Dl should report mapped-construct diagnostics: {stdout}"
+    );
 }
 
 #[test]
@@ -100,15 +98,15 @@ fn help_succeeds() {
 }
 
 #[test]
-fn classify_stub_exits_not_implemented() {
+fn classify_rdfs_materializes_family_corpus() {
     let path = repo_root().join("benchmarks/data/family.owl");
     assert!(path.exists(), "missing family corpus at {}", path.display());
     Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args(["classify", path.to_str().expect("path")])
         .assert()
-        .failure()
-        .stderr(predicate::str::contains("reasoning not yet implemented"));
+        .success()
+        .stdout(predicate::str::contains("status: classified"));
 }
 
 #[test]

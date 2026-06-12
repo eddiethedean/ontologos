@@ -50,7 +50,7 @@ mod integration_tests {
     #[test]
     fn classify_returns_not_implemented() {
         let ontology = Ontology::default();
-        let reasoner = Reasoner::builder()
+        let mut reasoner = Reasoner::builder()
             .profile(Profile::El)
             .build(ontology)
             .expect("build");

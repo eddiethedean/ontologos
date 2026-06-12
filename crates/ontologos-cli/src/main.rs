@@ -73,7 +73,9 @@ fn run() -> Result<(), CliError> {
         }
         Command::Classify { ontology } => {
             let ontology = load_ontology(&ontology)?;
-            let mut reasoner = Reasoner::builder().build(ontology)?;
+            let mut reasoner = Reasoner::builder()
+                .profile(ontologos_core::Profile::Rdfs)
+                .build(ontology)?;
             classify_reasoner(&mut reasoner)?;
             emit_status(cli.format, "classified")?;
         }

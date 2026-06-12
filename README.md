@@ -30,7 +30,8 @@ If you need OWL classification today, use Protégé with HermiT or ELK. If you w
 | `ontologos profile` CLI | Available |
 | `ontologos materialize` CLI | Available |
 | OWL RL / EL reasoning | v0.4–v0.5 |
-| `classify` / `explain` CLI | v0.5–v0.6 (see [ROADMAP](ROADMAP.md)) |
+| `classify` CLI (RDFS) | Available |
+| `explain` CLI | v0.6 (see [ROADMAP](ROADMAP.md)) |
 | Python bindings (full API) | v0.9 |
 
 ## Install (library)
@@ -132,7 +133,7 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos materialize benchmarks/data/family.owl
 ```
 
-`classify` and `explain` load the ontology then return `NotImplemented` until v0.5/v0.6 — see [ROADMAP.md](ROADMAP.md).
+`classify` runs RDFS materialization in v0.3; OWL EL/RL classification and `explain` ship in v0.5/v0.6 — see [ROADMAP.md](ROADMAP.md).
 
 ## Documentation
 

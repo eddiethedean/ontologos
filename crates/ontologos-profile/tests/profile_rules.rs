@@ -96,4 +96,27 @@ fn skipped_only_source_constructs_escalates_to_dl() {
 
     let report = detect_profile(&ontology).expect("detect");
     assert_eq!(report.detected, Some(OwlProfile::Dl));
+    assert!(
+        report
+            .diagnostics
+            .iter()
+            .any(|diag| diag.construct == "SkippedAxioms"),
+        "expected skipped-only DL diagnostic, got {:?}",
+        report.diagnostics
+    );
+}
+
+#[test]
+fn mixed_el_and_rl_forbidden_mapped_constructs_detect_dl_with_diagnostics() {
+    let ontology = ontology_with_profile_constructs(&[
+        OwlConstruct::SubClassOfExistential,
+        OwlConstruct::InverseObjectProperties,
+    ]);
+    let report = detect_profile(&ontology).expect("detect");
+    assert_eq!(report.detected, Some(OwlProfile::Dl));
+    assert!(
+        report.diagnostics.len() >= 2,
+        "expected EL and RL violation diagnostics, got {:?}",
+        report.diagnostics
+    );
 }

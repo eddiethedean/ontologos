@@ -26,7 +26,7 @@ ontologos/
 │   ├── ontologos-el        (stub → v0.5)
 │   ├── ontologos-query     (stub → v0.5)
 │   ├── ontologos-explain   (stub → v0.6)
-│   ├── ontologos-cli       (partial — profile, materialize in v0.3)
+│   ├── ontologos-cli       (partial — profile, materialize, classify/RDFS in v0.3)
 │   └── ontologos-py        (stub → v0.9)
 ```
 
@@ -100,7 +100,7 @@ fn main() -> Result<(), Error> {
 
 # Reasoner API (planned)
 
-**Status:** `Reasoner::classify()` returns `Error::NotImplemented` for EL/RL/Auto until v0.5. For RDFS, use `ontologos_rdfs::classify_reasoner` or `materialize_reasoner` with `Profile::Rdfs`.
+**Status:** `Reasoner::classify(&mut self)` returns `Error::NotImplemented` for EL/RL/Auto until v0.5. For RDFS, use `ontologos_rdfs::classify_reasoner` or `materialize_reasoner` with `Profile::Rdfs` (CLI `classify` uses this path in v0.3).
 
 ```rust
 // v0.2 load, v0.5 classify:
@@ -195,14 +195,14 @@ Features:
 
 # CLI Specification
 
-**Status:** `profile` and `materialize` work in v0.3; other subcommands load then fail at engine stubs.
+**Status:** `profile`, `materialize`, and `classify` (RDFS) work in v0.3; `explain` loads then fails at engine stub.
 
 Commands:
 
 ```bash
 ontologos profile ontology.owl
 ontologos materialize ontology.owl # v0.3+
-ontologos classify ontology.owl    # NotImplemented (v0.5; use materialize for RDFS)
+ontologos classify ontology.owl    # RDFS materialization (v0.3; OWL EL/RL in v0.5)
 ontologos explain ontology.owl     # NotImplemented (v0.6)
 ```
 
