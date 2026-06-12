@@ -21,13 +21,35 @@ pub fn map_to_core(
         limits,
     };
 
+    // Pass 1: explicit declarations only, so axiom mapping cannot pin entity kinds
+    // before declared types are known (issue #3).
     for annotated in source.iter() {
-        mapper.visit(annotated);
+        if is_declaration(&annotated.component) {
+            mapper.visit(annotated);
+        }
+    }
+    // Pass 2: logical axioms and metadata.
+    for annotated in source.iter() {
+        if !is_declaration(&annotated.component) {
+            mapper.visit(annotated);
+        }
     }
 
     report.meta.logical_axiom_count =
         report.meta.mapped_axiom_count + report.meta.skipped_axiom_count;
     Ok((ontology, report))
+}
+
+fn is_declaration(component: &Component<RcStr>) -> bool {
+    matches!(
+        component,
+        Component::DeclareClass(_)
+            | Component::DeclareObjectProperty(_)
+            | Component::DeclareNamedIndividual(_)
+            | Component::DeclareDataProperty(_)
+            | Component::DeclareDatatype(_)
+            | Component::DeclareAnnotationProperty(_)
+    )
 }
 
 struct Mapper<'a> {

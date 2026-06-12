@@ -1,0 +1,7 @@
+Prefix(:=<http://example.org/test#>)
+
+Ontology(<http://example.org/test>
+  Declaration(DataProperty(:X))
+  Declaration(Class(:Y))
+  SubClassOf(:Y :X)
+)
