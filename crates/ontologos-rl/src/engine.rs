@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use ontologos_core::Ontology;
 use ontologos_rdfs::RdfsEngine;
 
@@ -65,6 +67,7 @@ impl RlEngine {
             inferred_by_rule: std::collections::BTreeMap::new(),
             traces: Vec::new(),
             clashes: Vec::new(),
+            disjoint_clash_keys: HashSet::new(),
         };
 
         let mut index = TripleIndex::from_ontology(ontology);

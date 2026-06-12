@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
-use ontologos_core::AxiomId;
+use ontologos_core::{AxiomId, EntityId};
 use serde::Serialize;
 
 /// OWL RL rule that produced an inference.
@@ -84,6 +84,9 @@ pub struct MaterializationReport {
     pub traces: Vec<InferenceRecord>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub clashes: Vec<String>,
+    /// Canonical disjoint-clash keys already reported (not serialized).
+    #[serde(skip)]
+    pub disjoint_clash_keys: HashSet<(EntityId, EntityId, EntityId)>,
 }
 
 impl MaterializationReport {

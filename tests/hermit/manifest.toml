@@ -172,6 +172,15 @@ rust_test = "disjoint_classes_on_individual_report_clash"
 notes = "RL-native: disjoint classes on one individual → clash diagnostic"
 
 [[case]]
+id = "rl.disjoint_clash_via_equivalence"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "disjoint_classes_via_equivalence_report_clash"
+notes = "RL cls-disjoint2: equivalent class expansion in disjoint clash detection"
+
+[[case]]
 id = "ReasonerTest.testSubsumption1"
 tier = "A"
 milestone = "0.3"
