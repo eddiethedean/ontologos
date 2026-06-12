@@ -47,10 +47,9 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.5.0/on
 | API / CLI | Message (typical) |
 |-----------|-------------------|
 | `Reasoner::classify()` with `Profile::Auto` / `El` | `reasoning not yet implemented` |
-| Python `Reasoner(path)` default profile | `reasoning not yet implemented` |
 | CLI `explain` | `explanation generation not yet implemented` |
 
-**Recovery:** Use `ontologos profile`, `ontologos materialize`, or `ontologos classify` (RDFS) for CLI workflows. In library code: `ontologos_rdfs::classify_reasoner` with `Profile::Rdfs`; `ontologos_rl::classify_reasoner` with `Profile::Rl`. Python: `Reasoner(path, profile="rdfs")` or `profile="rl"`. For OWL EL taxonomy classification, wait for v0.5 or use an external reasoner (HermiT/ELK).
+**Recovery:** Core `Reasoner::classify()` does not dispatch to profile engines — use `ontologos_el::classify_with_profile`, `ontologos_rdfs::materialize_reasoner`, or `ontologos_rl::classify_reasoner`. CLI: `ontologos classify --profile auto|el|rl|rdfs`. Python: `Reasoner(path, profile="auto")` routes via `classify_with_profile` (v0.5+).
 
 Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/0.5.0/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
 

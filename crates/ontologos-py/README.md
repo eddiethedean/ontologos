@@ -4,16 +4,14 @@ Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a
 
 **Alpha package (v0.5.0).** See the full guide: **[docs/guides/python.md](../../docs/guides/python.md)**.
 
-> **Always pass `profile=`** — `Reasoner(path)` without a profile uses `"auto"`, which fails in v0.4.
-
-| Capability | Rust v0.4 | Python v0.4 |
+| Capability | Rust v0.5 | Python v0.5 |
 |------------|-----------|-------------|
 | In-memory ontology model | Yes (`ontologos-core`) | No |
 | OWL file loading | Yes (`ontologos-parser`) | Partial (`Reasoner(path)` loads only) |
 | Profile detection | Yes (`ontologos-profile`) | No |
 | RDFS materialization | Yes (`ontologos-rdfs`) | Partial (`Reasoner(path, profile="rdfs")`) |
 | OWL RL saturation | Yes (`ontologos-rl`) | Partial (`Reasoner(path, profile="rl")`) |
-| OWL EL taxonomy classification | No (v0.5) | No |
+| OWL EL taxonomy classification | Yes (`ontologos-el`) | Partial (`Reasoner(path, profile="el")` or `"auto"`) |
 | Full Python API | — | v0.9 / 1.0 |
 
 For working Rust APIs today, use [crates.io](https://crates.io/crates/ontologos-core) crates.
@@ -29,9 +27,9 @@ import ontologos
 
 print(ontologos.__version__)
 
-# Always set profile= — default "auto" fails in v0.4
-reasoner = ontologos.Reasoner("ontology.owl", profile="rdfs")
-reasoner.classify()
+# Default profile="auto" routes EL/RL/RDFS by detected profile (v0.5+)
+reasoner = ontologos.Reasoner("pizza.owl", profile="auto")
+taxonomy = reasoner.classify()
 
 reasoner = ontologos.Reasoner("family.owl", profile="rl")
 reasoner.classify()

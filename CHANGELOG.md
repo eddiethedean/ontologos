@@ -17,18 +17,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI `--profile el|rl|rdfs|auto` on `classify`; taxonomy JSON/text output for EL
 - Python `profile="el"` / `"auto"`; `classify()` returns taxonomy or materialization dict
 - Parser: decompose `SubClassOf(C, ObjectIntersectionOf(...))` into EL axioms
-- HermiT `ClassificationTest` Tier-B harness (`hermit_el.rs`, `#[ignore]` without `HermiT/`)
-- Benchmark scripts: `compare-elk.sh`, `generate-go-subset.sh`; Pizza EL integration tests
+- HermiT `ClassificationTest` pizza harness with vendored fixtures (`benchmarks/data/hermit/`)
+- Pizza EL golden conformance (`pizza-el-golden.json`, `compare-elk.sh` in CI)
+- Vendored `go-subset.owl` EL performance gate (< 10s)
 
 ### Changed
 
 - **Breaking:** CLI `classify` defaults to `--profile auto` (EL/RL routing), not RDFS-only — use `materialize` or `--profile rdfs` for RDFS
-- `ontologos-el` and `ontologos-query` published to crates.io
+- Python package version aligned to **0.5.0**
+
+### Fixed
+
+- **RL soundness:** replace unsound upward existential `subClassOf` propagation with downward scm-spo1
+- **RL existential subsumption:** compare asserted existentials only (avoids spurious inferences from property weakening)
+- **EL completion graph:** seed `EquivalentObjectProperties` at graph build time
 
 ### Documentation
 
 - [OWL EL classification](docs/getting-started/owl-el-classification.md)
 - [Migration v0.4.x → v0.5.0](docs/migration/v0.4.x-to-v0.5.0.md)
+- v0.5 capability matrix, architecture, conformance, and Python guide updates
 
 ## [0.4.0] - 2026-06-12
 
@@ -172,7 +180,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/eddiethedean/ontologos/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/eddiethedean/ontologos/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/eddiethedean/ontologos/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0

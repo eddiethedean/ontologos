@@ -1,6 +1,6 @@
 # Contributing to OntoLogos
 
-Thank you for your interest in contributing. OntoLogos is in early development (v0.4); high-impact contributions include EL engine, tests, and documentation.
+Thank you for your interest in contributing. OntoLogos is in early development (v0.5); high-impact contributions include explanations, conformance, and documentation.
 
 ## Prerequisites
 
@@ -71,6 +71,8 @@ Run all locally before submitting.
 | `crates/ontologos-profile/` | Profile detection (v0.2) |
 | `crates/ontologos-rdfs/` | RDFS engine (v0.3) |
 | `crates/ontologos-rl/` | OWL RL engine (v0.4) |
+| `crates/ontologos-el/` | OWL EL engine (v0.5) |
+| `crates/ontologos-query/` | Taxonomy queries (v0.5) |
 | `crates/ontologos-conformance/` | HermiT-ported tests — [tests/hermit/README.md](tests/hermit/README.md) |
 | `docs/` | User and reference documentation |
 | `docs/internal/research/` | Maintainer research notes |
@@ -95,6 +97,8 @@ cargo publish -p ontologos-profile --dry-run
 cargo publish -p ontologos-parser --dry-run
 cargo publish -p ontologos-rdfs --dry-run
 cargo publish -p ontologos-rl --dry-run --allow-dirty
+cargo publish -p ontologos-el --dry-run --allow-dirty
+cargo publish -p ontologos-query --dry-run --allow-dirty
 ```
 
 Use `--allow-dirty` only for local dry-runs before commit; release CI publishes from a clean tagged checkout.
@@ -120,7 +124,7 @@ Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire
 
 On each release tag, CI publishes:
 
-- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (v0.4: `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, in dependency order)
+- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (`ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, in dependency order)
 - **PyPI** — `ontologos` via release CI (`maturin-action`): Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x64, aarch64), plus sdist. Manual upload: [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh)
 
 - **Tags:** Release tags follow semver (`v0.5.0`, …)
@@ -130,4 +134,4 @@ On each release tag, CI publishes:
 
 Open a [GitHub issue](https://github.com/eddiethedean/ontologos/issues) for bugs, feature requests, or design questions. Check [FAQ.md](FAQ.md) and [Troubleshooting](docs/guides/troubleshooting.md) first.
 
-There is no Discord or mailing list — GitHub Issues is the primary support channel for v0.4.
+There is no Discord or mailing list — GitHub Issues is the primary support channel.

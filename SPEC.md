@@ -1,13 +1,13 @@
 
 # OntoLogos Technical Specification
 
-> **Document status:** Mixed. Sections marked **(v0.1)** / **(v0.2)** / **(v0.3)** / **(v0.4)** reflect shipped crates.
-> OWL EL taxonomy classification, explanations, and full Python bindings are **planned** — see [ROADMAP.md](ROADMAP.md).
+> **Document status:** Mixed. Sections marked **(v0.1)** / **(v0.2)** / **(v0.3)** / **(v0.4)** / **(v0.5)** reflect shipped crates.
+> Explanations and full Python bindings remain **planned** — see [ROADMAP.md](ROADMAP.md).
 > Last reviewed: 2026-06-12
 
 ## Overview
 
-OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.4 ships ABox in core, OWL RL saturation (`ontologos-rl`), plus parsing, profile detection, and RDFS from v0.2–v0.3.**
+OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.5 ships OWL EL classification (`ontologos-el`), taxonomy queries (`ontologos-query`), CLI profile routing, and Python `profile="el"`/`"auto"`.** v0.4 added ABox in core and OWL RL saturation (`ontologos-rl`); v0.2–v0.3 added parsing, profile detection, and RDFS.
 
 ---
 
@@ -23,11 +23,11 @@ ontologos/
 │   ├── ontologos-profile   (v0.2)
 │   ├── ontologos-rdfs      (v0.3)
 │   ├── ontologos-rl        (v0.4)
-│   ├── ontologos-el        (stub → v0.5)
-│   ├── ontologos-query     (stub → v0.5)
+│   ├── ontologos-el        (v0.5)
+│   ├── ontologos-query     (v0.5)
 │   ├── ontologos-explain   (stub → v0.6)
-│   ├── ontologos-cli       (partial — profile, materialize, classify/RDFS)
-│   └── ontologos-py        (alpha — load, profile=rdfs/rl → v0.9 full API)
+│   ├── ontologos-cli       (v0.5 — profile, materialize, classify with routing)
+│   └── ontologos-py        (alpha v0.5 — load, profile=rdfs/rl/el/auto)
 ```
 
 ---
@@ -203,7 +203,7 @@ Features:
 
 # CLI Specification
 
-**Status:** `profile`, `materialize`, and `classify` (RDFS) work in v0.4; `classify` and `materialize` emit the same inference report (`status` differs). OWL RL saturation is via `ontologos-rl` (library) or Python `profile="rl"`. CLI profile routing for RL ships in v0.5. `explain` loads then fails at engine stub.
+**Status:** `profile`, `materialize`, and `classify --profile auto|el|rl|rdfs` work in v0.5. `materialize` and `classify --profile rdfs` emit RDFS inference reports. `explain` loads then fails at engine stub (v0.6).
 
 Commands:
 
@@ -223,9 +223,9 @@ Outputs:
 
 ---
 
-# Python Bindings (alpha v0.4, full API v0.9)
+# Python Bindings (alpha v0.5, full API v0.9)
 
-**Status:** Alpha on PyPI; v0.4 exposes load, RDFS materialization, and OWL RL saturation.
+**Status:** Alpha on PyPI; v0.5 exposes load, RDFS/RL materialization, EL taxonomy, and `profile="auto"` routing.
 
 ```python
 from ontologos import Reasoner
