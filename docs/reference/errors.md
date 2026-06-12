@@ -52,15 +52,17 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/latest/o
 
 **Recovery:** Use `ontologos profile`, `ontologos materialize`, or `ontologos classify` (RDFS) for v0.3 workflows; use `ontologos_rdfs::classify_reasoner` with `Profile::Rdfs` in library code. Python: `Reasoner(path, profile="rdfs")`. For OWL EL/RL classification, wait for the roadmap milestone or use an external reasoner (HermiT/ELK).
 
+Calling `Reasoner::classify()` with `Profile::Rdfs` returns [`Error::Message`](https://docs.rs/ontologos-core/latest/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` (core does not link profile engines in v0.3).
+
 ### `OntologyNotLoaded`
 
 **Cause:** Reasoner used without ontology (reserved for future API).
 
 ### `Message`
 
-**Cause:** Generic validation failure (e.g. invalid `parallelism` in `ReasonerBuilder`).
+**Cause:** Generic validation failure (e.g. invalid `parallelism` in `ReasonerBuilder`) or `Reasoner::classify()` called with `Profile::Rdfs` (use `ontologos_rdfs::classify_reasoner` instead).
 
-**Recovery:** Read the message string; typically configuration bounds (parallelism 1–64).
+**Recovery:** Read the message string; for parallelism, use bounds 1–64; for RDFS, call `classify_reasoner` or `materialize_reasoner`.
 
 ### Lookup vs validation
 

@@ -50,6 +50,7 @@ Welcome to OntoLogos documentation. Start here if you are new to the project.
 |----------|-------------|
 | [v0.1-to-v0.2.md](migration/v0.1-to-v0.2.md) | Upgrade guide |
 | [v0.2-to-v0.3.md](migration/v0.2-to-v0.3.md) | RDFS engine and materialize CLI |
+| [v0.3.0-to-v0.3.1.md](migration/v0.3.0-to-v0.3.1.md) | Patch: classify CLI report, docs, delegate hint |
 
 ## Project meta
 

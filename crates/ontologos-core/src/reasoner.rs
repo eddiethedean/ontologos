@@ -122,13 +122,19 @@ impl Reasoner {
 
     /// Run classification over the loaded ontology.
     ///
-    /// For `Profile::Rdfs`, use `ontologos_rdfs::classify_reasoner` until core
-    /// delegates to profile engines in a later release. EL/RL/Auto return
-    /// [`Error::NotImplemented`] in v0.3.
+    /// Profile engines live in separate crates in v0.3. Use
+    /// `ontologos_rdfs::classify_reasoner` for [`Profile::Rdfs`]. EL/RL/Auto
+    /// return [`Error::NotImplemented`]. Calling this with [`Profile::Rdfs`]
+    /// returns [`Error::Message`] with a delegate hint.
     pub fn classify(&mut self) -> Result<()> {
-        let _ = &mut self.ontology;
-        let _ = self.profile;
-        let _ = &self.config;
+        if self.profile == Profile::Rdfs {
+            return Err(Error::Message(
+                "Profile::Rdfs: use ontologos_rdfs::classify_reasoner or \
+                 ontologos_rdfs::materialize_reasoner; Reasoner::classify does not \
+                 dispatch to profile engines in v0.3"
+                    .into(),
+            ));
+        }
         Err(Error::NotImplemented)
     }
 }

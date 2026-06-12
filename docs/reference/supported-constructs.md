@@ -33,6 +33,18 @@ Examples (non-exhaustive):
 
 Skipped axioms increment `parse_meta.skipped_axiom_count` and append to `parse_meta.warnings`.
 
+`owl:imports` declarations are scanned but **not resolved** — imported ontologies are not loaded.
+
+## RDFS materialization scope (v0.3)
+
+| Input in core | Materialized by `ontologos-rdfs` |
+|---------------|----------------------------------|
+| `SubClassOf` | Transitive closure |
+| `SubObjectPropertyOf` | Transitive closure |
+| `ObjectPropertyDomain` / `ObjectPropertyRange` | Inherited along `subPropertyOf` |
+| `EquivalentClasses` | Stored only; not expanded to mutual `SubClassOf` (v0.4+ RL) |
+| Data properties, ABox, `rdf:type` | Not in scope (parser skips or deferred) |
+
 ## Profile detection input
 
 | Field | Contents |

@@ -73,8 +73,10 @@ cargo test --workspace --locked
 cargo publish -p ontologos-core --dry-run
 cargo publish -p ontologos-profile --dry-run
 cargo publish -p ontologos-parser --dry-run
-cargo publish -p ontologos-rdfs --dry-run
+cargo publish -p ontologos-rdfs --dry-run --allow-dirty
 ```
+
+Use `--allow-dirty` only for local dry-runs before commit; release CI publishes from a clean tagged checkout.
 
 Then:
 

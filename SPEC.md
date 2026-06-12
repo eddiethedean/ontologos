@@ -100,7 +100,7 @@ fn main() -> Result<(), Error> {
 
 # Reasoner API (planned)
 
-**Status:** `Reasoner::classify(&mut self)` returns `Error::NotImplemented` for EL/RL/Auto until v0.5. For RDFS, use `ontologos_rdfs::classify_reasoner` or `materialize_reasoner` with `Profile::Rdfs` (CLI `classify` uses this path in v0.3).
+**Status:** `Reasoner::classify(&mut self)` returns `Error::NotImplemented` for EL/RL/Auto until v0.5 and `Error::Message` (delegate hint) for `Profile::Rdfs`. For RDFS, use `ontologos_rdfs::classify_reasoner` or `materialize_reasoner` (CLI `classify` uses this path in v0.3).
 
 ```rust
 // v0.2 load, v0.5 classify:
@@ -142,9 +142,9 @@ let mut ontology = ontologos_parser::load_ontology("family.owl")?;
 let report = RdfsEngine::new().materialize(&mut ontology)?;
 ```
 
-For `Profile::Rdfs`, use `ontologos_rdfs::classify_reasoner(&mut reasoner)` or `materialize_reasoner(&mut reasoner)`. Core `Reasoner::classify` remains a stub for EL/RL until v0.4/v0.5.
+For `Profile::Rdfs`, use `ontologos_rdfs::classify_reasoner(&mut reasoner)` or `materialize_reasoner(&mut reasoner)`. Core `Reasoner::classify` returns a delegate hint for `Profile::Rdfs` and `NotImplemented` for EL/RL/Auto until v0.4/v0.5.
 
-Complexity goal: O(n log n) on benchmark corpora (worklist saturation).
+Implementation: batch fixed-point forward chaining (all rules per round until saturation). Worklist optimization is deferred to v1.1 performance work.
 
 ---
 
@@ -195,7 +195,7 @@ Features:
 
 # CLI Specification
 
-**Status:** `profile`, `materialize`, and `classify` (RDFS) work in v0.3; `explain` loads then fails at engine stub.
+**Status:** `profile`, `materialize`, and `classify` (RDFS) work in v0.3.1; `classify` and `materialize` emit the same inference report (`status` differs). `explain` loads then fails at engine stub.
 
 Commands:
 
@@ -217,13 +217,16 @@ Outputs:
 
 # Python Bindings (planned v0.9)
 
-**Status:** Alpha placeholder on PyPI; Rust v0.3 APIs are not yet fully exposed in Python.
+**Status:** Alpha on PyPI; v0.3 exposes load + RDFS materialization only.
 
 ```python
 from ontologos import Reasoner
 
-r = Reasoner("ontology.owl")
+# RDFS materialization (v0.3)
+r = Reasoner("ontology.owl", profile="rdfs")
 r.classify()
+
+# Default profile raises not-implemented until OWL EL/RL (v0.5)
 ```
 
 ---

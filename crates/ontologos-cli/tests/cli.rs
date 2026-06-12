@@ -106,7 +106,8 @@ fn classify_rdfs_materializes_family_corpus() {
         .args(["classify", path.to_str().expect("path")])
         .assert()
         .success()
-        .stdout(predicate::str::contains("status: classified"));
+        .stdout(predicate::str::contains("status: classified"))
+        .stdout(predicate::str::contains("inferred_axioms:"));
 }
 
 #[test]
@@ -120,6 +121,29 @@ fn materialize_family_corpus_succeeds() {
         .success()
         .stdout(predicate::str::contains("status: materialized"))
         .stdout(predicate::str::contains("inferred_axioms:"));
+}
+
+#[test]
+fn classify_json_includes_report_fields() {
+    let path = repo_root().join("benchmarks/data/family.owl");
+    assert!(path.exists(), "missing family corpus at {}", path.display());
+    let output = Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args([
+            "--format",
+            "json",
+            "classify",
+            path.to_str().expect("path"),
+        ])
+        .assert()
+        .success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
+    assert!(stdout.contains("\"status\""));
+    assert!(stdout.contains("\"classified\"") || stdout.contains("classified"));
+    assert!(stdout.contains("initial_axiom_count"));
+    assert!(stdout.contains("final_axiom_count"));
+    assert!(stdout.contains("inferred_by_rule"));
+    assert!(stdout.contains("inferred_axioms"));
 }
 
 #[test]

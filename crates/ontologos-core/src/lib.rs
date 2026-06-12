@@ -48,7 +48,7 @@ mod integration_tests {
     use super::*;
 
     #[test]
-    fn classify_returns_not_implemented() {
+    fn classify_returns_not_implemented_for_el() {
         let ontology = Ontology::default();
         let mut reasoner = Reasoner::builder()
             .profile(Profile::El)
@@ -56,6 +56,17 @@ mod integration_tests {
             .expect("build");
         assert_eq!(reasoner.classify().unwrap_err(), Error::NotImplemented);
         assert_eq!(reasoner.ontology().entity_count(), 0);
+    }
+
+    #[test]
+    fn classify_rdfs_profile_returns_delegate_hint() {
+        let ontology = Ontology::default();
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::Rdfs)
+            .build(ontology)
+            .expect("build");
+        let err = reasoner.classify().expect_err("rdfs delegate hint");
+        assert!(matches!(err, Error::Message(_)));
     }
 
     #[test]

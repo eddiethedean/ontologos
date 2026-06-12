@@ -47,9 +47,9 @@ Common causes:
 - **Unknown entity IRI in axioms** — declare all entities before referencing them in axioms
 - **Size limits** — default max JSON size is 16 MiB; see [security.md](docs/security.md)
 
-## Why does Pizza detect as EL but diagnostics mention DL constructs?
+## Why does Pizza detect as DL?
 
-Profile **classification** uses mapped TBox shapes (`parse_meta.profile_constructs`). **Diagnostics** also flag constructs observed in the full parse that fall outside the detected profile. Pizza is detected as **EL** based on mapped axioms, while diagnostics may list constructs such as `ObjectAllValuesFrom` seen in the source but not stored in core.
+Profile **classification** uses mapped TBox shapes (`parse_meta.profile_constructs`). The Pizza corpus mixes EL shapes (existentials) with constructs that rule out EL and RL (e.g. inverse and functional object properties), so detection reports **DL**. **Diagnostics** explain which mapped constructs violate EL/RL profile rules and may also list constructs seen in the source but not stored in core (e.g. `ObjectAllValuesFrom`).
 
 See [Profile detection](docs/guides/profile-detection.md).
 

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-12
+
+### Changed
+
+- `ontologos classify` emits the same inference report as `materialize` (`status: classified`, axiom counts, per-rule breakdown)
+- Clarified `Reasoner::classify` documentation: CLI/Python use `ontologos_rdfs` for `Profile::Rdfs`
+
+### Fixed
+
+- `Reasoner::classify()` with `Profile::Rdfs` returns a delegate hint instead of generic `NotImplemented`
+- FAQ, load guide, and CLI reference updated for Pizza → DL profile detection
+- Documented OWL import non-resolution, RDFS materialization scope, and batch fixed-point engine (vs worklist)
+
+### Published
+
+- [ontologos-core](https://crates.io/crates/ontologos-core) **0.3.1**
+- [ontologos-parser](https://crates.io/crates/ontologos-parser) **0.3.1**
+- [ontologos-profile](https://crates.io/crates/ontologos-profile) **0.3.1**
+- [ontologos-rdfs](https://crates.io/crates/ontologos-rdfs) **0.3.1**
+
 ## [0.3.0] - 2026-06-12
 
 ### Added
@@ -95,7 +115,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/eddiethedean/ontologos/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0
 [0.2.0]: https://github.com/eddiethedean/ontologos/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/eddiethedean/ontologos/releases/tag/v0.1.0

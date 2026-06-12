@@ -21,22 +21,26 @@ cargo build -p ontologos-cli --release
 |---------|-------------|-------------|
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
 | `materialize <file>` | **Works** | RDFS TBox materialization with report |
-| `classify <file>` | **RDFS** | Loads file; RDFS materialization via `classify_reasoner` (`Profile::Rdfs`) |
-| `explain <file>` | Stub | Loads file; explain → `NotImplemented` |
+| `classify <file>` | **RDFS** | RDFS materialization via reasoner (`Profile::Rdfs`); same inference report as `materialize` with `status: classified` |
+| `explain <file>` | Stub | Loads file; explain → `NotImplemented` (v0.6) |
 
 All commands load the ontology via `ontologos_parser::load_ontology` first.
+
+`classify` and `materialize` both run the RDFS engine in v0.3; use either for inference counts. OWL EL/RL classification ships in v0.5.
 
 ## `profile` output
 
 ### Text
 
+Family example:
+
 ```text
-detected profile: El
+detected profile: Rl
 diagnostics:
-  - ObjectAllValuesFrom: construct observed in source but outside detected El profile (not mapped to core)
+  - ObjectIntersectionOf: construct observed in source but outside detected Rl profile (not mapped to core)
 ```
 
-When no diagnostics: `diagnostics: none`.
+Pizza reports `detected profile: Dl` with mapped-construct diagnostics. When no diagnostics: `diagnostics: none`.
 
 ### JSON
 
@@ -54,7 +58,9 @@ When no diagnostics: `diagnostics: none`.
 
 `detected` is always present when profile detection succeeds on a loaded ontology.
 
-## `materialize` output
+## `classify` and `materialize` output
+
+Both commands emit the same inference report fields; only `status` differs (`classified` vs `materialized`).
 
 ### Text
 
@@ -98,7 +104,8 @@ Errors print to stderr: `error: ...`
 ./target/release/ontologos profile benchmarks/data/pizza.owl
 ./target/release/ontologos --format json profile benchmarks/data/family.owl
 ./target/release/ontologos materialize benchmarks/data/family.owl
-./target/release/ontologos classify benchmarks/data/family.owl  # RDFS materialization (status: classified)
+./target/release/ontologos classify benchmarks/data/family.owl  # status: classified + inference report
+./target/release/ontologos --format json classify benchmarks/data/family.owl
 ```
 
 ## Related

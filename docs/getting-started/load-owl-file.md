@@ -24,14 +24,17 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos profile benchmarks/data/pizza.owl
 ```
 
-Expected output (abbreviated):
+Expected output for Pizza (abbreviated):
 
 ```text
-detected profile: El
+detected profile: Dl
 diagnostics:
-  - ObjectAllValuesFrom: construct observed in source but outside detected El profile (not mapped to core)
+  - InverseObjectProperties: construct is outside OWL 2 EL (mapped axiom rules out OWL 2 EL)
+  - SubClassOfExistential: construct is outside OWL 2 RL (mapped axiom rules out OWL 2 RL)
   ...
 ```
+
+Family ontology typically reports `detected profile: Rl`.
 
 ## Library
 
@@ -88,6 +91,10 @@ After loading, `ontology.parse_meta()` contains:
 | `warnings` | Skipped shapes and mapping messages |
 
 Not every construct in the file becomes a core axiom. See [Supported constructs](../reference/supported-constructs.md).
+
+## OWL imports
+
+`owl:imports` declarations are recorded in `parse_meta.constructs` but **not resolved** — axioms from imported ontologies are not merged into the loaded ontology. Use a single self-contained file or merge ontologies upstream before loading.
 
 ## Untrusted files
 

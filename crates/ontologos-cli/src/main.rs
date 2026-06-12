@@ -5,7 +5,7 @@ use ontologos_core::Reasoner;
 use ontologos_explain::explain;
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, ProfileReport};
-use ontologos_rdfs::{classify_reasoner, MaterializationReport, RdfsEngine};
+use ontologos_rdfs::{materialize_reasoner, MaterializationReport, RdfsEngine};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -76,13 +76,13 @@ fn run() -> Result<(), CliError> {
             let mut reasoner = Reasoner::builder()
                 .profile(ontologos_core::Profile::Rdfs)
                 .build(ontology)?;
-            classify_reasoner(&mut reasoner)?;
-            emit_status(cli.format, "classified")?;
+            let report = materialize_reasoner(&mut reasoner)?;
+            emit_inference_report(cli.format, "classified", &report)?;
         }
         Command::Materialize { ontology } => {
             let mut ontology = load_ontology(&ontology)?;
             let report = RdfsEngine::new().materialize(&mut ontology)?;
-            emit_materialize_report(cli.format, &report)?;
+            emit_inference_report(cli.format, "materialized", &report)?;
         }
         Command::Explain { ontology } => {
             let ontology = load_ontology(&ontology)?;
@@ -94,16 +94,8 @@ fn run() -> Result<(), CliError> {
     Ok(())
 }
 
-fn emit_status(format: OutputFormat, status: &str) -> Result<(), CliError> {
-    match format {
-        OutputFormat::Text => println!("status: {status}"),
-        OutputFormat::Json => emit_json(&serde_json::json!({ "status": status }))?,
-    }
-    Ok(())
-}
-
 #[derive(Serialize)]
-struct MaterializeCliOutput<'a> {
+struct InferenceCliOutput<'a> {
     status: &'static str,
     initial_axiom_count: usize,
     final_axiom_count: usize,
@@ -117,13 +109,14 @@ fn inference_traces_empty(traces: &&[ontologos_rdfs::InferenceRecord]) -> bool {
     traces.is_empty()
 }
 
-fn emit_materialize_report(
+fn emit_inference_report(
     format: OutputFormat,
+    status: &'static str,
     report: &MaterializationReport,
 ) -> Result<(), CliError> {
     match format {
         OutputFormat::Text => {
-            println!("status: materialized");
+            println!("status: {status}");
             println!("initial_axiom_count: {}", report.initial_axiom_count);
             println!("final_axiom_count: {}", report.final_axiom_count);
             println!("inferred_axioms: {}", report.inferred_total());
@@ -136,8 +129,8 @@ fn emit_materialize_report(
                 }
             }
         }
-        OutputFormat::Json => emit_json(&MaterializeCliOutput {
-            status: "materialized",
+        OutputFormat::Json => emit_json(&InferenceCliOutput {
+            status,
             initial_axiom_count: report.initial_axiom_count,
             final_axiom_count: report.final_axiom_count,
             inferred_axioms: report.inferred_total(),

@@ -42,10 +42,10 @@ From [crates.io](https://crates.io/crates/ontologos-core):
 
 ```toml
 [dependencies]
-ontologos-core = "0.3.0"
-ontologos-parser = "0.3.0"
-ontologos-profile = "0.3.0"
-ontologos-rdfs = "0.3.0"
+ontologos-core = "0.3.1"
+ontologos-parser = "0.3.1"
+ontologos-profile = "0.3.1"
+ontologos-rdfs = "0.3.1"
 ```
 
 From this repository:
@@ -58,7 +58,7 @@ cd ontologos
 
 API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core) · [parser](https://docs.rs/ontologos-parser) · [profile](https://docs.rs/ontologos-profile) · [rdfs](https://docs.rs/ontologos-rdfs)
 
-> **Python:** `pip install ontologos` is an alpha placeholder only — use Rust crates for v0.3 workflows. See [crates/ontologos-py/README.md](crates/ontologos-py/README.md).
+> **Python:** `pip install ontologos` is an alpha package — `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; the default profile is not implemented until v0.5. Full Python APIs ship in v0.9. See [crates/ontologos-py/README.md](crates/ontologos-py/README.md).
 
 ## Quick start (5 minutes)
 
@@ -124,7 +124,7 @@ Or run: `cargo run -p ontologos-parser --example load_and_profile`
 | `ontologos-conformance` | HermiT-ported conformance tests (workspace-only) | Dev harness |
 | `ontologos-py` | Python bindings via PyO3 | Stub |
 
-**v0.3.0** publishes [`ontologos-core`](https://crates.io/crates/ontologos-core), [`ontologos-parser`](https://crates.io/crates/ontologos-parser), [`ontologos-profile`](https://crates.io/crates/ontologos-profile), and [`ontologos-rdfs`](https://crates.io/crates/ontologos-rdfs) to crates.io.
+**v0.3.1** publishes [`ontologos-core`](https://crates.io/crates/ontologos-core), [`ontologos-parser`](https://crates.io/crates/ontologos-parser), [`ontologos-profile`](https://crates.io/crates/ontologos-profile), and [`ontologos-rdfs`](https://crates.io/crates/ontologos-rdfs) to crates.io.
 
 ## CLI
 

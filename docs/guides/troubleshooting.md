@@ -45,6 +45,16 @@ Common causes: `format_version: 1`, invalid IRI, unknown entity in axiom, size l
 
 Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology loads with whatever axioms could be mapped.
 
+## Missing axioms from imported ontologies
+
+`owl:imports` is recorded in `parse_meta` but **not resolved** — only axioms in the loaded file are mapped. Merge imports upstream or use a single bundle file.
+
 ## `classify` / `explain` behavior
 
-In v0.3, **`classify`** and **`materialize`** both run RDFS TBox materialization. OWL EL/RL classification ships in v0.5; **`explain`** in v0.6. Library users with `Profile::Auto` / `El` / `Rl` still get `NotImplemented` from `Reasoner::classify()`. See [CLI reference](../reference/cli.md).
+In v0.3, **`classify`** and **`materialize`** both run RDFS TBox materialization and emit the same inference report (`status` differs). OWL EL/RL classification ships in v0.5; **`explain`** in v0.6.
+
+Library users: call `ontologos_rdfs::classify_reasoner` for `Profile::Rdfs`. `Reasoner::classify()` returns a delegate hint for `Profile::Rdfs` and `NotImplemented` for `Profile::Auto` / `El` / `Rl`. See [CLI reference](../reference/cli.md) and [errors.md](../reference/errors.md).
+
+## RDFS does not expand `EquivalentClasses`
+
+v0.3 RDFS materializes `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance only. Named `EquivalentClasses` axioms are stored but not expanded into mutual subsumption (planned for RL/EL engines). `rdf:type` propagation requires ABox support (v1.6).

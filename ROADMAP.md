@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-12 · **Current release:** [v0.3.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0) · **Next milestone:** v0.4 — OWL RL engine
+**Last updated:** 2026-06-12 · **Current release:** [v0.3.1](https://github.com/eddiethedean/ontologos/releases/tag/v0.3.1) · **Next milestone:** v0.4 — OWL RL engine
 
 ---
 
@@ -345,7 +345,7 @@ First reasoning engine. Implements RDFS entailment over the core axiom model.
 
 - [x] `RdfsEngine::materialize` produces inferred axioms or a materialized view
 - [x] `materialize_reasoner` with `Profile::Rdfs` delegates here
-- [x] Complexity target: O(n log n) on benchmark corpora (worklist fixed-point)
+- [x] Batch fixed-point materialization (Family/Pizza corpora); worklist optimization deferred to v1.1
 
 ### Deliverables
 

@@ -780,7 +780,7 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
 name = "ontologos-cli"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -797,7 +797,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-conformance"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ontologos-conformance",
  "ontologos-core",
@@ -807,7 +807,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-core"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "criterion",
  "serde",
@@ -817,7 +817,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-el"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ontologos-core",
  "thiserror 2.0.18",
@@ -825,7 +825,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-explain"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ontologos-core",
  "serde",
@@ -835,7 +835,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-parser"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "horned-owl",
  "ontologos-core",
@@ -846,7 +846,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-profile"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ontologos-core",
  "serde",
@@ -855,7 +855,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-py"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ontologos-core",
  "ontologos-parser",
@@ -865,7 +865,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-query"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ontologos-core",
  "thiserror 2.0.18",
@@ -873,7 +873,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-rdfs"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ontologos-core",
  "ontologos-parser",
@@ -883,7 +883,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-rl"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "ontologos-core",
  "thiserror 2.0.18",
