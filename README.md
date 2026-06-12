@@ -111,13 +111,14 @@ cargo build -p ontologos-cli --release
 | Crate | Description | Published |
 |-------|-------------|-----------|
 | `ontologos-core` | Data model, builder, JSON v2 | crates.io |
-| `ontologos-bridge` | core ↔ horned-owl/oxrdf/whelk adapters | crates.io |
 | `ontologos-parser` | OWL/RDF loading (horned-owl) | crates.io |
 | `ontologos-profile` | Profile detection | crates.io |
-| `ontologos-rdfs` | RDFS facade → reasonable | crates.io |
-| `ontologos-rl` | OWL RL facade → reasonable | crates.io |
-| `ontologos-el` | OWL EL facade → whelk | crates.io |
 | `ontologos-query` | Taxonomy queries | crates.io |
+| `ontologos-bridge` | core ↔ horned-owl/oxrdf/whelk adapters | Workspace only (whelk git dep) |
+| `ontologos-rdfs` | RDFS facade → reasonable | Workspace only |
+| `ontologos-rl` | OWL RL facade → reasonable | Workspace only |
+| `ontologos-el` | OWL EL facade → whelk | Workspace only |
+| `ontologos-explain` | Proof graphs and explanations | Workspace only |
 | `ontologos-cli` | CLI binary | Source-build only |
 | `ontologos-py` | Python bindings | PyPI (alpha) |
 

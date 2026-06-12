@@ -46,6 +46,7 @@ Public crate names (`ontologos-el`, `ontologos-rl`, `ontologos-rdfs`) remain sta
 - Dual native models: horned-owl + whelk for EL; oxrdf + reasonable for RL/RDFS.
 - RL explanations remain EL-first until reasonable exposes rule traces.
 - `whelk` is pinned as a git dependency until published to crates.io.
+- `ontologos-bridge`, `ontologos-el`, `ontologos-rdfs`, `ontologos-rl`, and `ontologos-explain` are workspace-only on crates.io until then.
 
 ## Related
 

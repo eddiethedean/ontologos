@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`ontologos-explain`**: `ProofGraph`, `build_proof_graph`, `explain_with_profile`, `explain_rdfs`/`explain_rl`/`explain_el`
-- **`ontologos-bridge`**: core ↔ horned-owl/oxrdf/whelk/reasonable adapters (published crate)
+- **`ontologos-bridge`**: core ↔ horned-owl/oxrdf/whelk/reasonable adapters (workspace-only until whelk is on crates.io)
 - **`InferenceTrace`** / **`TraceStep`** in `ontologos-core` for engine-agnostic explanation traces
 - Query APIs: `explain_subsumption`, `explain_unsatisfiable` with EL-first HST pruning
 - Human-readable `render_text` formatter for proof graphs

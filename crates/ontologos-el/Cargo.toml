@@ -9,7 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "OWL EL classification facade over whelk for OntoLogos"
-publish = true
+publish = false # depends on ontologos-bridge (whelk git dep)
 
 [dependencies]
 ontologos-core = { workspace = true }

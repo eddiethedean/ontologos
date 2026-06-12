@@ -11,7 +11,7 @@ documentation.workspace = true
 description = "Model adapters between ontologos-core, horned-owl, whelk, and reasonable"
 keywords = ["owl", "ontology", "adapter", "reasoner"]
 categories = ["science"]
-publish = true
+publish = false # whelk is a git dependency until it lands on crates.io
 
 [dependencies]
 ontologos-core = { workspace = true }
