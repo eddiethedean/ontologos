@@ -41,3 +41,21 @@ def test_classify_rdfs_profile_materializes() -> None:
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
     reasoner = Reasoner(str(FIXTURE), profile="rdfs")
     reasoner.classify()
+
+
+def test_parse_meta_exposes_warnings_for_kind_clash() -> None:
+    from ontologos import Reasoner
+
+    clash = (
+        Path(__file__).resolve().parents[2]
+        / "ontologos-parser"
+        / "tests"
+        / "fixtures"
+        / "class_individual_kind_clash.ttl"
+    )
+    assert clash.is_file(), f"missing fixture: {clash}"
+    reasoner = Reasoner(str(clash), profile="rdfs")
+    meta = reasoner.parse_meta
+    assert meta["skipped_axiom_count"] == 1
+    assert meta["logical_axiom_count"] == 1
+    assert any("entity kind mismatch" in warning for warning in meta["warnings"])

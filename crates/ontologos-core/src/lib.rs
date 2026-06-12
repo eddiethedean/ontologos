@@ -40,7 +40,7 @@ pub use graph::{AxiomIndex, AxiomStore};
 pub use iri::{InternPool, IriId};
 pub use limits::Limits;
 pub use ontology::{Ontology, OntologyBuilder};
-pub use parse_meta::{OwlConstruct, ParseMeta};
+pub use parse_meta::{OwlConstruct, ParseMeta, ParseMetaSummary};
 pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
 
 #[cfg(test)]
