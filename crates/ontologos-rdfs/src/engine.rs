@@ -35,13 +35,13 @@ impl RdfsEngine {
         let diagnostics = reasoner.diagnostics();
         let merge = merge_triples_into_ontology(ontology, &output, diagnostics)
             .map_err(crate::Error::Bridge)?;
-        let _ = merge.inferred_axioms;
 
         Ok(MaterializationReport {
             initial_axiom_count,
             final_axiom_count: ontology.axiom_count(),
             inferred_by_rule: std::collections::BTreeMap::new(),
             trace: ontologos_core::InferenceTrace::new(),
+            clashes: merge.clashes,
         })
     }
 }

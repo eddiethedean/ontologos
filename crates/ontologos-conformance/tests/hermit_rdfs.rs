@@ -3,7 +3,7 @@
 //! Source: `HermiT/project/test/org/semanticweb/HermiT/reasoner/ReasonerTest.java`
 //!         `HermiT/project/test/org/semanticweb/HermiT/reasoner/OWLLinkTest.java`
 
-use ontologos_conformance::{assert_subproperty, assert_subsumed, PORT_NS};
+use ontologos_conformance::{assert_subproperty, assert_subsumed, assert_typed, PORT_NS};
 use ontologos_core::Ontology;
 use ontologos_rdfs::RdfsEngine;
 
@@ -176,4 +176,36 @@ fn sub_and_super_roles() {
     assert!(!assert_subproperty(&ontology, &iri("s"), &iri("r")));
     assert!(!assert_subproperty(&ontology, &iri("t"), &iri("r")));
     assert!(!assert_subproperty(&ontology, &iri("t"), &iri("s")));
+}
+
+/// Requires materialization: domain typing from property assertion (prp-dom).
+#[test]
+fn domain_typing_from_property_assertion() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("Person"))
+        .expect("Person")
+        .individual(&iri("alice"))
+        .expect("alice")
+        .individual(&iri("bob"))
+        .expect("bob")
+        .object_property(&iri("knows"))
+        .expect("knows")
+        .property_domain(&iri("knows"), &iri("Person"))
+        .expect("knows domain Person")
+        .object_property_assertion(&iri("alice"), &iri("knows"), &iri("bob"))
+        .expect("alice knows bob")
+        .build()
+        .expect("build");
+
+    assert!(
+        !assert_typed(&ontology, &iri("alice"), &iri("Person")),
+        "alice should not be typed before materialization"
+    );
+
+    materialize(&mut ontology);
+
+    assert!(
+        assert_typed(&ontology, &iri("alice"), &iri("Person")),
+        "materialization should infer alice rdf:type Person from domain"
+    );
 }

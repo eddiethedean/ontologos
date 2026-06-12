@@ -17,6 +17,8 @@ fn repo_root() -> std::path::PathBuf {
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const OWL_THING: &str = "http://www.w3.org/2002/07/owl#Thing";
 const OWL_CLASS: &str = "http://www.w3.org/2002/07/owl#Class";
+const OWL_NAMED_INDIVIDUAL: &str = "http://www.w3.org/2002/07/owl#NamedIndividual";
+const OWL_OBJECT_PROPERTY: &str = "http://www.w3.org/2002/07/owl#ObjectProperty";
 
 fn triple_key(triple: &Triple) -> String {
     let sub = match &triple.subject {
@@ -43,14 +45,13 @@ fn mergeable_triple_key(triple: &Triple) -> Option<String> {
     if key.starts_with(&format!("{OWL_THING}|{RDF_TYPE}|")) {
         return None;
     }
-    if key.ends_with(&format!("|{RDF_TYPE}|{OWL_CLASS}"))
-        && !key.starts_with("http://a.com/")
-        && !key.starts_with("http://ex.org/")
+    if key.starts_with("http://www.w3.org/2002/07/owl#")
+        && key.contains(&format!("|{RDF_TYPE}|"))
+        && (key.ends_with(&format!("|{RDF_TYPE}|{OWL_CLASS}"))
+            || key.ends_with(&format!("|{RDF_TYPE}|{OWL_NAMED_INDIVIDUAL}"))
+            || key.ends_with(&format!("|{RDF_TYPE}|{OWL_OBJECT_PROPERTY}")))
     {
-        // owl:Nothing and other seed class declarations
-        if key.starts_with("http://www.w3.org/2002/07/owl#") {
-            return None;
-        }
+        return None;
     }
     Some(key)
 }
@@ -68,14 +69,16 @@ fn reasonable_closure(triples: Vec<Triple>) -> HashSet<String> {
         .collect()
 }
 
-/// Adapter smoke test: brick subset saturates without error.
+/// Optional smoke test when `benchmarks/data/brick-subset.ttl` is present locally.
 #[test]
+#[ignore = "optional corpus benchmarks/data/brick-subset.ttl is not vendored in-repo"]
 fn brick_subset_saturates() {
     let path = repo_root().join("benchmarks/data/brick-subset.ttl");
-    if !path.exists() {
-        eprintln!("skip: missing {}", path.display());
-        return;
-    }
+    assert!(
+        path.exists(),
+        "missing {} (add corpus locally to run this test)",
+        path.display()
+    );
     let mut ontology = load_ontology(&path).expect("load brick subset");
     let initial = ontology.axiom_count();
     let report = RlEngine::new(1).saturate(&mut ontology).expect("saturate");
@@ -104,5 +107,12 @@ fn family_rl_closure_matches_reasonable() {
         missing.is_empty(),
         "ontologos-rl missing {} reasonable triples (sample: {missing:?})",
         expected.difference(&actual).count()
+    );
+
+    let extra: Vec<_> = actual.difference(&expected).take(10).collect();
+    assert!(
+        extra.is_empty(),
+        "ontologos-rl has {} triples not in reasonable closure (sample: {extra:?})",
+        actual.difference(&expected).count()
     );
 }

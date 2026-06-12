@@ -45,6 +45,8 @@ pub struct MaterializationReport {
     pub inferred_by_rule: BTreeMap<RdfsRule, usize>,
     #[serde(skip_serializing_if = "trace_is_empty")]
     pub trace: InferenceTrace,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub clashes: Vec<String>,
 }
 
 fn trace_is_empty(trace: &InferenceTrace) -> bool {

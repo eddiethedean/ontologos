@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{Axiom, EntityId, EntityKind, Ontology};
 use oxrdf::{BlankNode, NamedNode, Term, Triple};
@@ -62,7 +62,7 @@ fn existential_restriction_triples(
     let sub = entity_iri(ontology, subclass)?;
     let prop = entity_iri(ontology, property)?;
     let filler_iri = entity_iri(ontology, filler)?;
-    let bnode = BlankNode::new(format!("rest_{}_{}", subclass.0, property.0))
+    let bnode = BlankNode::new(format!("rest_{}_{}_{}", subclass.0, property.0, filler.0))
         .map_err(|e| Error::Bridge(format!("blank node: {e}")))?;
     Ok(vec![
         Triple {
@@ -275,6 +275,14 @@ pub fn merge_triples_into_ontology(
         }
     }
 
+    for axiom in collect_existential_axioms(ontology, triples)? {
+        if let Some(key) = axiom_triple_key(ontology, &axiom)? {
+            if seen.insert(key) {
+                ontology.add_axiom(axiom)?;
+            }
+        }
+    }
+
     for t in triples {
         if let Some(axiom) = triple_to_axiom(ontology, t)? {
             if let Some(key) = axiom_triple_key(ontology, &axiom)? {
@@ -301,6 +309,75 @@ fn term_iri(term: &Term) -> Option<String> {
         Term::NamedNode(n) => Some(n.as_str().to_string()),
         _ => None,
     }
+}
+
+fn blank_node_id(node: &BlankNode) -> String {
+    node.as_str().to_string()
+}
+
+#[derive(Debug, Default)]
+struct RestrictionParts {
+    is_restriction: bool,
+    property: Option<String>,
+    filler: Option<String>,
+}
+
+fn collect_existential_axioms(ontology: &mut Ontology, triples: &[Triple]) -> Result<Vec<Axiom>> {
+    let mut restrictions: HashMap<String, RestrictionParts> = HashMap::new();
+    let mut subclass_edges: Vec<(String, String)> = Vec::new();
+
+    for triple in triples {
+        match &triple.subject {
+            oxrdf::NamedOrBlankNode::BlankNode(bnode) => {
+                let id = blank_node_id(bnode);
+                let entry = restrictions.entry(id).or_default();
+                match triple.predicate.as_str() {
+                    RDF_TYPE if term_iri(&triple.object).as_deref() == Some(OWL_RESTRICTION) => {
+                        entry.is_restriction = true;
+                    }
+                    OWL_ON_PROPERTY => {
+                        entry.property = term_iri(&triple.object);
+                    }
+                    OWL_SOME_VALUES_FROM => {
+                        entry.filler = term_iri(&triple.object);
+                    }
+                    _ => {}
+                }
+            }
+            oxrdf::NamedOrBlankNode::NamedNode(subject) => {
+                if triple.predicate.as_str() == RDFS_SUBCLASS {
+                    if let Term::BlankNode(bnode) = &triple.object {
+                        subclass_edges.push((subject.as_str().to_string(), blank_node_id(bnode)));
+                    }
+                }
+            }
+        }
+    }
+
+    let mut axioms = Vec::new();
+    for (subclass_iri, bnode_id) in subclass_edges {
+        let Some(parts) = restrictions.get(&bnode_id) else {
+            continue;
+        };
+        if !parts.is_restriction {
+            continue;
+        }
+        let (Some(property_iri), Some(filler_iri)) = (&parts.property, &parts.filler) else {
+            continue;
+        };
+        let subclass = lookup_or_insert(ontology, &subclass_iri, EntityKind::Class)?;
+        let property = lookup_or_insert(ontology, property_iri, EntityKind::ObjectProperty)?;
+        let filler = lookup_or_insert(ontology, filler_iri, EntityKind::Class)?;
+        if let (Some(subclass), Some(property), Some(filler)) = (subclass, property, filler) {
+            axioms.push(Axiom::SubClassOfExistential {
+                subclass,
+                property,
+                filler,
+            });
+        }
+    }
+
+    Ok(axioms)
 }
 
 fn triple_to_axiom(ontology: &mut Ontology, triple: &Triple) -> Result<Option<Axiom>> {
@@ -407,6 +484,39 @@ fn triple_to_axiom(ontology: &mut Ontology, triple: &Triple) -> Result<Option<Ax
         let class = lookup_or_insert(ontology, &obj, EntityKind::Class)?;
         return Ok(match (individual, class) {
             (Some(individual), Some(class)) => Some(Axiom::ClassAssertion { individual, class }),
+            _ => None,
+        });
+    }
+    if pred == OWL_SAME_AS {
+        if sub == obj {
+            return Ok(None);
+        }
+        let left = lookup_or_insert(ontology, sub, EntityKind::Individual)?;
+        let right = lookup_or_insert(ontology, &obj, EntityKind::Individual)?;
+        return Ok(match (left, right) {
+            (Some(left), Some(right)) => Some(Axiom::SameIndividual(vec![left, right])),
+            _ => None,
+        });
+    }
+    if pred == OWL_DISJOINT_WITH {
+        if sub == obj {
+            return Ok(None);
+        }
+        let left = lookup_or_insert(ontology, sub, EntityKind::Class)?;
+        let right = lookup_or_insert(ontology, &obj, EntityKind::Class)?;
+        return Ok(match (left, right) {
+            (Some(left), Some(right)) => Some(Axiom::DisjointClasses(vec![left, right])),
+            _ => None,
+        });
+    }
+    if pred == OWL_DIFFERENT_FROM {
+        if sub == obj {
+            return Ok(None);
+        }
+        let left = lookup_or_insert(ontology, sub, EntityKind::Individual)?;
+        let right = lookup_or_insert(ontology, &obj, EntityKind::Individual)?;
+        return Ok(match (left, right) {
+            (Some(left), Some(right)) => Some(Axiom::DifferentIndividuals(vec![left, right])),
             _ => None,
         });
     }
@@ -571,7 +681,19 @@ fn axiom_triple_key(
                 ))
             })
             .transpose(),
-        Axiom::SubClassOfExistential { .. } => Ok(None),
+        Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        } => Ok(Some((
+            entity_iri(ontology, *subclass)?,
+            OWL_ON_PROPERTY.to_string(),
+            format!(
+                "{}|{}",
+                entity_iri(ontology, *property)?,
+                entity_iri(ontology, *filler)?
+            ),
+        ))),
     }
 }
 
@@ -581,6 +703,101 @@ mod adapter_tests {
     use reasonable::reasoner::ReasonerBuilder;
 
     use super::*;
+
+    #[test]
+    fn merge_persists_same_as_disjoint_and_different() {
+        let mut ontology = Ontology::new();
+        let a = ontology
+            .entity_id("http://ex.org/a", EntityKind::Individual)
+            .unwrap();
+        let b = ontology
+            .entity_id("http://ex.org/b", EntityKind::Individual)
+            .unwrap();
+        let c1 = ontology
+            .entity_id("http://ex.org/C1", EntityKind::Class)
+            .unwrap();
+        let c2 = ontology
+            .entity_id("http://ex.org/C2", EntityKind::Class)
+            .unwrap();
+
+        let triples = vec![
+            triple("http://ex.org/a", OWL_SAME_AS, "http://ex.org/b").unwrap(),
+            triple("http://ex.org/C1", OWL_DISJOINT_WITH, "http://ex.org/C2").unwrap(),
+            triple("http://ex.org/a", OWL_DIFFERENT_FROM, "http://ex.org/b").unwrap(),
+        ];
+        merge_triples_into_ontology(&mut ontology, &triples, &[]).unwrap();
+
+        assert!(ontology
+            .axioms()
+            .iter()
+            .any(|(_, axiom)| matches!(axiom, Axiom::SameIndividual(ids) if ids == &vec![a, b])));
+        assert!(ontology.axioms().iter().any(
+            |(_, axiom)| matches!(axiom, Axiom::DisjointClasses(ids) if ids == &vec![c1, c2])
+        ));
+        assert!(ontology.axioms().iter().any(
+            |(_, axiom)| matches!(axiom, Axiom::DifferentIndividuals(ids) if ids == &vec![a, b])
+        ));
+        assert!(!ontology
+            .axioms()
+            .iter()
+            .any(|(_, axiom)| matches!(axiom, Axiom::ObjectPropertyAssertion { .. })));
+    }
+
+    #[test]
+    fn existential_blank_nodes_include_filler_in_id() {
+        let mut ontology = Ontology::new();
+        let sub = ontology
+            .entity_id("http://ex.org/C", EntityKind::Class)
+            .unwrap();
+        let prop = ontology
+            .entity_id("http://ex.org/p", EntityKind::ObjectProperty)
+            .unwrap();
+        let d1 = ontology
+            .entity_id("http://ex.org/D1", EntityKind::Class)
+            .unwrap();
+        let d2 = ontology
+            .entity_id("http://ex.org/D2", EntityKind::Class)
+            .unwrap();
+
+        let t1 = existential_restriction_triples(&ontology, sub, prop, d1).unwrap();
+        let t2 = existential_restriction_triples(&ontology, sub, prop, d2).unwrap();
+
+        let bnode1 = match &t1[0].object {
+            Term::BlankNode(b) => b.as_str().to_string(),
+            _ => panic!("expected blank node"),
+        };
+        let bnode2 = match &t2[0].object {
+            Term::BlankNode(b) => b.as_str().to_string(),
+            _ => panic!("expected blank node"),
+        };
+        assert_ne!(bnode1, bnode2);
+    }
+
+    #[test]
+    fn merge_reconstructs_existential_from_blank_node_restriction() {
+        let mut ontology = Ontology::new();
+        let sub = ontology
+            .entity_id("http://ex.org/C", EntityKind::Class)
+            .unwrap();
+        let prop = ontology
+            .entity_id("http://ex.org/p", EntityKind::ObjectProperty)
+            .unwrap();
+        let filler = ontology
+            .entity_id("http://ex.org/D", EntityKind::Class)
+            .unwrap();
+
+        let triples = existential_restriction_triples(&ontology, sub, prop, filler).unwrap();
+        merge_triples_into_ontology(&mut ontology, &triples, &[]).unwrap();
+
+        assert!(ontology.axioms().iter().any(|(_, axiom)| matches!(
+            axiom,
+            Axiom::SubClassOfExistential {
+                subclass,
+                property,
+                filler: f
+            } if *subclass == sub && *property == prop && *f == filler
+        )));
+    }
 
     #[test]
     fn merge_persists_inferred_property_assertions() {
