@@ -112,17 +112,37 @@ fn classify_stub_exits_not_implemented() {
 }
 
 #[test]
-fn materialize_stub_exits_not_implemented() {
+fn materialize_family_corpus_succeeds() {
     let path = repo_root().join("benchmarks/data/family.owl");
     assert!(path.exists(), "missing family corpus at {}", path.display());
     Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args(["materialize", path.to_str().expect("path")])
         .assert()
-        .failure()
-        .stderr(predicate::str::contains(
-            "rdfs reasoning not yet implemented",
-        ));
+        .success()
+        .stdout(predicate::str::contains("status: materialized"))
+        .stdout(predicate::str::contains("inferred_axioms:"));
+}
+
+#[test]
+fn materialize_json_includes_report_fields() {
+    let path = repo_root().join("benchmarks/data/family.owl");
+    assert!(path.exists(), "missing family corpus at {}", path.display());
+    let output = Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args([
+            "--format",
+            "json",
+            "materialize",
+            path.to_str().expect("path"),
+        ])
+        .assert()
+        .success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
+    assert!(stdout.contains("\"status\""));
+    assert!(stdout.contains("initial_axiom_count"));
+    assert!(stdout.contains("final_axiom_count"));
+    assert!(stdout.contains("inferred_by_rule"));
 }
 
 #[test]

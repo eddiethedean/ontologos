@@ -45,6 +45,6 @@ Common causes: `format_version: 1`, invalid IRI, unknown entity in axiom, size l
 
 Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology loads with whatever axioms could be mapped.
 
-## `classify` / `materialize` / `explain` not implemented
+## `classify` / `explain` not implemented
 
-Reasoning engines ship in v0.3–v0.6 (`materialize` v0.3, `classify` v0.5, `explain` v0.6). Only `profile` is functional in v0.2. See [CLI reference](../reference/cli.md).
+OWL EL classification and explanations ship in v0.5–v0.6. **`materialize`** is available in v0.3 via the RDFS engine. See [CLI reference](../reference/cli.md).

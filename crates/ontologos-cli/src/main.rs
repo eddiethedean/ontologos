@@ -5,7 +5,7 @@ use ontologos_core::Reasoner;
 use ontologos_explain::explain;
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, ProfileReport};
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rdfs::{MaterializationReport, RdfsEngine};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -61,31 +61,29 @@ fn main() {
 
 fn run() -> Result<(), CliError> {
     let cli = Cli::parse();
-    let ontology = load_ontology(match &cli.command {
-        Command::Profile { ontology }
-        | Command::Classify { ontology }
-        | Command::Materialize { ontology }
-        | Command::Explain { ontology } => ontology,
-    })?;
 
     match cli.command {
-        Command::Profile { .. } => {
+        Command::Profile { ontology } => {
+            let ontology = load_ontology(&ontology)?;
             let report = detect_profile(&ontology)?;
             match cli.format {
                 OutputFormat::Text => println!("{}", format_profile_text(&report)),
                 OutputFormat::Json => emit_json(&report)?,
             }
         }
-        Command::Classify { .. } => {
+        Command::Classify { ontology } => {
+            let ontology = load_ontology(&ontology)?;
             let reasoner = Reasoner::builder().build(ontology)?;
             reasoner.classify()?;
             emit_status(cli.format, "classified")?;
         }
-        Command::Materialize { .. } => {
-            RdfsEngine::new().materialize(&ontology)?;
-            emit_status(cli.format, "materialized")?;
+        Command::Materialize { ontology } => {
+            let mut ontology = load_ontology(&ontology)?;
+            let report = RdfsEngine::new().materialize(&mut ontology)?;
+            emit_materialize_report(cli.format, &report)?;
         }
-        Command::Explain { .. } => {
+        Command::Explain { ontology } => {
+            let ontology = load_ontology(&ontology)?;
             let graph = explain(&ontology)?;
             emit(cli.format, &graph)?;
         }
@@ -98,6 +96,40 @@ fn emit_status(format: OutputFormat, status: &str) -> Result<(), CliError> {
     match format {
         OutputFormat::Text => println!("status: {status}"),
         OutputFormat::Json => emit_json(&serde_json::json!({ "status": status }))?,
+    }
+    Ok(())
+}
+
+#[derive(Serialize)]
+struct MaterializeCliOutput<'a> {
+    status: &'static str,
+    #[serde(flatten)]
+    report: &'a MaterializationReport,
+}
+
+fn emit_materialize_report(
+    format: OutputFormat,
+    report: &MaterializationReport,
+) -> Result<(), CliError> {
+    match format {
+        OutputFormat::Text => {
+            println!("status: materialized");
+            println!("initial_axiom_count: {}", report.initial_axiom_count);
+            println!("final_axiom_count: {}", report.final_axiom_count);
+            println!("inferred_axioms: {}", report.inferred_total());
+            if report.inferred_by_rule.is_empty() {
+                println!("inferred_by_rule: none");
+            } else {
+                println!("inferred_by_rule:");
+                for (rule, count) in &report.inferred_by_rule {
+                    println!("  {}: {count}", rule.as_str());
+                }
+            }
+        }
+        OutputFormat::Json => emit_json(&MaterializeCliOutput {
+            status: "materialized",
+            report,
+        })?,
     }
     Ok(())
 }

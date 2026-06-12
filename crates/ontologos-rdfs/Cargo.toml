@@ -8,8 +8,16 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "RDFS reasoning engine for OntoLogos"
-publish = false
+documentation = "https://docs.rs/ontologos-rdfs"
+publish = true
+
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 ontologos-core = { workspace = true }
+serde = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+ontologos-parser = { workspace = true }

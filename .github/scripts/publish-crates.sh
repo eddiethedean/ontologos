@@ -10,7 +10,7 @@ CRATES=(
   ontologos-core
   ontologos-profile
   ontologos-parser
-  # ontologos-rdfs
+  ontologos-rdfs
   # ontologos-rl
   # ontologos-el
   # ontologos-query

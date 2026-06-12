@@ -282,6 +282,32 @@ impl OntologyBuilder {
         Ok(self)
     }
 
+    /// Add an `ObjectPropertyDomain` axiom.
+    pub fn property_domain(mut self, property: &str, domain: &str) -> Result<Self> {
+        let property_id = self
+            .ontology
+            .entity_id(property, EntityKind::ObjectProperty)?;
+        let domain_id = self.ontology.entity_id(domain, EntityKind::Class)?;
+        self.ontology.add_axiom(Axiom::ObjectPropertyDomain {
+            property: property_id,
+            domain: domain_id,
+        })?;
+        Ok(self)
+    }
+
+    /// Add an `ObjectPropertyRange` axiom.
+    pub fn property_range(mut self, property: &str, range: &str) -> Result<Self> {
+        let property_id = self
+            .ontology
+            .entity_id(property, EntityKind::ObjectProperty)?;
+        let range_id = self.ontology.entity_id(range, EntityKind::Class)?;
+        self.ontology.add_axiom(Axiom::ObjectPropertyRange {
+            property: property_id,
+            range: range_id,
+        })?;
+        Ok(self)
+    }
+
     /// Build the ontology.
     pub fn build(self) -> Result<Ontology> {
         Ok(self.ontology)

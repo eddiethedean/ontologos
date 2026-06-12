@@ -1,18 +1,18 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos v0.2 is **not** a drop-in HermiT replacement.
+Honest positioning for evaluators. OntoLogos v0.3 is **not** a drop-in HermiT replacement.
 
 See [landscape-2023.md](internal/research/landscape-2023.md) for the full 2023–2026 reasoner survey.
 
 ## Maturity matrix
 
-| Capability | OntoLogos v0.2 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+| Capability | OntoLogos v0.3 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|----------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
 | OWL EL classification | No (v0.5) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
 | OWL RL reasoning | No (v0.4) | No | Partial | Partial | **Yes** | No | Via plugin |
-| RDFS materialization | No (v0.3) | No | Yes | Yes | Partial | No | Yes |
+| RDFS materialization | Yes (TBox) | No | Yes | Yes | Partial | No | Yes |
 | OWL DL | No (2.0) | No | Yes (stagnant) | **Yes** | No | No | Via plugin |
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
 | Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |

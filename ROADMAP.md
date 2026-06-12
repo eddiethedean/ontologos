@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-11 · **Current release:** [v0.2.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.2.0) · **Next milestone:** v0.3 — RDFS engine
+**Last updated:** 2026-06-12 · **Current release:** [v0.3.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0) · **Next milestone:** v0.4 — OWL RL engine
 
 ---
 
@@ -290,7 +290,7 @@ Load real ontologies from disk, map them into the core model, and report which O
 
 ## v0.3 — RDFS engine
 
-**Status: Planned** · **Effort:** Medium · **Depends on:** v0.2
+**Status: Complete** (v0.3.0, 2026-06-12) · **Effort:** Medium · **Depends on:** v0.2
 
 **Crate:** `ontologos-rdfs`
 
@@ -298,28 +298,28 @@ First reasoning engine. Implements RDFS entailment over the core axiom model.
 
 ### Rules
 
-- [ ] `rdfs:subClassOf` propagation (transitive closure)
-- [ ] `rdfs:subPropertyOf` propagation
-- [ ] `rdfs:domain` / `rdfs:range` typing
-- [ ] `rdf:type` propagation where representable in core
+- [x] `rdfs:subClassOf` propagation (transitive closure)
+- [x] `rdfs:subPropertyOf` propagation
+- [x] `rdfs:domain` / `rdfs:range` typing (property hierarchy inheritance)
+- [ ] `rdf:type` propagation where representable in core (deferred to v1.6 — requires ABox)
 
 ### Implementation
 
-- [ ] `RdfsEngine::materialize` produces inferred axioms or a materialized view
-- [ ] `Reasoner::classify` with `Profile::Rdfs` delegates here
-- [ ] Complexity target: O(n log n) on benchmark corpora
+- [x] `RdfsEngine::materialize` produces inferred axioms or a materialized view
+- [x] `materialize_reasoner` with `Profile::Rdfs` delegates here
+- [x] Complexity target: O(n log n) on benchmark corpora (worklist fixed-point)
 
 ### Deliverables
 
-- [ ] Materialization report (counts of new axioms by rule)
-- [ ] `ontologos materialize <file>` — text status and JSON summary
-- [ ] Initial inference traces (feeds v0.6 explain)
+- [x] Materialization report (counts of new axioms by rule)
+- [x] `ontologos materialize <file>` — text status and JSON summary
+- [x] Initial inference traces (feeds v0.6 explain)
 
 ### Exit criteria
 
-- [ ] RDFS conformance tests pass on Family corpus
-- [ ] Materialized Pizza ontology is a strict superset of parsed axioms
-- [ ] `ontologos-rdfs` published to crates.io
+- [x] RDFS conformance tests pass on Family corpus
+- [x] Materialized Pizza ontology is a strict superset of parsed axioms
+- [x] `ontologos-rdfs` published to crates.io
 
 ---
 

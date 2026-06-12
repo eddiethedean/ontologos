@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-12
+
+### Added
+
+- **`ontologos-rdfs`**: TBox RDFS materialization (`subClassOf` / `subPropertyOf` closure, domain/range inheritance)
+- `MaterializationReport` with per-rule inference counts and optional traces
+- `materialize_reasoner(&mut Reasoner)` for `Profile::Rdfs`
+- `Reasoner::ontology_mut()` for in-place materialization
+- `OntologyBuilder::property_domain` / `property_range` helpers
+- RDFS unit tests and Family/Pizza corpus conformance tests
+- `ontologos materialize` CLI with text and JSON report output
+
+### Changed
+
+- `RdfsEngine::materialize` now takes `&mut Ontology` and returns a structured report
+- Workspace version bumped to 0.3.0
+
+### Published
+
+- [ontologos-rdfs](https://crates.io/crates/ontologos-rdfs) on crates.io
+
 ## [0.2.0] - 2026-06-11
 
 ### Added
@@ -58,6 +79,7 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/eddiethedean/ontologos/releases/tag/v0.2.0
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0
+[0.2.0]: https://github.com/eddiethedean/ontologos/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/eddiethedean/ontologos/releases/tag/v0.1.0

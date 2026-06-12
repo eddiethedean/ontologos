@@ -21,7 +21,7 @@ ontologos/
 │   ├── ontologos-core      (v0.1+)
 │   ├── ontologos-parser    (v0.2)
 │   ├── ontologos-profile   (v0.2)
-│   ├── ontologos-rdfs      (stub → v0.3)
+│   ├── ontologos-rdfs      (v0.3)
 │   ├── ontologos-rl        (stub → v0.4)
 │   ├── ontologos-el        (stub → v0.5)
 │   ├── ontologos-query     (stub → v0.5)
@@ -125,15 +125,26 @@ pub struct ReasonerConfig {
 
 ---
 
-# RDFS Engine (planned v0.3)
+# RDFS Engine (v0.3)
 
-Algorithms:
+TBox RDFS materialization via fixed-point forward chaining:
 
-- Graph closure
-- Property propagation
-- Type propagation
+- `subClassOf` transitive closure
+- `subPropertyOf` transitive closure
+- Domain/range inheritance along the property hierarchy (RDFS 6/8)
 
-Complexity goal: O(n log n)
+`rdf:type` propagation is deferred until ABox support (v1.6).
+
+```rust
+use ontologos_rdfs::RdfsEngine;
+
+let mut ontology = ontologos_parser::load_ontology("family.owl")?;
+let report = RdfsEngine::new().materialize(&mut ontology)?;
+```
+
+For `Profile::Rdfs`, use `ontologos_rdfs::materialize_reasoner(&mut reasoner)` (core `Reasoner::classify` remains stub for EL/RL until v0.4/v0.5).
+
+Complexity goal: O(n log n) on benchmark corpora (worklist saturation).
 
 ---
 
@@ -184,7 +195,7 @@ Features:
 
 # CLI Specification
 
-**Status:** `profile` works in v0.2; other subcommands load then fail at engine stubs.
+**Status:** `profile` and `materialize` work in v0.3; other subcommands load then fail at engine stubs.
 
 Commands:
 

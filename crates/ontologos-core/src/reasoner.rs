@@ -115,6 +115,11 @@ impl Reasoner {
         &self.ontology
     }
 
+    /// Mutably borrow the loaded ontology (e.g. for RDFS materialization).
+    pub fn ontology_mut(&mut self) -> &mut Ontology {
+        &mut self.ontology
+    }
+
     /// Run classification over the loaded ontology.
     pub fn classify(&self) -> Result<()> {
         let _ = &self.ontology;
