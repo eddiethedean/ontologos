@@ -1,0 +1,8 @@
+@prefix : <http://example.org/test#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<http://example.org/test> a owl:Ontology .
+
+:alice a owl:Class .
+:Person a owl:Class .
+:alice a :Person .
