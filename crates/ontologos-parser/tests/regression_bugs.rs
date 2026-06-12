@@ -76,12 +76,16 @@ fn entity_kind(ontology: &ontologos_core::Ontology, local: &str) -> EntityKind {
     ontology.entities().entity(id).expect("entity record").kind
 }
 
-fn assert_subclass_data_property_conflict(ontology: &ontologos_core::Ontology) {
+fn assert_subclass_data_property_conflict(ontology: &ontologos_core::Ontology) -> ParseMeta {
     assert_eq!(ontology.axiom_count(), 0, "SubClassOf should be skipped");
     assert_eq!(entity_kind(ontology, "X"), EntityKind::DataProperty);
     assert_eq!(entity_kind(ontology, "Y"), EntityKind::Class);
-    let meta = ontology.parse_meta().expect("parse_meta");
-    assert_kind_mismatch_without_misleading_skip(meta, &["complex class expression"]);
+    let meta = ontology.parse_meta().expect("parse_meta").clone();
+    assert_eq!(meta.mapped_axiom_count, 0);
+    assert_eq!(meta.skipped_axiom_count, 1);
+    assert_eq!(meta.logical_axiom_count, 1);
+    assert_kind_mismatch_without_misleading_skip(&meta, &["complex class expression"]);
+    meta
 }
 
 /// SubClassOf(:Y :X) with :X declared DataProperty must not depend on axiom visit order.
@@ -95,6 +99,42 @@ fn subclass_data_property_conflict_is_order_independent_decl_first() {
 fn subclass_data_property_conflict_is_order_independent_axiom_first() {
     let ontology = load_ontology(&fixture("subclass_data_property_axiom_first.ofn")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
+}
+
+#[test]
+fn subclass_data_property_conflict_ofn_orderings_share_parse_meta() {
+    let decl_first =
+        load_ontology(&fixture("subclass_data_property_decl_first.ofn")).expect("load");
+    let axiom_first =
+        load_ontology(&fixture("subclass_data_property_axiom_first.ofn")).expect("load");
+    let meta_decl = assert_subclass_data_property_conflict(&decl_first);
+    let meta_axiom = assert_subclass_data_property_conflict(&axiom_first);
+    assert_eq!(meta_decl.warnings.len(), meta_axiom.warnings.len());
+    assert_eq!(meta_decl.warnings, meta_axiom.warnings);
+}
+
+#[test]
+fn subclass_data_property_conflict_is_order_independent_decl_first_turtle() {
+    let ontology = load_ontology(&fixture("subclass_data_property_decl_first.ttl")).expect("load");
+    assert_subclass_data_property_conflict(&ontology);
+}
+
+#[test]
+fn subclass_data_property_conflict_is_order_independent_axiom_first_turtle() {
+    let ontology = load_ontology(&fixture("subclass_data_property_axiom_first.ttl")).expect("load");
+    assert_subclass_data_property_conflict(&ontology);
+}
+
+#[test]
+fn subclass_data_property_conflict_turtle_orderings_share_parse_meta() {
+    let decl_first =
+        load_ontology(&fixture("subclass_data_property_decl_first.ttl")).expect("load");
+    let axiom_first =
+        load_ontology(&fixture("subclass_data_property_axiom_first.ttl")).expect("load");
+    let meta_decl = assert_subclass_data_property_conflict(&decl_first);
+    let meta_axiom = assert_subclass_data_property_conflict(&axiom_first);
+    assert_eq!(meta_decl.warnings.len(), meta_axiom.warnings.len());
+    assert_eq!(meta_decl.warnings, meta_axiom.warnings);
 }
 
 #[test]

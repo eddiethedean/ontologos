@@ -22,7 +22,8 @@ pub fn map_to_core(
     };
 
     // Pass 1: explicit declarations only, so axiom mapping cannot pin entity kinds
-    // before declared types are known (issue #3).
+    // before declared types are known (issue #3). Conflicting declarations for the same
+    // IRI within pass 1 (e.g. Class then DataProperty) remain visit-order dependent.
     for annotated in source.iter() {
         if is_declaration(&annotated.component) {
             mapper.visit(annotated);
