@@ -1,0 +1,6 @@
+Prefix(:=<http://example.org/test#>)
+
+Ontology(<http://example.org/test>
+  Declaration(Datatype(:MyType))
+  Declaration(Class(:MyType))
+)

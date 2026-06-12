@@ -1,7 +1,7 @@
 //! Python bindings for OntoLogos.
 //!
-//! v0.2: alpha placeholder — loads ontologies via `ontologos_parser::load_ontology`;
-//! `Reasoner::classify()` returns not-implemented until v0.5.
+//! v0.3: alpha placeholder — loads ontologies via `ontologos_parser::load_ontology`;
+//! `Reasoner::classify()` returns not-implemented until v0.5 (except `Profile::Rdfs` when enabled).
 
 use ontologos_core::Reasoner;
 use ontologos_parser::load_ontology;

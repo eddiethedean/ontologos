@@ -1,5 +1,7 @@
 use ontologos_core::{Axiom, Ontology, Profile, Reasoner};
-use ontologos_rdfs::{materialize_reasoner, MaterializationReport, RdfsEngine, RdfsRule};
+use ontologos_rdfs::{
+    classify_reasoner, materialize_reasoner, MaterializationReport, RdfsEngine, RdfsRule,
+};
 
 const NS: &str = "http://example.org/";
 
@@ -247,4 +249,68 @@ fn inferred_axioms_update_indexes() {
         }
     }
     assert!(found, "inferred axiom stored in axiom store");
+}
+
+#[test]
+fn materialize_with_traces_records_premises() {
+    let mut ontology = Ontology::builder()
+        .class(&format!("{NS}A"))
+        .expect("A")
+        .class(&format!("{NS}B"))
+        .expect("B")
+        .class(&format!("{NS}C"))
+        .expect("C")
+        .subclass_of(&format!("{NS}A"), &format!("{NS}B"))
+        .expect("A sub B")
+        .subclass_of(&format!("{NS}B"), &format!("{NS}C"))
+        .expect("B sub C")
+        .build()
+        .expect("build");
+
+    let report = RdfsEngine::new()
+        .with_traces(true)
+        .materialize(&mut ontology)
+        .expect("materialize");
+
+    assert!(!report.traces.is_empty());
+    assert!(
+        report.traces.iter().any(|trace| !trace.premises.is_empty()),
+        "expected at least one trace with premises"
+    );
+}
+
+#[test]
+fn reasoner_classify_rdfs_profile_materializes() {
+    let ontology = Ontology::builder()
+        .class(&format!("{NS}A"))
+        .expect("A")
+        .class(&format!("{NS}B"))
+        .expect("B")
+        .class(&format!("{NS}C"))
+        .expect("C")
+        .subclass_of(&format!("{NS}A"), &format!("{NS}B"))
+        .expect("A sub B")
+        .subclass_of(&format!("{NS}B"), &format!("{NS}C"))
+        .expect("B sub C")
+        .build()
+        .expect("build");
+
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::Rdfs)
+        .build(ontology)
+        .expect("reasoner");
+    let before = reasoner.ontology().axiom_count();
+    classify_reasoner(&mut reasoner).expect("classify");
+    assert!(reasoner.ontology().axiom_count() > before);
+}
+
+#[test]
+fn classify_reasoner_non_rdfs_returns_not_implemented() {
+    let ontology = Ontology::default();
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::El)
+        .build(ontology)
+        .expect("reasoner");
+    let err = classify_reasoner(&mut reasoner).expect_err("stub");
+    assert!(matches!(err, ontologos_rdfs::Error::Core(_)));
 }

@@ -16,7 +16,7 @@ pub fn validate_load_path(path: &Path, base: Option<&Path>) -> Result<PathBuf> {
 
     if let Some(base) = base {
         let base_normalized = normalize_path(base)?;
-        if !normalized.starts_with(&base_normalized) {
+        if !path_is_under_base(&normalized, &base_normalized) {
             return Err(Error::Parse(format!(
                 "path {} escapes allowed base {}",
                 normalized.display(),
@@ -113,6 +113,18 @@ fn normalize_path(path: &Path) -> Result<PathBuf> {
     Ok(normalized)
 }
 
+/// True when `path` is the same as or nested under `base` (path-component wise).
+fn path_is_under_base(path: &Path, base: &Path) -> bool {
+    let mut path_iter = path.components();
+    for base_comp in base.components() {
+        match path_iter.next() {
+            Some(path_comp) if path_comp == base_comp => {}
+            _ => return false,
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -124,5 +136,43 @@ mod tests {
         let err = validate_load_path(Path::new("../../../etc/passwd"), Some(&base))
             .expect_err("traversal");
         assert!(matches!(err, Error::Parse(_)));
+    }
+
+    #[test]
+    fn rejects_path_prefix_bypass() {
+        let parent = std::env::temp_dir();
+        let base = parent.join("ontologos_uploads_base");
+        let evil = parent.join("ontologos_uploads_base_evil");
+        std::fs::create_dir_all(&base).expect("create base");
+        std::fs::create_dir_all(&evil).expect("create evil sibling");
+        let file = evil.join("secret.owl");
+        std::fs::write(&file, b"<rdf:RDF/>").expect("write file");
+
+        let err = validate_load_path(&file, Some(&base)).expect_err("prefix bypass");
+        assert!(matches!(err, Error::Parse(_)));
+
+        let _ = std::fs::remove_file(&file);
+        let _ = std::fs::remove_dir(&evil);
+        let _ = std::fs::remove_dir(&base);
+    }
+
+    #[test]
+    fn path_is_under_base_accepts_nested_file() {
+        let parent = std::env::temp_dir();
+        let base = parent.join("ontologos_nested_base");
+        let nested = base.join("nested");
+        std::fs::create_dir_all(&nested).expect("create nested");
+        let file = nested.join("ontology.owl");
+        std::fs::write(&file, b"<rdf:RDF/>").expect("write file");
+
+        let validated = validate_load_path(&file, Some(&base)).expect("nested file under base");
+        assert!(path_is_under_base(
+            &validated,
+            &base.canonicalize().expect("canonicalize base")
+        ));
+
+        let _ = std::fs::remove_file(&file);
+        let _ = std::fs::remove_dir(&nested);
+        let _ = std::fs::remove_dir(&base);
     }
 }

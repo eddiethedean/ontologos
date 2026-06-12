@@ -44,7 +44,7 @@ fn main() -> Result<(), Error> {
 
 ## Next steps
 
-- [Load an OWL file](load-owl-file.md) — parse real ontologies (v0.2)
+- [Load an OWL file](load-owl-file.md) — parse real ontologies (v0.3)
 - [Profile detection](../guides/profile-detection.md)
 - [JSON snapshots](../json-snapshot-v2.md)
 - [Error reference](../reference/errors.md)

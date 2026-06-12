@@ -52,7 +52,7 @@ When no diagnostics: `diagnostics: none`.
 }
 ```
 
-`detected` is `null` if detection fails (rare).
+`detected` is always present when profile detection succeeds on a loaded ontology.
 
 ## `materialize` output
 
@@ -74,6 +74,7 @@ inferred_by_rule:
   "status": "materialized",
   "initial_axiom_count": 57,
   "final_axiom_count": 62,
+  "inferred_axioms": 5,
   "inferred_by_rule": {
     "rng_inherit": 5
   }

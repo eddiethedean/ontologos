@@ -1,13 +1,13 @@
 
 # OntoLogos Technical Specification
 
-> **Document status:** Mixed. Sections marked **(v0.1)** / **(v0.2)** reflect shipped crates.
-> Engine, full CLI, and Python sections beyond profile detection are **planned** — see [ROADMAP.md](ROADMAP.md).
-> Last reviewed: 2026-06-11
+> **Document status:** Mixed. Sections marked **(v0.1)** / **(v0.2)** / **(v0.3)** reflect shipped crates.
+> Full OWL classification, explanations, and Python bindings beyond placeholders are **planned** — see [ROADMAP.md](ROADMAP.md).
+> Last reviewed: 2026-06-12
 
 ## Overview
 
-OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.2 ships the core data model, JSON v2 serialization, OWL file loading, and profile detection.**
+OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.3 ships the core data model, JSON v2 serialization, OWL file loading, profile detection, and RDFS materialization.**
 
 ---
 
@@ -26,7 +26,7 @@ ontologos/
 │   ├── ontologos-el        (stub → v0.5)
 │   ├── ontologos-query     (stub → v0.5)
 │   ├── ontologos-explain   (stub → v0.6)
-│   ├── ontologos-cli       (partial — profile in v0.2)
+│   ├── ontologos-cli       (partial — profile, materialize in v0.3)
 │   └── ontologos-py        (stub → v0.9)
 ```
 
@@ -100,7 +100,7 @@ fn main() -> Result<(), Error> {
 
 # Reasoner API (planned)
 
-**Status:** `Reasoner::classify()` returns `Error::NotImplemented` in v0.1–v0.2 (classification ships in v0.5).
+**Status:** `Reasoner::classify()` returns `Error::NotImplemented` for EL/RL/Auto until v0.5. For RDFS, use `ontologos_rdfs::classify_reasoner` or `materialize_reasoner` with `Profile::Rdfs`.
 
 ```rust
 // v0.2 load, v0.5 classify:
@@ -142,7 +142,7 @@ let mut ontology = ontologos_parser::load_ontology("family.owl")?;
 let report = RdfsEngine::new().materialize(&mut ontology)?;
 ```
 
-For `Profile::Rdfs`, use `ontologos_rdfs::materialize_reasoner(&mut reasoner)` (core `Reasoner::classify` remains stub for EL/RL until v0.4/v0.5).
+For `Profile::Rdfs`, use `ontologos_rdfs::classify_reasoner(&mut reasoner)` or `materialize_reasoner(&mut reasoner)`. Core `Reasoner::classify` remains a stub for EL/RL until v0.4/v0.5.
 
 Complexity goal: O(n log n) on benchmark corpora (worklist saturation).
 
@@ -201,9 +201,9 @@ Commands:
 
 ```bash
 ontologos profile ontology.owl
-ontologos classify ontology.owl    # NotImplemented
-ontologos materialize ontology.owl # NotImplemented
-ontologos explain ontology.owl     # NotImplemented
+ontologos materialize ontology.owl # v0.3+
+ontologos classify ontology.owl    # NotImplemented (v0.5; use materialize for RDFS)
+ontologos explain ontology.owl     # NotImplemented (v0.6)
 ```
 
 Outputs:
@@ -217,7 +217,7 @@ Outputs:
 
 # Python Bindings (planned v0.9)
 
-**Status:** Alpha placeholder on PyPI; Rust v0.2 APIs not yet exposed in Python.
+**Status:** Alpha placeholder on PyPI; Rust v0.3 APIs are not yet fully exposed in Python.
 
 ```python
 from ontologos import Reasoner

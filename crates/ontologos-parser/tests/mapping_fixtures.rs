@@ -97,3 +97,16 @@ fn minimal_subclass_turtle_maps_both_axioms() {
     let ontology = load_ontology(&fixture("minimal.ttl")).expect("turtle");
     assert_minimal_subclass_mapping(&ontology, "turtle");
 }
+
+#[test]
+fn declare_datatype_does_not_block_class_with_same_iri() {
+    let ontology = load_ontology(&fixture("datatype_class_same_iri.ofn")).expect("ofn");
+    assert_eq!(ontology.entity_count(), 1);
+    let id = ontology
+        .lookup_entity(&entity_iri("MyType"))
+        .expect("MyType");
+    assert_eq!(
+        ontology.entities().entity(id).expect("record").kind,
+        ontologos_core::EntityKind::Class
+    );
+}

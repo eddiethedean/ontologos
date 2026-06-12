@@ -143,6 +143,18 @@ fn materialize_json_includes_report_fields() {
     assert!(stdout.contains("initial_axiom_count"));
     assert!(stdout.contains("final_axiom_count"));
     assert!(stdout.contains("inferred_by_rule"));
+    assert!(stdout.contains("inferred_axioms"));
+}
+
+#[test]
+fn materialize_minimal_fixture_succeeds() {
+    let path = fixture("minimal_subclass.owl");
+    Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args(["materialize", path.to_str().expect("path")])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("status: materialized"));
 }
 
 #[test]

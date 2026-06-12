@@ -5,7 +5,7 @@ use ontologos_core::Reasoner;
 use ontologos_explain::explain;
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, ProfileReport};
-use ontologos_rdfs::{MaterializationReport, RdfsEngine};
+use ontologos_rdfs::{classify_reasoner, MaterializationReport, RdfsEngine};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -73,8 +73,8 @@ fn run() -> Result<(), CliError> {
         }
         Command::Classify { ontology } => {
             let ontology = load_ontology(&ontology)?;
-            let reasoner = Reasoner::builder().build(ontology)?;
-            reasoner.classify()?;
+            let mut reasoner = Reasoner::builder().build(ontology)?;
+            classify_reasoner(&mut reasoner)?;
             emit_status(cli.format, "classified")?;
         }
         Command::Materialize { ontology } => {
@@ -103,8 +103,16 @@ fn emit_status(format: OutputFormat, status: &str) -> Result<(), CliError> {
 #[derive(Serialize)]
 struct MaterializeCliOutput<'a> {
     status: &'static str,
-    #[serde(flatten)]
-    report: &'a MaterializationReport,
+    initial_axiom_count: usize,
+    final_axiom_count: usize,
+    inferred_axioms: usize,
+    inferred_by_rule: &'a std::collections::BTreeMap<ontologos_rdfs::RdfsRule, usize>,
+    #[serde(skip_serializing_if = "inference_traces_empty")]
+    traces: &'a [ontologos_rdfs::InferenceRecord],
+}
+
+fn inference_traces_empty(traces: &&[ontologos_rdfs::InferenceRecord]) -> bool {
+    traces.is_empty()
 }
 
 fn emit_materialize_report(
@@ -128,7 +136,11 @@ fn emit_materialize_report(
         }
         OutputFormat::Json => emit_json(&MaterializeCliOutput {
             status: "materialized",
-            report,
+            initial_axiom_count: report.initial_axiom_count,
+            final_axiom_count: report.final_axiom_count,
+            inferred_axioms: report.inferred_total(),
+            inferred_by_rule: &report.inferred_by_rule,
+            traces: &report.traces,
         })?,
     }
     Ok(())

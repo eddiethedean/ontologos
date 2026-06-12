@@ -6,7 +6,7 @@ mod report;
 mod rules;
 
 pub use engine::RdfsEngine;
-pub use reasoner::materialize_reasoner;
+pub use reasoner::{classify_reasoner, materialize_reasoner};
 pub use report::{InferenceRecord, MaterializationReport, RdfsRule};
 
 use ontologos_core::Error as CoreError;

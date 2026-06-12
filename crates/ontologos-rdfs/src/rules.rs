@@ -1,4 +1,4 @@
-use ontologos_core::{Axiom, EntityId, Ontology};
+use ontologos_core::{Axiom, AxiomId, EntityId, Ontology};
 
 use crate::report::{InferenceRecord, MaterializationReport, RdfsRule};
 
@@ -22,7 +22,14 @@ pub(crate) fn apply_sc_trans(ctx: &mut RuleContext<'_>) -> ontologos_core::Resul
         for direct_super in supers {
             let indirect: Vec<EntityId> = ctx.ontology.direct_superclasses(direct_super).to_vec();
             for super_super in indirect {
-                infer_subclass(ctx, RdfsRule::ScTrans, subclass, super_super)?;
+                let premises = [
+                    find_subclass_axiom(ctx.ontology, subclass, direct_super),
+                    find_subclass_axiom(ctx.ontology, direct_super, super_super),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                infer_subclass(ctx, RdfsRule::ScTrans, subclass, super_super, premises)?;
             }
         }
     }
@@ -44,7 +51,14 @@ pub(crate) fn apply_sp_trans(ctx: &mut RuleContext<'_>) -> ontologos_core::Resul
             let indirect: Vec<EntityId> =
                 ctx.ontology.direct_superproperties(direct_super).to_vec();
             for super_super in indirect {
-                infer_subproperty(ctx, RdfsRule::SpTrans, sub_property, super_super)?;
+                let premises = [
+                    find_subproperty_axiom(ctx.ontology, sub_property, direct_super),
+                    find_subproperty_axiom(ctx.ontology, direct_super, super_super),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                infer_subproperty(ctx, RdfsRule::SpTrans, sub_property, super_super, premises)?;
             }
         }
     }
@@ -65,7 +79,14 @@ pub(crate) fn apply_dom_inherit(ctx: &mut RuleContext<'_>) -> ontologos_core::Re
         for super_property in supers {
             let domains: Vec<EntityId> = ctx.ontology.index().domains_of(super_property).to_vec();
             for domain in domains {
-                infer_domain(ctx, RdfsRule::DomInherit, sub_property, domain)?;
+                let premises = [
+                    find_subproperty_axiom(ctx.ontology, sub_property, super_property),
+                    find_domain_axiom(ctx.ontology, super_property, domain),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                infer_domain(ctx, RdfsRule::DomInherit, sub_property, domain, premises)?;
             }
         }
     }
@@ -86,11 +107,78 @@ pub(crate) fn apply_rng_inherit(ctx: &mut RuleContext<'_>) -> ontologos_core::Re
         for super_property in supers {
             let ranges: Vec<EntityId> = ctx.ontology.index().ranges_of(super_property).to_vec();
             for range in ranges {
-                infer_range(ctx, RdfsRule::RngInherit, sub_property, range)?;
+                let premises = [
+                    find_subproperty_axiom(ctx.ontology, sub_property, super_property),
+                    find_range_axiom(ctx.ontology, super_property, range),
+                ]
+                .into_iter()
+                .flatten()
+                .collect();
+                infer_range(ctx, RdfsRule::RngInherit, sub_property, range, premises)?;
             }
         }
     }
     Ok(())
+}
+
+fn find_subclass_axiom(
+    ontology: &Ontology,
+    subclass: EntityId,
+    superclass: EntityId,
+) -> Option<AxiomId> {
+    ontology.axioms().iter().find_map(|(id, axiom)| {
+        matches!(
+            axiom,
+            Axiom::SubClassOf {
+                subclass: s,
+                superclass: sup,
+            } if *s == subclass && *sup == superclass
+        )
+        .then_some(id)
+    })
+}
+
+fn find_subproperty_axiom(
+    ontology: &Ontology,
+    sub_property: EntityId,
+    super_property: EntityId,
+) -> Option<AxiomId> {
+    ontology.axioms().iter().find_map(|(id, axiom)| {
+        matches!(
+            axiom,
+            Axiom::SubObjectPropertyOf {
+                sub_property: sub,
+                super_property: sup,
+            } if *sub == sub_property && *sup == super_property
+        )
+        .then_some(id)
+    })
+}
+
+fn find_domain_axiom(ontology: &Ontology, property: EntityId, domain: EntityId) -> Option<AxiomId> {
+    ontology.axioms().iter().find_map(|(id, axiom)| {
+        matches!(
+            axiom,
+            Axiom::ObjectPropertyDomain {
+                property: p,
+                domain: d,
+            } if *p == property && *d == domain
+        )
+        .then_some(id)
+    })
+}
+
+fn find_range_axiom(ontology: &Ontology, property: EntityId, range: EntityId) -> Option<AxiomId> {
+    ontology.axioms().iter().find_map(|(id, axiom)| {
+        matches!(
+            axiom,
+            Axiom::ObjectPropertyRange {
+                property: p,
+                range: r,
+            } if *p == property && *r == range
+        )
+        .then_some(id)
+    })
 }
 
 fn infer_subclass(
@@ -98,6 +186,7 @@ fn infer_subclass(
     rule: RdfsRule,
     subclass: EntityId,
     superclass: EntityId,
+    premises: Vec<AxiomId>,
 ) -> ontologos_core::Result<()> {
     if subclass == superclass {
         return Ok(());
@@ -112,7 +201,7 @@ fn infer_subclass(
         if ctx.record_traces {
             ctx.report.traces.push(InferenceRecord {
                 rule,
-                premises: Vec::new(),
+                premises,
                 conclusion,
             });
         }
@@ -125,6 +214,7 @@ fn infer_subproperty(
     rule: RdfsRule,
     sub_property: EntityId,
     super_property: EntityId,
+    premises: Vec<AxiomId>,
 ) -> ontologos_core::Result<()> {
     if sub_property == super_property {
         return Ok(());
@@ -139,7 +229,7 @@ fn infer_subproperty(
         if ctx.record_traces {
             ctx.report.traces.push(InferenceRecord {
                 rule,
-                premises: Vec::new(),
+                premises,
                 conclusion,
             });
         }
@@ -152,6 +242,7 @@ fn infer_domain(
     rule: RdfsRule,
     property: EntityId,
     domain: EntityId,
+    premises: Vec<AxiomId>,
 ) -> ontologos_core::Result<()> {
     let before = ctx.ontology.axiom_count();
     let conclusion = ctx
@@ -162,7 +253,7 @@ fn infer_domain(
         if ctx.record_traces {
             ctx.report.traces.push(InferenceRecord {
                 rule,
-                premises: Vec::new(),
+                premises,
                 conclusion,
             });
         }
@@ -175,6 +266,7 @@ fn infer_range(
     rule: RdfsRule,
     property: EntityId,
     range: EntityId,
+    premises: Vec<AxiomId>,
 ) -> ontologos_core::Result<()> {
     let before = ctx.ontology.axiom_count();
     let conclusion = ctx
@@ -185,7 +277,7 @@ fn infer_range(
         if ctx.record_traces {
             ctx.report.traces.push(InferenceRecord {
                 rule,
-                premises: Vec::new(),
+                premises,
                 conclusion,
             });
         }

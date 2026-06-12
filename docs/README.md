@@ -4,7 +4,7 @@ Welcome to OntoLogos documentation. Start here if you are new to the project.
 
 ## Learning path
 
-1. **[README](../README.md)** — install, what works in v0.2, quick start
+1. **[README](../README.md)** — install, what works in v0.3, quick start
 2. **[First ontology](getting-started/first-ontology.md)** — builder API walkthrough
 3. **[Load an OWL file](getting-started/load-owl-file.md)** — parser, formats, `ParseMeta`
 4. **[Profile detection](guides/profile-detection.md)** — EL/RL/QL/DL + hybrid diagnostics
@@ -42,12 +42,14 @@ Welcome to OntoLogos documentation. Start here if you are new to the project.
 | [docs.rs/ontologos-core](https://docs.rs/ontologos-core) | Rust API (core) |
 | [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser) | Rust API (parser) |
 | [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile) | Rust API (profile) |
+| [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs) | Rust API (RDFS engine) |
 
 ## Migration
 
 | Document | Description |
 |----------|-------------|
 | [v0.1-to-v0.2.md](migration/v0.1-to-v0.2.md) | Upgrade guide |
+| [v0.2-to-v0.3.md](migration/v0.2-to-v0.3.md) | RDFS engine and materialize CLI |
 
 ## Project meta
 

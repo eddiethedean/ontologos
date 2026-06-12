@@ -1,6 +1,6 @@
 # Load an OWL File
 
-v0.2 loads OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser).
+v0.3 loads OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser).
 
 ## Prerequisites
 
@@ -39,8 +39,8 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "0.2"
-ontologos-parser = "0.2"
+ontologos-core = "0.3"
+ontologos-parser = "0.3"
 ```
 
 Load and inspect:

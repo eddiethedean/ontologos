@@ -54,9 +54,7 @@ impl Mapper<'_> {
                     .meta
                     .note_construct(OwlConstruct::DataPropertyAxiom);
             }
-            Component::DeclareDatatype(decl) => {
-                let _ =
-                    self.register_or_warn_entity(iri_of(&decl.0), EntityKind::AnnotationProperty);
+            Component::DeclareDatatype(_decl) => {
                 self.report.meta.note_construct(OwlConstruct::Datatype);
             }
             Component::SubClassOf(axiom) => self.map_subclass_of(&axiom.sub, &axiom.sup),
@@ -407,14 +405,6 @@ impl Mapper<'_> {
     }
 
     fn push_axiom(&mut self, axiom: Axiom) {
-        if self.ontology.entity_count() >= self.limits.max_entities {
-            self.report.meta.warn(format!(
-                "entity limit {} reached; skipping further axioms",
-                self.limits.max_entities
-            ));
-            self.report.meta.skipped_axiom_count += 1;
-            return;
-        }
         if self.ontology.axiom_count() >= self.limits.max_axioms {
             self.report.meta.warn(format!(
                 "axiom limit {} reached; skipping further axioms",
@@ -642,4 +632,39 @@ impl Mapper<'_> {
 
 fn iri_of<T: horned_owl::model::ForIRI>(entity: &horned_owl::model::IRI<T>) -> &str {
     entity.as_ref()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ontologos_core::{EntityKind, Ontology};
+
+    #[test]
+    fn push_axiom_allows_axioms_at_entity_limit() {
+        let mut ontology = Ontology::new();
+        let mut report = ParseReport::new();
+        let limits = ParseLimits {
+            max_entities: 2,
+            ..ParseLimits::default()
+        };
+        {
+            let mut mapper = Mapper {
+                ontology: &mut ontology,
+                report: &mut report,
+                limits,
+            };
+            let a = mapper
+                .register_entity("http://ex.org/A", EntityKind::Class)
+                .expect("A");
+            let b = mapper
+                .register_entity("http://ex.org/B", EntityKind::Class)
+                .expect("B");
+            mapper.push_axiom(Axiom::SubClassOf {
+                subclass: a,
+                superclass: b,
+            });
+        }
+        assert_eq!(ontology.entity_count(), 2);
+        assert_eq!(ontology.axiom_count(), 1);
+    }
 }

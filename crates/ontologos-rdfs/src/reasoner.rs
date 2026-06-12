@@ -1,4 +1,4 @@
-use ontologos_core::{Profile, Reasoner};
+use ontologos_core::{Error as CoreError, Profile, Reasoner};
 
 use crate::engine::RdfsEngine;
 use crate::report::MaterializationReport;
@@ -15,4 +15,13 @@ pub fn materialize_reasoner(reasoner: &mut Reasoner) -> crate::Result<Materializ
     RdfsEngine::new()
         .with_traces(record_traces)
         .materialize(reasoner.ontology_mut())
+}
+
+/// Run classification when the reasoner profile is [`Profile::Rdfs`]; otherwise returns
+/// [`CoreError::NotImplemented`].
+pub fn classify_reasoner(reasoner: &mut Reasoner) -> crate::Result<()> {
+    match reasoner.profile() {
+        Profile::Rdfs => materialize_reasoner(reasoner).map(|_| ()),
+        _ => Err(crate::Error::Core(CoreError::NotImplemented)),
+    }
 }

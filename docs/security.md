@@ -1,6 +1,6 @@
 # Security Considerations
 
-OntoLogos v0.2 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
+OntoLogos v0.3 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
 
 ## JSON snapshots
 
@@ -47,7 +47,7 @@ Rejected:
 
 ## File loading (v0.2+)
 
-`ontologos_parser::validate_load_path` canonicalizes paths and rejects traversal outside an optional base directory.
+`ontologos_parser::validate_load_path` canonicalizes paths and rejects traversal outside an optional base directory using **path-component containment** (not string-prefix matching).
 
 - `load_ontology` — no sandbox base (trusted local paths)
 - `load_ontology_in(base, path)` — constrain loads to stay under `base` (untrusted uploads)
