@@ -37,9 +37,7 @@ fn saturate(ontology: &mut Ontology) {
 }
 
 /// Domain on subproperty Q should type assertion on superproperty P (prp-dom2).
-/// RDFS dom_inherit runs once before RL; no domain is copied to P when only Q has domain.
 #[test]
-#[ignore = "bug #1: RL TypeDomain misses domain when subproperty has domain"]
 fn domain_on_subproperty_types_superproperty_assertion() {
     let mut ontology = Ontology::builder()
         .class(&iri("Person"))
@@ -66,6 +64,103 @@ fn domain_on_subproperty_types_superproperty_assertion() {
     assert!(
         is_typed(&ontology, &iri("a"), &iri("Person")),
         "expected TypeDomain: domain on subproperty Q should apply to assertion on superproperty P"
+    );
+}
+
+/// Domain on Q should type assertion on equivalent property P (EqPropSub in same round).
+#[test]
+fn equivalent_property_domain_types_sibling_property_assertion() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("Person"))
+        .expect("Person")
+        .individual(&iri("a"))
+        .expect("a")
+        .individual(&iri("b"))
+        .expect("b")
+        .object_property(&iri("P"))
+        .expect("P")
+        .object_property(&iri("Q"))
+        .expect("Q")
+        .equivalent_object_properties(&[&iri("P"), &iri("Q")])
+        .expect("equiv")
+        .property_domain(&iri("Q"), &iri("Person"))
+        .expect("domain on Q")
+        .object_property_assertion(&iri("a"), &iri("P"), &iri("b"))
+        .expect("assertion on P")
+        .build()
+        .expect("build");
+
+    saturate(&mut ontology);
+
+    assert!(
+        is_typed(&ontology, &iri("a"), &iri("Person")),
+        "expected TypeDomain via equivalent property subproperty link"
+    );
+}
+
+/// Domain on R should type assertion on P when R ⊑ Q ⊑ P (transitive subproperty chain).
+#[test]
+fn domain_on_transitive_subproperty_types_superproperty_assertion() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("Person"))
+        .expect("Person")
+        .individual(&iri("a"))
+        .expect("a")
+        .individual(&iri("b"))
+        .expect("b")
+        .object_property(&iri("P"))
+        .expect("P")
+        .object_property(&iri("Q"))
+        .expect("Q")
+        .object_property(&iri("R"))
+        .expect("R")
+        .subproperty_of(&iri("Q"), &iri("P"))
+        .expect("Q sub P")
+        .subproperty_of(&iri("R"), &iri("Q"))
+        .expect("R sub Q")
+        .property_domain(&iri("R"), &iri("Person"))
+        .expect("domain on R")
+        .object_property_assertion(&iri("a"), &iri("P"), &iri("b"))
+        .expect("assertion on P")
+        .build()
+        .expect("build");
+
+    saturate(&mut ontology);
+
+    assert!(
+        is_typed(&ontology, &iri("a"), &iri("Person")),
+        "expected TypeDomain via transitive subproperty chain R ⊑ Q ⊑ P"
+    );
+}
+
+/// Range on subproperty Q should type assertion object on superproperty P.
+#[test]
+fn range_on_subproperty_types_superproperty_assertion_object() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("Person"))
+        .expect("Person")
+        .individual(&iri("a"))
+        .expect("a")
+        .individual(&iri("b"))
+        .expect("b")
+        .object_property(&iri("P"))
+        .expect("P")
+        .object_property(&iri("Q"))
+        .expect("Q")
+        .subproperty_of(&iri("Q"), &iri("P"))
+        .expect("Q sub P")
+        .property_range(&iri("Q"), &iri("Person"))
+        .expect("range on Q")
+        .object_property_assertion(&iri("a"), &iri("P"), &iri("b"))
+        .expect("assertion on P")
+        .build()
+        .expect("build");
+
+    saturate(&mut ontology);
+
+    assert!(
+        is_typed(&ontology, &iri("b"), &iri("Person")),
+        "expected TypeRange: range on subproperty Q should apply to assertion on superproperty P"
     );
 }
 

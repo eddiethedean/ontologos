@@ -1,10 +1,32 @@
-use ontologos_core::{Axiom, EntityId, EntityKind};
+use ontologos_core::{Axiom, EntityId, EntityKind, Ontology};
 
 use super::helpers::{
-    expand_equivalent_classes, expand_same_as, infer_axiom, map_parallel, transitive_superclasses,
-    RuleContext,
+    expand_equivalent_classes, expand_same_as, infer_axiom, map_parallel, transitive_subproperties,
+    transitive_superclasses, RuleContext,
 };
 use crate::report::RlRule;
+
+fn characteristic_classes_for_property(
+    ontology: &Ontology,
+    property: EntityId,
+    lookup: impl Fn(&Ontology, EntityId) -> &[EntityId],
+) -> Vec<EntityId> {
+    let mut classes: Vec<EntityId> = lookup(ontology, property).to_vec();
+    for sub in transitive_subproperties(ontology, property) {
+        classes.extend(lookup(ontology, sub).iter().copied());
+    }
+    classes.sort_unstable_by_key(|id| id.0);
+    classes.dedup();
+    classes
+}
+
+fn domains_for_property(ontology: &Ontology, property: EntityId) -> Vec<EntityId> {
+    characteristic_classes_for_property(ontology, property, |o, p| o.index().domains_of(p))
+}
+
+fn ranges_for_property(ontology: &Ontology, property: EntityId) -> Vec<EntityId> {
+    characteristic_classes_for_property(ontology, property, |o, p| o.index().ranges_of(p))
+}
 
 pub(crate) fn apply_batch_b(ctx: &mut RuleContext<'_>) -> ontologos_core::Result<()> {
     apply_type_rules(ctx)?;
@@ -29,35 +51,38 @@ fn apply_type_rules(ctx: &mut RuleContext<'_>) -> ontologos_core::Result<()> {
         })
         .collect();
 
-    let index = ctx.ontology.index();
-    let domain_candidates: Vec<(EntityId, EntityId)> = map_parallel(
-        ctx.parallelism,
-        property_assertions.clone(),
-        |(subject, property, _)| {
-            index
-                .domains_of(property)
-                .iter()
-                .map(|domain| (subject, *domain))
-                .collect::<Vec<_>>()
-        },
-    )
-    .into_iter()
-    .flatten()
-    .collect();
-    let range_candidates: Vec<(EntityId, EntityId)> = map_parallel(
-        ctx.parallelism,
-        property_assertions,
-        |(_, property, object)| {
-            index
-                .ranges_of(property)
-                .iter()
-                .map(|range| (object, *range))
-                .collect::<Vec<_>>()
-        },
-    )
-    .into_iter()
-    .flatten()
-    .collect();
+    let domain_candidates: Vec<(EntityId, EntityId)> = {
+        let ontology: &Ontology = ctx.ontology;
+        map_parallel(
+            ctx.parallelism,
+            property_assertions.clone(),
+            |(subject, property, _)| {
+                domains_for_property(ontology, property)
+                    .into_iter()
+                    .map(|domain| (subject, domain))
+                    .collect::<Vec<_>>()
+            },
+        )
+        .into_iter()
+        .flatten()
+        .collect()
+    };
+    let range_candidates: Vec<(EntityId, EntityId)> = {
+        let ontology: &Ontology = ctx.ontology;
+        map_parallel(
+            ctx.parallelism,
+            property_assertions,
+            |(_, property, object)| {
+                ranges_for_property(ontology, property)
+                    .into_iter()
+                    .map(|range| (object, range))
+                    .collect::<Vec<_>>()
+            },
+        )
+        .into_iter()
+        .flatten()
+        .collect()
+    };
 
     for (individual, class) in domain_candidates {
         infer_axiom(
