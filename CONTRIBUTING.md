@@ -12,16 +12,19 @@ Thank you for your interest in contributing. OntoLogos is in early development (
 ```bash
 git clone https://github.com/eddiethedean/ontologos.git
 cd ontologos
-./benchmarks/scripts/download.sh   # required for parser/CLI integration tests
+./benchmarks/scripts/download.sh   # required for Pizza corpus and full test suite
 cargo build
 cargo test --workspace
 ```
 
-Run the quick-start example:
+> **Benchmark download:** `family.owl` is vendored, but Pizza and other corpora require `./benchmarks/scripts/download.sh`. CI runs this automatically. Without it, some parser and integration tests fail with `missing benchmark corpus pizza`.
+
+Run the quick-start examples:
 
 ```bash
 cargo run -p ontologos-core --example pizza_builder
 cargo run -p ontologos-parser --example load_and_profile
+cargo run -p ontologos-rl --example rl_saturation
 ```
 
 ## Checks before opening a PR
@@ -56,6 +59,7 @@ Run all locally before submitting.
 | `crates/ontologos-profile/` | Profile detection (v0.2) |
 | `crates/ontologos-rdfs/` | RDFS engine (v0.3) |
 | `crates/ontologos-rl/` | OWL RL engine (v0.4) |
+| `crates/ontologos-conformance/` | HermiT-ported tests — [tests/hermit/README.md](tests/hermit/README.md) |
 | `docs/` | User and reference documentation |
 | `docs/internal/research/` | Maintainer research notes |
 | `benchmarks/` | Benchmark ontology manifest and corpora |

@@ -1,6 +1,6 @@
 # Profile Detection
 
-v0.2 reports which OWL 2 profile best fits an ontology using [`ontologos-profile`](https://docs.rs/ontologos-profile).
+Detect which OWL 2 profile best fits an ontology using [`ontologos-profile`](https://docs.rs/ontologos-profile/0.4.0).
 
 ## CLI
 
@@ -93,4 +93,4 @@ Corpus files: run `./benchmarks/scripts/download.sh`. Expected counts are **mapp
 
 - [Supported constructs](../reference/supported-constructs.md)
 - [Troubleshooting](troubleshooting.md)
-- [ROADMAP](../../ROADMAP.md) — reasoning engines (v0.3+)
+- [ROADMAP](../../ROADMAP.md) — reasoning engines and milestones

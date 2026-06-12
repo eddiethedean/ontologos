@@ -4,7 +4,13 @@ OWL 2 RL forward-chaining rule engine for [OntoLogos](https://github.com/eddieth
 
 Runs RDFS materialization first, then applies OWL RL TBox and ABox rules until saturation.
 
-## Example
+Repository example:
+
+```bash
+cargo run -p ontologos-rl --example rl_saturation
+```
+
+See [OWL RL saturation guide](../../docs/getting-started/owl-rl-saturation.md).
 
 ```rust
 use ontologos_core::Ontology;

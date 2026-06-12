@@ -2,12 +2,31 @@
 
 Binary: `ontologos` (from `ontologos-cli` crate).
 
-## Build
+> **`classify` is not OWL taxonomy classification.** It runs RDFS TBox materialization (same inferences as `materialize`; only the `status` field differs). For OWL RL, use `ontologos-rl` or Python `profile="rl"`. OWL EL classification arrives in v0.5.
+
+## Install
+
+`ontologos-cli` is **not published to crates.io** (`publish = false`). Build from a repository clone or install from git.
+
+### Build from clone
 
 ```bash
+git clone https://github.com/eddiethedean/ontologos.git
+cd ontologos
 cargo build -p ontologos-cli --release
 ./target/release/ontologos --help
 ```
+
+### Install from git
+
+Requires Rust 1.88+:
+
+```bash
+cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
+ontologos --help
+```
+
+Pre-built release binaries are not attached to GitHub Releases today (crates.io and PyPI only).
 
 ## Global options
 
@@ -21,12 +40,22 @@ cargo build -p ontologos-cli --release
 |---------|-------------|-------------|
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
 | `materialize <file>` | **Works** | RDFS TBox materialization with report |
-| `classify <file>` | **RDFS** | RDFS materialization via reasoner (`Profile::Rdfs`); same inference report as `materialize` with `status: classified` |
-| `explain <file>` | Stub | Loads file; explain → `NotImplemented` (v0.6) |
+| `classify <file>` | **RDFS only** | RDFS materialization via reasoner (`Profile::Rdfs`); same inference report as `materialize` with `status: classified` |
+| `explain <file>` | **Stub** | Loads file then returns `explanation generation not yet implemented` (v0.6) |
 
 All commands load the ontology via `ontologos_parser::load_ontology` first.
 
 `classify` and `materialize` both run the RDFS engine only. OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5.
+
+### `explain` (stub)
+
+Running `ontologos explain file.owl` loads the ontology successfully, then fails with:
+
+```text
+error: explanation generation not yet implemented
+```
+
+Exit code `1`. Do not use this command in automation until v0.6.
 
 ## `profile` output
 
@@ -104,7 +133,7 @@ Errors print to stderr: `error: ...`
 ./target/release/ontologos profile benchmarks/data/pizza.owl
 ./target/release/ontologos --format json profile benchmarks/data/family.owl
 ./target/release/ontologos materialize benchmarks/data/family.owl
-./target/release/ontologos classify benchmarks/data/family.owl  # status: classified + inference report
+./target/release/ontologos classify benchmarks/data/family.owl  # RDFS only; status: classified
 ./target/release/ontologos --format json classify benchmarks/data/family.owl
 ```
 
@@ -112,3 +141,4 @@ Errors print to stderr: `error: ...`
 
 - [Profile detection](../guides/profile-detection.md)
 - [Load an OWL file](../getting-started/load-owl-file.md)
+- [OWL RL saturation](../getting-started/owl-rl-saturation.md)

@@ -60,3 +60,5 @@ OntoLogos targets a **unified multi-profile workspace** with MORe-style hybrid r
 Replace JVM-bound **batch** reasoning in Rust/Python pipelines with native EL/RL/RDFS engines, CLI, and IDE integration (Ontocode). Conformance measured against **ELK + whelk-rs** (EL) and **reasonable** (RL). Full OWL DL in 2.0, architected after **Konclude** hybrid design rather than a legacy HermiT port.
 
 See [ROADMAP.md](../ROADMAP.md) for milestone sequencing and exit criteria.
+
+For HermiT-ported test coverage and known gaps, see [Conformance coverage](reference/conformance.md).

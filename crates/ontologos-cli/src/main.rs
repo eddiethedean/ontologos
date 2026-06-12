@@ -24,11 +24,11 @@ struct Cli {
 enum Command {
     /// Detect the OWL profile of an ontology
     Profile { ontology: PathBuf },
-    /// Classify an ontology
+    /// Run RDFS TBox materialization (not OWL EL/DL taxonomy classification; v0.5)
     Classify { ontology: PathBuf },
-    /// Materialize RDFS inferences
+    /// Materialize RDFS TBox inferences
     Materialize { ontology: PathBuf },
-    /// Explain inferences in an ontology
+    /// Explain inferences (stub until v0.6 — returns not implemented)
     Explain { ontology: PathBuf },
 }
 

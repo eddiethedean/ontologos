@@ -94,3 +94,29 @@ Parser warnings in `ParseMeta` are non-fatal.
 | `Message` | Profile detection internal failure (rare) | Report issue; check ontology has valid `parse_meta` or axioms |
 
 `detect_profile` normally returns `Ok(ProfileReport)` with `detected: Some(...)` or diagnostics.
+
+---
+
+## `ontologos_rdfs::Error`
+
+| Variant | Cause | Recovery |
+|---------|-------|----------|
+| `WrongProfile` | Engine invoked with mismatched reasoner profile | Build reasoner with `Profile::Rdfs`; use `RdfsEngine::materialize` directly on `Ontology` to skip profile check |
+| `Core` | Wrapped `ontologos_core::Error` | See core section above |
+
+RDFS materialization does not fail on empty ontologies; it returns a report with zero inferences.
+
+---
+
+## `ontologos_rl::Error`
+
+| Variant | Cause | Recovery |
+|---------|-------|----------|
+| `WrongProfile` | `classify_reasoner` called with non-RL profile | Use `Profile::Rl` or call `RlEngine::saturate` directly |
+| `Core` | Wrapped core error (e.g. invalid `parallelism` on `RlEngine::try_new`) | Use parallelism `1..=64`; fix underlying axiom/entity issues |
+
+### RL materialization report notes
+
+`MaterializationReport::clashes` lists human-readable inconsistency messages when detected (direct disjoint class types on an individual; `sameAs` / `differentFrom` conflicts). Clashes do not abort saturation — review the report after `saturate`.
+
+See [RL rules reference](rl-rules.md) for rule names in `inferred_by_rule`.

@@ -91,11 +91,12 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.4.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.4.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.4.0), [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.4.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.4.0)
+- Guides: [Choosing an API](docs/guides/choosing-an-api.md) · [Architecture](docs/architecture.md) · [OWL RL](docs/getting-started/owl-rl-saturation.md)
 - Local: `cargo doc -p ontologos-core --open`
 - Error catalog: [docs/reference/errors.md](docs/reference/errors.md)
 - CLI: [docs/reference/cli.md](docs/reference/cli.md)
 
 ## Does `pip install ontologos` work?
 
-The PyPI package is an **alpha** release (v0.4.0). It installs, reports its version, and `Reasoner(path)` loads an OWL file via the Rust parser. `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; `Reasoner(path, profile="rl").classify()` runs OWL RL saturation. The default profile returns not-implemented until OWL EL taxonomy classification ships in v0.5. Profile detection, CLI RL routing, and full Python APIs ship in later milestones (see [Python README](crates/ontologos-py/README.md)). Use the Rust crates for full v0.4 workflows.
+The PyPI package is an **alpha** release (v0.4.0). It installs, reports its version, and `Reasoner(path)` loads an OWL file via the Rust parser. `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; `Reasoner(path, profile="rl").classify()` runs OWL RL saturation. The default profile returns not-implemented until OWL EL taxonomy classification ships in v0.5. See [Python guide](docs/guides/python.md) for the full API and limitations. Use the Rust crates for full v0.4 workflows.

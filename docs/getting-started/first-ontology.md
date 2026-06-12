@@ -42,9 +42,55 @@ fn main() -> Result<(), Error> {
 }
 ```
 
+## ABox axioms (v0.4)
+
+The builder supports named individuals and ABox assertions:
+
+```rust
+use ontologos_core::{Error, Ontology};
+
+fn main() -> Result<(), Error> {
+    let ontology = Ontology::builder()
+        .class("http://example.org/Person")?
+        .individual("http://example.org/alice")?
+        .object_property("http://example.org/knows")?
+        .individual("http://example.org/bob")?
+        .class_assertion("http://example.org/alice", "http://example.org/Person")?
+        .object_property_assertion(
+            "http://example.org/alice",
+            "http://example.org/knows",
+            "http://example.org/bob",
+        )?
+        .same_individual(&[
+            "http://example.org/alice",
+            "http://example.org/alice-copy",
+        ])?
+        .different_individuals(&[
+            "http://example.org/alice",
+            "http://example.org/bob",
+        ])?
+        .build()?;
+
+    let alice = ontology
+        .lookup_entity("http://example.org/alice")
+        .expect("alice");
+    let person = ontology
+        .lookup_entity("http://example.org/Person")
+        .expect("person");
+    assert_eq!(ontology.individuals_of(person), &[alice]);
+
+    Ok(())
+}
+```
+
+Additional builder methods: `equivalent_object_properties`, `asymmetric_object_property`, `property_domain`, `property_range`, `subproperty_of`.
+
+After building an RL-shaped ontology, saturate with [OWL RL saturation](owl-rl-saturation.md).
+
 ## Next steps
 
-- [Load an OWL file](load-owl-file.md) — parse real ontologies (v0.3)
+- [Load an OWL file](load-owl-file.md) — parse real ontologies
+- [OWL RL saturation](owl-rl-saturation.md) — forward-chaining on ABox + TBox
 - [Profile detection](../guides/profile-detection.md)
 - [JSON snapshots](../json-snapshot-v2.md)
 - [Error reference](../reference/errors.md)

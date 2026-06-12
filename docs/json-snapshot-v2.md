@@ -59,9 +59,57 @@ Axioms use IRI strings (not numeric entity IDs). Supported variants:
 | `SubClassOfExistential` | `{ "subclass": "...", "property": "...", "filler": "..." }` *(v0.2)* |
 | `SymmetricObjectProperty` | `"..."` *(v0.2)* |
 | `ReflexiveObjectProperty` | `"..."` *(v0.2)* |
-| `FunctionalObjectProperty` | `"..."` *(v0.2)* |
+| `FunctionalObjectProperty` | `"..."` |
+| `AsymmetricObjectProperty` | `"..."` *(v0.4)* |
+| `EquivalentObjectProperties` | `[ "...", "..." ]` *(v0.4)* |
+| `ClassAssertion` | `{ "individual": "...", "class": "..." }` *(v0.4)* |
+| `ObjectPropertyAssertion` | `{ "subject": "...", "property": "...", "object": "..." }` *(v0.4)* |
+| `SameIndividual` | `[ "...", "..." ]` *(v0.4)* |
+| `DifferentIndividuals` | `[ "...", "..." ]` *(v0.4)* |
 
 Every IRI referenced in an axiom must match an entity declared in `entities`.
+
+### v0.4 ABox examples
+
+```json
+{
+  "ClassAssertion": {
+    "individual": "http://example.org/alice",
+    "class": "http://example.org/Person"
+  }
+}
+```
+
+```json
+{
+  "ObjectPropertyAssertion": {
+    "subject": "http://example.org/alice",
+    "property": "http://example.org/knows",
+    "object": "http://example.org/bob"
+  }
+}
+```
+
+```json
+{ "SameIndividual": ["http://example.org/alice", "http://example.org/alice-copy"] }
+```
+
+```json
+{ "DifferentIndividuals": ["http://example.org/alice", "http://example.org/bob"] }
+```
+
+```json
+{ "AsymmetricObjectProperty": "http://example.org/hasParent" }
+```
+
+```json
+{
+  "EquivalentObjectProperties": [
+    "http://example.org/hasParent",
+    "http://example.org/isParentOf"
+  ]
+}
+```
 
 ## Full example
 

@@ -6,15 +6,20 @@
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
 ![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)
 
-A modular Rust ontology reasoner **in early development**.
+A modular Rust ontology reasoner **in early development** — embeddable OWL graph, file loading, profile detection, RDFS materialization, and OWL RL saturation.
 
 **Display name:** OntoLogos · **Crates:** `ontologos-*` · **CLI binary:** `ontologos`
 
-**v0.4 (today):** OWL RL forward-chaining via [`ontologos-rl`](crates/ontologos-rl) (on top of RDFS), full ABox in core, plus parsing and profile detection from v0.2–v0.3.
+Replace JVM-bound reasoning in Rust and Python pipelines with a native, maintained multi-profile stack. **Not a HermiT/ELK replacement yet** — use Protégé + ELK for production EL/DL classification today.
 
-**Planned:** OWL EL reasoning (v0.5), explanations (v0.6), Python bindings (v0.9).
+| Layer | Status |
+|-------|--------|
+| Core model + parser + profiles | Available (v0.4) |
+| RDFS + OWL RL engines | Available (library + Python alpha) |
+| OWL EL taxonomy classification | v0.5 |
+| Explanations + full Python API | v0.6 / v0.9 |
 
-If you need OWL classification today, use Protégé with HermiT or ELK. If you want to embed a Rust ontology graph, load OWL files, or evaluate the architecture, start below.
+> **Partial OWL mapping:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](docs/reference/supported-constructs.md) before comparing results.
 
 ## What works in v0.4
 
@@ -31,10 +36,10 @@ If you need OWL classification today, use Protégé with HermiT or ELK. If you w
 | OWL RL saturation (`RlEngine::saturate`) | Available |
 | `ontologos profile` CLI | Available |
 | `ontologos materialize` CLI | Available |
-| `classify` CLI (RDFS) | Available |
+| `classify` CLI (RDFS only — not OWL taxonomy classification) | Available |
 | OWL EL reasoning | v0.5 |
-| `explain` CLI | v0.6 (see [ROADMAP](ROADMAP.md)) |
-| Python bindings (`profile=rdfs` / `rl`) | Alpha |
+| `explain` CLI | Stub (v0.6 — see [ROADMAP](ROADMAP.md)) |
+| Python bindings (`profile=rdfs` / `rl`) | Alpha (full API v0.9) |
 
 ## Install (library)
 
@@ -56,12 +61,14 @@ From this repository:
 ```bash
 git clone https://github.com/eddiethedean/ontologos.git
 cd ontologos
-./benchmarks/scripts/download.sh   # for Pizza corpus examples
+./benchmarks/scripts/download.sh   # required for Pizza examples and full test suite
 ```
 
-API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core) · [parser](https://docs.rs/ontologos-parser) · [profile](https://docs.rs/ontologos-profile) · [rdfs](https://docs.rs/ontologos-rdfs) · [rl](https://docs.rs/ontologos-rl)
+> **Repository clone:** Run `./benchmarks/scripts/download.sh` before `cargo test --workspace`. The Family corpus is vendored; Pizza and other benchmarks are downloaded. See [benchmarks/README.md](benchmarks/README.md).
 
-> **Python:** `pip install ontologos` is an alpha package — `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; `profile="rl"` runs OWL RL saturation. The default profile is not implemented until v0.5. Full Python APIs ship in v0.9. See [crates/ontologos-py/README.md](crates/ontologos-py/README.md).
+API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.4.0) · [parser](https://docs.rs/ontologos-parser/0.4.0) · [profile](https://docs.rs/ontologos-profile/0.4.0) · [rdfs](https://docs.rs/ontologos-rdfs/0.4.0) · [rl](https://docs.rs/ontologos-rl/0.4.0)
+
+> **Python:** `pip install ontologos` is an alpha package — `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; `profile="rl"` runs OWL RL saturation. The default profile is not implemented until v0.5. Full Python APIs ship in v0.9. See [docs/guides/python.md](docs/guides/python.md).
 
 ## Quick start (5 minutes)
 
@@ -88,13 +95,12 @@ fn main() -> Result<(), Error> {
 }
 ```
 
-### Load OWL + materialize
+### Load OWL + RDFS materialize
 
 ```bash
-./benchmarks/scripts/download.sh
 cargo build -p ontologos-cli --release
 ./target/release/ontologos materialize benchmarks/data/family.owl
-./target/release/ontologos profile benchmarks/data/pizza.owl
+./target/release/ontologos profile benchmarks/data/pizza.owl   # after download.sh
 ```
 
 ```rust
@@ -104,6 +110,25 @@ use ontologos_rdfs::RdfsEngine;
 let mut ontology = load_ontology(path)?;
 let report = RdfsEngine::new().materialize(&mut ontology)?;
 ```
+
+### Load OWL + OWL RL saturation (v0.4)
+
+```rust
+use ontologos_parser::load_ontology;
+use ontologos_rl::RlEngine;
+
+let mut ontology = load_ontology(path)?;
+let report = RlEngine::new(1).saturate(&mut ontology)?;
+println!(
+    "inferred {} axioms ({} from RDFS)",
+    report.inferred_total(),
+    report.rdfs_inferred
+);
+```
+
+Or run: `cargo run -p ontologos-rl --example rl_saturation`
+
+> **CLI note:** `ontologos classify` runs **RDFS materialization only** (same inferences as `materialize`). For OWL RL, use the library above or Python `profile="rl"`. OWL EL taxonomy classification arrives in v0.5.
 
 ### Load OWL + detect profile
 
@@ -131,6 +156,8 @@ Or run: `cargo run -p ontologos-parser --example load_and_profile`
 
 ## CLI
 
+The CLI is **source-build only** (`ontologos-cli` is not published to crates.io). Build from a repository clone:
+
 ```bash
 cargo build -p ontologos-cli --release
 ./target/release/ontologos profile benchmarks/data/pizza.owl
@@ -138,15 +165,21 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos classify benchmarks/data/family.owl
 ```
 
-`classify` and `materialize` run RDFS materialization only; OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5; `explain` in v0.6 — see [ROADMAP.md](ROADMAP.md).
+Or install from git (requires Rust 1.88+):
+
+```bash
+cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
+```
+
+> **`classify` is not OWL taxonomy classification.** It runs RDFS TBox materialization (same inferences as `materialize`; only the `status` field differs). OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5. `explain` is a stub until v0.6 — see [CLI reference](docs/reference/cli.md).
 
 ## Documentation
 
 | Section | Link |
 |---------|------|
 | **Getting started** | [docs/README.md](docs/README.md) |
-| **Guides** | [Load OWL](docs/getting-started/load-owl-file.md) · [Profile detection](docs/guides/profile-detection.md) · [Security](docs/security.md) |
-| **Reference** | [Errors](docs/reference/errors.md) · [CLI](docs/reference/cli.md) · [JSON v2](docs/json-snapshot-v2.md) |
+| **Guides** | [Load OWL](docs/getting-started/load-owl-file.md) · [OWL RL](docs/getting-started/owl-rl-saturation.md) · [Profile detection](docs/guides/profile-detection.md) · [Choosing an API](docs/guides/choosing-an-api.md) · [Python](docs/guides/python.md) · [Security](docs/security.md) |
+| **Reference** | [Architecture](docs/architecture.md) · [Errors](docs/reference/errors.md) · [CLI](docs/reference/cli.md) · [JSON v2](docs/json-snapshot-v2.md) · [RL rules](docs/reference/rl-rules.md) · [Conformance](docs/reference/conformance.md) |
 | **Project** | [ROADMAP](ROADMAP.md) · [CHANGELOG](CHANGELOG.md) · [CONTRIBUTING](CONTRIBUTING.md) · [FAQ](FAQ.md) |
 
 ## License

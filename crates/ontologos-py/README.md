@@ -2,10 +2,10 @@
 
 Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a modular Rust ontology reasoner for OWL EL, RL, and RDFS.
 
-**This is an alpha package (v0.4.0).** The package installs and reports its version. `Reasoner(path)` loads OWL files via the Rust parser. Pass `profile="rdfs"` for RDFS materialization or `profile="rl"` for OWL RL saturation via `classify()`. The default profile returns not-implemented until OWL EL taxonomy classification ships in v0.5.
+**Alpha package (v0.4.0).** See the full guide: **[docs/guides/python.md](../../docs/guides/python.md)**.
 
-| Capability | Rust v0.4 | Python |
-|------------|-----------|--------|
+| Capability | Rust v0.4 | Python v0.4 |
+|------------|-----------|-------------|
 | In-memory ontology model | Yes (`ontologos-core`) | No |
 | OWL file loading | Yes (`ontologos-parser`) | Partial (`Reasoner(path)` loads only) |
 | Profile detection | Yes (`ontologos-profile`) | No |
@@ -14,7 +14,7 @@ Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a
 | OWL EL taxonomy classification | No (v0.5) | No |
 | Full Python API | — | v0.9 / 1.0 |
 
-For working Rust APIs today, use [crates.io](https://crates.io/crates/ontologos-core) crates (`ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-rdfs`, `ontologos-rl`).
+For working Rust APIs today, use [crates.io](https://crates.io/crates/ontologos-core) crates.
 
 ```bash
 pip install ontologos

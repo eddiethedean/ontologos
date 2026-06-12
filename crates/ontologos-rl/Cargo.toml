@@ -32,6 +32,10 @@ rayon = { version = "1", optional = true }
 ontologos-parser = { workspace = true }
 criterion = { version = "0.5", features = ["html_reports"] }
 
+[[example]]
+name = "rl_saturation"
+path = "examples/rl_saturation.rs"
+
 [[bench]]
 name = "rl_parallel"
 harness = false
