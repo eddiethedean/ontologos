@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-12
+
+### Added
+
+- **ABox in `ontologos-core`**: `ClassAssertion`, `ObjectPropertyAssertion`, `SameIndividual`, `DifferentIndividuals`, `EquivalentObjectProperties`, `AsymmetricObjectProperty`
+- Axiom indexes for individuals, property assertions, `sameAs`, and equivalent properties
+- JSON snapshot v2 round-trip for new axiom variants; `OntologyBuilder` ABox helpers
+- Parser mapping for named ABox axioms and `AsymmetricObjectProperty` / `EquivalentObjectProperties`
+- **`ontologos-rl`**: OWL RL forward-chaining (`RlEngine::saturate`) on top of RDFS materialization
+- `ontologos_rl::classify_reasoner` / `materialize_reasoner` for `Profile::Rl`
+- HermiT Tier-A ports: `testSubsumption2` / `testSubsumption3` (inlined existential encoding)
+- Family RL corpus test; optional `compare-reasonable.sh` harness for external diff
+
+### Changed
+
+- Profile detection: mapped ABox constructs are allowed under OWL RL (family corpus → RL)
+- Python `profile="rl"` routes through `ontologos_rl::classify_reasoner`
+- `Reasoner::classify()` with `Profile::Rl` returns delegate hint (use `ontologos_rl`)
+
+### Published
+
+- [ontologos-core](https://crates.io/crates/ontologos-core) **0.4.0**
+- [ontologos-parser](https://crates.io/crates/ontologos-parser) **0.4.0**
+- [ontologos-profile](https://crates.io/crates/ontologos-profile) **0.4.0**
+- [ontologos-rdfs](https://crates.io/crates/ontologos-rdfs) **0.4.0**
+- [ontologos-rl](https://crates.io/crates/ontologos-rl) **0.4.0**
+
 ## [0.3.1] - 2026-06-12
 
 ### Changed

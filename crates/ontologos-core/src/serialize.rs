@@ -60,6 +60,19 @@ enum SnapshotAxiom {
     SymmetricObjectProperty(String),
     ReflexiveObjectProperty(String),
     FunctionalObjectProperty(String),
+    AsymmetricObjectProperty(String),
+    EquivalentObjectProperties(Vec<String>),
+    ClassAssertion {
+        individual: String,
+        class: String,
+    },
+    ObjectPropertyAssertion {
+        subject: String,
+        property: String,
+        object: String,
+    },
+    SameIndividual(Vec<String>),
+    DifferentIndividuals(Vec<String>),
 }
 
 impl Ontology {
@@ -278,6 +291,40 @@ fn axiom_to_snapshot(axiom: &Axiom, ontology: &Ontology) -> Result<SnapshotAxiom
         Axiom::FunctionalObjectProperty(property) => {
             SnapshotAxiom::FunctionalObjectProperty(entity_iri(ontology, *property)?)
         }
+        Axiom::AsymmetricObjectProperty(property) => {
+            SnapshotAxiom::AsymmetricObjectProperty(entity_iri(ontology, *property)?)
+        }
+        Axiom::EquivalentObjectProperties(properties) => SnapshotAxiom::EquivalentObjectProperties(
+            properties
+                .iter()
+                .map(|id| entity_iri(ontology, *id))
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        Axiom::ClassAssertion { individual, class } => SnapshotAxiom::ClassAssertion {
+            individual: entity_iri(ontology, *individual)?,
+            class: entity_iri(ontology, *class)?,
+        },
+        Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => SnapshotAxiom::ObjectPropertyAssertion {
+            subject: entity_iri(ontology, *subject)?,
+            property: entity_iri(ontology, *property)?,
+            object: entity_iri(ontology, *object)?,
+        },
+        Axiom::SameIndividual(individuals) => SnapshotAxiom::SameIndividual(
+            individuals
+                .iter()
+                .map(|id| entity_iri(ontology, *id))
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        Axiom::DifferentIndividuals(individuals) => SnapshotAxiom::DifferentIndividuals(
+            individuals
+                .iter()
+                .map(|id| entity_iri(ontology, *id))
+                .collect::<Result<Vec<_>>>()?,
+        ),
     })
 }
 
@@ -342,6 +389,40 @@ fn snapshot_axiom_to_axiom(snapshot: &SnapshotAxiom, ontology: &Ontology) -> Res
         SnapshotAxiom::FunctionalObjectProperty(property) => {
             Axiom::FunctionalObjectProperty(resolve_entity(ontology, property)?)
         }
+        SnapshotAxiom::AsymmetricObjectProperty(property) => {
+            Axiom::AsymmetricObjectProperty(resolve_entity(ontology, property)?)
+        }
+        SnapshotAxiom::EquivalentObjectProperties(properties) => Axiom::EquivalentObjectProperties(
+            properties
+                .iter()
+                .map(|iri| resolve_entity(ontology, iri))
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        SnapshotAxiom::ClassAssertion { individual, class } => Axiom::ClassAssertion {
+            individual: resolve_entity(ontology, individual)?,
+            class: resolve_entity(ontology, class)?,
+        },
+        SnapshotAxiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => Axiom::ObjectPropertyAssertion {
+            subject: resolve_entity(ontology, subject)?,
+            property: resolve_entity(ontology, property)?,
+            object: resolve_entity(ontology, object)?,
+        },
+        SnapshotAxiom::SameIndividual(individuals) => Axiom::SameIndividual(
+            individuals
+                .iter()
+                .map(|iri| resolve_entity(ontology, iri))
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        SnapshotAxiom::DifferentIndividuals(individuals) => Axiom::DifferentIndividuals(
+            individuals
+                .iter()
+                .map(|iri| resolve_entity(ontology, iri))
+                .collect::<Result<Vec<_>>>()?,
+        ),
     })
 }
 
@@ -503,6 +584,42 @@ mod tests {
         assert_eq!(restored.axiom_count(), 1);
         assert!(restored.direct_superclasses(c).is_empty());
         assert_eq!(restored.existentials_of(c), &[(has_part, b)]);
+    }
+
+    #[test]
+    fn round_trip_abox_axiom_variants() {
+        let ontology = Ontology::builder()
+            .individual("http://example.org/alice")
+            .expect("alice")
+            .individual("http://example.org/bob")
+            .expect("bob")
+            .class("http://example.org/Person")
+            .expect("Person")
+            .object_property("http://example.org/knows")
+            .expect("knows")
+            .class_assertion("http://example.org/alice", "http://example.org/Person")
+            .expect("type")
+            .object_property_assertion(
+                "http://example.org/alice",
+                "http://example.org/knows",
+                "http://example.org/bob",
+            )
+            .expect("assertion")
+            .same_individual(&["http://example.org/alice", "http://example.org/bob"])
+            .expect("same")
+            .build()
+            .expect("build");
+
+        let json = ontology.to_json().expect("to_json");
+        let restored = Ontology::from_json(&json).expect("from_json");
+        assert_eq!(restored.axiom_count(), 3);
+        let alice = restored
+            .lookup_entity("http://example.org/alice")
+            .expect("alice");
+        let person = restored
+            .lookup_entity("http://example.org/Person")
+            .expect("Person");
+        assert_eq!(restored.classes_of(alice), &[person]);
     }
 
     #[test]

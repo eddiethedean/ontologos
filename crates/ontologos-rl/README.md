@@ -1,0 +1,26 @@
+# ontologos-rl
+
+OWL 2 RL forward-chaining rule engine for [OntoLogos](https://github.com/eddiethedean/ontologos).
+
+Runs RDFS materialization first, then applies OWL RL TBox and ABox rules until saturation.
+
+## Example
+
+```rust
+use ontologos_core::Ontology;
+use ontologos_rl::RlEngine;
+
+let mut ontology = Ontology::builder()
+    .class("http://example.org/A")?
+    .class("http://example.org/B")?
+    .object_property("http://example.org/R")?
+    .object_property("http://example.org/S")?
+    .subproperty_of("http://example.org/R", "http://example.org/S")?
+    .build()?;
+
+let report = RlEngine::new(1).saturate(&mut ontology)?;
+assert!(report.inferred_total() >= 0);
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+For [`Reasoner`](https://docs.rs/ontologos-core/latest/ontologos_core/struct.Reasoner.html) integration use `ontologos_rl::classify_reasoner`.

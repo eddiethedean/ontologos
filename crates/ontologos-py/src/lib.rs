@@ -1,12 +1,12 @@
 //! Python bindings for OntoLogos.
 //!
-//! v0.3: alpha placeholder — loads ontologies via `ontologos_parser::load_ontology`.
-//! Pass `profile="rdfs"` to run RDFS materialization via `classify()`; default `auto`
-//! returns not-implemented until OWL EL/RL classification ships in v0.5.
+//! v0.4: loads ontologies via `ontologos_parser::load_ontology`.
+//! Pass `profile="rdfs"` or `profile="rl"` to run materialization via `classify()`.
 
 use ontologos_core::{Profile, Reasoner};
 use ontologos_parser::load_ontology;
 use ontologos_rdfs::classify_reasoner;
+use ontologos_rl::classify_reasoner as classify_rl_reasoner;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 
@@ -45,6 +45,8 @@ impl PyReasoner {
     fn classify(&mut self) -> PyResult<()> {
         match self.reasoner.profile() {
             Profile::Rdfs => classify_reasoner(&mut self.reasoner)
+                .map_err(|e| PyRuntimeError::new_err(e.to_string())),
+            Profile::Rl => classify_rl_reasoner(&mut self.reasoner)
                 .map_err(|e| PyRuntimeError::new_err(e.to_string())),
             _ => self
                 .reasoner

@@ -1,4 +1,4 @@
-# Supported OWL Constructs (v0.3)
+# Supported OWL Constructs (v0.4)
 
 The parser **maps** a subset of OWL TBox axioms into `ontologos-core`. Other constructs are **scanned** for profile detection (`ParseMeta.constructs`) but **skipped** with warnings.
 
@@ -18,16 +18,21 @@ The parser **maps** a subset of OWL TBox axioms into `ontologos-core`. Other con
 | `SymmetricObjectProperty` | `SymmetricObjectProperty` |
 | `ReflexiveObjectProperty` | `ReflexiveObjectProperty` |
 | `FunctionalObjectProperty` | `FunctionalObjectProperty` |
+| `AsymmetricObjectProperty` | `AsymmetricObjectProperty` |
+| `EquivalentObjectProperties` (named operands) | `EquivalentObjectProperties` |
+| `ClassAssertion` (named individual, named class) | `ClassAssertion` |
+| `ObjectPropertyAssertion` (named individuals + property) | `ObjectPropertyAssertion` |
+| `SameIndividual` / `DifferentIndividuals` (named) | `SameIndividual` / `DifferentIndividuals` |
 
 Entity declarations (classes, properties, individuals) are registered even when surrounding axioms are skipped.
 
-## Scanned but not mapped (v0.2)
+## Scanned but not mapped
 
 Examples (non-exhaustive):
 
 - Complex class expressions: `ObjectUnionOf`, `ObjectIntersectionOf`, `ObjectComplementOf`, `ObjectAllValuesFrom`, cardinalities, nominals
-- `DisjointUnion`, `EquivalentObjectProperties`, asymmetric/irreflexive/inverse-functional properties
-- ABox: `ClassAssertion`, `ObjectPropertyAssertion`, individual equality
+- `DisjointUnion`, irreflexive/inverse-functional properties
+- Negative property assertions, data property assertions
 - Data properties and datatypes (declarations may register entities; axioms skipped)
 - SWRL rules, annotations (neutral for profile diagnostics)
 
@@ -35,15 +40,18 @@ Skipped axioms increment `parse_meta.skipped_axiom_count` and append to `parse_m
 
 `owl:imports` declarations are scanned but **not resolved** — imported ontologies are not loaded.
 
-## RDFS materialization scope (v0.3)
+## RDFS materialization scope
 
 | Input in core | Materialized by `ontologos-rdfs` |
 |---------------|----------------------------------|
 | `SubClassOf` | Transitive closure |
 | `SubObjectPropertyOf` | Transitive closure |
 | `ObjectPropertyDomain` / `ObjectPropertyRange` | Inherited along `subPropertyOf` |
-| `EquivalentClasses` | Stored only; not expanded to mutual `SubClassOf` (v0.4+ RL) |
-| Data properties, ABox, `rdf:type` | Not in scope (parser skips or deferred) |
+| `EquivalentClasses` | Stored only; mutual `SubClassOf` via `ontologos-rl` |
+
+## OWL RL saturation scope (v0.4)
+
+`RlEngine::saturate` runs RDFS materialization first, then RL TBox/ABox rules (equivalence, property characteristics, existentials, type/property propagation, `sameAs`, disjoint clash detection). See [`ontologos-rl`](../../crates/ontologos-rl/README.md).
 
 ## Profile detection input
 

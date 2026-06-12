@@ -65,5 +65,20 @@ fn note_axiom_construct(axiom: &ontologos_core::Axiom, constructs: &mut BTreeSet
         Axiom::FunctionalObjectProperty(_) => {
             constructs.insert(OwlConstruct::FunctionalObjectProperty);
         }
+        Axiom::AsymmetricObjectProperty(_) => {
+            constructs.insert(OwlConstruct::AsymmetricObjectProperty);
+        }
+        Axiom::EquivalentObjectProperties(_) => {
+            constructs.insert(OwlConstruct::EquivalentObjectProperties);
+        }
+        Axiom::ClassAssertion { .. } => {
+            constructs.insert(OwlConstruct::ClassAssertion);
+        }
+        Axiom::ObjectPropertyAssertion { .. } => {
+            constructs.insert(OwlConstruct::ObjectPropertyAssertion);
+        }
+        Axiom::SameIndividual(_) | Axiom::DifferentIndividuals(_) => {
+            constructs.insert(OwlConstruct::IndividualEquality);
+        }
     }
 }

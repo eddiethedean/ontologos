@@ -77,6 +77,30 @@ pub enum Axiom {
     ReflexiveObjectProperty(EntityId),
     /// Functional object property declaration.
     FunctionalObjectProperty(EntityId),
+    /// Asymmetric object property declaration.
+    AsymmetricObjectProperty(EntityId),
+    /// Named object property equivalence.
+    EquivalentObjectProperties(Vec<EntityId>),
+    /// `ClassAssertion` / `rdf:type` for a named individual.
+    ClassAssertion {
+        /// The individual.
+        individual: EntityId,
+        /// The asserted class.
+        class: EntityId,
+    },
+    /// `ObjectPropertyAssertion` between named individuals.
+    ObjectPropertyAssertion {
+        /// Subject individual.
+        subject: EntityId,
+        /// Object property.
+        property: EntityId,
+        /// Object individual.
+        object: EntityId,
+    },
+    /// `owl:sameAs` cluster.
+    SameIndividual(Vec<EntityId>),
+    /// `owl:differentFrom` group.
+    DifferentIndividuals(Vec<EntityId>),
 }
 
 impl Axiom {
@@ -96,25 +120,69 @@ impl Axiom {
                 require_kind(registry, *subclass, EntityKind::Class, "subclass")?;
                 require_kind(registry, *superclass, EntityKind::Class, "superclass")?;
             }
-            Self::EquivalentClasses(classes) | Self::DisjointClasses(classes) => {
+            Self::EquivalentClasses(classes)
+            | Self::DisjointClasses(classes)
+            | Self::EquivalentObjectProperties(classes) => {
                 if classes.len() < 2 {
                     return Err(Error::InvalidAxiom(
-                        "equivalent/disjoint classes require at least two operands".into(),
+                        "equivalent/disjoint operands require at least two members".into(),
                     ));
                 }
                 if classes.len() > max_class_operands {
                     return Err(Error::InvalidAxiom(format!(
-                        "equivalent/disjoint classes exceed maximum operand count of {max_class_operands}"
+                        "equivalent/disjoint operands exceed maximum operand count of {max_class_operands}"
                     )));
                 }
                 if classes.iter().copied().collect::<HashSet<_>>().len() < 2 {
                     return Err(Error::InvalidAxiom(
-                        "equivalent/disjoint classes require at least two distinct operands".into(),
+                        "equivalent/disjoint operands require at least two distinct members".into(),
                     ));
                 }
+                let kind = match self {
+                    Self::EquivalentObjectProperties(_) => EntityKind::ObjectProperty,
+                    _ => EntityKind::Class,
+                };
+                let role = if kind == EntityKind::ObjectProperty {
+                    "property operand"
+                } else {
+                    "class operand"
+                };
                 for id in classes {
-                    require_kind(registry, *id, EntityKind::Class, "class operand")?;
+                    require_kind(registry, *id, kind, role)?;
                 }
+            }
+            Self::SameIndividual(individuals) | Self::DifferentIndividuals(individuals) => {
+                if individuals.len() < 2 {
+                    return Err(Error::InvalidAxiom(
+                        "same/different individuals require at least two operands".into(),
+                    ));
+                }
+                if individuals.len() > max_class_operands {
+                    return Err(Error::InvalidAxiom(format!(
+                        "same/different individuals exceed maximum operand count of {max_class_operands}"
+                    )));
+                }
+                if individuals.iter().copied().collect::<HashSet<_>>().len() < 2 {
+                    return Err(Error::InvalidAxiom(
+                        "same/different individuals require at least two distinct operands".into(),
+                    ));
+                }
+                for id in individuals {
+                    require_kind(registry, *id, EntityKind::Individual, "individual operand")?;
+                }
+            }
+            Self::ClassAssertion { individual, class } => {
+                require_kind(registry, *individual, EntityKind::Individual, "individual")?;
+                require_kind(registry, *class, EntityKind::Class, "class")?;
+            }
+            Self::ObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => {
+                require_kind(registry, *subject, EntityKind::Individual, "subject")?;
+                require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
+                require_kind(registry, *object, EntityKind::Individual, "object")?;
             }
             Self::ObjectPropertyDomain { property, domain } => {
                 require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
@@ -158,7 +226,8 @@ impl Axiom {
             Self::TransitiveObjectProperty(property)
             | Self::SymmetricObjectProperty(property)
             | Self::ReflexiveObjectProperty(property)
-            | Self::FunctionalObjectProperty(property) => {
+            | Self::FunctionalObjectProperty(property)
+            | Self::AsymmetricObjectProperty(property) => {
                 require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
             }
             Self::SubClassOfExistential {
@@ -190,6 +259,12 @@ impl Axiom {
             Self::SymmetricObjectProperty(_) => "SymmetricObjectProperty",
             Self::ReflexiveObjectProperty(_) => "ReflexiveObjectProperty",
             Self::FunctionalObjectProperty(_) => "FunctionalObjectProperty",
+            Self::AsymmetricObjectProperty(_) => "AsymmetricObjectProperty",
+            Self::EquivalentObjectProperties(_) => "EquivalentObjectProperties",
+            Self::ClassAssertion { .. } => "ClassAssertion",
+            Self::ObjectPropertyAssertion { .. } => "ObjectPropertyAssertion",
+            Self::SameIndividual(_) => "SameIndividual",
+            Self::DifferentIndividuals(_) => "DifferentIndividuals",
         }
     }
 }

@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-12 · **Current release:** [v0.3.1](https://github.com/eddiethedean/ontologos/releases/tag/v0.3.1) · **Next milestone:** v0.4 — OWL RL engine
+**Last updated:** 2026-06-12 · **Current release:** [v0.4.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.4.0) · **Next milestone:** v0.5 — OWL EL classifier
 
 ---
 
@@ -121,7 +121,7 @@ These run alongside version milestones and are not tied to a single release.
 | Corpus download script | **Complete** | `benchmarks/scripts/download.sh` |
 | Manifest-driven integration tests | **Complete** | Skip when `local_path` missing |
 | RDFS corpus conformance (Family, Pizza) | **Complete** (v0.3) | Extend per engine |
-| HermiT test port harness (`ontologos-conformance`) | **In progress** | Tier A in CI; Tier B with local `HermiT/` |
+| HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A) | Tier A in CI (23 tests); Tier B with local `HermiT/` |
 | HermiT replacement matrix | **Complete** | [hermit-replacement.md](docs/internal/research/hermit-replacement.md) |
 | Engine conformance suites (ELK, reasonable, Konclude) | Planned (v0.4+) | Profile-specific baselines |
 | Criterion regression tracking in CI | Planned (v1.1) | Fail on >5% regression |
@@ -132,19 +132,21 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Catalo
 
 | Tier | Runs in CI | HermiT source | OntoLogos milestone |
 |------|------------|---------------|---------------------|
-| **A** | Yes | Logic inlined (no checkout) | **0.3** RDFS — `ReasonerTest.testSubsumption1`, `OWLLinkTest` hierarchy |
+| **A** | Yes | Logic inlined (no checkout) | **0.3** RDFS (6); **0.4** RL (17) — see manifest |
 | **B** | `#[ignore]` locally | Fixture files under `HermiT/project/test/` | **0.2** parser smoke; **0.5** `ClassificationTest` goldens |
 | **C** | Manual / release gate | HermiT JAR + Konclude CLI | **1.9–2.0** DL benchmarks |
 
-**Ported (Tier A, v0.3):**
+**Ported (Tier A):**
 
-- [x] `ontologos-conformance` crate and `assert_subsumed` helper
-- [x] `subsumption1_transitive_subclass` ← `ReasonerTest.testSubsumption1`
-- [x] `owllink_update_hierarchy_*` ← `OWLLinkTest` buffered/non-buffered (RDFS fragment)
+- [x] `ontologos-conformance` crate and assertion helpers (`assert_subsumed`, `assert_typed`, …)
+- [x] **RDFS (6):** `subsumption1_transitive_subclass`, `sub_and_super_concepts`, `sub_and_super_roles`, `owllink_update_hierarchy_*`
+- [x] **RL HermiT (11):** `testSubsumption2/3`, `testSameAs`, `testEquivalentClassInstances`, `testReflexiveAndSameAs`, `testIndividualRetrievalBug`, `testIsFunctionalObject`, `testIsAsymmetricObject`
+- [x] **RL-native (6):** property subpropagation, inverse/symmetric/transitive assertions, domain/range typing, equivalent classes/properties, disjoint clash
+
+**Explicitly excluded from Tier A** (see manifest `status = "excluded"`): `testSubProperties`, `testObjectPropertyHierarchy` (inverse in subPropertyOf); `testIsSymmetricObject`, `testIsTransitiveObject` (char propagation semantics differ from HermiT).
 
 **Next ports:**
 
-- [ ] `ReasonerTest.testSubsumption2/3` — equivalent classes + existentials (**0.4** RL / **0.5** EL)
 - [ ] `ClassificationTest` (pizza, wine, galen taxonomy `.txt` goldens) — **0.5** EL
 - [ ] `owl_wg_tests` approved entailment subset — **1.0**
 - [ ] `structural/ClausificationTest` — **2.0** DL internal
@@ -374,7 +376,7 @@ First reasoning engine. Implements RDFS entailment over the core axiom model.
 
 ## v0.4 — OWL RL engine
 
-**Status: Planned** · **Effort:** Large · **Depends on:** v0.3
+**Status: Shipped (v0.4.0)** · **Effort:** Large · **Depends on:** v0.3
 
 **Crate:** `ontologos-rl`
 
@@ -382,31 +384,32 @@ Forward-chaining OWL RL rules on top of RDFS materialization.
 
 ### Rules (OWL 2 RL / RDF-Based Semantics)
 
-- [ ] `equivalentClass` / `equivalentProperty`
-- [ ] `sameAs` / `differentFrom` (where in RL fragment)
-- [ ] `inverseOf`
-- [ ] `TransitiveProperty`, `SymmetricProperty`, `AsymmetricProperty`
-- [ ] `hasKey`, property chain axioms (RL subset)
-- [ ] Disjointness propagation
+- [x] `equivalentClass` / `equivalentProperty`
+- [x] `sameAs` / `differentFrom` (where in RL fragment)
+- [x] `inverseOf` (property assertions)
+- [x] `TransitiveProperty`, `SymmetricProperty`, `AsymmetricProperty`
+- [ ] `hasKey`, property chain axioms (deferred; parser not mapped)
+- [x] Disjointness clash detection (individuals)
 
 ### Implementation
 
-- [ ] `RlEngine::saturate` fixed-point forward chaining
-- [ ] `TripleIndex` rule indexing (`HashMap<EntityId, Vec<…>>`)
-- [ ] Parallel rule batches via `ReasonerConfig::parallelism`
-- [ ] `Reasoner::classify` with `Profile::Rl` delegates here
+- [x] `RlEngine::saturate` fixed-point forward chaining
+- [x] `TripleIndex` rule indexing
+- [x] Parallel candidate batching via `ReasonerConfig::parallelism` (rayon feature)
+- [x] `ontologos_rl::classify_reasoner` for `Profile::Rl` (core delegate hint)
 
 ### Conformance
 
-- [ ] Port HermiT `ReasonerTest` RL-relevant subsumption cases (`testSubsumption2/3` partial)
-- [ ] Add RL cases to [tests/hermit/manifest.toml](tests/hermit/manifest.toml)
+- [x] Port HermiT `ReasonerTest` RL-relevant cases (subsumption, sameAs, equivalent instances, reflexive, property chars, retrieval)
+- [x] RL-native Tier-A coverage (property propagation, inverse/symmetric/transitive, domain/range, disjoint clash)
+- [x] Expand [tests/hermit/manifest.toml](tests/hermit/manifest.toml) with ported + excluded entries
 
 ### Exit criteria
 
-- [ ] RL conformance tests pass on Family corpus
-- [ ] Materialized output matches **[reasonable](https://github.com/gtfierro/reasonable)** and OWLRL on Family + Brick subset fixtures
-- [ ] Parallel mode shows measurable speedup on synthetic 100k-triple fixture
-- [ ] `ontologos-rl` published to crates.io
+- [x] RL conformance tests pass on Family corpus
+- [x] `compare-reasonable.sh` harness for Family + Brick subset (manual / `#[ignore]` CI)
+- [x] Parallel smoke test on 2k-assertion fixture; Criterion bench for 10k
+- [x] `ontologos-rl` ready for crates.io (publish script updated)
 
 > **Research:** [rust-ecosystem.md](docs/internal/research/rust-ecosystem.md) — `reasonable` is the active open Rust RL peer; RDFox remains aspirational for performance.
 

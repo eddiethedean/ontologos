@@ -75,6 +75,18 @@ fn normalize_class_operands(axiom: Axiom) -> Axiom {
             classes.sort_by_key(|id| id.0);
             Axiom::DisjointClasses(classes)
         }
+        Axiom::EquivalentObjectProperties(mut properties) => {
+            properties.sort_by_key(|id| id.0);
+            Axiom::EquivalentObjectProperties(properties)
+        }
+        Axiom::SameIndividual(mut individuals) => {
+            individuals.sort_by_key(|id| id.0);
+            Axiom::SameIndividual(individuals)
+        }
+        Axiom::DifferentIndividuals(mut individuals) => {
+            individuals.sort_by_key(|id| id.0);
+            Axiom::DifferentIndividuals(individuals)
+        }
         other => other,
     }
 }
@@ -119,9 +131,17 @@ pub struct AxiomIndex {
     symmetric_properties: HashSet<EntityId>,
     reflexive_properties: HashSet<EntityId>,
     functional_properties: HashSet<EntityId>,
+    asymmetric_properties: HashSet<EntityId>,
     equivalent_classes: HashMap<EntityId, HashSet<EntityId>>,
+    equivalent_properties: HashMap<EntityId, HashSet<EntityId>>,
     disjoint_with: HashMap<EntityId, HashSet<EntityId>>,
     inverse_of: HashMap<EntityId, EntityId>,
+    classes_of: HashMap<EntityId, Vec<EntityId>>,
+    individuals_of: HashMap<EntityId, Vec<EntityId>>,
+    object_assertions_by_subject: HashMap<EntityId, Vec<(EntityId, EntityId)>>,
+    object_assertions_by_object: HashMap<EntityId, Vec<(EntityId, EntityId)>>,
+    same_as: HashMap<EntityId, HashSet<EntityId>>,
+    different_from: HashMap<EntityId, HashSet<EntityId>>,
     by_kind: HashMap<&'static str, Vec<AxiomId>>,
 }
 
@@ -196,8 +216,14 @@ impl AxiomIndex {
             Axiom::FunctionalObjectProperty(property) => {
                 self.functional_properties.insert(*property);
             }
+            Axiom::AsymmetricObjectProperty(property) => {
+                self.asymmetric_properties.insert(*property);
+            }
             Axiom::EquivalentClasses(classes) => {
                 merge_equivalence_class(&mut self.equivalent_classes, classes);
+            }
+            Axiom::EquivalentObjectProperties(properties) => {
+                merge_equivalence_class(&mut self.equivalent_properties, properties);
             }
             Axiom::DisjointClasses(classes) => {
                 for i in 0..classes.len() {
@@ -209,6 +235,39 @@ impl AxiomIndex {
             Axiom::InverseObjectProperties { left, right } => {
                 self.inverse_of.insert(*left, *right);
                 self.inverse_of.insert(*right, *left);
+            }
+            Axiom::ClassAssertion { individual, class } => {
+                push_unique(self.classes_of.entry(*individual).or_default(), *class);
+                push_unique(self.individuals_of.entry(*class).or_default(), *individual);
+            }
+            Axiom::ObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => {
+                let pair = (*property, *object);
+                let entry = self
+                    .object_assertions_by_subject
+                    .entry(*subject)
+                    .or_default();
+                if !entry.contains(&pair) {
+                    entry.push(pair);
+                }
+                let reverse = (*property, *subject);
+                let entry = self.object_assertions_by_object.entry(*object).or_default();
+                if !entry.contains(&reverse) {
+                    entry.push(reverse);
+                }
+            }
+            Axiom::SameIndividual(individuals) => {
+                merge_equivalence_class(&mut self.same_as, individuals);
+            }
+            Axiom::DifferentIndividuals(individuals) => {
+                for i in 0..individuals.len() {
+                    for j in (i + 1)..individuals.len() {
+                        link_symmetric(&mut self.different_from, individuals[i], individuals[j]);
+                    }
+                }
             }
         }
     }
@@ -305,6 +364,58 @@ impl AxiomIndex {
     #[must_use]
     pub fn functional_properties(&self) -> &HashSet<EntityId> {
         &self.functional_properties
+    }
+
+    /// Properties declared asymmetric.
+    #[must_use]
+    pub fn asymmetric_properties(&self) -> &HashSet<EntityId> {
+        &self.asymmetric_properties
+    }
+
+    /// Classes asserted for an individual.
+    #[must_use]
+    pub fn classes_of(&self, individual: EntityId) -> &[EntityId] {
+        self.classes_of.get(&individual).map_or(&[], Vec::as_slice)
+    }
+
+    /// Individuals asserted for a class.
+    #[must_use]
+    pub fn individuals_of(&self, class: EntityId) -> &[EntityId] {
+        self.individuals_of.get(&class).map_or(&[], Vec::as_slice)
+    }
+
+    /// Object property assertions with the given subject (`property`, `object` pairs).
+    #[must_use]
+    pub fn object_assertions_of(&self, subject: EntityId) -> &[(EntityId, EntityId)] {
+        self.object_assertions_by_subject
+            .get(&subject)
+            .map_or(&[], Vec::as_slice)
+    }
+
+    /// Object property assertions with the given object (`property`, `subject` pairs).
+    #[must_use]
+    pub fn object_assertions_to(&self, object: EntityId) -> &[(EntityId, EntityId)] {
+        self.object_assertions_by_object
+            .get(&object)
+            .map_or(&[], Vec::as_slice)
+    }
+
+    /// Properties declared equivalent to the given property.
+    #[must_use]
+    pub fn equivalent_properties_of(&self, property: EntityId) -> Option<&HashSet<EntityId>> {
+        self.equivalent_properties.get(&property)
+    }
+
+    /// Individuals declared same-as the given individual.
+    #[must_use]
+    pub fn same_as(&self, individual: EntityId) -> Option<&HashSet<EntityId>> {
+        self.same_as.get(&individual)
+    }
+
+    /// Individuals declared different-from the given individual.
+    #[must_use]
+    pub fn different_from(&self, individual: EntityId) -> Option<&HashSet<EntityId>> {
+        self.different_from.get(&individual)
     }
 
     /// Axiom ids grouped by kind tag.

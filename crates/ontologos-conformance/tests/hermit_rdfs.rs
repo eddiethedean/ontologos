@@ -3,7 +3,7 @@
 //! Source: `HermiT/project/test/org/semanticweb/HermiT/reasoner/ReasonerTest.java`
 //!         `HermiT/project/test/org/semanticweb/HermiT/reasoner/OWLLinkTest.java`
 
-use ontologos_conformance::{assert_subsumed, PORT_NS};
+use ontologos_conformance::{assert_subproperty, assert_subsumed, PORT_NS};
 use ontologos_core::Ontology;
 use ontologos_rdfs::RdfsEngine;
 
@@ -122,4 +122,58 @@ fn owllink_update_hierarchy_buffered_flushed() {
 fn owllink_update_hierarchy_non_buffered() {
     owllink_update_hierarchy_buffered_initial();
     owllink_update_hierarchy_buffered_flushed();
+}
+
+/// HermiT `ReasonerTest.testSubAndSuperConcepts`
+#[test]
+fn sub_and_super_concepts() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("C"))
+        .expect("C")
+        .class(&iri("D"))
+        .expect("D")
+        .class(&iri("E"))
+        .expect("E")
+        .subclass_of(&iri("C"), &iri("D"))
+        .expect("C sub D")
+        .subclass_of(&iri("D"), &iri("E"))
+        .expect("D sub E")
+        .build()
+        .expect("build");
+
+    materialize(&mut ontology);
+
+    assert!(assert_subsumed(&ontology, &iri("C"), &iri("D")));
+    assert!(assert_subsumed(&ontology, &iri("C"), &iri("E")));
+    assert!(assert_subsumed(&ontology, &iri("D"), &iri("E")));
+    assert!(!assert_subsumed(&ontology, &iri("D"), &iri("C")));
+    assert!(!assert_subsumed(&ontology, &iri("E"), &iri("C")));
+    assert!(!assert_subsumed(&ontology, &iri("E"), &iri("D")));
+}
+
+/// HermiT `ReasonerTest.testSubAndSuperRoles`
+#[test]
+fn sub_and_super_roles() {
+    let mut ontology = Ontology::builder()
+        .object_property(&iri("r"))
+        .expect("r")
+        .object_property(&iri("s"))
+        .expect("s")
+        .object_property(&iri("t"))
+        .expect("t")
+        .subproperty_of(&iri("r"), &iri("s"))
+        .expect("r sub s")
+        .subproperty_of(&iri("s"), &iri("t"))
+        .expect("s sub t")
+        .build()
+        .expect("build");
+
+    materialize(&mut ontology);
+
+    assert!(assert_subproperty(&ontology, &iri("r"), &iri("s")));
+    assert!(assert_subproperty(&ontology, &iri("r"), &iri("t")));
+    assert!(assert_subproperty(&ontology, &iri("s"), &iri("t")));
+    assert!(!assert_subproperty(&ontology, &iri("s"), &iri("r")));
+    assert!(!assert_subproperty(&ontology, &iri("t"), &iri("r")));
+    assert!(!assert_subproperty(&ontology, &iri("t"), &iri("s")));
 }

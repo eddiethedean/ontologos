@@ -10,29 +10,31 @@ A modular Rust ontology reasoner **in early development**.
 
 **Display name:** OntoLogos · **Crates:** `ontologos-*` · **CLI binary:** `ontologos`
 
-**v0.3 (today):** RDFS materialization via [`ontologos-rdfs`](crates/ontologos-rdfs), plus OWL parsing, profile detection, and the in-memory model from v0.2.
+**v0.4 (today):** OWL RL forward-chaining via [`ontologos-rl`](crates/ontologos-rl) (on top of RDFS), full ABox in core, plus parsing and profile detection from v0.2–v0.3.
 
-**Planned:** OWL RL/EL reasoning (v0.4–v0.5), explanations (v0.6), Python bindings (v0.9).
+**Planned:** OWL EL reasoning (v0.5), explanations (v0.6), Python bindings (v0.9).
 
 If you need OWL classification today, use Protégé with HermiT or ELK. If you want to embed a Rust ontology graph, load OWL files, or evaluate the architecture, start below.
 
-## What works in v0.3
+## What works in v0.4
 
 | Feature | Status |
 |---------|--------|
 | IRI intern pool, entity registry, axiom store | Available |
 | `OntologyBuilder` programmatic construction | Available |
 | JSON snapshot v2 (`to_json` / `from_json`) | Available |
-| Axiom indexes (subclass, subproperty, equivalence, …) | Available |
+| ABox axioms (class/property assertions, same/different) | Available |
+| Axiom indexes (subclass, subproperty, equivalence, ABox, …) | Available |
 | OWL file loading (`.owl`, `.rdf`, `.ttl`, `.ofn`) | Available |
 | Profile detection (EL / RL / QL / DL) | Available |
 | RDFS materialization (TBox rules) | Available |
+| OWL RL saturation (`RlEngine::saturate`) | Available |
 | `ontologos profile` CLI | Available |
 | `ontologos materialize` CLI | Available |
-| OWL RL / EL reasoning | v0.4–v0.5 |
 | `classify` CLI (RDFS) | Available |
+| OWL EL reasoning | v0.5 |
 | `explain` CLI | v0.6 (see [ROADMAP](ROADMAP.md)) |
-| Python bindings (full API) | v0.9 |
+| Python bindings (`profile=rdfs` / `rl`) | Alpha |
 
 ## Install (library)
 
@@ -42,10 +44,11 @@ From [crates.io](https://crates.io/crates/ontologos-core):
 
 ```toml
 [dependencies]
-ontologos-core = "0.3.1"
-ontologos-parser = "0.3.1"
-ontologos-profile = "0.3.1"
-ontologos-rdfs = "0.3.1"
+ontologos-core = "0.4.0"
+ontologos-parser = "0.4.0"
+ontologos-profile = "0.4.0"
+ontologos-rdfs = "0.4.0"
+ontologos-rl = "0.4.0"
 ```
 
 From this repository:

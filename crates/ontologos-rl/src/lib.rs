@@ -1,62 +1,48 @@
 //! OWL RL forward-chaining rule engine.
+//!
+//! # Example
+//!
+//! ```
+//! use ontologos_core::Ontology;
+//! use ontologos_rl::RlEngine;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let mut ontology = Ontology::builder()
+//!     .class("http://example.org/A")?
+//!     .class("http://example.org/B")?
+//!     .subclass_of("http://example.org/A", "http://example.org/B")?
+//!     .build()?;
+//! let report = RlEngine::new(1).saturate(&mut ontology)?;
+//! assert!(report.inferred_total() >= 0);
+//! # Ok(())
+//! # }
+//! ```
 
-use ontologos_core::{EntityId, Error as CoreError, Ontology};
+mod engine;
+mod reasoner;
+mod report;
+mod rules;
+mod triple_index;
+
+pub use engine::RlEngine;
+pub use reasoner::{classify_reasoner, materialize_reasoner};
+pub use report::{InferenceRecord, MaterializationReport, RlRule};
+pub use triple_index::TripleIndex;
+
+use ontologos_core::Error as CoreError;
 use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("owl rl reasoning not yet implemented")]
-    NotImplemented,
+    #[error("expected profile {expected:?}, got {actual:?}")]
+    WrongProfile {
+        expected: ontologos_core::Profile,
+        actual: ontologos_core::Profile,
+    },
     #[error(transparent)]
     Core(#[from] CoreError),
-}
-
-/// Indexed triple store used by the RL engine.
-#[derive(Debug, Default)]
-pub struct TripleIndex {
-    #[allow(dead_code)]
-    entries: std::collections::HashMap<EntityId, Vec<u32>>,
-}
-
-impl TripleIndex {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-/// OWL RL rule engine with optional parallel execution.
-#[derive(Debug)]
-pub struct RlEngine {
-    parallelism: usize,
-}
-
-const MAX_PARALLELISM: usize = 64;
-
-impl RlEngine {
-    #[must_use]
-    pub fn new(parallelism: usize) -> Self {
-        Self { parallelism }
-    }
-
-    /// Validate parallelism is within supported bounds.
-    pub fn try_new(parallelism: usize) -> Result<Self> {
-        if parallelism == 0 || parallelism > MAX_PARALLELISM {
-            return Err(Error::Core(CoreError::Message(format!(
-                "parallelism must be in 1..={MAX_PARALLELISM}, got {parallelism}"
-            ))));
-        }
-        Ok(Self { parallelism })
-    }
-
-    /// Run forward chaining until saturation.
-    pub fn saturate(&self, ontology: &Ontology) -> Result<()> {
-        let _ = ontology;
-        let _ = self.parallelism;
-        Err(Error::NotImplemented)
-    }
 }
 
 #[cfg(test)]

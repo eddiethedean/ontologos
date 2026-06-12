@@ -1,6 +1,6 @@
 use horned_owl::model::{
-    AnnotatedComponent, Class, ClassExpression, Component, ObjectProperty,
-    ObjectPropertyExpression, RcStr, SubObjectPropertyExpression,
+    AnnotatedComponent, Class, ClassExpression, Component, Individual, NamedIndividual,
+    ObjectProperty, ObjectPropertyExpression, RcStr, SubObjectPropertyExpression,
 };
 use horned_owl::ontology::set::SetOntology;
 use ontologos_core::{Axiom, EntityId, EntityKind, Error as CoreError, Ontology, OwlConstruct};
@@ -69,13 +69,7 @@ impl Mapper<'_> {
                 self.map_sub_object_property(&axiom.sub, &axiom.sup);
             }
             Component::EquivalentObjectProperties(axiom) => {
-                self.report
-                    .meta
-                    .note_construct(OwlConstruct::EquivalentObjectProperties);
-                self.skip(&format!(
-                    "EquivalentObjectProperties ({} operands) not mapped in v0.2",
-                    axiom.0.len()
-                ));
+                self.map_equivalent_object_properties(&axiom.0);
             }
             Component::DisjointObjectProperties(_) => {
                 self.report
@@ -116,11 +110,7 @@ impl Mapper<'_> {
                 self.map_symmetric_property(&axiom.0);
             }
             Component::AsymmetricObjectProperty(axiom) => {
-                self.report
-                    .meta
-                    .note_construct(OwlConstruct::AsymmetricObjectProperty);
-                self.scan_object_property_expression(&axiom.0);
-                self.skip("AsymmetricObjectProperty not mapped in v0.2");
+                self.map_asymmetric_property(&axiom.0);
             }
             Component::TransitiveObjectProperty(axiom) => {
                 self.map_transitive_property(&axiom.0);
@@ -131,17 +121,11 @@ impl Mapper<'_> {
                 let _ = &axiom.vpe;
                 self.skip("HasKey not mapped in v0.2");
             }
-            Component::ClassAssertion(_) => {
-                self.report
-                    .meta
-                    .note_construct(OwlConstruct::ClassAssertion);
-                self.skip("ABox assertion not mapped in v0.2");
+            Component::ClassAssertion(axiom) => {
+                self.map_class_assertion(&axiom.ce, &axiom.i);
             }
-            Component::ObjectPropertyAssertion(_) => {
-                self.report
-                    .meta
-                    .note_construct(OwlConstruct::ObjectPropertyAssertion);
-                self.skip("ABox assertion not mapped in v0.2");
+            Component::ObjectPropertyAssertion(axiom) => {
+                self.map_object_property_assertion(&axiom.ope, &axiom.from, &axiom.to);
             }
             Component::DataPropertyAssertion(_)
             | Component::NegativeObjectPropertyAssertion(_)
@@ -151,12 +135,8 @@ impl Mapper<'_> {
                     .note_construct(OwlConstruct::DataPropertyAssertion);
                 self.skip("ABox assertion not mapped in v0.2");
             }
-            Component::SameIndividual(_) | Component::DifferentIndividuals(_) => {
-                self.report
-                    .meta
-                    .note_construct(OwlConstruct::IndividualEquality);
-                self.skip("individual equality axiom not mapped in v0.2");
-            }
+            Component::SameIndividual(axiom) => self.map_same_individual(&axiom.0),
+            Component::DifferentIndividuals(axiom) => self.map_different_individuals(&axiom.0),
             Component::SubDataPropertyOf(_)
             | Component::EquivalentDataProperties(_)
             | Component::DisjointDataProperties(_)
@@ -404,6 +384,95 @@ impl Mapper<'_> {
         }
     }
 
+    fn map_asymmetric_property(&mut self, ope: &ObjectPropertyExpression<RcStr>) {
+        self.report
+            .meta
+            .note_construct(OwlConstruct::AsymmetricObjectProperty);
+        if let Some(prop_id) = self.named_object_property(ope) {
+            self.push_axiom(Axiom::AsymmetricObjectProperty(prop_id));
+        } else {
+            self.skip("AsymmetricObjectProperty with non-named property not mapped in v0.4");
+        }
+    }
+
+    fn map_equivalent_object_properties(&mut self, properties: &[ObjectPropertyExpression<RcStr>]) {
+        self.report
+            .meta
+            .note_construct(OwlConstruct::EquivalentObjectProperties);
+        for ope in properties {
+            self.scan_object_property_expression(ope);
+        }
+        if let Some(ids) = self.all_named_object_properties(properties) {
+            self.push_axiom(Axiom::EquivalentObjectProperties(ids));
+        } else {
+            self.skip("EquivalentObjectProperties with non-named operands not mapped in v0.4");
+        }
+    }
+
+    fn map_class_assertion(&mut self, ce: &ClassExpression<RcStr>, individual: &Individual<RcStr>) {
+        self.report
+            .meta
+            .note_construct(OwlConstruct::ClassAssertion);
+        self.scan_class_expression(ce);
+        if let (Some(class_id), Some(individual_id)) =
+            (self.named_class(ce), self.named_individual(individual))
+        {
+            self.push_axiom(Axiom::ClassAssertion {
+                individual: individual_id,
+                class: class_id,
+            });
+        } else {
+            self.skip("ClassAssertion with complex operands not mapped in v0.4");
+        }
+    }
+
+    fn map_object_property_assertion(
+        &mut self,
+        ope: &ObjectPropertyExpression<RcStr>,
+        from: &Individual<RcStr>,
+        to: &Individual<RcStr>,
+    ) {
+        self.report
+            .meta
+            .note_construct(OwlConstruct::ObjectPropertyAssertion);
+        self.scan_object_property_expression(ope);
+        if let (Some(property_id), Some(subject_id), Some(object_id)) = (
+            self.named_object_property(ope),
+            self.named_individual(from),
+            self.named_individual(to),
+        ) {
+            self.push_axiom(Axiom::ObjectPropertyAssertion {
+                subject: subject_id,
+                property: property_id,
+                object: object_id,
+            });
+        } else {
+            self.skip("ObjectPropertyAssertion with complex operands not mapped in v0.4");
+        }
+    }
+
+    fn map_same_individual(&mut self, individuals: &[Individual<RcStr>]) {
+        self.report
+            .meta
+            .note_construct(OwlConstruct::IndividualEquality);
+        if let Some(ids) = self.all_named_individuals(individuals) {
+            self.push_axiom(Axiom::SameIndividual(ids));
+        } else {
+            self.skip("SameIndividual with anonymous individuals not mapped in v0.4");
+        }
+    }
+
+    fn map_different_individuals(&mut self, individuals: &[Individual<RcStr>]) {
+        self.report
+            .meta
+            .note_construct(OwlConstruct::IndividualEquality);
+        if let Some(ids) = self.all_named_individuals(individuals) {
+            self.push_axiom(Axiom::DifferentIndividuals(ids));
+        } else {
+            self.skip("DifferentIndividuals with anonymous individuals not mapped in v0.4");
+        }
+    }
+
     fn push_axiom(&mut self, axiom: Axiom) {
         if self.ontology.axiom_count() >= self.limits.max_axioms {
             self.report.meta.warn(format!(
@@ -448,6 +517,13 @@ impl Mapper<'_> {
             Axiom::SymmetricObjectProperty(_) => OwlConstruct::SymmetricObjectProperty,
             Axiom::ReflexiveObjectProperty(_) => OwlConstruct::ReflexiveObjectProperty,
             Axiom::FunctionalObjectProperty(_) => OwlConstruct::FunctionalObjectProperty,
+            Axiom::AsymmetricObjectProperty(_) => OwlConstruct::AsymmetricObjectProperty,
+            Axiom::EquivalentObjectProperties(_) => OwlConstruct::EquivalentObjectProperties,
+            Axiom::ClassAssertion { .. } => OwlConstruct::ClassAssertion,
+            Axiom::ObjectPropertyAssertion { .. } => OwlConstruct::ObjectPropertyAssertion,
+            Axiom::SameIndividual(_) | Axiom::DifferentIndividuals(_) => {
+                OwlConstruct::IndividualEquality
+            }
         };
         self.report.meta.note_profile_construct(construct);
         if matches!(axiom, Axiom::SubClassOfExistential { .. }) {
@@ -627,6 +703,37 @@ impl Mapper<'_> {
             }
             ObjectPropertyExpression::InverseObjectProperty(_) => None,
         }
+    }
+
+    fn all_named_object_properties(
+        &mut self,
+        properties: &[ObjectPropertyExpression<RcStr>],
+    ) -> Option<Vec<EntityId>> {
+        let mut ids = Vec::with_capacity(properties.len());
+        for ope in properties {
+            ids.push(self.named_object_property(ope)?);
+        }
+        Some(ids)
+    }
+
+    fn named_individual(&mut self, individual: &Individual<RcStr>) -> Option<EntityId> {
+        match individual {
+            Individual::Named(NamedIndividual(iri)) => self
+                .register_entity(iri_of(iri), EntityKind::Individual)
+                .ok(),
+            Individual::Anonymous(_) => None,
+        }
+    }
+
+    fn all_named_individuals(
+        &mut self,
+        individuals: &[Individual<RcStr>],
+    ) -> Option<Vec<EntityId>> {
+        let mut ids = Vec::with_capacity(individuals.len());
+        for individual in individuals {
+            ids.push(self.named_individual(individual)?);
+        }
+        Some(ids)
     }
 }
 

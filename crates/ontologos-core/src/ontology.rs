@@ -193,6 +193,54 @@ impl Ontology {
         self.index.existentials_of(subclass)
     }
 
+    /// Classes asserted for an individual.
+    #[must_use]
+    pub fn classes_of(&self, individual: EntityId) -> &[EntityId] {
+        self.index.classes_of(individual)
+    }
+
+    /// Individuals asserted for a class.
+    #[must_use]
+    pub fn individuals_of(&self, class: EntityId) -> &[EntityId] {
+        self.index.individuals_of(class)
+    }
+
+    /// Object property assertions with the given subject.
+    #[must_use]
+    pub fn object_assertions_of(&self, subject: EntityId) -> &[(EntityId, EntityId)] {
+        self.index.object_assertions_of(subject)
+    }
+
+    /// Object property assertions with the given object (`property`, `subject` pairs).
+    #[must_use]
+    pub fn object_assertions_to(&self, object: EntityId) -> &[(EntityId, EntityId)] {
+        self.index.object_assertions_to(object)
+    }
+
+    /// Declared equivalent object properties.
+    #[must_use]
+    pub fn equivalent_properties_of(
+        &self,
+        property: EntityId,
+    ) -> Option<&std::collections::HashSet<EntityId>> {
+        self.index.equivalent_properties_of(property)
+    }
+
+    /// Individuals declared `sameAs` the given individual.
+    #[must_use]
+    pub fn same_as(&self, individual: EntityId) -> Option<&std::collections::HashSet<EntityId>> {
+        self.index.same_as(individual)
+    }
+
+    /// Individuals declared `differentFrom` the given individual.
+    #[must_use]
+    pub fn different_from(
+        &self,
+        individual: EntityId,
+    ) -> Option<&std::collections::HashSet<EntityId>> {
+        self.index.different_from(individual)
+    }
+
     /// Add a validated axiom, updating indexes.
     pub fn add_axiom(&mut self, axiom: Axiom) -> Result<AxiomId> {
         self.validate_inverse_pair(&axiom)?;
@@ -305,6 +353,80 @@ impl OntologyBuilder {
             property: property_id,
             range: range_id,
         })?;
+        Ok(self)
+    }
+
+    /// Add a `ClassAssertion` axiom.
+    pub fn class_assertion(mut self, individual: &str, class: &str) -> Result<Self> {
+        let individual_id = self
+            .ontology
+            .entity_id(individual, EntityKind::Individual)?;
+        let class_id = self.ontology.entity_id(class, EntityKind::Class)?;
+        self.ontology.add_axiom(Axiom::ClassAssertion {
+            individual: individual_id,
+            class: class_id,
+        })?;
+        Ok(self)
+    }
+
+    /// Add an `ObjectPropertyAssertion` axiom.
+    pub fn object_property_assertion(
+        mut self,
+        subject: &str,
+        property: &str,
+        object: &str,
+    ) -> Result<Self> {
+        let subject_id = self.ontology.entity_id(subject, EntityKind::Individual)?;
+        let property_id = self
+            .ontology
+            .entity_id(property, EntityKind::ObjectProperty)?;
+        let object_id = self.ontology.entity_id(object, EntityKind::Individual)?;
+        self.ontology.add_axiom(Axiom::ObjectPropertyAssertion {
+            subject: subject_id,
+            property: property_id,
+            object: object_id,
+        })?;
+        Ok(self)
+    }
+
+    /// Add a `SameIndividual` axiom.
+    pub fn same_individual(mut self, individuals: &[&str]) -> Result<Self> {
+        let ids = individuals
+            .iter()
+            .map(|iri| self.ontology.entity_id(iri, EntityKind::Individual))
+            .collect::<Result<Vec<_>>>()?;
+        self.ontology.add_axiom(Axiom::SameIndividual(ids))?;
+        Ok(self)
+    }
+
+    /// Add a `DifferentIndividuals` axiom.
+    pub fn different_individuals(mut self, individuals: &[&str]) -> Result<Self> {
+        let ids = individuals
+            .iter()
+            .map(|iri| self.ontology.entity_id(iri, EntityKind::Individual))
+            .collect::<Result<Vec<_>>>()?;
+        self.ontology.add_axiom(Axiom::DifferentIndividuals(ids))?;
+        Ok(self)
+    }
+
+    /// Add an `EquivalentObjectProperties` axiom.
+    pub fn equivalent_object_properties(mut self, properties: &[&str]) -> Result<Self> {
+        let ids = properties
+            .iter()
+            .map(|iri| self.ontology.entity_id(iri, EntityKind::ObjectProperty))
+            .collect::<Result<Vec<_>>>()?;
+        self.ontology
+            .add_axiom(Axiom::EquivalentObjectProperties(ids))?;
+        Ok(self)
+    }
+
+    /// Declare an asymmetric object property.
+    pub fn asymmetric_object_property(mut self, property: &str) -> Result<Self> {
+        let property_id = self
+            .ontology
+            .entity_id(property, EntityKind::ObjectProperty)?;
+        self.ontology
+            .add_axiom(Axiom::AsymmetricObjectProperty(property_id))?;
         Ok(self)
     }
 

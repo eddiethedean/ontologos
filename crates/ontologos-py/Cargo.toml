@@ -18,6 +18,7 @@ crate-type = ["cdylib"]
 ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }
 ontologos-rdfs = { workspace = true }
+ontologos-rl = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module"] }
 
 [features]

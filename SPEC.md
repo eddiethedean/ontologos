@@ -7,7 +7,7 @@
 
 ## Overview
 
-OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.3 ships the core data model, JSON v2 serialization, OWL file loading, profile detection, and RDFS materialization.**
+OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, explanation generation, and incremental classification. **v0.4 ships ABox in core, OWL RL saturation (`ontologos-rl`), plus parsing, profile detection, and RDFS from v0.2–v0.3.**
 
 ---
 
@@ -22,7 +22,7 @@ ontologos/
 │   ├── ontologos-parser    (v0.2)
 │   ├── ontologos-profile   (v0.2)
 │   ├── ontologos-rdfs      (v0.3)
-│   ├── ontologos-rl        (stub → v0.4)
+│   ├── ontologos-rl        (v0.4)
 │   ├── ontologos-el        (stub → v0.5)
 │   ├── ontologos-query     (stub → v0.5)
 │   ├── ontologos-explain   (stub → v0.6)
@@ -100,7 +100,7 @@ fn main() -> Result<(), Error> {
 
 # Reasoner API (planned)
 
-**Status:** `Reasoner::classify(&mut self)` returns `Error::NotImplemented` for EL/RL/Auto until v0.5 and `Error::Message` (delegate hint) for `Profile::Rdfs`. For RDFS, use `ontologos_rdfs::classify_reasoner` or `materialize_reasoner` (CLI `classify` uses this path in v0.3).
+**Status:** `Reasoner::classify(&mut self)` returns `Error::NotImplemented` for EL/Auto until v0.5 and `Error::Message` (delegate hint) for `Profile::Rdfs` / `Profile::Rl`. Use `ontologos_rdfs` or `ontologos_rl` profile crates for materialization.
 
 ```rust
 // v0.2 load, v0.5 classify:
@@ -133,7 +133,7 @@ TBox RDFS materialization via fixed-point forward chaining:
 - `subPropertyOf` transitive closure
 - Domain/range inheritance along the property hierarchy (RDFS 6/8)
 
-`rdf:type` propagation is deferred until ABox support (v1.6).
+ABox `rdf:type` propagation is handled by `ontologos-rl` (v0.4).
 
 ```rust
 use ontologos_rdfs::RdfsEngine;
@@ -142,19 +142,21 @@ let mut ontology = ontologos_parser::load_ontology("family.owl")?;
 let report = RdfsEngine::new().materialize(&mut ontology)?;
 ```
 
-For `Profile::Rdfs`, use `ontologos_rdfs::classify_reasoner(&mut reasoner)` or `materialize_reasoner(&mut reasoner)`. Core `Reasoner::classify` returns a delegate hint for `Profile::Rdfs` and `NotImplemented` for EL/RL/Auto until v0.4/v0.5.
+For `Profile::Rdfs`, use `ontologos_rdfs::classify_reasoner`. For `Profile::Rl`, use `ontologos_rl::classify_reasoner`. Core `Reasoner::classify` returns delegate hints for RDFS/RL and `NotImplemented` for EL/Auto.
 
 Implementation: batch fixed-point forward chaining (all rules per round until saturation). Worklist optimization is deferred to v1.1 performance work.
 
 ---
 
-# OWL RL Engine (planned v0.4)
+# OWL RL Engine (v0.4)
 
-Implementation:
+`RlEngine::saturate` runs RDFS materialization then OWL RL TBox/ABox rule batches until fixed point. Entry points: `ontologos_rl::classify_reasoner`, `materialize_reasoner`.
 
-- Forward chaining
-- Rule indexing
-- Parallel execution
+```rust
+use ontologos_rl::RlEngine;
+
+let report = RlEngine::new(1).saturate(&mut ontology)?;
+```
 
 ---
 

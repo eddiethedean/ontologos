@@ -56,13 +56,31 @@ HermiT ships **59** Java test classes under `project/test/`. Grouped by port tie
 
 ### Tier A — run in CI without HermiT checkout
 
-Logic ported inline; provenance tracked in `tests/hermit/manifest.toml`.
+Logic ported inline; provenance tracked in `tests/hermit/manifest.toml`. **23** Rust tests (6 RDFS + 17 RL) as of v0.4.
 
 | HermiT test | OntoLogos port | Engine |
 |-------------|----------------|--------|
 | `ReasonerTest.testSubsumption1` | `hermit_rdfs::subsumption1_transitive_subclass` | RDFS |
-| `OWLLinkTest` update hierarchy (buffered) | `hermit_rdfs::owllink_update_hierarchy_buffered` | RDFS |
-| `ReasonerTest` simple `SubClassOf` chains | covered by `rdfs_rules` + HermiT ports | RDFS |
+| `ReasonerTest.testSubAndSuperConcepts` | `hermit_rdfs::sub_and_super_concepts` | RDFS |
+| `ReasonerTest.testSubAndSuperRoles` | `hermit_rdfs::sub_and_super_roles` | RDFS |
+| `OWLLinkTest` update hierarchy (buffered/non-buffered) | `hermit_rdfs::owllink_update_hierarchy_*` | RDFS |
+| `ReasonerTest.testSubsumption2/3` | `hermit_rl::subsumption2_*`, `subsumption3_*` | RL |
+| `ReasonerTest.testSameAs` | `hermit_rl::same_as_propagates_class_assertion` | RL |
+| `ReasonerTest.testEquivalentClassInstances` | `hermit_rl::equivalent_class_instances_share_types` | RL |
+| `ReasonerTest.testReflexiveAndSameAs` | `hermit_rl::reflexive_and_same_as_expand_property_instances` | RL |
+| `ReasonerTest.testIndividualRetrievalBug` | `hermit_rl::individual_property_retrieval` | RL |
+| `ReasonerTest.testIsFunctionalObject` | `hermit_rl::functional_property_characteristic_propagates_to_subproperty` | RL |
+| `ReasonerTest.testIsAsymmetricObject` | `hermit_rl::asymmetric_property_characteristic_propagates_to_subproperty` | RL |
+| RL fragment coverage (no HermiT method) | `hermit_rl::{property_assertion_*, inverse_*, symmetric_*, transitive_*, domain_*, range_*, equivalent_*, disjoint_*}` | RL |
+
+**Tier A excluded** (documented in manifest, not ported):
+
+| HermiT test | Reason |
+|-------------|--------|
+| `ReasonerTest.testSubProperties`, `testObjectPropertyHierarchy` | `SubObjectPropertyOf` with inverse operands — parser not mapped |
+| `ReasonerTest.testIsSymmetricObject`, `testIsTransitiveObject` | HermiT does not propagate symmetric/transitive to subproperties; OntoLogos RL does (OWL RL prp-fp/ap) |
+| Incremental/buffered reasoner tests | No buffered reasoner until v0.7 |
+| Nominals, complements, role chains, hasKey | DL / unmapped constructs |
 
 ### Tier B — optional local (`HermiT/` present)
 

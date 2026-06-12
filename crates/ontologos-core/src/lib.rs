@@ -70,6 +70,17 @@ mod integration_tests {
     }
 
     #[test]
+    fn classify_rl_profile_returns_delegate_hint() {
+        let ontology = Ontology::default();
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::Rl)
+            .build(ontology)
+            .expect("build");
+        let err = reasoner.classify().expect_err("rl delegate hint");
+        assert!(matches!(err, Error::Message(_)));
+    }
+
+    #[test]
     fn reasoner_rejects_invalid_parallelism() {
         let ontology = Ontology::default();
         let err = Reasoner::builder()

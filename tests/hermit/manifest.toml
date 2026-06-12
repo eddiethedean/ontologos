@@ -3,6 +3,175 @@
 # Tier B: requires local HermiT/ checkout (#[ignore] unless ONTOLOGOS_HERMIT_ROOT set)
 
 [[case]]
+id = "ReasonerTest.testSubsumption2"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testSubsumption2"
+rust_test = "subsumption2_property_subsumption_existential"
+notes = "Inlined SubClassOfExistential + SubObjectPropertyOf; A ⊑ B via RL existential subsumption"
+
+[[case]]
+id = "ReasonerTest.testSubsumption3"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testSubsumption3"
+rust_test = "subsumption3_equivalent_properties_existential"
+notes = "Inlined EquivalentObjectProperties + existentials; mutual A ≡ B"
+
+[[case]]
+id = "ReasonerTest.testSameAs"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testSameAs"
+rust_test = "same_as_propagates_class_assertion"
+notes = "sameAs propagates ClassAssertion to equivalent individuals"
+
+[[case]]
+id = "ReasonerTest.testEquivalentClassInstances"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testEquivalentClassInstances"
+rust_test = "equivalent_class_instances_share_types"
+notes = "EquivalentClasses propagates instance types"
+
+[[case]]
+id = "ReasonerTest.testReflexiveAndSameAs"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testReflexiveAndSameAs"
+rust_test = "reflexive_and_same_as_expand_property_instances"
+notes = "ReflexiveObjectProperty + sameAs expand property assertions"
+
+[[case]]
+id = "ReasonerTest.testIndividualRetrievalBug"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testIndividualRetrievalBug"
+rust_test = "individual_property_retrieval"
+notes = "ObjectPropertyAssertion indexed for individual retrieval"
+
+[[case]]
+id = "ReasonerTest.testIsFunctionalObject"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testIsFunctionalObject"
+rust_test = "functional_property_characteristic_propagates_to_subproperty"
+notes = "Functional characteristic propagates to sub-properties (RL prp-fp)"
+
+[[case]]
+id = "ReasonerTest.testIsAsymmetricObject"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testIsAsymmetricObject"
+rust_test = "asymmetric_property_characteristic_propagates_to_subproperty"
+notes = "Asymmetric characteristic propagates to sub-properties (RL prp-ap)"
+
+[[case]]
+id = "rl.property_assertion_subproperty"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "property_assertion_propagates_along_subproperty"
+notes = "RL-native: subPropertyOf propagates object property assertions"
+
+[[case]]
+id = "rl.inverse_property_assertion"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "inverse_property_assertion"
+notes = "RL-native: inverseOf swaps assertion direction"
+
+[[case]]
+id = "rl.symmetric_property_assertion"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "symmetric_property_assertion"
+notes = "RL-native: SymmetricProperty yields reverse assertion"
+
+[[case]]
+id = "rl.transitive_property_assertion"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "transitive_property_assertion_chain"
+notes = "RL-native: TransitiveProperty chains assertions"
+
+[[case]]
+id = "rl.domain_typing"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "domain_types_property_assertion_subject"
+notes = "RL-native: domain types assertion subject"
+
+[[case]]
+id = "rl.range_typing"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "range_types_property_assertion_object"
+notes = "RL-native: range types assertion object"
+
+[[case]]
+id = "rl.equivalent_classes"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "equivalent_classes_mutual_subclass"
+notes = "RL-native: equivalentClass yields mutual subClassOf"
+
+[[case]]
+id = "rl.equivalent_properties"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "equivalent_properties_mutual_subproperty"
+notes = "RL-native: equivalentProperty yields mutual subPropertyOf"
+
+[[case]]
+id = "rl.disjoint_clash"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "ported"
+rust_test = "disjoint_classes_on_individual_report_clash"
+notes = "RL-native: disjoint classes on one individual → clash diagnostic"
+
+[[case]]
 id = "ReasonerTest.testSubsumption1"
 tier = "A"
 milestone = "0.3"
@@ -34,6 +203,68 @@ source_class = "org.semanticweb.HermiT.reasoner.OWLLinkTest"
 source_method = "testUpdatesNonBuffered"
 rust_test = "owllink_update_hierarchy_non_buffered"
 notes = "Same axioms as buffered test; OntoLogos has no buffered reasoner yet — RDFS only"
+
+[[case]]
+id = "ReasonerTest.testSubAndSuperConcepts"
+tier = "A"
+milestone = "0.3"
+engine = "rdfs"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testSubAndSuperConcepts"
+rust_test = "sub_and_super_concepts"
+notes = "Direct/direct superclasses after transitive subClassOf closure"
+
+[[case]]
+id = "ReasonerTest.testSubAndSuperRoles"
+tier = "A"
+milestone = "0.3"
+engine = "rdfs"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testSubAndSuperRoles"
+rust_test = "sub_and_super_roles"
+notes = "Direct/direct superproperties after transitive subPropertyOf closure"
+
+[[case]]
+id = "ReasonerTest.testSubProperties"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "excluded"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testSubProperties"
+notes = "Uses inverse in SubObjectPropertyOf — not mapped in parser/core yet"
+
+[[case]]
+id = "ReasonerTest.testObjectPropertyHierarchy"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "excluded"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testObjectPropertyHierarchy"
+notes = "Uses inverse in SubObjectPropertyOf — not mapped in parser/core yet"
+
+[[case]]
+id = "ReasonerTest.testIsSymmetricObject"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "excluded"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testIsSymmetricObject"
+notes = "HermiT: symmetric does not propagate to subproperties; OntoLogos RL propagates all chars"
+
+[[case]]
+id = "ReasonerTest.testIsTransitiveObject"
+tier = "A"
+milestone = "0.4"
+engine = "rl"
+status = "excluded"
+source_class = "org.semanticweb.HermiT.reasoner.ReasonerTest"
+source_method = "testIsTransitiveObject"
+notes = "HermiT: transitive does not propagate to subproperties; OntoLogos RL propagates all chars"
 
 [[case]]
 id = "reasoner.res.OWLLink.owl"

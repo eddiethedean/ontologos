@@ -8,8 +8,30 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "OWL RL rule-based reasoning engine for OntoLogos"
-publish = false
+readme = "README.md"
+documentation = "https://docs.rs/ontologos-rl"
+keywords = ["owl", "ontology", "owl-rl", "reasoner", "semantic-web"]
+categories = ["science"]
+publish = true
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = ["parallel"]
+parallel = ["dep:rayon"]
 
 [dependencies]
 ontologos-core = { workspace = true }
+ontologos-rdfs = { workspace = true }
+serde = { workspace = true }
 thiserror = { workspace = true }
+rayon = { version = "1", optional = true }
+
+[dev-dependencies]
+ontologos-parser = { workspace = true }
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "rl_parallel"
+harness = false
