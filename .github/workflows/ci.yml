@@ -26,6 +26,8 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test
         run: cargo test --workspace
+      - name: HermiT conformance (Tier A)
+        run: cargo test -p ontologos-conformance
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
 

@@ -6,9 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-12 · **Current release:** [v0.3.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0) (tag pending) · **Next milestone:** v0.4 — OWL RL engine
-
-**On `main` since v0.3.0 prep:** RDFS/classify polish, DL profile diagnostics, [HermiT replacement matrix](docs/internal/research/hermit-replacement.md), and `ontologos-conformance` with Tier-A HermiT test ports.
+**Last updated:** 2026-06-12 · **Current release:** [v0.3.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.3.0) · **Next milestone:** v0.4 — OWL RL engine
 
 ---
 
@@ -330,7 +328,7 @@ Load real ontologies from disk, map them into the core model, and report which O
 
 ## v0.3 — RDFS engine
 
-**Status: Complete** (v0.3.0, 2026-06-12; tag/publish pending) · **Effort:** Medium · **Depends on:** v0.2
+**Status: Complete** (v0.3.0, 2026-06-12) · **Effort:** Medium · **Depends on:** v0.2
 
 **Crate:** `ontologos-rdfs`
 
@@ -356,21 +354,21 @@ First reasoning engine. Implements RDFS entailment over the core axiom model.
 - [x] `ontologos classify <file>` — RDFS materialization via `Profile::Rdfs`
 - [x] Initial inference traces (feeds v0.6 explain)
 
-### Conformance & polish (on `main`, pre-tag)
+### Conformance & polish
 
 - [x] DL profile diagnostics when mapped constructs rule out EL/RL (Pizza corpus)
 - [x] `classify_reasoner` + CLI/Python `classify` for `Profile::Rdfs`
 - [x] Parser security: path prefix bypass, entity-limit axiom drop, datatype/class same IRI
 - [x] HermiT Tier-A RDFS ports in `ontologos-conformance`
-- [ ] `cargo test -p ontologos-conformance` in CI
-- [ ] Tag and publish **v0.3.0** to crates.io
+- [x] `cargo test -p ontologos-conformance` in CI
+- [x] Tag and publish **v0.3.0** to crates.io
 
 ### Exit criteria
 
 - [x] RDFS conformance tests pass on Family corpus
 - [x] Materialized Pizza ontology is a strict superset of parsed axioms
 - [x] HermiT Tier-A RDFS ports pass (`ontologos-conformance`)
-- [ ] `ontologos-rdfs` published to crates.io (pending tag)
+- [x] `ontologos-rdfs` published to crates.io
 
 ---
 

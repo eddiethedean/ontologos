@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ontologos materialize` CLI with text and JSON report output
 - DL profile diagnostics explaining mapped constructs that rule out EL/RL
 - Python `Reasoner(path, profile="rdfs")` for RDFS materialization via `classify()`
+- `ontologos-conformance` workspace harness with HermiT Tier-A RDFS test ports ([tests/hermit/](tests/hermit/))
+- HermiT replacement strategy doc ([docs/internal/research/hermit-replacement.md](docs/internal/research/hermit-replacement.md))
 
 ### Changed
 
@@ -37,7 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Published
 
-- [ontologos-rdfs](https://crates.io/crates/ontologos-rdfs) on crates.io
+- [ontologos-core](https://crates.io/crates/ontologos-core) **0.3.0**
+- [ontologos-parser](https://crates.io/crates/ontologos-parser) **0.3.0**
+- [ontologos-profile](https://crates.io/crates/ontologos-profile) **0.3.0**
+- [ontologos-rdfs](https://crates.io/crates/ontologos-rdfs) **0.3.0** (new crate)
 
 ## [0.2.0] - 2026-06-11
 

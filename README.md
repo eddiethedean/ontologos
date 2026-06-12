@@ -120,10 +120,11 @@ Or run: `cargo run -p ontologos-parser --example load_and_profile`
 | `ontologos-el` | OWL EL classification | Stub |
 | `ontologos-query` | Query interface over classified ontologies | Stub |
 | `ontologos-explain` | Proof graphs and explanation export | Stub |
-| `ontologos-cli` | `ontologos` command-line tool | **Partial** (`profile`, `materialize`) |
+| `ontologos-cli` | `ontologos` command-line tool | **Partial** (`profile`, `materialize`, `classify` RDFS) |
+| `ontologos-conformance` | HermiT-ported conformance tests (workspace-only) | Dev harness |
 | `ontologos-py` | Python bindings via PyO3 | Stub |
 
-`ontologos-core`, `ontologos-parser`, `ontologos-profile`, and `ontologos-rdfs` are published to crates.io in v0.3.0.
+**v0.3.0** publishes [`ontologos-core`](https://crates.io/crates/ontologos-core), [`ontologos-parser`](https://crates.io/crates/ontologos-parser), [`ontologos-profile`](https://crates.io/crates/ontologos-profile), and [`ontologos-rdfs`](https://crates.io/crates/ontologos-rdfs) to crates.io.
 
 ## CLI
 
@@ -131,6 +132,7 @@ Or run: `cargo run -p ontologos-parser --example load_and_profile`
 cargo build -p ontologos-cli --release
 ./target/release/ontologos profile benchmarks/data/pizza.owl
 ./target/release/ontologos materialize benchmarks/data/family.owl
+./target/release/ontologos classify benchmarks/data/family.owl
 ```
 
 `classify` runs RDFS materialization in v0.3; OWL EL/RL classification and `explain` ship in v0.5/v0.6 — see [ROADMAP.md](ROADMAP.md).
