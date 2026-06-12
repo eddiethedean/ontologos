@@ -1,8 +1,8 @@
 use ontologos_core::{Axiom, EntityId, EntityKind, Ontology};
 
 use super::helpers::{
-    expand_equivalent_classes, expand_same_as, infer_axiom, map_parallel, transitive_subproperties,
-    transitive_superclasses, RuleContext,
+    classes_are_disjoint, expand_equivalent_classes, expand_same_as, infer_axiom, map_parallel,
+    transitive_subproperties, transitive_superclasses, RuleContext,
 };
 use crate::report::RlRule;
 
@@ -329,11 +329,7 @@ fn detect_disjoint_clashes(ctx: &mut RuleContext<'_>) -> ontologos_core::Result<
         let classes: Vec<EntityId> = ctx.ontology.classes_of(individual).to_vec();
         for i in 0..classes.len() {
             for j in (i + 1)..classes.len() {
-                if ctx
-                    .ontology
-                    .disjoint_with(classes[i])
-                    .is_some_and(|set| set.contains(&classes[j]))
-                {
+                if classes_are_disjoint(ctx.ontology, classes[i], classes[j]) {
                     ctx.report.clashes.push(format!(
                         "individual {:?} has types in disjoint classes {:?} and {:?}",
                         individual, classes[i], classes[j]

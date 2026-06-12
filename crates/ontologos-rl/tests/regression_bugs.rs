@@ -164,8 +164,8 @@ fn range_on_subproperty_types_superproperty_assertion_object() {
     );
 }
 
-/// Documents that direct `disjoint_with(B)` does not see `D` when only `A` is disjoint with `D`.
-/// Full saturation may still report a clash via `TypeSubclass` + `EqClassSub` (see issue #5).
+/// Direct `disjoint_with(B)` does not see `D` when only `A` is disjoint with `D`;
+/// clash detection expands equivalence (issue #5 / cls-disjoint2).
 #[test]
 fn disjoint_index_does_not_expand_equivalent_classes() {
     let mut ontology = Ontology::builder()
@@ -194,5 +194,42 @@ fn disjoint_index_does_not_expand_equivalent_classes() {
     assert!(
         !direct_disjoint,
         "setup: index disjoint_with(B) should not list D when only A disjoint D"
+    );
+}
+
+/// EquivalentClasses(A, B) + DisjointClasses(A, D) + types B and D on x must clash (cls-disjoint2).
+#[test]
+fn disjoint_clash_detected_via_equivalent_class_expansion() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("A"))
+        .expect("A")
+        .class(&iri("B"))
+        .expect("B")
+        .class(&iri("D"))
+        .expect("D")
+        .individual(&iri("x"))
+        .expect("x")
+        .class_assertion(&iri("x"), &iri("B"))
+        .expect("x type B")
+        .class_assertion(&iri("x"), &iri("D"))
+        .expect("x type D")
+        .build()
+        .expect("build");
+
+    let a = ontology.lookup_entity(&iri("A")).expect("A");
+    let b = ontology.lookup_entity(&iri("B")).expect("B");
+    let d = ontology.lookup_entity(&iri("D")).expect("D");
+    ontology
+        .add_axiom(Axiom::EquivalentClasses(vec![a, b]))
+        .expect("equiv");
+    ontology
+        .add_axiom(Axiom::DisjointClasses(vec![a, d]))
+        .expect("disjoint");
+
+    let report = RlEngine::new(1).saturate(&mut ontology).expect("saturate");
+
+    assert!(
+        !report.clashes.is_empty(),
+        "expected disjoint clash when x typed B and D with A ≡ B and A ⊥ D"
     );
 }

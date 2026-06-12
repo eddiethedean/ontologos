@@ -43,6 +43,24 @@ pub(crate) fn expand_equivalent_classes(ontology: &Ontology, class: EntityId) ->
     out
 }
 
+/// True when `class_a` and `class_b` belong to disjoint classes, expanding equivalence (cls-disjoint2).
+pub(crate) fn classes_are_disjoint(
+    ontology: &Ontology,
+    class_a: EntityId,
+    class_b: EntityId,
+) -> bool {
+    for rep_a in expand_equivalent_classes(ontology, class_a) {
+        if let Some(disjoint_set) = ontology.disjoint_with(rep_a) {
+            for rep_b in expand_equivalent_classes(ontology, class_b) {
+                if disjoint_set.contains(&rep_b) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
 pub(crate) fn expand_equivalent_properties(
     ontology: &Ontology,
     property: EntityId,
@@ -133,4 +151,52 @@ where
 
     #[cfg(not(feature = "parallel"))]
     items.into_iter().map(f).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use ontologos_core::{Axiom, Ontology};
+
+    use super::classes_are_disjoint;
+
+    const NS: &str = "http://example.org/test#";
+
+    fn iri(local: &str) -> String {
+        format!("{NS}{local}")
+    }
+
+    /// cls-disjoint2: disjoint check must expand equivalence, not rely on direct index lookup.
+    #[test]
+    fn classes_are_disjoint_expands_equivalent_classes() {
+        let mut ontology = Ontology::builder()
+            .class(&iri("A"))
+            .expect("A")
+            .class(&iri("B"))
+            .expect("B")
+            .class(&iri("D"))
+            .expect("D")
+            .build()
+            .expect("build");
+
+        let a = ontology.lookup_entity(&iri("A")).expect("A");
+        let b = ontology.lookup_entity(&iri("B")).expect("B");
+        let d = ontology.lookup_entity(&iri("D")).expect("D");
+        ontology
+            .add_axiom(Axiom::EquivalentClasses(vec![a, b]))
+            .expect("equiv");
+        ontology
+            .add_axiom(Axiom::DisjointClasses(vec![a, d]))
+            .expect("disjoint");
+
+        assert!(
+            !ontology
+                .disjoint_with(b)
+                .is_some_and(|set| set.contains(&d)),
+            "setup: direct disjoint index on B should not list D"
+        );
+        assert!(
+            classes_are_disjoint(&ontology, b, d),
+            "expected disjoint via equivalence expansion A ≡ B and A ⊥ D"
+        );
+    }
 }
