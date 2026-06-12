@@ -20,6 +20,9 @@ horned-owl = { workspace = true }
 oxrdfio = "0.2"
 thiserror = { workspace = true }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"
+
 [dev-dependencies]
 ontologos-profile = { workspace = true }
 

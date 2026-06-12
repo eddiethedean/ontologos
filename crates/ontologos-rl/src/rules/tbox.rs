@@ -1,8 +1,8 @@
 use ontologos_core::{Axiom, EntityId, EntityKind};
 
 use super::helpers::{
-    expand_equivalent_classes, expand_equivalent_properties, infer_axiom, transitive_subproperties,
-    transitive_superproperties, RuleContext,
+    expand_equivalent_classes, expand_equivalent_properties, infer_axiom, is_subclass_of,
+    transitive_subproperties, transitive_superclasses, transitive_superproperties, RuleContext,
 };
 use crate::report::RlRule;
 
@@ -208,18 +208,37 @@ fn apply_existential_subproperty(ctx: &mut RuleContext<'_>) -> ontologos_core::R
         }
     }
 
-    for class in classes {
-        for equiv_class in expand_equivalent_classes(ctx.ontology, class) {
-            if equiv_class == class {
+    for class in &classes {
+        for equiv_class in expand_equivalent_classes(ctx.ontology, *class) {
+            if equiv_class == *class {
                 continue;
             }
-            let existentials = ctx.ontology.existentials_of(class).to_vec();
+            let existentials = ctx.ontology.existentials_of(*class).to_vec();
             for (property, filler) in existentials {
                 infer_axiom(
                     ctx,
                     RlRule::ExistentialSubProp,
                     Axiom::SubClassOfExistential {
                         subclass: equiv_class,
+                        property,
+                        filler,
+                    },
+                    vec![],
+                )?;
+            }
+        }
+    }
+
+    // cls-spo2: propagate existentials along subClassOf to superclasses.
+    for subclass in classes {
+        for super_class in transitive_superclasses(ctx.ontology, subclass) {
+            let existentials = ctx.ontology.existentials_of(subclass).to_vec();
+            for (property, filler) in existentials {
+                infer_axiom(
+                    ctx,
+                    RlRule::ExistentialSubProp,
+                    Axiom::SubClassOfExistential {
+                        subclass: super_class,
                         property,
                         filler,
                     },
@@ -251,10 +270,22 @@ fn apply_existential_subsumption(ctx: &mut RuleContext<'_>) -> ontologos_core::R
     for (sub_x, prop_x, filler_x) in &existentials {
         let supers = transitive_superproperties(ctx.ontology, *prop_x);
         for (sub_y, prop_y, filler_y) in &existentials {
-            if sub_x == sub_y || filler_x != filler_y {
+            if sub_x == sub_y {
                 continue;
             }
-            if supers.contains(prop_y) {
+            let fillers_compatible = filler_x == filler_y
+                || is_subclass_of(ctx.ontology, *filler_x, *filler_y);
+            if !fillers_compatible {
+                continue;
+            }
+            let props_compatible = if prop_x == prop_y {
+                // Same property: only filler subsumption (not reflexive same-filler pairs).
+                filler_x != filler_y
+            } else {
+                supers.contains(prop_y)
+                    || expand_equivalent_properties(ctx.ontology, *prop_x).contains(prop_y)
+            };
+            if props_compatible {
                 infer_axiom(
                     ctx,
                     RlRule::ExistentialSubsumption,

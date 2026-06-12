@@ -846,6 +846,7 @@ name = "ontologos-parser"
 version = "0.5.0"
 dependencies = [
  "horned-owl",
+ "libc",
  "ontologos-core",
  "ontologos-profile",
  "oxrdfio",

@@ -357,10 +357,13 @@ fn detect_disjoint_clashes(ctx: &mut RuleContext<'_>) -> ontologos_core::Result<
                     .different_from(a)
                     .is_some_and(|set| set.contains(&b))
                 {
-                    ctx.report.clashes.push(format!(
-                        "individuals {:?} and {:?} are sameAs but also differentFrom",
-                        a, b
-                    ));
+                    let (lo, hi) = if a.0 <= b.0 { (a, b) } else { (b, a) };
+                    if ctx.report.same_as_clash_keys.insert((lo, hi)) {
+                        ctx.report.clashes.push(format!(
+                            "individuals {:?} and {:?} are sameAs but also differentFrom",
+                            a, b
+                        ));
+                    }
                 }
             }
         }

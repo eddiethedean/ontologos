@@ -87,6 +87,16 @@ fn normalize_class_operands(axiom: Axiom) -> Axiom {
             individuals.sort_by_key(|id| id.0);
             Axiom::DifferentIndividuals(individuals)
         }
+        Axiom::InverseObjectProperties { left, right } => {
+            if left.0 <= right.0 {
+                Axiom::InverseObjectProperties { left, right }
+            } else {
+                Axiom::InverseObjectProperties {
+                    left: right,
+                    right: left,
+                }
+            }
+        }
         other => other,
     }
 }
@@ -601,6 +611,36 @@ mod tests {
             .expect("push");
         let id2 = store
             .push(Axiom::EquivalentClasses(vec![b, a]), &registry)
+            .expect("push");
+        assert_eq!(id1, id2);
+        assert_eq!(store.len(), 1);
+    }
+
+    #[test]
+    fn inverse_object_properties_operand_order_deduped() {
+        let mut pool = InternPool::new();
+        let mut registry = EntityRegistry::new();
+        let p_iri = pool.intern("http://ex.org/p").expect("intern");
+        let q_iri = pool.intern("http://ex.org/q").expect("intern");
+        let p = registry
+            .get_or_register(p_iri, "http://ex.org/p", EntityKind::ObjectProperty)
+            .expect("register");
+        let q = registry
+            .get_or_register(q_iri, "http://ex.org/q", EntityKind::ObjectProperty)
+            .expect("register");
+
+        let mut store = AxiomStore::new();
+        let id1 = store
+            .push(
+                Axiom::InverseObjectProperties { left: p, right: q },
+                &registry,
+            )
+            .expect("push");
+        let id2 = store
+            .push(
+                Axiom::InverseObjectProperties { left: q, right: p },
+                &registry,
+            )
             .expect("push");
         assert_eq!(id1, id2);
         assert_eq!(store.len(), 1);
