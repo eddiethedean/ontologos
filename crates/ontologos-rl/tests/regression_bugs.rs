@@ -98,6 +98,41 @@ fn equivalent_property_domain_types_sibling_property_assertion() {
     );
 }
 
+/// Domain on R should type assertion on P when R ⊑ Q ⊑ P (transitive subproperty chain).
+#[test]
+fn domain_on_transitive_subproperty_types_superproperty_assertion() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("Person"))
+        .expect("Person")
+        .individual(&iri("a"))
+        .expect("a")
+        .individual(&iri("b"))
+        .expect("b")
+        .object_property(&iri("P"))
+        .expect("P")
+        .object_property(&iri("Q"))
+        .expect("Q")
+        .object_property(&iri("R"))
+        .expect("R")
+        .subproperty_of(&iri("Q"), &iri("P"))
+        .expect("Q sub P")
+        .subproperty_of(&iri("R"), &iri("Q"))
+        .expect("R sub Q")
+        .property_domain(&iri("R"), &iri("Person"))
+        .expect("domain on R")
+        .object_property_assertion(&iri("a"), &iri("P"), &iri("b"))
+        .expect("assertion on P")
+        .build()
+        .expect("build");
+
+    saturate(&mut ontology);
+
+    assert!(
+        is_typed(&ontology, &iri("a"), &iri("Person")),
+        "expected TypeDomain via transitive subproperty chain R ⊑ Q ⊑ P"
+    );
+}
+
 /// Range on subproperty Q should type assertion object on superproperty P.
 #[test]
 fn range_on_subproperty_types_superproperty_assertion_object() {

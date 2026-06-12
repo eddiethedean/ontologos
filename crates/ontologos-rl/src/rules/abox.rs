@@ -6,26 +6,26 @@ use super::helpers::{
 };
 use crate::report::RlRule;
 
-fn domains_for_property(ontology: &Ontology, property: EntityId) -> Vec<EntityId> {
-    let index = ontology.index();
-    let mut domains: Vec<EntityId> = index.domains_of(property).to_vec();
+fn characteristic_classes_for_property(
+    ontology: &Ontology,
+    property: EntityId,
+    lookup: impl Fn(&Ontology, EntityId) -> &[EntityId],
+) -> Vec<EntityId> {
+    let mut classes: Vec<EntityId> = lookup(ontology, property).to_vec();
     for sub in transitive_subproperties(ontology, property) {
-        domains.extend(index.domains_of(sub).iter().copied());
+        classes.extend(lookup(ontology, sub).iter().copied());
     }
-    domains.sort_unstable_by_key(|id| id.0);
-    domains.dedup();
-    domains
+    classes.sort_unstable_by_key(|id| id.0);
+    classes.dedup();
+    classes
+}
+
+fn domains_for_property(ontology: &Ontology, property: EntityId) -> Vec<EntityId> {
+    characteristic_classes_for_property(ontology, property, |o, p| o.index().domains_of(p))
 }
 
 fn ranges_for_property(ontology: &Ontology, property: EntityId) -> Vec<EntityId> {
-    let index = ontology.index();
-    let mut ranges: Vec<EntityId> = index.ranges_of(property).to_vec();
-    for sub in transitive_subproperties(ontology, property) {
-        ranges.extend(index.ranges_of(sub).iter().copied());
-    }
-    ranges.sort_unstable_by_key(|id| id.0);
-    ranges.dedup();
-    ranges
+    characteristic_classes_for_property(ontology, property, |o, p| o.index().ranges_of(p))
 }
 
 pub(crate) fn apply_batch_b(ctx: &mut RuleContext<'_>) -> ontologos_core::Result<()> {

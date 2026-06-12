@@ -471,6 +471,34 @@ fn domain_types_property_assertion_subject() {
     assert!(assert_typed(&ontology, &iri("a"), &iri("Person")));
 }
 
+/// RL: domain on subproperty types subject of superproperty assertion (prp-dom2 + TypeDomain).
+#[test]
+fn domain_on_subproperty_types_superproperty_assertion() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("Person"))
+        .expect("Person")
+        .individual(&iri("a"))
+        .expect("a")
+        .individual(&iri("b"))
+        .expect("b")
+        .object_property(&iri("P"))
+        .expect("P")
+        .object_property(&iri("Q"))
+        .expect("Q")
+        .subproperty_of(&iri("Q"), &iri("P"))
+        .expect("Q sub P")
+        .property_domain(&iri("Q"), &iri("Person"))
+        .expect("domain on Q")
+        .object_property_assertion(&iri("a"), &iri("P"), &iri("b"))
+        .expect("assertion on P")
+        .build()
+        .expect("build");
+
+    saturate(&mut ontology);
+
+    assert!(assert_typed(&ontology, &iri("a"), &iri("Person")));
+}
+
 /// RL: range axiom types the object of a property assertion.
 #[test]
 fn range_types_property_assertion_object() {
