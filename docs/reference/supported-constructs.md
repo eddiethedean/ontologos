@@ -1,4 +1,4 @@
-# Supported OWL Constructs (v0.4)
+# Supported OWL Constructs (v0.5)
 
 The parser **maps** a subset of OWL TBox axioms into `ontologos-core`. Other constructs are **scanned** for profile detection (`ParseMeta.constructs`) but **skipped** with warnings.
 
@@ -8,6 +8,7 @@ The parser **maps** a subset of OWL TBox axioms into `ontologos-core`. Other con
 |---------------|------------|
 | `SubClassOf` (named ⊑ named) | `SubClassOf` |
 | `SubClassOf` (C ⊑ ∃r.D, named filler) | `SubClassOfExistential` |
+| `SubClassOf` (C ⊑ D ⊓ E …, EL operands) | decomposed `SubClassOf` / `SubClassOfExistential` |
 | `EquivalentClasses` (named operands) | `EquivalentClasses` |
 | `DisjointClasses` (named operands) | `DisjointClasses` |
 | `SubObjectPropertyOf` | `SubObjectPropertyOf` |

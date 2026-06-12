@@ -1,12 +1,11 @@
 //! Python bindings for OntoLogos.
 //!
-//! v0.4: loads ontologies via `ontologos_parser::load_ontology`.
-//! Pass `profile="rdfs"` or `profile="rl"` to run materialization via `classify()`.
+//! v0.5: loads ontologies via `ontologos_parser::load_ontology`.
+//! Pass `profile="rdfs"`, `"rl"`, `"el"`, or `"auto"` to run classification via `classify()`.
 
 use ontologos_core::{ParseMetaSummary, Profile, Reasoner};
+use ontologos_el::{classify_with_profile, ClassifyOutcome};
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::classify_reasoner;
-use ontologos_rl::classify_reasoner as classify_rl_reasoner;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -15,6 +14,7 @@ use pyo3::types::PyDict;
 #[pyclass(name = "Reasoner")]
 struct PyReasoner {
     reasoner: Reasoner,
+    last_taxonomy: Option<ontologos_core::Taxonomy>,
 }
 
 fn parse_profile(profile: Option<&str>) -> PyResult<Profile> {
@@ -41,6 +41,55 @@ fn parse_meta_dict<'py>(
     Ok(dict)
 }
 
+fn taxonomy_dict<'py>(
+    py: Python<'py>,
+    ontology: &ontologos_core::Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+) -> PyResult<Bound<'py, PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("subsumption_count", taxonomy.subsumption_count())?;
+
+    let subs: Vec<(String, String)> = taxonomy
+        .subsumptions
+        .iter()
+        .map(|&(sub, sup)| Ok((entity_iri(ontology, sub)?, entity_iri(ontology, sup)?)))
+        .collect::<PyResult<Vec<_>>>()?;
+    dict.set_item("subsumptions", subs)?;
+
+    let equiv: Vec<Vec<String>> = taxonomy
+        .equivalences
+        .iter()
+        .map(|cluster| {
+            cluster
+                .iter()
+                .map(|&id| entity_iri(ontology, id))
+                .collect::<PyResult<Vec<_>>>()
+        })
+        .collect::<PyResult<Vec<_>>>()?;
+    dict.set_item("equivalences", equiv)?;
+
+    let unsat: Vec<String> = taxonomy
+        .unsatisfiable
+        .iter()
+        .map(|&id| entity_iri(ontology, id))
+        .collect::<PyResult<Vec<_>>>()?;
+    dict.set_item("unsatisfiable", unsat)?;
+    Ok(dict)
+}
+
+fn entity_iri(
+    ontology: &ontologos_core::Ontology,
+    id: ontologos_core::EntityId,
+) -> PyResult<String> {
+    let record = ontology
+        .entity(id)
+        .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+    ontology
+        .resolve_iri(record.iri)
+        .map(|s| s.to_owned())
+        .map_err(|e| PyRuntimeError::new_err(e.to_string()))
+}
+
 #[pymethods]
 impl PyReasoner {
     #[new]
@@ -52,7 +101,10 @@ impl PyReasoner {
             .profile(parse_profile(profile)?)
             .build(ontology)
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-        Ok(Self { reasoner })
+        Ok(Self {
+            reasoner,
+            last_taxonomy: None,
+        })
     }
 
     /// Parse metadata from the loaded ontology (warnings and axiom counts).
@@ -67,16 +119,40 @@ impl PyReasoner {
         Ok(parse_meta_dict(py, &summary)?.into())
     }
 
-    fn classify(&mut self) -> PyResult<()> {
-        match self.reasoner.profile() {
-            Profile::Rdfs => classify_reasoner(&mut self.reasoner)
-                .map_err(|e| PyRuntimeError::new_err(e.to_string())),
-            Profile::Rl => classify_rl_reasoner(&mut self.reasoner)
-                .map_err(|e| PyRuntimeError::new_err(e.to_string())),
-            _ => self
-                .reasoner
-                .classify()
-                .map_err(|e| PyRuntimeError::new_err(e.to_string())),
+    /// Taxonomy from the last EL classification (`None` for RDFS/RL runs).
+    #[getter]
+    fn taxonomy(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let Some(ref taxonomy) = self.last_taxonomy else {
+            return Ok(py.None());
+        };
+        Ok(taxonomy_dict(py, self.reasoner.ontology(), taxonomy)?.into())
+    }
+
+    fn classify(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let outcome = classify_with_profile(&mut self.reasoner)
+            .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+        match outcome {
+            ClassifyOutcome::Taxonomy(taxonomy) => {
+                let dict = taxonomy_dict(py, self.reasoner.ontology(), &taxonomy)?;
+                self.last_taxonomy = Some(taxonomy);
+                Ok(dict.into())
+            }
+            ClassifyOutcome::Rdfs(report) => {
+                self.last_taxonomy = None;
+                let dict = PyDict::new(py);
+                dict.set_item("initial_axiom_count", report.initial_axiom_count)?;
+                dict.set_item("final_axiom_count", report.final_axiom_count)?;
+                dict.set_item("inferred_axioms", report.inferred_total())?;
+                Ok(dict.into())
+            }
+            ClassifyOutcome::Rl(report) => {
+                self.last_taxonomy = None;
+                let dict = PyDict::new(py);
+                dict.set_item("initial_axiom_count", report.initial_axiom_count)?;
+                dict.set_item("final_axiom_count", report.final_axiom_count)?;
+                dict.set_item("inferred_axioms", report.inferred_total())?;
+                Ok(dict.into())
+            }
         }
     }
 }

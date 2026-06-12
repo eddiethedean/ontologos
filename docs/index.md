@@ -2,8 +2,8 @@
 
 Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materialization and OWL RL saturation.
 
-!!! warning "Early development (v0.4)"
-    OntoLogos maps a **subset** of OWL axioms into its core model — `axiom_count()` is mapper output, not Protégé's total. CLI **`classify`** runs **RDFS materialization only**, not OWL taxonomy classification (ELK/HermiT-style). Prefer CLI **`materialize`** for RDFS. OWL RL saturation requires the **library** or **Python** until v0.5. See [Supported constructs](reference/supported-constructs.md).
+!!! warning "Early development (v0.5)"
+    OntoLogos maps a **subset** of OWL axioms into its core model — `axiom_count()` is mapper output, not Protégé's total. CLI **`classify --profile auto`** routes to EL or RL; use **`materialize`** for explicit RDFS. Full OWL DL classification is not yet available. See [Supported constructs](reference/supported-constructs.md).
 
 ## Persona quick links
 
@@ -16,16 +16,17 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | Use Python | [Python guide](guides/python.md) |
 | Contribute | [Contributing](project/contributing.md) |
 
-## Capability matrix (v0.4)
+## Capability matrix (v0.5)
 
 | Capability | Library | CLI | Python |
 |------------|---------|-----|--------|
 | Load OWL files | Yes | Yes | Yes |
 | Profile detection | Yes | `profile` | No |
-| RDFS materialization | Yes | `materialize` | `profile="rdfs"` |
-| OWL RL saturation | Yes | No (v0.5) | `profile="rl"` |
-| OWL EL taxonomy | No (v0.5) | No (v0.5) | No (v0.5) |
-| Materialization reports | Yes | Yes (RDFS) | No |
+| RDFS materialization | Yes | `materialize` / `classify --profile rdfs` | `profile="rdfs"` |
+| OWL RL saturation | Yes | `classify --profile rl` | `profile="rl"` |
+| OWL EL taxonomy | Yes | `classify --profile el` | `profile="el"` |
+| Taxonomy queries | Yes (`ontologos-query`) | JSON output | `taxonomy` property |
+| Materialization reports | Yes | Yes (RDFS/RL) | Yes |
 | Export saturated ontology | Yes (in-process) | No | No |
 
 ## Learning path
@@ -34,10 +35,11 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 2. **[Load an OWL file](getting-started/load-owl-file.md)** — parser, formats, `ParseMeta`
 3. **[RDFS materialization](getting-started/rdfs-materialization.md)** — TBox closure and domain/range
 4. **[OWL RL saturation](getting-started/owl-rl-saturation.md)** — forward-chaining, reports, clashes
-5. **[Profile detection](guides/profile-detection.md)** — EL/RL/QL/DL + hybrid diagnostics
-6. **[JSON snapshots](json-snapshot-v2.md)** — load and save ontologies
-7. **[Error reference](reference/errors.md)** — core, parser, profile, engine errors
-8. **[Roadmap summary](project/roadmap-summary.md)** — what ships next
+5. **[OWL EL classification](getting-started/owl-el-classification.md)** — completion-based taxonomy
+6. **[Profile detection](guides/profile-detection.md)** — EL/RL/QL/DL + hybrid diagnostics
+7. **[JSON snapshots](json-snapshot-v2.md)** — load and save ontologies
+8. **[Error reference](reference/errors.md)** — core, parser, profile, engine errors
+9. **[Roadmap summary](project/roadmap-summary.md)** — what ships next
 
 ## Getting started
 

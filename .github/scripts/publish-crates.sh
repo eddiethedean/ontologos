@@ -12,8 +12,8 @@ CRATES=(
   ontologos-parser
   ontologos-rdfs
   ontologos-rl
-  # ontologos-el
-  # ontologos-query
+  ontologos-el
+  ontologos-query
   # ontologos-explain
   # ontologos-cli
   # ontologos-py

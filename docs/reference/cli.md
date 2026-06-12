@@ -2,7 +2,7 @@
 
 Binary: `ontologos` (from `ontologos-cli` crate).
 
-> **`classify` is not OWL taxonomy classification.** It runs RDFS TBox materialization (same inferences as `materialize`; only the `status` field differs). For OWL RL, use `ontologos-rl` or Python `profile="rl"`. OWL EL classification arrives in v0.5.
+> **v0.5:** `classify` routes by `--profile` (default `auto`) to OWL EL taxonomy, OWL RL saturation, or RDFS materialization — matching Protégé/HermiT "Classify" semantics for EL. Use `materialize` for explicit RDFS.
 
 ## Install
 
@@ -26,117 +26,44 @@ cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
 ontologos --help
 ```
 
-Pre-built release binaries are not attached to GitHub Releases today (crates.io and PyPI only).
-
 ## Global options
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
+| `--profile` | `auto`, `el`, `rl`, `rdfs` | `auto` | Engine for `classify` |
 | `--format` | `text`, `json` | `text` | Output format |
 
 ## Subcommands
 
-| Command | v0.4 status | Description |
-|---------|-------------|-------------|
+| Command | Status | Description |
+|---------|--------|-------------|
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
-| `materialize <file>` | **Works** | RDFS TBox materialization with report |
-| `classify <file>` | **RDFS only** | RDFS materialization via reasoner (`Profile::Rdfs`); same inference report as `materialize` with `status: classified`. Prints stderr note — prefer `materialize`. |
-| `explain <file>` | **Hidden (v0.6)** | Not shown in `--help` until v0.6; returns not implemented if invoked |
+| `classify <file>` | **Works** | Profile-routed classification / saturation |
+| `materialize <file>` | **Works** | Explicit RDFS TBox materialization |
+| `explain <file>` | **Hidden (v0.6)** | Not shown in `--help` until v0.6 |
 
-All commands load the ontology via `ontologos_parser::load_ontology` first.
+### `classify`
 
-`classify` and `materialize` both run the RDFS engine only. OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5.
+| `--profile` | Engine | Output |
+|-------------|--------|--------|
+| `el` | `ontologos-el` | Taxonomy (subsumptions, equivalences, unsatisfiable) |
+| `rl` | `ontologos-rl` | Materialization report |
+| `rdfs` | `ontologos-rdfs` | Materialization report |
+| `auto` | detect → EL or RL | Taxonomy or materialization report |
 
-### `explain` (v0.6)
+DL-detected ontologies with `--profile auto` return an error; use an explicit profile or `materialize` for RDFS.
 
-The `explain` subcommand is **hidden from `--help`** until v0.6. If invoked directly, it loads the ontology then fails with:
-
-```text
-error: explanation generation not yet implemented
-```
-
-## `profile` output
-
-### Text
-
-Family example:
-
-```text
-detected profile: Rl
-diagnostics:
-  - ObjectIntersectionOf: construct observed in source but outside detected Rl profile (not mapped to core)
-```
-
-Pizza reports `detected profile: Dl` with mapped-construct diagnostics. When no diagnostics: `diagnostics: none`.
-
-### JSON
-
-```json
-{
-  "detected": "EL",
-  "diagnostics": [
-    {
-      "construct": "ObjectAllValuesFrom",
-      "message": "..."
-    }
-  ]
-}
-```
-
-`detected` is always present when profile detection succeeds on a loaded ontology.
-
-## `classify` and `materialize` output
-
-Both commands emit the same inference report fields; only `status` differs (`classified` vs `materialized`).
-
-### Text
-
-```text
-status: materialized
-initial_axiom_count: 57
-final_axiom_count: 62
-inferred_axioms: 5
-inferred_by_rule:
-  rng_inherit: 5
-```
-
-### JSON
-
-```json
-{
-  "status": "materialized",
-  "initial_axiom_count": 57,
-  "final_axiom_count": 62,
-  "inferred_axioms": 5,
-  "inferred_by_rule": {
-    "rng_inherit": 5
-  }
-}
-```
-
-## Exit codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | Success |
-| `1` | Error (parse failure, I/O, engine stub, etc.) |
-
-Errors print to stderr: `error: ...`
-
-## Examples
+### Examples
 
 ```bash
-./benchmarks/scripts/download.sh
-
-./target/release/ontologos profile benchmarks/data/pizza.owl
-./target/release/ontologos --format json profile benchmarks/data/family.owl
-./target/release/ontologos materialize benchmarks/data/family.owl
-./target/release/ontologos classify benchmarks/data/family.owl  # RDFS only; status: classified
-./target/release/ontologos --format json classify benchmarks/data/family.owl
+ontologos classify --profile el benchmarks/data/pizza.owl
+ontologos classify --profile rl benchmarks/data/family.owl
+ontologos classify --profile rdfs ontology.owl
+ontologos classify --profile auto ontology.owl
+ontologos materialize ontology.owl
+ontologos --format json classify --profile el pizza.owl
 ```
 
-## Related
+## Migration from v0.4
 
-- [Profile detection](../guides/profile-detection.md)
-- [Load an OWL file](../getting-started/load-owl-file.md)
-- [OWL RL saturation](../getting-started/owl-rl-saturation.md)
+v0.4 `classify` always ran RDFS. See [v0.4.x → v0.5.0](../migration/v0.4.x-to-v0.5.0.md).

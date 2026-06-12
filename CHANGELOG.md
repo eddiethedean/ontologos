@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-12
+
+### Added
+
+- **`ontologos-el`**: OWL EL completion classifier (`ElClassifier`, `classify_reasoner`, `classify_with_profile`)
+- **`ontologos-query`**: taxonomy query API (`direct_subclasses`, `is_subsumed`, `equivalent_classes`, `unsatisfiable_classes`)
+- **`Taxonomy`** type in `ontologos-core` (subsumptions, equivalences, unsatisfiable)
+- CLI `--profile el|rl|rdfs|auto` on `classify`; taxonomy JSON/text output for EL
+- Python `profile="el"` / `"auto"`; `classify()` returns taxonomy or materialization dict
+- Parser: decompose `SubClassOf(C, ObjectIntersectionOf(...))` into EL axioms
+- HermiT `ClassificationTest` Tier-B harness (`hermit_el.rs`, `#[ignore]` without `HermiT/`)
+- Benchmark scripts: `compare-elk.sh`, `generate-go-subset.sh`; Pizza EL integration tests
+
+### Changed
+
+- **Breaking:** CLI `classify` defaults to `--profile auto` (EL/RL routing), not RDFS-only — use `materialize` or `--profile rdfs` for RDFS
+- `ontologos-el` and `ontologos-query` published to crates.io
+
+### Documentation
+
+- [OWL EL classification](docs/getting-started/owl-el-classification.md)
+- [Migration v0.4.x → v0.5.0](docs/migration/v0.4.x-to-v0.5.0.md)
+
 ## [0.4.0] - 2026-06-12
 
 ### Added

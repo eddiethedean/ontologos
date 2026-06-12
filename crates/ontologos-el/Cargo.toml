@@ -9,8 +9,14 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "OWL EL classification engine for OntoLogos"
-publish = false
+publish = true
 
 [dependencies]
 ontologos-core = { workspace = true }
+ontologos-profile = { workspace = true }
+ontologos-rdfs = { workspace = true }
+ontologos-rl = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+ontologos-parser = { workspace = true }

@@ -74,6 +74,7 @@ impl NamedLookup {
         }
     }
 
+    #[allow(dead_code)]
     fn is_resolved(&self) -> bool {
         matches!(self, Self::Resolved(_))
     }
@@ -278,10 +279,10 @@ impl Mapper<'_> {
             return;
         }
 
-        if sub_lookup.is_resolved() && matches!(sup, ClassExpression::ObjectIntersectionOf(_)) {
-            self.report
-                .meta
-                .note_construct(OwlConstruct::SubClassOfIntersection);
+        if let Some(sub_id) = sub_lookup.resolved_id() {
+            if self.map_intersection_superclass(sub_id, sup) {
+                return;
+            }
         }
 
         let mut lookups = vec![sub_lookup, sup_lookup];
@@ -290,6 +291,57 @@ impl Mapper<'_> {
             &lookups,
             "SubClassOf with complex class expression not mapped in v0.2",
         );
+    }
+
+    /// Decompose `SubClassOf(C, Intersection(...))` and nested EL operands into core axioms.
+    fn map_intersection_superclass(
+        &mut self,
+        sub_id: EntityId,
+        sup: &ClassExpression<RcStr>,
+    ) -> bool {
+        let ClassExpression::ObjectIntersectionOf(ops) = sup else {
+            return false;
+        };
+        self.report
+            .meta
+            .note_construct(OwlConstruct::SubClassOfIntersection);
+        let mut mapped_any = false;
+        for op in ops {
+            mapped_any |= self.map_el_superclass_operand(sub_id, op);
+        }
+        mapped_any
+    }
+
+    fn map_el_superclass_operand(
+        &mut self,
+        sub_id: EntityId,
+        operand: &ClassExpression<RcStr>,
+    ) -> bool {
+        if self.map_intersection_superclass(sub_id, operand) {
+            return true;
+        }
+        if let Some(sup_id) = self.named_class(operand).resolved_id() {
+            self.report
+                .meta
+                .note_construct(OwlConstruct::SubClassOfNamed);
+            self.push_axiom(Axiom::SubClassOf {
+                subclass: sub_id,
+                superclass: sup_id,
+            });
+            return true;
+        }
+        if let Some((prop_id, filler_id)) = self.try_existential_restriction(operand).resolved() {
+            self.report
+                .meta
+                .note_construct(OwlConstruct::SubClassOfExistential);
+            self.push_axiom(Axiom::SubClassOfExistential {
+                subclass: sub_id,
+                property: prop_id,
+                filler: filler_id,
+            });
+            return true;
+        }
+        false
     }
 
     fn map_equivalent_classes(&mut self, classes: &[ClassExpression<RcStr>]) {

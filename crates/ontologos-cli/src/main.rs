@@ -1,11 +1,14 @@
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use ontologos_core::{Ontology, ParseMetaSummary, Reasoner};
+use ontologos_core::{EntityId, Ontology, ParseMetaSummary, Profile, Reasoner, Taxonomy};
+use ontologos_el::{classify_with_profile, ClassifyOutcome};
 use ontologos_explain::{explain, ProofGraph};
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, ProfileReport};
-use ontologos_rdfs::{materialize_reasoner, MaterializationReport, RdfsEngine};
+use ontologos_rdfs::{MaterializationReport as RdfsReport, RdfsEngine};
+use ontologos_rl::MaterializationReport as RlReport;
 use serde::Serialize;
 use thiserror::Error;
 
@@ -13,13 +16,16 @@ use thiserror::Error;
 #[command(
     name = "ontologos",
     about = "Modular Rust ontology reasoner",
-    after_help = "v0.4 capabilities: profile (detect), materialize (RDFS), classify (RDFS only — not OWL taxonomy). \
-                  OWL RL saturation: ontologos-rl library or Python profile=\"rl\". \
+    after_help = "v0.5: profile (detect), materialize (RDFS), classify (EL/RL/RDFS via --profile). \
                   Docs: https://ontologos.readthedocs.io/en/latest/reference/cli/"
 )]
 struct Cli {
     #[command(subcommand)]
     command: Command,
+
+    /// OWL profile for `classify` (default: auto)
+    #[arg(long, value_enum, default_value_t = CliProfile::Auto)]
+    profile: CliProfile,
 
     /// Output format
     #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
@@ -30,13 +36,33 @@ struct Cli {
 enum Command {
     /// Detect the OWL profile of an ontology
     Profile { ontology: PathBuf },
-    /// Run RDFS TBox materialization (NOT OWL EL/DL taxonomy classification — prefer `materialize`)
+    /// Classify or saturate by profile (EL taxonomy, RL saturation, or RDFS materialization)
     Classify { ontology: PathBuf },
-    /// Materialize RDFS TBox inferences (recommended for RDFS in v0.4)
+    /// Materialize RDFS TBox inferences explicitly
     Materialize { ontology: PathBuf },
     /// Explain inferences (not available until v0.6)
     #[command(hide = true)]
     Explain { ontology: PathBuf },
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum, Default)]
+enum CliProfile {
+    #[default]
+    Auto,
+    El,
+    Rl,
+    Rdfs,
+}
+
+impl From<CliProfile> for Profile {
+    fn from(value: CliProfile) -> Self {
+        match value {
+            CliProfile::Auto => Profile::Auto,
+            CliProfile::El => Profile::El,
+            CliProfile::Rl => Profile::Rl,
+            CliProfile::Rdfs => Profile::Rdfs,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -53,6 +79,8 @@ enum CliError {
     Parser(#[from] ontologos_parser::Error),
     #[error(transparent)]
     Profile(#[from] ontologos_profile::Error),
+    #[error(transparent)]
+    El(#[from] ontologos_el::Error),
     #[error(transparent)]
     Rdfs(#[from] ontologos_rdfs::Error),
     #[error(transparent)]
@@ -84,25 +112,21 @@ fn run() -> Result<(), CliError> {
             }
         }
         Command::Classify { ontology } => {
-            eprintln!(
-                "note: `classify` runs RDFS materialization only (not OWL taxonomy classification). \
-                 Prefer `materialize` for RDFS. OWL RL: use ontologos-rl or Python profile=\"rl\"."
-            );
             let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let mut reasoner = Reasoner::builder()
-                .profile(ontologos_core::Profile::Rdfs)
+                .profile(cli.profile.into())
                 .build(ontology)?;
-            let report = materialize_reasoner(&mut reasoner)?;
-            emit_inference_report(cli.format, "classified", &report, &parse_meta)?;
+            let outcome = classify_with_profile(&mut reasoner)?;
+            emit_classify_outcome(cli.format, &outcome, reasoner.ontology(), &parse_meta)?;
         }
         Command::Materialize { ontology } => {
             let mut ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let report = RdfsEngine::new().materialize(&mut ontology)?;
-            emit_inference_report(cli.format, "materialized", &report, &parse_meta)?;
+            emit_rdfs_report(cli.format, "materialized", &report, &parse_meta)?;
         }
         Command::Explain { ontology } => {
             let ontology = load_ontology(&ontology)?;
@@ -148,14 +172,34 @@ struct ProfileCliOutput<'a> {
 }
 
 #[derive(Serialize)]
-struct InferenceCliOutput<'a> {
+struct RdfsCliOutput<'a> {
     status: &'static str,
     initial_axiom_count: usize,
     final_axiom_count: usize,
     inferred_axioms: usize,
-    inferred_by_rule: &'a std::collections::BTreeMap<ontologos_rdfs::RdfsRule, usize>,
-    #[serde(skip_serializing_if = "inference_traces_empty")]
-    traces: &'a [ontologos_rdfs::InferenceRecord],
+    inferred_by_rule: &'a BTreeMap<ontologos_rdfs::RdfsRule, usize>,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct RlCliOutput<'a> {
+    status: &'static str,
+    initial_axiom_count: usize,
+    final_axiom_count: usize,
+    inferred_axioms: usize,
+    inferred_by_rule: &'a BTreeMap<ontologos_rl::RlRule, usize>,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct TaxonomyCliOutput<'a> {
+    status: &'static str,
+    subsumption_count: usize,
+    subsumptions: &'a [(String, String)],
+    equivalences: &'a [Vec<String>],
+    unsatisfiable: &'a [String],
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
@@ -168,14 +212,90 @@ struct ExplainCliOutput<'a> {
     parse_meta: &'a ParseMetaSummary,
 }
 
-fn inference_traces_empty(traces: &&[ontologos_rdfs::InferenceRecord]) -> bool {
-    traces.is_empty()
+fn emit_classify_outcome(
+    format: OutputFormat,
+    outcome: &ClassifyOutcome,
+    ontology: &Ontology,
+    parse_meta: &ParseMetaSummary,
+) -> Result<(), CliError> {
+    match outcome {
+        ClassifyOutcome::Taxonomy(taxonomy) => {
+            emit_taxonomy(format, "classified", taxonomy, ontology, parse_meta)
+        }
+        ClassifyOutcome::Rdfs(report) => emit_rdfs_report(format, "classified", report, parse_meta),
+        ClassifyOutcome::Rl(report) => emit_rl_report(format, "classified", report, parse_meta),
+    }
 }
 
-fn emit_inference_report(
+fn emit_taxonomy(
     format: OutputFormat,
     status: &'static str,
-    report: &MaterializationReport,
+    taxonomy: &Taxonomy,
+    ontology: &Ontology,
+    parse_meta: &ParseMetaSummary,
+) -> Result<(), CliError> {
+    let subsumptions: Vec<(String, String)> = taxonomy
+        .subsumptions
+        .iter()
+        .map(|&(sub, sup)| Ok((entity_iri(ontology, sub)?, entity_iri(ontology, sup)?)))
+        .collect::<Result<Vec<_>, CliError>>()?;
+    let equivalences: Vec<Vec<String>> = taxonomy
+        .equivalences
+        .iter()
+        .map(|cluster| {
+            cluster
+                .iter()
+                .map(|&id| entity_iri(ontology, id))
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let unsatisfiable: Vec<String> = taxonomy
+        .unsatisfiable
+        .iter()
+        .map(|&id| entity_iri(ontology, id))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    match format {
+        OutputFormat::Text => {
+            println!("status: {status}");
+            println!("subsumption_count: {}", taxonomy.subsumption_count());
+            println!("equivalence_class_count: {}", equivalences.len());
+            println!("unsatisfiable_count: {}", unsatisfiable.len());
+            if !subsumptions.is_empty() {
+                println!("subsumptions:");
+                for (sub, sup) in &subsumptions {
+                    println!("  {sub} ⊑ {sup}");
+                }
+            }
+            if !equivalences.is_empty() {
+                println!("equivalences:");
+                for cluster in &equivalences {
+                    println!("  {}", cluster.join(" ≡ "));
+                }
+            }
+            if !unsatisfiable.is_empty() {
+                println!("unsatisfiable:");
+                for iri in &unsatisfiable {
+                    println!("  {iri}");
+                }
+            }
+        }
+        OutputFormat::Json => emit_json(&TaxonomyCliOutput {
+            status,
+            subsumption_count: taxonomy.subsumption_count(),
+            subsumptions: &subsumptions,
+            equivalences: &equivalences,
+            unsatisfiable: &unsatisfiable,
+            parse_meta,
+        })?,
+    }
+    Ok(())
+}
+
+fn emit_rdfs_report(
+    format: OutputFormat,
+    status: &'static str,
+    report: &RdfsReport,
     parse_meta: &ParseMetaSummary,
 ) -> Result<(), CliError> {
     match format {
@@ -193,17 +313,54 @@ fn emit_inference_report(
                 }
             }
         }
-        OutputFormat::Json => emit_json(&InferenceCliOutput {
+        OutputFormat::Json => emit_json(&RdfsCliOutput {
             status,
             initial_axiom_count: report.initial_axiom_count,
             final_axiom_count: report.final_axiom_count,
             inferred_axioms: report.inferred_total(),
             inferred_by_rule: &report.inferred_by_rule,
-            traces: &report.traces,
             parse_meta,
         })?,
     }
     Ok(())
+}
+
+fn emit_rl_report(
+    format: OutputFormat,
+    status: &'static str,
+    report: &RlReport,
+    parse_meta: &ParseMetaSummary,
+) -> Result<(), CliError> {
+    match format {
+        OutputFormat::Text => {
+            println!("status: {status}");
+            println!("initial_axiom_count: {}", report.initial_axiom_count);
+            println!("final_axiom_count: {}", report.final_axiom_count);
+            println!("inferred_axioms: {}", report.inferred_total());
+            if report.inferred_by_rule.is_empty() {
+                println!("inferred_by_rule: none");
+            } else {
+                println!("inferred_by_rule:");
+                for (rule, count) in &report.inferred_by_rule {
+                    println!("  {}: {count}", rule.as_str());
+                }
+            }
+        }
+        OutputFormat::Json => emit_json(&RlCliOutput {
+            status,
+            initial_axiom_count: report.initial_axiom_count,
+            final_axiom_count: report.final_axiom_count,
+            inferred_axioms: report.inferred_total(),
+            inferred_by_rule: &report.inferred_by_rule,
+            parse_meta,
+        })?,
+    }
+    Ok(())
+}
+
+fn entity_iri(ontology: &Ontology, id: EntityId) -> Result<String, CliError> {
+    let record = ontology.entity(id)?;
+    Ok(ontology.resolve_iri(record.iri)?.to_owned())
 }
 
 fn emit_json<T: Serialize>(value: &T) -> Result<(), CliError> {

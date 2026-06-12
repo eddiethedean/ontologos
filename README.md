@@ -8,17 +8,17 @@
 
 Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materialization and OWL RL saturation.
 
-**Status:** v0.4 pre-release — **not** a HermiT/ELK replacement for production EL/DL taxonomy classification yet.
+**Status:** v0.5 — OWL EL taxonomy classification, OWL RL saturation, and RDFS materialization. **Not** full OWL DL / HermiT replacement.
 
-| You need… | Use today | Wait for |
-|-----------|-----------|----------|
-| Embed ontology graph in Rust | `ontologos-core` | — |
-| Load `.owl` / `.ttl` files | `ontologos-parser` | — |
-| RDFS TBox inferences | `ontologos-rdfs` or CLI `materialize` | — |
-| OWL RL saturation | `ontologos-rl` or Python `profile="rl"` | CLI in v0.5 |
-| OWL EL taxonomy | — | v0.5 |
+| You need… | Use today |
+|-----------|-----------|
+| Embed ontology graph in Rust | `ontologos-core` |
+| Load `.owl` / `.ttl` files | `ontologos-parser` |
+| RDFS TBox inferences | `ontologos-rdfs` or CLI `materialize` |
+| OWL RL saturation | `ontologos-rl` or CLI/Python `profile="rl"` |
+| OWL EL taxonomy | `ontologos-el` or CLI/Python `profile="el"` |
 
-**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.4.0)
+**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.5.0)
 
 > **Partial OWL mapping:** `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](docs/reference/supported-constructs.md).
 
@@ -28,14 +28,16 @@ Requires **Rust 1.88+**.
 
 ```toml
 [dependencies]
-ontologos-core = "0.4.0"
-ontologos-parser = "0.4.0"
-ontologos-profile = "0.4.0"
-ontologos-rdfs = "0.4.0"
-ontologos-rl = "0.4.0"
+ontologos-core = "0.5.0"
+ontologos-parser = "0.5.0"
+ontologos-profile = "0.5.0"
+ontologos-rdfs = "0.5.0"
+ontologos-rl = "0.5.0"
+ontologos-el = "0.5.0"
+ontologos-query = "0.5.0"
 ```
 
-**Python (alpha):** `pip install ontologos` — always pass `profile="rdfs"` or `profile="rl"` ([Python guide](docs/guides/python.md)).
+**Python (alpha):** `pip install ontologos` — pass `profile="rdfs"`, `"rl"`, `"el"`, or `"auto"` ([Python guide](docs/guides/python.md)).
 
 ## Quick start (crates.io)
 
@@ -99,7 +101,7 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos materialize benchmarks/data/family.owl
 ```
 
-> **CLI:** Prefer `materialize` over `classify` — both run RDFS only in v0.4; `classify` is not OWL taxonomy classification. OWL RL requires the library or Python until v0.5.
+> **CLI:** `classify --profile auto` routes to EL or RL; use `materialize` for explicit RDFS. See [CLI reference](docs/reference/cli.md).
 
 ## Workspace
 
@@ -110,7 +112,8 @@ cargo build -p ontologos-cli --release
 | `ontologos-profile` | Profile detection | crates.io |
 | `ontologos-rdfs` | RDFS materialization | crates.io |
 | `ontologos-rl` | OWL RL saturation | crates.io |
-| `ontologos-el` | OWL EL classification | Stub (v0.5) |
+| `ontologos-el` | OWL EL classification | crates.io |
+| `ontologos-query` | Taxonomy queries | crates.io |
 | `ontologos-cli` | CLI binary | Source-build only |
 | `ontologos-py` | Python bindings | PyPI (alpha) |
 

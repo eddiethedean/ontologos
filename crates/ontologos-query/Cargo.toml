@@ -9,8 +9,11 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Query interface for OntoLogos ontologies"
-publish = false
+publish = true
 
 [dependencies]
 ontologos-core = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+ontologos-el = { workspace = true }

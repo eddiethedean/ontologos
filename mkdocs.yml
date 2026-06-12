@@ -57,6 +57,7 @@ nav:
       - Load an OWL file: getting-started/load-owl-file.md
       - RDFS materialization: getting-started/rdfs-materialization.md
       - OWL RL saturation: getting-started/owl-rl-saturation.md
+      - OWL EL classification: getting-started/owl-el-classification.md
   - Guides:
       - Choosing an API: guides/choosing-an-api.md
       - Profile detection: guides/profile-detection.md
@@ -87,6 +88,7 @@ nav:
       - v0.2 to v0.3: migration/v0.2-to-v0.3.md
       - v0.3.0 to v0.3.1: migration/v0.3.0-to-v0.3.1.md
       - v0.3.x to v0.4.0: migration/v0.3.x-to-v0.4.0.md
+      - v0.4.x to v0.5.0: migration/v0.4.x-to-v0.5.0.md
   - Project:
       - FAQ: project/faq.md
       - Roadmap summary: project/roadmap-summary.md

@@ -66,3 +66,12 @@ cargo bench -p ontologos-core
 ```
 
 Results are written under `target/criterion/`.
+
+## EL benchmarks (v0.5)
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/compare-elk.sh` | Compare Pizza EL taxonomy against optional golden JSON |
+| `scripts/generate-go-subset.sh` | Trim GO with ROBOT for `<10s` EL CI test |
+
+EL integration tests: `cargo test -p ontologos-el --test pizza_el`

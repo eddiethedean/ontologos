@@ -98,12 +98,33 @@ fn help_succeeds() {
 }
 
 #[test]
+fn classify_el_pizza_corpus() {
+    let path = repo_root().join("benchmarks/data/pizza.owl");
+    assert!(
+        path.exists(),
+        "missing pizza corpus at {} (run ./benchmarks/scripts/download.sh)",
+        path.display()
+    );
+    Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args(["--profile", "el", "classify", path.to_str().expect("path")])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("subsumption_count:"));
+}
+
+#[test]
 fn classify_rdfs_materializes_family_corpus() {
     let path = repo_root().join("benchmarks/data/family.owl");
     assert!(path.exists(), "missing family corpus at {}", path.display());
     Command::cargo_bin("ontologos")
         .expect("ontologos binary")
-        .args(["classify", path.to_str().expect("path")])
+        .args([
+            "--profile",
+            "rdfs",
+            "classify",
+            path.to_str().expect("path"),
+        ])
         .assert()
         .success()
         .stdout(predicate::str::contains("status: classified"))
@@ -227,7 +248,14 @@ fn classify_json_includes_parse_meta() {
     let path = fixture("class_individual_kind_clash.ttl");
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
-        .args(["--format", "json", "classify", path.to_str().expect("path")])
+        .args([
+            "--format",
+            "json",
+            "--profile",
+            "rdfs",
+            "classify",
+            path.to_str().expect("path"),
+        ])
         .assert()
         .success();
     let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");

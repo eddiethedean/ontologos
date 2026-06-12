@@ -46,6 +46,7 @@ mod ontology;
 mod parse_meta;
 mod reasoner;
 mod serialize;
+mod taxonomy;
 
 pub use axiom::{Axiom, AxiomId};
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
@@ -56,6 +57,7 @@ pub use limits::Limits;
 pub use ontology::{Ontology, OntologyBuilder};
 pub use parse_meta::{OwlConstruct, ParseMeta, ParseMetaSummary};
 pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
+pub use taxonomy::Taxonomy;
 
 #[cfg(test)]
 mod integration_tests {

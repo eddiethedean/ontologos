@@ -18,4 +18,5 @@ ontologos-rdfs = { workspace = true }
 
 [dev-dependencies]
 ontologos-conformance = { path = "." }
+ontologos-el = { workspace = true }
 ontologos-rl = { workspace = true }
