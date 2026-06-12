@@ -54,5 +54,7 @@ jobs:
       - name: Build and test Python package
         working-directory: crates/ontologos-py
         run: |
+          python -m venv .venv
+          source .venv/bin/activate
           maturin develop --release
           pytest tests/ -q
