@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
 
 use horned_owl::curie::PrefixMapping;
@@ -16,29 +16,34 @@ use crate::limits::ParseLimits;
 use crate::{Error, Format, Result};
 
 /// Read a horned-owl ontology from disk after format detection and size checks.
+///
+/// Prefer [`crate::load_ontology`] or [`crate::load_ontology_in`] for sandboxed loads.
+#[allow(dead_code)]
 pub fn read_horned_owl(
     path: &Path,
     format: Format,
     limits: ParseLimits,
 ) -> Result<SetOntology<RcStr>> {
     let metadata = std::fs::metadata(path).map_err(|e| Error::Parse(e.to_string()))?;
-    if metadata.len() as usize > limits.max_file_bytes {
-        return Err(Error::Parse(format!(
-            "file size {} exceeds limit of {} bytes",
-            metadata.len(),
-            limits.max_file_bytes
-        )));
-    }
-
+    check_file_size(metadata.len(), limits)?;
     let file = File::open(path).map_err(|e| Error::Parse(e.to_string()))?;
+    read_horned_owl_from_reader(BufReader::new(file), format, limits)
+}
+
+/// Parse ontology bytes from an already-open reader (single-fd load path).
+pub fn read_horned_owl_from_reader<R: Read>(
+    reader: R,
+    format: Format,
+    _limits: ParseLimits,
+) -> Result<SetOntology<RcStr>> {
     let config = parser_config(format);
 
     let (ontology, _prefixes) = match format {
         Format::OwlXml => {
-            owx_reader::read(&mut BufReader::new(file), config).map_err(map_horned_error)?
+            owx_reader::read(&mut BufReader::new(reader), config).map_err(map_horned_error)?
         }
         Format::RdfXml | Format::Turtle => {
-            let mut reader = BufReader::new(file);
+            let mut reader = BufReader::new(reader);
             let (concrete, incomplete) =
                 rdf_reader::read(&mut reader, config).map_err(map_horned_error)?;
             if !incomplete.is_complete() {
@@ -49,12 +54,22 @@ pub fn read_horned_owl(
             (concrete.into(), PrefixMapping::default())
         }
         Format::Functional => {
-            let mut reader = BufReader::new(file);
+            let mut reader = BufReader::new(reader);
             ofn_reader::read(&mut reader, config).map_err(map_horned_error)?
         }
     };
 
     Ok(ontology)
+}
+
+fn check_file_size(len: u64, limits: ParseLimits) -> Result<()> {
+    if len as usize > limits.max_file_bytes {
+        return Err(Error::Parse(format!(
+            "file size {len} exceeds limit of {} bytes",
+            limits.max_file_bytes
+        )));
+    }
+    Ok(())
 }
 
 fn parser_config(format: Format) -> ParserConfiguration {
@@ -99,10 +114,24 @@ fn strip_utf8_bom(text: &str) -> &str {
 /// Read up to `max` bytes from `path` for format sniffing.
 pub fn sniff_file_header(path: &Path, max: usize) -> Result<Vec<u8>> {
     let mut file = File::open(path).map_err(|e| Error::Parse(e.to_string()))?;
+    sniff_reader(&mut file, max)
+}
+
+/// Read up to `max` bytes from a reader for format sniffing.
+pub fn sniff_reader(reader: &mut impl Read, max: usize) -> Result<Vec<u8>> {
     let mut header = vec![0_u8; max];
-    let read = file
+    let read = reader
         .read(&mut header)
         .map_err(|e| Error::Parse(e.to_string()))?;
     header.truncate(read);
+    Ok(header)
+}
+
+/// Sniff from a seekable reader and rewind to the start.
+pub fn sniff_and_rewind(reader: &mut (impl Read + Seek), max: usize) -> Result<Vec<u8>> {
+    let header = sniff_reader(reader, max)?;
+    reader
+        .seek(SeekFrom::Start(0))
+        .map_err(|e| Error::Parse(e.to_string()))?;
     Ok(header)
 }

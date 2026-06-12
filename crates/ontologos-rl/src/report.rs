@@ -87,6 +87,9 @@ pub struct MaterializationReport {
     /// Canonical disjoint-clash keys already reported (not serialized).
     #[serde(skip)]
     pub disjoint_clash_keys: HashSet<(EntityId, EntityId, EntityId)>,
+    /// Canonical sameAs/differentFrom clash pairs already reported (not serialized).
+    #[serde(skip)]
+    pub same_as_clash_keys: HashSet<(EntityId, EntityId)>,
 }
 
 impl MaterializationReport {

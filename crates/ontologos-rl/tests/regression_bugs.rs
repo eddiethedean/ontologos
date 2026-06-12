@@ -275,3 +275,127 @@ fn disjoint_clash_deduped_for_equivalent_types_on_individual() {
         report.clashes
     );
 }
+
+/// cls-spo2: existential on subclass propagates to superclass.
+#[test]
+fn existential_propagates_along_subclass_of() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("Animal"))
+        .expect("Animal")
+        .class(&iri("Dog"))
+        .expect("Dog")
+        .class(&iri("Leg"))
+        .expect("Leg")
+        .object_property(&iri("hasLeg"))
+        .expect("hasLeg")
+        .subclass_of(&iri("Dog"), &iri("Animal"))
+        .expect("Dog sub Animal")
+        .build()
+        .expect("build");
+
+    let dog = ontology.lookup_entity(&iri("Dog")).expect("Dog");
+    let has_leg = ontology.lookup_entity(&iri("hasLeg")).expect("hasLeg");
+    let leg = ontology.lookup_entity(&iri("Leg")).expect("Leg");
+    ontology
+        .add_axiom(Axiom::SubClassOfExistential {
+            subclass: dog,
+            property: has_leg,
+            filler: leg,
+        })
+        .expect("Dog exists hasLeg Leg");
+
+    saturate(&mut ontology);
+
+    let animal = ontology.lookup_entity(&iri("Animal")).expect("Animal");
+    assert!(
+        ontology.existentials_of(animal).contains(&(has_leg, leg)),
+        "expected Animal ⊑ ∃hasLeg.Leg after cls-spo2"
+    );
+}
+
+/// cls-svf2: filler subsumption enables existential subsumption between classes.
+#[test]
+fn existential_subsumption_with_filler_subclass() {
+    let mut ontology = Ontology::builder()
+        .class(&iri("A"))
+        .expect("A")
+        .class(&iri("B"))
+        .expect("B")
+        .class(&iri("D1"))
+        .expect("D1")
+        .class(&iri("D2"))
+        .expect("D2")
+        .object_property(&iri("R"))
+        .expect("R")
+        .subclass_of(&iri("D1"), &iri("D2"))
+        .expect("D1 sub D2")
+        .build()
+        .expect("build");
+
+    let a = ontology.lookup_entity(&iri("A")).expect("A");
+    let b = ontology.lookup_entity(&iri("B")).expect("B");
+    let d1 = ontology.lookup_entity(&iri("D1")).expect("D1");
+    let d2 = ontology.lookup_entity(&iri("D2")).expect("D2");
+    let r = ontology.lookup_entity(&iri("R")).expect("R");
+    ontology
+        .add_axiom(Axiom::SubClassOfExistential {
+            subclass: a,
+            property: r,
+            filler: d1,
+        })
+        .expect("A exists R D1");
+    ontology
+        .add_axiom(Axiom::SubClassOfExistential {
+            subclass: b,
+            property: r,
+            filler: d2,
+        })
+        .expect("B exists R D2");
+
+    saturate(&mut ontology);
+
+    assert!(
+        ontology.direct_superclasses(a).contains(&b)
+            || ontology.direct_superclasses(a).iter().any(|&sup| {
+                let mut stack = vec![sup];
+                while let Some(c) = stack.pop() {
+                    if c == b {
+                        return true;
+                    }
+                    stack.extend_from_slice(ontology.direct_superclasses(c));
+                }
+                false
+            }),
+        "expected A ⊑ B from cls-svf2 filler subsumption"
+    );
+}
+
+/// sameAs/differentFrom clash should be reported once across saturation iterations.
+#[test]
+fn same_as_different_from_clash_deduped_across_iterations() {
+    let mut ontology = Ontology::builder()
+        .individual(&iri("a"))
+        .expect("a")
+        .individual(&iri("b"))
+        .expect("b")
+        .build()
+        .expect("build");
+
+    let a = ontology.lookup_entity(&iri("a")).expect("a");
+    let b = ontology.lookup_entity(&iri("b")).expect("b");
+    ontology
+        .add_axiom(Axiom::SameIndividual(vec![a, b]))
+        .expect("same");
+    ontology
+        .add_axiom(Axiom::DifferentIndividuals(vec![a, b]))
+        .expect("different");
+
+    let report = RlEngine::new(1).saturate(&mut ontology).expect("saturate");
+
+    assert_eq!(
+        report.clashes.len(),
+        1,
+        "expected one sameAs/differentFrom clash, got: {:?}",
+        report.clashes
+    );
+}

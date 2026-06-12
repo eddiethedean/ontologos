@@ -1,14 +1,23 @@
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Seek, SeekFrom};
 use std::path::{Component, Path, PathBuf};
 
 use ontologos_core::Ontology;
 
 use crate::limits::ParseLimits;
 use crate::map::map_to_core;
-use crate::read::{read_horned_owl, sniff_file_header};
+use crate::read::{read_horned_owl_from_reader, sniff_and_rewind};
 use crate::{
     detect_format, detect_format_from_bytes, detect_functional_from_bytes,
     detect_turtle_from_bytes, Error, Format, Result,
 };
+
+#[cfg(target_os = "linux")]
+const O_NOFOLLOW: i32 = 0o100_000;
+#[cfg(target_os = "macos")]
+const O_NOFOLLOW: i32 = 0x0000_0040;
+#[cfg(all(unix, not(any(target_os = "linux", target_os = "macos"))))]
+const O_NOFOLLOW: i32 = 0;
 
 /// Resolve and validate a path before loading an ontology file.
 pub fn validate_load_path(path: &Path, base: Option<&Path>) -> Result<PathBuf> {
@@ -54,19 +63,137 @@ pub fn load_ontology_with_limits_and_base(
         return Err(Error::Parse(format!("not a file: {}", validated.display())));
     }
 
-    let format = detect_format_with_sniff(&validated)?;
-    let set_ontology = read_horned_owl(&validated, format, limits)?;
+    let mut file = open_for_load(&validated, base)?;
+    let file_len = file
+        .metadata()
+        .map_err(|e| Error::Parse(e.to_string()))?
+        .len();
+    if file_len as usize > limits.max_file_bytes {
+        return Err(Error::Parse(format!(
+            "file size {file_len} exceeds limit of {} bytes",
+            limits.max_file_bytes
+        )));
+    }
+    let format = detect_format_with_sniff(path, &mut file)?;
+    let set_ontology = read_horned_owl_from_reader(&mut file, format, limits)?;
     let (mut ontology, report) = map_to_core(&set_ontology, limits)?;
     ontology.set_parse_meta(report.into_meta());
     Ok(ontology)
 }
 
-fn detect_format_with_sniff(path: &Path) -> Result<Format> {
+fn open_for_load(path: &Path, base: Option<&Path>) -> Result<File> {
+    let pre_meta = std::fs::symlink_metadata(path).map_err(|e| Error::Parse(e.to_string()))?;
+    let file = open_readonly_nofollow(path)?;
+    if let Some(base) = base {
+        verify_opened_under_base(&file, base, path, &pre_meta)?;
+    }
+    Ok(file)
+}
+
+fn open_readonly_nofollow(path: &Path) -> Result<File> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        OpenOptions::new()
+            .read(true)
+            .custom_flags(O_NOFOLLOW)
+            .open(path)
+            .map_err(|e| Error::Parse(e.to_string()))
+    }
+    #[cfg(not(unix))]
+    {
+        File::open(path).map_err(|e| Error::Parse(e.to_string()))
+    }
+}
+
+fn verify_opened_under_base(
+    file: &File,
+    base: &Path,
+    validated: &Path,
+    pre_meta: &std::fs::Metadata,
+) -> Result<()> {
+    #[cfg(unix)]
+    use std::os::unix::fs::MetadataExt;
+
+    let file_meta = file.metadata().map_err(|e| Error::Parse(e.to_string()))?;
+    #[cfg(unix)]
+    if pre_meta.dev() != file_meta.dev() || pre_meta.ino() != file_meta.ino() {
+        return Err(Error::Parse(
+            "ontology path changed between validation and open".into(),
+        ));
+    }
+    #[cfg(not(unix))]
+    let _ = (pre_meta, file_meta);
+
+    let base_normalized = normalize_path(base)?;
+    let base_canon = base_normalized
+        .canonicalize()
+        .map_err(|e| Error::Parse(e.to_string()))?;
+
+    if let Ok(opened) = opened_path(file) {
+        let opened_canon = opened
+            .canonicalize()
+            .map_err(|e| Error::Parse(e.to_string()))?;
+        if !path_is_under_base(&opened_canon, &base_canon) {
+            return Err(Error::Parse(format!(
+                "opened file {} escapes allowed base {}",
+                opened_canon.display(),
+                base_canon.display()
+            )));
+        }
+        return Ok(());
+    }
+
+    let validated_canon = validated
+        .canonicalize()
+        .map_err(|e| Error::Parse(e.to_string()))?;
+    if !path_is_under_base(&validated_canon, &base_canon) {
+        return Err(Error::Parse(format!(
+            "path {} escapes allowed base {}",
+            validated_canon.display(),
+            base_canon.display()
+        )));
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn opened_path(file: &File) -> Result<PathBuf> {
+    use std::os::unix::io::AsRawFd;
+    let fd = file.as_raw_fd();
+    std::fs::read_link(format!("/proc/self/fd/{fd}")).map_err(|e| Error::Parse(e.to_string()))
+}
+
+#[cfg(target_os = "macos")]
+fn opened_path(file: &File) -> Result<PathBuf> {
+    use std::ffi::CStr;
+    use std::os::unix::io::AsRawFd;
+
+    const F_GETPATH: i32 = 50;
+    let fd = file.as_raw_fd();
+    let mut buf = [0u8; 1024];
+    let rc = unsafe { libc::fcntl(fd, F_GETPATH, buf.as_mut_ptr()) };
+    if rc == -1 {
+        return Err(Error::Parse("fcntl(F_GETPATH) failed".into()));
+    }
+    let cstr = CStr::from_bytes_until_nul(&buf).map_err(|e| Error::Parse(e.to_string()))?;
+    Ok(PathBuf::from(cstr.to_string_lossy().into_owned()))
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+fn opened_path(_file: &File) -> Result<PathBuf> {
+    Err(Error::Parse("fd path resolution unavailable".into()))
+}
+
+fn detect_format_with_sniff(path: &Path, reader: &mut (impl Read + Seek)) -> Result<Format> {
     if let Some(format) = detect_format(path) {
+        reader
+            .seek(SeekFrom::Start(0))
+            .map_err(|e| Error::Parse(e.to_string()))?;
         return Ok(format);
     }
 
-    let header = sniff_file_header(path, 4096)?;
+    let header = sniff_and_rewind(reader, 4096)?;
     if let Some(format) = detect_format_from_bytes(&header) {
         return Ok(format);
     }
@@ -173,6 +300,28 @@ mod tests {
 
         let _ = std::fs::remove_file(&file);
         let _ = std::fs::remove_dir(&nested);
+        let _ = std::fs::remove_dir(&base);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn sandboxed_load_does_not_follow_symlink_to_outside_file() {
+        use std::os::unix::fs::symlink;
+
+        let parent = std::env::temp_dir();
+        let base = parent.join("ontologos_sandbox_base");
+        let outside = parent.join("ontologos_outside_secret.owl");
+        let link = base.join("ontology.owl");
+        std::fs::create_dir_all(&base).expect("create base");
+        std::fs::write(&outside, b"OUTSIDE_SECRET_CONTENT").expect("write outside");
+
+        symlink(&outside, &link).expect("symlink");
+
+        let err = load_ontology_in(&base, &link).expect_err("symlink escape");
+        assert!(matches!(err, Error::Parse(_) | Error::UnsupportedFormat(_)));
+
+        let _ = std::fs::remove_file(&link);
+        let _ = std::fs::remove_file(&outside);
         let _ = std::fs::remove_dir(&base);
     }
 }

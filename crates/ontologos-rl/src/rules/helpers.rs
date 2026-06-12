@@ -106,6 +106,24 @@ pub(crate) fn transitive_superproperties(ontology: &Ontology, property: EntityId
     out
 }
 
+/// True when `sub` is equivalent to or a subclass of `sup`.
+pub(crate) fn is_subclass_of(ontology: &Ontology, sub: EntityId, sup: EntityId) -> bool {
+    if sub == sup {
+        return true;
+    }
+    for rep_sub in expand_equivalent_classes(ontology, sub) {
+        for rep_sup in expand_equivalent_classes(ontology, sup) {
+            if rep_sub == rep_sup {
+                return true;
+            }
+            if transitive_superclasses(ontology, rep_sub).contains(&rep_sup) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 pub(crate) fn transitive_superclasses(ontology: &Ontology, class: EntityId) -> Vec<EntityId> {
     let mut seen = std::collections::HashSet::new();
     let mut stack: Vec<EntityId> = ontology.direct_superclasses(class).to_vec();

@@ -30,7 +30,9 @@ pub use load::{
     load_ontology, load_ontology_in, load_ontology_with_limits, load_ontology_with_limits_and_base,
     validate_load_path,
 };
-pub use read::detect_turtle_from_bytes;
+pub use read::{
+    detect_turtle_from_bytes, read_horned_owl, read_horned_owl_from_reader, sniff_file_header,
+};
 
 /// Supported ontology serialization formats.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,15 +91,8 @@ pub fn detect_format(path: &std::path::Path) -> Option<Format> {
 }
 
 fn sniff_xml_format(path: &std::path::Path) -> Option<Format> {
-    const SNIFF_BYTES: usize = 4096;
-    let mut header = vec![0_u8; SNIFF_BYTES];
-    let read = std::fs::File::open(path)
-        .and_then(|mut file| {
-            use std::io::Read;
-            file.read(&mut header)
-        })
-        .ok()?;
-    detect_format_from_bytes(&header[..read])
+    let header = sniff_file_header(path, 4096).ok()?;
+    detect_format_from_bytes(&header)
 }
 
 #[cfg(test)]
