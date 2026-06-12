@@ -73,11 +73,7 @@ fn entity_kind(ontology: &ontologos_core::Ontology, local: &str) -> EntityKind {
     let id = ontology
         .lookup_entity(&entity_iri(local))
         .unwrap_or_else(|| panic!("missing entity {local}"));
-    ontology
-        .entities()
-        .entity(id)
-        .expect("entity record")
-        .kind
+    ontology.entities().entity(id).expect("entity record").kind
 }
 
 fn assert_subclass_data_property_conflict(ontology: &ontologos_core::Ontology) {
