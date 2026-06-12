@@ -80,6 +80,13 @@ fn collect_resolved(lookups: &[NamedLookup]) -> Option<Vec<EntityId>> {
     Some(ids)
 }
 
+fn named_lookup_from_register(result: Option<EntityId>) -> NamedLookup {
+    match result {
+        Some(id) => NamedLookup::Resolved(id),
+        None => NamedLookup::RegistrationFailed,
+    }
+}
+
 impl Mapper<'_> {
     fn visit(&mut self, annotated: &AnnotatedComponent<RcStr>) {
         match &annotated.component {
@@ -248,9 +255,7 @@ impl Mapper<'_> {
             return;
         }
 
-        if sub_lookup.is_resolved()
-            && matches!(sup, ClassExpression::ObjectIntersectionOf(_))
-        {
+        if sub_lookup.is_resolved() && matches!(sup, ClassExpression::ObjectIntersectionOf(_)) {
             self.report
                 .meta
                 .note_construct(OwlConstruct::SubClassOfIntersection);
@@ -343,21 +348,20 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::InverseObjectProperties);
-        match (
-            self.register_object_property(left),
-            self.register_object_property(right),
-        ) {
-            (Ok(left_id), Ok(right_id)) => {
-                self.push_axiom(Axiom::InverseObjectProperties {
-                    left: left_id,
-                    right: right_id,
-                });
-            }
-            (Err(err), _) | (_, Err(err)) => {
-                self.skip(&format!(
-                    "InverseObjectProperties registration failed: {err}"
-                ));
-            }
+        let left_lookup = named_lookup_from_register(self.register_or_warn_object_property(left));
+        let right_lookup = named_lookup_from_register(self.register_or_warn_object_property(right));
+        if let (Some(left_id), Some(right_id)) =
+            (left_lookup.resolved_id(), right_lookup.resolved_id())
+        {
+            self.push_axiom(Axiom::InverseObjectProperties {
+                left: left_id,
+                right: right_id,
+            });
+        } else {
+            self.skip_if_unmapped(
+                &[left_lookup, right_lookup],
+                "InverseObjectProperties with unmapped operands not mapped in v0.2",
+            );
         }
     }
 
@@ -518,10 +522,9 @@ impl Mapper<'_> {
         self.scan_class_expression(ce);
         let class_lookup = self.named_class(ce);
         let individual_lookup = self.named_individual(individual);
-        if let (Some(class_id), Some(individual_id)) = (
-            class_lookup.resolved_id(),
-            individual_lookup.resolved_id(),
-        ) {
+        if let (Some(class_id), Some(individual_id)) =
+            (class_lookup.resolved_id(), individual_lookup.resolved_id())
+        {
             self.push_axiom(Axiom::ClassAssertion {
                 individual: individual_id,
                 class: class_id,
@@ -808,10 +811,9 @@ impl Mapper<'_> {
 
     fn named_class(&mut self, ce: &ClassExpression<RcStr>) -> NamedLookup {
         match ce {
-            ClassExpression::Class(class) => match self.register_or_warn_class(class) {
-                Some(id) => NamedLookup::Resolved(id),
-                None => NamedLookup::RegistrationFailed,
-            },
+            ClassExpression::Class(class) => {
+                named_lookup_from_register(self.register_or_warn_class(class))
+            }
             _ => NamedLookup::NotNamed,
         }
     }
@@ -835,10 +837,7 @@ impl Mapper<'_> {
     fn named_object_property(&mut self, ope: &ObjectPropertyExpression<RcStr>) -> NamedLookup {
         match ope {
             ObjectPropertyExpression::ObjectProperty(prop) => {
-                match self.register_or_warn_object_property(prop) {
-                    Some(id) => NamedLookup::Resolved(id),
-                    None => NamedLookup::RegistrationFailed,
-                }
+                named_lookup_from_register(self.register_or_warn_object_property(prop))
             }
             ObjectPropertyExpression::InverseObjectProperty(_) => NamedLookup::NotNamed,
         }
@@ -846,12 +845,9 @@ impl Mapper<'_> {
 
     fn named_individual(&mut self, individual: &Individual<RcStr>) -> NamedLookup {
         match individual {
-            Individual::Named(NamedIndividual(iri)) => {
-                match self.register_or_warn_entity(iri_of(iri), EntityKind::Individual) {
-                    Some(id) => NamedLookup::Resolved(id),
-                    None => NamedLookup::RegistrationFailed,
-                }
-            }
+            Individual::Named(NamedIndividual(iri)) => named_lookup_from_register(
+                self.register_or_warn_entity(iri_of(iri), EntityKind::Individual),
+            ),
             Individual::Anonymous(_) => NamedLookup::NotNamed,
         }
     }
@@ -893,5 +889,27 @@ mod tests {
         }
         assert_eq!(ontology.entity_count(), 2);
         assert_eq!(ontology.axiom_count(), 1);
+    }
+
+    #[test]
+    fn class_assertion_kind_mismatch_warns_without_complex_operands_skip() {
+        use std::path::Path;
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/class_individual_kind_clash.ttl");
+        let ontology = crate::load_ontology(&path).expect("load");
+        let meta = ontology.parse_meta().expect("parse_meta");
+
+        assert!(
+            meta.warnings
+                .iter()
+                .any(|w| w.contains("entity kind mismatch")),
+            "expected kind mismatch warning, got: {:?}",
+            meta.warnings
+        );
+        assert!(
+            !meta.warnings.iter().any(|w| w.contains("complex operands")),
+            "should not mislabel kind clash as unmapped complex expression"
+        );
     }
 }
