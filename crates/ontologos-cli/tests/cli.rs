@@ -129,12 +129,7 @@ fn classify_json_includes_report_fields() {
     assert!(path.exists(), "missing family corpus at {}", path.display());
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
-        .args([
-            "--format",
-            "json",
-            "classify",
-            path.to_str().expect("path"),
-        ])
+        .args(["--format", "json", "classify", path.to_str().expect("path")])
         .assert()
         .success();
     let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
