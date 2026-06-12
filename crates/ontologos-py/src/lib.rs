@@ -1,7 +1,7 @@
 //! Python bindings for OntoLogos.
 //!
-//! v0.1: loads ontologies via `Ontology::from_file`, which returns an error until
-//! v0.2 parser support. Use programmatic construction or JSON deserialization from Rust.
+//! v0.2: alpha placeholder — loads ontologies via `ontologos_parser::load_ontology`;
+//! `Reasoner::classify()` returns not-implemented until v0.5.
 
 use ontologos_core::Reasoner;
 use ontologos_parser::load_ontology;

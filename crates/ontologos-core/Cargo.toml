@@ -9,6 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 description = "In-memory OWL ontology data model — interned IRIs, typed axioms, and JSON v2 snapshots"
 readme = "../../README.md"
+publish = true
 keywords = ["owl", "ontology", "reasoner", "semantic-web", "knowledge-graph"]
 categories = ["science", "data-structures"]
 documentation = "https://docs.rs/ontologos-core"
@@ -28,8 +29,6 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
-ontologos-parser = { workspace = true }
-ontologos-profile = { workspace = true }
 
 [[bench]]
 name = "serialize_bench"

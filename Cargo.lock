@@ -800,8 +800,6 @@ name = "ontologos-core"
 version = "0.2.0"
 dependencies = [
  "criterion",
- "ontologos-parser",
- "ontologos-profile",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -841,7 +839,6 @@ name = "ontologos-profile"
 version = "0.2.0"
 dependencies = [
  "ontologos-core",
- "ontologos-parser",
  "serde",
  "thiserror 2.0.18",
 ]

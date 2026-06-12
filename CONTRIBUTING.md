@@ -95,7 +95,7 @@ Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire
 
 On each release tag, CI publishes:
 
-- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (v0.2: `ontologos-core`, `ontologos-parser`, `ontologos-profile`)
+- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (v0.2: `ontologos-core`, `ontologos-profile`, `ontologos-parser`, in dependency order)
 - **PyPI** — `ontologos` via [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh) (`maturin`, Linux wheel + sdist)
 
 Bump `version` in [crates/ontologos-py/pyproject.toml](crates/ontologos-py/pyproject.toml) and [python/ontologos/__init__.py](crates/ontologos-py/python/ontologos/__init__.py) to match the workspace version before tagging.

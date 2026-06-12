@@ -6,13 +6,13 @@
 //!
 //! # Example
 //!
-//! ```no_run
-//! use ontologos_parser::load_ontology;
-//! use ontologos_profile::detect_profile;
+//! ```
+//! use ontologos_core::Ontology;
+//! use ontologos_profile::{detect_profile, OwlProfile};
 //!
-//! let ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
+//! let ontology = Ontology::default();
 //! let report = detect_profile(&ontology)?;
-//! println!("{:?}", report.detected);
+//! assert_eq!(report.detected, Some(OwlProfile::Ql));
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!

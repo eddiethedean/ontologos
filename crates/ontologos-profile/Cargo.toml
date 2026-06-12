@@ -18,6 +18,3 @@ all-features = true
 ontologos-core = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
-
-[dev-dependencies]
-ontologos-parser = { workspace = true }

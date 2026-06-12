@@ -1,6 +1,4 @@
 use ontologos_core::{Error, Limits, Ontology};
-use ontologos_parser::validate_load_path;
-use ontologos_profile::{detect_profile, OwlProfile};
 
 #[test]
 fn rejects_format_version_1_snapshot() {
@@ -76,19 +74,4 @@ fn rejects_oversized_json_input() {
     let json = r#"{"format_version":2,"entities":[],"axioms":[]}"#;
     let err = Ontology::from_json_with_limits(json, limits).expect_err("size");
     assert!(matches!(err, Error::Serialization(_)));
-}
-
-#[test]
-fn detect_profile_succeeds_on_empty_ontology() {
-    let ontology = Ontology::default();
-    let report = detect_profile(&ontology).expect("detect");
-    assert_eq!(report.detected, Some(OwlProfile::Ql));
-}
-
-#[test]
-fn validate_load_path_rejects_traversal() {
-    let base = std::env::current_dir().expect("cwd");
-    let err = validate_load_path(std::path::Path::new("../../../etc/passwd"), Some(&base))
-        .expect_err("traversal");
-    assert!(matches!(err, ontologos_parser::Error::Parse(_)));
 }
