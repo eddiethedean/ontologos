@@ -7,10 +7,6 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
-  jobs:
-    build:
-      environment:
-        NO_MKDOCS_2_WARNING: "1"
 
 mkdocs:
   configuration: mkdocs.yml
