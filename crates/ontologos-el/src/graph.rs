@@ -46,6 +46,14 @@ impl CompletionGraph {
                 } => {
                     graph.add_subproperty(*sub_property, *super_property);
                 }
+                ontologos_core::Axiom::EquivalentObjectProperties(properties) => {
+                    for i in 0..properties.len() {
+                        for j in (i + 1)..properties.len() {
+                            graph.add_subproperty(properties[i], properties[j]);
+                            graph.add_subproperty(properties[j], properties[i]);
+                        }
+                    }
+                }
                 _ => {}
             }
         }
@@ -54,6 +62,17 @@ impl CompletionGraph {
 
     pub fn subsumptions(&self) -> &HashSet<(EntityId, EntityId)> {
         &self.subsumptions
+    }
+
+    /// Whether the saturated graph contains `class ⊑ ∃property.filler`.
+    #[cfg(test)]
+    pub(crate) fn has_existential(
+        &self,
+        class: EntityId,
+        property: EntityId,
+        filler: EntityId,
+    ) -> bool {
+        self.existentials.contains(&(class, property, filler))
     }
 
     pub fn is_subsumed(&self, sub: EntityId, sup: EntityId) -> bool {
@@ -196,5 +215,71 @@ impl CompletionGraph {
                 self.add_existential(c, sub, d);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ontologos_core::{Axiom, EntityKind, Ontology};
+
+    use super::CompletionGraph;
+
+    fn class(ontology: &mut Ontology, iri: &str) -> ontologos_core::EntityId {
+        ontology.entity_id(iri, EntityKind::Class).unwrap()
+    }
+
+    #[test]
+    fn equivalent_properties_seed_mutual_subproperties() {
+        let mut ontology = Ontology::new();
+        let a = class(&mut ontology, "http://ex.org/A");
+        let d = class(&mut ontology, "http://ex.org/D");
+        let r = ontology
+            .entity_id("http://ex.org/r", EntityKind::ObjectProperty)
+            .unwrap();
+        let s = ontology
+            .entity_id("http://ex.org/s", EntityKind::ObjectProperty)
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::EquivalentObjectProperties(vec![r, s]))
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::SubClassOfExistential {
+                subclass: a,
+                property: r,
+                filler: d,
+            })
+            .unwrap();
+
+        let mut graph = CompletionGraph::seed(&ontology);
+        graph.saturate();
+        assert!(graph.has_existential(a, s, d));
+    }
+
+    #[test]
+    fn existential_propagates_along_filler_subsumption() {
+        let mut ontology = Ontology::new();
+        let a = class(&mut ontology, "http://ex.org/A");
+        let b = class(&mut ontology, "http://ex.org/B");
+        let c = class(&mut ontology, "http://ex.org/C");
+        let r = ontology
+            .entity_id("http://ex.org/r", EntityKind::ObjectProperty)
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::SubClassOfExistential {
+                subclass: a,
+                property: r,
+                filler: b,
+            })
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::SubClassOf {
+                subclass: b,
+                superclass: c,
+            })
+            .unwrap();
+
+        let mut graph = CompletionGraph::seed(&ontology);
+        graph.saturate();
+        assert!(graph.has_existential(a, r, c));
     }
 }

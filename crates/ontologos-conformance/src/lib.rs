@@ -1,7 +1,8 @@
 //! Shared helpers for HermiT-ported conformance tests.
 //!
-//! HermiT source is expected at `HermiT/` in the repo root (gitignored) or at
-//! `ONTOLOGOS_HERMIT_ROOT`.
+//! HermiT fixtures are vendored under `benchmarks/data/hermit/` for CI. A full
+//! HermiT source tree at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT` is
+//! also supported.
 
 use std::path::{Path, PathBuf};
 
@@ -41,10 +42,31 @@ pub fn hermit_test_path(relative: &str) -> Option<PathBuf> {
     })
 }
 
+/// Vendored `ClassificationTest` fixtures under `benchmarks/data/hermit/`.
+#[must_use]
+pub fn vendored_hermit_test_path(relative: &str) -> Option<PathBuf> {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit")
+        .join(relative);
+    path.exists().then_some(path)
+}
+
+/// Resolve a HermiT test fixture from the local tree or vendored benchmarks.
+#[must_use]
+pub fn classification_fixture_path(relative: &str) -> Option<PathBuf> {
+    hermit_test_path(relative).or_else(|| vendored_hermit_test_path(relative))
+}
+
 /// Returns true when optional Tier-B HermiT fixture tests should run.
 #[must_use]
 pub fn hermit_available() -> bool {
     hermit_root().is_some()
+}
+
+/// Returns true when `ClassificationTest` fixtures are available (vendored or local HermiT).
+#[must_use]
+pub fn classification_fixtures_available() -> bool {
+    classification_fixture_path("reasoner/res/pizza.xml").is_some()
 }
 
 /// Assert `subclass` has a direct or indirect super-class `superclass`.

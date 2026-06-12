@@ -1,6 +1,6 @@
 # Conformance Coverage
 
-Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. OntoLogos v0.4 is **pre-release** — conformance is growing, not complete.
+Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. OntoLogos v0.5 ships EL classification, RL saturation, and growing HermiT ports.
 
 ## HermiT porting strategy
 
@@ -8,19 +8,20 @@ Tests are cataloged in [tests/hermit/manifest.toml](https://github.com/eddiethed
 
 | Tier | CI | HermiT checkout required | Purpose |
 |------|-----|--------------------------|---------|
-| **A** | Always (`cargo test -p ontologos-conformance`) | No | Inlined logic + small fixtures |
-| **B** | `#[ignore]` unless `ONTOLOGOS_HERMIT_ROOT` set | Yes | Parser + classification goldens from HermiT tree |
+| **A** | Always (`cargo test -p ontologos-conformance`) | No | Inlined RL logic + small fixtures |
+| **B** | Always for pizza; wine optional | No (vendored under `benchmarks/data/hermit/`) | `ClassificationTest` taxonomy goldens |
 
 Run locally:
 
 ```bash
-cargo test -p ontologos-conformance              # Tier A
-cargo test -p ontologos-conformance -- --ignored # Tier B (needs HermiT/)
+cargo test -p ontologos-conformance
 ```
+
+Optional full HermiT tree: set `ONTOLOGOS_HERMIT_ROOT` or clone to `HermiT/` for additional fixtures.
 
 See [tests/hermit/README.md](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/README.md) for maintainer setup.
 
-## Tier A coverage (v0.4, RL engine)
+## Tier A coverage (RL engine)
 
 Representative ported cases (see manifest for full list):
 
@@ -34,43 +35,35 @@ Representative ported cases (see manifest for full list):
 | `testIndividualRetrievalBug` | RL | Property assertion indexing |
 | `testIsFunctionalObject` | RL | Functional characteristic on sub-properties |
 
-Additional Tier A tests cover RDFS materialization and parser mapping (RDFS rules, profile detection on corpora).
+## Tier B coverage (EL engine)
 
-## Known gaps (v0.4)
+| HermiT test | Status | Notes |
+|-------------|--------|-------|
+| `ClassificationTest.testPizza` | **CI** | Vendored `pizza.xml` + golden `.txt` |
+| `ClassificationTest.testWine` | Optional | Skips when horned-owl cannot parse `wine.xml` |
+
+## EL golden conformance
+
+Pizza EL taxonomy is checked in CI via [`benchmarks/scripts/compare-elk.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-elk.sh) against committed `benchmarks/data/pizza-el-golden.json`. Regenerate baselines from ELK or whelk-rs when updating the EL engine.
+
+## Known gaps (v0.5)
 
 | Area | Status |
 |------|--------|
-| OWL EL taxonomy classification | Not shipped (v0.5 target; compare to ELK / whelk-rs) |
 | Full OWL DL | Not shipped (2.0 target) |
-| Complete OWL RL rule set | Partial — see [RL rules](rl-rules.md) and clash detection limits |
+| Complete OWL RL rule set | Partial — see [RL rules](rl-rules.md) |
 | Explanations | Stub (v0.6) |
 | Large DL corpora (GALEN, SNOMED) | Optional stress tests only |
-| CLI RL routing | Library/Python only until v0.5 |
+| Wine `ClassificationTest` | Parser limitation on legacy RDF/XML |
 
 ## Benchmark corpora
 
-Integration tests use Pizza (downloaded) and Family (vendored) ontologies. Manifest expected counts are **mapper output**, not Protégé logical axiom totals.
+Integration tests use Pizza (downloaded), Family (vendored), go-subset (vendored EL perf), and HermiT pizza fixtures. Manifest expected counts are **mapper output**, not Protégé logical axiom totals.
 
 See [benchmarks.md](../project/benchmarks.md).
 
-## External comparison harness
-
-Optional script compares RL output against [reasonable](https://github.com/UKEmbassy/reasonable) when installed:
-
-```bash
-./benchmarks/scripts/compare-reasonable.sh benchmarks/data/family.owl
-```
-
-## v1.0 exit criteria (from ROADMAP)
-
-Conformance targets at stable release:
-
-- EL: parity measured against **ELK + whelk-rs**
-- RL: parity measured against **reasonable**
-- Documented known divergences from partial OWL mapping
-
 ## Related
 
-- [Comparison with existing tools](../comparison.md)
+- [Comparison](../comparison.md)
 - [Supported constructs](supported-constructs.md)
-- [Roadmap summary](../project/roadmap-summary.md)
+- [RL rules](rl-rules.md)

@@ -2,7 +2,7 @@
 
 Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a modular Rust ontology reasoner for OWL EL, RL, and RDFS.
 
-**Alpha package (v0.4.0).** See the full guide: **[docs/guides/python.md](../../docs/guides/python.md)**.
+**Alpha package (v0.5.0).** See the full guide: **[docs/guides/python.md](../../docs/guides/python.md)**.
 
 > **Always pass `profile=`** — `Reasoner(path)` without a profile uses `"auto"`, which fails in v0.4.
 

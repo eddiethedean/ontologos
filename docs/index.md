@@ -78,11 +78,13 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | [rl-rules.md](reference/rl-rules.md) | OWL RL rule catalog |
 | [conformance.md](reference/conformance.md) | HermiT-ported test coverage |
 | [json-snapshot-v2.md](json-snapshot-v2.md) | JSON snapshot schema |
-| [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.4.0) | Rust API (core) |
-| [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.4.0) | Rust API (parser) |
-| [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.4.0) | Rust API (profile) |
-| [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.4.0) | Rust API (RDFS engine) |
-| [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.4.0) | Rust API (OWL RL engine) |
+| [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.5.0) | Rust API (core) |
+| [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.5.0) | Rust API (parser) |
+| [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.5.0) | Rust API (profile) |
+| [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.5.0) | Rust API (RDFS engine) |
+| [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.5.0) | Rust API (OWL RL engine) |
+| [docs.rs/ontologos-el](https://docs.rs/ontologos-el/0.5.0) | Rust API (OWL EL classifier) |
+| [docs.rs/ontologos-query](https://docs.rs/ontologos-query/0.5.0) | Rust API (taxonomy queries) |
 
 ## Migration
 
@@ -92,6 +94,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | [v0.2-to-v0.3.md](migration/v0.2-to-v0.3.md) | RDFS engine and materialize CLI |
 | [v0.3.0-to-v0.3.1.md](migration/v0.3.0-to-v0.3.1.md) | Patch: classify CLI report |
 | [v0.3.x-to-v0.4.0.md](migration/v0.3.x-to-v0.4.0.md) | ABox, OWL RL, Python `profile="rl"` |
+| [v0.4.x-to-v0.5.0.md](migration/v0.4.x-to-v0.5.0.md) | OWL EL, CLI profile routing, Python `auto`/`el` |
 
 ## Project
 

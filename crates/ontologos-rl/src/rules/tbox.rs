@@ -229,16 +229,16 @@ fn apply_existential_subproperty(ctx: &mut RuleContext<'_>) -> ontologos_core::R
         }
     }
 
-    // cls-spo2: propagate existentials along subClassOf to superclasses.
-    for subclass in classes {
+    // scm-spo1: propagate existentials along subClassOf to subclasses.
+    for subclass in classes.clone() {
         for super_class in transitive_superclasses(ctx.ontology, subclass) {
-            let existentials = ctx.ontology.existentials_of(subclass).to_vec();
+            let existentials = ctx.ontology.existentials_of(super_class).to_vec();
             for (property, filler) in existentials {
                 infer_axiom(
                     ctx,
                     RlRule::ExistentialSubProp,
                     Axiom::SubClassOfExistential {
-                        subclass: super_class,
+                        subclass,
                         property,
                         filler,
                     },
@@ -252,18 +252,18 @@ fn apply_existential_subproperty(ctx: &mut RuleContext<'_>) -> ontologos_core::R
 }
 
 fn apply_existential_subsumption(ctx: &mut RuleContext<'_>) -> ontologos_core::Result<()> {
-    let classes: Vec<EntityId> = ctx
-        .ontology
-        .entities()
-        .iter()
-        .filter(|(_, record)| record.kind == EntityKind::Class)
-        .map(|(id, _)| id)
-        .collect();
-
     let mut existentials: Vec<(EntityId, EntityId, EntityId)> = Vec::new();
-    for subclass in &classes {
-        for &(property, filler) in ctx.ontology.existentials_of(*subclass) {
-            existentials.push((*subclass, property, filler));
+    for (id, axiom) in ctx.ontology.axioms().iter() {
+        if id.0 as usize >= ctx.asserted_axiom_count {
+            continue;
+        }
+        if let Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        } = axiom
+        {
+            existentials.push((*subclass, *property, *filler));
         }
     }
 
@@ -273,8 +273,8 @@ fn apply_existential_subsumption(ctx: &mut RuleContext<'_>) -> ontologos_core::R
             if sub_x == sub_y {
                 continue;
             }
-            let fillers_compatible = filler_x == filler_y
-                || is_subclass_of(ctx.ontology, *filler_x, *filler_y);
+            let fillers_compatible =
+                filler_x == filler_y || is_subclass_of(ctx.ontology, *filler_x, *filler_y);
             if !fillers_compatible {
                 continue;
             }

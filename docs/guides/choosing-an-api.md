@@ -112,7 +112,7 @@ let mut reasoner = Reasoner::builder().profile(Profile::Rdfs).build(ontology)?;
 classify_reasoner(&mut reasoner)?;
 ```
 
-CLI: `ontologos materialize` or `ontologos classify` (both RDFS only — prefer `materialize`).
+CLI: `ontologos materialize` (RDFS) or `ontologos classify --profile rdfs|rl|el|auto`.
 
 See [RDFS materialization](../getting-started/rdfs-materialization.md).
 
@@ -140,15 +140,31 @@ classify_reasoner(&mut reasoner)?;
 
 Do **not** call `Reasoner::classify()` on core for RL — it returns a delegate hint.
 
-CLI: not available in v0.4. Python: `Reasoner(path, profile="rl").classify()`.
+CLI: `ontologos classify --profile rl`. Python: `Reasoner(path, profile="rl").classify()`.
 
 See [OWL RL saturation](../getting-started/owl-rl-saturation.md).
 
 ### OWL EL taxonomy classification
 
-**Status:** v0.5 (`ontologos-el` is a stub)
+**Crates:** `ontologos-el`, `ontologos-query` (+ parser if loading files)
 
-`Reasoner::classify()` with `Profile::El` or `Profile::Auto` returns `NotImplemented`. Use ELK or whelk-rs for production EL today.
+```rust
+use ontologos_el::ElClassifier;
+
+let taxonomy = ElClassifier::new().classify(&ontology)?;
+```
+
+**Routed classification:**
+
+```rust
+use ontologos_el::classify_with_profile;
+
+let outcome = classify_with_profile(&mut reasoner)?;
+```
+
+CLI: `ontologos classify --profile el`. Python: `Reasoner(path, profile="el").classify()`.
+
+See [OWL EL classification](../getting-started/owl-el-classification.md).
 
 ### Python
 
@@ -159,9 +175,11 @@ from ontologos import Reasoner
 
 Reasoner("file.owl", profile="rdfs").classify()
 Reasoner("file.owl", profile="rl").classify()
+Reasoner("file.owl", profile="el").classify()
+Reasoner("file.owl", profile="auto").classify()
 ```
 
-Default profile (`auto`) is not implemented until v0.5. See [Python guide](python.md).
+See [Python guide](python.md).
 
 ## Dependency cheat sheet
 
@@ -172,6 +190,7 @@ Default profile (`auto`) is not implemented until v0.5. See [Python guide](pytho
 | + Profile detection | `+ ontologos-profile` |
 | + RDFS | `+ ontologos-rdfs` |
 | + OWL RL | `+ ontologos-rl` (pulls in rdfs transitively) |
+| + OWL EL + queries | `+ ontologos-el`, `+ ontologos-query` |
 
 There is no single `ontologos` meta-crate on crates.io.
 
@@ -181,7 +200,7 @@ There is no single `ontologos` meta-crate on crates.io.
 |---------|-----|
 | `Ontology::from_file` | Use `ontologos_parser::load_ontology` |
 | `Reasoner::classify()` for RL/RDFS | Use profile crate helpers |
-| Expect CLI `classify` to run EL/DL | It runs RDFS only in v0.4 |
+| Expect CLI `classify` to run DL | Use EL/RL/RDFS profiles; full DL is v2.0 |
 | Compare axiom count to Protégé | See [supported constructs](../reference/supported-constructs.md) |
 | `Profile::Auto` on core reasoner | Detect profile explicitly, pick engine |
 

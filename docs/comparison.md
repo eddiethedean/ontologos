@@ -1,17 +1,17 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos v0.4 is **not** a drop-in HermiT replacement.
+Honest positioning for evaluators. OntoLogos v0.5 is **not** a drop-in HermiT replacement.
 
 See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full 2023–2026 reasoner survey.
 
 ## Maturity matrix
 
-| Capability | OntoLogos v0.4 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+| Capability | OntoLogos v0.5 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|----------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
-| OWL EL classification | No (v0.5) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
-| OWL RL reasoning | **Yes** (library/Python) | No | Partial | Partial | **Yes** | No | Via plugin |
+| OWL EL classification | **Yes** | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
+| OWL RL reasoning | **Yes** (library/CLI/Python) | No | Partial | Partial | **Yes** | No | Via plugin |
 | RDFS materialization | Yes (TBox) | No | Yes | Yes | Partial | No | Yes |
 | OWL DL | No (2.0) | No | Yes (stagnant) | **Yes** | No | No | Via plugin |
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
@@ -20,9 +20,9 @@ See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs
 | Explanations | No (v0.6) | Yes | Yes | Partial | Limited | No | Yes |
 | Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
 
-CLI `classify` and `materialize` remain RDFS-only until v0.5; OWL RL saturation is available via `ontologos-rl` (Rust library) or Python `profile="rl"`.
+CLI `classify --profile auto|el|rl|rdfs` routes to EL taxonomy, RL saturation, or RDFS materialization. Use `materialize` for explicit RDFS.
 
-v0.4 maps a **subset** of TBox and named ABox axioms into core; complex expressions are scanned for profile diagnostics but not stored. See [supported-constructs.md](reference/supported-constructs.md).
+v0.5 maps a **subset** of TBox and named ABox axioms into core; complex expressions are scanned for profile diagnostics but not stored. See [supported-constructs.md](reference/supported-constructs.md).
 
 ## Maintenance landscape
 

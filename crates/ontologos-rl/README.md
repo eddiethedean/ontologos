@@ -29,6 +29,6 @@ assert!(report.inferred_total() >= 0);
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-For [`Reasoner`](https://docs.rs/ontologos-core/0.4.0/ontologos_core/struct.Reasoner.html) integration use `ontologos_rl::classify_reasoner`.
+For [`Reasoner`](https://docs.rs/ontologos-core/0.5.0/ontologos_core/struct.Reasoner.html) integration use `ontologos_rl::classify_reasoner`.
 
 Documentation: [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) · [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl)

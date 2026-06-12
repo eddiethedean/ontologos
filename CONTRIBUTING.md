@@ -82,7 +82,7 @@ See [Roadmap summary](docs/project/roadmap-summary.md) (full checklist: [ROADMAP
 
 ### Release checklist
 
-Before tagging a release (e.g. `v0.4.0`):
+Before tagging a release (e.g. `v0.5.0`):
 
 ```bash
 ./benchmarks/scripts/download.sh
@@ -104,10 +104,10 @@ Then:
 1. Bump `version` in [crates/ontologos-py/pyproject.toml](crates/ontologos-py/pyproject.toml) and [python/ontologos/__init__.py](crates/ontologos-py/python/ontologos/__init__.py) to match the workspace version.
 2. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated version section and empty `[Unreleased]`.
 3. Commit release prep on `main`.
-4. Create an annotated tag: `git tag -a v0.4.0 -m "OntoLogos v0.4.0"`
-5. Push commit and tag: `git push origin main && git push origin v0.4.0`
+4. Create an annotated tag: `git tag -a v0.5.0 -m "OntoLogos v0.5.0"`
+5. Push commit and tag: `git push origin main && git push origin v0.5.0`
 6. The [release workflow](.github/workflows/release.yml) runs when the tag is pushed (requires GitHub secrets below).
-7. Create a GitHub Release from [`.github/release/v0.4.0.md`](.github/release/v0.4.0.md) (or the matching version file).
+7. Create a GitHub Release from [`.github/release/v0.5.0.md`](.github/release/v0.5.0.md) (or the matching version file).
 
 ### Release secrets
 
@@ -123,7 +123,7 @@ On each release tag, CI publishes:
 - **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (v0.4: `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, in dependency order)
 - **PyPI** — `ontologos` via release CI (`maturin-action`): Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x64, aarch64), plus sdist. Manual upload: [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh)
 
-- **Tags:** Release tags follow semver (`v0.4.0`, …)
+- **Tags:** Release tags follow semver (`v0.5.0`, …)
 - **CHANGELOG:** [Keep a Changelog](https://keepachangelog.com/) format in [CHANGELOG.md](CHANGELOG.md)
 
 ## Questions

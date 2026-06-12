@@ -11,8 +11,8 @@ RDFS rules (`subclass_trans`, `subprop_trans`, `dom_inherit`, `rng_inherit`) run
 | `eq_class_sub` | `EquivalentClasses` expanded to mutual `SubClassOf` |
 | `eq_prop_sub` | `EquivalentObjectProperties` expanded to mutual `SubObjectPropertyOf` |
 | `char_propagate` | Property characteristics (functional, transitive, symmetric, etc.) propagate along `subPropertyOf` |
-| `existential_sub_prop` | Existential restriction propagates along `subPropertyOf` |
-| `existential_subsumption` | Class with `∃P.D` subsumed by class with `∃Q.D` when `P ⊑ Q` |
+| `existential_sub_prop` | Existential restriction propagates along `subPropertyOf`, `equivalentProperties`, `equivalentClasses`, and downward along `subClassOf` (scm-spo1) |
+| `existential_subsumption` | Class with `∃P.D` subsumed by class with `∃Q.D` when `P ⊑ Q` (asserted existentials only) |
 
 ## ABox rules
 
@@ -67,4 +67,4 @@ See [Supported constructs](supported-constructs.md).
 ## Related
 
 - [OWL RL saturation guide](../getting-started/owl-rl-saturation.md)
-- [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.4.0)
+- [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.5.0)

@@ -1,14 +1,17 @@
-//! HermiT `ClassificationTest` Tier-B ports (require local `HermiT/` tree).
+//! HermiT `ClassificationTest` ports (vendored fixtures + optional local `HermiT/` tree).
 
-use ontologos_conformance::{assert_subsumed, hermit_available, hermit_test_path};
+use ontologos_conformance::{
+    assert_subsumed, classification_fixture_path, classification_fixtures_available,
+};
 use ontologos_el::ElClassifier;
 use ontologos_parser::load_ontology;
 use std::collections::HashSet;
 use std::fs;
 
-fn load_hermit_fixture(relative: &str) -> Option<ontologos_core::Ontology> {
-    let path = hermit_test_path(relative)?;
-    load_ontology(&path).ok()
+fn load_classification_fixture(relative: &str) -> ontologos_core::Ontology {
+    let path = classification_fixture_path(relative)
+        .unwrap_or_else(|| panic!("missing classification fixture: {relative}"));
+    load_ontology(&path).expect("load fixture")
 }
 
 fn parse_hermit_hierarchy_txt(text: &str) -> Vec<(String, String)> {
@@ -45,13 +48,14 @@ fn assert_hierarchies(
 }
 
 #[test]
-#[ignore = "requires HermiT source tree at HermiT/ or ONTOLOGOS_HERMIT_ROOT"]
 fn hermit_classification_pizza_taxonomy() {
-    if !hermit_available() {
+    if !classification_fixtures_available() {
+        eprintln!("skip: missing vendored pizza classification fixtures");
         return;
     }
-    let ontology = load_hermit_fixture("reasoner/res/pizza.xml").expect("pizza fixture");
-    let control_path = hermit_test_path("reasoner/res/pizza.xml.txt").expect("control");
+    let ontology = load_classification_fixture("reasoner/res/pizza.xml");
+    let control_path =
+        classification_fixture_path("reasoner/res/pizza.xml.txt").expect("pizza control");
     let golden_text = fs::read_to_string(control_path).expect("read golden");
     let golden = parse_hermit_hierarchy_txt(&golden_text);
 
@@ -60,26 +64,20 @@ fn hermit_classification_pizza_taxonomy() {
 }
 
 #[test]
-#[ignore = "requires HermiT source tree at HermiT/ or ONTOLOGOS_HERMIT_ROOT"]
+#[ignore = "horned-owl panics on legacy wine.xml duplicate rdf:ID until parser handles the error"]
 fn hermit_classification_wine_taxonomy() {
-    if !hermit_available() {
+    if !classification_fixtures_available() {
+        eprintln!("skip: missing vendored wine classification fixtures");
         return;
     }
-    let ontology = load_hermit_fixture("reasoner/res/wine.xml").expect("wine fixture");
-    let control_path = hermit_test_path("reasoner/res/wine.xml.txt").expect("control");
+    let ontology = load_classification_fixture("reasoner/res/wine.xml");
+    let control_path =
+        classification_fixture_path("reasoner/res/wine.xml.txt").expect("wine control");
     let golden_text = fs::read_to_string(control_path).expect("read golden");
     let golden = parse_hermit_hierarchy_txt(&golden_text);
 
     let taxonomy = ElClassifier::new().classify(&ontology).expect("classify");
     assert_hierarchies(&ontology, &taxonomy, &golden);
-}
-
-#[test]
-fn hermit_el_tests_skipped_without_fixture_tree() {
-    if hermit_available() {
-        return;
-    }
-    assert!(!hermit_available());
 }
 
 #[test]

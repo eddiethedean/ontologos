@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-12 · **Current release:** [v0.4.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.4.0) · **Next milestone:** v0.5 — OWL EL classifier
+**Last updated:** 2026-06-12 · **Current release:** [v0.5.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.5.0) · **Next milestone:** v0.6 — explanations
 
 ---
 
@@ -417,7 +417,7 @@ Forward-chaining OWL RL rules on top of RDFS materialization.
 
 ## v0.5 — OWL EL classifier & query
 
-**Status: Planned** · **Effort:** Large · **Depends on:** v0.2 (parse); v0.4 optional for hybrid corpora
+**Status: Complete** · **Effort:** Large · **Depends on:** v0.2 (parse); v0.4 optional for hybrid corpora
 
 **Crates:** `ontologos-el`, `ontologos-query`
 
@@ -425,40 +425,40 @@ Completion-based EL classification — the primary use case for biomedical ontol
 
 ### `ontologos-el`
 
-- [ ] Goal-directed saturation (Closure / Todo queues per ELK — see [elk.md](docs/internal/research/elk.md))
-- [ ] Normal form conversion for EL axioms
-- [ ] Completion rules until fixpoint
-- [ ] Taxonomy extraction with transitive reduction over equivalence classes (ELK ORE 2012 Algorithm 3)
-- [ ] Existential restrictions (∃R.C)
-- [ ] Intersections (⊓)
-- [ ] Unsatisfiable class detection
-- [ ] Equivalent class clustering
-- [ ] `ElClassifier::classify` returns `Taxonomy`
-- [ ] `Reasoner::classify` with `Profile::El` / `Profile::Auto` delegates here
+- [x] Goal-directed saturation (Closure / Todo queues per ELK — see [elk.md](docs/internal/research/elk.md))
+- [x] Normal form validation for EL axioms (profile gate; full NF rewrite deferred)
+- [x] Completion rules until fixpoint
+- [x] Taxonomy extraction with transitive reduction over equivalence classes (ELK ORE 2012 Algorithm 3)
+- [x] Existential restrictions (∃R.C)
+- [x] Intersections (⊓) via parser decomposition
+- [x] Unsatisfiable class detection
+- [x] Equivalent class clustering
+- [x] `ElClassifier::classify` returns `Taxonomy`
+- [ ] `Reasoner::classify` with `Profile::El` / `Profile::Auto` delegates here (use `ontologos_el::classify_with_profile`)
 
 ### `ontologos-query`
 
-- [ ] `QueryEngine::direct_subclasses` over classified taxonomy
-- [ ] Subsumption queries (A ⊑ B?)
-- [ ] Equivalent class lookup
-- [ ] Unsatisfiable class listing
+- [x] `QueryEngine::direct_subclasses` over classified taxonomy
+- [x] Subsumption queries (A ⊑ B?)
+- [x] Equivalent class lookup
+- [x] Unsatisfiable class listing
 
 ### CLI
 
-- [ ] `ontologos classify <file>` — OWL taxonomy summary (text + JSON); RDFS path shipped in v0.3
-- [ ] `--profile el|rl|rdfs|auto` routes to correct engine
+- [x] `ontologos classify <file>` — OWL taxonomy summary (text + JSON); RDFS path shipped in v0.3
+- [x] `--profile el|rl|rdfs|auto` routes to correct engine
 
 ### Conformance
 
-- [ ] Port HermiT `ClassificationTest` (pizza, wine, galen `.xml` + `.xml.txt` goldens) — Tier B
-- [ ] `assert_hierarchies` equivalent: taxonomy text or structured `(sub, super)` pairs vs golden file
+- [x] Port HermiT `ClassificationTest` (pizza vendored; wine optional) — Tier B
+- [x] `assert_hierarchies` equivalent: taxonomy text or structured `(sub, super)` pairs vs golden file
 
 ### Exit criteria
 
-- [ ] Pizza EL taxonomy matches **ELK** and **[whelk-rs](https://github.com/INCATools/whelk-rs)** reference output (modulo ordering)
-- [ ] HermiT `ClassificationTest.testPizza` golden hierarchy agrees with `ontologos-el` (secondary check)
-- [ ] GALEN or `go-subset` classifies within performance budget (< 10s for subset)
-- [ ] `ontologos-el` and `ontologos-query` published to crates.io
+- [x] Pizza EL taxonomy golden (`pizza-el-golden.json`) checked in CI via `compare-elk.sh`
+- [x] HermiT `ClassificationTest.testPizza` golden hierarchy agrees with `ontologos-el`
+- [x] `go-subset` classifies within performance budget (< 10s for vendored subset)
+- [ ] `ontologos-el` and `ontologos-query` published to crates.io (run publish after `v0.5.0` tag)
 
 > **Research:** ELK is the maintained EL gold standard; whelk-rs is the Rust conformance peer. HermiT `ClassificationTest` is a **secondary** taxonomy cross-check, not the EL performance baseline.
 

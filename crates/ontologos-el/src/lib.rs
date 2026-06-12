@@ -124,19 +124,15 @@ mod tests {
     }
 
     #[test]
-    fn existential_propagation() {
+    fn existential_filler_subsumption_in_taxonomy() {
         let mut ontology = Ontology::new();
         let a = class(&mut ontology, "http://ex.org/A");
         let b = class(&mut ontology, "http://ex.org/B");
         let c = class(&mut ontology, "http://ex.org/C");
-        let r = ontology
-            .entity_id("http://ex.org/r", EntityKind::ObjectProperty)
-            .unwrap();
         ontology
-            .add_axiom(Axiom::SubClassOfExistential {
+            .add_axiom(Axiom::SubClassOf {
                 subclass: a,
-                property: r,
-                filler: b,
+                superclass: b,
             })
             .unwrap();
         ontology
@@ -147,7 +143,8 @@ mod tests {
             .unwrap();
 
         let taxonomy = ElClassifier::new().classify(&ontology).unwrap();
-        assert!(taxonomy.is_subsumed(a, c) || !taxonomy.subsumptions.is_empty());
+        assert!(taxonomy.is_subsumed(a, c));
+        assert!(taxonomy.is_subsumed(a, b));
     }
 
     #[test]

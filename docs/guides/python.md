@@ -1,10 +1,6 @@
 # Python Guide
 
-Alpha Python bindings for OntoLogos v0.4 via PyO3 (`pip install ontologos`).
-
-!!! danger "Always set profile="
-    `Reasoner(path)` defaults to `profile="auto"`, which **fails** in v0.4 with `reasoning not yet implemented`.
-    Always pass `profile="rdfs"` or `profile="rl"`.
+Alpha Python bindings for OntoLogos v0.5 via PyO3 (`pip install ontologos`).
 
 ## Install
 
@@ -28,8 +24,9 @@ Development install from a clone:
 cd crates/ontologos-py
 python -m venv .venv
 source .venv/bin/activate
-pip install 'maturin>=1.7,<2.0'
+pip install 'maturin>=1.7,<2.0' pytest
 maturin develop --release
+pytest tests/ -q
 ```
 
 ## Quick start
@@ -41,11 +38,21 @@ print(ontologos.__version__)
 
 # RDFS TBox materialization
 reasoner = ontologos.Reasoner("ontology.owl", profile="rdfs")
-reasoner.classify()
+report = reasoner.classify()
+print(report["inferred_axioms"])
 
 # OWL RL saturation (RDFS + RL rules)
 reasoner = ontologos.Reasoner("family.owl", profile="rl")
-reasoner.classify()
+report = reasoner.classify()
+
+# OWL EL taxonomy
+reasoner = ontologos.Reasoner("pizza.owl", profile="el")
+taxonomy = reasoner.classify()
+print(taxonomy["subsumption_count"])
+
+# Auto-detect profile (EL or RL)
+reasoner = ontologos.Reasoner("ontology.owl", profile="auto")
+result = reasoner.classify()
 ```
 
 ## API reference
@@ -61,28 +68,25 @@ Constructs a reasoner by loading an OWL file via the Rust parser.
 
 **Profiles:**
 
-| Profile | `classify()` behavior |
-|---------|----------------------|
-| `"rdfs"` | RDFS TBox materialization |
-| `"rl"` | OWL RL saturation (includes RDFS pass) |
-| `"auto"` | **Not implemented** until v0.5 — raises runtime error |
-| `"el"` | **Not implemented** until v0.5 — raises runtime error |
+| Profile | `classify()` return value |
+|---------|--------------------------|
+| `"rdfs"` | `dict` with `initial_axiom_count`, `final_axiom_count`, `inferred_axioms` |
+| `"rl"` | Same report shape as RDFS (includes RL inferences) |
+| `"el"` | `dict` with `subsumption_count`, `subsumptions`, `equivalences`, `unsatisfiable` |
+| `"auto"` | EL taxonomy or RL report based on profile detection |
 
 Invalid profile strings raise `RuntimeError`.
 
-### `classify() -> None`
+### `classify() -> dict`
 
-Runs the selected profile engine **in place** on the loaded ontology held by the reasoner.
+Runs the selected profile engine on the loaded ontology.
 
-- **Return value:** `None` (no report object exposed in v0.4).
-- **Side effect:** Inferred axioms are added to the internal ontology (not exported to Python yet).
-- **Errors:** `RuntimeError` with message string on parse failure, unsupported profile, or engine errors.
-
-To inspect results today, use `parse_meta` before/after or the Rust library for full report access.
+- **EL / auto (EL):** Returns taxonomy dict; also available via `reasoner.taxonomy` after classify.
+- **RDFS / RL:** Returns materialization report dict with axiom counts.
 
 ### `parse_meta` (property)
 
-Read-only dict after load (and still valid after `classify()`):
+Read-only dict after load:
 
 | Key | Type | Description |
 |-----|------|-------------|
@@ -91,22 +95,16 @@ Read-only dict after load (and still valid after `classify()`):
 | `skipped_axiom_count` | `int` | Logical components not mapped |
 | `logical_axiom_count` | `int` | Mapped + skipped |
 
-Profile detection, JSON export, and query APIs are **not** exposed in Python until later milestones (v0.9 full API).
+## Limitations (v0.5 alpha)
 
-## Limitations (v0.4 alpha)
-
-| Capability | Rust v0.4 | Python v0.4 |
+| Capability | Rust v0.5 | Python v0.5 |
 |------------|-----------|-------------|
-| Load OWL files | Yes | Yes (`Reasoner(path)`) |
-| Profile detection | Yes | No |
-| RDFS materialization | Yes | Yes (`profile="rdfs"`) |
-| OWL RL saturation | Yes | Yes (`profile="rl"`) |
-| Materialization report / rule counts | Yes | No |
+| Load OWL files | Yes | Yes |
+| Profile detection | Yes | Via `"auto"` only |
+| RDFS / RL / EL classify | Yes | Yes |
+| Per-rule RL report | Yes | Counts only |
 | Export saturated ontology | Yes (in-process) | No |
-| OWL EL classification | No (v0.5) | No |
-| CLI-equivalent commands | Yes | No |
-
-Use Rust crates for production integrations requiring reports, profile detection, or ontology export.
+| Query API | Yes (`ontologos-query`) | No |
 
 ## Errors
 
@@ -114,15 +112,12 @@ All failures surface as `RuntimeError` with a string message. Common messages:
 
 | Message pattern | Cause |
 |-----------------|-------|
-| `reasoning not yet implemented` | Default `"auto"` or `"el"` profile |
 | `unsupported profile` | Invalid profile string |
+| `classification not supported for profile` | Auto-routing hit DL-only ontology |
 | Parse / I/O errors | Bad path, unsupported format, mapping failure |
-
-See [Error reference](../reference/errors.md) for Rust-side details.
 
 ## Related
 
-- [Choosing an API](choosing-an-api.md)
-- [OWL RL saturation](../getting-started/owl-rl-saturation.md)
-- [Rust Python crate README](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-py/README.md)
-- [Roadmap summary](../project/roadmap-summary.md) — Python maturity in v0.9 / 1.4
+- [Getting started](../getting-started/index.md)
+- [OWL EL classification](../getting-started/owl-el-classification.md)
+- [Migration v0.4 → v0.5](../migration/v0.4.x-to-v0.5.0.md)

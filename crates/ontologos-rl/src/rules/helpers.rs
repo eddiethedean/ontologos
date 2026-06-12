@@ -9,6 +9,8 @@ pub(crate) struct RuleContext<'a> {
     pub report: &'a mut MaterializationReport,
     pub record_traces: bool,
     pub parallelism: usize,
+    /// Axiom ids below this bound are treated as asserted for existential subsumption.
+    pub asserted_axiom_count: usize,
 }
 
 pub(crate) fn infer_axiom(

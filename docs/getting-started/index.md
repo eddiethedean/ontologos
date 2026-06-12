@@ -14,9 +14,9 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-ontologos-core = "0.4.0"
-ontologos-parser = "0.4.0"
-ontologos-rdfs = "0.4.0"
+ontologos-core = "0.5.0"
+ontologos-parser = "0.5.0"
+ontologos-rdfs = "0.5.0"
 ```
 
 `src/main.rs`:
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 Place your OWL file at `ontology.owl`, then `cargo run`.
 
-For OWL RL saturation, add `ontologos-rl = "0.4.0"` and see [OWL RL saturation](owl-rl-saturation.md).
+For OWL RL saturation, add `ontologos-rl = "0.5.0"` and see [OWL RL saturation](owl-rl-saturation.md).
 
 ## I want to try it from a clone
 

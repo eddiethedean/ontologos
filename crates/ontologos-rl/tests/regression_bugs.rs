@@ -276,7 +276,7 @@ fn disjoint_clash_deduped_for_equivalent_types_on_individual() {
     );
 }
 
-/// cls-spo2: existential on subclass propagates to superclass.
+/// scm-spo1: existential on superclass propagates to subclass.
 #[test]
 fn existential_propagates_along_subclass_of() {
     let mut ontology = Ontology::builder()
@@ -293,23 +293,23 @@ fn existential_propagates_along_subclass_of() {
         .build()
         .expect("build");
 
-    let dog = ontology.lookup_entity(&iri("Dog")).expect("Dog");
+    let animal = ontology.lookup_entity(&iri("Animal")).expect("Animal");
     let has_leg = ontology.lookup_entity(&iri("hasLeg")).expect("hasLeg");
     let leg = ontology.lookup_entity(&iri("Leg")).expect("Leg");
     ontology
         .add_axiom(Axiom::SubClassOfExistential {
-            subclass: dog,
+            subclass: animal,
             property: has_leg,
             filler: leg,
         })
-        .expect("Dog exists hasLeg Leg");
+        .expect("Animal exists hasLeg Leg");
 
     saturate(&mut ontology);
 
-    let animal = ontology.lookup_entity(&iri("Animal")).expect("Animal");
+    let dog = ontology.lookup_entity(&iri("Dog")).expect("Dog");
     assert!(
-        ontology.existentials_of(animal).contains(&(has_leg, leg)),
-        "expected Animal ⊑ ∃hasLeg.Leg after cls-spo2"
+        ontology.existentials_of(dog).contains(&(has_leg, leg)),
+        "expected Dog ⊑ ∃hasLeg.Leg after scm-spo1"
     );
 }
 

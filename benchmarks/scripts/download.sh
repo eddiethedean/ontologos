@@ -59,4 +59,14 @@ else
   exit 1
 fi
 
+# Vendored EL perf + golden baselines (committed in-repo).
+for vendored in go-subset.owl pizza-el-golden.json; do
+  if [[ -f "${DATA}/${vendored}" ]]; then
+    verify_checksum "${DATA}/${vendored}"
+  else
+    echo "missing vendored ${vendored} at ${DATA}/${vendored}" >&2
+    exit 1
+  fi
+done
+
 echo "Done. Corpus files in ${DATA}"

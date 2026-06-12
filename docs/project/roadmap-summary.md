@@ -1,6 +1,6 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Current release:** [v0.4.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.4.0) · **Next milestone:** v0.5 — OWL EL classifier.
+OntoLogos follows [semantic versioning](https://semver.org/). **Current release:** [v0.5.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.5.0) · **Next milestone:** v0.6 — explanations.
 
 ## Shipped (v0.4)
 

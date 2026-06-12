@@ -14,10 +14,11 @@ fn repo_root() -> std::path::PathBuf {
 #[test]
 fn go_subset_classifies_within_budget() {
     let path = repo_root().join("benchmarks/data/go-subset.owl");
-    if !path.exists() {
-        eprintln!("skip: missing go-subset.owl (run benchmarks/scripts/generate-go-subset.sh)");
-        return;
-    }
+    assert!(
+        path.exists(),
+        "missing go-subset.owl at {} (vendored EL perf corpus)",
+        path.display()
+    );
 
     let ontology = load_ontology(&path).expect("load go-subset");
     let start = Instant::now();

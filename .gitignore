@@ -18,9 +18,13 @@ dist/
 *.swo
 .DS_Store
 
-# Test artifacts (large downloads; family.owl is vendored)
+# Test artifacts (large downloads; vendored corpora below)
 /benchmarks/data/*
 !/benchmarks/data/family.owl
+!/benchmarks/data/go-subset.owl
+!/benchmarks/data/pizza-el-golden.json
+!/benchmarks/data/hermit/
+!/benchmarks/data/hermit/**
 
 # Local HermiT reference checkout (not part of OntoLogos)
 /HermiT/

@@ -11,8 +11,8 @@ flowchart TB
   profile[ontologos_profile]
   rdfs[ontologos_rdfs]
   rl[ontologos_rl]
-  el[ontologos_el stub]
-  query[ontologos_query stub]
+  el[ontologos_el]
+  query[ontologos_query]
   explain[ontologos_explain stub]
   cli[ontologos_cli]
   py[ontologos_py]
@@ -28,18 +28,22 @@ flowchart TB
   parser --> cli
   profile --> cli
   rdfs --> cli
+  el --> cli
+  rl --> cli
   explain --> cli
   parser --> py
   rdfs --> py
   rl --> py
+  el --> py
   rl --> conformance
   rdfs --> conformance
+  el --> conformance
   parser --> conformance
 ```
 
-Published to crates.io (v0.4): `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-rdfs`, `ontologos-rl`.
+Published to crates.io (v0.5): `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`.
 
-Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py` (also on PyPI).
+Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-explain` (stub), `ontologos-py` (also on PyPI).
 
 ## Data flow
 
@@ -58,7 +62,7 @@ flowchart LR
   subgraph engines [Engines]
     rdfsEng[RdfsEngine]
     rlEng[RlEngine]
-    elEng[ElClassifier stub]
+    elEng[ElClassifier]
   end
 
   builder --> ontology
@@ -72,8 +76,8 @@ flowchart LR
 
 1. **Construct or load** an `Ontology` (builder, JSON, or parser).
 2. **Optionally detect profile** with `ontologos_profile::detect_profile`.
-3. **Run an engine** that mutates the ontology in place (adds inferred axioms).
-4. **Query indexes** on `Ontology` (subclasses, individuals, property assertions, etc.).
+3. **Run an engine** that mutates the ontology in place (RDFS/RL) or returns a `Taxonomy` (EL).
+4. **Query** via `ontologos-query` or indexes on `Ontology`.
 
 ## Core model (`ontologos-core`)
 
@@ -86,6 +90,7 @@ Single in-memory representation:
 | `AxiomStore` | Structured TBox and ABox axioms |
 | `AxiomIndex` | Secondary indexes for traversal |
 | `ParseMeta` | Parser scan metadata (optional) |
+| `Taxonomy` | EL classification output (subsumptions, equivalences, unsatisfiable) |
 
 Serialization: JSON snapshot v2 (`to_json` / `from_json`).
 
@@ -95,14 +100,14 @@ Serialization: JSON snapshot v2 (`to_json` / `from_json`).
 
 `Reasoner` in core is a configuration wrapper around `Ontology`:
 
-| `Profile` | `Reasoner::classify()` in v0.4 | Use instead |
+| `Profile` | `Reasoner::classify()` in core | Use instead |
 |-----------|-------------------------------|-------------|
-| `Auto` | `NotImplemented` | Detect profile, pick engine manually |
-| `El` | `NotImplemented` | Wait for v0.5 or external ELK |
-| `Rdfs` | Delegate hint (`Error::Message`) | `ontologos_rdfs::classify_reasoner` |
+| `Auto` | `NotImplemented` | `ontologos_el::classify_with_profile` |
+| `El` | `NotImplemented` | `ontologos_el::classify_reasoner` or `ElClassifier` |
+| `Rdfs` | Delegate hint (`Error::Message`) | `ontologos_rdfs::materialize_reasoner` |
 | `Rl` | Delegate hint | `ontologos_rl::classify_reasoner` |
 
-Python `Reasoner` bridges RDFS and RL by calling the profile crates internally.
+CLI and Python call `ontologos_el::classify_with_profile` for routed classification.
 
 ## Engine layering
 
@@ -110,13 +115,18 @@ Python `Reasoner` bridges RDFS and RL by calling the profile crates internally.
 |--------|-------|-------|
 | RDFS | `ontologos-rdfs` | TBox: `subClassOf`/`subPropertyOf` closure, domain/range inheritance |
 | OWL RL | `ontologos-rl` | RDFS pass + RL TBox/ABox rules until saturation |
-| OWL EL | `ontologos-el` | Stub — completion-based taxonomy (v0.5) |
+| OWL EL | `ontologos-el` | Completion-based taxonomy (`ElClassifier`) |
+| Query | `ontologos-query` | Taxonomy queries (`is_subsumed`, `direct_subclasses`, …) |
 
 RL always runs RDFS first inside `RlEngine::saturate`.
 
 ## CLI surface
 
-`ontologos-cli` wires parser + profile + RDFS. It does **not** link `ontologos-rl` in v0.4 — RL is library/Python only until v0.5 CLI routing.
+`ontologos-cli` wires parser, profile detection, RDFS, RL, and EL:
+
+- `profile` — detect OWL profile
+- `classify --profile auto|el|rl|rdfs` — routed classification
+- `materialize` — explicit RDFS materialization
 
 ## Design choices
 
@@ -124,7 +134,8 @@ RL always runs RDFS first inside `RlEngine::saturate`.
 |--------|-----------|
 | No umbrella `ontologos` crate | Depend only on what you need; smaller dependency trees |
 | Core/parser split | Embed data model without OWL parse stack |
-| In-place materialization | Engines add axioms to the same `Ontology`; no separate triple store |
+| In-place materialization | RDFS/RL engines add axioms to the same `Ontology` |
+| EL taxonomy overlay | EL classification returns `Taxonomy` without mutating asserted axioms |
 | Partial OWL mapping | Map named TBox/ABox shapes; scan rest for profile diagnostics |
 | Batch fixed-point engines | Saturation loops until no new axioms (not incremental yet) |
 

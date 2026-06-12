@@ -56,9 +56,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ontologos-core = "0.4.0"
-ontologos-parser = "0.4.0"
-ontologos-rdfs = "0.4.0"
+ontologos-core = "0.5.0"
+ontologos-parser = "0.5.0"
+ontologos-rdfs = "0.5.0"
 ```
 
 `src/main.rs`:

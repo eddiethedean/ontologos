@@ -83,6 +83,7 @@ impl RlEngine {
                 report: &mut report,
                 record_traces,
                 parallelism,
+                asserted_axiom_count: initial_axiom_count,
             };
             apply_batch_a(&mut ctx)?;
             apply_batch_b(&mut ctx)?;

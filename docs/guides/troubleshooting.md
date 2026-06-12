@@ -53,7 +53,7 @@ Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology l
 
 ## `classify` / `explain` behavior
 
-In v0.4, CLI **`classify`** and **`materialize`** both run RDFS TBox materialization and emit the same inference report (`status` differs). OWL RL saturation is available via `ontologos-rl` (library) or Python `profile="rl"`. OWL EL taxonomy classification and CLI profile routing ship in v0.5; **`explain`** in v0.6.
+CLI **`classify --profile auto|el|rl|rdfs`** routes to EL taxonomy, RL saturation, or RDFS materialization. Use **`materialize`** for explicit RDFS. **`explain`** ships in v0.6.
 
 Library users: call `ontologos_rdfs::classify_reasoner` for `Profile::Rdfs`; `ontologos_rl::classify_reasoner` for `Profile::Rl`. `Reasoner::classify()` returns a delegate hint for `Profile::Rdfs` / `Profile::Rl` and `NotImplemented` for `Profile::Auto` / `El`. See [CLI reference](../reference/cli.md) and [errors.md](../reference/errors.md).
 
