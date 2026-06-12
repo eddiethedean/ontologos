@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
-use ontologos_core::Reasoner;
-use ontologos_explain::explain;
+use ontologos_core::{Ontology, ParseMetaSummary, Reasoner};
+use ontologos_explain::{explain, ProofGraph};
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, ProfileReport};
 use ontologos_rdfs::{materialize_reasoner, MaterializationReport, RdfsEngine};
@@ -65,33 +65,70 @@ fn run() -> Result<(), CliError> {
     match cli.command {
         Command::Profile { ontology } => {
             let ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
             let report = detect_profile(&ontology)?;
             match cli.format {
                 OutputFormat::Text => println!("{}", format_profile_text(&report)),
-                OutputFormat::Json => emit_json(&report)?,
+                OutputFormat::Json => emit_json(&ProfileCliOutput {
+                    report: &report,
+                    parse_meta: &parse_meta,
+                })?,
             }
         }
         Command::Classify { ontology } => {
             let ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
             let mut reasoner = Reasoner::builder()
                 .profile(ontologos_core::Profile::Rdfs)
                 .build(ontology)?;
             let report = materialize_reasoner(&mut reasoner)?;
-            emit_inference_report(cli.format, "classified", &report)?;
+            emit_inference_report(cli.format, "classified", &report, &parse_meta)?;
         }
         Command::Materialize { ontology } => {
             let mut ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
             let report = RdfsEngine::new().materialize(&mut ontology)?;
-            emit_inference_report(cli.format, "materialized", &report)?;
+            emit_inference_report(cli.format, "materialized", &report, &parse_meta)?;
         }
         Command::Explain { ontology } => {
             let ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
             let graph = explain(&ontology)?;
-            emit(cli.format, &graph)?;
+            emit(
+                cli.format,
+                &ExplainCliOutput {
+                    graph: &graph,
+                    parse_meta: &parse_meta,
+                },
+            )?;
         }
     }
 
     Ok(())
+}
+
+fn parse_meta_summary(ontology: &Ontology) -> ParseMetaSummary {
+    ontology
+        .parse_meta()
+        .map(ParseMetaSummary::from)
+        .unwrap_or_default()
+}
+
+fn emit_parse_meta_text(format: OutputFormat, parse_meta: &ParseMetaSummary) {
+    if matches!(format, OutputFormat::Text) {
+        parse_meta.emit_stderr();
+    }
+}
+
+#[derive(Serialize)]
+struct ProfileCliOutput<'a> {
+    #[serde(flatten)]
+    report: &'a ProfileReport,
+    parse_meta: &'a ParseMetaSummary,
 }
 
 #[derive(Serialize)]
@@ -103,6 +140,14 @@ struct InferenceCliOutput<'a> {
     inferred_by_rule: &'a std::collections::BTreeMap<ontologos_rdfs::RdfsRule, usize>,
     #[serde(skip_serializing_if = "inference_traces_empty")]
     traces: &'a [ontologos_rdfs::InferenceRecord],
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct ExplainCliOutput<'a> {
+    #[serde(flatten)]
+    graph: &'a ProofGraph,
+    parse_meta: &'a ParseMetaSummary,
 }
 
 fn inference_traces_empty(traces: &&[ontologos_rdfs::InferenceRecord]) -> bool {
@@ -113,6 +158,7 @@ fn emit_inference_report(
     format: OutputFormat,
     status: &'static str,
     report: &MaterializationReport,
+    parse_meta: &ParseMetaSummary,
 ) -> Result<(), CliError> {
     match format {
         OutputFormat::Text => {
@@ -136,6 +182,7 @@ fn emit_inference_report(
             inferred_axioms: report.inferred_total(),
             inferred_by_rule: &report.inferred_by_rule,
             traces: &report.traces,
+            parse_meta,
         })?,
     }
     Ok(())

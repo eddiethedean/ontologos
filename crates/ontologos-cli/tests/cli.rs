@@ -187,3 +187,50 @@ fn explain_stub_exits_not_implemented() {
             "explanation generation not yet implemented",
         ));
 }
+
+#[test]
+fn profile_surfaces_parse_meta_warnings_on_stderr() {
+    let path = fixture("class_individual_kind_clash.ttl");
+    let output = Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args(["profile", path.to_str().expect("path")])
+        .assert()
+        .success();
+    let stderr = String::from_utf8(output.get_output().stderr.clone()).expect("utf8");
+    assert!(
+        stderr.contains("warning: parse skipped 1 of 1 logical axioms"),
+        "expected parse summary on stderr, got: {stderr}"
+    );
+    assert!(
+        stderr.contains("entity kind mismatch"),
+        "expected kind mismatch warning on stderr, got: {stderr}"
+    );
+}
+
+#[test]
+fn profile_json_includes_parse_meta() {
+    let path = fixture("class_individual_kind_clash.ttl");
+    let output = Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args(["--format", "json", "profile", path.to_str().expect("path")])
+        .assert()
+        .success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
+    assert!(stdout.contains("\"parse_meta\""));
+    assert!(stdout.contains("\"skipped_axiom_count\""));
+    assert!(stdout.contains("\"warnings\""));
+    assert!(stdout.contains("entity kind mismatch"));
+}
+
+#[test]
+fn classify_json_includes_parse_meta() {
+    let path = fixture("class_individual_kind_clash.ttl");
+    let output = Command::cargo_bin("ontologos")
+        .expect("ontologos binary")
+        .args(["--format", "json", "classify", path.to_str().expect("path")])
+        .assert()
+        .success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
+    assert!(stdout.contains("\"parse_meta\""));
+    assert!(stdout.contains("\"skipped_axiom_count\": 1"));
+}

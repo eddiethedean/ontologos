@@ -128,3 +128,48 @@ impl ParseMeta {
         self.warnings.push(message.into());
     }
 }
+
+/// User-facing parse metadata for CLI and Python bindings.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+pub struct ParseMetaSummary {
+    /// Non-fatal parse warnings (skipped axioms, unsupported shapes).
+    pub warnings: Vec<String>,
+    /// Axioms successfully stored in the core model.
+    pub mapped_axiom_count: usize,
+    /// Logical axioms skipped during mapping.
+    pub skipped_axiom_count: usize,
+    /// Total logical components visited in the source (mapped + skipped).
+    pub logical_axiom_count: usize,
+}
+
+impl ParseMetaSummary {
+    /// Returns true when there are skipped axioms or warning messages to report.
+    pub fn has_issues(&self) -> bool {
+        self.skipped_axiom_count > 0 || !self.warnings.is_empty()
+    }
+
+    /// Print parse summary and warnings to stderr (CLI text mode).
+    pub fn emit_stderr(&self) {
+        if !self.has_issues() {
+            return;
+        }
+        eprintln!(
+            "warning: parse skipped {} of {} logical axioms",
+            self.skipped_axiom_count, self.logical_axiom_count
+        );
+        for warning in &self.warnings {
+            eprintln!("warning: {warning}");
+        }
+    }
+}
+
+impl From<&ParseMeta> for ParseMetaSummary {
+    fn from(meta: &ParseMeta) -> Self {
+        Self {
+            warnings: meta.warnings.clone(),
+            mapped_axiom_count: meta.mapped_axiom_count,
+            skipped_axiom_count: meta.skipped_axiom_count,
+            logical_axiom_count: meta.logical_axiom_count,
+        }
+    }
+}
