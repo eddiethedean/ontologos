@@ -3,7 +3,7 @@ use ontologos_profile::{detect_profile, OwlProfile};
 use ontologos_rdfs::{materialize_reasoner, MaterializationReport as RdfsReport};
 use ontologos_rl::{MaterializationReport as RlReport, RlEngine};
 
-use crate::{classify_reasoner, ElClassifier, Error};
+use crate::{ElClassifier, Error};
 
 /// Result of a profile-routed classification run.
 #[derive(Debug)]
@@ -19,7 +19,9 @@ pub enum ClassifyOutcome {
 /// Run classification using the reasoner's configured profile.
 pub fn classify_with_profile(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
     match reasoner.profile() {
-        Profile::El => Ok(ClassifyOutcome::Taxonomy(classify_reasoner(reasoner)?)),
+        Profile::El => Ok(ClassifyOutcome::Taxonomy(
+            crate::classify_with_report(reasoner)?.taxonomy,
+        )),
         Profile::Rdfs => Ok(ClassifyOutcome::Rdfs(materialize_reasoner(reasoner)?)),
         Profile::Rl => Ok(ClassifyOutcome::Rl(saturate_rl(reasoner)?)),
         Profile::Auto => classify_auto(reasoner),
@@ -34,12 +36,18 @@ fn saturate_rl(reasoner: &mut Reasoner) -> Result<RlReport, Error> {
         });
     }
     let parallelism = reasoner.config().parallelism;
-    Ok(RlEngine::try_new(parallelism)?.saturate(reasoner.ontology_mut())?)
+    let record_traces = reasoner.config().explanations;
+    Ok(RlEngine::try_new(parallelism)?
+        .with_traces(record_traces)
+        .saturate(reasoner.ontology_mut())?)
 }
 
 fn saturate_rl_unchecked(reasoner: &mut Reasoner) -> Result<RlReport, Error> {
     let parallelism = reasoner.config().parallelism;
-    Ok(RlEngine::try_new(parallelism)?.saturate(reasoner.ontology_mut())?)
+    let record_traces = reasoner.config().explanations;
+    Ok(RlEngine::try_new(parallelism)?
+        .with_traces(record_traces)
+        .saturate(reasoner.ontology_mut())?)
 }
 
 fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {

@@ -2,9 +2,10 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
+use ontologos_core::ReasonerConfig;
 use ontologos_core::{EntityId, Ontology, ParseMetaSummary, Profile, Reasoner, Taxonomy};
 use ontologos_el::{classify_with_profile, ClassifyOutcome};
-use ontologos_explain::{explain, ProofGraph};
+use ontologos_explain::{explain_with_profile, render_text, ProofGraph};
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, ProfileReport};
 use ontologos_rdfs::{MaterializationReport as RdfsReport, RdfsEngine};
@@ -16,7 +17,7 @@ use thiserror::Error;
 #[command(
     name = "ontologos",
     about = "Modular Rust ontology reasoner",
-    after_help = "v0.5: profile (detect), materialize (RDFS), classify (EL/RL/RDFS via --profile). \
+    after_help = "v0.6: profile (detect), materialize (RDFS), classify (EL/RL/RDFS), explain (proof graphs). \
                   Docs: https://ontologos.readthedocs.io/en/latest/reference/cli/"
 )]
 struct Cli {
@@ -40,8 +41,7 @@ enum Command {
     Classify { ontology: PathBuf },
     /// Materialize RDFS TBox inferences explicitly
     Materialize { ontology: PathBuf },
-    /// Explain inferences (not available until v0.6)
-    #[command(hide = true)]
+    /// Explain inferences as a proof graph (JSON or text)
     Explain { ontology: PathBuf },
 }
 
@@ -132,14 +132,15 @@ fn run() -> Result<(), CliError> {
             let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            let graph = explain(&ontology)?;
-            emit(
-                cli.format,
-                &ExplainCliOutput {
-                    graph: &graph,
-                    parse_meta: &parse_meta,
-                },
-            )?;
+            let mut reasoner = Reasoner::builder()
+                .profile(cli.profile.into())
+                .config(ReasonerConfig {
+                    explanations: true,
+                    ..ReasonerConfig::default()
+                })
+                .build(ontology)?;
+            let graph = explain_with_profile(&mut reasoner)?;
+            emit_explain(cli.format, reasoner.ontology(), &graph, &parse_meta)?;
         }
     }
 
@@ -370,10 +371,21 @@ fn emit_json<T: Serialize>(value: &T) -> Result<(), CliError> {
     Ok(())
 }
 
-fn emit<T: Serialize>(format: OutputFormat, value: &T) -> Result<(), CliError> {
+fn emit_explain(
+    format: OutputFormat,
+    ontology: &Ontology,
+    graph: &ProofGraph,
+    parse_meta: &ParseMetaSummary,
+) -> Result<(), CliError> {
     match format {
-        OutputFormat::Text => println!("(use --format json for structured output)"),
-        OutputFormat::Json => emit_json(value)?,
+        OutputFormat::Text => {
+            println!("status: explained");
+            println!("node_count: {}", graph.node_count());
+            if graph.node_count() > 0 {
+                println!("{}", render_text(ontology, graph));
+            }
+        }
+        OutputFormat::Json => emit_json(&ExplainCliOutput { graph, parse_meta })?,
     }
     Ok(())
 }

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-12
+
+### Added
+
+- **`ontologos-explain`**: `ProofGraph`, `build_proof_graph`, `explain_with_profile`, `explain_rdfs`/`explain_rl`/`explain_el`
+- **`InferenceTrace`** / **`TraceStep`** in `ontologos-core` for engine-agnostic explanation traces
+- EL completion trace recording (`ElRule`, instrumented `CompletionGraph`)
+- Query APIs: `explain_subsumption`, `explain_unsatisfiable` with EL-first HST pruning
+- Human-readable `render_text` formatter for proof graphs
+- CLI `ontologos explain --profile auto|el|rl|rdfs` (JSON + text output)
+- Conformance: `explain_benchmarks.rs` (≥10 inferences across RDFS, RL, EL)
+
+### Changed
+
+- RDFS/RL `MaterializationReport.traces` renamed to `.trace` (`InferenceTrace`)
+- RL saturation merges RDFS traces into the combined RL trace
+- `ReasonerConfig::explanations` honored on RL classify routes
+
+### Fixed
+
+- RL report previously dropped RDFS inference traces during saturation
+
 ## [0.5.0] - 2026-06-12
 
 ### Added
@@ -180,7 +202,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/eddiethedean/ontologos/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/eddiethedean/ontologos/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/eddiethedean/ontologos/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/eddiethedean/ontologos/compare/v0.3.0...v0.3.1

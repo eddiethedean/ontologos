@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use ontologos_core::AxiomId;
+use ontologos_core::{AxiomId, InferenceTrace, TraceConclusion, TraceStep};
 use serde::Serialize;
 
 /// RDFS TBox rule that produced an inference.
@@ -29,7 +29,7 @@ impl RdfsRule {
     }
 }
 
-/// A single recorded inference (optional trace for explain v0.6).
+/// A single recorded inference (legacy alias; prefer [`TraceStep`]).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct InferenceRecord {
     pub rule: RdfsRule,
@@ -43,8 +43,12 @@ pub struct MaterializationReport {
     pub initial_axiom_count: usize,
     pub final_axiom_count: usize,
     pub inferred_by_rule: BTreeMap<RdfsRule, usize>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub traces: Vec<InferenceRecord>,
+    #[serde(skip_serializing_if = "trace_is_empty")]
+    pub trace: InferenceTrace,
+}
+
+fn trace_is_empty(trace: &InferenceTrace) -> bool {
+    trace.steps.is_empty()
 }
 
 impl MaterializationReport {
@@ -53,4 +57,20 @@ impl MaterializationReport {
         self.final_axiom_count
             .saturating_sub(self.initial_axiom_count)
     }
+}
+
+pub(crate) fn push_trace(
+    trace: &mut InferenceTrace,
+    rule: RdfsRule,
+    premises: Vec<AxiomId>,
+    conclusion: AxiomId,
+) {
+    trace.push(TraceStep {
+        rule: rule.as_str().to_string(),
+        premises: premises
+            .into_iter()
+            .map(|id| ontologos_core::TracePremise::Axiom { id })
+            .collect(),
+        conclusion: TraceConclusion::Axiom { id: conclusion },
+    });
 }

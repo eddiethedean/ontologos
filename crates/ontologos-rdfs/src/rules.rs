@@ -1,6 +1,6 @@
 use ontologos_core::{Axiom, AxiomId, EntityId, Ontology};
 
-use crate::report::{InferenceRecord, MaterializationReport, RdfsRule};
+use crate::report::{push_trace, MaterializationReport, RdfsRule};
 
 pub(crate) struct RuleContext<'a> {
     pub ontology: &'a mut Ontology,
@@ -199,11 +199,7 @@ fn infer_subclass(
     if ctx.ontology.axiom_count() > before {
         *ctx.report.inferred_by_rule.entry(rule).or_default() += 1;
         if ctx.record_traces {
-            ctx.report.traces.push(InferenceRecord {
-                rule,
-                premises,
-                conclusion,
-            });
+            push_trace(&mut ctx.report.trace, rule, premises, conclusion);
         }
     }
     Ok(())
@@ -227,11 +223,7 @@ fn infer_subproperty(
     if ctx.ontology.axiom_count() > before {
         *ctx.report.inferred_by_rule.entry(rule).or_default() += 1;
         if ctx.record_traces {
-            ctx.report.traces.push(InferenceRecord {
-                rule,
-                premises,
-                conclusion,
-            });
+            push_trace(&mut ctx.report.trace, rule, premises, conclusion);
         }
     }
     Ok(())
@@ -251,11 +243,7 @@ fn infer_domain(
     if ctx.ontology.axiom_count() > before {
         *ctx.report.inferred_by_rule.entry(rule).or_default() += 1;
         if ctx.record_traces {
-            ctx.report.traces.push(InferenceRecord {
-                rule,
-                premises,
-                conclusion,
-            });
+            push_trace(&mut ctx.report.trace, rule, premises, conclusion);
         }
     }
     Ok(())
@@ -275,11 +263,7 @@ fn infer_range(
     if ctx.ontology.axiom_count() > before {
         *ctx.report.inferred_by_rule.entry(rule).or_default() += 1;
         if ctx.record_traces {
-            ctx.report.traces.push(InferenceRecord {
-                rule,
-                premises,
-                conclusion,
-            });
+            push_trace(&mut ctx.report.trace, rule, premises, conclusion);
         }
     }
     Ok(())

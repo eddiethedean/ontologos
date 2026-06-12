@@ -31,7 +31,7 @@ impl RdfsEngine {
             initial_axiom_count,
             final_axiom_count: initial_axiom_count,
             inferred_by_rule: std::collections::BTreeMap::new(),
-            traces: Vec::new(),
+            trace: ontologos_core::InferenceTrace::new(),
         };
 
         loop {

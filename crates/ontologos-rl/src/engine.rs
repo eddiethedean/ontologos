@@ -65,7 +65,7 @@ impl RlEngine {
             final_axiom_count: ontology.axiom_count(),
             rdfs_inferred,
             inferred_by_rule: std::collections::BTreeMap::new(),
-            traces: Vec::new(),
+            trace: rdfs_report.trace.clone(),
             clashes: Vec::new(),
             disjoint_clash_keys: HashSet::new(),
             same_as_clash_keys: HashSet::new(),

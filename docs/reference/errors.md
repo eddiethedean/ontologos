@@ -47,7 +47,6 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.5.0/on
 | API / CLI | Message (typical) |
 |-----------|-------------------|
 | `Reasoner::classify()` with `Profile::Auto` / `El` | `reasoning not yet implemented` |
-| CLI `explain` | `explanation generation not yet implemented` |
 
 **Recovery:** Core `Reasoner::classify()` does not dispatch to profile engines — use `ontologos_el::classify_with_profile`, `ontologos_rdfs::materialize_reasoner`, or `ontologos_rl::classify_reasoner`. CLI: `ontologos classify --profile auto|el|rl|rdfs`. Python: `Reasoner(path, profile="auto")` routes via `classify_with_profile` (v0.5+).
 

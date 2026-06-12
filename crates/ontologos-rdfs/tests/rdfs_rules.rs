@@ -1,4 +1,4 @@
-use ontologos_core::{Axiom, Ontology, Profile, Reasoner};
+use ontologos_core::{Axiom, Ontology, Profile, Reasoner, TracePremise};
 use ontologos_rdfs::{
     classify_reasoner, materialize_reasoner, MaterializationReport, RdfsEngine, RdfsRule,
 };
@@ -272,9 +272,13 @@ fn materialize_with_traces_records_premises() {
         .materialize(&mut ontology)
         .expect("materialize");
 
-    assert!(!report.traces.is_empty());
+    assert!(!report.trace.steps.is_empty());
     assert!(
-        report.traces.iter().any(|trace| !trace.premises.is_empty()),
+        report.trace.steps.iter().any(|step| {
+            step.premises
+                .iter()
+                .any(|p| matches!(p, TracePremise::Axiom { .. }))
+        }),
         "expected at least one trace with premises"
     );
 }

@@ -196,17 +196,24 @@ fn materialize_minimal_fixture_succeeds() {
 }
 
 #[test]
-fn explain_stub_exits_not_implemented() {
+fn explain_family_rdfs_json_has_proof_nodes() {
     let path = repo_root().join("benchmarks/data/family.owl");
     assert!(path.exists(), "missing family corpus at {}", path.display());
-    Command::cargo_bin("ontologos")
+    let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
-        .args(["explain", path.to_str().expect("path")])
+        .args([
+            "--format",
+            "json",
+            "--profile",
+            "rdfs",
+            "explain",
+            path.to_str().expect("path"),
+        ])
         .assert()
-        .failure()
-        .stderr(predicate::str::contains(
-            "explanation generation not yet implemented",
-        ));
+        .success();
+    let stdout = String::from_utf8(output.get_output().stdout.clone()).expect("utf8");
+    assert!(stdout.contains("\"nodes\""));
+    assert!(stdout.contains("\"rule\""));
 }
 
 #[test]
@@ -316,13 +323,13 @@ fn profile_json_omits_parse_meta_for_clean_fixture() {
 }
 
 #[test]
-fn explain_surfaces_parse_meta_warnings_on_stderr_before_failure() {
+fn explain_surfaces_parse_meta_warnings_on_stderr() {
     let path = fixture("class_individual_kind_clash.ttl");
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
-        .args(["explain", path.to_str().expect("path")])
+        .args(["--profile", "rdfs", "explain", path.to_str().expect("path")])
         .assert()
-        .failure();
+        .success();
     let stderr = String::from_utf8(output.get_output().stderr.clone()).expect("utf8");
     assert!(
         stderr.contains("warning: parse skipped 1 of 1 logical axioms"),
@@ -331,9 +338,5 @@ fn explain_surfaces_parse_meta_warnings_on_stderr_before_failure() {
     assert!(
         stderr.contains("entity kind mismatch"),
         "expected kind mismatch warning on stderr, got: {stderr}"
-    );
-    assert!(
-        stderr.contains("explanation generation not yet implemented"),
-        "expected explain stub error after parse warnings, got: {stderr}"
     );
 }

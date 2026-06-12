@@ -4,7 +4,7 @@ set -euo pipefail
 # Publish workspace crates in dependency order. crates.io index propagation
 # can lag behind uploads, so each crate is retried before failing the job.
 #
-# v0.5.x: core → profile → parser → rdfs → rl → el → query.
+# v0.6.x: core → profile → parser → rdfs → rl → el → query → explain.
 
 CRATES=(
   ontologos-core
@@ -14,7 +14,7 @@ CRATES=(
   ontologos-rl
   ontologos-el
   ontologos-query
-  # ontologos-explain
+  ontologos-explain
   # ontologos-cli
   # ontologos-py
 )

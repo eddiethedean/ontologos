@@ -47,6 +47,7 @@ mod parse_meta;
 mod reasoner;
 mod serialize;
 mod taxonomy;
+mod trace;
 
 pub use axiom::{Axiom, AxiomId};
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
@@ -58,6 +59,7 @@ pub use ontology::{Ontology, OntologyBuilder};
 pub use parse_meta::{OwlConstruct, ParseMeta, ParseMetaSummary};
 pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
 pub use taxonomy::Taxonomy;
+pub use trace::{InferenceTrace, TraceConclusion, TracePremise, TraceStep};
 
 #[cfg(test)]
 mod integration_tests {

@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashSet};
 
-use ontologos_core::{AxiomId, EntityId};
+use ontologos_core::{AxiomId, EntityId, InferenceTrace, TraceConclusion, TraceStep};
 use serde::Serialize;
 
 /// OWL RL rule that produced an inference.
@@ -65,7 +65,7 @@ impl RlRule {
     }
 }
 
-/// A single recorded inference (optional trace for explain v0.6).
+/// A single recorded inference (legacy alias; prefer [`TraceStep`]).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct InferenceRecord {
     pub rule: RlRule,
@@ -80,8 +80,8 @@ pub struct MaterializationReport {
     pub final_axiom_count: usize,
     pub rdfs_inferred: usize,
     pub inferred_by_rule: BTreeMap<RlRule, usize>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub traces: Vec<InferenceRecord>,
+    #[serde(skip_serializing_if = "trace_is_empty")]
+    pub trace: InferenceTrace,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub clashes: Vec<String>,
     /// Canonical disjoint-clash keys already reported (not serialized).
@@ -92,10 +92,30 @@ pub struct MaterializationReport {
     pub same_as_clash_keys: HashSet<(EntityId, EntityId)>,
 }
 
+fn trace_is_empty(trace: &InferenceTrace) -> bool {
+    trace.steps.is_empty()
+}
+
 impl MaterializationReport {
     #[must_use]
     pub fn inferred_total(&self) -> usize {
         self.final_axiom_count
             .saturating_sub(self.initial_axiom_count)
     }
+}
+
+pub(crate) fn push_trace(
+    trace: &mut InferenceTrace,
+    rule: RlRule,
+    premises: Vec<AxiomId>,
+    conclusion: AxiomId,
+) {
+    trace.push(TraceStep {
+        rule: rule.as_str().to_string(),
+        premises: premises
+            .into_iter()
+            .map(|id| ontologos_core::TracePremise::Axiom { id })
+            .collect(),
+        conclusion: TraceConclusion::Axiom { id: conclusion },
+    });
 }

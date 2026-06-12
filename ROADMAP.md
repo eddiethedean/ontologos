@@ -473,22 +473,22 @@ Completion-based EL classification — the primary use case for biomedical ontol
 ### Features
 
 - [x] `ProofGraph`, `ProofNode`, `NodeId` types
-- [ ] Record rule applications during RDFS / RL / EL runs (`ReasonerConfig::explanations`)
-- [ ] "Why inferred?" for subclass and subsumption queries
-- [ ] "Why inconsistent?" for unsatisfiable classes
-- [ ] Minimal justification extraction (HST-style pruning — EL first)
-- [ ] Human-readable trace formatter
-- [ ] JSON export (`ProofGraph::to_json` exists; populate graphs)
+- [x] Record rule applications during RDFS / RL / EL runs (`ReasonerConfig::explanations`)
+- [x] "Why inferred?" for subclass and subsumption queries
+- [x] "Why inconsistent?" for unsatisfiable classes
+- [x] Minimal justification extraction (HST-style pruning — EL first)
+- [x] Human-readable trace formatter
+- [x] JSON export (`ProofGraph::to_json` exists; populate graphs)
 
 ### CLI
 
-- [ ] `ontologos explain <file>` — JSON proof graph; text defers to `--format json`
+- [x] `ontologos explain <file>` — JSON proof graph; text formatter via `--format text`
 
 ### Exit criteria
 
-- [ ] Explanations generated for ≥ 10 benchmark inferences across three engines
-- [ ] Proof graphs are acyclic and reference valid axiom ids
-- [ ] `ontologos-explain` published to crates.io
+- [x] Explanations generated for ≥ 10 benchmark inferences across three engines
+- [x] Proof graphs are acyclic and reference valid axiom ids
+- [ ] `ontologos-explain` published to crates.io (run publish after `v0.6.0` tag)
 
 ---
 

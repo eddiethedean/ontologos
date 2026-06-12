@@ -21,12 +21,14 @@ mod normal_form;
 mod reasoner;
 mod route;
 mod taxonomy_extract;
+mod trace;
 
 use ontologos_core::{Ontology, Taxonomy};
 use thiserror::Error;
 
-pub use reasoner::{classify_reasoner, try_classify_reasoner};
+pub use reasoner::{classify_reasoner, classify_with_report, try_classify_reasoner};
 pub use route::{classify_with_profile, resolve_profile_flag, ClassifyOutcome, ProfileFlag};
+pub use trace::ElReport;
 
 /// Result type for EL operations.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -81,10 +83,22 @@ impl ElClassifier {
     /// Runs ELK-style goal-directed completion and transitive-reduction taxonomy
     /// extraction. The ontology is not mutated.
     pub fn classify(&self, ontology: &Ontology) -> Result<Taxonomy> {
+        self.classify_with_options(ontology, false)
+            .map(|r| r.taxonomy)
+    }
+
+    /// Classify with optional inference trace recording.
+    pub fn classify_with_options(
+        &self,
+        ontology: &Ontology,
+        record_traces: bool,
+    ) -> Result<ElReport> {
         normal_form::validate_el_profile(ontology)?;
-        let mut graph = graph::CompletionGraph::seed(ontology);
+        let mut graph = graph::CompletionGraph::seed(ontology).with_traces(record_traces);
         graph.saturate();
-        Ok(taxonomy_extract::extract_taxonomy(ontology, &graph))
+        let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);
+        let trace = graph.into_trace();
+        Ok(ElReport { taxonomy, trace })
     }
 }
 
@@ -145,6 +159,35 @@ mod tests {
         let taxonomy = ElClassifier::new().classify(&ontology).unwrap();
         assert!(taxonomy.is_subsumed(a, c));
         assert!(taxonomy.is_subsumed(a, b));
+    }
+
+    #[test]
+    fn el_trace_records_transitive_subsumption() {
+        let mut ontology = Ontology::new();
+        let a = class(&mut ontology, "http://ex.org/A");
+        let b = class(&mut ontology, "http://ex.org/B");
+        let c = class(&mut ontology, "http://ex.org/C");
+        ontology
+            .add_axiom(Axiom::SubClassOf {
+                subclass: a,
+                superclass: b,
+            })
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::SubClassOf {
+                subclass: b,
+                superclass: c,
+            })
+            .unwrap();
+
+        let report = ElClassifier::new()
+            .classify_with_options(&ontology, true)
+            .unwrap();
+        assert!(report
+            .trace
+            .steps
+            .iter()
+            .any(|s| s.rule == "sub_trans_forward"));
     }
 
     #[test]

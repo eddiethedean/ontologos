@@ -1,6 +1,6 @@
 use ontologos_core::{Axiom, AxiomId, EntityId, Ontology};
 
-use crate::report::{InferenceRecord, MaterializationReport, RlRule};
+use crate::report::{push_trace, MaterializationReport, RlRule};
 use crate::triple_index::TripleIndex;
 
 pub(crate) struct RuleContext<'a> {
@@ -25,11 +25,7 @@ pub(crate) fn infer_axiom(
         ctx.index.on_axiom_added(ctx.ontology, &axiom);
         *ctx.report.inferred_by_rule.entry(rule).or_default() += 1;
         if ctx.record_traces {
-            ctx.report.traces.push(InferenceRecord {
-                rule,
-                premises,
-                conclusion,
-            });
+            push_trace(&mut ctx.report.trace, rule, premises, conclusion);
         }
     }
     Ok(())

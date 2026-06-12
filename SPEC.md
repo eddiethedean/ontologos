@@ -25,7 +25,7 @@ ontologos/
 │   ├── ontologos-rl        (v0.4)
 │   ├── ontologos-el        (v0.5)
 │   ├── ontologos-query     (v0.5)
-│   ├── ontologos-explain   (stub → v0.6)
+│   ├── ontologos-explain   (v0.6)
 │   ├── ontologos-cli       (v0.5 — profile, materialize, classify with routing)
 │   └── ontologos-py        (alpha v0.5 — load, profile=rdfs/rl/el/auto)
 ```
@@ -203,7 +203,7 @@ Features:
 
 # CLI Specification
 
-**Status:** `profile`, `materialize`, and `classify --profile auto|el|rl|rdfs` work in v0.5. `materialize` and `classify --profile rdfs` emit RDFS inference reports. `explain` loads then fails at engine stub (v0.6).
+**Status:** `profile`, `materialize`, `classify`, and `explain --profile auto|el|rl|rdfs` work in v0.6. `explain` emits proof graphs (JSON or text).
 
 Commands:
 
@@ -211,7 +211,7 @@ Commands:
 ontologos profile ontology.owl
 ontologos materialize ontology.owl # RDFS (v0.3+)
 ontologos classify ontology.owl    # RDFS materialization; OWL EL taxonomy in v0.5
-ontologos explain ontology.owl     # NotImplemented (v0.6)
+ontologos explain ontology.owl     # Proof graph (v0.6)
 ```
 
 Outputs:

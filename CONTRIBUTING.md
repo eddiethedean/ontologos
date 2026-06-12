@@ -1,6 +1,6 @@
 # Contributing to OntoLogos
 
-Thank you for your interest in contributing. OntoLogos is in early development (v0.5); high-impact contributions include explanations, conformance, and documentation.
+Thank you for your interest in contributing. OntoLogos is in early development (v0.6); high-impact contributions include incremental reasoning, conformance, and documentation.
 
 ## Prerequisites
 
@@ -99,6 +99,7 @@ cargo publish -p ontologos-rdfs --dry-run
 cargo publish -p ontologos-rl --dry-run --allow-dirty
 cargo publish -p ontologos-el --dry-run --allow-dirty
 cargo publish -p ontologos-query --dry-run --allow-dirty
+cargo publish -p ontologos-explain --dry-run --allow-dirty
 ```
 
 Use `--allow-dirty` only for local dry-runs before commit; release CI publishes from a clean tagged checkout.
@@ -124,7 +125,7 @@ Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire
 
 On each release tag, CI publishes:
 
-- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (`ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, in dependency order)
+- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (`ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, in dependency order)
 - **PyPI** — `ontologos` via release CI (`maturin-action`): Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x64, aarch64), plus sdist. Manual upload: [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh)
 
 - **Tags:** Release tags follow semver (`v0.5.0`, …)
