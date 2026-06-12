@@ -1,0 +1,4 @@
+# MkDocs dependencies for Read the Docs and local doc builds
+mkdocs>=1.6,<2
+mkdocs-material>=9.5,<10
+mkdocs-include-markdown-plugin>=7.0,<8

@@ -27,6 +27,17 @@ cargo run -p ontologos-parser --example load_and_profile
 cargo run -p ontologos-rl --example rl_saturation
 ```
 
+## Documentation
+
+Published at **[ontologos.readthedocs.io](https://ontologos.readthedocs.io/)** (MkDocs Material, built via [Read the Docs](https://readthedocs.org/)).
+
+```bash
+pip install -r docs/requirements.txt
+NO_MKDOCS_2_WARNING=1 mkdocs serve
+```
+
+See [docs/readthedocs.md](docs/readthedocs.md) for import instructions and local builds.
+
 ## Checks before opening a PR
 
 CI runs the following on every push to `main` (see [.github/workflows/ci.yml](.github/workflows/ci.yml)):
@@ -38,6 +49,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo test -p ontologos-conformance
 cargo build -p ontologos-cli --release
+pip install -r docs/requirements.txt && NO_MKDOCS_2_WARNING=1 mkdocs build --strict
 ```
 
 Run all locally before submitting.

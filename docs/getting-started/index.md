@@ -59,4 +59,4 @@ See [Python guide](../guides/python.md).
 
 ## Full learning path
 
-See the [documentation index](../README.md#learning-path).
+See the [documentation index](../index.md#learning-path).

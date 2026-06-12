@@ -1,0 +1,133 @@
+# MkDocs configuration for OntoLogos (Read the Docs + local preview)
+# https://www.mkdocs.org/
+
+site_name: OntoLogos
+site_description: Modular Rust ontology reasoner — OWL EL, RL, and RDFS
+site_url: https://ontologos.readthedocs.io/
+repo_url: https://github.com/eddiethedean/ontologos
+repo_name: eddiethedean/ontologos
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; Odo Matthews
+
+docs_dir: docs
+
+exclude_docs: |
+  internal/research/
+  README.md
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - getting-started/index.md
+      - First ontology: getting-started/first-ontology.md
+      - Load an OWL file: getting-started/load-owl-file.md
+      - OWL RL saturation: getting-started/owl-rl-saturation.md
+  - Guides:
+      - Choosing an API: guides/choosing-an-api.md
+      - Profile detection: guides/profile-detection.md
+      - Python: guides/python.md
+      - Troubleshooting: guides/troubleshooting.md
+      - Security: security.md
+      - Comparison: comparison.md
+  - Reference:
+      - Architecture: architecture.md
+      - CLI: reference/cli.md
+      - Errors: reference/errors.md
+      - Supported constructs: reference/supported-constructs.md
+      - JSON snapshot v2: json-snapshot-v2.md
+      - RL rules: reference/rl-rules.md
+      - Conformance: reference/conformance.md
+      - Rust API (docs.rs):
+          - ontologos-core: https://docs.rs/ontologos-core/0.4.0
+          - ontologos-parser: https://docs.rs/ontologos-parser/0.4.0
+          - ontologos-profile: https://docs.rs/ontologos-profile/0.4.0
+          - ontologos-rdfs: https://docs.rs/ontologos-rdfs/0.4.0
+          - ontologos-rl: https://docs.rs/ontologos-rl/0.4.0
+  - Migration:
+      - v0.1 to v0.2: migration/v0.1-to-v0.2.md
+      - v0.2 to v0.3: migration/v0.2-to-v0.3.md
+      - v0.3.0 to v0.3.1: migration/v0.3.0-to-v0.3.1.md
+      - v0.3.x to v0.4.0: migration/v0.3.x-to-v0.4.0.md
+  - Project:
+      - Overview: project/overview.md
+      - FAQ: project/faq.md
+      - Roadmap: project/roadmap.md
+      - Changelog: project/changelog.md
+      - Contributing: project/contributing.md
+      - Technical spec: project/spec.md
+      - Benchmarks: project/benchmarks.md
+      - Security policy: project/security-policy.md
+      - Code of conduct: project/code-of-conduct.md
+  - Read the Docs setup: readthedocs.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - include-markdown
+
+hooks:
+  - docs/hooks/rtd_links.py
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/eddiethedean/ontologos
+    - icon: fontawesome/brands/rust
+      link: https://docs.rs/ontologos-core/0.4.0
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/ontologos/
+
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+  links:
+    not_found: warn
+    absolute_links: info

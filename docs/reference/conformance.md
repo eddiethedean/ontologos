@@ -4,7 +4,7 @@ Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. 
 
 ## HermiT porting strategy
 
-Tests are cataloged in [tests/hermit/manifest.toml](../../tests/hermit/manifest.toml) and implemented in `ontologos-conformance`.
+Tests are cataloged in [tests/hermit/manifest.toml](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/manifest.toml) and implemented in `ontologos-conformance`.
 
 | Tier | CI | HermiT checkout required | Purpose |
 |------|-----|--------------------------|---------|
@@ -18,7 +18,7 @@ cargo test -p ontologos-conformance              # Tier A
 cargo test -p ontologos-conformance -- --ignored # Tier B (needs HermiT/)
 ```
 
-See [tests/hermit/README.md](../../tests/hermit/README.md) for maintainer setup.
+See [tests/hermit/README.md](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/README.md) for maintainer setup.
 
 ## Tier A coverage (v0.4, RL engine)
 
@@ -51,7 +51,7 @@ Additional Tier A tests cover RDFS materialization and parser mapping (RDFS rule
 
 Integration tests use Pizza (downloaded) and Family (vendored) ontologies. Manifest expected counts are **mapper output**, not Protégé logical axiom totals.
 
-See [benchmarks/README.md](../../benchmarks/README.md).
+See [benchmarks.md](../project/benchmarks.md).
 
 ## External comparison harness
 
@@ -73,4 +73,4 @@ Conformance targets at stable release:
 
 - [Comparison with existing tools](../comparison.md)
 - [Supported constructs](supported-constructs.md)
-- [ROADMAP](../../ROADMAP.md)
+- [ROADMAP.md](../project/roadmap.md)

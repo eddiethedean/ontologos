@@ -11,7 +11,7 @@
 cargo test --workspace
 ```
 
-CI runs `download.sh` automatically. See [benchmarks/README.md](../../benchmarks/README.md).
+CI runs `download.sh` automatically. See [benchmarks](../project/benchmarks.md).
 
 ## `ontologos profile` fails: file not found
 
@@ -23,7 +23,7 @@ Pizza is not committed to the repo (gitignored). Run `./benchmarks/scripts/downl
 
 The parser skips complex class expressions, many data-property axioms, and some property axiom shapes. Named ABox axioms (`ClassAssertion`, `ObjectPropertyAssertion`, `SameIndividual`, `DifferentIndividuals`) are mapped in v0.4. Skipped items appear in `parse_meta.skipped_axiom_count` and `parse_meta.warnings`.
 
-Benchmark manifest values (e.g. Pizza `658`) are mapper output targets, documented in [benchmarks/README.md](../../benchmarks/README.md).
+Benchmark manifest values (e.g. Pizza `658`) are mapper output targets, documented in [benchmarks](../project/benchmarks.md).
 
 ## Pizza is DL with mapped-construct diagnostics
 
@@ -31,7 +31,7 @@ Expected for the current Pizza corpus: mapped axioms include both EL shapes (exi
 
 ## `Ontology::from_file` returns `ParseNotAvailable`
 
-Use `ontologos_parser::load_ontology`. See [FAQ](../../FAQ.md).
+Use `ontologos_parser::load_ontology`. See [FAQ](../project/faq.md).
 
 ## JSON `from_json` fails
 

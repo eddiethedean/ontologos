@@ -29,7 +29,7 @@ dependencies = []
 [project.urls]
 Homepage = "https://github.com/eddiethedean/ontologos"
 Repository = "https://github.com/eddiethedean/ontologos"
-Documentation = "https://github.com/eddiethedean/ontologos/blob/main/docs/guides/python.md"
+Documentation = "https://ontologos.readthedocs.io/"
 "Bug Tracker" = "https://github.com/eddiethedean/ontologos/issues"
 
 [tool.maturin]

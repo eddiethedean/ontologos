@@ -22,7 +22,7 @@ Include a description, reproduction steps, and impact assessment. You should rec
 
 Input validation, default limits, and recommended practices for untrusted JSON and OWL files:
 
-**[docs/security.md](docs/security.md)**
+**[docs/security.md](docs/security.md)** · **[ontologos.readthedocs.io/security](https://ontologos.readthedocs.io/en/latest/security/)**
 
 Topics covered:
 

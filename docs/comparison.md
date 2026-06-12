@@ -2,7 +2,7 @@
 
 Honest positioning for evaluators. OntoLogos v0.4 is **not** a drop-in HermiT replacement.
 
-See [landscape-2023.md](internal/research/landscape-2023.md) for the full 2023–2026 reasoner survey.
+See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full 2023–2026 reasoner survey.
 
 ## Maturity matrix
 
@@ -59,6 +59,6 @@ OntoLogos targets a **unified multi-profile workspace** with MORe-style hybrid r
 
 Replace JVM-bound **batch** reasoning in Rust/Python pipelines with native EL/RL/RDFS engines, CLI, and IDE integration (Ontocode). Conformance measured against **ELK + whelk-rs** (EL) and **reasonable** (RL). Full OWL DL in 2.0, architected after **Konclude** hybrid design rather than a legacy HermiT port.
 
-See [ROADMAP.md](../ROADMAP.md) for milestone sequencing and exit criteria.
+See [ROADMAP.md](project/roadmap.md) for milestone sequencing and exit criteria.
 
 For HermiT-ported test coverage and known gaps, see [Conformance coverage](reference/conformance.md).

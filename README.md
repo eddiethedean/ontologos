@@ -1,6 +1,7 @@
 # OntoLogos
 
 [![CI](https://github.com/eddiethedean/ontologos/actions/workflows/ci.yml/badge.svg)](https://github.com/eddiethedean/ontologos/actions/workflows/ci.yml)
+[![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/)
 [![crates.io](https://img.shields.io/crates/v/ontologos-core.svg)](https://crates.io/crates/ontologos-core)
 [![docs.rs](https://docs.rs/ontologos-core/badge.svg)](https://docs.rs/ontologos-core)
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
@@ -177,10 +178,11 @@ cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
 
 | Section | Link |
 |---------|------|
-| **Getting started** | [docs/README.md](docs/README.md) |
+| **Documentation site** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/) |
+| **Getting started** | [docs/index.md](docs/index.md) |
 | **Guides** | [Load OWL](docs/getting-started/load-owl-file.md) · [OWL RL](docs/getting-started/owl-rl-saturation.md) · [Profile detection](docs/guides/profile-detection.md) · [Choosing an API](docs/guides/choosing-an-api.md) · [Python](docs/guides/python.md) · [Security](docs/security.md) |
 | **Reference** | [Architecture](docs/architecture.md) · [Errors](docs/reference/errors.md) · [CLI](docs/reference/cli.md) · [JSON v2](docs/json-snapshot-v2.md) · [RL rules](docs/reference/rl-rules.md) · [Conformance](docs/reference/conformance.md) |
-| **Project** | [ROADMAP](ROADMAP.md) · [CHANGELOG](CHANGELOG.md) · [CONTRIBUTING](CONTRIBUTING.md) · [FAQ](FAQ.md) |
+| **Project** | [ROADMAP](ROADMAP.md) · [CHANGELOG](CHANGELOG.md) · [CONTRIBUTING](CONTRIBUTING.md) · [FAQ](FAQ.md) · [Docs build](docs/readthedocs.md) |
 
 ## License
 

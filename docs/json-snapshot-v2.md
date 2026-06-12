@@ -113,7 +113,7 @@ Every IRI referenced in an axiom must match an entity declared in `entities`.
 
 ## Full example
 
-See [pizza_minimal.json](../crates/ontologos-core/tests/fixtures/pizza_minimal.json).
+See [pizza_minimal.json](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-core/tests/fixtures/pizza_minimal.json).
 
 ## Rust API
 
@@ -155,4 +155,4 @@ To migrate:
 ## Related
 
 - [Error reference](reference/errors.md)
-- [SPEC.md](../SPEC.md) — core data model
+- [SPEC.md](project/spec.md) — core data model

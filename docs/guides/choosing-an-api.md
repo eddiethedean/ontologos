@@ -187,4 +187,4 @@ There is no single `ontologos` meta-crate on crates.io.
 
 - [Architecture](../architecture.md)
 - [Error reference](../reference/errors.md)
-- [FAQ](../../FAQ.md)
+- [FAQ](../project/faq.md)

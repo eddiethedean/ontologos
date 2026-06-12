@@ -24,3 +24,7 @@ dist/
 
 # Local HermiT reference checkout (not part of OntoLogos)
 /HermiT/
+
+# MkDocs build output
+/site/
+.venv-docs/

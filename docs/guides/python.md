@@ -112,5 +112,5 @@ See [Error reference](../reference/errors.md) for Rust-side details.
 
 - [Choosing an API](choosing-an-api.md)
 - [OWL RL saturation](../getting-started/owl-rl-saturation.md)
-- [Rust crate README](../../crates/ontologos-py/README.md)
-- [ROADMAP](../../ROADMAP.md) — Python maturity in v0.9 / 1.4
+- [Rust Python crate README](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-py/README.md)
+- [ROADMAP](../project/roadmap.md) — Python maturity in v0.9 / 1.4

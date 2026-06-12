@@ -68,7 +68,7 @@ Skipped axioms and parser warnings are recorded in `ParseMeta` but do not fail t
 
 ## Reporting issues
 
-Report security vulnerabilities privately — see [SECURITY.md](../SECURITY.md) at the repository root (not public GitHub issues).
+Report security vulnerabilities privately — see [Security policy](project/security-policy.md) (not public GitHub issues).
 
 ## Related
 

@@ -1,6 +1,6 @@
 # Architecture Overview
 
-OntoLogos is a Cargo workspace of profile-specific reasoning crates layered on a shared in-memory ontology model. This page is for adopters evaluating integration — see [SPEC.md](../SPEC.md) for detailed API status tags.
+OntoLogos is a Cargo workspace of profile-specific reasoning crates layered on a shared in-memory ontology model. This page is for adopters evaluating integration — see [SPEC.md](project/spec.md) for detailed API status tags.
 
 ## Crate dependency graph
 
@@ -132,5 +132,5 @@ RL always runs RDFS first inside `RlEngine::saturate`.
 
 - [Choosing an API](guides/choosing-an-api.md)
 - [Supported constructs](reference/supported-constructs.md)
-- [SPEC.md](../SPEC.md)
-- [ROADMAP.md](../ROADMAP.md)
+- [SPEC.md](project/spec.md)
+- [ROADMAP.md](project/roadmap.md)
