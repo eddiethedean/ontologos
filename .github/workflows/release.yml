@@ -9,19 +9,17 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  publish:
-    name: Publish to crates.io and PyPI
+  verify:
+    name: Verify release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - uses: Swatinem/rust-cache@v2
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
 
       - name: Verify tag matches workspace version
         run: |
@@ -49,12 +47,144 @@ jobs:
       - name: HermiT conformance (Tier A)
         run: cargo test -p ontologos-conformance --locked
 
+  publish-crates:
+    name: Publish Rust crates
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
       - name: Publish crates
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: ./.github/scripts/publish-crates.sh
 
-      - name: Publish PyPI package
+  pypi-linux:
+    name: PyPI wheels (Linux ${{ matrix.target }})
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: crates/ontologos-py
+          target: ${{ matrix.target }}
+          command: build
+          args: --release --out dist
+          sccache: "true"
+          manylinux: auto
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pypi-linux-${{ matrix.target }}
+          path: crates/ontologos-py/dist/*.whl
+
+  pypi-macos:
+    name: PyPI wheels (macOS ${{ matrix.target }})
+    needs: verify
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64, x86_64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: crates/ontologos-py
+          target: ${{ matrix.target }}
+          command: build
+          args: --release --out dist
+          sccache: "true"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pypi-macos-${{ matrix.target }}
+          path: crates/ontologos-py/dist/*.whl
+
+  pypi-windows:
+    name: PyPI wheels (Windows ${{ matrix.target }})
+    needs: verify
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x64, aarch64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: crates/ontologos-py
+          target: ${{ matrix.target }}
+          command: build
+          args: --release --out dist
+          sccache: "true"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pypi-windows-${{ matrix.target }}
+          path: crates/ontologos-py/dist/*.whl
+
+  pypi-sdist:
+    name: PyPI sdist
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: crates/ontologos-py
+          command: sdist
+          args: --out dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pypi-sdist
+          path: crates/ontologos-py/dist/*.tar.gz
+
+  publish-pypi:
+    name: Publish PyPI package
+    needs: [publish-crates, pypi-linux, pypi-macos, pypi-windows, pypi-sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pypi-*
+          path: dist
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -la dist/
+
+      - name: Publish to PyPI
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         run: |
@@ -63,4 +193,4 @@ jobs:
             exit 0
           fi
           pip install 'maturin>=1.7,<2.0'
-          ./.github/scripts/publish-pypi.sh
+          MATURIN_PYPI_TOKEN="${PYPI_API_TOKEN}" maturin upload --skip-existing dist/*

@@ -8,7 +8,15 @@ Alpha Python bindings for OntoLogos v0.4 via PyO3 (`pip install ontologos`).
 
 ## Install
 
-Requires **Python 3.10+**. Pre-built wheels are published to PyPI for common Linux targets on release; other platforms may build from source (requires Rust toolchain + maturin).
+Requires **Python 3.10+**. Release wheels are published for:
+
+| OS | Architectures |
+|----|---------------|
+| Linux | `x86_64`, `aarch64` (manylinux) |
+| macOS | `x86_64`, `aarch64` (Apple Silicon + Intel) |
+| Windows | `x64`, `aarch64` |
+
+Wheels use the stable Python ABI (`abi3`) — one wheel per platform covers Python 3.10–3.13+. If no wheel matches your platform, build from source (requires Rust + maturin).
 
 ```bash
 pip install ontologos

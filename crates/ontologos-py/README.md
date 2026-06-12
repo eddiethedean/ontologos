@@ -22,6 +22,8 @@ For working Rust APIs today, use [crates.io](https://crates.io/crates/ontologos-
 pip install ontologos
 ```
 
+Pre-built wheels ship for Linux (x86_64, aarch64), macOS (Intel + Apple Silicon), and Windows (x64, ARM64). Python 3.10+ (`abi3` wheel).
+
 ```python
 import ontologos
 

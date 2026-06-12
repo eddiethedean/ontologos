@@ -121,7 +121,7 @@ Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire
 On each release tag, CI publishes:
 
 - **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (v0.4: `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, in dependency order)
-- **PyPI** — `ontologos` via [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh) (`maturin`, Linux wheel + sdist)
+- **PyPI** — `ontologos` via release CI (`maturin-action`): Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x64, aarch64), plus sdist. Manual upload: [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh)
 
 - **Tags:** Release tags follow semver (`v0.4.0`, …)
 - **CHANGELOG:** [Keep a Changelog](https://keepachangelog.com/) format in [CHANGELOG.md](CHANGELOG.md)
