@@ -27,6 +27,7 @@ struct SnapshotEntity {
 /// Axiom representation using IRI strings in JSON.
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
+#[serde(deny_unknown_fields)]
 enum SnapshotAxiom {
     SubClassOf {
         subclass: String,
@@ -197,6 +198,7 @@ impl Ontology {
 
         for axiom in snapshot.axioms {
             let axiom = snapshot_axiom_to_axiom(&axiom, &ontology)?;
+            axiom.validate_with_limits(&ontology.entities, limits)?;
             ontology.add_axiom(axiom)?;
         }
 
@@ -456,6 +458,22 @@ mod tests {
     }
 
     #[test]
+    fn rejects_unknown_axiom_fields() {
+        let json = r#"{
+            "format_version": 2,
+            "entities": [
+                {"iri": "http://example.org/A", "kind": "Class"},
+                {"iri": "http://example.org/B", "kind": "Class"}
+            ],
+            "axioms": [
+                {"SubClassOf": {"subclass": "http://example.org/A", "superclass": "http://example.org/B", "extra": true}}
+            ]
+        }"#;
+        let err = Ontology::from_json(json).expect_err("unknown axiom field");
+        assert!(matches!(err, Error::Serialization(_)));
+    }
+
+    #[test]
     fn round_trip_subclass_of_existential() {
         let ontology = Ontology::builder()
             .class("http://example.org/C")
@@ -483,7 +501,8 @@ mod tests {
         let json = ontology.to_json().expect("to_json");
         let restored = Ontology::from_json(&json).expect("from_json");
         assert_eq!(restored.axiom_count(), 1);
-        assert_eq!(restored.direct_superclasses(c), &[b]);
+        assert!(restored.direct_superclasses(c).is_empty());
+        assert_eq!(restored.existentials_of(c), &[(has_part, b)]);
     }
 
     #[test]

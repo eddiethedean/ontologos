@@ -32,7 +32,7 @@ pub fn detect_profile(ontology: &Ontology) -> Result<ProfileReport> {
     let mapped = scan_constructs(ontology);
     let source = source_constructs(ontology);
 
-    let detected = classify_profile(&mapped);
+    let detected = classify_profile(ontology, &mapped);
     let diagnostics = merge_diagnostics(detected, &mapped, &source);
 
     Ok(ProfileReport {
@@ -41,7 +41,11 @@ pub fn detect_profile(ontology: &Ontology) -> Result<ProfileReport> {
     })
 }
 
-fn classify_profile(mapped: &BTreeSet<OwlConstruct>) -> OwlProfile {
+fn classify_profile(ontology: &Ontology, mapped: &BTreeSet<OwlConstruct>) -> OwlProfile {
+    if should_escalate_skipped_only(ontology) {
+        return OwlProfile::Dl;
+    }
+
     if satisfies_ql(mapped) {
         return OwlProfile::Ql;
     }
@@ -88,4 +92,13 @@ fn merge_diagnostics(
 
 fn has_marker(constructs: &BTreeSet<OwlConstruct>, markers: &[OwlConstruct]) -> bool {
     constructs.iter().any(|c| markers.contains(c))
+}
+
+fn should_escalate_skipped_only(ontology: &Ontology) -> bool {
+    let Some(meta) = ontology.parse_meta() else {
+        return false;
+    };
+    !meta.constructs.is_empty()
+        && meta.profile_constructs.is_empty()
+        && meta.skipped_axiom_count > 0
 }

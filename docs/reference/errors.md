@@ -42,7 +42,13 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/latest/o
 
 ### `NotImplemented`
 
-**Cause:** `Reasoner::classify()`, CLI `classify`/`materialize`/`explain`, or other engine stubs.
+**Cause:** Engine stubs not yet shipped.
+
+| API / CLI | Message (typical) |
+|-----------|-------------------|
+| `Reasoner::classify()` / CLI `classify` | `reasoning not yet implemented` |
+| CLI `materialize` | `rdfs reasoning not yet implemented` |
+| CLI `explain` | `explanation generation not yet implemented` |
 
 **Recovery:** Use `ontologos profile` for v0.2; wait for roadmap milestone or use external reasoner (HermiT/ELK).
 

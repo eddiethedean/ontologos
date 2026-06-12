@@ -96,4 +96,4 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Does `pip install ontologos` work?
 
-The PyPI package is an **alpha placeholder** (v0.2). It exposes version metadata only; OWL loading and reasoning APIs ship in later milestones (see [Python README](crates/ontologos-py/README.md)). Use the Rust crates for v0.2 workflows.
+The PyPI package is an **alpha placeholder** (v0.2). It installs, reports its version, and `Reasoner(path)` loads an OWL file via the Rust parser — but `classify()` returns not-implemented. Profile detection and full Python APIs ship in later milestones (see [Python README](crates/ontologos-py/README.md)). Use the Rust crates for v0.2 workflows.

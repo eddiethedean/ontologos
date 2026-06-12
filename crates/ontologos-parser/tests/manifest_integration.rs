@@ -16,9 +16,9 @@ const ENTRIES: &[ManifestEntry] = &[
     ManifestEntry {
         name: "pizza",
         local_path: "benchmarks/data/pizza.owl",
-        expected_profile: OwlProfile::El,
+        expected_profile: OwlProfile::Dl,
         // Mapper output count; see benchmarks/manifest.toml and benchmarks/README.md.
-        axiom_count_approx: 1056,
+        axiom_count_approx: 658,
     },
     ManifestEntry {
         name: "family",
@@ -92,10 +92,12 @@ fn manifest_corpus_load_and_profile() {
                         || meta.constructs.contains(&OwlConstruct::ObjectUnionOf),
                     "pizza source should contain DL constructs in parse_meta.constructs"
                 );
-                assert!(
-                    !report.diagnostics.is_empty(),
-                    "pizza should report source-only diagnostics under hybrid profile contract"
-                );
+                if report.detected == Some(OwlProfile::El) {
+                    assert!(
+                        !report.diagnostics.is_empty(),
+                        "pizza classified as El should report source-only diagnostics under hybrid profile contract"
+                    );
+                }
             }
             "family" => {
                 assert!(

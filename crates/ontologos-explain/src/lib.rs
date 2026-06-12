@@ -43,3 +43,16 @@ impl ProofGraph {
 pub fn explain(_ontology: &Ontology) -> Result<ProofGraph> {
     Err(Error::NotImplemented)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ontologos_core::Ontology;
+
+    #[test]
+    fn explain_returns_not_implemented() {
+        let ontology = Ontology::default();
+        let err = explain(&ontology).expect_err("stub");
+        assert!(matches!(err, Error::NotImplemented));
+    }
+}

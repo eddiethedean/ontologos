@@ -4,7 +4,7 @@ v0.2 loads OWL and RDF serializations into the core ontology model via [`ontolog
 
 ## Prerequisites
 
-- Rust 1.78+
+- Rust 1.88+
 - Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos) (for benchmark examples)
 
 ## Supported formats

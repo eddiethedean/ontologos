@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::entity::{EntityId, EntityKind, EntityRegistry};
 use crate::error::{Error, Result};
+use crate::limits::Limits;
 
 /// Stable identifier for a stored axiom.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -79,8 +80,14 @@ pub enum Axiom {
 }
 
 impl Axiom {
-    /// Validate entity references and kinds for this axiom.
+    /// Validate entity references and kinds for this axiom using default [`Limits`](crate::Limits).
     pub fn validate(&self, registry: &EntityRegistry) -> Result<()> {
+        self.validate_with_limits(registry, Limits::default())
+    }
+
+    /// Validate entity references, kinds, and resource limits for this axiom.
+    pub fn validate_with_limits(&self, registry: &EntityRegistry, limits: Limits) -> Result<()> {
+        let max_class_operands = limits.max_class_operands;
         match self {
             Self::SubClassOf {
                 subclass,
@@ -95,10 +102,9 @@ impl Axiom {
                         "equivalent/disjoint classes require at least two operands".into(),
                     ));
                 }
-                if classes.len() > crate::limits::MAX_CLASS_OPERANDS {
+                if classes.len() > max_class_operands {
                     return Err(Error::InvalidAxiom(format!(
-                        "equivalent/disjoint classes exceed maximum operand count of {}",
-                        crate::limits::MAX_CLASS_OPERANDS
+                        "equivalent/disjoint classes exceed maximum operand count of {max_class_operands}"
                     )));
                 }
                 if classes.iter().copied().collect::<HashSet<_>>().len() < 2 {

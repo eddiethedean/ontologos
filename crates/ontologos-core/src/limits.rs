@@ -23,7 +23,7 @@ impl Default for Limits {
             max_entities: 1_000_000,
             max_axioms: 10_000_000,
             max_iri_len: 8_192,
-            max_class_operands: 10_000,
+            max_class_operands: MAX_CLASS_OPERANDS,
         }
     }
 }

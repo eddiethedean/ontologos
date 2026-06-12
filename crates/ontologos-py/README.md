@@ -2,12 +2,12 @@
 
 Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a modular Rust ontology reasoner for OWL EL, RL, and RDFS.
 
-**This is an alpha placeholder (v0.2.0).** The package installs and reports its version; reasoning and OWL workflows are not yet exposed in Python.
+**This is an alpha placeholder (v0.2.0).** The package installs and reports its version. `Reasoner(path)` loads OWL files via the Rust parser; `classify()` is not implemented until v0.5.
 
 | Capability | Rust v0.2 | Python |
 |------------|-----------|--------|
 | In-memory ontology model | Yes (`ontologos-core`) | No |
-| OWL file loading | Yes (`ontologos-parser`) | No |
+| OWL file loading | Yes (`ontologos-parser`) | Partial (`Reasoner(path)` loads only) |
 | Profile detection | Yes (`ontologos-profile`) | No |
 | Classification | No (v0.5) | No |
 | Full Python API | — | v0.9 / 1.0 |

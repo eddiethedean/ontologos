@@ -40,22 +40,23 @@ impl Mapper<'_> {
     fn visit(&mut self, annotated: &AnnotatedComponent<RcStr>) {
         match &annotated.component {
             Component::DeclareClass(decl) => {
-                let _ = self.register_class(&decl.0);
+                let _ = self.register_or_warn_class(&decl.0);
             }
             Component::DeclareObjectProperty(decl) => {
-                let _ = self.register_object_property(&decl.0);
+                let _ = self.register_or_warn_object_property(&decl.0);
             }
             Component::DeclareNamedIndividual(decl) => {
-                let _ = self.register_entity(iri_of(&decl.0), EntityKind::Individual);
+                let _ = self.register_or_warn_entity(iri_of(&decl.0), EntityKind::Individual);
             }
             Component::DeclareDataProperty(decl) => {
-                let _ = self.register_entity(iri_of(&decl.0), EntityKind::DataProperty);
+                let _ = self.register_or_warn_entity(iri_of(&decl.0), EntityKind::DataProperty);
                 self.report
                     .meta
                     .note_construct(OwlConstruct::DataPropertyAxiom);
             }
             Component::DeclareDatatype(decl) => {
-                let _ = self.register_entity(iri_of(&decl.0), EntityKind::AnnotationProperty);
+                let _ =
+                    self.register_or_warn_entity(iri_of(&decl.0), EntityKind::AnnotationProperty);
                 self.report.meta.note_construct(OwlConstruct::Datatype);
             }
             Component::SubClassOf(axiom) => self.map_subclass_of(&axiom.sub, &axiom.sup),
@@ -79,7 +80,9 @@ impl Mapper<'_> {
                 ));
             }
             Component::DisjointObjectProperties(_) => {
-                self.report.meta.note_construct(OwlConstruct::Unknown);
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::DisjointObjectProperties);
                 self.skip("DisjointObjectProperties not mapped in v0.2");
             }
             Component::InverseObjectProperties(axiom) => {
@@ -130,14 +133,24 @@ impl Mapper<'_> {
                 let _ = &axiom.vpe;
                 self.skip("HasKey not mapped in v0.2");
             }
-            Component::ClassAssertion(_)
-            | Component::ObjectPropertyAssertion(_)
-            | Component::DataPropertyAssertion(_)
+            Component::ClassAssertion(_) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::ClassAssertion);
+                self.skip("ABox assertion not mapped in v0.2");
+            }
+            Component::ObjectPropertyAssertion(_) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::ObjectPropertyAssertion);
+                self.skip("ABox assertion not mapped in v0.2");
+            }
+            Component::DataPropertyAssertion(_)
             | Component::NegativeObjectPropertyAssertion(_)
             | Component::NegativeDataPropertyAssertion(_) => {
                 self.report
                     .meta
-                    .note_construct(OwlConstruct::ClassAssertion);
+                    .note_construct(OwlConstruct::DataPropertyAssertion);
                 self.skip("ABox assertion not mapped in v0.2");
             }
             Component::SameIndividual(_) | Component::DifferentIndividuals(_) => {
@@ -287,14 +300,21 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::InverseObjectProperties);
-        if let (Ok(left_id), Ok(right_id)) = (
+        match (
             self.register_object_property(left),
             self.register_object_property(right),
         ) {
-            self.push_axiom(Axiom::InverseObjectProperties {
-                left: left_id,
-                right: right_id,
-            });
+            (Ok(left_id), Ok(right_id)) => {
+                self.push_axiom(Axiom::InverseObjectProperties {
+                    left: left_id,
+                    right: right_id,
+                });
+            }
+            (Err(err), _) | (_, Err(err)) => {
+                self.skip(&format!(
+                    "InverseObjectProperties registration failed: {err}"
+                ));
+            }
         }
     }
 
@@ -387,7 +407,7 @@ impl Mapper<'_> {
     }
 
     fn push_axiom(&mut self, axiom: Axiom) {
-        if self.ontology.entity_count() > self.limits.max_entities {
+        if self.ontology.entity_count() >= self.limits.max_entities {
             self.report.meta.warn(format!(
                 "entity limit {} reached; skipping further axioms",
                 self.limits.max_entities
@@ -405,7 +425,9 @@ impl Mapper<'_> {
         }
         match self.ontology.add_axiom(axiom.clone()) {
             Ok(_) => {
-                self.report.meta.mapped_axiom_count += 1;
+                if self.ontology.axiom_count() > self.report.meta.mapped_axiom_count {
+                    self.report.meta.mapped_axiom_count += 1;
+                }
                 self.note_profile_axiom(&axiom);
             }
             Err(err) => {
@@ -442,6 +464,46 @@ impl Mapper<'_> {
             self.report
                 .meta
                 .note_profile_construct(OwlConstruct::ObjectSomeValuesFrom);
+        }
+    }
+
+    fn register_or_warn_class(&mut self, class: &Class<RcStr>) -> Option<EntityId> {
+        match self.register_class(class) {
+            Ok(id) => Some(id),
+            Err(err) => {
+                self.report
+                    .meta
+                    .warn(format!("failed to register class {}: {err}", iri_of(class)));
+                None
+            }
+        }
+    }
+
+    fn register_or_warn_object_property(
+        &mut self,
+        property: &ObjectProperty<RcStr>,
+    ) -> Option<EntityId> {
+        match self.register_object_property(property) {
+            Ok(id) => Some(id),
+            Err(err) => {
+                self.report.meta.warn(format!(
+                    "failed to register object property {}: {err}",
+                    iri_of(property)
+                ));
+                None
+            }
+        }
+    }
+
+    fn register_or_warn_entity(&mut self, iri: &str, kind: EntityKind) -> Option<EntityId> {
+        match self.register_entity(iri, kind) {
+            Ok(id) => Some(id),
+            Err(err) => {
+                self.report
+                    .meta
+                    .warn(format!("failed to register entity {iri}: {err}"));
+                None
+            }
         }
     }
 

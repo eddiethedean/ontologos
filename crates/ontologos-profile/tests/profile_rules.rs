@@ -48,7 +48,8 @@ fn rl_marker_without_el_markers_detects_rl() {
 fn both_el_and_rl_markers_prefers_el_when_el_markers_present() {
     let ontology = ontology_with_profile_constructs(&[
         OwlConstruct::SubClassOfExistential,
-        OwlConstruct::SymmetricObjectProperty,
+        OwlConstruct::ObjectSomeValuesFrom,
+        OwlConstruct::TransitiveObjectProperty,
     ]);
     let report = detect_profile(&ontology).expect("detect");
     assert_eq!(report.detected, Some(OwlProfile::El));
@@ -69,4 +70,30 @@ fn ql_forbidden_construct_escalates_profile() {
     let ontology = ontology_with_profile_constructs(&[OwlConstruct::ObjectUnionOf]);
     let report = detect_profile(&ontology).expect("detect");
     assert_ne!(report.detected, Some(OwlProfile::Ql));
+}
+
+#[test]
+fn functional_object_property_is_not_el() {
+    let ontology = ontology_with_profile_constructs(&[OwlConstruct::FunctionalObjectProperty]);
+    let report = detect_profile(&ontology).expect("detect");
+    assert_ne!(report.detected, Some(OwlProfile::El));
+}
+
+#[test]
+fn inverse_object_properties_is_not_el() {
+    let ontology = ontology_with_profile_constructs(&[OwlConstruct::InverseObjectProperties]);
+    let report = detect_profile(&ontology).expect("detect");
+    assert_ne!(report.detected, Some(OwlProfile::El));
+}
+
+#[test]
+fn skipped_only_source_constructs_escalates_to_dl() {
+    let mut meta = ParseMeta::default();
+    meta.constructs.insert(OwlConstruct::ObjectUnionOf);
+    meta.skipped_axiom_count = 1;
+    let mut ontology = Ontology::new();
+    ontology.set_parse_meta(meta);
+
+    let report = detect_profile(&ontology).expect("detect");
+    assert_eq!(report.detected, Some(OwlProfile::Dl));
 }

@@ -19,6 +19,15 @@ pub(crate) const EL_FORBIDDEN: &[OwlConstruct] = &[
     OwlConstruct::ObjectPropertyAssertion,
     OwlConstruct::DataPropertyAssertion,
     OwlConstruct::SwrlRule,
+    OwlConstruct::InverseObjectProperties,
+    OwlConstruct::FunctionalObjectProperty,
+    OwlConstruct::InverseFunctionalObjectProperty,
+    OwlConstruct::SymmetricObjectProperty,
+    OwlConstruct::ReflexiveObjectProperty,
+    OwlConstruct::AsymmetricObjectProperty,
+    OwlConstruct::IrreflexiveObjectProperty,
+    OwlConstruct::DisjointObjectProperties,
+    OwlConstruct::EquivalentObjectProperties,
 ];
 
 pub fn satisfies_el(constructs: &BTreeSet<OwlConstruct>) -> bool {

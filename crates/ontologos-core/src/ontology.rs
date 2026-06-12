@@ -187,8 +187,15 @@ impl Ontology {
         self.index.inverse_of(property)
     }
 
+    /// Existential restrictions declared for a subclass (`property`, `filler` pairs).
+    #[must_use]
+    pub fn existentials_of(&self, subclass: EntityId) -> &[(EntityId, EntityId)] {
+        self.index.existentials_of(subclass)
+    }
+
     /// Add a validated axiom, updating indexes.
     pub fn add_axiom(&mut self, axiom: Axiom) -> Result<AxiomId> {
+        self.validate_inverse_pair(&axiom)?;
         let id = self.axioms.push(axiom, &self.entities)?;
         let stored = self.axioms.get(id)?;
         self.index.insert(id, stored);
@@ -198,6 +205,27 @@ impl Ontology {
     /// Intern an IRI without registering an entity.
     pub fn intern_iri(&mut self, iri: &str) -> Result<IriId> {
         self.iris.intern(iri)
+    }
+
+    fn validate_inverse_pair(&self, axiom: &Axiom) -> Result<()> {
+        let Axiom::InverseObjectProperties { left, right } = axiom else {
+            return Ok(());
+        };
+        if let Some(existing) = self.index.inverse_of(*left) {
+            if existing != *right {
+                return Err(Error::InvalidAxiom(format!(
+                    "property {left:?} already has inverse {existing:?}, cannot add inverse {right:?}"
+                )));
+            }
+        }
+        if let Some(existing) = self.index.inverse_of(*right) {
+            if existing != *left {
+                return Err(Error::InvalidAxiom(format!(
+                    "property {right:?} already has inverse {existing:?}, cannot add inverse {left:?}"
+                )));
+            }
+        }
+        Ok(())
     }
 }
 

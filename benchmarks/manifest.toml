@@ -3,11 +3,11 @@
 
 [[ontology]]
 name = "pizza"
-expected_profile = "EL"
+expected_profile = "DL"
 source_url = "https://github.com/owlcs/pizza-ontology/raw/refs/heads/master/pizza.owl"
 license = "CC-BY-4.0"
 format = "owl+xml"
-axiom_count_approx = 1056
+axiom_count_approx = 658
 local_path = "benchmarks/data/pizza.owl"
 notes = "Classic OWL tutorial ontology; primary EL conformance corpus."
 

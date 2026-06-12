@@ -28,3 +28,31 @@ jobs:
         run: cargo test --workspace
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.88
+      - uses: Swatinem/rust-cache@v2
+      - name: Download benchmark corpora
+        run: ./benchmarks/scripts/download.sh
+      - name: Test (MSRV)
+        run: cargo test --workspace --locked
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install maturin
+        run: pip install 'maturin>=1.7,<2.0' pytest
+      - name: Build and test Python package
+        working-directory: crates/ontologos-py
+        run: |
+          maturin develop --release
+          pytest tests/ -q

@@ -6,7 +6,8 @@ use crate::limits::ParseLimits;
 use crate::map::map_to_core;
 use crate::read::{read_horned_owl, sniff_file_header};
 use crate::{
-    detect_format, detect_format_from_bytes, detect_turtle_from_bytes, Error, Format, Result,
+    detect_format, detect_format_from_bytes, detect_functional_from_bytes,
+    detect_turtle_from_bytes, Error, Format, Result,
 };
 
 /// Resolve and validate a path before loading an ontology file.
@@ -32,9 +33,23 @@ pub fn load_ontology(path: &Path) -> Result<Ontology> {
     load_ontology_with_limits(path, ParseLimits::default())
 }
 
+/// Load an ontology constrained to stay under `base` (untrusted uploads).
+pub fn load_ontology_in(base: &Path, path: &Path) -> Result<Ontology> {
+    load_ontology_with_limits_and_base(path, ParseLimits::default(), Some(base))
+}
+
 /// Load an ontology with custom [`ParseLimits`].
 pub fn load_ontology_with_limits(path: &Path, limits: ParseLimits) -> Result<Ontology> {
-    let validated = validate_load_path(path, None)?;
+    load_ontology_with_limits_and_base(path, limits, None)
+}
+
+/// Load an ontology with custom limits and optional sandbox base directory.
+pub fn load_ontology_with_limits_and_base(
+    path: &Path,
+    limits: ParseLimits,
+    base: Option<&Path>,
+) -> Result<Ontology> {
+    let validated = validate_load_path(path, base)?;
     if !validated.is_file() {
         return Err(Error::Parse(format!("not a file: {}", validated.display())));
     }
@@ -52,13 +67,14 @@ fn detect_format_with_sniff(path: &Path) -> Result<Format> {
     }
 
     let header = sniff_file_header(path, 4096)?;
-    if detect_format_from_bytes(&header).is_some() {
-        return detect_format_from_bytes(&header).ok_or_else(|| {
-            Error::UnsupportedFormat(format!("unrecognized XML in {}", path.display()))
-        });
+    if let Some(format) = detect_format_from_bytes(&header) {
+        return Ok(format);
     }
     if detect_turtle_from_bytes(&header) {
         return Ok(Format::Turtle);
+    }
+    if detect_functional_from_bytes(&header) {
+        return Ok(Format::Functional);
     }
 
     Err(Error::UnsupportedFormat(format!(

@@ -34,6 +34,15 @@ jobs:
             exit 1
           fi
 
+      - name: Download benchmark corpora
+        run: ./benchmarks/scripts/download.sh
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
       - name: Test
         run: cargo test --workspace --locked
 

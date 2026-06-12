@@ -29,3 +29,15 @@ impl RdfsEngine {
         Err(Error::NotImplemented)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn materialize_returns_not_implemented() {
+        let ontology = Ontology::default();
+        let err = RdfsEngine::new().materialize(&ontology).expect_err("stub");
+        assert!(matches!(err, Error::NotImplemented));
+    }
+}

@@ -34,6 +34,8 @@ pub enum OwlConstruct {
     EquivalentClasses,
     /// `DisjointClasses`.
     DisjointClasses,
+    /// `DisjointObjectProperties`.
+    DisjointObjectProperties,
     /// `DisjointUnion`.
     DisjointUnion,
     /// `SubObjectPropertyOf`.
@@ -104,6 +106,9 @@ pub struct ParseMeta {
 }
 
 impl ParseMeta {
+    /// Maximum number of warnings retained from parsing.
+    pub const MAX_WARNINGS: usize = 10_000;
+
     /// Record a construct flag.
     pub fn note_construct(&mut self, construct: OwlConstruct) {
         self.constructs.insert(construct);
@@ -117,6 +122,9 @@ impl ParseMeta {
 
     /// Append a warning message.
     pub fn warn(&mut self, message: impl Into<String>) {
+        if self.warnings.len() >= Self::MAX_WARNINGS {
+            return;
+        }
         self.warnings.push(message.into());
     }
 }

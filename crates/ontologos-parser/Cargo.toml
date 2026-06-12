@@ -22,3 +22,4 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 ontologos-profile = { workspace = true }
+

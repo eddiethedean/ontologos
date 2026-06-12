@@ -39,8 +39,13 @@ pub fn read_horned_owl(
         }
         Format::RdfXml | Format::Turtle => {
             let mut reader = BufReader::new(file);
-            let (concrete, _incomplete) =
+            let (concrete, incomplete) =
                 rdf_reader::read(&mut reader, config).map_err(map_horned_error)?;
+            if !incomplete.is_complete() {
+                return Err(Error::Parse(
+                    "RDF parse incomplete: input truncated or malformed".into(),
+                ));
+            }
             (concrete.into(), PrefixMapping::default())
         }
         Format::Functional => {
@@ -77,14 +82,18 @@ pub(crate) fn map_horned_error(err: HornedError) -> Error {
 /// Sniff the first bytes of a file for Turtle `@prefix` or `PREFIX` declarations.
 pub fn detect_turtle_from_bytes(header: &[u8]) -> bool {
     let text = match std::str::from_utf8(header) {
-        Ok(t) => t.trim_start(),
+        Ok(t) => strip_utf8_bom(t).trim_start(),
         Err(_) => return false,
     };
     text.starts_with("@prefix")
         || text.starts_with("@base")
         || text.to_ascii_lowercase().starts_with("prefix ")
         || text.contains("\n@prefix")
-        || text.contains("\nPREFIX ")
+        || text.to_ascii_lowercase().contains("\nprefix ")
+}
+
+fn strip_utf8_bom(text: &str) -> &str {
+    text.strip_prefix('\u{feff}').unwrap_or(text)
 }
 
 /// Read up to `max` bytes from `path` for format sniffing.

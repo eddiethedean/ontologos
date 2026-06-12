@@ -47,4 +47,4 @@ Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology l
 
 ## `classify` / `materialize` / `explain` not implemented
 
-Reasoning engines ship in v0.3–v0.6. Only `profile` is functional in v0.2. See [CLI reference](../reference/cli.md).
+Reasoning engines ship in v0.3–v0.6 (`materialize` v0.3, `classify` v0.5, `explain` v0.6). Only `profile` is functional in v0.2. See [CLI reference](../reference/cli.md).

@@ -4,7 +4,7 @@ Thank you for your interest in contributing. OntoLogos is in early development (
 
 ## Prerequisites
 
-- Rust **1.78+** (see `rust-version` in the workspace [Cargo.toml](Cargo.toml))
+- Rust **1.88+** (see `rust-version` in the workspace [Cargo.toml](Cargo.toml))
 - `cargo fmt` and `cargo clippy` (installed via `rustup component add rustfmt clippy`)
 
 ## Getting started
@@ -71,8 +71,8 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace --locked
 cargo publish -p ontologos-core --dry-run
-cargo publish -p ontologos-parser --dry-run
 cargo publish -p ontologos-profile --dry-run
+cargo publish -p ontologos-parser --dry-run
 ```
 
 Then:

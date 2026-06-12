@@ -114,8 +114,8 @@ These run alongside version milestones and are not tied to a single release.
 |-------|------|--------|
 | Criterion serialize bench (10k axioms) | **Complete** | Keep in CI |
 | OWL corpus manifest | **Complete** | Extend as engines land |
-| Corpus download script | Planned (v0.2) | `benchmarks/scripts/download.sh` |
-| Manifest-driven integration tests | Planned (v0.2) | Skip when `local_path` missing |
+| Corpus download script | **Complete** | `benchmarks/scripts/download.sh` |
+| Manifest-driven integration tests | **Complete** | Skip when `local_path` missing |
 | Engine conformance suites | Planned (v0.3+) | Pizza, Family, GALEN, GO-subset |
 | Criterion regression tracking in CI | Planned (v1.1) | Fail on >5% regression |
 
@@ -511,7 +511,7 @@ All 0.x capabilities integrated, tested, documented, and semver-stable.
 - [ ] Benchmark suite with published results in [benchmarks/README.md](benchmarks/README.md)
 - [ ] OWL profile conformance suite green in CI
 - [ ] Automated crates.io + PyPI release workflow
-- [ ] MSRV policy documented (currently 1.78+)
+- [x] MSRV policy documented (currently 1.88+; driven by `horned-owl` 1.4)
 
 ### Performance targets
 

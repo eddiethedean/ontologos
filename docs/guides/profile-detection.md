@@ -80,7 +80,7 @@ This is intentional: classification reflects what the reasoner can use from the 
 
 | Corpus | Expected profile | Notes |
 |--------|------------------|-------|
-| Pizza | `El` | Diagnostics non-empty (DL constructs in source) |
+| Pizza | `Dl` | Mapped inverse/functional axioms; DL constructs in source |
 | Family | `Rl` | RL property axioms mapped; some source-only diagnostics possible |
 
 Corpus files: run `./benchmarks/scripts/download.sh`. Expected counts are **mapper output**, not Protégé logical axiom totals.

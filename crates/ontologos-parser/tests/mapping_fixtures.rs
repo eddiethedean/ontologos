@@ -68,9 +68,9 @@ fn assert_minimal_subclass_mapping(ontology: &Ontology, format_label: &str) {
         "{format_label}: SubClassOfExistential(C, hasPart, B)"
     );
     assert_eq!(
-        ontology.direct_superclasses(c),
-        &[b],
-        "{format_label}: existential indexes filler as superclass"
+        ontology.existentials_of(c),
+        &[(has_part, b)],
+        "{format_label}: existential indexed separately"
     );
 }
 

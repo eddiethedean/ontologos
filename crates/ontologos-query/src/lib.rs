@@ -32,3 +32,17 @@ impl<'a> QueryEngine<'a> {
         Err(Error::NotImplemented)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ontologos_core::Ontology;
+
+    #[test]
+    fn direct_subclasses_returns_not_implemented() {
+        let ontology = Ontology::default();
+        let engine = QueryEngine::new(&ontology);
+        let err = engine.direct_subclasses(EntityId(0)).expect_err("stub");
+        assert!(matches!(err, Error::NotImplemented));
+    }
+}

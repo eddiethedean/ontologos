@@ -47,7 +47,12 @@ Rejected:
 
 ## File loading (v0.2+)
 
-`ontologos_parser::validate_load_path` canonicalizes paths and rejects traversal outside an optional base directory. `load_ontology` validates the path, enforces [`ParseLimits`](https://docs.rs/ontologos-parser/latest/ontologos_parser/struct.ParseLimits.html), then parses via horned-owl.
+`ontologos_parser::validate_load_path` canonicalizes paths and rejects traversal outside an optional base directory.
+
+- `load_ontology` — no sandbox base (trusted local paths)
+- `load_ontology_in(base, path)` — constrain loads to stay under `base` (untrusted uploads)
+
+Both validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/latest/ontologos_parser/struct.ParseLimits.html), then parse via horned-owl.
 
 ### Default parse limits
 

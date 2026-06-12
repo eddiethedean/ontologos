@@ -1,4 +1,4 @@
-use ontologos_core::{Axiom, EntityId, EntityKind, Ontology};
+use ontologos_core::{Axiom, EntityId, EntityKind, Error, Ontology};
 
 #[test]
 fn add_axiom_updates_indexes() {
@@ -125,7 +125,7 @@ fn add_axiom_transitive_updates_index() {
 }
 
 #[test]
-fn add_axiom_subclass_of_existential_indexes_filler_as_superclass() {
+fn add_axiom_subclass_of_existential_indexes_existentials() {
     let mut ontology = Ontology::new();
     let subclass = ontology
         .entity_id("http://ex.org/C", EntityKind::Class)
@@ -144,8 +144,9 @@ fn add_axiom_subclass_of_existential_indexes_filler_as_superclass() {
         })
         .expect("axiom");
 
-    assert_eq!(ontology.direct_superclasses(subclass), &[filler]);
-    assert_eq!(ontology.index().ranges_of(property), &[filler]);
+    assert!(ontology.direct_superclasses(subclass).is_empty());
+    assert!(ontology.index().ranges_of(property).is_empty());
+    assert_eq!(ontology.existentials_of(subclass), &[(property, filler)]);
     assert_eq!(ontology.index().by_kind("SubClassOfExistential").len(), 1);
 }
 
@@ -178,4 +179,34 @@ fn add_axiom_symmetric_reflexive_functional_property_axioms() {
         ontology.index().by_kind("FunctionalObjectProperty").len(),
         1
     );
+    assert!(ontology.index().symmetric_properties().contains(&symmetric));
+    assert!(ontology.index().reflexive_properties().contains(&reflexive));
+    assert!(ontology
+        .index()
+        .functional_properties()
+        .contains(&functional));
+}
+
+#[test]
+fn add_axiom_rejects_conflicting_inverse_pairs() {
+    let mut ontology = Ontology::new();
+    let left = ontology
+        .entity_id("http://ex.org/left", EntityKind::ObjectProperty)
+        .expect("left");
+    let right = ontology
+        .entity_id("http://ex.org/right", EntityKind::ObjectProperty)
+        .expect("right");
+    let other = ontology
+        .entity_id("http://ex.org/other", EntityKind::ObjectProperty)
+        .expect("other");
+
+    ontology
+        .add_axiom(Axiom::InverseObjectProperties { left, right })
+        .expect("first inverse");
+
+    let err = ontology
+        .add_axiom(Axiom::InverseObjectProperties { left, right: other })
+        .expect_err("conflicting inverse");
+    assert!(matches!(err, Error::InvalidAxiom(_)));
+    assert_eq!(ontology.inverse_of(left), Some(right));
 }

@@ -100,7 +100,7 @@ fn main() -> Result<(), Error> {
 
 # Reasoner API (planned)
 
-**Status:** `Reasoner::classify()` returns `Error::NotImplemented` in v0.1.
+**Status:** `Reasoner::classify()` returns `Error::NotImplemented` in v0.1–v0.2 (classification ships in v0.5).
 
 ```rust
 // v0.2 load, v0.5 classify:

@@ -37,3 +37,15 @@ impl ElClassifier {
         Err(Error::NotImplemented)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classify_returns_not_implemented() {
+        let ontology = Ontology::default();
+        let err = ElClassifier::new().classify(&ontology).expect_err("stub");
+        assert!(matches!(err, Error::NotImplemented));
+    }
+}

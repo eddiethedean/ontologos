@@ -46,6 +46,7 @@ impl AxiomStore {
 
     /// Append a validated axiom and return its id (idempotent on duplicates).
     pub fn push(&mut self, axiom: Axiom, registry: &EntityRegistry) -> Result<AxiomId> {
+        let axiom = normalize_class_operands(axiom);
         axiom.validate(registry)?;
         if let Some((index, _)) = self
             .axioms
@@ -64,6 +65,20 @@ impl AxiomStore {
     }
 }
 
+fn normalize_class_operands(axiom: Axiom) -> Axiom {
+    match axiom {
+        Axiom::EquivalentClasses(mut classes) => {
+            classes.sort_by_key(|id| id.0);
+            Axiom::EquivalentClasses(classes)
+        }
+        Axiom::DisjointClasses(mut classes) => {
+            classes.sort_by_key(|id| id.0);
+            Axiom::DisjointClasses(classes)
+        }
+        other => other,
+    }
+}
+
 fn push_unique(vec: &mut Vec<EntityId>, value: EntityId) {
     if !vec.contains(&value) {
         vec.push(value);
@@ -75,6 +90,21 @@ fn link_symmetric(map: &mut HashMap<EntityId, HashSet<EntityId>>, a: EntityId, b
     map.entry(b).or_default().insert(a);
 }
 
+fn merge_equivalence_class(map: &mut HashMap<EntityId, HashSet<EntityId>>, classes: &[EntityId]) {
+    let mut component: HashSet<EntityId> = classes.iter().copied().collect();
+    for id in classes {
+        if let Some(existing) = map.get(id) {
+            component.extend(existing.iter().copied());
+        }
+    }
+    let members: Vec<EntityId> = component.into_iter().collect();
+    for i in 0..members.len() {
+        for j in (i + 1)..members.len() {
+            link_symmetric(map, members[i], members[j]);
+        }
+    }
+}
+
 /// Secondary indexes over axioms for fast engine lookups.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct AxiomIndex {
@@ -84,7 +114,11 @@ pub struct AxiomIndex {
     superproperty_of: HashMap<EntityId, Vec<EntityId>>,
     property_domains: HashMap<EntityId, Vec<EntityId>>,
     property_ranges: HashMap<EntityId, Vec<EntityId>>,
+    subclass_existentials: HashMap<EntityId, Vec<(EntityId, EntityId)>>,
     transitive_properties: HashSet<EntityId>,
+    symmetric_properties: HashSet<EntityId>,
+    reflexive_properties: HashSet<EntityId>,
+    functional_properties: HashSet<EntityId>,
     equivalent_classes: HashMap<EntityId, HashSet<EntityId>>,
     disjoint_with: HashMap<EntityId, HashSet<EntityId>>,
     inverse_of: HashMap<EntityId, EntityId>,
@@ -147,19 +181,23 @@ impl AxiomIndex {
                 property,
                 filler,
             } => {
-                push_unique(self.subclass_of.entry(*subclass).or_default(), *filler);
-                push_unique(self.property_ranges.entry(*property).or_default(), *filler);
-                let _ = property;
-            }
-            Axiom::SymmetricObjectProperty(_)
-            | Axiom::ReflexiveObjectProperty(_)
-            | Axiom::FunctionalObjectProperty(_) => {}
-            Axiom::EquivalentClasses(classes) => {
-                for i in 0..classes.len() {
-                    for j in (i + 1)..classes.len() {
-                        link_symmetric(&mut self.equivalent_classes, classes[i], classes[j]);
-                    }
+                let entry = self.subclass_existentials.entry(*subclass).or_default();
+                let pair = (*property, *filler);
+                if !entry.contains(&pair) {
+                    entry.push(pair);
                 }
+            }
+            Axiom::SymmetricObjectProperty(property) => {
+                self.symmetric_properties.insert(*property);
+            }
+            Axiom::ReflexiveObjectProperty(property) => {
+                self.reflexive_properties.insert(*property);
+            }
+            Axiom::FunctionalObjectProperty(property) => {
+                self.functional_properties.insert(*property);
+            }
+            Axiom::EquivalentClasses(classes) => {
+                merge_equivalence_class(&mut self.equivalent_classes, classes);
             }
             Axiom::DisjointClasses(classes) => {
                 for i in 0..classes.len() {
@@ -185,6 +223,14 @@ impl AxiomIndex {
     #[must_use]
     pub fn direct_subclasses(&self, class: EntityId) -> &[EntityId] {
         self.superclass_of.get(&class).map_or(&[], Vec::as_slice)
+    }
+
+    /// Existential restrictions declared for a subclass (`property`, `filler` pairs).
+    #[must_use]
+    pub fn existentials_of(&self, subclass: EntityId) -> &[(EntityId, EntityId)] {
+        self.subclass_existentials
+            .get(&subclass)
+            .map_or(&[], Vec::as_slice)
     }
 
     /// Direct super-properties declared for a property.
@@ -241,6 +287,24 @@ impl AxiomIndex {
     #[must_use]
     pub fn transitive_properties(&self) -> &HashSet<EntityId> {
         &self.transitive_properties
+    }
+
+    /// Properties declared symmetric.
+    #[must_use]
+    pub fn symmetric_properties(&self) -> &HashSet<EntityId> {
+        &self.symmetric_properties
+    }
+
+    /// Properties declared reflexive.
+    #[must_use]
+    pub fn reflexive_properties(&self) -> &HashSet<EntityId> {
+        &self.reflexive_properties
+    }
+
+    /// Properties declared functional.
+    #[must_use]
+    pub fn functional_properties(&self) -> &HashSet<EntityId> {
+        &self.functional_properties
     }
 
     /// Axiom ids grouped by kind tag.
@@ -336,5 +400,98 @@ mod tests {
 
         assert_eq!(index.direct_superproperties(sub), &[sup]);
         assert_eq!(index.direct_subproperties(sup), &[sub]);
+    }
+
+    #[test]
+    fn equivalence_closed_across_axioms() {
+        let mut pool = InternPool::new();
+        let mut registry = EntityRegistry::new();
+        let mut ids = Vec::new();
+        for label in ["A", "B", "C"] {
+            let iri = pool
+                .intern(&format!("http://ex.org/{label}"))
+                .expect("intern");
+            ids.push(
+                registry
+                    .get_or_register(iri, &format!("http://ex.org/{label}"), EntityKind::Class)
+                    .expect("register"),
+            );
+        }
+        let [a, b, c] = [ids[0], ids[1], ids[2]];
+
+        let mut store = AxiomStore::new();
+        let mut index = AxiomIndex::new();
+        let id1 = store
+            .push(Axiom::EquivalentClasses(vec![a, b]), &registry)
+            .expect("push");
+        index.insert(id1, store.get(id1).expect("get"));
+        let id2 = store
+            .push(Axiom::EquivalentClasses(vec![b, c]), &registry)
+            .expect("push");
+        index.insert(id2, store.get(id2).expect("get"));
+
+        let equiv_a = index.equivalents_of(a).expect("equiv");
+        assert!(equiv_a.contains(&b));
+        assert!(equiv_a.contains(&c));
+    }
+
+    #[test]
+    fn existential_indexed_separately_from_subclass() {
+        let mut pool = InternPool::new();
+        let mut registry = EntityRegistry::new();
+        let c_iri = pool.intern("http://ex.org/C").expect("intern");
+        let b_iri = pool.intern("http://ex.org/B").expect("intern");
+        let p_iri = pool.intern("http://ex.org/p").expect("intern");
+        let c = registry
+            .get_or_register(c_iri, "http://ex.org/C", EntityKind::Class)
+            .expect("register");
+        let b = registry
+            .get_or_register(b_iri, "http://ex.org/B", EntityKind::Class)
+            .expect("register");
+        let p = registry
+            .get_or_register(p_iri, "http://ex.org/p", EntityKind::ObjectProperty)
+            .expect("register");
+
+        let mut store = AxiomStore::new();
+        let mut index = AxiomIndex::new();
+        let id = store
+            .push(
+                Axiom::SubClassOfExistential {
+                    subclass: c,
+                    property: p,
+                    filler: b,
+                },
+                &registry,
+            )
+            .expect("push");
+        index.insert(id, store.get(id).expect("get"));
+
+        assert!(index.direct_superclasses(c).is_empty());
+        assert!(index.ranges_of(p).is_empty());
+        assert_eq!(index.existentials_of(c), &[(p, b)]);
+    }
+
+    #[test]
+    fn equivalent_classes_operand_order_deduped() {
+        let mut pool = InternPool::new();
+        let mut registry = EntityRegistry::new();
+        let a_iri = pool.intern("http://ex.org/A").expect("intern");
+        let b_iri = pool.intern("http://ex.org/B").expect("intern");
+        let a = registry
+            .get_or_register(a_iri, "http://ex.org/A", EntityKind::Class)
+            .expect("register");
+        let b = registry
+            .get_or_register(b_iri, "http://ex.org/B", EntityKind::Class)
+            .expect("register");
+
+        let mut store = AxiomStore::new();
+        let id1 = store
+            .push(Axiom::EquivalentClasses(vec![a, b]), &registry)
+            .expect("push");
+        let id2 = store
+            .push(Axiom::EquivalentClasses(vec![b, a]), &registry)
+            .expect("push");
+        assert_eq!(id1, id2);
+        assert_eq!(store.len(), 1);
     }
 }

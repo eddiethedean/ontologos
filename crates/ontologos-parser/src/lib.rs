@@ -26,7 +26,10 @@ mod report;
 
 pub use error::{Error, Result};
 pub use limits::ParseLimits;
-pub use load::{load_ontology, load_ontology_with_limits, validate_load_path};
+pub use load::{
+    load_ontology, load_ontology_in, load_ontology_with_limits, load_ontology_with_limits_and_base,
+    validate_load_path,
+};
 pub use read::detect_turtle_from_bytes;
 
 /// Supported ontology serialization formats.
@@ -45,6 +48,9 @@ pub enum Format {
 /// Detect format from file content bytes.
 #[must_use]
 pub fn detect_format_from_bytes(header: &[u8]) -> Option<Format> {
+    if detect_functional_from_bytes(header) {
+        return Some(Format::Functional);
+    }
     let text = std::str::from_utf8(header).ok()?;
     let trimmed = text.trim_start();
     if trimmed.contains("rdf:RDF") || trimmed.contains("<rdf:RDF") {
@@ -59,11 +65,21 @@ pub fn detect_format_from_bytes(header: &[u8]) -> Option<Format> {
     None
 }
 
+/// Detect OWL Functional Syntax from a file header.
+#[must_use]
+pub fn detect_functional_from_bytes(header: &[u8]) -> bool {
+    let text = match std::str::from_utf8(header) {
+        Ok(t) => t.trim_start(),
+        Err(_) => return false,
+    };
+    text.starts_with("Prefix(") || text.starts_with("Ontology(")
+}
+
 /// Detect the most likely format from a file path and optional content sniffing.
 #[must_use]
 pub fn detect_format(path: &std::path::Path) -> Option<Format> {
     match path.extension()?.to_str()? {
-        "owl" => sniff_xml_format(path).or(Some(Format::OwlXml)),
+        "owl" => sniff_xml_format(path),
         "xml" => sniff_xml_format(path),
         "rdf" => Some(Format::RdfXml),
         "ttl" | "turtle" => Some(Format::Turtle),
@@ -92,7 +108,6 @@ mod tests {
 
     #[test]
     fn detect_format_by_extension() {
-        assert_eq!(detect_format(Path::new("p.owl")), Some(Format::OwlXml));
         assert_eq!(detect_format(Path::new("p.rdf")), Some(Format::RdfXml));
         assert_eq!(detect_format(Path::new("p.ttl")), Some(Format::Turtle));
         assert_eq!(detect_format(Path::new("p.turtle")), Some(Format::Turtle));
@@ -100,6 +115,13 @@ mod tests {
         assert_eq!(detect_format(Path::new("p.func")), Some(Format::Functional));
         assert_eq!(detect_format(Path::new("p.txt")), None);
         assert_eq!(detect_format(Path::new("noext")), None);
+    }
+
+    #[test]
+    fn detect_functional_from_bytes_header() {
+        let header = b"Prefix(:=<http://example.org/>)\nOntology(<http://example.org/o>)";
+        assert!(detect_functional_from_bytes(header));
+        assert_eq!(detect_format_from_bytes(header), Some(Format::Functional));
     }
 
     #[test]

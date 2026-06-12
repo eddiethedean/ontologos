@@ -4,7 +4,7 @@
 [![crates.io](https://img.shields.io/crates/v/ontologos-core.svg)](https://crates.io/crates/ontologos-core)
 [![docs.rs](https://docs.rs/ontologos-core/badge.svg)](https://docs.rs/ontologos-core)
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
-![Rust](https://img.shields.io/badge/rust-1.78%2B-orange)
+![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)
 
 A modular Rust ontology reasoner **in early development**.
 
@@ -28,12 +28,12 @@ If you need OWL classification today, use Protégé with HermiT or ELK. If you w
 | Profile detection (EL / RL / QL / DL) | Available |
 | `ontologos profile` CLI | Available |
 | RDFS / RL / EL reasoning | v0.3–v0.5 |
-| `classify` / `materialize` / `explain` CLI | v0.3+ |
+| `classify` / `materialize` / `explain` CLI | v0.3–v0.6 (see [ROADMAP](ROADMAP.md)) |
 | Python bindings (full API) | v0.9 |
 
 ## Install (library)
 
-Requires **Rust 1.78+**.
+Requires **Rust 1.88+**.
 
 From [crates.io](https://crates.io/crates/ontologos-core):
 
@@ -128,7 +128,7 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos --format json profile benchmarks/data/family.owl
 ```
 
-`classify`, `materialize`, and `explain` load the ontology then return `NotImplemented` until v0.3+ — see [ROADMAP.md](ROADMAP.md).
+`classify`, `materialize`, and `explain` load the ontology then return `NotImplemented` until their roadmap milestones (`materialize` v0.3, `classify` v0.5, `explain` v0.6) — see [ROADMAP.md](ROADMAP.md).
 
 ## Documentation
 

@@ -4,7 +4,7 @@ This guide walks through building a small ontology with the builder API.
 
 ## Prerequisites
 
-- Rust 1.78+
+- Rust 1.88+
 - Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos) (for examples)
 
 ## Run the example
