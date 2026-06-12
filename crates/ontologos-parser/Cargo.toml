@@ -7,8 +7,8 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
+documentation.workspace = true
 description = "OWL/RDF parsers for OntoLogos"
-documentation = "https://docs.rs/ontologos-parser"
 publish = true
 
 [package.metadata.docs.rs]

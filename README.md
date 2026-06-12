@@ -1,9 +1,9 @@
 # OntoLogos
 
 [![CI](https://github.com/eddiethedean/ontologos/actions/workflows/ci.yml/badge.svg)](https://github.com/eddiethedean/ontologos/actions/workflows/ci.yml)
-[![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/)
+[![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/en/latest/)
 [![crates.io](https://img.shields.io/crates/v/ontologos-core.svg)](https://crates.io/crates/ontologos-core)
-[![docs.rs](https://docs.rs/ontologos-core/badge.svg)](https://docs.rs/ontologos-core)
+[![docs.rs](https://docs.rs/ontologos-core/badge.svg)](https://docs.rs/ontologos-core/0.4.0/ontologos_core/)
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
 ![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)
 
@@ -67,7 +67,7 @@ cd ontologos
 
 > **Repository clone:** Run `./benchmarks/scripts/download.sh` before `cargo test --workspace`. The Family corpus is vendored; Pizza and other benchmarks are downloaded. See [benchmarks/README.md](benchmarks/README.md).
 
-API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.4.0) · [parser](https://docs.rs/ontologos-parser/0.4.0) · [profile](https://docs.rs/ontologos-profile/0.4.0) · [rdfs](https://docs.rs/ontologos-rdfs/0.4.0) · [rl](https://docs.rs/ontologos-rl/0.4.0)
+API reference: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.4.0) · [parser](https://docs.rs/ontologos-parser/0.4.0) · [profile](https://docs.rs/ontologos-profile/0.4.0) · [rdfs](https://docs.rs/ontologos-rdfs/0.4.0) · [rl](https://docs.rs/ontologos-rl/0.4.0) · User guide: [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/)
 
 > **Python:** `pip install ontologos` is an alpha package — `Reasoner(path, profile="rdfs").classify()` runs RDFS materialization; `profile="rl"` runs OWL RL saturation. The default profile is not implemented until v0.5. Full Python APIs ship in v0.9. See [docs/guides/python.md](docs/guides/python.md).
 

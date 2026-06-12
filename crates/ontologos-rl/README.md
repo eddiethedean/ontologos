@@ -30,3 +30,5 @@ assert!(report.inferred_total() >= 0);
 ```
 
 For [`Reasoner`](https://docs.rs/ontologos-core/latest/ontologos_core/struct.Reasoner.html) integration use `ontologos_rl::classify_reasoner`.
+
+Documentation: [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) · [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl)

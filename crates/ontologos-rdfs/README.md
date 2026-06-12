@@ -25,4 +25,4 @@ let mut reasoner = Reasoner::builder()
 classify_reasoner(&mut reasoner)?;
 ```
 
-See the [workspace README](../../README.md) and [docs.rs](https://docs.rs/ontologos-rdfs).
+See the [workspace README](../../README.md), [documentation site](https://ontologos.readthedocs.io/en/latest/), and [docs.rs](https://docs.rs/ontologos-rdfs).

@@ -22,6 +22,7 @@ license = "MIT OR Apache-2.0"
 authors = ["Odo Matthews <odosmatthews@gmail.com>"]
 repository = "https://github.com/eddiethedean/ontologos"
 homepage = "https://github.com/eddiethedean/ontologos"
+documentation = "https://ontologos.readthedocs.io/en/latest/"
 description = "A modular Rust ontology reasoner supporting OWL EL, OWL RL, and RDFS"
 
 [workspace.dependencies]

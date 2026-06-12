@@ -7,8 +7,8 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
+documentation.workspace = true
 description = "OWL profile detection for OntoLogos"
-documentation = "https://docs.rs/ontologos-profile"
 publish = true
 
 [package.metadata.docs.rs]

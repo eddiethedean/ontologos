@@ -2,8 +2,8 @@
 
 Welcome to OntoLogos documentation.
 
-!!! tip "Published site"
-    Browse at **[ontologos.readthedocs.io](https://ontologos.readthedocs.io/)** (built from this directory on every release).
+!!! tip "Source"
+    Pages are built from the [`docs/`](https://github.com/eddiethedean/ontologos/tree/main/docs) directory on every release.
 
 ## Persona quick links
 
@@ -30,7 +30,7 @@ Welcome to OntoLogos documentation.
 
 | Document | Description |
 |----------|-------------|
-| [index.md](getting-started/index.md) | 5-minute success paths by persona |
+| [Getting started overview](getting-started/index.md) | 5-minute success paths by persona |
 | [first-ontology.md](getting-started/first-ontology.md) | Build a taxonomy with `OntologyBuilder` |
 | [load-owl-file.md](getting-started/load-owl-file.md) | Load OWL/RDF files with `ontologos-parser` |
 | [owl-rl-saturation.md](getting-started/owl-rl-saturation.md) | OWL RL forward-chaining with `ontologos-rl` |

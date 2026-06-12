@@ -7,12 +7,12 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
+documentation.workspace = true
 description = "In-memory OWL ontology data model — interned IRIs, typed axioms, and JSON v2 snapshots"
 readme = "../../README.md"
 publish = true
 keywords = ["owl", "ontology", "reasoner", "semantic-web", "knowledge-graph"]
 categories = ["science", "data-structures"]
-documentation = "https://docs.rs/ontologos-core"
 
 [package.metadata.docs.rs]
 all-features = false

@@ -7,6 +7,7 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
+documentation.workspace = true
 description = "HermiT and OWL conformance test harness for OntoLogos"
 publish = false
 
