@@ -327,8 +327,7 @@ mod tests {
             .profile(Profile::Alc)
             .build(ontology)
             .unwrap();
-        let err = super::is_consistent(&reasoner).expect_err("alc consistency on bare class");
-        assert!(matches!(err, super::Error::Alc(_)));
+        assert!(super::is_consistent(&reasoner).unwrap());
     }
 
     #[test]

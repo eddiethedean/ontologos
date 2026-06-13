@@ -111,13 +111,16 @@ fn propagate_existential_role(
 }
 
 fn find_some_ce(ontology: &Ontology, property: RoleExpr, filler: CeId) -> Option<CeId> {
-    ontology.dl().expressions().find_map(|(id, expr)| match expr {
-        ClassExpr::Some {
-            property: p,
-            filler: f,
-        } if *p == property && *f == filler => Some(id),
-        _ => None,
-    })
+    ontology
+        .dl()
+        .expressions()
+        .find_map(|(id, expr)| match expr {
+            ClassExpr::Some {
+                property: p,
+                filler: f,
+            } if *p == property && *f == filler => Some(id),
+            _ => None,
+        })
 }
 
 fn push_subsumption(out: &mut Vec<(EntityId, EntityId)>, sub: EntityId, sup: EntityId) {

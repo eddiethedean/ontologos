@@ -61,10 +61,9 @@ pub fn derive_cardinality_subsumptions(ontology: &Ontology) -> Vec<(EntityId, En
         }
 
         // complex3: ∀r.A ⊓ MinCard(n,r) ⊓ MaxCard(m,r,C) with A ⊑ C ⊔ D  =>  ⊑ MinCard(n-m,r,D)
-        if let (Some((min_n, ref prop)), Some((max_m, ref max_prop, max_filler))) = (
-            parts.min_unqualified.as_ref(),
-            parts.max_qualified.first(),
-        ) {
+        if let (Some((min_n, ref prop)), Some((max_m, ref max_prop, max_filler))) =
+            (parts.min_unqualified.as_ref(), parts.max_qualified.first())
+        {
             if prop == max_prop && *min_n > *max_m {
                 if let Some((_, all_filler)) = parts.all_restriction {
                     if let Some(all_entity) = atomic_entity(ontology, all_filler) {
@@ -252,9 +251,12 @@ fn ce_matches_min_card(
             (Some(e), Some(f_ce)) => atomic_entity(ontology, *f_ce) == Some(e),
             _ => false,
         },
-        ClassExpr::And(ops) => ops
-            .iter()
-            .any(|&id| ontology.dl().ce(id).is_some_and(|e| ce_matches_min_card(ontology, e, property, n, filler))),
+        ClassExpr::And(ops) => ops.iter().any(|&id| {
+            ontology
+                .dl()
+                .ce(id)
+                .is_some_and(|e| ce_matches_min_card(ontology, e, property, n, filler))
+        }),
         _ => false,
     }
 }

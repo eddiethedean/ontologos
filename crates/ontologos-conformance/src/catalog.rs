@@ -491,7 +491,8 @@ fn top_role_universal_subsumption(
 }
 
 fn is_universal_top_role_class(ontology: &Ontology, class: ontologos_core::EntityId) -> bool {
-    let Some(top) = ontology.lookup_entity("http://www.w3.org/2002/07/owl#topObjectProperty") else {
+    let Some(top) = ontology.lookup_entity("http://www.w3.org/2002/07/owl#topObjectProperty")
+    else {
         return false;
     };
     let store = ontology.dl();
@@ -507,9 +508,9 @@ fn is_universal_top_role_class(ontology: &Ontology, class: ontologos_core::Entit
         let ontologos_core::DlAxiom::EquivalentClasses(ids) = axiom else {
             continue;
         };
-        let is_cp = ids.iter().any(|&id| {
-            matches!(store.ce(id), Some(ontologos_core::ClassExpr::Atomic(c)) if *c == class)
-        });
+        let is_cp = ids.iter().any(
+            |&id| matches!(store.ce(id), Some(ontologos_core::ClassExpr::Atomic(c)) if *c == class),
+        );
         if !is_cp {
             continue;
         }
@@ -531,9 +532,9 @@ fn is_universal_top_role_class(ontology: &Ontology, class: ontologos_core::Entit
                 let ontologos_core::DlAxiom::ClassAssertion { class, .. } = a else {
                     return false;
                 };
-                store.ce(*class).is_some_and(|e| {
-                    matches!(e, ontologos_core::ClassExpr::Atomic(c) if *c == *filler_class)
-                })
+                store.ce(*class).is_some_and(
+                    |e| matches!(e, ontologos_core::ClassExpr::Atomic(c) if *c == *filler_class),
+                )
             }) || ontology.axioms().iter().any(|(_, a)| {
                 matches!(
                     a,

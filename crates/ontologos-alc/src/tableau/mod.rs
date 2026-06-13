@@ -7,7 +7,9 @@ mod expand;
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy};
+use ontologos_core::{
+    CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy,
+};
 
 use crate::clause::Clause;
 use crate::dl_ontology::DlOntology;

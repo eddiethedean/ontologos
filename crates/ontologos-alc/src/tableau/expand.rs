@@ -135,13 +135,21 @@ fn expand_min_cardinality(
 }
 
 fn top_ce(branch: &Branch<'_>) -> Option<CeId> {
-    branch.dl.core().dl().expressions().find_map(|(id, e)| match e {
-        ClassExpr::Top => Some(id),
-        _ => None,
-    })
+    branch
+        .dl
+        .core()
+        .dl()
+        .expressions()
+        .find_map(|(id, e)| match e {
+            ClassExpr::Top => Some(id),
+            _ => None,
+        })
 }
 
-pub(crate) fn effective_cardinality_filler(branch: &Branch<'_>, filler: Option<CeId>) -> Option<CeId> {
+pub(crate) fn effective_cardinality_filler(
+    branch: &Branch<'_>,
+    filler: Option<CeId>,
+) -> Option<CeId> {
     let Some(f) = filler else {
         return None;
     };

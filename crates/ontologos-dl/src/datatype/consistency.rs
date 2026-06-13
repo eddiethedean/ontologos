@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology};
 
-use super::{canonical_plain_literal, LiteralIndex, LiteralValue, literals_equal};
+use super::{canonical_plain_literal, literals_equal, LiteralIndex, LiteralValue};
 
 #[derive(Debug, Clone)]
 enum DataRestriction {
@@ -152,10 +152,8 @@ fn negative_assertions_consistent(
         let Some(lit) = literal_from_de(ontology, value) else {
             continue;
         };
-        let prop_restrictions: Vec<_> = restrictions
-            .iter()
-            .filter(|(p, _)| p == property)
-            .collect();
+        let prop_restrictions: Vec<_> =
+            restrictions.iter().filter(|(p, _)| p == property).collect();
         if prop_restrictions.is_empty() {
             continue;
         }
@@ -245,9 +243,7 @@ fn disjoint_assertions_consistent(
 
     for axiom in store.axioms() {
         if let DlAxiom::DataPropertyAssertion {
-            subject,
-            property,
-            ..
+            subject, property, ..
         } = axiom
         {
             if *subject == individual {
@@ -293,18 +289,15 @@ fn restriction_from_ce(
         ClassExpr::DataHasValue { property, value } => {
             Some((*property, DataRestriction::HasValue(*value)))
         }
-        ClassExpr::DataMinCardinality { n, property, range } => Some((
-            *property,
-            DataRestriction::MinCardinality(*n, *range),
-        )),
-        ClassExpr::DataMaxCardinality { n, property, range } => Some((
-            *property,
-            DataRestriction::MaxCardinality(*n, *range),
-        )),
-        ClassExpr::DataExactCardinality { n, property, range } => Some((
-            *property,
-            DataRestriction::ExactCardinality(*n, *range),
-        )),
+        ClassExpr::DataMinCardinality { n, property, range } => {
+            Some((*property, DataRestriction::MinCardinality(*n, *range)))
+        }
+        ClassExpr::DataMaxCardinality { n, property, range } => {
+            Some((*property, DataRestriction::MaxCardinality(*n, *range)))
+        }
+        ClassExpr::DataExactCardinality { n, property, range } => {
+            Some((*property, DataRestriction::ExactCardinality(*n, *range)))
+        }
         ClassExpr::And(ops) => {
             for op in ops {
                 if let Some(r) = restriction_from_ce(store, *op) {
@@ -324,7 +317,10 @@ fn restrictions_satisfiable(
 ) -> bool {
     let mut by_property: HashMap<EntityId, Vec<DataRestriction>> = HashMap::new();
     for (prop, restriction) in restrictions {
-        by_property.entry(*prop).or_default().push(restriction.clone());
+        by_property
+            .entry(*prop)
+            .or_default()
+            .push(restriction.clone());
     }
 
     for group in by_property.values() {
@@ -556,7 +552,11 @@ fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> 
             }
             count
         }
-        DataExpr::Facet { base, facet_iri, value } => {
+        DataExpr::Facet {
+            base,
+            facet_iri,
+            value,
+        } => {
             if facet_contradiction_on_base(store, *base, facet_iri, value) {
                 return 0;
             }
@@ -579,7 +579,9 @@ fn satisfies_all_ranges(
     lit: &LiteralValue,
     ranges: &[DeId],
 ) -> bool {
-    ranges.iter().all(|&r| idx.satisfies_with_ontology(lit, ontology, r))
+    ranges
+        .iter()
+        .all(|&r| idx.satisfies_with_ontology(lit, ontology, r))
 }
 
 fn facet_contradiction_on_base(
@@ -711,9 +713,11 @@ fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<Lite
         "http://www.w3.org/2002/07/owl#rational" => &["0", "1/2", "1"],
         "http://www.w3.org/2002/07/owl#real" => &["0", "1", "1.5"],
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" => &["en"],
-        "http://www.w3.org/2001/XMLSchema#dateTime" => {
-            &["2000-01-01T00:00:00", "2000-01-01T00:00:00Z", "2000-01-01T00:00:00+05:00"]
-        }
+        "http://www.w3.org/2001/XMLSchema#dateTime" => &[
+            "2000-01-01T00:00:00",
+            "2000-01-01T00:00:00Z",
+            "2000-01-01T00:00:00+05:00",
+        ],
         _ => &["0"],
     };
     witnesses

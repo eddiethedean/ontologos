@@ -42,8 +42,9 @@ fn heinsohn_tbox3_complex1_subsumption() -> Result<(), Error> {
 
     const NS: &str = "file:/c/test.owl#";
 
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testheinsohntbox3.ofn");
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testheinsohntbox3.ofn",
+    );
     let ontology = load_ontology(&path).map_err(|e| Error::Message(e.to_string()))?;
     let taxonomy = classify(&ontology).map_err(|e| Error::Message(e.to_string()))?;
 

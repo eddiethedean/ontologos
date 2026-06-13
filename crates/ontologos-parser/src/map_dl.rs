@@ -830,10 +830,7 @@ impl Mapper<'_> {
     }
 
     /// Map cardinality filler; `owl:Thing` means unqualified (no filler).
-    fn universal_or_class_filler(
-        &mut self,
-        bce: &ClassExpression<RcStr>,
-    ) -> Option<CeId> {
+    fn universal_or_class_filler(&mut self, bce: &ClassExpression<RcStr>) -> Option<CeId> {
         if let ClassExpression::Class(class) = bce {
             if iri_of(&class.0) == "http://www.w3.org/2002/07/owl#Thing" {
                 return None;

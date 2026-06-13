@@ -85,8 +85,7 @@ fn facet_check(
                 lexical: lexical.clone(),
                 datatype: *datatype,
             };
-            (lit.lexical == *lexical && lit.datatype == *datatype)
-                || literals_equal(lit, &other)
+            (lit.lexical == *lexical && lit.datatype == *datatype) || literals_equal(lit, &other)
         }
         DataExpr::Facet {
             base,
@@ -174,15 +173,15 @@ fn literal_in_datatype_value_space(
     }
 }
 
-fn datatype_subsumes(
-    ontology: &ontologos_core::Ontology,
-    sub: EntityId,
-    sup: EntityId,
-) -> bool {
+fn datatype_subsumes(ontology: &ontologos_core::Ontology, sub: EntityId, sup: EntityId) -> bool {
     if sub == sup {
         return true;
     }
-    let Some(sup_iri) = ontology.entity(sup).ok().and_then(|r| ontology.resolve_iri(r.iri).ok()) else {
+    let Some(sup_iri) = ontology
+        .entity(sup)
+        .ok()
+        .and_then(|r| ontology.resolve_iri(r.iri).ok())
+    else {
         return false;
     };
     if sup_iri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Literal"
@@ -190,7 +189,11 @@ fn datatype_subsumes(
     {
         return true;
     }
-    let Some(sub_iri) = ontology.entity(sub).ok().and_then(|r| ontology.resolve_iri(r.iri).ok()) else {
+    let Some(sub_iri) = ontology
+        .entity(sub)
+        .ok()
+        .and_then(|r| ontology.resolve_iri(r.iri).ok())
+    else {
         return false;
     };
     matches!(

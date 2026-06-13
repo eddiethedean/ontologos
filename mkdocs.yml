@@ -15,6 +15,7 @@ docs_dir: docs
 exclude_docs: |
   internal/research/
   internal/upstream-reasonable-gaps.md
+  internal/hermit-parity-gap-report.md
   internal/v0.5-docs-plan.md
   README.md
   project/overview.md
@@ -109,6 +110,7 @@ nav:
       - v0.5.x to v0.6.0: migration/v0.5.x-to-v0.6.0.md
       - v0.6.x to v0.7.0: migration/v0.6.x-to-v0.7.0.md
       - v0.7.x to v0.8.0: migration/v0.7.x-to-v0.8.0.md
+      - v0.8.x to v0.9.0: migration/v0.8.x-to-v0.9.0.md
       - v0.8.x to v1.0.0: migration/v0.8.x-to-v1.0.0.md
       - v0.9.x to v1.0.0: migration/v0.9.x-to-v1.0.0.md
   - Project:
