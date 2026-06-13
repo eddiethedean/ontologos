@@ -91,8 +91,32 @@ impl Ontology {
     }
 
     /// Clear pending dirty flags after incremental engines consume edits.
+    ///
+    /// Prefer letting profile engines flush dirty state; clearing manually between edits
+    /// without re-classifying can leave incremental sessions stale.
     pub fn clear_dirty(&mut self) {
         self.dirty.clear();
+    }
+
+    /// Remove all inferred axioms (from RL/RDFS materialization) and rebuild indexes.
+    #[must_use]
+    pub fn strip_inferred_axioms(&mut self) -> usize {
+        let removed = self.axioms.strip_inferred();
+        if !removed.is_empty() {
+            self.index.rebuild_from_store(&self.axioms);
+            self.revision.bump();
+        }
+        removed.len()
+    }
+
+    /// Add an inferred axiom from materialization (does not mark dirty).
+    pub fn add_inferred_axiom(&mut self, axiom: Axiom) -> Result<AxiomId> {
+        self.validate_inverse_pair(&axiom)?;
+        let id = self.axioms.push_inferred(axiom, &self.entities)?;
+        let stored = self.axioms.get(id)?;
+        self.index.insert(id, stored);
+        self.revision.bump();
+        Ok(id)
     }
 
     /// Entity signature for a stored axiom.

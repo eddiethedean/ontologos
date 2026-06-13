@@ -22,6 +22,50 @@ fn family_base() -> Ontology {
         .unwrap()
 }
 
+fn axiom_keys(ontology: &Ontology) -> std::collections::BTreeSet<String> {
+    fn iri_of(ontology: &Ontology, id: ontologos_core::EntityId) -> String {
+        ontology
+            .entity(id)
+            .ok()
+            .and_then(|r| ontology.resolve_iri(r.iri).ok().map(str::to_string))
+            .unwrap_or_else(|| format!("?{}", id.0))
+    }
+
+    ontology
+        .axioms()
+        .iter()
+        .map(|(_, axiom)| match axiom {
+            Axiom::SubClassOf {
+                subclass,
+                superclass,
+            } => format!(
+                "SubClassOf({}, {})",
+                iri_of(ontology, *subclass),
+                iri_of(ontology, *superclass)
+            ),
+            Axiom::SubObjectPropertyOf {
+                sub_property,
+                super_property,
+            } => format!(
+                "SubObjectPropertyOf({}, {})",
+                iri_of(ontology, *sub_property),
+                iri_of(ontology, *super_property)
+            ),
+            Axiom::ObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => format!(
+                "ObjectPropertyAssertion({}, {}, {})",
+                iri_of(ontology, *subject),
+                iri_of(ontology, *property),
+                iri_of(ontology, *object)
+            ),
+            other => format!("{other:?}"),
+        })
+        .collect()
+}
+
 #[test]
 fn incremental_matches_full_after_axiom_addition() {
     let mut full = family_base();
@@ -78,5 +122,61 @@ fn incremental_matches_full_after_axiom_addition() {
         .saturate(&mut full_after)
         .unwrap();
 
-    assert_eq!(reasoner.ontology().axiom_count(), full_after.axiom_count());
+    assert_eq!(axiom_keys(reasoner.ontology()), axiom_keys(&full_after));
+}
+
+#[test]
+fn incremental_matches_full_after_axiom_removal() {
+    let mut ontology = Ontology::new();
+    let a = ontology
+        .entity_id("http://ex.org/A", EntityKind::Class)
+        .unwrap();
+    let b = ontology
+        .entity_id("http://ex.org/B", EntityKind::Class)
+        .unwrap();
+    let c = ontology
+        .entity_id("http://ex.org/C", EntityKind::Class)
+        .unwrap();
+    ontology
+        .add_axiom(Axiom::SubClassOf {
+            subclass: a,
+            superclass: b,
+        })
+        .unwrap();
+    let bc_id = ontology
+        .add_axiom(Axiom::SubClassOf {
+            subclass: b,
+            superclass: c,
+        })
+        .unwrap();
+
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::Rl)
+        .config(ReasonerConfig {
+            incremental: true,
+            ..ReasonerConfig::default()
+        })
+        .build(ontology)
+        .unwrap();
+
+    ontologos_rl::materialize_reasoner(&mut reasoner).unwrap();
+    reasoner.ontology_mut().remove_axiom(bc_id).unwrap();
+    ontologos_rl::materialize_reasoner(&mut reasoner).unwrap();
+
+    let mut full = Ontology::new();
+    let a = full
+        .entity_id("http://ex.org/A", EntityKind::Class)
+        .unwrap();
+    let b = full
+        .entity_id("http://ex.org/B", EntityKind::Class)
+        .unwrap();
+    full.add_axiom(Axiom::SubClassOf {
+        subclass: a,
+        superclass: b,
+    })
+    .unwrap();
+    ontologos_rl::RlEngine::new(1).saturate(&mut full).unwrap();
+
+    assert_eq!(axiom_keys(reasoner.ontology()), axiom_keys(&full));
+    let _ = c;
 }

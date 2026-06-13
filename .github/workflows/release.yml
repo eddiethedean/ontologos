@@ -60,6 +60,9 @@ jobs:
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh
 
+      - name: EL incremental correctness
+        run: cargo test -p ontologos-el --test incremental_correctness --locked
+
   publish-crates:
     name: Publish Rust crates
     if: github.event_name == 'push'

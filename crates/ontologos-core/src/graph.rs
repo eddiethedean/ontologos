@@ -9,6 +9,7 @@ use crate::error::{Error, Result};
 pub struct AxiomStore {
     axioms: Vec<Axiom>,
     removed: HashSet<AxiomId>,
+    inferred: HashSet<AxiomId>,
 }
 
 impl AxiomStore {
@@ -52,21 +53,68 @@ impl AxiomStore {
         })
     }
 
-    /// Append a validated axiom and return its id (idempotent on duplicates).
+    /// Iterate over active asserted (non-inferred) axioms.
+    pub fn iter_asserted(&self) -> impl Iterator<Item = (AxiomId, &Axiom)> {
+        self.iter().filter(|(id, _)| !self.inferred.contains(id))
+    }
+
+    /// Whether an axiom was added by reasoning merge (not user/asserted input).
+    #[must_use]
+    pub fn is_inferred(&self, id: AxiomId) -> bool {
+        self.inferred.contains(&id)
+    }
+
+    /// Append a validated asserted axiom and return its id (idempotent on duplicates).
     pub fn push(&mut self, axiom: Axiom, registry: &EntityRegistry) -> Result<AxiomId> {
+        self.push_with_provenance(axiom, registry, false)
+    }
+
+    /// Append a validated inferred axiom (from materialization merge).
+    pub fn push_inferred(&mut self, axiom: Axiom, registry: &EntityRegistry) -> Result<AxiomId> {
+        self.push_with_provenance(axiom, registry, true)
+    }
+
+    fn push_with_provenance(
+        &mut self,
+        axiom: Axiom,
+        registry: &EntityRegistry,
+        inferred: bool,
+    ) -> Result<AxiomId> {
         let axiom = normalize_class_operands(axiom);
         axiom.validate(registry)?;
         if let Some((index, _)) = self.axioms.iter().enumerate().find(|(i, existing)| {
             !self.removed.contains(&AxiomId(*i as u32)) && **existing == axiom
         }) {
-            return Ok(AxiomId(index as u32));
+            let id = AxiomId(index as u32);
+            if !inferred {
+                self.inferred.remove(&id);
+            }
+            return Ok(id);
         }
         let id = AxiomId(
             u32::try_from(self.axioms.len())
                 .map_err(|_| Error::InvalidAxiom("axiom store capacity exceeded".into()))?,
         );
         self.axioms.push(axiom);
+        if inferred {
+            self.inferred.insert(id);
+        }
         Ok(id)
+    }
+
+    /// Tombstone all inferred axioms; returns ids removed.
+    pub fn strip_inferred(&mut self) -> Vec<AxiomId> {
+        let ids: Vec<AxiomId> = self
+            .inferred
+            .iter()
+            .copied()
+            .filter(|id| !self.removed.contains(id))
+            .collect();
+        for id in &ids {
+            self.removed.insert(*id);
+        }
+        self.inferred.clear();
+        ids
     }
 
     /// Look up an axiom by id including tombstoned entries.

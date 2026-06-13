@@ -15,11 +15,7 @@ fn classify_incremental(reasoner: &mut Reasoner) -> Taxonomy {
 }
 
 fn assert_taxonomy_eq(a: &Taxonomy, b: &Taxonomy) {
-    assert_eq!(
-        a.subsumption_count(),
-        b.subsumption_count(),
-        "subsumption count mismatch"
-    );
+    assert_eq!(a, b, "taxonomy mismatch");
 }
 
 #[test]
@@ -152,4 +148,41 @@ fn ten_axiom_batch_matches_full() {
     let full_after = classify_full(reasoner.ontology());
     let incr_after = classify_incremental(&mut reasoner);
     assert_taxonomy_eq(&full_after, &incr_after);
+}
+
+#[test]
+fn incremental_matches_full_after_axiom_removal() {
+    let mut ontology = Ontology::new();
+    let a = class(&mut ontology, "http://ex.org/A");
+    let b = class(&mut ontology, "http://ex.org/B");
+    let c = class(&mut ontology, "http://ex.org/C");
+    ontology
+        .add_axiom(Axiom::SubClassOf {
+            subclass: a,
+            superclass: b,
+        })
+        .unwrap();
+    let bc_id = ontology
+        .add_axiom(Axiom::SubClassOf {
+            subclass: b,
+            superclass: c,
+        })
+        .unwrap();
+
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::El)
+        .config(ReasonerConfig {
+            incremental: true,
+            ..ReasonerConfig::default()
+        })
+        .build(ontology)
+        .unwrap();
+
+    classify_incremental(&mut reasoner);
+    reasoner.ontology_mut().remove_axiom(bc_id).unwrap();
+
+    let full_after = classify_full(reasoner.ontology());
+    let incr_after = classify_incremental(&mut reasoner);
+    assert_taxonomy_eq(&full_after, &incr_after);
+    assert!(!incr_after.is_subsumed(a, c));
 }

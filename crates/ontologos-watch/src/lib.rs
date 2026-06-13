@@ -83,9 +83,12 @@ where
     Ok(())
 }
 
-/// Non-blocking receiver for tests: watch and return first reload event.
+/// Non-blocking receiver for tests: watch and return first reload event or parse error.
 #[doc(hidden)]
-pub fn watch_once(path: impl AsRef<Path>, debounce_ms: u64) -> Result<Receiver<WatchEvent>> {
+pub fn watch_once(
+    path: impl AsRef<Path>,
+    debounce_ms: u64,
+) -> Result<Receiver<std::result::Result<WatchEvent, Error>>> {
     let path = path.as_ref().to_path_buf();
     let (out_tx, out_rx) = mpsc::channel();
     let (notify_tx, notify_rx) = mpsc::channel();
@@ -95,27 +98,31 @@ pub fn watch_once(path: impl AsRef<Path>, debounce_ms: u64) -> Result<Receiver<W
                 let _ = notify_tx.send(event);
             }
         },
-        Config::default(),
+        Config::default().with_poll_interval(Duration::from_millis(100)),
     )
     .map_err(|e| Error::Watch(e.to_string()))?;
     watcher
-        .watch(
-            path.parent().unwrap_or(path.as_path()),
-            RecursiveMode::NonRecursive,
-        )
+        .watch(path.as_path(), RecursiveMode::NonRecursive)
         .map_err(|e| Error::Watch(e.to_string()))?;
 
     std::thread::spawn(move || {
+        let _watcher = watcher;
         let debounce = Duration::from_millis(debounce_ms);
         while let Ok(event) = notify_rx.recv() {
-            if event.paths.iter().any(|p| p == &path) {
-                if let Ok(ontology) = load_ontology(&path) {
-                    let _ = out_tx.send(WatchEvent {
-                        path: path.clone(),
-                        ontology,
-                    });
-                    break;
-                }
+            if event
+                .paths
+                .iter()
+                .any(|p| p == &path || p.file_name().is_some() && p.file_name() == path.file_name())
+            {
+                let result =
+                    load_ontology(&path)
+                        .map_err(Error::Parse)
+                        .map(|ontology| WatchEvent {
+                            path: path.clone(),
+                            ontology,
+                        });
+                let _ = out_tx.send(result);
+                break;
             }
             std::thread::sleep(debounce);
         }

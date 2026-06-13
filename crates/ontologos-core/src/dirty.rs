@@ -25,12 +25,16 @@ pub struct DirtySet {
 impl DirtySet {
     /// Record a newly added axiom.
     pub fn record_add(&mut self, id: AxiomId) {
-        self.added.push(id);
+        if !self.added.contains(&id) {
+            self.added.push(id);
+        }
     }
 
     /// Record a removed axiom.
     pub fn record_remove(&mut self, id: AxiomId) {
-        self.removed.push(id);
+        if !self.removed.contains(&id) {
+            self.removed.push(id);
+        }
         self.has_removals = true;
     }
 

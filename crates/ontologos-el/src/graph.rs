@@ -25,7 +25,7 @@ impl CompletionGraph {
     /// Seed the graph from ontology axioms (after normal-form preprocessing).
     pub fn seed(ontology: &Ontology) -> Self {
         let mut graph = Self::default();
-        for (_id, axiom) in ontology.axioms().iter() {
+        for (_id, axiom) in ontology.axioms().iter_asserted() {
             match axiom {
                 Axiom::SubClassOf {
                     subclass,
@@ -195,15 +195,38 @@ impl CompletionGraph {
         });
         self.subproperties
             .retain(|(sub, sup)| !signature.contains(sub) && !signature.contains(sup));
+        self.domains.retain(|prop, domains| {
+            if signature.contains(prop) {
+                return false;
+            }
+            domains.retain(|d| !signature.contains(d));
+            !domains.is_empty()
+        });
         self.todo_sub.clear();
         self.todo_ex.clear();
         self.todo_sp.clear();
+        if self.record_traces {
+            self.trace = InferenceTrace::new();
+        }
+    }
+
+    /// Rebuild domain map entries from ontology axioms touching `signature`.
+    pub fn reseed_domains(&mut self, ontology: &Ontology, signature: &HashSet<EntityId>) {
+        use ontologos_core::axiom_signature;
+        for (_, axiom) in ontology.axioms().iter_asserted() {
+            if let Axiom::ObjectPropertyDomain { property, domain } = axiom {
+                let sig = axiom_signature(axiom);
+                if sig.iter().any(|e| signature.contains(e)) {
+                    self.domains.entry(*property).or_default().insert(*domain);
+                }
+            }
+        }
     }
 
     /// Re-apply seeds from axioms whose signature intersects `signature`.
     pub fn reseed_signature(&mut self, ontology: &Ontology, signature: &HashSet<EntityId>) {
         use ontologos_core::axiom_signature;
-        for (_, axiom) in ontology.axioms().iter() {
+        for (_, axiom) in ontology.axioms().iter_asserted() {
             let sig = axiom_signature(axiom);
             if sig.iter().any(|e| signature.contains(e)) {
                 self.seed_axiom(axiom);

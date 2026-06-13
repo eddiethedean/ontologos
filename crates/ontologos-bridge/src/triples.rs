@@ -97,6 +97,34 @@ pub fn core_to_triples(ontology: &Ontology) -> Result<Vec<Triple>> {
         let _ = id;
     }
 
+    for (_, axiom) in ontology.axioms().iter_asserted() {
+        out.extend(axiom_to_triples(ontology, axiom)?);
+    }
+
+    Ok(out)
+}
+
+/// Serialize all active axioms (asserted and inferred) to oxrdf triples.
+pub fn core_to_triples_all(ontology: &Ontology) -> Result<Vec<Triple>> {
+    let mut out = Vec::new();
+
+    for (id, record) in ontology.entities().iter() {
+        let iri = ontology.resolve_iri(record.iri)?;
+        match record.kind {
+            EntityKind::Class => {
+                out.push(triple(iri, RDF_TYPE, OWL_CLASS)?);
+            }
+            EntityKind::Individual => {
+                out.push(triple(iri, RDF_TYPE, OWL_NAMED_INDIVIDUAL)?);
+            }
+            EntityKind::ObjectProperty => {
+                out.push(triple(iri, RDF_TYPE, OWL_OBJECT_PROPERTY)?);
+            }
+            EntityKind::DataProperty | EntityKind::AnnotationProperty | _ => {}
+        }
+        let _ = id;
+    }
+
     for (_, axiom) in ontology.axioms().iter() {
         out.extend(axiom_to_triples(ontology, axiom)?);
     }
@@ -343,7 +371,7 @@ pub fn merge_triples_into_ontology_with_limits(
         }
         if let Some(key) = axiom_triple_key(ontology, &axiom)? {
             if seen.insert(key) {
-                ontology.add_axiom(axiom)?;
+                ontology.add_inferred_axiom(axiom)?;
             }
         }
     }
@@ -358,7 +386,7 @@ pub fn merge_triples_into_ontology_with_limits(
         if let Some(axiom) = triple_to_axiom(ontology, t)? {
             if let Some(key) = axiom_triple_key(ontology, &axiom)? {
                 if seen.insert(key) {
-                    ontology.add_axiom(axiom)?;
+                    ontology.add_inferred_axiom(axiom)?;
                 }
             }
         }

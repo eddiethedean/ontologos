@@ -1,7 +1,7 @@
 use ontologos_bridge::{
     materialize_with_session, take_reasonable_session, MaterializeOutcome, MergeLimits,
 };
-use ontologos_core::{Ontology, Reasoner};
+use ontologos_core::{Ontology, Profile, Reasoner};
 
 use crate::report::MaterializationReport;
 
@@ -36,11 +36,11 @@ impl RdfsEngine {
         let initial_axiom_count = ontology.axiom_count();
         let (outcome, _) = materialize_with_session(
             ontology,
-            ontologos_bridge::ReasonableSession::new(),
+            ontologos_bridge::ReasonableSession::new_for_profile(Profile::Rdfs),
             false,
             self.merge_limits,
         )
-        .map_err(crate::Error::Bridge)?;
+        .map_err(|boxed| crate::Error::Bridge(boxed.0))?;
         Ok(report_from_outcome(
             initial_axiom_count,
             ontology.axiom_count(),
@@ -55,20 +55,27 @@ impl RdfsEngine {
     ) -> crate::Result<MaterializationReport> {
         let initial_axiom_count = reasoner.ontology().axiom_count();
         let incremental = reasoner.config().incremental;
-        let session = take_reasonable_session(reasoner);
-        let (outcome, session) = materialize_with_session(
+        let session = take_reasonable_session(reasoner, Profile::Rdfs);
+        match materialize_with_session(
             reasoner.ontology_mut(),
             session,
             incremental,
             self.merge_limits,
-        )
-        .map_err(crate::Error::Bridge)?;
-        reasoner.set_session(Box::new(session));
-        Ok(report_from_outcome(
-            initial_axiom_count,
-            reasoner.ontology().axiom_count(),
-            outcome,
-        ))
+        ) {
+            Ok((outcome, session)) => {
+                reasoner.set_session(Box::new(session));
+                Ok(report_from_outcome(
+                    initial_axiom_count,
+                    reasoner.ontology().axiom_count(),
+                    outcome,
+                ))
+            }
+            Err(boxed) => {
+                let (e, session) = *boxed;
+                reasoner.set_session(Box::new(session));
+                Err(crate::Error::Bridge(e))
+            }
+        }
     }
 }
 

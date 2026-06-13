@@ -17,19 +17,23 @@ pub fn classify_with_report(reasoner: &mut Reasoner) -> crate::Result<ElReport> 
     }
     let record_traces = reasoner.config().explanations;
     let incremental = reasoner.config().incremental;
-    let session = take_el_session(reasoner);
 
-    let (report, session) = if incremental {
-        ElClassifier::new().classify_incremental(reasoner.ontology_mut(), session, record_traces)?
+    if incremental {
+        crate::normal_form::validate_el_profile(reasoner.ontology())?;
+        let session = take_el_session(reasoner);
+        let (report, session) = ElClassifier::new().classify_incremental(
+            reasoner.ontology_mut(),
+            session,
+            record_traces,
+        )?;
+        reasoner.set_session(Box::new(session));
+        Ok(report)
     } else {
         let report =
             ElClassifier::new().classify_with_options(reasoner.ontology(), record_traces)?;
         reasoner.clear_session();
-        return Ok(report);
-    };
-
-    reasoner.set_session(Box::new(session));
-    Ok(report)
+        Ok(report)
+    }
 }
 
 /// Classify when the reasoner profile is [`Profile::El`]; otherwise returns

@@ -12,15 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Core:** axiom-level dirty tracking (`OntologyRevision`, `DirtySet`), `remove_axiom`, `ReasonerSession` slot on `Reasoner`
+- **Core:** asserted vs inferred axiom provenance (`add_inferred_axiom`, `strip_inferred_axioms`) for correct RL/RDFS removal rematerialization
 - **EL:** incremental classification via partition overdelete-rederive on `CompletionGraph` (`ElSession`, `ReasonerConfig::incremental`)
 - **RL/RDFS:** `ReasonableSession` wrapper over reasonable incremental `reason()` / `set_base_triples`
 - **`ontologos-watch`:** library file-watch + ontology reload hook for Ontocode (not published)
-- **CLI / Python:** `--incremental` flag and `Reasoner(..., incremental=True)`
+- **CLI / Python:** `--incremental` flag and `Reasoner(..., incremental=True)` (library multi-pass workflows)
 - **Benchmarks:** incremental edit suite, `incremental_correctness` tests, optional `bench-el-incremental.sh` perf gate
+- **Tests:** bridge `reasonable_session`, RL/RDFS incremental removal, `ontologos-watch` integration tests
 
 ### Changed
 
 - Workspace and published crates bump to **0.8.0**
+- Incremental engines validate session revision, restore sessions on merge failure, and skip no-op passes when ontology is clean
+
+### Fixed
+
+- **RL/RDFS:** stale inferred axioms after `remove_axiom` — strip inferred set before rematerialize
+- **RL/RDFS:** removal path uses cold `ReasonableReasoner` reset with correct `full_rebuild` flag
+- **EL:** `overdelete_signature` rebuilds domains and clears traces; revision mismatch forces full classify
+- **Bridge:** empty incremental delta clears dirty state; `ReasonableSession` stores RL vs RDFS profile
+- **Perf gate:** `bench-el-incremental.sh` runs with `--ignored`; bench uses unique deltas per iteration
 
 ## [0.7.0] - 2026-06-13
 

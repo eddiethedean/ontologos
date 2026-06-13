@@ -542,8 +542,8 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 ### Exit criteria
 
-- [x] Incremental EL re-classification is ≥ 5× faster than full classify on 10-axiom delta (see `bench-el-incremental.sh`, `#[ignore]` perf test)
-- [x] Correctness: incremental taxonomy equals full classify on documented edit suite (`incremental_correctness.rs`)
+- [x] Incremental EL re-classification is ≥ 5× faster than full classify on 10-axiom delta (local: `./benchmarks/scripts/bench-el-incremental.sh` with `--ignored` perf test)
+- [x] Correctness: incremental taxonomy equals full classify on documented edit suite (`incremental_correctness.rs`); RL/RDFS removal tests in bridge and engine crates
 
 > **Research:** ELK incremental design in [elk.md](docs/internal/research/elk.md); prefer reasonable/whelk upstream incremental APIs over custom rule replay.
 

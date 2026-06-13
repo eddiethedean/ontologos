@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-use ontologos_bridge::core_to_triples;
+use ontologos_bridge::{core_to_triples, core_to_triples_all};
 use ontologos_parser::load_ontology;
 use ontologos_rl::RlEngine;
 use oxrdf::{NamedOrBlankNode, Term, Triple};
@@ -96,7 +96,7 @@ fn family_rl_closure_matches_reasonable() {
     let expected = reasonable_closure(input);
 
     RlEngine::new(1).saturate(&mut ontology).expect("saturate");
-    let actual: HashSet<_> = core_to_triples(&ontology)
+    let actual: HashSet<_> = core_to_triples_all(&ontology)
         .expect("re-export")
         .iter()
         .filter_map(mergeable_triple_key)

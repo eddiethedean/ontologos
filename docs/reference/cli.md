@@ -32,6 +32,7 @@ ontologos --help
 |------|--------|---------|-------------|
 | `--profile` | `auto`, `el`, `rl`, `rdfs` | `auto` | Engine for `classify` |
 | `--format` | `text`, `json` | `text` | Output format |
+| `--incremental` | flag | off | Enable incremental session mode (library multi-pass; single file load runs one pass) |
 
 ## Subcommands
 
@@ -40,7 +41,7 @@ ontologos --help
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
 | `classify <file>` | **Works** | Profile-routed classification / saturation |
 | `materialize <file>` | **Works** | Explicit RDFS TBox materialization |
-| `explain <file>` | **v0.7.0** | Proof graph JSON/text; supports `--profile` |
+| `explain <file>` | **v0.8.0** | Proof graph JSON/text; supports `--profile` |
 
 ### `classify`
 

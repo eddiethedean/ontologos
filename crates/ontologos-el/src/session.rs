@@ -71,6 +71,10 @@ pub fn take_el_session(reasoner: &mut Reasoner) -> Option<ElSession> {
     })
 }
 
+fn session_matches(session: &ElSession, ontology: &Ontology) -> bool {
+    session.last_revision == ontology.revision()
+}
+
 impl ElClassifier {
     /// Classify with incremental session when edits are small; falls back to full classify.
     pub fn classify_incremental(
@@ -82,46 +86,62 @@ impl ElClassifier {
         normal_form::validate_el_profile(ontology)?;
 
         let dirty = ontology.dirty();
-        let use_incremental = session.is_some() && dirty.is_dirty() && !dirty.has_removals();
+        if let Some(session) = session {
+            if !dirty.is_dirty() && session_matches(&session, ontology) {
+                let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &session.graph);
+                let trace = if record_traces && session.record_traces {
+                    session.graph.clone().into_trace()
+                } else {
+                    Default::default()
+                };
+                let mut session = session;
+                session.record_traces = record_traces;
+                return Ok((ElReport { taxonomy, trace }, session));
+            }
 
-        if !use_incremental {
-            let mut graph = CompletionGraph::seed(ontology).with_traces(record_traces);
-            graph.saturate();
-            let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);
-            let trace = graph.clone().into_trace();
-            let mut session = ElSession::new(graph, PartitionIndex::build(ontology), record_traces);
-            session.last_revision = ontology.revision();
-            ontology.clear_dirty();
-            return Ok((ElReport { taxonomy, trace }, session));
+            let use_incremental =
+                dirty.is_dirty() && !dirty.has_removals() && session_matches(&session, ontology);
+
+            if use_incremental {
+                let mut session = session;
+                session.record_traces = record_traces;
+
+                let sig = ontology.dirty_signatures();
+                let partitions = session.partitions.partitions_for_signature(&sig);
+                if session.partitions.affected_fraction(&partitions) > PARTITION_FALLBACK_FRACTION {
+                    let mut graph = CompletionGraph::seed(ontology).with_traces(record_traces);
+                    graph.saturate();
+                    let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);
+                    let trace = graph.clone().into_trace();
+                    session.graph = graph;
+                    session.partitions = PartitionIndex::build(ontology);
+                    session.last_revision = ontology.revision();
+                    ontology.clear_dirty();
+                    return Ok((ElReport { taxonomy, trace }, session));
+                }
+
+                session.graph.overdelete_signature(&sig);
+                session.graph.reseed_signature(ontology, &sig);
+                session.graph.reseed_domains(ontology, &sig);
+                session.graph.saturate();
+
+                let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &session.graph);
+                let trace = session.graph.clone().into_trace();
+                session.partitions = PartitionIndex::build(ontology);
+                session.last_revision = ontology.revision();
+                ontology.clear_dirty();
+
+                return Ok((ElReport { taxonomy, trace }, session));
+            }
         }
 
-        let mut session = session.expect("checked is_some");
-        session.record_traces = record_traces;
-
-        let sig = ontology.dirty_signatures();
-        let partitions = session.partitions.partitions_for_signature(&sig);
-        if session.partitions.affected_fraction(&partitions) > PARTITION_FALLBACK_FRACTION {
-            let mut graph = CompletionGraph::seed(ontology).with_traces(record_traces);
-            graph.saturate();
-            let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);
-            let trace = graph.clone().into_trace();
-            session.graph = graph;
-            session.partitions = PartitionIndex::build(ontology);
-            session.last_revision = ontology.revision();
-            ontology.clear_dirty();
-            return Ok((ElReport { taxonomy, trace }, session));
-        }
-
-        session.graph.overdelete_signature(&sig);
-        session.graph.reseed_signature(ontology, &sig);
-        session.graph.saturate();
-
-        let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &session.graph);
-        let trace = session.graph.clone().into_trace();
-        session.partitions = PartitionIndex::build(ontology);
+        let mut graph = CompletionGraph::seed(ontology).with_traces(record_traces);
+        graph.saturate();
+        let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);
+        let trace = graph.clone().into_trace();
+        let mut session = ElSession::new(graph, PartitionIndex::build(ontology), record_traces);
         session.last_revision = ontology.revision();
         ontology.clear_dirty();
-
         Ok((ElReport { taxonomy, trace }, session))
     }
 }

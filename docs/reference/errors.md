@@ -2,7 +2,7 @@
 
 ## `ontologos_core::Error`
 
-Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.7.0/ontologos_core/enum.Error.html).
+Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.8.0/ontologos_core/enum.Error.html).
 
 ### `InvalidIri`
 
@@ -42,15 +42,16 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.7.0/on
 
 ### `NotImplemented`
 
-**Cause:** Engine stubs not yet shipped.
+**Cause:** `Reasoner::classify()` on `ontologos-core` does not dispatch to profile engines (by design).
 
-| API / CLI | Message (typical) |
-|-----------|-------------------|
-| `Reasoner::classify()` with `Profile::Auto` / `El` | `reasoning not yet implemented` |
+| API | Behavior |
+|-----|----------|
+| `Reasoner::classify()` with `Profile::El` | Returns `NotImplemented` |
+| `Reasoner::classify()` with `Profile::Auto` | Returns `NotImplemented` |
 
-**Recovery:** Core `Reasoner::classify()` does not dispatch to profile engines — use `ontologos_el::classify_with_profile`, `ontologos_rdfs::materialize_reasoner`, or `ontologos_rl::classify_reasoner`. CLI: `ontologos classify --profile auto|el|rl|rdfs`. Python: `Reasoner(path, profile="auto")` routes via `classify_with_profile` (v0.5+).
+**Recovery:** Use `ontologos_el::classify_reasoner`, `ontologos_rdfs::materialize_reasoner`, or `ontologos_rl::materialize_reasoner`. CLI: `ontologos classify --profile auto|el|rl|rdfs`. Python: `Reasoner(path, profile="auto")` routes via `classify_with_profile`.
 
-Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/0.7.0/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
+Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/0.8.0/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
 
 ### `OntologyNotLoaded`
 

@@ -4,8 +4,8 @@ use ontologos_core::{Ontology, OntologyRevision, Profile, Reasoner, ReasonerSess
 use reasonable::reasoner::Reasoner as ReasonableReasoner;
 
 use crate::{
-    core_to_triples, core_to_triples_for_axioms, merge_triples_into_ontology_with_limits,
-    MergeLimits, MergeReport, Result,
+    core_to_triples, core_to_triples_for_axioms, merge_triples_into_ontology_with_limits, Error,
+    MergeLimits, MergeReport,
 };
 
 /// Persistent reasonable state for incremental RL/RDFS materialization.
@@ -13,6 +13,7 @@ pub struct ReasonableSession {
     reasoner: ReasonableReasoner,
     last_revision: OntologyRevision,
     warmed: bool,
+    profile: Profile,
 }
 
 impl std::fmt::Debug for ReasonableSession {
@@ -20,19 +21,27 @@ impl std::fmt::Debug for ReasonableSession {
         f.debug_struct("ReasonableSession")
             .field("last_revision", &self.last_revision)
             .field("warmed", &self.warmed)
+            .field("profile", &self.profile)
             .finish_non_exhaustive()
     }
 }
 
 impl ReasonableSession {
-    /// Create an empty session.
+    /// Create an empty session for the given profile.
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new_for_profile(profile: Profile) -> Self {
         Self {
             reasoner: ReasonableReasoner::new(),
             last_revision: OntologyRevision::default(),
             warmed: false,
+            profile,
         }
+    }
+
+    /// Create an empty RL session.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::new_for_profile(Profile::Rl)
     }
 
     /// Whether a prior materialization warmed this session.
@@ -56,11 +65,11 @@ impl Default for ReasonableSession {
 
 impl ReasonerSession for ReasonableSession {
     fn profile(&self) -> Profile {
-        Profile::Rl
+        self.profile
     }
 
     fn clear(&mut self) {
-        *self = Self::new();
+        *self = Self::new_for_profile(self.profile);
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
@@ -77,37 +86,50 @@ pub struct MaterializeOutcome {
     pub full_rebuild: bool,
 }
 
+fn session_stale(session: &ReasonableSession, ontology: &Ontology) -> bool {
+    session.warmed && session.last_revision != ontology.revision()
+}
+
+pub type MaterializeSessionResult =
+    std::result::Result<(MaterializeOutcome, ReasonableSession), Box<(Error, ReasonableSession)>>;
+
 /// Materialize `ontology` using batch or incremental reasonable reasoning.
 pub fn materialize_with_session(
     ontology: &mut Ontology,
     mut session: ReasonableSession,
     incremental: bool,
     limits: MergeLimits,
-) -> Result<(MaterializeOutcome, ReasonableSession)> {
+) -> MaterializeSessionResult {
     let dirty = ontology.dirty().clone();
-    let use_incremental =
-        incremental && session.warmed && dirty.is_dirty() && !dirty.has_removals();
+    let stale = session_stale(&session, ontology);
 
-    let full_rebuild = if !incremental || !session.warmed {
-        true
-    } else if dirty.has_removals() {
-        let triples = core_to_triples(ontology)?;
-        session.reasoner.set_base_triples(triples);
-        session.reasoner.reason();
-        false
-    } else {
-        !use_incremental
-    };
+    if dirty.has_removals() {
+        let _ = ontology.strip_inferred_axioms();
+    }
+
+    let use_incremental =
+        incremental && session.warmed && dirty.is_dirty() && !dirty.has_removals() && !stale;
+
+    let full_rebuild =
+        !incremental || !session.warmed || dirty.has_removals() || stale || !use_incremental;
 
     if full_rebuild {
-        let triples = core_to_triples(ontology)?;
+        let triples = match core_to_triples(ontology) {
+            Ok(t) => t,
+            Err(e) => return Err(Box::new((e, session))),
+        };
         session.reasoner = ReasonableReasoner::new();
         session.reasoner.load_triples(triples);
         session.reasoner.reason();
         session.warmed = true;
     } else if use_incremental {
-        let delta = core_to_triples_for_axioms(ontology, dirty.added())?;
+        let delta = match core_to_triples_for_axioms(ontology, dirty.added()) {
+            Ok(d) => d,
+            Err(e) => return Err(Box::new((e, session))),
+        };
         if delta.is_empty() {
+            ontology.clear_dirty();
+            session.last_revision = ontology.revision();
             return Ok((
                 MaterializeOutcome {
                     merge: MergeReport::default(),
@@ -118,11 +140,25 @@ pub fn materialize_with_session(
         }
         session.reasoner.load_triples(delta);
         session.reasoner.reason();
+    } else {
+        ontology.clear_dirty();
+        session.last_revision = ontology.revision();
+        return Ok((
+            MaterializeOutcome {
+                merge: MergeReport::default(),
+                full_rebuild: false,
+            },
+            session,
+        ));
     }
 
     let output = session.reasoner.view_output().to_vec();
     let diagnostics = session.reasoner.diagnostics();
-    let merge = merge_triples_into_ontology_with_limits(ontology, &output, diagnostics, limits)?;
+    let merge =
+        match merge_triples_into_ontology_with_limits(ontology, &output, diagnostics, limits) {
+            Ok(m) => m,
+            Err(e) => return Err(Box::new((e, session))),
+        };
 
     session.last_revision = ontology.revision();
     ontology.clear_dirty();
@@ -137,7 +173,7 @@ pub fn materialize_with_session(
 }
 
 /// Extract a [`ReasonableSession`] from a core reasoner, or start a fresh one.
-pub fn take_reasonable_session(reasoner: &mut Reasoner) -> ReasonableSession {
+pub fn take_reasonable_session(reasoner: &mut Reasoner, profile: Profile) -> ReasonableSession {
     reasoner
         .take_session()
         .and_then(|mut boxed| {
@@ -146,7 +182,8 @@ pub fn take_reasonable_session(reasoner: &mut Reasoner) -> ReasonableSession {
                 .downcast_mut::<ReasonableSession>()
                 .map(std::mem::take)
         })
-        .unwrap_or_default()
+        .filter(|s| s.profile() == profile)
+        .unwrap_or_else(|| ReasonableSession::new_for_profile(profile))
 }
 
 /// Downcast helper for [`Reasoner::session_mut`].

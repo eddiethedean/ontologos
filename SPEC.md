@@ -1,12 +1,12 @@
 
 # OntoLogos Technical Specification
 
-> **Document status:** Mixed. Sections marked **(v0.1)** … **(v0.5)** reflect earlier shipped crates; **v0.6** adds explain + dependency-first adapters; **v0.7.0** aligns semver with ROADMAP v0.7 (no API changes from v0.6.1).
+> **Document status:** Mixed. Sections marked **(v0.1)** … **(v0.5)** reflect earlier shipped crates; **v0.6** adds explain + dependency-first adapters; **v0.8.0** aligns semver with ROADMAP v0.7 (no API changes from v0.6.1).
 > Last reviewed: 2026-06-13
 
 ## Overview
 
-OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, and explanation generation. **v0.7.0** ships dependency-first adapters: `ontologos-explain`, `ontologos-bridge`, in-house EL completion, and reasonable (RL/RDFS). v0.5 added EL classification, taxonomy queries, and CLI profile routing; v0.4 added ABox and OWL RL saturation.
+OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, and explanation generation. **v0.8.0** ships dependency-first adapters: `ontologos-explain`, `ontologos-bridge`, in-house EL completion, and reasonable (RL/RDFS). v0.5 added EL classification, taxonomy queries, and CLI profile routing; v0.4 added ABox and OWL RL saturation.
 
 ---
 
@@ -166,7 +166,7 @@ let report = RlEngine::new(1).saturate(&mut ontology)?;
 
 ---
 
-# OWL EL Engine (v0.5+, in-house completion in 0.6.1/0.7.0)
+# OWL EL Engine (v0.5+, in-house completion in 0.6.1/0.8.0)
 
 Algorithms:
 
@@ -182,7 +182,7 @@ Outputs:
 
 ---
 
-# Explanation Engine (v0.6+, shipped in 0.7.0)
+# Explanation Engine (v0.6+, shipped in 0.8.0)
 
 Proof graph:
 
@@ -203,7 +203,7 @@ Features:
 
 # CLI Specification
 
-**Status:** `profile`, `materialize`, `classify`, and `explain --profile auto|el|rl|rdfs` work in v0.7.0. `explain` emits proof graphs (JSON or text).
+**Status:** `profile`, `materialize`, `classify`, and `explain --profile auto|el|rl|rdfs` work in v0.8.0. `explain` emits proof graphs (JSON or text).
 
 Commands:
 
@@ -211,7 +211,7 @@ Commands:
 ontologos profile ontology.owl
 ontologos materialize ontology.owl # RDFS (v0.3+)
 ontologos classify ontology.owl    # RDFS materialization; OWL EL taxonomy in v0.5
-ontologos explain ontology.owl     # Proof graph (v0.7.0)
+ontologos explain ontology.owl     # Proof graph (v0.8.0)
 ```
 
 Outputs:

@@ -22,7 +22,7 @@ See [Security](../security.md) and [JSON snapshot v2](../json-snapshot-v2.md).
 | `max_file_bytes` | 64 MiB | `ParseLimits::max_file_bytes` |
 | `max_axioms` | 10,000,000 | `ParseLimits::max_axioms` |
 
-See [`ParseLimits`](https://docs.rs/ontologos-parser/0.7.0/ontologos_parser/struct.ParseLimits.html).
+See [`ParseLimits`](https://docs.rs/ontologos-parser/0.8.0/ontologos_parser/struct.ParseLimits.html).
 
 ## Engine behavior
 
@@ -84,7 +84,7 @@ See [Conformance coverage](../reference/conformance.md).
 | Medium batch jobs | Tune `ParseLimits`; snapshot to JSON v2 after saturation |
 | Untrusted uploads | `load_ontology_in(base, path)` + reduced limits — [Production integration](production-integration.md) |
 | Large DL corpora (GALEN, SNOMED) | Not production-ready in v0.4; optional `#[ignore]` stress tests only |
-| Incremental updates | Not supported until v0.7 — reload and re-saturate |
+| Incremental updates | v0.8+ library session API (`ReasonerConfig::incremental`); CLI `--watch` in v1.2 |
 
 ## Related
 

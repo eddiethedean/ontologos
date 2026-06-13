@@ -4,7 +4,7 @@ The full OntoLogos technical specification (API status tags, crate contracts, en
 
 **[SPEC.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/SPEC.md)**
 
-## Quick reference (v0.7.0)
+## Quick reference (v0.8.0)
 
 | Area | Status | Doc |
 |------|--------|-----|

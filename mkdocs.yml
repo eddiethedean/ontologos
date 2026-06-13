@@ -63,6 +63,7 @@ nav:
       - Profile detection: guides/profile-detection.md
       - Python: guides/python.md
       - Glossary: guides/glossary.md
+      - Incremental reasoning: guides/incremental-reasoning.md
       - Protégé axiom counts: guides/protege-axiom-counts.md
       - Performance: guides/performance.md
       - Production integration: guides/production-integration.md
@@ -79,15 +80,15 @@ nav:
       - RL rules: reference/rl-rules.md
       - Conformance: reference/conformance.md
       - Rust API (docs.rs):
-          - ontologos-core: https://docs.rs/ontologos-core/0.7.0
-          - ontologos-bridge: https://docs.rs/ontologos-bridge/0.7.0
-          - ontologos-parser: https://docs.rs/ontologos-parser/0.7.0
-          - ontologos-profile: https://docs.rs/ontologos-profile/0.7.0
-          - ontologos-rdfs: https://docs.rs/ontologos-rdfs/0.7.0
-          - ontologos-rl: https://docs.rs/ontologos-rl/0.7.0
-          - ontologos-el: https://docs.rs/ontologos-el/0.7.0
-          - ontologos-query: https://docs.rs/ontologos-query/0.7.0
-          - ontologos-explain: https://docs.rs/ontologos-explain/0.7.0
+          - ontologos-core: https://docs.rs/ontologos-core/0.8.0
+          - ontologos-bridge: https://docs.rs/ontologos-bridge/0.8.0
+          - ontologos-parser: https://docs.rs/ontologos-parser/0.8.0
+          - ontologos-profile: https://docs.rs/ontologos-profile/0.8.0
+          - ontologos-rdfs: https://docs.rs/ontologos-rdfs/0.8.0
+          - ontologos-rl: https://docs.rs/ontologos-rl/0.8.0
+          - ontologos-el: https://docs.rs/ontologos-el/0.8.0
+          - ontologos-query: https://docs.rs/ontologos-query/0.8.0
+          - ontologos-explain: https://docs.rs/ontologos-explain/0.8.0
   - Migration:
       - v0.1 to v0.2: migration/v0.1-to-v0.2.md
       - v0.2 to v0.3: migration/v0.2-to-v0.3.md
@@ -95,7 +96,6 @@ nav:
       - v0.3.x to v0.4.0: migration/v0.3.x-to-v0.4.0.md
       - v0.4.x to v0.5.0: migration/v0.4.x-to-v0.5.0.md
       - v0.5.x to v0.6.0: migration/v0.5.x-to-v0.6.0.md
-      - Incremental reasoning: guides/incremental-reasoning.md
       - v0.6.x to v0.7.0: migration/v0.6.x-to-v0.7.0.md
       - v0.7.x to v0.8.0: migration/v0.7.x-to-v0.8.0.md
   - Project:
@@ -138,7 +138,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/eddiethedean/ontologos
     - icon: fontawesome/brands/rust
-      link: https://docs.rs/ontologos-core/0.7.0
+      link: https://docs.rs/ontologos-core/0.8.0
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/ontologos/
 

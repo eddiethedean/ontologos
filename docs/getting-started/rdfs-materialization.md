@@ -1,6 +1,6 @@
 # RDFS Materialization
 
-RDFS TBox materialization via [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/0.7.0): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
+RDFS TBox materialization via [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/0.8.0): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
 
 ## Prerequisites
 
@@ -38,9 +38,9 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "0.7.0"
-ontologos-parser = "0.7.0"
-ontologos-rdfs = "0.7.0"
+ontologos-core = "0.8.0"
+ontologos-parser = "0.8.0"
+ontologos-rdfs = "0.8.0"
 ```
 
 Load and materialize:

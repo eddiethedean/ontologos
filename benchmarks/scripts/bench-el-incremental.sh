@@ -7,4 +7,4 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-cargo test -p ontologos-el --test incremental_bench -- --nocapture 2>&1
+cargo test -p ontologos-el --test incremental_bench -- --ignored --nocapture 2>&1

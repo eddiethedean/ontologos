@@ -14,6 +14,6 @@ pub use reasonable_session::{
 };
 pub use taxonomy::{equivalence_clusters, reduce_subsumptions};
 pub use triples::{
-    core_to_triples, core_to_triples_for_axioms, merge_triples_into_ontology,
+    core_to_triples, core_to_triples_all, core_to_triples_for_axioms, merge_triples_into_ontology,
     merge_triples_into_ontology_with_limits, MergeLimits, MergeReport,
 };

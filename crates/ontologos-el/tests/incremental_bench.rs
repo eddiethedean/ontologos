@@ -28,6 +28,9 @@ fn build_chain(n: usize) -> Ontology {
 #[test]
 #[ignore = "performance gate: run via benchmarks/scripts/bench-el-incremental.sh"]
 fn incremental_el_at_least_5x_faster_on_ten_axiom_delta() {
+    const ITERS: usize = 20;
+    const DELTA_PER_ITER: usize = 10;
+
     let base = build_chain(50);
     let mut reasoner = Reasoner::builder()
         .profile(Profile::El)
@@ -40,37 +43,12 @@ fn incremental_el_at_least_5x_faster_on_ten_axiom_delta() {
 
     ontologos_el::classify_reasoner(&mut reasoner).unwrap();
 
-    for i in 0..10 {
-        let ont = reasoner.ontology_mut();
-        let x = ont
-            .entity_id(&format!("http://ex.org/X{i}"), EntityKind::Class)
-            .unwrap();
-        let target = ont
-            .entity_id(&format!("http://ex.org/C{i}"), EntityKind::Class)
-            .unwrap();
-        ont.add_axiom(Axiom::SubClassOf {
-            subclass: x,
-            superclass: target,
-        })
-        .unwrap();
-    }
-
     let full_start = Instant::now();
-    for _ in 0..20 {
-        let _ = ontologos_el::ElClassifier::new()
-            .classify(reasoner.ontology())
-            .unwrap();
-    }
-    let full_elapsed = full_start.elapsed();
-
-    let incr_start = Instant::now();
-    for _ in 0..20 {
-        ontologos_el::classify_reasoner(&mut reasoner).unwrap();
-        // re-dirty for next iteration
-        for i in 0..10 {
-            let ont = reasoner.ontology_mut();
+    for iter in 0..ITERS {
+        let mut ont = reasoner.ontology().clone();
+        for i in 0..DELTA_PER_ITER {
             let x = ont
-                .entity_id(&format!("http://ex.org/X{i}"), EntityKind::Class)
+                .entity_id(&format!("http://ex.org/X{iter}_{i}"), EntityKind::Class)
                 .unwrap();
             let target = ont
                 .entity_id(&format!("http://ex.org/C{i}"), EntityKind::Class)
@@ -79,8 +57,29 @@ fn incremental_el_at_least_5x_faster_on_ten_axiom_delta() {
                 subclass: x,
                 superclass: target,
             })
-            .ok();
+            .unwrap();
         }
+        let _ = ontologos_el::ElClassifier::new().classify(&ont).unwrap();
+    }
+    let full_elapsed = full_start.elapsed();
+
+    let incr_start = Instant::now();
+    for iter in 0..ITERS {
+        for i in 0..DELTA_PER_ITER {
+            let ont = reasoner.ontology_mut();
+            let x = ont
+                .entity_id(&format!("http://ex.org/Y{iter}_{i}"), EntityKind::Class)
+                .unwrap();
+            let target = ont
+                .entity_id(&format!("http://ex.org/C{i}"), EntityKind::Class)
+                .unwrap();
+            ont.add_axiom(Axiom::SubClassOf {
+                subclass: x,
+                superclass: target,
+            })
+            .unwrap();
+        }
+        ontologos_el::classify_reasoner(&mut reasoner).unwrap();
     }
     let incr_elapsed = incr_start.elapsed();
 

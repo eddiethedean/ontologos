@@ -1,12 +1,12 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos is **not** a drop-in HermiT replacement. From v0.7.0 it **orchestrates** in-house OWL EL completion and **reasonable** (RL/RDFS) behind a unified API.
+Honest positioning for evaluators. OntoLogos is **not** a drop-in HermiT replacement. From v0.8.0 it **orchestrates** in-house OWL EL completion and **reasonable** (RL/RDFS) behind a unified API.
 
 See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
 
 ## Maturity matrix
 
-| Capability | OntoLogos v0.7.0 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+| Capability | OntoLogos v0.8.0 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|-----------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
@@ -18,7 +18,7 @@ See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs
 | Unified multi-profile CLI/Python | **Yes** | No | No | No | RL only | EL only | Via plugins |
 | Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |
 | Hybrid EL+DL routing | Planned (v1.5) | No | No | Internal | No | No | MORe plugin |
-| Explanations | EL-first (v0.7.0) | Yes | Yes | Partial | Limited | No | Yes |
+| Explanations | EL-first (v0.8.0) | Yes | Yes | Partial | Limited | No | Yes |
 | Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
 
 CLI `classify --profile auto|el|rl|rdfs` routes to in-house EL or reasonable (RL/RDFS). Use `materialize` for explicit RDFS.

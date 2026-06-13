@@ -20,7 +20,7 @@ Native Rust ontology reasoning orchestration: load OWL files, detect profiles, a
 | OWL EL taxonomy | `ontologos-el` (in-house completion) |
 | Engine adapters / conversions | `ontologos-bridge` |
 
-**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.7.0)
+**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.8.0)
 
 > **Partial OWL mapping:** `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](docs/reference/supported-constructs.md).
 
@@ -60,9 +60,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ontologos-core = "0.7.0"
-ontologos-parser = "0.7.0"
-ontologos-rdfs = "0.7.0"
+ontologos-core = "0.8.0"
+ontologos-parser = "0.8.0"
+ontologos-rdfs = "0.8.0"
 ```
 
 `src/main.rs`:
@@ -121,6 +121,7 @@ cargo build -p ontologos-cli --release
 | `ontologos-explain` | Proof graphs and explanations | crates.io |
 | `ontologos-query` | Taxonomy queries | crates.io |
 | `ontologos-cli` | CLI binary | Source-build only |
+| `ontologos-watch` | File-watch reload (Ontocode hook) | Workspace only |
 | `ontologos-py` | Python bindings | PyPI (alpha) |
 
 Full feature matrix and roadmap: [documentation index](docs/index.md) · [ROADMAP](ROADMAP.md)

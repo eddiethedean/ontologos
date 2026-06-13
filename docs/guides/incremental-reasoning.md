@@ -25,20 +25,20 @@ reasoner.ontology_mut().add_axiom(new_axiom)?;
 classify_reasoner(&mut reasoner)?; // incremental path when session is warm
 ```
 
-**CLI:** `ontologos classify --incremental ontology.owl`  
-**Python:** `Reasoner(path, profile="el", incremental=True)`
+**CLI / Python:** The `--incremental` flag and `incremental=True` enable session mode, but **single-shot** file classify/materialize still runs one pass only. Incremental benefit requires a **library workflow**: load once, classify/materialize, edit with `add_axiom` / `remove_axiom`, classify/materialize again. Multi-pass Python APIs are planned for v0.9.
 
 ## Engines
 
 | Profile | Strategy |
 |---------|----------|
 | **EL** | Persisted `CompletionGraph` + partition overdelete-rederive (Kazakov ISWC 2013 style) |
-| **RL / RDFS** | Persistent `reasonable::Reasoner`; delta triples on add-only edits |
+| **RL / RDFS** | Persistent `reasonable::Reasoner`; delta triples on add-only edits; full rematerialize on removal |
 
 ## Limitations
 
-- **Axiom removal:** EL and RL/RDFS fall back to full re-classify / `set_base_triples` rematerialization. Stale inferred axioms may remain in core after removals (asserted vs inferred is not tracked yet).
+- **Axiom removal:** EL falls back to full classify; RL/RDFS strip inferred axioms then cold rematerialize (asserted-only base triples).
 - **Large edits:** EL falls back to full classify when >50% of partitions are affected.
+- **CLI single-shot:** `--incremental` on one file load does not speed up batch runs; use the Rust session API or wait for CLI `--watch` (v1.2).
 - **File watch:** `ontologos-watch` reloads OWL files for Ontocode; CLI `--watch` is v1.2.
 
 ## Conformance

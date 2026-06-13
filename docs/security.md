@@ -52,9 +52,9 @@ Rejected:
 - `load_ontology` — no sandbox base (trusted local paths)
 - `load_ontology_in(base, path)` — constrain loads to stay under `base` (untrusted uploads)
 
-Both validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/0.7.0/ontologos_parser/struct.ParseLimits.html), then parse via horned-owl. **Note:** `max_axioms` / `max_entities` apply during axiom mapping; horned-owl may allocate before mapping caps. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
+Both validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/0.8.0/ontologos_parser/struct.ParseLimits.html), then parse via horned-owl. **Note:** `max_axioms` / `max_entities` apply during axiom mapping; horned-owl may allocate before mapping caps. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
 
-### Reasoning merge limits (v0.7.0)
+### Reasoning merge limits (v0.8.0)
 
 RL/RDFS saturation merges inferred axioms via `ontologos-bridge::MergeLimits` (default `max_axioms: 10_000_000`). Configure with `RdfsEngine::with_merge_limits` / `RlEngine::with_merge_limits` for untrusted workloads.
 

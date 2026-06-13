@@ -1,6 +1,6 @@
 # Load an OWL File
 
-Load OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser/0.7.0).
+Load OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser/0.8.0).
 
 > **Important:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](../reference/supported-constructs.md) before comparing results.
 
@@ -44,8 +44,8 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "0.7.0"
-ontologos-parser = "0.7.0"
+ontologos-core = "0.8.0"
+ontologos-parser = "0.8.0"
 ```
 
 Load and inspect:
