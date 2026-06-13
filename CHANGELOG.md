@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-06-13
+
 ### Changed
 
 - **EL engine:** restore in-house ELK-style completion in `ontologos-el`; remove git `whelk` dependency
 - **`ontologos-bridge`:** horned-owl/oxrdf/reasonable adapters only (no whelk)
 - Pizza EL golden baseline regenerated from in-house EL (`84` direct subsumptions)
+- All library crates publishable to crates.io again (full publish order restored)
+
+### Fixed
+
+- **`ontologos-query`:** removed `ontologos-el` dev-dependency so the crate publishes cleanly
+- **`ontologos-explain`:** `ProofGraph::is_acyclic` uses the same validator as `build_proof_graph`
 
 ## [0.6.0] - 2026-06-12
 
@@ -227,7 +235,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/eddiethedean/ontologos/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/eddiethedean/ontologos/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/eddiethedean/ontologos/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/eddiethedean/ontologos/compare/v0.3.1...v0.4.0

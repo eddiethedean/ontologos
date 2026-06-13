@@ -78,15 +78,15 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | [rl-rules.md](reference/rl-rules.md) | OWL RL rule catalog |
 | [conformance.md](reference/conformance.md) | HermiT-ported test coverage |
 | [json-snapshot-v2.md](json-snapshot-v2.md) | JSON snapshot schema |
-| [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.6.0) | Rust API (core) |
-| [docs.rs/ontologos-bridge](https://docs.rs/ontologos-bridge/0.6.0) | Rust API (adapters) |
-| [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.6.0) | Rust API (parser) |
-| [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.6.0) | Rust API (profile) |
-| [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.6.0) | Rust API (RDFS engine) |
-| [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.6.0) | Rust API (OWL RL engine) |
-| [docs.rs/ontologos-el](https://docs.rs/ontologos-el/0.6.0) | Rust API (OWL EL classifier) |
-| [docs.rs/ontologos-query](https://docs.rs/ontologos-query/0.6.0) | Rust API (taxonomy queries) |
-| [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/0.6.0) | Rust API (explanations) |
+| [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.6.1) | Rust API (core) |
+| [docs.rs/ontologos-bridge](https://docs.rs/ontologos-bridge/0.6.1) | Rust API (adapters) |
+| [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.6.1) | Rust API (parser) |
+| [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.6.1) | Rust API (profile) |
+| [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.6.1) | Rust API (RDFS engine) |
+| [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.6.1) | Rust API (OWL RL engine) |
+| [docs.rs/ontologos-el](https://docs.rs/ontologos-el/0.6.1) | Rust API (OWL EL classifier) |
+| [docs.rs/ontologos-query](https://docs.rs/ontologos-query/0.6.1) | Rust API (taxonomy queries) |
+| [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/0.6.1) | Rust API (explanations) |
 
 ## Migration
 

@@ -16,7 +16,7 @@ FIXTURE = (
 def test_version_matches_release() -> None:
     import ontologos
 
-    assert ontologos.__version__ == "0.6.0"
+    assert ontologos.__version__ == "0.6.1"
 
 
 def test_reasoner_import() -> None:

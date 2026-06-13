@@ -9,7 +9,7 @@
 Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
 **reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
 
-**Status:** v0.6.0 on `main` — explanations plus EL completion and RL/RDFS adapters over reasonable. **Not** full OWL DL / HermiT replacement.
+**Status:** v0.6.1 on `main` — explanations plus EL completion and RL/RDFS adapters over reasonable. **Not** full OWL DL / HermiT replacement.
 
 | You need… | Use today |
 |-----------|-----------|
@@ -20,7 +20,7 @@ Native Rust ontology reasoning orchestration: load OWL files, detect profiles, a
 | OWL EL taxonomy | `ontologos-el` (in-house completion) |
 | Engine adapters / conversions | `ontologos-bridge` |
 
-**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.6.0)
+**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.6.1)
 
 > **Partial OWL mapping:** `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](docs/reference/supported-constructs.md).
 
@@ -30,14 +30,14 @@ Requires **Rust 1.88+**.
 
 ```toml
 [dependencies]
-ontologos-core = "0.6.0"
-ontologos-parser = "0.6.0"
-ontologos-profile = "0.6.0"
-ontologos-rdfs = "0.6.0"
-ontologos-rl = "0.6.0"
-ontologos-el = "0.6.0"
-ontologos-query = "0.6.0"
-ontologos-explain = "0.6.0"
+ontologos-core = "0.6.1"
+ontologos-parser = "0.6.1"
+ontologos-profile = "0.6.1"
+ontologos-rdfs = "0.6.1"
+ontologos-rl = "0.6.1"
+ontologos-el = "0.6.1"
+ontologos-query = "0.6.1"
+ontologos-explain = "0.6.1"
 ```
 
 **Python (alpha):** `pip install ontologos` — pass `profile="rdfs"`, `"rl"`, `"el"`, or `"auto"` ([Python guide](docs/guides/python.md)).
@@ -59,9 +59,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ontologos-core = "0.6.0"
-ontologos-parser = "0.6.0"
-ontologos-rdfs = "0.6.0"
+ontologos-core = "0.6.1"
+ontologos-parser = "0.6.1"
+ontologos-rdfs = "0.6.1"
 ```
 
 `src/main.rs`:

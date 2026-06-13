@@ -3,16 +3,16 @@
 > **Canonical release plan:** [ROADMAP.md](ROADMAP.md) — semver milestones, exit criteria, crate publish policy.
 > **This document** is historical background and long-term ecosystem vision (Ontocode, OntoHub). For **current shipped scope and milestone status**, use ROADMAP.md and [dependency-first ADR](docs/internal/design/dependency-first.md).
 
-## Current status (2026-06-12)
+## Current status (2026-06-13)
 
 | Milestone | Status |
 |-----------|--------|
-| **v0.6.0** | **Release candidate on `main`** — explanations, `ontologos-bridge`, EL → whelk, RL/RDFS → reasonable, Python 0.6.0 |
-| **Next tag** | **v0.6.0** (pending) — publish bridge + explain + facade updates |
+| **v0.6.1** | **On `main`** — in-house EL restored, whelk removed, full crates.io publish |
+| **Next tag** | **v0.6.1** — publish all library crates + PyPI |
 | **v0.8** | Incremental reasoning + petgraph polish |
 | **v0.9** | Python wheels / PyPI maturity |
 
-OntoLogos no longer ships in-house EL completion or RL/RDFS rule engines. Adapter fidelity gates: Pizza EL golden (whelk), Family RL closure (reasonable), HermiT Tier A through facades (with documented upstream gaps ignored, not reimplemented).
+OntoLogos ships in-house EL completion in `ontologos-el`; RL/RDFS use **reasonable** via `ontologos-bridge`. Adapter fidelity gates: Pizza EL golden (in-house EL), Family RL closure (reasonable), HermiT Tier A through facades (with documented upstream gaps ignored, not reimplemented).
 
 ## Executive Summary
 

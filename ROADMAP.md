@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-12 · **Latest on crates.io:** [v0.5.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.5.0) · **Next tag:** **v0.6.0** (pending) · **On `main`:** v0.6.0 release candidate (explain + dependency-first adapters)
+**Last updated:** 2026-06-13 · **Latest on crates.io:** partial **v0.6.0** · **Next tag:** **v0.6.1** · **On `main`:** v0.6.1 (in-house EL, full crates.io publish)
 
 ---
 

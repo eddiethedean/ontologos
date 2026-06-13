@@ -1,6 +1,6 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest on crates.io:** [v0.5.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.5.0) · **Next tag:** **v0.6.0** (pending) · **On `main`:** v0.6.0 release candidate
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest on crates.io:** partial **v0.6.0** (core, parser, profile, query) · **Next tag:** **v0.6.1** · **On `main`:** v0.6.1
 
 ## Shipped through v0.5 (crates.io)
 
@@ -12,7 +12,7 @@ OntoLogos follows [semantic versioning](https://semver.org/). **Latest on crates
 | CLI `profile`, `materialize`, `classify` | Available |
 | Python alpha (`profile="rdfs"` / `"rl"` / `"el"` / `"auto"`) | Available |
 
-## v0.6.0 on `main` (pending tag)
+## v0.6.x on `main` (v0.6.1 pending tag)
 
 | Area | Status |
 |------|--------|
