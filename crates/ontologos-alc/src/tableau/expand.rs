@@ -150,9 +150,7 @@ pub(crate) fn effective_cardinality_filler(
     branch: &Branch<'_>,
     filler: Option<CeId>,
 ) -> Option<CeId> {
-    let Some(f) = filler else {
-        return None;
-    };
+    let f = filler?;
     if is_universal_filler(branch, f) {
         None
     } else {

@@ -81,8 +81,14 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testIsTransitiveObject",
 }
 
-# RL-shaped subsumption cases that pass under RL saturation (honest engine tag).
-FORCE_RL_ENGINE_IDS = {
+# OFN extracts that fail load_ontology (punning / inverse CE) — keep out of axioms/.
+OFN_WRITE_SKIP_IDS = {
+    "reasoner.ReasonerTest.testPunning",
+    "reasoner.ReasonerTest.testPunning2",
+    "reasoner.ReasonerTest.testPunning3",
+    "reasoner.ReasonerTest.testInverses",
+}
+
     "reasoner.ReasonerTest.testSubsumption2",
     "reasoner.ReasonerTest.testSubsumption3",
 }
@@ -809,7 +815,7 @@ def write_axioms(cases: list[HermitCase]) -> int:
             stale.unlink()
     written = 0
     for case in cases:
-        if not case.axiom_ofn:
+        if not case.axiom_ofn or case.id in OFN_WRITE_SKIP_IDS:
             continue
         src = JAVA_ROOT / case.java_file
         text = src.read_text(errors="replace")

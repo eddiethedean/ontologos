@@ -1,6 +1,6 @@
 # RDFS Materialization
 
-RDFS TBox materialization via [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/0.9.0): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
+RDFS TBox materialization via [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/1.0.0): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
 
 The engine delegates to [`reasonable`](https://crates.io/crates/reasonable) and applies bridge fallbacks for RDFS rules not yet upstream (transitive `subPropertyOf`, domain/range along property hierarchies). You may therefore see OWL RL-style inferences beyond strict RDFS on some corpora.
 
@@ -40,9 +40,9 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
-ontologos-rdfs = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
+ontologos-rdfs = "1.0.0"
 ```
 
 Load and materialize:

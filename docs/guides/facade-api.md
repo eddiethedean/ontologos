@@ -67,9 +67,9 @@ Use **`ontologos_facade::classify`** or the profile-specific engine crate.
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
-ontologos-facade = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
+ontologos-facade = "1.0.0"
 ```
 
 The facade pulls in `ontologos-el`, `ontologos-dl`, `ontologos-alc`, `ontologos-swrl`, `ontologos-rdfs`, and `ontologos-rl` transitively.
@@ -79,4 +79,4 @@ The facade pulls in `ontologos-el`, `ontologos-dl`, `ontologos-alc`, `ontologos-
 - [Choosing an API](choosing-an-api.md)
 - [Preview profiles](preview-profiles.md)
 - [Architecture](../architecture.md)
-- [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/0.9.0) (when published)
+- [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/1.0.0) (when published)
