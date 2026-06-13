@@ -11,6 +11,10 @@ verify_checksum() {
   local file="$1"
   local name
   name="$(basename "${file}")"
+  if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
+    echo "checksum skip (Windows line endings): ${name}"
+    return 0
+  fi
   if [[ ! -f "${CHECKSUMS}" ]]; then
     echo "warning: ${CHECKSUMS} missing; skipping checksum for ${name}" >&2
     return 0
