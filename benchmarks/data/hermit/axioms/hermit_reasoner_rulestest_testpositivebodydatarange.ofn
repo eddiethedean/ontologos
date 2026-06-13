@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+ClassAssertion(:A :a) SubClassOf(:A DataSomeValuesFrom(:dp DatatypeRestriction(xsd:integer xsd:minInclusive "6"^^xsd:integer xsd:maxInclusive "9"^^xsd:integer)))DLSafeRule(Body(DataPropertyAtom(:dp Variable(:x) Variable(:y)) DataRangeAtom(DataIntersectionOf(DatatypeRestriction(xsd:integer xsd:minInclusive "5"^^xsd:int) DatatypeRestriction(xsd:decimal xsd:maxInclusive "10"^^xsd:int)) Variable(:y))) Head(ClassAtom(:B Variable(:x))))
+)

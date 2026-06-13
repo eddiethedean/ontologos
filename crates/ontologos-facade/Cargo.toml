@@ -1,0 +1,23 @@
+[package]
+name = "ontologos-facade"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Unified OWL reasoner facade routing EL/RL/RDFS/ALC/DL/SWRL"
+publish = true
+
+[dependencies]
+ontologos-core = { workspace = true }
+ontologos-el = { workspace = true }
+ontologos-rl = { workspace = true }
+ontologos-rdfs = { workspace = true }
+ontologos-alc = { workspace = true }
+ontologos-dl = { workspace = true }
+ontologos-swrl = { workspace = true }
+ontologos-profile = { workspace = true }
+thiserror = { workspace = true }

@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(ObjectProperty(:r))Declaration(ObjectProperty(:rp))Declaration(ObjectProperty(:s1))Declaration(ObjectProperty(:s2))Declaration(ObjectProperty(:s))Declaration(ObjectProperty(:t))Declaration(ObjectProperty(:tp))Declaration(NamedIndividual(:a))Declaration(NamedIndividual(:b))Declaration(NamedIndividual(:c))Declaration(NamedIndividual(:d))ObjectPropertyAssertion(:t :b :a)ObjectPropertyAssertion(:r :b :c)ObjectPropertyAssertion(:r :a :a)ObjectPropertyAssertion(:s :c :d)SubObjectPropertyOf(:r :s)SubObjectPropertyOf(:s1 ObjectInverseOf(:s2))SubObjectPropertyOf(ObjectPropertyChain(:r :s1 :s2) :rp)TransitiveObjectProperty(:t)SubObjectPropertyOf(:t :tp)ClassAssertion(ObjectSomeValuesFrom(:s1 owl:Thing) :c)ClassAssertion(ObjectSomeValuesFrom(:t ObjectSomeValuesFrom(:t ObjectSomeValuesFrom(:t ObjectOneOf(:d)))) :b)
+)

@@ -1,0 +1,17 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(NamedIndividual(:a))
+Declaration(NamedIndividual(:b))
+Declaration(Class(:c))
+Declaration(Class(:d))
+ClassAssertion(:c :a)
+ClassAssertion(ObjectComplementOf(:d) :b)
+DLSafeRule(
+Body(ClassAtom(:c :a))
+Head(ClassAtom(:d :b))
+)
+)

@@ -30,6 +30,14 @@ jobs:
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
       - name: HermiT conformance (Tier A)
         run: cargo test -p ontologos-conformance
+      - name: HermiT catalog drift check
+        run: |
+          chmod +x benchmarks/scripts/check-hermit-catalog.sh
+          ./benchmarks/scripts/check-hermit-catalog.sh
+      - name: Tier C reference harness smoke
+        run: |
+          chmod +x benchmarks/scripts/compare-hermit-tier-c.sh
+          ./benchmarks/scripts/compare-hermit-tier-c.sh
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh
       - name: EL incremental correctness

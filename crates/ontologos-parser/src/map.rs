@@ -53,9 +53,9 @@ fn is_declaration(component: &Component<RcStr>) -> bool {
     )
 }
 
-struct Mapper<'a> {
-    ontology: &'a mut Ontology,
-    report: &'a mut ParseReport,
+pub(crate) struct Mapper<'a> {
+    pub(crate) ontology: &'a mut Ontology,
+    pub(crate) report: &'a mut ParseReport,
     limits: ParseLimits,
 }
 
@@ -146,11 +146,13 @@ impl Mapper<'_> {
             Component::EquivalentObjectProperties(axiom) => {
                 self.map_equivalent_object_properties(&axiom.0);
             }
-            Component::DisjointObjectProperties(_) => {
+            Component::DisjointObjectProperties(axiom) => {
                 self.report
                     .meta
                     .note_construct(OwlConstruct::DisjointObjectProperties);
-                self.skip("DisjointObjectProperties not mapped in v0.2");
+                if !self.map_dl_disjoint_object_properties(&axiom.0) {
+                    self.skip("DisjointObjectProperties not mapped in v0.2");
+                }
             }
             Component::InverseObjectProperties(axiom) => {
                 self.map_inverse_properties(&axiom.0, &axiom.1);
@@ -169,7 +171,9 @@ impl Mapper<'_> {
                     .meta
                     .note_construct(OwlConstruct::InverseFunctionalObjectProperty);
                 self.scan_object_property_expression(&axiom.0);
-                self.skip("InverseFunctionalObjectProperty not mapped in v0.2");
+                if !self.map_dl_inverse_functional(&axiom.0) {
+                    self.skip("InverseFunctionalObjectProperty not mapped in v0.2");
+                }
             }
             Component::ReflexiveObjectProperty(axiom) => {
                 self.map_reflexive_property(&axiom.0);
@@ -179,7 +183,9 @@ impl Mapper<'_> {
                     .meta
                     .note_construct(OwlConstruct::IrreflexiveObjectProperty);
                 self.scan_object_property_expression(&axiom.0);
-                self.skip("IrreflexiveObjectProperty not mapped in v0.2");
+                if !self.map_dl_irreflexive(&axiom.0) {
+                    self.skip("IrreflexiveObjectProperty not mapped in v0.2");
+                }
             }
             Component::SymmetricObjectProperty(axiom) => {
                 self.map_symmetric_property(&axiom.0);
@@ -193,8 +199,9 @@ impl Mapper<'_> {
             Component::HasKey(axiom) => {
                 self.report.meta.note_construct(OwlConstruct::HasKey);
                 self.scan_class_expression(&axiom.ce);
-                let _ = &axiom.vpe;
-                self.skip("HasKey not mapped in v0.2");
+                if !self.map_dl_has_key(&axiom.ce, &axiom.vpe) {
+                    self.skip("HasKey not mapped in v0.2");
+                }
             }
             Component::ClassAssertion(axiom) => {
                 self.map_class_assertion(&axiom.ce, &axiom.i);
@@ -202,30 +209,93 @@ impl Mapper<'_> {
             Component::ObjectPropertyAssertion(axiom) => {
                 self.map_object_property_assertion(&axiom.ope, &axiom.from, &axiom.to);
             }
-            Component::DataPropertyAssertion(_)
-            | Component::NegativeObjectPropertyAssertion(_)
-            | Component::NegativeDataPropertyAssertion(_) => {
+            Component::DataPropertyAssertion(axiom) => {
                 self.report
                     .meta
                     .note_construct(OwlConstruct::DataPropertyAssertion);
-                self.skip("ABox assertion not mapped in v0.2");
+                if !self.map_dl_data_property_assertion(&axiom.dp, &axiom.from, &axiom.to) {
+                    self.skip("ABox assertion not mapped in v0.2");
+                }
+            }
+            Component::NegativeObjectPropertyAssertion(axiom) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::DataPropertyAssertion);
+                if !self.map_dl_negative_object_property_assertion(
+                    &axiom.ope,
+                    &axiom.from,
+                    &axiom.to,
+                ) {
+                    self.skip("ABox assertion not mapped in v0.2");
+                }
+            }
+            Component::NegativeDataPropertyAssertion(axiom) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::DataPropertyAssertion);
+                if !self.map_dl_negative_data_property_assertion(
+                    &axiom.dp,
+                    &axiom.from,
+                    &axiom.to,
+                ) {
+                    self.skip("ABox assertion not mapped in v0.2");
+                }
             }
             Component::SameIndividual(axiom) => self.map_same_individual(&axiom.0),
             Component::DifferentIndividuals(axiom) => self.map_different_individuals(&axiom.0),
-            Component::SubDataPropertyOf(_)
-            | Component::EquivalentDataProperties(_)
-            | Component::DisjointDataProperties(_)
-            | Component::DataPropertyDomain(_)
-            | Component::DataPropertyRange(_)
-            | Component::FunctionalDataProperty(_) => {
+            Component::SubDataPropertyOf(axiom) => {
                 self.report
                     .meta
                     .note_construct(OwlConstruct::DataPropertyAxiom);
-                self.skip("data property axiom not mapped in v0.2");
+                if !self.map_dl_sub_data_property(&axiom.sub, &axiom.sup) {
+                    self.skip("data property axiom not mapped in v0.2");
+                }
             }
-            Component::DatatypeDefinition(_) => {
+            Component::EquivalentDataProperties(axiom) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::DataPropertyAxiom);
+                if !self.map_dl_equivalent_data_properties(&axiom.0) {
+                    self.skip("data property axiom not mapped in v0.2");
+                }
+            }
+            Component::DisjointDataProperties(axiom) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::DataPropertyAxiom);
+                if !self.map_dl_disjoint_data_properties(&axiom.0) {
+                    self.skip("data property axiom not mapped in v0.2");
+                }
+            }
+            Component::DataPropertyDomain(axiom) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::DataPropertyAxiom);
+                if !self.map_dl_data_property_domain(&axiom.dp, &axiom.ce) {
+                    self.skip("data property axiom not mapped in v0.2");
+                }
+            }
+            Component::DataPropertyRange(axiom) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::DataPropertyAxiom);
+                if !self.map_dl_data_property_range(&axiom.dp, &axiom.dr) {
+                    self.skip("data property axiom not mapped in v0.2");
+                }
+            }
+            Component::FunctionalDataProperty(axiom) => {
+                self.report
+                    .meta
+                    .note_construct(OwlConstruct::DataPropertyAxiom);
+                if !self.map_dl_functional_data_property(&axiom.0) {
+                    self.skip("data property axiom not mapped in v0.2");
+                }
+            }
+            Component::DatatypeDefinition(axiom) => {
                 self.report.meta.note_construct(OwlConstruct::Datatype);
-                self.skip("DatatypeDefinition not mapped in v0.2");
+                if !self.map_dl_datatype_definition(&axiom.kind, &axiom.range) {
+                    self.skip("DatatypeDefinition not mapped in v0.2");
+                }
             }
             Component::Import(_) => {
                 self.report.meta.note_construct(OwlConstruct::Import);
@@ -241,7 +311,9 @@ impl Mapper<'_> {
             Component::OntologyID(_) | Component::DocIRI(_) => {}
             Component::Rule(_) => {
                 self.report.meta.note_construct(OwlConstruct::SwrlRule);
-                self.skip("SWRL rule not mapped in v0.2");
+                if !self.map_dl_swrl_rule() {
+                    self.skip("SWRL rule not mapped in v0.2");
+                }
             }
         }
     }
@@ -287,6 +359,9 @@ impl Mapper<'_> {
 
         let mut lookups = vec![sub_lookup, sup_lookup];
         lookups.extend(existential.lookups());
+        if self.map_dl_subclass_of(sub, sup) {
+            return;
+        }
         self.skip_if_unmapped(
             &lookups,
             "SubClassOf with complex class expression not mapped in v0.2",
@@ -354,6 +429,7 @@ impl Mapper<'_> {
         let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
         if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::EquivalentClasses(ids));
+        } else if self.map_dl_equivalent_classes(classes) {
         } else {
             self.skip_if_unmapped(
                 &lookups,
@@ -372,6 +448,7 @@ impl Mapper<'_> {
         let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
         if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::DisjointClasses(ids));
+        } else if self.map_dl_disjoint_classes(classes) {
         } else {
             self.skip_if_unmapped(
                 &lookups,
@@ -389,11 +466,13 @@ impl Mapper<'_> {
             .meta
             .note_construct(OwlConstruct::SubObjectPropertyOf);
         match sub {
-            SubObjectPropertyExpression::ObjectPropertyChain(_) => {
+            SubObjectPropertyExpression::ObjectPropertyChain(chain) => {
                 self.report
                     .meta
                     .note_construct(OwlConstruct::SubObjectPropertyChain);
-                self.skip("SubObjectPropertyChain not mapped in v0.2");
+                if !self.map_dl_sub_property_chain(chain, sup) {
+                    self.skip("SubObjectPropertyChain not mapped in v0.2");
+                }
             }
             SubObjectPropertyExpression::ObjectPropertyExpression(sub_ope) => {
                 let sub_lookup = self.named_object_property(sub_ope);
@@ -405,6 +484,7 @@ impl Mapper<'_> {
                         sub_property: sub_id,
                         super_property: sup_id,
                     });
+                } else if self.map_dl_sub_object_property_of(sub_ope, sup) {
                 } else {
                     self.skip_if_unmapped(
                         &[sub_lookup, sup_lookup],
@@ -459,6 +539,7 @@ impl Mapper<'_> {
                 property: prop_id,
                 domain: domain_id,
             });
+        } else if self.map_dl_property_domain(ope, ce) {
         } else {
             self.skip_if_unmapped(
                 &[prop_lookup, domain_lookup],
@@ -486,6 +567,7 @@ impl Mapper<'_> {
                 property: prop_id,
                 range: range_id,
             });
+        } else if self.map_dl_property_range(ope, ce) {
         } else {
             self.skip_if_unmapped(
                 &[prop_lookup, range_lookup],
@@ -501,6 +583,7 @@ impl Mapper<'_> {
         let prop_lookup = self.named_object_property(ope);
         if let Some(prop_id) = prop_lookup.resolved_id() {
             self.push_axiom(Axiom::TransitiveObjectProperty(prop_id));
+        } else if self.map_dl_transitive_object_property(ope) {
         } else {
             self.skip_if_unmapped(
                 &[prop_lookup],
@@ -516,6 +599,7 @@ impl Mapper<'_> {
         let prop_lookup = self.named_object_property(ope);
         if let Some(prop_id) = prop_lookup.resolved_id() {
             self.push_axiom(Axiom::SymmetricObjectProperty(prop_id));
+        } else if self.map_dl_symmetric_object_property(ope) {
         } else {
             self.skip_if_unmapped(
                 &[prop_lookup],
@@ -604,6 +688,7 @@ impl Mapper<'_> {
                 individual: individual_id,
                 class: class_id,
             });
+        } else if self.map_dl_class_assertion(ce, individual) {
         } else {
             self.skip_if_unmapped(
                 &[class_lookup, individual_lookup],
@@ -635,6 +720,7 @@ impl Mapper<'_> {
                 property: property_id,
                 object: object_id,
             });
+        } else if self.map_dl_object_property_assertion(ope, from, to) {
         } else {
             self.skip_if_unmapped(
                 &[property_lookup, from_lookup, to_lookup],
@@ -653,6 +739,7 @@ impl Mapper<'_> {
             .collect();
         if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::SameIndividual(ids));
+        } else if self.map_dl_same_individual(individuals) {
         } else {
             self.skip_if_unmapped(
                 &lookups,
@@ -671,6 +758,7 @@ impl Mapper<'_> {
             .collect();
         if let Some(ids) = collect_resolved(&lookups) {
             self.push_axiom(Axiom::DifferentIndividuals(ids));
+        } else if self.map_dl_different_individuals(individuals) {
         } else {
             self.skip_if_unmapped(
                 &lookups,
@@ -750,7 +838,7 @@ impl Mapper<'_> {
         }
     }
 
-    fn register_or_warn_class(&mut self, class: &Class<RcStr>) -> Option<EntityId> {
+    pub(crate) fn register_or_warn_class(&mut self, class: &Class<RcStr>) -> Option<EntityId> {
         match self.register_class(class) {
             Ok(id) => Some(id),
             Err(err) => {
@@ -762,7 +850,7 @@ impl Mapper<'_> {
         }
     }
 
-    fn register_or_warn_object_property(
+    pub(crate) fn register_or_warn_object_property(
         &mut self,
         property: &ObjectProperty<RcStr>,
     ) -> Option<EntityId> {
@@ -778,7 +866,7 @@ impl Mapper<'_> {
         }
     }
 
-    fn register_or_warn_entity(&mut self, iri: &str, kind: EntityKind) -> Option<EntityId> {
+    pub(crate) fn register_or_warn_entity(&mut self, iri: &str, kind: EntityKind) -> Option<EntityId> {
         match self.register_entity(iri, kind) {
             Ok(id) => Some(id),
             Err(err) => {
@@ -812,7 +900,9 @@ impl Mapper<'_> {
 
     fn scan_class_expression(&mut self, ce: &ClassExpression<RcStr>) {
         match ce {
-            ClassExpression::Class(_) => {}
+            ClassExpression::Class(class) => {
+                let _ = self.register_or_warn_class(class);
+            }
             ClassExpression::ObjectIntersectionOf(ops) => {
                 self.report
                     .meta
@@ -877,6 +967,9 @@ impl Mapper<'_> {
     }
 
     fn scan_object_property_expression(&mut self, ope: &ObjectPropertyExpression<RcStr>) {
+        if let ObjectPropertyExpression::ObjectProperty(prop) = ope {
+            let _ = self.register_or_warn_object_property(prop);
+        }
         if matches!(ope, ObjectPropertyExpression::InverseObjectProperty(_)) {
             self.report
                 .meta
@@ -919,12 +1012,7 @@ impl Mapper<'_> {
     }
 
     fn named_individual(&mut self, individual: &Individual<RcStr>) -> NamedLookup {
-        match individual {
-            Individual::Named(NamedIndividual(iri)) => named_lookup_from_register(
-                self.register_or_warn_entity(iri_of(iri), EntityKind::Individual),
-            ),
-            Individual::Anonymous(_) => NamedLookup::NotNamed,
-        }
+        named_lookup_from_register(self.map_individual_entity(individual))
     }
 }
 

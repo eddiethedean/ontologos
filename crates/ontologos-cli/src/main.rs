@@ -57,6 +57,9 @@ enum CliProfile {
     El,
     Rl,
     Rdfs,
+    Alc,
+    Dl,
+    Swrl,
 }
 
 impl From<CliProfile> for Profile {
@@ -66,6 +69,9 @@ impl From<CliProfile> for Profile {
             CliProfile::El => Profile::El,
             CliProfile::Rl => Profile::Rl,
             CliProfile::Rdfs => Profile::Rdfs,
+            CliProfile::Alc => Profile::Alc,
+            CliProfile::Dl => Profile::Dl,
+            CliProfile::Swrl => Profile::Swrl,
         }
     }
 }
@@ -127,7 +133,17 @@ fn run() -> Result<(), CliError> {
                     ..ReasonerConfig::default()
                 })
                 .build(ontology)?;
-            let outcome = classify_with_profile(&mut reasoner)?;
+            let outcome = match cli.profile {
+                CliProfile::Alc | CliProfile::Dl | CliProfile::Swrl => {
+                    ontologos_facade::classify(&mut reasoner).map_err(|e| match e {
+                        ontologos_facade::Error::El(inner) => CliError::El(inner),
+                        _ => CliError::El(ontologos_el::Error::UnsupportedProfile(
+                            ontologos_profile::OwlProfile::Dl,
+                        )),
+                    })?
+                }
+                _ => classify_with_profile(&mut reasoner)?,
+            };
             emit_classify_outcome(cli.format, &outcome, reasoner.ontology(), &parse_meta)?;
         }
         Command::Materialize { ontology } => {

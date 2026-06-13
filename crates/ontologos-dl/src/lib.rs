@@ -1,0 +1,79 @@
+//! OWL 2 DL reasoner: coupled saturation + tableau (Konclude-style hybrid).
+
+#![warn(missing_docs)]
+
+mod classify;
+mod datatype;
+mod ria;
+mod route;
+mod saturation;
+
+use ontologos_core::{Ontology, Profile, Taxonomy};
+use thiserror::Error;
+
+pub use classify::DlClassifier;
+pub use datatype::LiteralIndex;
+pub use ontologos_alc::{clausify, classify as alc_classify, Clause, ClauseSet, DlOntology};
+pub use ria::RoleHierarchy;
+pub use route::{classify_reasoner, classify_with_profile, DlReport};
+pub use ontologos_alc::{classify_with_seed, TableauSeed};
+pub use saturation::{saturate, SaturatedFacts};
+
+/// Result type for DL operations.
+pub type Result<T> = std::result::Result<T, Error>;
+
+/// DL engine errors.
+#[derive(Debug, Error)]
+pub enum Error {
+    /// Profile mismatch.
+    #[error("expected DL profile, got {0:?}")]
+    WrongProfile(Profile),
+    /// EL fallback error.
+    #[error(transparent)]
+    El(#[from] ontologos_el::Error),
+    /// ALC/tableau error.
+    #[error(transparent)]
+    Alc(#[from] ontologos_alc::Error),
+    /// Parser error.
+    #[error(transparent)]
+    Parser(#[from] ontologos_parser::Error),
+    /// Core error.
+    #[error(transparent)]
+    Core(#[from] ontologos_core::Error),
+    /// Ontology is inconsistent.
+    #[error("ontology inconsistent")]
+    Inconsistent,
+    /// Preview-only limitation.
+    #[error("DL preview: {0}")]
+    PreviewLimit(String),
+    /// General message.
+    #[error("{0}")]
+    Message(String),
+}
+
+/// Classify an ontology under OWL 2 DL semantics.
+pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
+    DlClassifier::new().classify(ontology)
+}
+
+/// Check ontology consistency under DL.
+pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
+    ontologos_alc::is_consistent(ontology).map_err(Error::Alc)
+}
+
+/// Check named class subsumption after DL classification.
+pub fn is_subsumed(ontology: &Ontology, sub: &str, sup: &str) -> Result<bool> {
+    let taxonomy = classify(ontology)?;
+    let sub_id = ontology
+        .lookup_entity(sub)
+        .ok_or_else(|| Error::Message(format!("unknown entity: {sub}")))?;
+    let sup_id = ontology
+        .lookup_entity(sup)
+        .ok_or_else(|| Error::Message(format!("unknown entity: {sup}")))?;
+    Ok(taxonomy.is_subsumed(sub_id, sup_id))
+}
+
+/// Check entailment of a named subsumption axiom.
+pub fn is_entailed(ontology: &Ontology, sub: &str, sup: &str) -> Result<bool> {
+    is_subsumed(ontology, sub, sup)
+}

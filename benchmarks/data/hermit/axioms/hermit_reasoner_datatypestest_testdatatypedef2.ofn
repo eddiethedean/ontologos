@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(Datatype(:SSN))DatatypeDefinition(:SSN DatatypeRestriction(xsd:string xsd:pattern "[0-9]{3}-[0-9]{2}-[0-9]{4}"))DataPropertyRange(:hasSSN :SSN)DataPropertyAssertion(:hasSSN :Peter "13-42-64")
+)

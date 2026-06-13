@@ -1,0 +1,18 @@
+[package]
+name = "ontologos-swrl"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "DLSafe SWRL rule engine for OntoLogos"
+publish = true
+
+[dependencies]
+ontologos-core = { workspace = true }
+ontologos-dl = { workspace = true }
+ontologos-parser = { workspace = true }
+thiserror = { workspace = true }

@@ -21,9 +21,12 @@ mod error;
 mod limits;
 mod load;
 mod map;
+mod map_dl;
+mod rdf_preprocess;
 mod read;
 mod report;
 
+pub use rdf_preprocess::expand_xml_entities;
 pub use error::{Error, Result};
 pub use limits::ParseLimits;
 pub use load::{

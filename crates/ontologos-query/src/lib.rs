@@ -65,6 +65,11 @@ impl<'a> QueryEngine<'a> {
         self.taxonomy.unsatisfiable.clone()
     }
 
+    /// Whether `sub` is entailed to be subsumed by `sup` (taxonomy + asserted edges).
+    pub fn is_entailed(&self, sub: EntityId, sup: EntityId) -> Result<bool> {
+        self.is_subsumed(sub, sup)
+    }
+
     pub fn lookup(&self, iri: &str) -> Option<EntityId> {
         self.ontology.lookup_entity(iri)
     }

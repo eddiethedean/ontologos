@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use crate::axiom::{Axiom, AxiomId};
+use crate::dl::DlStore;
 use crate::dirty::{axiom_signature, DirtySet, OntologyRevision};
 use crate::entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 use crate::error::{Error, Result};
@@ -17,6 +18,7 @@ pub struct Ontology {
     pub(crate) index: AxiomIndex,
     pub(crate) revision: OntologyRevision,
     pub(crate) dirty: DirtySet,
+    pub(crate) dl: DlStore,
     #[doc(hidden)]
     pub parse_meta: Option<ParseMeta>,
 }
@@ -38,6 +40,7 @@ impl Ontology {
             index: AxiomIndex::new(),
             revision: OntologyRevision::default(),
             dirty: DirtySet::default(),
+            dl: DlStore::new(),
             parse_meta: None,
         }
     }
@@ -76,6 +79,17 @@ impl Ontology {
     #[must_use]
     pub fn axiom_count(&self) -> usize {
         self.axioms.active_len()
+    }
+
+    /// DL class expressions and generalized axioms.
+    #[must_use]
+    pub fn dl(&self) -> &DlStore {
+        &self.dl
+    }
+
+    /// Mutable DL store (parser / reasoner ingestion).
+    pub fn dl_mut(&mut self) -> &mut DlStore {
+        &mut self.dl
     }
 
     /// Monotonic edit revision (incremented on add/remove).

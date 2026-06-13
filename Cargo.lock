@@ -939,6 +939,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
+name = "ontologos-abox"
+version = "0.9.0"
+dependencies = [
+ "ontologos-core",
+ "ontologos-rl",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "ontologos-alc"
+version = "0.9.0"
+dependencies = [
+ "ontologos-core",
+ "ontologos-parser",
+ "ontologos-profile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "ontologos-bridge"
 version = "0.9.0"
 dependencies = [
@@ -960,6 +979,7 @@ dependencies = [
  "ontologos-core",
  "ontologos-el",
  "ontologos-explain",
+ "ontologos-facade",
  "ontologos-parser",
  "ontologos-profile",
  "ontologos-rdfs",
@@ -974,13 +994,18 @@ dependencies = [
 name = "ontologos-conformance"
 version = "0.9.0"
 dependencies = [
+ "ontologos-alc",
  "ontologos-conformance",
  "ontologos-core",
+ "ontologos-dl",
  "ontologos-el",
  "ontologos-explain",
  "ontologos-parser",
  "ontologos-rdfs",
  "ontologos-rl",
+ "ontologos-swrl",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -994,9 +1019,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ontologos-dl"
+version = "0.9.0"
+dependencies = [
+ "horned-owl",
+ "ontologos-alc",
+ "ontologos-core",
+ "ontologos-el",
+ "ontologos-parser",
+ "ontologos-profile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "ontologos-el"
 version = "0.9.0"
 dependencies = [
+ "ontologos-alc",
  "ontologos-core",
  "ontologos-parser",
  "ontologos-profile",
@@ -1009,6 +1048,7 @@ dependencies = [
 name = "ontologos-explain"
 version = "0.9.0"
 dependencies = [
+ "ontologos-alc",
  "ontologos-core",
  "ontologos-el",
  "ontologos-profile",
@@ -1016,6 +1056,21 @@ dependencies = [
  "ontologos-rl",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "ontologos-facade"
+version = "0.9.0"
+dependencies = [
+ "ontologos-alc",
+ "ontologos-core",
+ "ontologos-dl",
+ "ontologos-el",
+ "ontologos-profile",
+ "ontologos-rdfs",
+ "ontologos-rl",
+ "ontologos-swrl",
  "thiserror 2.0.18",
 ]
 
@@ -1055,6 +1110,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ontologos-ql"
+version = "0.9.0"
+dependencies = [
+ "ontologos-core",
+ "ontologos-query",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "ontologos-query"
 version = "0.9.0"
 dependencies = [
@@ -1086,6 +1150,16 @@ dependencies = [
  "oxrdf",
  "reasonable",
  "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "ontologos-swrl"
+version = "0.9.0"
+dependencies = [
+ "ontologos-core",
+ "ontologos-dl",
+ "ontologos-parser",
  "thiserror 2.0.18",
 ]
 

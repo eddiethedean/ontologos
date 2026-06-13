@@ -75,7 +75,24 @@ pub fn load_ontology_with_limits_and_base(
         )));
     }
     let format = detect_format_with_sniff(path, &mut file)?;
-    let set_ontology = read_horned_owl_from_reader(&mut file, format, limits)?;
+    let set_ontology = if format == Format::RdfXml {
+        let mut bytes = Vec::new();
+        file.seek(SeekFrom::Start(0))
+            .map_err(|e| Error::Parse(e.to_string()))?;
+        file.read_to_end(&mut bytes)
+            .map_err(|e| Error::Parse(e.to_string()))?;
+        let text = String::from_utf8_lossy(&bytes);
+        let expanded = crate::rdf_preprocess::expand_xml_entities(&text);
+        read_horned_owl_from_reader(
+            &mut std::io::Cursor::new(expanded.as_bytes().to_vec()),
+            format,
+            limits,
+        )?
+    } else {
+        file.seek(SeekFrom::Start(0))
+            .map_err(|e| Error::Parse(e.to_string()))?;
+        read_horned_owl_from_reader(&mut file, format, limits)?
+    };
     let (mut ontology, report) = map_to_core(&set_ontology, limits)?;
     ontology.set_parse_meta(report.into_meta());
     Ok(ontology)

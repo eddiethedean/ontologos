@@ -15,6 +15,12 @@ pub enum Profile {
     Rl,
     /// OWL EL completion-based classification.
     El,
+    /// OWL ALC tableau-lite (pre-DL bridge).
+    Alc,
+    /// OWL 2 DL coupled saturation + tableau.
+    Dl,
+    /// DLSafe SWRL rules with DL.
+    Swrl,
 }
 
 /// Configuration options for the reasoner builder.
@@ -149,6 +155,11 @@ impl Reasoner {
             session.clear();
         }
         self.session = None;
+    }
+
+    /// Check ontology consistency (profile engines implement semantics).
+    pub fn is_consistent(&self) -> Result<bool> {
+        Err(Error::NotImplemented)
     }
 
     /// Run classification over the loaded ontology.

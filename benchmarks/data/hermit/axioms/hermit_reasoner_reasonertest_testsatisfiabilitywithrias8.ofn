@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+ObjectPropertyAssertion( :R1 :a :b )ObjectPropertyAssertion( :S1 :b :c )ObjectPropertyAssertion( :S2 :c :d )ObjectPropertyAssertion( :S1 :d :e )ObjectPropertyAssertion( :S2 :e :f )TransitiveObjectProperty(:S)ClassAssertion(ObjectComplementOf(:C) :a) ClassAssertion(ObjectAllValuesFrom(:R :C) :f) SubObjectPropertyOf(ObjectPropertyChain(ObjectInverseOf(:S2) ObjectInverseOf(:S1)) :S) SubObjectPropertyOf(ObjectPropertyChain(:S ObjectInverseOf(:R1)) :R)
+)

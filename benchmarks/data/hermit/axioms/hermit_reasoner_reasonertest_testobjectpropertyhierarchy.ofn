@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+SubObjectPropertyOf( :r4 :r2 ) SubObjectPropertyOf( :r4 :r3 ) SubObjectPropertyOf( :r3 :r5 ) SubObjectPropertyOf( :r5 :r3 ) SubObjectPropertyOf( ObjectInverseOf(:r2) ObjectInverseOf(:r1) ) SubObjectPropertyOf( ObjectInverseOf(:r3) ObjectInverseOf(:r1) ) SubObjectPropertyOf( :r4 :r1 ) SubObjectPropertyOf( :r6 :r2 ) SubObjectPropertyOf( :r6 ObjectInverseOf(:r2) )
+)

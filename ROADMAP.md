@@ -2,11 +2,11 @@
 
 OntoLogos is a Rust-native ontology reasoner built to replace JVM-bound reasoning workflows with an embeddable engine, CLI, Python bindings, and future IDE integration.
 
-Releases follow [semantic versioning](https://semver.org/). **0.x** builds capability toward **1.0**; **1.x** hardens and extends the stable API; **2.0** introduces full OWL DL reasoning.
+Releases follow [semantic versioning](https://semver.org/). **0.x** builds profile engines and surfaces toward **1.0** (full HermiT parity); **1.1–1.4** harden the post-parity platform; expressivity tracks **v1.5–v1.9** block the 1.0 gate; **2.0** is beyond-HermiT (Konclude-class performance and breaking API evolution).
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.8.0** · **Next release:** **v0.9.0** (ready on `main`; tag pending) · **Current focus:** v0.9 Python maturity → 1.0 stable
+**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.8.0** · **Next release:** **v0.9.0** (ready on `main`; tag pending) · **Current focus:** v0.9 Python → expressivity tracks (v1.5–v1.9) → **1.0 HermiT parity**
 
 ---
 
@@ -36,7 +36,7 @@ Checklists use GitHub task syntax (`- [x]` / `- [ ]`) so progress is visible in 
 | **0.7** | Dependency-first adapters | `+bridge`; reasonable RL/RDFS; in-house EL restored in 0.6.1 | — | `+bridge` |
 | **0.8** | Incremental + petgraph polish | query, explain, bridge | — | — |
 | **0.9** | Python ecosystem | `+py` | — | PyPI `ontologos` |
-| **1.0** | Stable release | all 0.x crates | all four | full set |
+| **1.0** | Full HermiT parity | `+dl` stable | `classify --profile dl` | `ontologos-dl` + full set |
 | **1.1** | Performance & benchmarks | engines | — | patch releases |
 | **1.2** | CLI & export polish | cli | polish | — |
 | **1.3** | Ontocode / LSP | `ontologos-lsp`? | — | optional crate |
@@ -46,7 +46,7 @@ Checklists use GitHub task syntax (`- [x]` / `- [ ]`) so progress is visible in 
 | **1.7** | ALC expressivity | `ontologos-alc` | — | TBD |
 | **1.8** | OWL QL & queries | `ontologos-ql` | `query` | TBD |
 | **1.9** | DL foundations | `ontologos-dl` (preview) | `classify --profile dl-preview` | TBD |
-| **2.0** | Full OWL DL | `ontologos-dl` (stable) | `classify --profile dl` | `ontologos-dl` |
+| **2.0** | Beyond HermiT | `ontologos-dl` evolution | — | breaking API where needed |
 
 Workspace-internal crates (`ontologos-cli`, `ontologos-conformance`) are not published; they consume the library crates above.
 
@@ -126,7 +126,7 @@ These run alongside version milestones and are not tied to a single release.
 | Corpus download script | **Complete** | `benchmarks/scripts/download.sh` |
 | Manifest-driven integration tests | **Complete** | Skip when `local_path` missing |
 | RDFS corpus conformance (Family, Pizza) | **Complete** (v0.3) | Extend per engine |
-| HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A) | Tier A in CI (23 tests); Tier B with local `HermiT/` |
+| HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A) | **599** Java tests cataloged in `hermit_generated.rs`; 23 hand-written Tier A in CI |
 | HermiT replacement matrix | **Complete** | [hermit-replacement.md](docs/internal/research/hermit-replacement.md) |
 | Pizza EL golden regression (`compare-pizza-el-golden.sh`) | **Complete** (v0.6.1) | CI gate on `main` |
 | Family RL triple closure vs reasonable (`compare-reasonable.sh`) | **Complete** (v0.7) | CI gate on `main` |
@@ -135,13 +135,13 @@ These run alongside version milestones and are not tied to a single release.
 
 ### HermiT conformance porting
 
-Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Catalog: [tests/hermit/manifest.toml](tests/hermit/manifest.toml).
+Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Hand-written ports: [tests/hermit/manifest.toml](tests/hermit/manifest.toml). Full catalog: run `python3 tests/hermit/generate_catalog.py` → `benchmarks/data/hermit/catalog/cases.json` + `hermit_generated.rs` (599 `#[test]` stubs).
 
 | Tier | Runs in CI | HermiT source | OntoLogos milestone |
 |------|------------|---------------|---------------------|
 | **A** | Yes | Logic inlined (no checkout) | **0.3** RDFS (6); **0.4** RL (17) — see manifest |
 | **B** | `#[ignore]` locally | Fixture files under `HermiT/project/test/` | **0.2** parser smoke; **0.5** `ClassificationTest` goldens |
-| **C** | Manual / release gate | HermiT JAR + Konclude CLI | **1.9–2.0** DL benchmarks |
+| **C** | Manual / release gate | HermiT JAR + Konclude CLI | **1.0** DL parity gate |
 
 **Ported (Tier A):**
 
@@ -159,7 +159,7 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Catalo
 - [x] `ClassificationTest` pizza taxonomy golden — **0.5** EL (CI via `compare-pizza-el-golden.sh`)
 - [ ] `ClassificationTest` wine / galen taxonomy goldens — wine blocked on `wine.xml` parse error
 - [ ] `owl_wg_tests` approved entailment subset — **1.0**
-- [ ] `structural/ClausificationTest` — **2.0** DL internal
+- [ ] `structural/ClausificationTest` — **1.0** DL internal
 - [ ] SWRL `RulesTest` — **deferred** (out of scope 1.x)
 
 **Known gaps from HermiT fixture survey:**
@@ -210,12 +210,16 @@ OntoLogos is the reasoning layer in a broader Rust ontology stack:
 4. Enable IDE-native ontology development via Ontocode
 5. Handle medium-to-large ontologies (GO-scale subsets, not full SNOMED in CI)
 
-### Non-goals (1.x)
+### Non-goals (until 1.0)
 
-- Full OWL 2 DL parity with HermiT
 - Distributed or federated reasoning
 - Triple store or SPARQL endpoint replacement
 - Interactive ontology editing (delegated to Protégé / Ontocode)
+
+### Non-goals (1.0+)
+
+- Bit-for-bit parity with every HermiT internal optimization or JVM heap profile
+- Replacing Konclude as the DL **performance** reference (1.0 targets **functional** HermiT parity; 2.0 targets Konclude-class speed)
 
 ### Comparison baseline
 
@@ -575,76 +579,116 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 ---
 
-# 1.0 — Stable release
+# 1.0 — Full HermiT parity
 
-**Status: Planned** · **Gate for production use**
+**Status: Planned** · **Gate for JVM-free DL replacement** · **Blocked by:** v1.5–v1.9 expressivity tracks
 
-All 0.x capabilities integrated, tested, documented, and semver-stable.
+**1.0** is the release where OntoLogos **replaces HermiT** as the default OWL 2 DL reasoner for batch classification, materialization, and explanation in Rust/Python/CLI workflows. Not a line-by-line hypertableau port — a **profile-modular** stack (EL, RL/RDFS, hybrid routing, `ontologos-dl`) that passes the HermiT conformance harness and matches classification results on standard corpora within documented tolerance.
 
-### Requirements
+See [hermit-replacement.md](docs/internal/research/hermit-replacement.md) and [hermit.md](docs/internal/research/hermit.md).
 
+### HermiT conformance (release gate)
+
+| Tier | Requirement for 1.0 |
+|------|---------------------|
+| **A** | All inlined RL/RDFS ports in CI (done) |
+| **B** | `ClassificationTest` goldens (pizza CI; wine/galen where parseable); `owl_wg_tests` approved entailment subset |
+| **C** | HermiT JAR + Konclude CLI reference harness; DL corpora (Pizza-DL, Galen subset, ≥1 OBO DL corpus) within documented taxonomy tolerance |
+
+- [ ] `ontologos-conformance` Tier B enabled in CI (not `#[ignore]` only locally)
+- [ ] `owl_wg_tests` approved entailment subset passes
+- [ ] Port HermiT `structural/ClausificationTest` as DL internal regression suite
+- [ ] HermiT JAR reference harness in `benchmarks/` (extends Tier C)
+- [ ] Comparison guide: OntoLogos 1.0 vs HermiT on standard corpora (honest gaps documented)
+
+### OWL 2 DL engine (`ontologos-dl`)
+
+Promoted from preview to **stable** in 1.0 (not deferred to 2.0).
+
+- [ ] Coupled saturation + tableau (Konclude-style; see [konclude.md](docs/internal/research/konclude.md))
+- [ ] Full nominal support, cardinality restrictions, datatype reasoning (OWL 2 DL subset in SPEC)
+- [ ] Property chains, keys, full disjointness in DL semantics
+- [ ] `classify --profile dl` — stable, no preview warning
+- [ ] DL explanations at EL quality bar (`ontologos-explain`)
+- [ ] MORe-style hybrid routing (v1.5) for mixed EL/RL/DL ontologies
+
+### API & platform (HermiT-equivalent surface)
+
+- [ ] OWLReasoner-equivalent operations: classify, realize, consistency, entailment (see replacement matrix)
+- [ ] CLI: `profile`, `classify`, `materialize`, `explain`, `query` fully functional for DL
+- [ ] Python: classify/explain/query parity with Rust CLI on Pizza + DL corpora
 - [ ] `#![deny(missing_docs)]` on all published crates
 - [ ] Stable Rust API with deprecation policy documented
-- [ ] CLI: `profile`, `classify`, `materialize`, `explain` fully functional
-- [ ] docs.rs complete for every published crate
-- [ ] Benchmark suite with published results in [benchmarks/README.md](benchmarks/README.md)
-- [ ] CI gates on whelk + reasonable conformance (Pizza golden, Family RL closure)
-- [ ] HermiT Tier-B ports for EL/RL classification goldens
+- [ ] docs.rs complete for every published crate including `ontologos-dl`
 - [ ] Automated crates.io + PyPI release workflow
 - [x] MSRV policy documented (currently 1.88+; driven by `horned-owl` 1.4)
 
-### Performance targets
+### Performance targets (functional parity, not Konclude-beating)
 
 | Corpus class | Axioms (approx.) | Classify target |
 |--------------|------------------|-----------------|
 | Small (Family) | < 100 | < 100 ms |
 | Medium (Pizza) | ~ 800 | < 1 s |
+| Medium DL (≤ 5k axioms) | — | < 30 s |
 | Large (go-subset) | ~ 10k | < 10 s |
+| Large DL (Galen-class) | — | Best effort; timeout configurable |
 
 ### Quality targets
 
 - ≥ 90% line coverage on published crates (measured in CI)
 - Zero JVM dependency in the reasoning path
 - Full workspace `clippy -D warnings` clean
+- W3C OWL 2 DL test case suite (documented subset) passes above agreed threshold
+
+### Exit criteria (1.0 ships when all met)
+
+- [ ] HermiT Tier A + B + C gates green in CI or documented release workflow
+- [ ] `ontologos-dl` published to crates.io; `classify --profile dl` default for DL ontologies
+- [ ] Protégé-equivalent batch workflows documented without JVM (Rust + Python migration guides)
+- [ ] No panics on DL benchmark corpus; timeouts return structured errors
 
 ---
 
-# 1.x — Post-1.0 ladder (1.0 → 2.0)
+# 1.x — Post-1.0 hardening (1.1 → 1.4)
 
-Incremental releases after 1.0. **API breaking changes require 2.0.** Versions 1.1–1.4 harden the 1.0 platform; 1.5–1.9 extend expressivity toward full OWL DL so 2.0 is an integration release, not a greenfield rewrite.
+Incremental releases **after** HermiT parity. **API breaking changes require 2.0.** Versions 1.1–1.4 polish performance, CLI, IDE, and Python adoption on top of the 1.0 DL platform.
+
+> **Expressivity tracks v1.5–v1.9** (hybrid profiles, ABox, ALC, QL, DL scaffolding) are **prerequisites for 1.0**, not post-1.0 releases. See sections below.
 
 ```mermaid
 flowchart LR
-  v10[1.0 Stable EL/RL/RDFS]
+  v09[0.9 Python]
+  v15[1.5 Hybrid]
+  v16[1.6 ABox]
+  v17[1.7 ALC]
+  v18[1.8 QL]
+  v19[1.9 DL scaffold]
+  v10[1.0 HermiT parity]
   v11[1.1 Perf]
   v12[1.2 CLI]
   v13[1.3 LSP]
   v14[1.4 Python]
-  v15[1.5 Hybrid profiles]
-  v16[1.6 ABox]
-  v17[1.7 ALC]
-  v18[1.8 QL]
-  v19[1.9 DL preview]
-  v20[2.0 Full DL]
+  v20[2.0 Beyond HermiT]
 
+  v09 --> v15
+  v15 --> v16 --> v17
+  v17 --> v18
+  v17 --> v19
+  v18 --> v10
+  v19 --> v10
   v10 --> v11 --> v12
   v10 --> v13
   v10 --> v14
-  v12 --> v15
-  v15 --> v16 --> v17 --> v19
-  v17 --> v18
-  v19 --> v20
-  v18 --> v20
+  v10 --> v20
 ```
 
 | Phase | Versions | Theme |
 |-------|----------|-------|
+| **Expressivity (blocks 1.0)** | 1.5–1.9 | Hybrid routing, ABox, ALC, QL, DL engine |
+| **HermiT parity** | **1.0** | Full DL + conformance harness |
 | **Hardening** | 1.1–1.2 | Performance, CLI, ops |
 | **Ecosystem** | 1.3–1.4 | IDE and Python adoption |
-| **Expressivity** | 1.5–1.7 | Richer OWL fragments toward DL |
-| **Query** | 1.8 | OWL QL and structured queries |
-| **DL prep** | 1.9 | Tableau scaffolding and preview |
-| **DL** | 2.0 | Full OWL 2 DL |
+| **Beyond HermiT** | 2.0 | Konclude-class performance, API evolution |
 
 ---
 
@@ -716,16 +760,20 @@ flowchart LR
 
 ---
 
+# Path to 1.0 — Expressivity tracks (v1.5–v1.9)
+
+These milestones **block the 1.0 HermiT parity release**. They may ship as pre-1.0 workspace minors; semver labels v1.5–v1.9 are roadmap track IDs.
+
 ## v1.5 — Profile completeness & hybrid corpora
 
-**Status: Planned** · **Effort:** Large · **Depends on:** 1.0
+**Status: Planned** · **Effort:** Large · **Depends on:** 0.9 · **Blocks:** 1.0
 
 Real ontologies mix EL-safe TBox with RL/DL axioms. **MORe** (Oxford) proves module-based black-box composition outperforms single-reasoner selection — see [more.md](docs/internal/research/more.md).
 
 ### Module routing (`Reasoner` facade)
 
 - [ ] ⊥-module or signature extraction over `ontologos-core` (Rust-native; no OWL API)
-- [ ] Classify EL module with `ontologos-el`; RL residue with `ontologos-rl`; DL residue with `ontologos-dl` preview (when available)
+- [ ] Classify EL module with `ontologos-el`; RL residue with `ontologos-rl`; DL residue with `ontologos-dl` (1.9 scaffold → 1.0 stable)
 - [ ] Merge taxonomies from module results
 - [ ] TBox-first scope (ABox deferred to v1.6, matching MORe initial semantics)
 
@@ -824,13 +872,13 @@ OWL QL supports query answering via rewriting over EL/RL class hierarchies. Inte
 
 ---
 
-## v1.9 — DL engine foundations (preview)
+## v1.9 — DL engine foundations
 
-**Status: Planned** · **Effort:** Very large · **Depends on:** 1.7, 1.8
+**Status: Planned** · **Effort:** Very large · **Depends on:** 1.7, 1.8 · **Blocks:** 1.0
 
-**Crate:** `ontologos-dl` (preview, semver 0.x within workspace until 2.0)
+**Crate:** `ontologos-dl` (workspace preview until **1.0** promotes to stable)
 
-Scaffolding for full DL without committing to 2.0 API stability. Users opt in via feature flag or `--profile dl-preview`.
+Scaffolding for full DL — lands in **1.0** as the HermiT parity engine. Users opt in via `--profile dl-preview` during development only.
 
 ### Infrastructure (Konclude hybrid model — see [konclude.md](docs/internal/research/konclude.md); HermiT as secondary cross-check in [hermit.md](docs/internal/research/hermit.md))
 
@@ -853,31 +901,30 @@ Scaffolding for full DL without committing to 2.0 API stability. Users opt in vi
 
 - [ ] DL preview classifies ≥ 3 published DL benchmark ontologies within 10× **Konclude** time (HermiT secondary where runnable)
 - [ ] No panics on DL benchmark corpus; timeouts return structured errors
-- [ ] 2.0 RFC issue drafted with API stabilization plan
+- [ ] All 1.9 checklist items complete — **required before 1.0 tag**
 
-### Decision criteria (promote preview → 2.0)
+### Decision criteria (promote v1.9 scaffold → 1.0 stable)
 
 - [ ] `ontologos-dl` preview stable for ≥ 3 months without breaking internal APIs
 - [ ] Reference harness covers Pizza-DL, Galen-DL subset, and one OBO DL corpus
-- [ ] Maintainer sign-off on multi-year support commitment for full DL
+- [ ] HermiT Tier C taxonomy match within documented tolerance on all gated corpora
+- [ ] Maintainer sign-off on multi-year support commitment for HermiT-parity DL
 
 ---
 
-# 2.0 — Full OWL DL
+# 2.0 — Beyond HermiT
 
-**Status: Planned** · **Major release** · **Depends on:** 1.9
+**Status: Planned** · **Major release** · **Depends on:** 1.0
 
-Promotes `ontologos-dl` from preview to stable. **2.0 is integration and completeness**, not a restart — coupled saturation+tableau lands in 1.9 per [konclude.md](docs/internal/research/konclude.md).
+**2.0** is not “first DL” — **1.0** delivers HermiT functional parity. **2.0** optimizes and extends: Konclude-class performance, breaking API improvements, and capabilities HermiT never shipped.
 
-### Scope (complete OWL 2 DL)
+### Scope (beyond HermiT parity)
 
-- [ ] Hypertableau or Konclude-style tableau optimizations (optional `ReasonerConfig` flag)
-- [ ] Full nominal support (unbounded)
-- [ ] Cardinality and qualified cardinality restrictions
-- [ ] Datatype reasoning (OWL 2 datatypes subset: XSD primitives used in OWL)
-- [ ] Full disjointness, keys, and property chains in DL semantics
-- [ ] `classify --profile dl` — stable, no preview warning
-- [ ] DL explanations parity with EL quality bar
+- [ ] Konclude-class performance on standard DL corpora (≤ 2× Konclude median on gated benchmarks)
+- [ ] Hypertableau or advanced tableau optimizations (optional `ReasonerConfig` flag)
+- [ ] Breaking API cleanup where 1.0 carried compatibility shims
+- [ ] Extended datatype reasoning beyond OWL 2 DL subset in 1.0
+- [ ] SPARQL conjunctive query subset or OntoIndex integration (optional)
 
 ### Performance targets
 
@@ -888,9 +935,8 @@ Promotes `ontologos-dl` from preview to stable. **2.0 is integration and complet
 
 ### Exit criteria
 
-- [ ] W3C OWL 2 DL test case suite (documented subset) passes above agreed threshold
-- [ ] Comparison guide updated: OntoLogos 2.0 vs Konclude (+ HermiT where applicable) on standard corpora
-- [ ] `ontologos-dl` published to crates.io with stable API
+- [ ] Performance guide: OntoLogos 2.0 vs Konclude on standard corpora (HermiT as secondary cross-check)
+- [ ] Documented migration from 1.0 → 2.0 for any breaking API changes
 
 ### Non-goals (carried forward)
 

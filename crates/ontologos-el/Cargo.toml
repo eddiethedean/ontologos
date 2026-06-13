@@ -13,6 +13,7 @@ publish = true
 
 [dependencies]
 ontologos-core = { workspace = true }
+ontologos-alc = { workspace = true }
 ontologos-profile = { workspace = true }
 ontologos-rdfs = { workspace = true }
 ontologos-rl = { workspace = true }

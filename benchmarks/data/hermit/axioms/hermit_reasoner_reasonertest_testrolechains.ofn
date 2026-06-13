@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(ObjectProperty(:s1))Declaration(ObjectProperty(:r))Declaration(ObjectProperty(:s2))SubClassOf(owl:Thing ObjectSomeValuesFrom(:r owl:Thing))SubObjectPropertyOf(ObjectPropertyChain(:s1 :r ObjectInverseOf(:r)) :s2)
+)

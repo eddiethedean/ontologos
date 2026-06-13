@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+DisjointClasses(:c :d)EquivalentClasses(:complex1 ObjectIntersectionOf(ObjectMinCardinality(2 :r) ObjectMaxCardinality(1 :r)))EquivalentClasses(:complex2 ObjectIntersectionOf(ObjectMaxCardinality(1 :r) ObjectSomeValuesFrom(:r :c) ObjectSomeValuesFrom(:r :d)))
+)

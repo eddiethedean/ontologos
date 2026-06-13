@@ -107,7 +107,7 @@ impl InternPool {
     }
 }
 
-const ALLOWED_SCHEMES: &[&str] = &["http", "https", "urn"];
+const ALLOWED_SCHEMES: &[&str] = &["http", "https", "urn", "file", "internal"];
 
 /// Validate that `iri` is an absolute IRI with an allowed scheme.
 pub fn validate_iri(iri: &str) -> Result<()> {
@@ -155,7 +155,7 @@ pub fn validate_iri_with_max_len(iri: &str, max_len: usize) -> Result<()> {
 
     if !ALLOWED_SCHEMES.contains(&scheme) {
         return Err(Error::InvalidIri(format!(
-            "IRI scheme '{scheme}' is not allowed (allowed: http, https, urn)"
+            "IRI scheme '{scheme}' is not allowed (allowed: http, https, urn, file, internal)"
         )));
     }
 

@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+DataPropertyAssertion(:hasSSN :Peter "123-45-6789") ClassAssertion(:Person :Peter) DataPropertyAssertion(:hasSSN :Peter_Griffin "123-45-6789") ClassAssertion(:Person :Peter_Griffin) DifferentIndividuals(:Peter :Peter_Griffin)HasKey(:Person () (:hasSSN))
+)

@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(DataProperty(:d1))Declaration(DataProperty(:d2))SubClassOf(owl:Thing DataSomeValuesFrom(:d1 xsd:int))SubClassOf(owl:Thing DataAllValuesFrom(:d1 DatatypeRestriction(xsd:int xsd:minInclusive "1"^^xsd:int xsd:maxInclusive "1"^^xsd:int)))SubClassOf(owl:Thing DataSomeValuesFrom(:d2 DataOneOf("1"^^xsd:int)))
+)

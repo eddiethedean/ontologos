@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(DataProperty(:dp1))Declaration(DataProperty(:dp2))Declaration(Datatype(<internal:unknown-datatype#A>))Declaration(Class(:A))DataPropertyRange(:dp1 DataOneOf( "1"^^xsd:integer ) )DataPropertyRange(:dp2 DataOneOf( "1"^^xsd:integer ) )SubClassOf(:A DataSomeValuesFrom(:dp1 <internal:unknown-datatype#A>))SubClassOf(:A DataSomeValuesFrom(:dp2 DataComplementOf(<internal:unknown-datatype#A>)))ClassAssertion(:A :i)
+)

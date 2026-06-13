@@ -1,0 +1,13 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(NamedIndividual(:sensor))Declaration(NamedIndividual(:kitchen))Declaration(NamedIndividual(:pda))Declaration(Class(:BluetoothSensor))Declaration(Class(:Location))Declaration(Class(:BluetoothDevice))Declaration(ObjectProperty(:hasLocation))Declaration(ObjectProperty(:detects))ClassAssertion(:BluetoothDevice :pda)
+ClassAssertion(:BluetoothSensor :sensor)
+ClassAssertion(:Location :kitchen)
+ObjectPropertyAssertion(:detects :sensor :pda)
+ObjectPropertyAssertion(:hasLocation :sensor :kitchen)
+DLSafeRule(  Body(    ClassAtom(:BluetoothDevice Variable(:vbd))     ClassAtom(:BluetoothSensor Variable(:vbs))     ClassAtom(:Location Variable(:vl))     ObjectPropertyAtom(:detects Variable(:vbs) Variable(:vbd))     ObjectPropertyAtom(:hasLocation Variable(:vbs) Variable(:vl))  )  Head(ObjectPropertyAtom(:hasLocation Variable(:vbd) Variable(:vl))))
+)

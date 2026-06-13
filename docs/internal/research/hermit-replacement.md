@@ -8,15 +8,15 @@ OntoLogos does **not** plan a line-by-line HermiT hypertableau port. Replacement
 
 | User need today | HermiT | OntoLogos path |
 |-----------------|--------|----------------|
-| Protégé DL classification | HermiT (unmaintained) | **2.0** `ontologos-dl` (Konclude-style hybrid); HermiT as secondary cross-check |
+| Protégé DL classification | HermiT (unmaintained) | **1.0** `ontologos-dl` (Konclude-style hybrid); HermiT JAR as conformance cross-check |
 | Biomedical EL batch | Often ELK, not HermiT | **0.5** `ontologos-el` (ELK-style completion) |
 | Rule materialization | Partial via RL rules | **0.4** `ontologos-rl` + **0.3** RDFS |
 | Embeddable Rust / Python | JVM only | **0.3+** crates + **0.9** PyPI |
 | Explanations | HermiT justifications | **0.6** `ontologos-explain` |
 | Incremental edits | HermiT buffered reasoner | **0.7** dependency-indexed re-classify |
 
-**1.0 goal:** Replace HermiT for **EL / RL / RDFS batch pipelines** in Rust/Python.  
-**2.0 goal:** Replace HermiT for **OWL DL** workloads where Konclude-level performance is acceptable.
+**1.0 goal:** **Full HermiT parity** — replace HermiT for OWL 2 DL batch classification, explanation, and Rust/Python/CLI workflows (HermiT conformance Tiers A–C).  
+**2.0 goal:** **Beyond HermiT** — Konclude-class performance, breaking API evolution, and features outside HermiT's surface.
 
 ## HermiT capability map
 
@@ -36,7 +36,7 @@ OntoLogos does **not** plan a line-by-line HermiT hypertableau port. Replacement
 | OWL WG test suite | `owl_wg_tests` | conformance harness | 1.0+ |
 | OWLlink eval tests | `reasoner.OWLLinkTest` | conformance harness | 0.4–2.0 |
 | Datatype reasoning | `DatatypesTest`, … | DL engine + literal index | 2.0 |
-| SWRL / DLSafe rules | `RulesTest` | out of scope 1.x | — |
+| SWRL / DLSafe rules | `RulesTest` | `ontologos-swrl` | 1.0 |
 
 ## OWL API surface (Protégé parity)
 

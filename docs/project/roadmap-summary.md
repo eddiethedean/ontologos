@@ -1,6 +1,6 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v0.8.0** · **v0.9.0** is ready on `main` (Python ecosystem; tag pending)
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v0.8.0** · **v0.9.0** ready on `main` (Python ecosystem; tag pending)
 
 ## Shipped in v0.9.0 (ready on `main`)
 
@@ -13,23 +13,26 @@ OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged re
 | Pizza EL golden pytest (CLI parity) | Complete |
 | macOS + Linux Python CI | Complete |
 
-## Shipped in v0.8.0
+## Path to 1.0 — Full HermiT parity
 
-| Area | Status |
-|------|--------|
-| Axiom dirty tracking + `remove_axiom` | Complete |
-| EL incremental classify (`ElSession`, partitions) | Complete |
-| RL/RDFS reasonable incremental session | Complete |
-| `ontologos-watch` library (Ontocode hook) | Complete |
-| Asserted/inferred axiom tracking (removal correctness) | Complete |
+**1.0** is the JVM-free replacement for **HermiT** (OWL 2 DL), not merely a “stable EL/RL/RDFS” cut. Expressivity tracks **v1.5–v1.9** block the 1.0 gate:
 
-## Next releases
+| Track | Theme |
+|-------|-------|
+| **v1.5** | Hybrid profile / MORe-style module routing |
+| **v1.6** | ABox & individual reasoning |
+| **v1.7** | ALC expressivity |
+| **v1.8** | OWL QL & structured queries |
+| **v1.9** | `ontologos-dl` engine (preview → stable in 1.0) |
 
-| Version | Theme | Key deliverables |
-|---------|-------|------------------|
-| **1.0** | Stable release | Semver-stable facades; documented upstream gaps |
-| **1.3** | Ontocode / LSP | IDE integration (uses `ontologos-watch`) |
-| **1.4** | Python maturity | Windows CI, mypy, owlready2 migration |
-| **2.0** | Full OWL DL | Extend horned-owl / Konclude-style kernel |
+**1.0 exit criteria:** HermiT conformance Tiers A–C, stable `ontologos-dl`, `classify --profile dl`, OWLReasoner-equivalent API.
+
+## After 1.0
+
+| Version | Theme |
+|---------|-------|
+| **1.1–1.2** | Performance, CLI polish |
+| **1.3–1.4** | Ontocode LSP, Python maturity |
+| **2.0** | Beyond HermiT (Konclude-class performance, breaking API where needed) |
 
 See [ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md) for full milestone detail.

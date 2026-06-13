@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+SubClassOf(:A DataHasValue(:dp "2007-10-08T20:44:11.656+01:00"^^xsd:dateTime))SubClassOf(:A DataAllValuesFrom(:dp DatatypeRestriction(xsd:dateTime xsd:minInclusive "2008-07-08T20:44:11.656+01:00"^^xsd:dateTime xsd:maxInclusive "2008-10-08T20:44:11.656+01:00"^^xsd:dateTime)))ClassAssertion(:A :a)
+)

@@ -12,6 +12,7 @@ description = "Explanation and proof graph generation for OntoLogos"
 publish = true
 
 [dependencies]
+ontologos-alc = { workspace = true }
 ontologos-core = { workspace = true }
 ontologos-el = { workspace = true }
 ontologos-profile = { workspace = true }

@@ -106,6 +106,7 @@ pub fn collect_trace(reasoner: &mut Reasoner) -> Result<InferenceTrace> {
         Profile::El => Ok(ElClassifier::new()
             .classify_with_options(reasoner.ontology(), true)?
             .trace),
+        Profile::Alc | Profile::Dl | Profile::Swrl => collect_trace_dl(reasoner.ontology()),
         Profile::Auto => collect_trace_auto(reasoner),
     }
 }
@@ -124,7 +125,7 @@ fn collect_trace_auto(reasoner: &mut Reasoner) -> Result<InferenceTrace> {
             .with_traces(true)
             .saturate(reasoner.ontology_mut())?
             .trace),
-        OwlProfile::Dl => Err(Error::UnsupportedProfile(detected)),
+        OwlProfile::Dl => collect_trace_dl(reasoner.ontology()),
     }
 }
 
@@ -155,6 +156,27 @@ pub fn explain_rl(ontology: &mut Ontology) -> Result<ProofGraph> {
         .with_traces(true)
         .saturate(ontology)?
         .trace;
+    build_proof_graph(ontology, &trace)
+}
+
+fn collect_trace_dl(ontology: &Ontology) -> Result<InferenceTrace> {
+    use ontologos_core::{TraceConclusion, TraceStep};
+
+    let taxonomy = ontologos_alc::classify(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    let mut trace = InferenceTrace::default();
+    for &(sub, sup) in &taxonomy.subsumptions {
+        trace.push(TraceStep {
+            rule: "dl_tableau_subsumption".into(),
+            premises: vec![],
+            conclusion: TraceConclusion::SubClassOf { sub, sup },
+        });
+    }
+    Ok(trace)
+}
+
+/// Generate proof graph for OWL DL/ALC tableau subsumptions.
+pub fn explain_dl(ontology: &Ontology) -> Result<ProofGraph> {
+    let trace = collect_trace_dl(ontology)?;
     build_proof_graph(ontology, &trace)
 }
 

@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+ClassAssertion(:A :a) ClassAssertion(:B :b) ClassAssertion(:C :c) ClassAssertion(:D :d) ClassAssertion(:E :e)ObjectPropertyAssertion(:rab :a :b) ObjectPropertyAssertion(:rac :a :c) ObjectPropertyAssertion(:rcd :c :d)DLSafeRule(Body(ClassAtom(:A Variable(:xa)) ClassAtom(:B :b) ObjectPropertyAtom(:rab Variable(:xa) Variable(:xb))ObjectPropertyAtom(:rac Variable(:xa) Variable(:xc))ObjectPropertyAtom(:rcd Variable(:xc) Variable(:xd))ClassAtom(:E Variable(:xe)) ) Head(ClassAtom(:Ap Variable(:xa)) ClassAtom(:Bp Variable(:xb)) ClassAtom(:Cp :c) ClassAtom(:Dp Variable(:xd)) ClassAtom(:Ep Variable(:xe)) ObjectPropertyAtom(:rae Variable(:xa) Variable(:xe))))
+)

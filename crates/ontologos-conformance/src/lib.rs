@@ -4,6 +4,10 @@
 //! HermiT source tree at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT` is
 //! also supported.
 
+mod catalog;
+
+pub use catalog::{load_catalog, load_wg_catalog, run_hermit_case, run_wg_case, HermitCase, WgCase};
+
 use std::path::{Path, PathBuf};
 
 /// Default namespace used by HermiT's `AbstractOntologyTest` (`file:/c/test.owl#`).
@@ -30,15 +34,43 @@ pub fn hermit_root() -> Option<PathBuf> {
 }
 
 fn is_hermit_tree(path: &Path) -> bool {
-    path.join("project/test/org/semanticweb/HermiT").is_dir()
+    path.join("src/test/java/org/semanticweb/HermiT").is_dir()
+        || path.join("project/test/org/semanticweb/HermiT").is_dir()
 }
 
-/// Path under `HermiT/project/test/org/semanticweb/HermiT/`.
+fn hermit_test_subdir() -> &'static str {
+    "src/test/java/org/semanticweb/HermiT"
+}
+
+fn hermit_resource_subdir() -> &'static str {
+    "src/test/resources/org/semanticweb/HermiT"
+}
+
+/// Path under the HermiT Java test tree (owlcs/hermit-reasoner layout).
 #[must_use]
 pub fn hermit_test_path(relative: &str) -> Option<PathBuf> {
-    hermit_root().map(|root| {
-        root.join("project/test/org/semanticweb/HermiT")
-            .join(relative)
+    hermit_root().and_then(|root| {
+        let modern = root.join(hermit_test_subdir()).join(relative);
+        if modern.exists() {
+            return Some(modern);
+        }
+        let legacy = root.join("project/test/org/semanticweb/HermiT").join(relative);
+        legacy.exists().then_some(legacy)
+    })
+}
+
+/// Path under the HermiT test resources tree.
+#[must_use]
+pub fn hermit_resource_path(relative: &str) -> Option<PathBuf> {
+    hermit_root().and_then(|root| {
+        let modern = root.join(hermit_resource_subdir()).join(relative);
+        if modern.exists() {
+            return Some(modern);
+        }
+        let legacy = root
+            .join("project/test/org/semanticweb/HermiT")
+            .join(relative);
+        legacy.exists().then_some(legacy)
     })
 }
 
@@ -51,10 +83,12 @@ pub fn vendored_hermit_test_path(relative: &str) -> Option<PathBuf> {
     path.exists().then_some(path)
 }
 
-/// Resolve a HermiT test fixture from the local tree or vendored benchmarks.
+/// Resolve a HermiT test fixture from vendored benchmarks, resources, or Java tree.
 #[must_use]
 pub fn classification_fixture_path(relative: &str) -> Option<PathBuf> {
-    hermit_test_path(relative).or_else(|| vendored_hermit_test_path(relative))
+    vendored_hermit_test_path(relative)
+        .or_else(|| hermit_resource_path(relative))
+        .or_else(|| hermit_test_path(relative))
 }
 
 /// Returns true when optional Tier-B HermiT fixture tests should run.

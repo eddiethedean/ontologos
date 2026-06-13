@@ -1,0 +1,17 @@
+[package]
+name = "ontologos-abox"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "ABox reasoning and individual closure for OntoLogos"
+publish = true
+
+[dependencies]
+ontologos-core = { workspace = true }
+ontologos-rl = { workspace = true }
+thiserror = { workspace = true }

@@ -1,0 +1,21 @@
+[package]
+name = "ontologos-dl"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "OWL 2 DL coupled saturation + tableau reasoner for OntoLogos"
+publish = true
+
+[dependencies]
+ontologos-core = { workspace = true }
+ontologos-parser = { workspace = true }
+ontologos-profile = { workspace = true }
+ontologos-el = { workspace = true }
+ontologos-alc = { workspace = true }
+horned-owl = { workspace = true }
+thiserror = { workspace = true }

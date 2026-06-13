@@ -1,0 +1,20 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(DataProperty(:r))
+Declaration(DataProperty(:s))
+Declaration(Class(:u))
+DataPropertyAssertion(:r :a "2"^^xsd:integer)
+ClassAssertion(DataSomeValuesFrom(:s DatatypeRestriction(xsd:integer xsd:minInclusive "2"^^xsd:integer xsd:maxInclusive "2"^^xsd:integer)) :a)
+ClassAssertion(ObjectComplementOf(:u) :a)
+DLSafeRule(
+Body(
+DataPropertyAtom(:r Variable(:x) Variable(:y))
+DataPropertyAtom(:s Variable(:x) Variable(:y))
+)
+Head(ClassAtom(:u Variable(:x)))
+)
+)

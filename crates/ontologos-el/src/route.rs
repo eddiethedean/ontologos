@@ -24,6 +24,13 @@ pub fn classify_with_profile(reasoner: &mut Reasoner) -> Result<ClassifyOutcome,
         )),
         Profile::Rdfs => Ok(ClassifyOutcome::Rdfs(materialize_reasoner(reasoner)?)),
         Profile::Rl => Ok(ClassifyOutcome::Rl(saturate_rl(reasoner)?)),
+        Profile::Alc | Profile::Dl => Ok(ClassifyOutcome::Taxonomy(
+            ontologos_alc::classify(reasoner.ontology())
+                .map_err(|e| Error::Profile(e.to_string()))?,
+        )),
+        Profile::Swrl => Err(Error::UnsupportedProfile(
+            ontologos_profile::OwlProfile::Dl,
+        )),
         Profile::Auto => classify_auto(reasoner),
     }
 }
@@ -65,7 +72,10 @@ fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
             }
         }
         OwlProfile::Rl => Ok(ClassifyOutcome::Rl(saturate_rl_unchecked(reasoner)?)),
-        OwlProfile::Dl => Err(Error::UnsupportedProfile(detected)),
+        OwlProfile::Dl => Ok(ClassifyOutcome::Taxonomy(
+            ontologos_alc::classify(reasoner.ontology())
+                .map_err(|e| Error::Profile(e.to_string()))?,
+        )),
     }
 }
 
@@ -75,6 +85,9 @@ pub fn resolve_profile_flag(flag: ProfileFlag) -> Profile {
         ProfileFlag::Auto => Profile::Auto,
         ProfileFlag::El => Profile::El,
         ProfileFlag::Rl => Profile::Rl,
+        ProfileFlag::Alc => Profile::Alc,
+        ProfileFlag::Dl => Profile::Dl,
+        ProfileFlag::Swrl => Profile::Swrl,
         ProfileFlag::Rdfs => Profile::Rdfs,
     }
 }
@@ -88,6 +101,12 @@ pub enum ProfileFlag {
     El,
     /// OWL RL saturation.
     Rl,
+    /// OWL ALC tableau-lite.
+    Alc,
+    /// OWL 2 DL classification.
+    Dl,
+    /// DLSafe SWRL with DL.
+    Swrl,
     /// RDFS materialization.
     Rdfs,
 }

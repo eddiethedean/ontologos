@@ -32,6 +32,8 @@ pub enum EntityKind {
     DataProperty,
     /// OWL annotation property.
     AnnotationProperty,
+    /// OWL datatype IRI.
+    Datatype,
 }
 
 /// A registered ontology entity with its interned IRI and kind.

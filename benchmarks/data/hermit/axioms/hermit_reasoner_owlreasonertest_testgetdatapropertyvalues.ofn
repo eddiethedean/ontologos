@@ -1,0 +1,9 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Ontology(<file:/c/test.owl#>
+DataPropertyAssertion(:dp :a "RDFPlainLiteralwithEmptyLangTag@"^^rdf:PlainLiteral) DataPropertyAssertion(:dp :a "RDFPlainLiteralwithEmptyLangTag") DataPropertyAssertion(:dp :a "RDFPlainLiteralWithLangTag@en-gb"^^rdf:PlainLiteral) DataPropertyAssertion(:dp :a "RDFPlainLiteralWithLangTag"@en-gb) DataPropertyAssertion(:dp :b "abc") DataPropertyAssertion(:dp :b "abc@"^^rdf:PlainLiteral) DataPropertyAssertion(:dp :c "1"^^xsd:integer) DataPropertyAssertion(:dp :c "01"^^xsd:integer) DataPropertyAssertion(:dp :c "1"^^xsd:short)
+)

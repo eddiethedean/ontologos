@@ -1,0 +1,35 @@
+//! DL ontology view over core + clausified TBox.
+
+use ontologos_core::Ontology;
+
+use crate::clause::ClauseSet;
+use crate::normalize::clausify;
+use crate::Error;
+
+/// OWL 2 DL internal ontology (core entities + CE store + clauses).
+#[derive(Debug, Clone)]
+pub struct DlOntology {
+    core: Ontology,
+    clauses: ClauseSet,
+}
+
+impl DlOntology {
+    /// Build from a core ontology with optional DL store population.
+    pub fn from_ontology(ontology: &Ontology) -> Result<Self, Error> {
+        let mut core = ontology.clone();
+        let clauses = clausify(&mut core)?;
+        Ok(Self { core, clauses })
+    }
+
+    /// Underlying core ontology (includes merged DL store).
+    #[must_use]
+    pub fn core(&self) -> &Ontology {
+        &self.core
+    }
+
+    /// Clausified TBox/ABox constraints.
+    #[must_use]
+    pub fn clauses(&self) -> &ClauseSet {
+        &self.clauses
+    }
+}
