@@ -1,25 +1,27 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest on crates.io:** partial **v0.6.0** (core, parser, profile, query) · **Next tag:** **v0.6.1** · **On `main`:** v0.6.1
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest release:** **v0.6.1** (includes ROADMAP **v0.7** dependency-first adapters) · **On `main`:** v0.6.1
 
-## Shipped through v0.5 (crates.io)
+## Shipped through v0.6.1 (crates.io + PyPI)
 
 | Area | Status |
 |------|--------|
 | Core data model, JSON v2, ABox | Available |
 | OWL/RDF parser (horned-owl), profile detection | Available |
 | RDFS / RL / EL facades (stable crate names) | Available |
-| CLI `profile`, `materialize`, `classify` | Available |
+| CLI `profile`, `materialize`, `classify`, `explain` | Available |
 | Python alpha (`profile="rdfs"` / `"rl"` / `"el"` / `"auto"`) | Available |
+| **`ontologos-explain`** + proof graphs | Available |
+| **`ontologos-bridge`** (core ↔ horned-owl/oxrdf/reasonable) | Available |
 
-## v0.6.x on `main` (v0.6.1 pending tag)
+## v0.7 — dependency-first adapters (shipped in v0.6.1)
 
 | Area | Status |
 |------|--------|
-| **`ontologos-explain`** + CLI `explain` | Ready |
-| **`ontologos-bridge`**; in-house EL; RL/RDFS → reasonable | Ready |
-| petgraph query/explain views | Ready |
-| CI: Pizza EL golden, Family RL triple closure | Ready |
+| **`ontologos-bridge`**; in-house EL; RL/RDFS → reasonable | Complete |
+| Custom RL/RDFS rule engines removed | Complete |
+| petgraph query/explain views | Complete |
+| CI: Pizza EL golden, Family RL triple closure, HermiT Tier A | Complete |
 
 ## Next releases
 

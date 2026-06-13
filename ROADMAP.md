@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-13 · **Latest on crates.io:** partial **v0.6.0** · **Next tag:** **v0.6.1** · **On `main`:** v0.6.1 (in-house EL, full crates.io publish)
+**Last updated:** 2026-06-13 · **Latest release:** **v0.6.1** (ROADMAP v0.7 dependency-first adapters) · **On `main`:** v0.6.1 · **Next:** v0.8 incremental reasoning
 
 ---
 
@@ -520,7 +520,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 - [x] `cargo test --workspace` and `clippy -D warnings` green
 - [x] No duplicate rule implementations in workspace
 - [x] Public API stable: `load_ontology`, `classify_with_profile`, CLI subcommands
-- [ ] Tag and publish **v0.6.1** (`ontologos-bridge`, `ontologos-explain`, facade crate updates)
+- [x] Tag and publish **v0.6.1** (`ontologos-bridge`, `ontologos-explain`, facade crate updates)
 
 > **Upstream gaps:** See [dependency-first ADR](docs/internal/design/dependency-first.md). Track in reasonable issues; do not silently reimplement RL/RDFS rules.
 

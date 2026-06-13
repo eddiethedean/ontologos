@@ -7,8 +7,7 @@
 
 | Milestone | Status |
 |-----------|--------|
-| **v0.6.1** | **On `main`** — in-house EL restored, whelk removed, full crates.io publish |
-| **Next tag** | **v0.6.1** — publish all library crates + PyPI |
+| **v0.6.1 / v0.7** | **Released** — dependency-first adapters (`ontologos-bridge`), in-house EL, RL/RDFS → reasonable |
 | **v0.8** | Incremental reasoning + petgraph polish |
 | **v0.9** | Python wheels / PyPI maturity |
 
