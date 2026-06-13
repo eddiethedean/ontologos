@@ -13,14 +13,14 @@ if [[ -f "${DATA}/pizza-el-golden.json" ]]; then
   "${ROOT}/benchmarks/scripts/compare-pizza-el-golden.sh"
 fi
 
-# DL smoke: classify family.owl and compare subsumption count to golden baseline.
-if [[ -f "${DATA}/family.owl" ]]; then
-  echo "DL smoke: classifying family.owl"
+# DL smoke: classify pizza.owl (DL-detected corpus) and compare subsumption count to golden baseline.
+if [[ -f "${DATA}/pizza.owl" ]]; then
+  echo "DL smoke: classifying pizza.owl"
   OUT="$(mktemp)"
-  cargo run -q -p ontologos-cli --release -- classify "${DATA}/family.owl" --profile dl --format json >"${OUT}" 2>/dev/null || \
-    cargo run -q -p ontologos-cli -- classify "${DATA}/family.owl" --profile dl --format json >"${OUT}"
+  cargo run -q -p ontologos-cli --release -- --profile dl --format json classify "${DATA}/pizza.owl" >"${OUT}" 2>/dev/null || \
+    cargo run -q -p ontologos-cli -- --profile dl --format json classify "${DATA}/pizza.owl" >"${OUT}"
   SUBS="$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('subsumption_count', len(d.get('subsumptions', []))))" "${OUT}")"
-  echo "family.owl DL subsumptions: ${SUBS}"
+  echo "pizza.owl DL subsumptions: ${SUBS}"
   if [[ -f "${GOLDEN}" ]]; then
     EXPECT="$(python3 -c "import json; g=json.load(open('${GOLDEN}')); print(g.get('subsumption_count', -1))")"
     if [[ "${EXPECT}" -gt 0 ]]; then

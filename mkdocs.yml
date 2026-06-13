@@ -14,6 +14,7 @@ docs_dir: docs
 
 exclude_docs: |
   internal/research/
+  internal/upstream-reasonable-gaps.md
   internal/v0.5-docs-plan.md
   README.md
   project/overview.md
