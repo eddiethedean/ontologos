@@ -71,7 +71,16 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
             }
         }
         ClassExpr::MaxCardinality { n: 0, .. } => branch.clash = true,
-        ClassExpr::MaxCardinality { .. } => {}
+        ClassExpr::MaxCardinality {
+            n,
+            property,
+            filler,
+        } => {
+            let count = count_role_successors(branch, world, &property, filler);
+            if count > n as usize {
+                branch.clash = true;
+            }
+        }
         ClassExpr::ExactCardinality { n, filler, .. } => {
             if let Some(f) = filler {
                 for _ in 0..n {
@@ -222,6 +231,23 @@ fn expand_disjunction(
         }
     }
     Ok(false)
+}
+
+fn count_role_successors(
+    branch: &Branch<'_>,
+    world: usize,
+    property: &RoleExpr,
+    filler: Option<CeId>,
+) -> usize {
+    branch
+        .edges
+        .iter()
+        .filter(|(from, role, to)| {
+            *from == world
+                && role_subsumes(branch, property, role)
+                && filler.is_none_or(|f| branch.worlds[*to].labels.contains(&f))
+        })
+        .count()
 }
 
 /// Whether `sub_role` ⊑ `super_role` in the saturated role hierarchy.

@@ -85,6 +85,7 @@ nav:
       - Explain API: reference/explain.md
       - Query API: reference/query.md
       - JSON snapshot v2: json-snapshot-v2.md
+      - JSON snapshot v3 (planned): json-snapshot-v3.md
       - RL rules: reference/rl-rules.md
       - Conformance: reference/conformance.md
       - Rust API (docs.rs):
@@ -109,6 +110,7 @@ nav:
       - v0.6.x to v0.7.0: migration/v0.6.x-to-v0.7.0.md
       - v0.7.x to v0.8.0: migration/v0.7.x-to-v0.8.0.md
       - v0.8.x to v0.9.0: migration/v0.8.x-to-v0.9.0.md
+      - v0.9.x to v1.0.0: migration/v0.9.x-to-v1.0.0.md
   - Project:
       - FAQ: project/faq.md
       - Release status: project/release-status.md

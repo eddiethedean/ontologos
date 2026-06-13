@@ -14,7 +14,7 @@ use crate::dl_ontology::DlOntology;
 use crate::Error;
 
 /// Skip pairwise entailment inference when the ontology has too many named classes.
-const MAX_CLASSES_FOR_ENTAILMENT_INFER: usize = 32;
+const MAX_CLASSES_FOR_ENTAILMENT_INFER: usize = 128;
 
 /// Facts from DL saturation to seed the initial tableau state.
 #[derive(Debug, Default, Clone)]

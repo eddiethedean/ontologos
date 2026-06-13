@@ -14,7 +14,9 @@ pub use reasonable_session::{
     MaterializeOutcome, ReasonableSession,
 };
 pub use rl_postprocess::{
-    apply_domain_range_inheritance, apply_reasonable_fallbacks, apply_transitive_subproperties,
+    apply_characteristic_propagation, apply_domain_range_inheritance,
+    apply_equivalent_property_subproperties, apply_reasonable_fallbacks,
+    apply_transitive_subproperties,
 };
 pub use taxonomy::{equivalence_clusters, reduce_subsumptions};
 pub use triples::{

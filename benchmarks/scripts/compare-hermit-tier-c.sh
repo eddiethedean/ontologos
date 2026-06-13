@@ -44,7 +44,8 @@ if [[ -f "${DATA}/hermit/reasoner/res/pizza.xml" ]]; then
 fi
 
 if [[ -n "${KONCLUDE_BIN:-}" ]] && command -v "${KONCLUDE_BIN}" >/dev/null; then
-  echo "Konclude found at ${KONCLUDE_BIN} (manual DL baseline — not run in default CI)"
+  echo "Konclude found at ${KONCLUDE_BIN}"
+  "${ROOT}/benchmarks/scripts/run-reference-baseline.sh" || true
 fi
 
 if [[ -n "${HERMIT_JAR:-}" ]] && [[ -f "${HERMIT_JAR}" ]]; then

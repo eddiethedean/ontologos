@@ -2,12 +2,14 @@
 
 #![warn(missing_docs)]
 
+mod parse;
 mod query;
 
 use ontologos_core::{EntityId, Ontology, Taxonomy};
 use ontologos_query::QueryEngine;
 use thiserror::Error;
 
+pub use parse::parse_conjunctive_query;
 pub use query::{ConjunctiveQuery, QueryAnswer, QueryAtom};
 
 /// Result type for QL operations.
@@ -19,6 +21,9 @@ pub enum Error {
     /// Unknown class in query.
     #[error("unknown class in query: {0}")]
     UnknownClass(String),
+    /// Parse error.
+    #[error("query parse error: {0}")]
+    Parse(String),
     /// Query engine error.
     #[error(transparent)]
     Query(#[from] ontologos_query::Error),

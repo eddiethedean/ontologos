@@ -984,6 +984,7 @@ dependencies = [
  "ontologos-facade",
  "ontologos-parser",
  "ontologos-profile",
+ "ontologos-ql",
  "ontologos-rdfs",
  "ontologos-rl",
  "ontologos-swrl",

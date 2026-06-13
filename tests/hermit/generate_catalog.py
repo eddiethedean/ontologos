@@ -66,6 +66,15 @@ DEFERRED_DL_AXIOM_IDS = {
     "reasoner.ReasonerTest.testSatisfiabilityWithRIAs14",
 }
 
+# RL/RDFS axiom ports extracted but not yet passing in ontologos.
+DEFERRED_RL_AXIOM_IDS = {
+    "reasoner.OWLReasonerTest.testIncrementalAddition2",
+    "reasoner.RIATest.testInverseAndChain",
+    "reasoner.ReasonerTest.testBottomObjectPropertyAssertion",
+    "reasoner.ReasonerTest.testIsInverseFunctionalObject",
+    "reasoner.ReasonerTest.testIsIrreflexiveObject",
+}
+
 DEFERRED_PREFIXES = ("reasoner.RulesTest",)
 
 INTERNAL_PREFIXES = (
@@ -155,6 +164,8 @@ class HermitCase:
     golden: str | None = None
     axiom_ofn: str | None = None
     subsumptions: list[dict[str, str | bool]] = field(default_factory=list)
+    property_subsumptions: list[dict[str, str | bool]] = field(default_factory=list)
+    property_characteristics: list[dict[str, str | bool]] = field(default_factory=list)
     consistent: bool | None = None
     rust_test: str | None = None
     hand_written: bool = False
@@ -192,6 +203,90 @@ def extract_method_body(text: str, method: str) -> str:
     return text[start : i - 1]
 
 
+def extract_property_bindings(body: str) -> dict[str, str]:
+    """Map Java variable names to local property names (e.g. sop -> SOP)."""
+    bindings: dict[str, str] = {}
+    for m in re.finditer(
+        r"OWLObjectProperty\s+(\w+)\s*=\s*m_dataFactory\.getOWLObjectProperty\s*\(\s*IRI\.create\([^)]*\+\s*\"(\w+)\"\s*\)\s*\)",
+        body,
+    ):
+        bindings[m.group(1)] = m.group(2)
+    for m in re.finditer(
+        r"OWLObjectProperty\s+(\w+)\s*=\s*m_dataFactory\.getOWLObjectProperty\s*\(\s*IRI\.create\(\"file:/c/test.owl#(\w+)\"\s*\)\s*\)",
+        body,
+    ):
+        bindings[m.group(1)] = m.group(2)
+    return bindings
+
+
+CHAR_KIND_MAP = {
+    "Functional": "functional",
+    "InverseFunctional": "inverse_functional",
+    "Asymmetric": "asymmetric",
+    "Symmetric": "symmetric",
+    "Transitive": "transitive",
+    "Reflexive": "reflexive",
+    "Irreflexive": "irreflexive",
+}
+
+
+def extract_property_characteristics(body: str) -> list[dict[str, str | bool]]:
+    bindings = extract_property_bindings(body)
+    out: list[dict[str, str | bool]] = []
+    seen: set[tuple[str, str, bool]] = set()
+    for m in re.finditer(
+        r"assert(True|False)\s*\(\s*m_reasoner\.isEntailed\s*\(\s*m_dataFactory\.getOWL(\w+)ObjectPropertyAxiom\s*\(\s*(\w+)\s*\)\s*\)\s*\)",
+        body,
+    ):
+        kind = CHAR_KIND_MAP.get(m.group(2))
+        if not kind:
+            continue
+        var = m.group(3)
+        local = bindings.get(var, var)
+        expected = m.group(1) == "True"
+        key = (local, kind, expected)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"property": local, "kind": kind, "expected": expected})
+    return out
+
+
+def extract_property_subsumptions(body: str) -> list[dict[str, str | bool]]:
+    bindings = extract_property_bindings(body)
+    out: list[dict[str, str | bool]] = []
+    seen: set[tuple[str, str, bool]] = set()
+    for m in re.finditer(
+        r"assert(True|False)\s*\(\s*m_reasoner\.getSubObjectProperties\s*\(\s*(\w+)\s*,\s*true\s*\)\.containsEntity\s*\(\s*(\w+)\s*\)\s*\)",
+        body,
+    ):
+        expected = m.group(1) == "True"
+        sup_var = m.group(2)
+        sub_var = m.group(3)
+        sub = bindings.get(sub_var, sub_var)
+        sup = bindings.get(sup_var, sup_var)
+        key = (sub, sup, expected)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"sub": sub, "sup": sup, "expected": expected})
+    for m in re.finditer(
+        r"assert(True|False)\s*\(\s*m_reasoner\.getSuperObjectProperties\s*\(\s*(\w+)\s*,\s*true\s*\)\.containsEntity\s*\(\s*(\w+)\s*\)\s*\)",
+        body,
+    ):
+        expected = m.group(1) == "True"
+        sub_var = m.group(2)
+        sup_var = m.group(3)
+        sub = bindings.get(sub_var, sub_var)
+        sup = bindings.get(sup_var, sup_var)
+        key = (sub, sup, expected)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"sub": sub, "sup": sup, "expected": expected})
+    return out
+
+
 def extract_subsumptions(body: str) -> list[dict[str, str | bool]]:
     subs = []
     seen: set[tuple[str, str, bool]] = set()
@@ -215,6 +310,10 @@ def extract_consistency(body: str) -> bool | None:
         return True
     if re.search(r"assertNotConsistent\s*\(\s*\)", body):
         return False
+    if re.search(r"assertFalse\s*\(\s*m_reasoner\.isConsistent\s*\(\s*\)\s*\)", body):
+        return False
+    if re.search(r"assertTrue\s*\(\s*m_reasoner\.isConsistent\s*\(\s*\)\s*\)", body):
+        return True
     if re.search(r"assertTrue\s*\(\s*[^)]*isConsistent", body):
         m = re.search(r"assertTrue\s*\(\s*[^,]+,\s*(true|false)\s*\)", body)
         if m:
@@ -331,6 +430,10 @@ def infer_status(case: HermitCase) -> None:
         case.status = "planned"
         case.ignore_reason = "complex DL subsumption (Phase 2 tableau)"
         return
+    if case.id in DEFERRED_RL_AXIOM_IDS:
+        case.status = "planned"
+        case.ignore_reason = "RL/RDFS axiom assertions pending engine hardening"
+        return
     if case.id in EXCLUDED_IDS:
         case.status = "excluded"
         case.ignore_reason = "documented semantic or mapping gap (see manifest)"
@@ -383,7 +486,19 @@ def infer_status(case: HermitCase) -> None:
             case.status = "planned"
             case.ignore_reason = f"axiom fixture requires {case.engine} (1.0)"
         return
+    if case.axiom_ofn and case.property_characteristics and case.engine in ("rdfs", "rl"):
+        case.status = "axiom"
+        case.tier = "A"
+        return
+    if case.axiom_ofn and case.property_subsumptions and case.engine in ("rdfs", "rl"):
+        case.status = "axiom"
+        case.tier = "A"
+        return
     if case.axiom_ofn and case.consistent is not None and case.engine in ("dl", "alc"):
+        case.status = "planned"
+        case.ignore_reason = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"
+        return
+    if case.axiom_ofn and case.consistent is not None and case.engine in ("rdfs", "rl"):
         case.status = "axiom"
         case.tier = "A"
         return
@@ -511,6 +626,8 @@ def collect_cases() -> list[HermitCase]:
                     case.axiom_ofn = f"axioms/{safe}.ofn"
 
             case.subsumptions = extract_subsumptions(body)
+            case.property_subsumptions = extract_property_subsumptions(body)
+            case.property_characteristics = extract_property_characteristics(body)
             case.consistent = extract_consistency(body)
             infer_status(case)
             cases.append(case)

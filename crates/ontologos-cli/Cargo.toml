@@ -29,6 +29,7 @@ ontologos-alc = { workspace = true }
 ontologos-dl = { workspace = true }
 ontologos-swrl = { workspace = true }
 ontologos-facade = { workspace = true }
+ontologos-ql = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

@@ -3,8 +3,10 @@
 #![warn(missing_docs)]
 
 use ontologos_core::{Profile, Reasoner, Taxonomy};
-use ontologos_el::{classify_with_profile as el_classify, ClassifyOutcome};
-use ontologos_profile::{detect_profile, OwlProfile};
+use ontologos_el::{classify_with_profile as el_classify, ClassifyOutcome, ElClassifier};
+use ontologos_profile::{
+    classify_hybrid, detect_profile, merge_taxonomies, subontology_with_axioms, OwlProfile,
+};
 use thiserror::Error;
 
 /// Result type for facade operations.
@@ -45,14 +47,49 @@ pub fn classify(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
 }
 
 fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
-    let report = detect_profile(reasoner.ontology())
+    let ontology = reasoner.ontology();
+    let report = detect_profile(ontology)
         .map_err(|e| Error::El(ontologos_el::Error::Profile(e.to_string())))?;
     if report.detected == Some(OwlProfile::Dl) {
-        return Ok(ClassifyOutcome::Taxonomy(ontologos_dl::classify(
-            reasoner.ontology(),
-        )?));
+        return classify_hybrid_auto(ontology);
     }
     el_classify(reasoner).map_err(Error::El)
+}
+
+fn classify_hybrid_auto(ontology: &ontologos_core::Ontology) -> Result<ClassifyOutcome> {
+    let hybrid = classify_hybrid(ontology)
+        .map_err(|e| Error::El(ontologos_el::Error::Profile(e.to_string())))?;
+    if hybrid.modules.len() <= 1 {
+        let module = hybrid.modules.first();
+        if module.is_some_and(|m| m.profile == OwlProfile::Dl) {
+            return Ok(ClassifyOutcome::Taxonomy(ontologos_dl::classify(ontology)?));
+        }
+        return Ok(ClassifyOutcome::Taxonomy(
+            ElClassifier::new().classify(ontology)?,
+        ));
+    }
+
+    let mut parts = Vec::with_capacity(hybrid.modules.len());
+    for module in &hybrid.modules {
+        let view = subontology_with_axioms(ontology, &module.axiom_ids)
+            .map_err(|e| Error::El(ontologos_el::Error::Profile(e.to_string())))?;
+        let tax = match module.profile {
+            OwlProfile::El | OwlProfile::Ql => ElClassifier::new().classify(&view)?,
+            OwlProfile::Dl => ontologos_dl::classify(&view)?,
+            OwlProfile::Rl => {
+                let mut materialized = subontology_with_axioms(ontology, &module.axiom_ids)
+                    .map_err(|e| Error::El(ontologos_el::Error::Profile(e.to_string())))?;
+                ontologos_rl::RlEngine::new(1)
+                    .saturate(&mut materialized)
+                    .map_err(|e| {
+                        Error::El(ontologos_el::Error::Profile(format!("rl saturate: {e}")))
+                    })?;
+                ElClassifier::new().classify(&materialized)?
+            }
+        };
+        parts.push(tax);
+    }
+    Ok(ClassifyOutcome::Taxonomy(merge_taxonomies(parts)))
 }
 
 /// Check ontology consistency for the configured profile.
@@ -292,5 +329,17 @@ mod tests {
             .unwrap();
         let err = super::is_consistent(&reasoner).expect_err("alc consistency on bare class");
         assert!(matches!(err, super::Error::Alc(_)));
+    }
+
+    #[test]
+    fn classify_auto_hybrid_partitions_mixed_ontology() {
+        let report = ontologos_profile::classify_hybrid(&el_chain_ontology()).expect("hybrid");
+        assert!(!report.modules.is_empty());
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::Auto)
+            .build(el_chain_ontology())
+            .unwrap();
+        let outcome = super::classify(&mut reasoner).expect("auto classify");
+        assert!(super::taxonomy_from_outcome(&outcome).is_some());
     }
 }

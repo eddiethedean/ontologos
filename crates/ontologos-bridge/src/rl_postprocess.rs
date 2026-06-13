@@ -97,9 +97,89 @@ pub fn apply_transitive_subproperties(ontology: &mut Ontology) -> Result<usize> 
     Ok(added)
 }
 
+/// Expand `EquivalentObjectProperties` to mutual `SubObjectPropertyOf` (EqPropSub).
+pub fn apply_equivalent_property_subproperties(ontology: &mut Ontology) -> Result<usize> {
+    let mut clusters: Vec<Vec<EntityId>> = Vec::new();
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::EquivalentObjectProperties(properties) = axiom {
+            if properties.len() >= 2 {
+                clusters.push(properties.clone());
+            }
+        }
+    }
+
+    let existing: HashSet<(EntityId, EntityId)> = ontology
+        .axioms()
+        .iter()
+        .filter_map(|(_, axiom)| match axiom {
+            Axiom::SubObjectPropertyOf {
+                sub_property,
+                super_property,
+            } => Some((*sub_property, *super_property)),
+            _ => None,
+        })
+        .collect();
+
+    let mut added = 0_usize;
+    let mut seen = existing;
+    for group in clusters {
+        for i in 0..group.len() {
+            for j in 0..group.len() {
+                if i == j {
+                    continue;
+                }
+                let sub = group[i];
+                let sup = group[j];
+                if seen.insert((sub, sup)) {
+                    ontology.add_inferred_axiom(Axiom::SubObjectPropertyOf {
+                        sub_property: sub,
+                        super_property: sup,
+                    })?;
+                    added += 1;
+                }
+            }
+        }
+    }
+    Ok(added)
+}
+
+/// Propagate property characteristics along `subPropertyOf` (CharPropagate).
+pub fn apply_characteristic_propagation(ontology: &mut Ontology) -> Result<usize> {
+    let sub_to_supers = superproperty_edges(ontology);
+    let index = ontology.index();
+    let mut functional: HashSet<EntityId> = index.functional_properties().iter().copied().collect();
+    let mut asymmetric: HashSet<EntityId> = index.asymmetric_properties().iter().copied().collect();
+    let mut reflexive: HashSet<EntityId> = index.reflexive_properties().iter().copied().collect();
+
+    let mut added = 0_usize;
+    for sub in sub_to_supers.keys() {
+        for sup in transitive_supers(*sub, &sub_to_supers) {
+            if functional.contains(&sup) && functional.insert(*sub) {
+                ontology.add_inferred_axiom(Axiom::FunctionalObjectProperty(*sub))?;
+                added += 1;
+            }
+            if asymmetric.contains(&sup) && asymmetric.insert(*sub) {
+                ontology.add_inferred_axiom(Axiom::AsymmetricObjectProperty(*sub))?;
+                added += 1;
+            }
+        }
+        if reflexive.contains(sub) {
+            for sup in transitive_supers(*sub, &sub_to_supers) {
+                if reflexive.insert(sup) {
+                    ontology.add_inferred_axiom(Axiom::ReflexiveObjectProperty(sup))?;
+                    added += 1;
+                }
+            }
+        }
+    }
+    Ok(added)
+}
+
 /// Run all reasonable semantic fallbacks after materialization.
 pub fn apply_reasonable_fallbacks(ontology: &mut Ontology) -> Result<usize> {
-    let mut total = apply_transitive_subproperties(ontology)?;
+    let mut total = apply_equivalent_property_subproperties(ontology)?;
+    total += apply_transitive_subproperties(ontology)?;
+    total += apply_characteristic_propagation(ontology)?;
     total += propagate_domain_range_along_subproperties(ontology)?;
     total += apply_domain_range_inheritance(ontology)?;
     Ok(total)

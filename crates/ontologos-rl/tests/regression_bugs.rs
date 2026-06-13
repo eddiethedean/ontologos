@@ -278,7 +278,6 @@ fn disjoint_clash_deduped_for_equivalent_types_on_individual() {
 
 /// scm-spo1: existential on superclass propagates to subclass.
 #[test]
-#[ignore = "reasonable does not materialize existential TBox subsumption between named classes"]
 fn existential_propagates_along_subclass_of() {
     let mut ontology = Ontology::builder()
         .class(&iri("Animal"))

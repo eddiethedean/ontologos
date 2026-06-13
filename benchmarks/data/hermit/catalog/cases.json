@@ -12,6 +12,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_graph_graphtest_testcontradictionongraph.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -29,6 +31,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_graph_graphtest_testgraph1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -46,6 +50,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_graph_graphtest_testgraph2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -63,6 +69,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -80,6 +88,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -97,6 +107,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -114,6 +126,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -131,6 +145,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -148,6 +164,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -165,6 +183,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -182,6 +202,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -199,6 +221,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -216,6 +240,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -233,6 +259,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -250,6 +278,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -267,6 +297,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -284,6 +316,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -301,6 +335,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -318,6 +354,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -335,6 +373,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -352,6 +392,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -369,6 +411,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -386,6 +430,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -403,6 +449,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -420,6 +468,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -437,6 +487,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -454,6 +506,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -471,6 +525,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -488,6 +544,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -505,6 +563,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -522,6 +582,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -539,6 +601,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -556,6 +620,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -573,6 +639,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -590,6 +658,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -607,6 +677,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -624,6 +696,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -641,6 +715,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -658,6 +734,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -675,6 +753,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -692,6 +772,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -709,6 +791,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -726,6 +810,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -743,6 +829,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -760,6 +848,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -777,6 +867,8 @@
     "golden": "res/dolce_all.xml.txt",
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -794,6 +886,8 @@
     "golden": "res/wine.xml.txt",
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "hermit_classification_wine_taxonomy",
     "hand_written": true
@@ -811,6 +905,8 @@
     "golden": "res/galen-ians-full-undoctored.xml.txt",
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -828,6 +924,8 @@
     "golden": "res/pizza.xml.txt",
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "hermit_classification_pizza_taxonomy",
     "hand_written": true
@@ -845,6 +943,8 @@
     "golden": "res/propreo.xml.txt",
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -862,6 +962,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -879,6 +981,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -896,6 +1000,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -913,6 +1019,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -930,6 +1038,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -947,6 +1057,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -964,6 +1076,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -981,6 +1095,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -998,6 +1114,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datalogenginetest_testbasic.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1015,6 +1133,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datalogenginetest_testequality.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1032,6 +1152,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datalogenginetest_testquerywithindividualsandequality.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1049,6 +1171,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datalogenginetest_testquerywithindividuals.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1066,6 +1190,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testenumwithintplusfloatrestriction.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1083,6 +1209,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testrationalconversion.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1100,6 +1228,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testnotxsdstring.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1117,6 +1247,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatetimetimezones.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1134,6 +1266,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypedef5.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1144,14 +1278,16 @@
     "java_method": "testNominalsAndDatatypesFromAlan",
     "java_file": "reasoner/DatatypesTest.java",
     "engine": "rl",
-    "status": "planned",
+    "status": "axiom",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rl)",
+    "ignore_reason": null,
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testnominalsanddatatypesfromalan.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": true,
     "rust_test": null,
     "hand_written": false
   },
@@ -1161,14 +1297,16 @@
     "java_method": "testDifferentLexicalForms",
     "java_file": "reasoner/DatatypesTest.java",
     "engine": "rl",
-    "status": "planned",
+    "status": "axiom",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rl)",
+    "ignore_reason": null,
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdifferentlexicalforms.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": true,
     "rust_test": null,
     "hand_written": false
   },
@@ -1185,6 +1323,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testliteralcustomdatatype.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1202,6 +1342,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testinf.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1219,6 +1361,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testfreshentitiesquery.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1236,6 +1380,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testparsingerror.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1253,6 +1399,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_teststringabbreviation.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1270,6 +1418,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testlangabbreviation.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1287,6 +1437,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypesunsat1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1304,6 +1456,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypesunsat2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1321,6 +1475,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypesunsat3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1338,6 +1494,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypesunsat4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1355,6 +1513,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypessat.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1372,6 +1532,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testmininclusivemaxinclusive.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1389,6 +1551,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdisjointdpsunsat.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1406,6 +1570,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdisjointdpsunsatstrings.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1423,6 +1589,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdisjointdpssatinteger.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1440,6 +1608,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testallvaluesfrominteger1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1457,6 +1627,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testallvaluesfrominteger2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1474,6 +1646,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testallvaluesfrommixed1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1491,6 +1665,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testallvaluesfrommixed2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1508,6 +1684,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testallvaluesfromdifferenttypes1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1525,6 +1703,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testallvaluesfromdifferenttypes2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1542,6 +1722,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testallvaluesfromdifferenttypes3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1559,6 +1741,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testnegzero1integer.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1576,6 +1760,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testnegzero2integer.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1593,6 +1779,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testintplusdecimal.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1610,6 +1798,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testintplusdecimal2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1627,6 +1817,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdecimals.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1644,6 +1836,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdecimalplusowlreal.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1661,6 +1855,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdecimalplusinteger.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1678,6 +1874,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdifferentoneofs.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1695,6 +1893,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testfloatzeros.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1712,6 +1912,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testfloatenuminconsistent.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1729,6 +1931,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testrationals1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1746,6 +1950,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testrationals2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1763,6 +1969,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testrationals3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1780,6 +1988,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatetime1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1797,6 +2007,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatetime2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1814,6 +2026,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testselfinequality.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1831,6 +2045,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypedef1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1848,6 +2064,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypedef2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1865,6 +2083,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypedef3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1882,6 +2102,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypedef4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1899,6 +2121,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypedef6.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1916,6 +2140,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypeunion1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1933,6 +2159,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypeunion2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1950,6 +2178,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypeunion3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1967,6 +2197,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypeunion4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -1984,6 +2216,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypeunionintersection1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2001,6 +2235,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypeunionintersection2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2018,6 +2254,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypeunionintersection3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2035,6 +2273,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testdatatypeunionintersection4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2052,6 +2292,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_datatypestest_testnegativedpassertions.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2069,6 +2311,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2086,6 +2330,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2103,6 +2349,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2120,6 +2368,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2137,6 +2387,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2154,6 +2406,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2171,6 +2425,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2188,6 +2444,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2205,6 +2463,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2222,6 +2482,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2239,6 +2501,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2256,6 +2520,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2273,6 +2539,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2290,6 +2558,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2307,6 +2577,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2324,6 +2596,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2341,6 +2615,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testintegerentailment.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2358,6 +2634,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testhaskey.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2375,6 +2653,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testblanknodes1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2392,6 +2672,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testinvalidblanknodes.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2409,6 +2691,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodeswithnominals.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2426,6 +2710,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodesinpremise.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2443,6 +2729,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodes.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2460,6 +2748,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testblankwithdts.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2477,6 +2767,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testblankwithdts2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2494,6 +2786,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_entailmenttest_testblankwithdts3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2511,6 +2805,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_floatdoubletest_testinf.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2528,6 +2824,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2545,6 +2843,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2562,6 +2862,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2579,6 +2881,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2596,6 +2900,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2613,6 +2919,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2630,6 +2938,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2647,6 +2957,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2664,6 +2976,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2681,6 +2995,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2698,6 +3014,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2715,6 +3033,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2732,6 +3052,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2749,6 +3071,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2766,6 +3090,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2783,6 +3109,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2800,6 +3128,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2817,6 +3147,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2834,6 +3166,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2851,6 +3185,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2868,6 +3204,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2885,6 +3223,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2902,6 +3242,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2919,6 +3261,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2936,6 +3280,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2953,6 +3299,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2970,6 +3318,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -2987,6 +3337,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3004,6 +3356,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3021,6 +3375,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3038,6 +3394,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3055,6 +3413,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3072,6 +3432,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3089,6 +3451,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3106,6 +3470,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3123,6 +3489,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3140,6 +3508,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3157,6 +3527,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3174,6 +3546,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3191,6 +3565,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3208,6 +3584,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3225,6 +3603,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3242,6 +3622,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3259,6 +3641,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3276,6 +3660,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3293,6 +3679,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3310,6 +3698,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3327,6 +3717,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3344,6 +3736,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3361,6 +3755,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3378,6 +3774,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3395,6 +3793,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3412,6 +3812,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3429,6 +3831,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3446,6 +3850,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3463,6 +3869,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3480,6 +3888,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3497,6 +3907,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3514,6 +3926,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3531,6 +3945,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3548,6 +3964,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3565,6 +3983,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3582,6 +4002,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3599,6 +4021,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3616,6 +4040,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3633,6 +4059,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3650,6 +4078,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3667,6 +4097,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3684,6 +4116,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3701,6 +4135,8 @@
     "golden": "res/OWLLink/updateHierarchy.txt",
     "axiom_ofn": "axioms/hermit_reasoner_owllinktest_testupdatesbuffered.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "owllink_update_hierarchy_buffered",
     "hand_written": true
@@ -3718,6 +4154,8 @@
     "golden": "res/OWLLink/updateHierarchy.txt",
     "axiom_ofn": "axioms/hermit_reasoner_owllinktest_testupdatesnonbuffered.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "owllink_update_hierarchy_non_buffered",
     "hand_written": true
@@ -3735,6 +4173,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3752,6 +4192,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3769,6 +4211,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3786,6 +4230,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3803,6 +4249,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3820,6 +4268,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3837,6 +4287,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3854,6 +4306,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_owlreasonertest_testgetinverseobjectpropertyexpressions.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3871,6 +4325,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_owlreasonertest_testbottomobjectpropertysubs.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3888,6 +4344,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_owlreasonertest_testtopobjectpropertysupers.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3905,6 +4363,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_owlreasonertest_testincrementaladdition.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3917,12 +4377,14 @@
     "engine": "rl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rl)",
+    "ignore_reason": "RL/RDFS axiom assertions pending engine hardening",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_owlreasonertest_testincrementaladdition2.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -3934,12 +4396,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_owlreasonertest_testgetdatapropertyvalues.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": true,
     "rust_test": null,
     "hand_written": false
   },
@@ -3956,6 +4420,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3973,6 +4439,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -3990,6 +4458,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4007,6 +4477,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4024,6 +4496,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4041,6 +4515,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4058,6 +4534,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4075,6 +4553,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4092,6 +4572,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4109,6 +4591,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4126,6 +4610,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4143,6 +4629,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4160,6 +4648,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4177,6 +4667,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4194,6 +4686,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4211,6 +4705,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4228,6 +4724,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4245,6 +4743,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4262,6 +4762,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4279,6 +4781,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4296,6 +4800,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4313,6 +4819,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4330,6 +4838,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4347,6 +4857,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4364,6 +4876,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4381,6 +4895,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4398,6 +4914,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4415,6 +4933,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4432,6 +4952,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4449,6 +4971,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4466,6 +4990,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4483,6 +5009,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4500,6 +5028,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4512,12 +5042,14 @@
     "engine": "rdfs",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rdfs)",
+    "ignore_reason": "RL/RDFS axiom assertions pending engine hardening",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_riatest_testinverseandchain.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -4534,6 +5066,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4551,6 +5085,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4568,6 +5104,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4585,6 +5123,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4602,6 +5142,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4619,6 +5161,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4636,6 +5180,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4653,6 +5199,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4670,6 +5218,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4687,6 +5237,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4704,6 +5256,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonercoreblockingtest_testexpansion.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4721,6 +5275,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonercoreblockingtest_testwidmann2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4738,6 +5294,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4755,6 +5313,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4772,6 +5332,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4789,6 +5351,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4806,6 +5370,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testisentailed.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4818,12 +5384,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testuniversalrolepartitionedabox.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -4840,6 +5408,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithsameas.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4857,6 +5427,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4869,12 +5441,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedhasvalue.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -4891,6 +5465,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithhasvalue.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4903,12 +5479,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedclass.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -4925,6 +5503,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithclass.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4937,12 +5517,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedhasself.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -4959,6 +5541,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithhasself.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4976,6 +5560,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithfreshnames.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -4993,6 +5579,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5010,6 +5598,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testtopopequivalence.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5027,6 +5617,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testreflexiveandsameas.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "reflexive_and_same_as_expand_property_instances",
     "hand_written": true
@@ -5044,6 +5636,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testfreshentityentailment.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5067,6 +5661,8 @@
         "expected": false
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5084,6 +5680,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testprecomputedisjointclasses.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5101,6 +5699,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testkeys3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5118,6 +5718,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testequivalentclassinstances.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "equivalent_class_instances_share_types",
     "hand_written": true
@@ -5135,6 +5737,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testobjectpropertysubsumptionsnonominals.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5152,6 +5756,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testobjectpropertysubsumptionsnominals.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5164,12 +5770,14 @@
     "engine": "rdfs",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rdfs)",
+    "ignore_reason": "RL/RDFS axiom assertions pending engine hardening",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testbottomobjectpropertyassertion.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -5186,6 +5794,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdatapropertyentailment.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5203,6 +5813,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testpropertyinstanceretrieval.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5226,6 +5838,8 @@
         "expected": true
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5238,12 +5852,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testnegativeobjectpropertyassertionwithnonsimple.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -5260,6 +5876,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testpropertyenailmentfromalan.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5277,6 +5895,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsubproperties.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5294,6 +5914,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testunknownclasshierarcyposition.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5306,12 +5928,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testunknowndatatypes.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -5328,6 +5952,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testrolechains.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5340,12 +5966,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testrolechainswithtransitivesymmetric.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -5362,6 +5990,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testrolesubsumptionwithchainstransitivesymmetric.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5379,6 +6009,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testrolesubsumption.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5396,6 +6028,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testisfunctionaldata.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5413,6 +6047,39 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testisfunctionalobject.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [
+      {
+        "property": "OP",
+        "kind": "functional",
+        "expected": true
+      },
+      {
+        "property": "OP",
+        "kind": "inverse_functional",
+        "expected": false
+      },
+      {
+        "property": "SOP",
+        "kind": "functional",
+        "expected": true
+      },
+      {
+        "property": "SOP",
+        "kind": "inverse_functional",
+        "expected": false
+      },
+      {
+        "property": "ANOP",
+        "kind": "functional",
+        "expected": false
+      },
+      {
+        "property": "ANOP",
+        "kind": "inverse_functional",
+        "expected": false
+      }
+    ],
     "consistent": null,
     "rust_test": "functional_property_characteristic_propagates_to_subproperty",
     "hand_written": true
@@ -5425,11 +6092,44 @@
     "engine": "rdfs",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rdfs)",
+    "ignore_reason": "RL/RDFS axiom assertions pending engine hardening",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testisinversefunctionalobject.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [
+      {
+        "property": "OP",
+        "kind": "functional",
+        "expected": false
+      },
+      {
+        "property": "OP",
+        "kind": "inverse_functional",
+        "expected": true
+      },
+      {
+        "property": "SOP",
+        "kind": "functional",
+        "expected": false
+      },
+      {
+        "property": "SOP",
+        "kind": "inverse_functional",
+        "expected": true
+      },
+      {
+        "property": "ANOP",
+        "kind": "functional",
+        "expected": false
+      },
+      {
+        "property": "ANOP",
+        "kind": "inverse_functional",
+        "expected": false
+      }
+    ],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5440,13 +6140,31 @@
     "java_method": "testIsReflexiveObject",
     "java_file": "reasoner/ReasonerTest.java",
     "engine": "rdfs",
-    "status": "planned",
+    "status": "axiom",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rdfs)",
+    "ignore_reason": null,
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testisreflexiveobject.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [
+      {
+        "property": "OP",
+        "kind": "reflexive",
+        "expected": true
+      },
+      {
+        "property": "SOP",
+        "kind": "reflexive",
+        "expected": true
+      },
+      {
+        "property": "ANOP",
+        "kind": "reflexive",
+        "expected": false
+      }
+    ],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5459,11 +6177,29 @@
     "engine": "rdfs",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rdfs)",
+    "ignore_reason": "RL/RDFS axiom assertions pending engine hardening",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testisirreflexiveobject.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [
+      {
+        "property": "OP",
+        "kind": "irreflexive",
+        "expected": true
+      },
+      {
+        "property": "SOP",
+        "kind": "irreflexive",
+        "expected": true
+      },
+      {
+        "property": "ANOP",
+        "kind": "irreflexive",
+        "expected": false
+      }
+    ],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5481,6 +6217,29 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testissymmetricobject.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [
+      {
+        "property": "OP",
+        "kind": "symmetric",
+        "expected": true
+      },
+      {
+        "property": "SOP1",
+        "kind": "symmetric",
+        "expected": false
+      },
+      {
+        "property": "SOP2",
+        "kind": "symmetric",
+        "expected": false
+      },
+      {
+        "property": "ANOP",
+        "kind": "symmetric",
+        "expected": false
+      }
+    ],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5498,6 +6257,29 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testisasymmetricobject.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [
+      {
+        "property": "OP",
+        "kind": "asymmetric",
+        "expected": true
+      },
+      {
+        "property": "SOP1",
+        "kind": "asymmetric",
+        "expected": true
+      },
+      {
+        "property": "SOP2",
+        "kind": "asymmetric",
+        "expected": false
+      },
+      {
+        "property": "ANOP",
+        "kind": "asymmetric",
+        "expected": false
+      }
+    ],
     "consistent": null,
     "rust_test": "asymmetric_property_characteristic_propagates_to_subproperty",
     "hand_written": true
@@ -5515,6 +6297,29 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testistransitiveobject.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [
+      {
+        "property": "OP",
+        "kind": "transitive",
+        "expected": true
+      },
+      {
+        "property": "SOP1",
+        "kind": "transitive",
+        "expected": false
+      },
+      {
+        "property": "SOP2",
+        "kind": "transitive",
+        "expected": false
+      },
+      {
+        "property": "ANOP",
+        "kind": "transitive",
+        "expected": false
+      }
+    ],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5527,12 +6332,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testlearningbacktracking.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": true,
     "rust_test": null,
     "hand_written": false
   },
@@ -5549,6 +6356,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsameas.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "same_as_propagates_class_assertion",
     "hand_written": true
@@ -5566,6 +6375,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testobjectpropertydomainstimothybug.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5583,6 +6394,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5600,6 +6413,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testindividualretrievalbug.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "individual_property_retrieval",
     "hand_written": true
@@ -5617,6 +6432,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5634,6 +6451,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5651,6 +6470,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdatatyperestriction.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5668,6 +6489,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testanonymousindividualconstraints.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5685,6 +6508,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testanonymousindividualconstraints2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5702,6 +6527,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testanonymousindividualconstraints3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5719,6 +6546,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testanonymousindividualconstraints4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5736,6 +6565,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testtransitivity.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5753,6 +6584,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsubandsuperconcepts.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "sub_and_super_concepts",
     "hand_written": true
@@ -5770,6 +6603,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsubandsuperroles.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "sub_and_super_roles",
     "hand_written": true
@@ -5780,13 +6615,26 @@
     "java_method": "testSubRolesChain",
     "java_file": "reasoner/ReasonerTest.java",
     "engine": "rdfs",
-    "status": "planned",
+    "status": "axiom",
     "tier": "A",
-    "ignore_reason": "auto-cataloged; requires manual port (rdfs)",
+    "ignore_reason": null,
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsubroleschain.ofn",
     "subsumptions": [],
+    "property_subsumptions": [
+      {
+        "sub": "s",
+        "sup": "s",
+        "expected": false
+      },
+      {
+        "sub": "r",
+        "sup": "s",
+        "expected": true
+      }
+    ],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5804,6 +6652,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testhaskeyentailment.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5821,6 +6671,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testhaskeynonentailment.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5838,6 +6690,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdatatypedefentailment.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5855,6 +6709,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdomainrange.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5872,6 +6728,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdatetime2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5889,6 +6747,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testchains1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5906,6 +6766,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testchains2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5923,6 +6785,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testchains3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5940,6 +6804,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testchains4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5957,6 +6823,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testanonymousindiviuals1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5974,6 +6842,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdatetime.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -5991,6 +6861,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdataranges.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6008,6 +6880,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testbottomdataproperty.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6025,6 +6899,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testchains.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6042,6 +6918,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testhaskeysonlynamed.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6059,6 +6937,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testnegativedatapropertyassertion.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6076,6 +6956,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testkeys.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6093,6 +6975,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testkeysnegatedclass.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6110,6 +6994,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testnonunarykeys.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6127,6 +7013,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testnonunarykeys2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6144,6 +7032,8 @@
     "golden": "res/hierarchy-printing-1.txt",
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6161,6 +7051,8 @@
     "golden": "res/hierarchy-printing-2.txt",
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6178,6 +7070,8 @@
     "golden": "res/hierarchy-printing-3.txt",
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testhierarchyprinting3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6195,6 +7089,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testobjectpropertyhierarchy.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6212,6 +7108,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsemanticobjectpropertyclassification.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6229,6 +7127,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdatapropertyhierarchy.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6241,12 +7141,14 @@
     "engine": "dl",
     "status": "planned",
     "tier": "A",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": "DL axiom fixture; consistency assertions pending engine (Phase 2+)",
     "fixture": null,
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testdatapropertysemantics.ofn",
     "subsumptions": [],
-    "consistent": null,
+    "property_subsumptions": [],
+    "property_characteristics": [],
+    "consistent": false,
     "rust_test": null,
     "hand_written": false
   },
@@ -6263,6 +7165,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsemanticdatapropertyclassification.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6280,6 +7184,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testcomplexconceptinstanceretrieval.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6297,6 +7203,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testwidmann1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6314,6 +7222,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testwidmann2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6331,6 +7241,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testwidmann3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6348,6 +7260,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testreflexivity.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6365,6 +7279,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testnegproperties.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6382,6 +7298,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testirreflexivity.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6399,6 +7317,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testroledisjointness_1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6416,6 +7336,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testroledisjointness_2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6433,6 +7355,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testroledisjointness2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6450,6 +7374,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testexistsself1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6467,6 +7393,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testexistsself2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6484,6 +7412,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testasymmetry.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6501,6 +7431,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiability1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6518,6 +7450,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiability2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6535,6 +7469,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiability3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6552,6 +7488,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiability4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6569,6 +7507,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testchanges.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6607,6 +7547,8 @@
         "expected": false
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "subsumption1_transitive_subclass",
     "hand_written": true
@@ -6635,6 +7577,8 @@
         "expected": false
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "subsumption2_property_subsumption_existential",
     "hand_written": true
@@ -6663,6 +7607,8 @@
         "expected": true
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": "subsumption3_equivalent_properties_existential",
     "hand_written": true
@@ -6680,6 +7626,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testheinsohntbox1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6697,6 +7645,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testheinsohntbox2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6714,6 +7664,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testheinsohntbox3c.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6731,6 +7683,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testheinsohntbox3cirh.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6769,6 +7723,8 @@
         "expected": true
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6792,6 +7748,8 @@
         "expected": true
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6809,6 +7767,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6826,6 +7786,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6843,6 +7805,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6860,6 +7824,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6877,6 +7843,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6894,6 +7862,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6911,6 +7881,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6928,6 +7900,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6945,6 +7919,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6962,6 +7938,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6979,6 +7957,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -6996,6 +7976,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7013,6 +7995,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7030,6 +8014,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7047,6 +8033,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7064,6 +8052,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7081,6 +8071,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7098,6 +8090,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7115,6 +8109,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7132,6 +8128,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7149,6 +8147,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7166,6 +8166,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7189,6 +8191,8 @@
         "expected": true
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7206,6 +8210,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7223,6 +8229,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7240,6 +8248,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7257,6 +8267,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7274,6 +8286,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7291,6 +8305,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7308,6 +8324,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7325,6 +8343,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7342,6 +8362,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7359,6 +8381,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7376,6 +8400,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7399,6 +8425,8 @@
         "expected": true
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7416,6 +8444,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7433,6 +8463,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7450,6 +8482,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7467,6 +8501,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7484,6 +8520,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7501,6 +8539,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7518,6 +8558,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7535,6 +8577,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7552,6 +8596,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7569,6 +8615,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7586,6 +8634,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7603,6 +8653,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7626,6 +8678,8 @@
         "expected": false
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7643,6 +8697,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testnovelnominals.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7660,6 +8716,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testkeys1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7677,6 +8735,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testkeys2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7694,6 +8754,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7711,6 +8773,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7728,6 +8792,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7745,6 +8811,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7762,6 +8830,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7779,6 +8849,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7796,6 +8868,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testmissingcbug.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7813,6 +8887,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7830,6 +8906,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testanonymousindiviuals2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7847,6 +8925,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testanonymousindiviuals3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7864,6 +8944,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7881,6 +8963,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7898,6 +8982,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7915,6 +9001,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7932,6 +9020,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias5.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7949,6 +9039,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias6.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7966,6 +9058,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias7.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -7983,6 +9077,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias8.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8000,6 +9096,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias9.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8017,6 +9115,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias10.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8034,6 +9134,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias11.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8051,6 +9153,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias11b.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8068,6 +9172,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias12.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8085,6 +9191,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_reasonertest_testsatisfiabilitywithrias13.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8108,6 +9216,8 @@
         "expected": true
       }
     ],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8125,6 +9235,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testsameasinbody1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8142,6 +9254,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testsameasinbody2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8159,6 +9273,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testsameasinbodywithdataproperties.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8176,6 +9292,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testdatapropertiesinbody.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8193,6 +9311,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testindividualsinrules.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8210,6 +9330,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testrulenonsimple.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8227,6 +9349,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testrulenotaxiom.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8244,6 +9368,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testsimplerule2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8261,6 +9387,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testsimplerule.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8278,6 +9406,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testrulewithconstants.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8295,6 +9425,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testrulewithconstants2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8312,6 +9444,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testrulewithdatatypes.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8329,6 +9463,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testrulewithdatatypes2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8346,6 +9482,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testrulewithfreshindividuals.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8363,6 +9501,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testaddingfactsbyrules.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8380,6 +9520,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testlloydtopor.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8397,6 +9539,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testdatarangesafety.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8414,6 +9558,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testseveralvars.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8431,6 +9577,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testpositivebodydatarange.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8448,6 +9596,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testnegativebodydatarange.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8465,6 +9615,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testnegdrinhead.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8482,6 +9634,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testsameas.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8499,6 +9653,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testdifferentfrom.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8516,6 +9672,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_reasoner_rulestest_testdiffrentfrom2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8533,6 +9691,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8550,6 +9710,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8567,6 +9729,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8584,6 +9748,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8601,6 +9767,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8618,6 +9786,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8635,6 +9805,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8652,6 +9824,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8669,6 +9843,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8686,6 +9862,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8703,6 +9881,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8720,6 +9900,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertieshasvalue1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8737,6 +9919,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertieshasvalue2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8754,6 +9938,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesall1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8771,6 +9957,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesall2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8788,6 +9976,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiessome1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8805,6 +9995,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiessome2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8822,6 +10014,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesdataoneof1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8839,6 +10033,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesdataoneof2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8856,6 +10052,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesdataoneof3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8873,6 +10071,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesdataoneof4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8890,6 +10090,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesdatacomplementof1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8907,6 +10109,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesdatacomplementof2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8924,6 +10128,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesmax1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8941,6 +10147,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesmax2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8958,6 +10166,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesmax3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8975,6 +10185,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesmax4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -8992,6 +10204,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesmin1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9009,6 +10223,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesmin2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9026,6 +10242,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesmin3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9043,6 +10261,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesmin4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9060,6 +10280,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesexact1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9077,6 +10299,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesexact2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9094,6 +10318,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesexact3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9111,6 +10337,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatapropertiesexact4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9128,6 +10356,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdataintersectionof.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9145,6 +10375,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdataintersectionof2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9162,6 +10394,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdataintersectionof3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9179,6 +10413,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdataunionof1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9196,6 +10432,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatacomplementof1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9213,6 +10451,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatacomplementof2.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9230,6 +10470,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatacomplementof3.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9247,6 +10489,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationdatatypestest_testdatacomplementof4.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9264,6 +10508,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9281,6 +10527,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9298,6 +10546,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9315,6 +10565,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9332,6 +10584,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9349,6 +10603,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_structural_clausificationtest_testasymmetry.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9366,6 +10622,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9383,6 +10641,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9400,6 +10660,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9417,6 +10679,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9434,6 +10698,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9451,6 +10717,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9468,6 +10736,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9485,6 +10755,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9502,6 +10774,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9519,6 +10793,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9536,6 +10812,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9553,6 +10831,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9570,6 +10850,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9587,6 +10869,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9604,6 +10888,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9621,6 +10907,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9638,6 +10926,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9655,6 +10945,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9672,6 +10964,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9689,6 +10983,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9706,6 +11002,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9723,6 +11021,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9740,6 +11040,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9757,6 +11059,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9774,6 +11078,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9791,6 +11097,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9808,6 +11116,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9825,6 +11135,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9842,6 +11154,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9859,6 +11173,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9876,6 +11192,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9893,6 +11211,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9910,6 +11230,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9927,6 +11249,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9944,6 +11268,8 @@
     "golden": null,
     "axiom_ofn": "axioms/hermit_tableau_graphtest_testgraph1.ofn",
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9961,6 +11287,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9978,6 +11306,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -9995,6 +11325,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10012,6 +11344,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10029,6 +11363,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10046,6 +11382,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10063,6 +11401,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10080,6 +11420,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10097,6 +11439,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10114,6 +11458,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10131,6 +11477,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10148,6 +11496,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10165,6 +11515,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10182,6 +11534,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false
@@ -10199,6 +11553,8 @@
     "golden": null,
     "axiom_ofn": null,
     "subsumptions": [],
+    "property_subsumptions": [],
+    "property_characteristics": [],
     "consistent": null,
     "rust_test": null,
     "hand_written": false

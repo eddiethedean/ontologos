@@ -45,26 +45,34 @@ pub fn is_abox_consistent(ontology: &Ontology) -> Result<bool> {
     Ok(!detect_clash(ontology))
 }
 
+/// Expand `differentFrom` pairs modulo `sameAs` and detect clashes.
+#[must_use]
+pub fn different_from_clash(ontology: &Ontology) -> bool {
+    detect_clash(ontology)
+}
+
 fn detect_clash(ontology: &Ontology) -> bool {
+    let closure = same_as_closure(ontology);
+    let mut rep_pairs: std::collections::HashSet<(EntityId, EntityId)> =
+        std::collections::HashSet::new();
     for (_, axiom) in ontology.axioms().iter() {
         if let ontologos_core::Axiom::DifferentIndividuals(ids) = axiom {
-            if ids.len() < 2 {
-                continue;
-            }
-            let rep0 = representative(ontology, ids[0]);
-            for &id in &ids[1..] {
-                if representative(ontology, id) == rep0 {
-                    return true;
+            for i in 0..ids.len() {
+                for j in (i + 1)..ids.len() {
+                    let a = closure.representative(ids[i]);
+                    let b = closure.representative(ids[j]);
+                    if a == b {
+                        return true;
+                    }
+                    let key = if a.0 <= b.0 { (a, b) } else { (b, a) };
+                    if !rep_pairs.insert(key) {
+                        return true;
+                    }
                 }
             }
         }
     }
     false
-}
-
-fn representative(ontology: &Ontology, id: EntityId) -> EntityId {
-    let closure = same_as_closure(ontology);
-    closure.representative(id)
 }
 
 #[cfg(test)]

@@ -7,7 +7,7 @@ use ontologos_core::{EntityId, Ontology, ParseMetaSummary, Profile, Reasoner, Ta
 use ontologos_el::ClassifyOutcome;
 use ontologos_explain::{explain_with_profile, render_text, ProofGraph};
 use ontologos_parser::load_ontology;
-use ontologos_profile::{detect_profile, ProfileReport};
+use ontologos_profile::{classify_hybrid, detect_profile, ProfileReport};
 use ontologos_rdfs::MaterializationReport as RdfsReport;
 use ontologos_rl::MaterializationReport as RlReport;
 use serde::Serialize;
@@ -49,6 +49,13 @@ enum Command {
     Materialize { ontology: PathBuf },
     /// Explain inferences as a proof graph (JSON or text)
     Explain { ontology: PathBuf },
+    /// Answer an OWL QL conjunctive query over a classified ontology
+    Query {
+        ontology: PathBuf,
+        /// Conjunctive query, e.g. `Type(?x, http://ex.org/A)`
+        #[arg(long)]
+        query: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum, Default, PartialEq, Eq)]
@@ -133,11 +140,27 @@ fn run() -> Result<(), CliError> {
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let report = detect_profile(&ontology)?;
+            let hybrid = classify_hybrid(&ontology).ok();
             match cli.format {
-                OutputFormat::Text => println!("{}", format_profile_text(&report)),
+                OutputFormat::Text => {
+                    println!("{}", format_profile_text(&report));
+                    if let Some(h) = &hybrid {
+                        println!("hybrid modules: {}", h.modules.len());
+                        for m in &h.modules {
+                            println!(
+                                "  {:?} engine={} axioms={} classes={}",
+                                m.profile,
+                                ontologos_profile::engine_for_profile(m.profile),
+                                m.axiom_ids.len(),
+                                m.signature.len()
+                            );
+                        }
+                    }
+                }
                 OutputFormat::Json => emit_json(&ProfileCliOutput {
                     report: &report,
                     parse_meta: &parse_meta,
+                    hybrid_modules: hybrid.as_ref().map(|h| h.modules.len()).unwrap_or(0),
                 })?,
             }
         }
@@ -195,6 +218,42 @@ fn run() -> Result<(), CliError> {
             let graph = explain_with_profile(&mut reasoner)?;
             emit_explain(cli.format, reasoner.ontology(), &graph, &parse_meta)?;
         }
+        Command::Query { ontology, query } => {
+            let ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
+            let cq = ontologos_ql::parse_conjunctive_query(&query)
+                .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
+            let mut reasoner = Reasoner::builder()
+                .profile(cli.profile.into())
+                .build(ontology)?;
+            let outcome = ontologos_facade::classify(&mut reasoner).map_err(map_facade_error)?;
+            let taxonomy = ontologos_facade::taxonomy_from_outcome(&outcome).ok_or_else(|| {
+                CliError::Core(ontologos_core::Error::Message(
+                    "query requires taxonomy classification outcome".into(),
+                ))
+            })?;
+            let answers = ontologos_ql::answer_query(reasoner.ontology(), taxonomy, &cq)
+                .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
+            match cli.format {
+                OutputFormat::Text => {
+                    println!("answers: {}", answers.len());
+                    for answer in &answers {
+                        for (var, id) in &answer.bindings {
+                            let iri = reasoner
+                                .ontology()
+                                .resolve_iri(reasoner.ontology().entity(*id).expect("entity").iri)
+                                .unwrap_or("?");
+                            println!("  ?{var} -> {iri}");
+                        }
+                    }
+                }
+                OutputFormat::Json => emit_json(&QueryCliOutput {
+                    answers: answers.len(),
+                    parse_meta: &parse_meta,
+                })?,
+            }
+        }
     }
 
     Ok(())
@@ -225,6 +284,14 @@ fn skip_clean_parse_meta(meta: &&ParseMetaSummary) -> bool {
 struct ProfileCliOutput<'a> {
     #[serde(flatten)]
     report: &'a ProfileReport,
+    hybrid_modules: usize,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct QueryCliOutput<'a> {
+    answers: usize,
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }

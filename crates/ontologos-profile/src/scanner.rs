@@ -2,6 +2,14 @@ use std::collections::BTreeSet;
 
 use ontologos_core::{Ontology, OwlConstruct};
 
+/// Collect OWL constructs present in a single axiom.
+#[must_use]
+pub fn axiom_constructs(axiom: &ontologos_core::Axiom) -> BTreeSet<OwlConstruct> {
+    let mut constructs = BTreeSet::new();
+    note_axiom_construct(axiom, &mut constructs);
+    constructs
+}
+
 /// Collect OWL constructs used for profile **classification** (mapped TBox shapes).
 pub fn scan_constructs(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
     if let Some(meta) = ontology.parse_meta() {

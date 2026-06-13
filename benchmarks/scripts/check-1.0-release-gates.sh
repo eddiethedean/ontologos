@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Verify ROADMAP 1.0.0 exit criteria. Fails until all gates are green — do not tag 1.0.0 before this passes.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+FAIL=0
+
+check() {
+  local name="$1"
+  shift
+  if "$@"; then
+    echo "OK  ${name}"
+  else
+    echo "FAIL ${name}" >&2
+    FAIL=1
+  fi
+}
+
+# Workspace must remain 0.9.x until gates pass.
+check "workspace version is 0.9.x" grep -q 'version = "0.9.0"' "${ROOT}/Cargo.toml"
+
+# Conformance active test budget (target ≥400 at 1.0).
+ACTIVE="$("${ROOT}/benchmarks/scripts/report-conformance-coverage.sh" 2>/dev/null | awk '/active in default CI/ {print $NF}')"
+if [[ "${ACTIVE:-0}" -ge 400 ]]; then
+  echo "OK  active conformance tests (${ACTIVE} ≥ 400)"
+else
+  echo "FAIL active conformance tests (${ACTIVE:-0} < 400 target)" >&2
+  FAIL=1
+fi
+
+# Tier A: default conformance green.
+check "Tier A conformance" cargo test -p ontologos-conformance --quiet
+
+# Tier B/C scripts present.
+check "Tier C smoke script" test -x "${ROOT}/benchmarks/scripts/compare-hermit-tier-c.sh"
+check "reference baseline script" test -x "${ROOT}/benchmarks/scripts/run-reference-baseline.sh"
+
+if [[ "${FAIL}" -ne 0 ]]; then
+  echo "" >&2
+  echo "1.0.0 release gates not met — see ROADMAP.md and docs/migration/v0.9.x-to-v1.0.0.md" >&2
+  exit 1
+fi
+
+echo "All 1.0.0 release gates satisfied."

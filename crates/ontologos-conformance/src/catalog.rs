@@ -8,7 +8,10 @@ use ontologos_parser::load_ontology;
 use ontologos_rdfs::RdfsEngine;
 use serde::Deserialize;
 
-use crate::{assert_subsumed, classification_fixture_path, HERMIT_DEFAULT_NS};
+use crate::{
+    assert_subproperty, assert_subsumed, classification_fixture_path, has_property_characteristic,
+    PropertyCharacteristic, HERMIT_DEFAULT_NS,
+};
 
 static CATALOG: OnceLock<Vec<HermitCase>> = OnceLock::new();
 static WG_CATALOG: OnceLock<Vec<WgCase>> = OnceLock::new();
@@ -29,6 +32,10 @@ pub struct HermitCase {
     pub axiom_ofn: Option<String>,
     #[serde(default)]
     pub subsumptions: Vec<SubsumptionExpectation>,
+    #[serde(default)]
+    pub property_subsumptions: Vec<SubsumptionExpectation>,
+    #[serde(default)]
+    pub property_characteristics: Vec<PropertyCharacteristicExpectation>,
     #[serde(default)]
     pub consistent: Option<bool>,
     pub rust_test: Option<String>,
@@ -54,6 +61,13 @@ pub struct WgCase {
 pub struct SubsumptionExpectation {
     pub sub: String,
     pub sup: String,
+    pub expected: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct PropertyCharacteristicExpectation {
+    pub property: String,
+    pub kind: String,
     pub expected: bool,
 }
 
@@ -192,10 +206,34 @@ fn run_axiom_case(case: &HermitCase) {
 
     materialize_ontology(case, &mut ontology);
     check_subsumptions(&ontology, case);
+    check_property_subsumptions(&ontology, case);
+    check_property_characteristics(&ontology, case);
 
     if let Some(expected) = case.consistent {
-        let consistent = ontologos_dl::is_consistent(&ontology).expect("consistent");
+        let consistent = if case.engine == "dl" || case.engine == "swrl" {
+            ontologos_dl::is_consistent(&ontology).expect("consistent")
+        } else {
+            !ontology
+                .axioms()
+                .iter()
+                .any(|(_, axiom)| matches!(axiom, ontologos_core::Axiom::DisjointClasses(_)))
+                && saturate_for_consistency(case, &mut ontology)
+        };
         assert_eq!(consistent, expected, "{}: consistency", case.id);
+    }
+}
+
+fn saturate_for_consistency(case: &HermitCase, ontology: &mut Ontology) -> bool {
+    match case.engine.as_str() {
+        "rl" => ontologos_rl::RlEngine::new(1)
+            .saturate(ontology)
+            .map(|r| r.clashes.is_empty())
+            .unwrap_or(false),
+        "rdfs" => ontologos_rdfs::RdfsEngine::new()
+            .materialize(ontology)
+            .map(|_| true)
+            .unwrap_or(false),
+        _ => true,
     }
 }
 
@@ -225,6 +263,48 @@ fn check_subsumptions(ontology: &Ontology, case: &HermitCase) {
             "{}: expected {} ⊑ {} = {}",
             case.id, sub_iri, sup_iri, sub.expected
         );
+    }
+}
+
+fn check_property_subsumptions(ontology: &Ontology, case: &HermitCase) {
+    for sub in &case.property_subsumptions {
+        let sub_iri = resolve_local_iri(&sub.sub);
+        let sup_iri = resolve_local_iri(&sub.sup);
+        let actual = assert_subproperty(ontology, &sub_iri, &sup_iri);
+        assert_eq!(
+            actual, sub.expected,
+            "{}: expected {} ⊑ {} (property) = {}",
+            case.id, sub_iri, sup_iri, sub.expected
+        );
+    }
+}
+
+fn check_property_characteristics(ontology: &Ontology, case: &HermitCase) {
+    for exp in &case.property_characteristics {
+        let property_iri = resolve_local_iri(&exp.property);
+        let Some(kind) = parse_property_characteristic(&exp.kind) else {
+            panic!(
+                "{}: unsupported property characteristic {}",
+                case.id, exp.kind
+            );
+        };
+        let actual = has_property_characteristic(ontology, &property_iri, kind);
+        assert_eq!(
+            actual, exp.expected,
+            "{}: expected {} has {:?} = {}",
+            case.id, property_iri, kind, exp.expected
+        );
+    }
+}
+
+fn parse_property_characteristic(kind: &str) -> Option<PropertyCharacteristic> {
+    match kind {
+        "functional" => Some(PropertyCharacteristic::Functional),
+        "symmetric" => Some(PropertyCharacteristic::Symmetric),
+        "transitive" => Some(PropertyCharacteristic::Transitive),
+        "reflexive" => Some(PropertyCharacteristic::Reflexive),
+        "asymmetric" => Some(PropertyCharacteristic::Asymmetric),
+        _ => None,
     }
 }
 

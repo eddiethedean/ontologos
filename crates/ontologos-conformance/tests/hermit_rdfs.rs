@@ -155,7 +155,6 @@ fn sub_and_super_concepts() {
 
 /// HermiT `ReasonerTest.testSubAndSuperRoles`
 #[test]
-#[ignore = "reasonable implements rdfs11 (subClassOf) but not subPropertyOf transitivity"]
 fn sub_and_super_roles() {
     let mut ontology = Ontology::builder()
         .object_property(&iri("r"))
