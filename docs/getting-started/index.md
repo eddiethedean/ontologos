@@ -14,9 +14,9 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-ontologos-core = "0.8.0"
-ontologos-parser = "0.8.0"
-ontologos-rdfs = "0.8.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
+ontologos-rdfs = "0.9.0"
 ```
 
 `src/main.rs`:
@@ -29,10 +29,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
     let report = RdfsEngine::new().materialize(&mut ontology)?;
     println!(
-        "inferred {} axioms ({} → {})",
-        report.inferred_total(),
+        "mapped {} → {} axioms (inferred {})",
         report.initial_axiom_count,
-        report.final_axiom_count
+        report.final_axiom_count,
+        report.inferred_total()
     );
     Ok(())
 }
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 Place your OWL file at `ontology.owl`, then `cargo run`.
 
-For OWL RL saturation, add `ontologos-rl = "0.8.0"` and see [OWL RL saturation](owl-rl-saturation.md).
+For OWL RL saturation, add `ontologos-rl = "0.9.0"` and see [OWL RL saturation](owl-rl-saturation.md).
 
 ## I want to try it from a clone
 
@@ -68,9 +68,9 @@ For OWL RL saturation, add `ontologos-rl = "0.8.0"` and see [OWL RL saturation](
 
 ## I want RDFS materialization
 
-Follow [RDFS materialization](rdfs-materialization.md). Prefer CLI **`materialize`** over **`classify`** — both run the same engine in v0.4.
+Follow [RDFS materialization](rdfs-materialization.md). Prefer CLI **`materialize`** over **`classify --profile rdfs`** — both run the same RDFS engine.
 
-## I want OWL RL saturation (v0.4 headline feature)
+## I want OWL RL saturation
 
 Follow [OWL RL saturation](owl-rl-saturation.md) or run:
 
@@ -78,7 +78,13 @@ Follow [OWL RL saturation](owl-rl-saturation.md) or run:
 cargo run -p ontologos-rl --example rl_saturation
 ```
 
-OWL RL is **not** available in the CLI until v0.5 — use the library or Python `profile="rl"`.
+From a clone with the CLI built:
+
+```bash
+./target/release/ontologos classify --profile rl benchmarks/data/family.owl
+```
+
+Or use Python: `Reasoner(path="ontology.owl", profile="rl").classify()`.
 
 ## I'm integrating in Rust
 
@@ -90,6 +96,7 @@ Read [Choosing an API](../guides/choosing-an-api.md) then the guide for your wor
 | Load OWL files | [Load an OWL file](load-owl-file.md) |
 | RDFS materialization | [RDFS materialization](rdfs-materialization.md) |
 | OWL RL saturation | [OWL RL saturation](owl-rl-saturation.md) |
+| OWL EL classification | [OWL EL classification](owl-el-classification.md) |
 | JSON snapshots | [JSON snapshot v2](../json-snapshot-v2.md) |
 
 ## I'm evaluating vs ELK / reasonable
@@ -103,13 +110,24 @@ pip install ontologos
 ```
 
 ```python
-from ontologos import Reasoner
+from ontologos import Reasoner, OntologyBuilder
 
-# Always set profile= — default "auto" fails in v0.4
-Reasoner("ontology.owl", profile="rdfs").classify()
+# profile defaults to "auto" (EL taxonomy or RL saturation)
+r = Reasoner(path="ontology.owl")
+report = r.classify()
+
+# In-memory ontology + incremental edits
+b = OntologyBuilder()
+b.add_class("http://example.org/Food")
+b.add_class("http://example.org/Pizza")
+b.subclass_of("http://example.org/Pizza", "http://example.org/Food")
+r = Reasoner(ontology=b.build(), profile="el", incremental=True)
+r.classify()
+r.add_subclass_of("http://example.org/VeggiePizza", "http://example.org/Pizza")
+r.classify()
 ```
 
-See [Python guide](../guides/python.md).
+See [Python guide](../guides/python.md) and [v0.8→v0.9 migration](../migration/v0.8.x-to-v0.9.0.md).
 
 ## Full learning path
 

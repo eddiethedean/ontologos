@@ -1,6 +1,6 @@
 # RDFS Materialization
 
-RDFS TBox materialization via [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/0.8.0): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
+RDFS TBox materialization via [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/0.9.0): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos materialize path/to/ontology.owl
 ```
 
-Prefer **`materialize`** over **`classify`** — both run the same RDFS engine in v0.4, but `classify` is named like OWL taxonomy classification tools (ELK/HermiT) and is easy to misread.
+Prefer **`materialize`** over **`classify --profile rdfs`** — both run the same RDFS engine, but `classify` is named like OWL taxonomy classification tools (ELK/HermiT) and is easy to misread.
 
 Expected text output (Family corpus, abbreviated):
 
@@ -38,9 +38,9 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "0.8.0"
-ontologos-parser = "0.8.0"
-ontologos-rdfs = "0.8.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
+ontologos-rdfs = "0.9.0"
 ```
 
 Load and materialize:
@@ -96,15 +96,15 @@ println!("axioms: {}", reasoner.ontology().axiom_count());
 
 `inferred_total()` equals `final_axiom_count - initial_axiom_count`.
 
-## What RDFS materializes (v0.4)
+## What RDFS materializes
 
-| Input in core | Materialized |
-|---------------|--------------|
-| `SubClassOf` | Transitive closure |
-| `SubObjectPropertyOf` | Transitive closure |
-| `ObjectPropertyDomain` / `ObjectPropertyRange` | Inherited along `subPropertyOf` |
-| `EquivalentClasses` | Stored only — mutual subsumption via [OWL RL saturation](owl-rl-saturation.md) |
-| ABox assertions | Not propagated — use RL saturation |
+| Input in core | Materialized | Via reasonable |
+|---------------|--------------|----------------|
+| `SubClassOf` | Transitive closure | Yes |
+| `SubObjectPropertyOf` | Transitive closure | **Gap** — see [Reasonable adapter limits](../reference/reasonable-limits.md) |
+| `ObjectPropertyDomain` / `ObjectPropertyRange` | Inherited along `subPropertyOf` | **Gap** — see [Reasonable adapter limits](../reference/reasonable-limits.md) |
+| `EquivalentClasses` | Stored only — mutual subsumption via [OWL RL saturation](../getting-started/owl-rl-saturation.md) | Partial |
+| ABox assertions | Not propagated — use RL saturation | — |
 
 ## Python
 
@@ -121,6 +121,6 @@ See [Python guide](../guides/python.md) for limitations.
 ## Next steps
 
 - [OWL RL saturation](owl-rl-saturation.md) — adds equivalence, ABox propagation, and more
-- [Choosing an API](../guides/choosing-an-api.md) — RDFS vs RL vs future EL
+- [Choosing an API](../guides/choosing-an-api.md) — RDFS vs RL vs EL
 - [Profile detection](../guides/profile-detection.md)
 - [Troubleshooting](../guides/troubleshooting.md)

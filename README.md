@@ -9,6 +9,8 @@
 Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
 **reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
 
+**Try in 5 minutes:** `pip install ontologos` or add `ontologos-parser = "0.9.0"` to Cargo.toml — no clone required.
+
 **Status:** **v0.9.0** ready on `main` (tag pending) — Python ecosystem: in-memory ontologies, `explain()`, incremental mutations. **Not** full OWL DL / HermiT replacement.
 
 | You need… | Use today |

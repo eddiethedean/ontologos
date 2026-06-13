@@ -104,6 +104,10 @@ jobs:
       - name: Install MkDocs
         run: pip install -r docs/requirements.txt
       - name: Build documentation site
-        env:
-          NO_MKDOCS_2_WARNING: "1"
-        run: mkdocs build --strict
+        run: |
+          chmod +x docs/build-site.sh
+          ./docs/build-site.sh
+      - name: Documentation version consistency
+        run: |
+          chmod +x docs/scripts/check-doc-versions.sh
+          ./docs/scripts/check-doc-versions.sh

@@ -53,10 +53,10 @@ Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology l
 
 ## `classify` / `explain` behavior
 
-CLI **`classify --profile auto|el|rl|rdfs`** routes to EL taxonomy, RL saturation, or RDFS materialization. Use **`materialize`** for explicit RDFS. **`explain`** is available in v0.8.0.
+CLI **`classify --profile auto|el|rl|rdfs`** routes to EL taxonomy, RL saturation, or RDFS materialization. Use **`materialize`** for explicit RDFS. **`explain`** is available in v0.9.0.
 
-Library users: call `ontologos_rdfs::classify_reasoner` for `Profile::Rdfs`; `ontologos_rl::classify_reasoner` for `Profile::Rl`. `Reasoner::classify()` returns a delegate hint for `Profile::Rdfs` / `Profile::Rl` and `NotImplemented` for `Profile::Auto` / `El`. See [CLI reference](../reference/cli.md) and [errors.md](../reference/errors.md).
+Library users: call `ontologos_el::classify_with_profile`, `ontologos_rdfs::classify_reasoner`, or `ontologos_rl::classify_reasoner`. **Do not** call `ontologos_core::Reasoner::classify()` directly — it returns delegate hints for RDFS/RL and `NotImplemented` for EL/Auto. CLI and Python route correctly. See [CLI reference](../reference/cli.md), [errors.md](../reference/errors.md), and [Choosing an API](../guides/choosing-an-api.md).
 
 ## RDFS does not expand `EquivalentClasses`
 
-v0.4 RDFS materializes `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance only. Named `EquivalentClasses` axioms are expanded into mutual subsumption by `ontologos-rl` during saturation. ABox `rdf:type` propagation is handled by RL rules when using `ontologos-rl` or Python `profile="rl"`.
+RDFS materializes primarily `subClassOf` transitive closure via reasonable. Some RDFS rules (`subPropertyOf` transitivity, domain/range inheritance) have [upstream gaps](../reference/reasonable-limits.md). Named `EquivalentClasses` axioms are expanded into mutual subsumption by `ontologos-rl` during saturation. ABox `rdf:type` propagation is handled by RL rules when using `ontologos-rl` or Python `profile="rl"`.

@@ -18,17 +18,19 @@ See [Load an OWL file](https://ontologos.readthedocs.io/en/latest/getting-starte
 
 ## Which crate should I depend on?
 
-For **v0.8.0**, typical workflows use:
+For **v0.9.0**, typical workflows use:
 
 ```toml
 [dependencies]
-ontologos-core = "0.8.0"
-ontologos-parser = "0.8.0"   # OWL/RDF file loading
-ontologos-profile = "0.8.0"  # EL / RL / QL / DL detection
-ontologos-rdfs = "0.8.0"     # RDFS materialization
-ontologos-rl = "0.8.0"       # OWL RL saturation
-ontologos-el = "0.8.0"       # OWL EL classification
-ontologos-explain = "0.8.0"  # Proof graphs
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"   # OWL/RDF file loading
+ontologos-profile = "0.9.0"  # EL / RL / QL / DL detection
+ontologos-rdfs = "0.9.0"     # RDFS materialization
+ontologos-rl = "0.9.0"       # OWL RL saturation
+ontologos-el = "0.9.0"       # OWL EL classification
+ontologos-explain = "0.9.0"  # Proof graphs
+ontologos-query = "0.9.0"    # Taxonomy queries
+ontologos-bridge = "0.9.0"   # Engine adapters (usually transitive)
 ```
 
 Depend on **`ontologos-core` only** if you build ontologies programmatically or from JSON snapshots.
@@ -37,7 +39,7 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Not for full OWL DL classification.** v0.8.0 loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. CLI `classify --profile auto|el|rl|rdfs` routes to the correct engine. Use Protégé with HermiT or Konclude for production OWL DL workflows.
+**Not for full OWL DL classification.** v0.9.0 loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. CLI `classify --profile auto|el|rl|rdfs` routes to the correct engine. Use Protégé with HermiT or Konclude for production OWL DL workflows.
 
 OntoLogos is for early adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
 
@@ -58,7 +60,7 @@ See [Profile detection](https://ontologos.readthedocs.io/en/latest/guides/profil
 
 ## Why doesn't `ontology.axiom_count()` match Protégé's axiom count?
 
-The parser maps a subset of OWL constructs into the core model. Complex class expressions, many data-property axioms, and some property axioms are scanned for profile detection but **skipped** during mapping. Named ABox axioms (`ClassAssertion`, `ObjectPropertyAssertion`, `SameIndividual`, `DifferentIndividuals`) are mapped in v0.4. `axiom_count()` is **mapper output**, not raw OWL logical axiom count.
+The parser maps a subset of OWL constructs into the core model. Complex class expressions, many data-property axioms, and some property axioms are scanned for profile detection but **skipped** during mapping. Named ABox axioms (`ClassAssertion`, `ObjectPropertyAssertion`, `SameIndividual`, `DifferentIndividuals`) are mapped. `axiom_count()` is **mapper output**, not raw OWL logical axiom count.
 
 See [Protégé vs OntoLogos counts](https://ontologos.readthedocs.io/en/latest/guides/protege-axiom-counts/), [Troubleshooting](https://ontologos.readthedocs.io/en/latest/guides/troubleshooting/), and [Supported constructs](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/).
 
@@ -93,22 +95,57 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.8.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.8.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.8.0), [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.8.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.8.0)
-- Guides: [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api/) · [Architecture](https://ontologos.readthedocs.io/en/latest/architecture/) · [OWL RL](https://ontologos.readthedocs.io/en/latest/getting-started/owl-rl-saturation/)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.9.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.9.0), [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.9.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.9.0), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/0.9.0), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/0.9.0), [docs.rs/ontologos-query](https://docs.rs/ontologos-query/0.9.0)
+- Site reference: [Explain API](https://ontologos.readthedocs.io/en/latest/reference/explain/) · [Query API](https://ontologos.readthedocs.io/en/latest/reference/query/) · [CLI](https://ontologos.readthedocs.io/en/latest/reference/cli/)
+- Guides: [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api/) · [Architecture](https://ontologos.readthedocs.io/en/latest/architecture/)
 - Local: `cargo doc -p ontologos-core --open`
 - Error catalog: [Error reference](https://ontologos.readthedocs.io/en/latest/reference/errors/)
-- CLI: [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli/)
 
 ## Does `pip install ontologos` work?
 
-The PyPI package is an **alpha** release (v0.8.0). It supports `profile="auto"`, `"el"`, `"rl"`, and `"rdfs"`:
+The PyPI package is **v0.9.0** (pre-1.0). It supports file and in-memory ontologies, `profile="auto"|"el"|"rl"|"rdfs"`, incremental mutations, `explain()`, and optional pandas/polars export:
 
 ```python
-Reasoner("ontology.owl", profile="rdfs").classify()  # RDFS materialization
-Reasoner("ontology.owl", profile="rl").classify()    # OWL RL saturation
+from ontologos import Reasoner, OntologyBuilder
+
+Reasoner(path="ontology.owl", profile="auto").classify()
+Reasoner(path="ontology.owl", profile="el").classify()
+Reasoner(path="ontology.owl", profile="rl").classify()
 ```
 
-See [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python/) for the full API and limitations.
+Optional extras: `pip install 'ontologos[pandas]'` or `'ontologos[polars]'`.
+
+See [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python/) and [v0.8→v0.9 migration](https://ontologos.readthedocs.io/en/latest/migration/v0.8.x-to-v0.9.0/).
+
+## When should I use `OntologyBuilder` vs loading a file?
+
+Use **`Reasoner(path=...)`** when you have an OWL/RDF file on disk.
+
+Use **`OntologyBuilder`** or **`Ontology.from_dict`** when constructing ontologies in memory (tests, pipelines, incremental edit workflows) without a parser round-trip. Pass the result to `Reasoner(ontology=..., profile=...)`.
+
+## What does `explain()` cover?
+
+| Profile | Coverage |
+|---------|----------|
+| **EL** | Full inference traces → proof graph with IRI-resolved conclusions |
+| **RL / RDFS** | Proof graph seeds **asserted** axioms; inferred steps lack per-rule premises until reasonable exposes a trace API |
+| **auto** | Routes like `classify`; DL-only ontologies error |
+
+See [Explain API reference](https://ontologos.readthedocs.io/en/latest/reference/explain/).
+
+## How does incremental reasoning work in Python?
+
+Pass `incremental=True` to `Reasoner`, call `classify()`, then mutate the ontology (`add_subclass_of`, `remove_subclass_of`, `add_axiom_json`), and call `classify()` again. Each pass reuses the session when the delta is small.
+
+See [Incremental reasoning guide](https://ontologos.readthedocs.io/en/latest/guides/incremental-reasoning/).
+
+## Is the Python `Reasoner` thread-safe?
+
+No. Each `Reasoner` instance should be used from one thread at a time. Create separate instances per worker or guard access with your own synchronization.
+
+## Why does `Reasoner::classify()` on core return `NotImplemented`?
+
+`ontologos_core::Reasoner::classify()` is a facade stub: it returns delegate hints for RDFS/RL and `NotImplemented` for EL. Use **CLI** (`ontologos classify`), **Python** (`Reasoner.classify()`), or profile crates directly (`ElClassifier`, `RlEngine`, `RdfsEngine`, `classify_with_profile`).
 
 ## Where do I ask questions?
 

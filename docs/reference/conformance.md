@@ -1,6 +1,6 @@
 # Conformance Coverage
 
-Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. OntoLogos v0.8.0 ships EL classification, RL/RDFS saturation via reasonable, explanations, and growing HermiT ports.
+Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. OntoLogos v0.9.0 ships EL classification, RL/RDFS saturation via reasonable, explanations, incremental reasoning, and growing HermiT ports.
 
 ## HermiT porting strategy
 

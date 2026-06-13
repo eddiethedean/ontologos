@@ -31,7 +31,7 @@ flowchart TD
   profile --> detect[ontologos_profile_detect_profile]
   rdfsGoal --> rdfsEng[RdfsEngine_materialize]
   rlGoal --> rlEng[RlEngine_saturate]
-  elGoal --> elStub[Not_available_v0_5]
+  elGoal --> elEng[ElClassifier_classify]
 ```
 
 ## By task
@@ -120,7 +120,7 @@ See [RDFS materialization](../getting-started/rdfs-materialization.md).
 
 **Crates:** `ontologos-rl` (+ parser if loading files)
 
-**Direct (recommended for v0.4):**
+**Direct:**
 
 ```rust
 use ontologos_rl::RlEngine;
@@ -168,7 +168,7 @@ See [OWL EL classification](../getting-started/owl-el-classification.md).
 
 ### Python
 
-**Package:** `pip install ontologos` (alpha)
+**Package:** `pip install ontologos` (v0.9.0)
 
 ```python
 from ontologos import Reasoner
@@ -202,7 +202,7 @@ There is no single `ontologos` meta-crate on crates.io.
 | `Reasoner::classify()` for RL/RDFS | Use profile crate helpers |
 | Expect CLI `classify` to run DL | Use EL/RL/RDFS profiles; full DL is v2.0 |
 | Compare axiom count to Protégé | See [supported constructs](../reference/supported-constructs.md) |
-| `Profile::Auto` on core reasoner | Detect profile explicitly, pick engine |
+| `Profile::Auto` on core reasoner | Use `classify_with_profile`, CLI `classify --profile auto`, or Python `profile="auto"` |
 
 ## Related
 

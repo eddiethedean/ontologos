@@ -1,6 +1,6 @@
 # OWL RL Rules Reference
 
-> **v0.8.0 adapter note:** `ontologos-rl` delegates to **reasonable**. `MaterializationReport::inferred_by_rule` and `rdfs_inferred` are empty until reasonable exposes rule-level diagnostics; use `inferred_total()` and axiom counts for saturation metrics. The rule keys below describe the OWL RL semantics reasonable implements.
+> **v0.9.0 adapter note:** `ontologos-rl` delegates to **reasonable**. `MaterializationReport::inferred_by_rule` and `rdfs_inferred` are empty until reasonable exposes rule-level diagnostics; use `inferred_total()` and axiom counts for saturation metrics. The rule keys below describe the OWL RL semantics reasonable implements.
 
 Rule names emitted in `MaterializationReport::inferred_by_rule` after `RlEngine::saturate` (when populated). JSON serialization uses snake_case (via `RlRule::as_str()`).
 
@@ -69,4 +69,4 @@ See [Supported constructs](supported-constructs.md).
 ## Related
 
 - [OWL RL saturation guide](../getting-started/owl-rl-saturation.md)
-- [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.8.0)
+- [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.9.0)

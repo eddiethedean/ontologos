@@ -1,4 +1,4 @@
-# Supported OWL Constructs (v0.8.0)
+# Supported OWL Constructs (v0.9.0)
 
 The parser **maps** a subset of OWL TBox axioms into `ontologos-core`. Other constructs are **scanned** for profile detection (`ParseMeta.constructs`) but **skipped** with warnings.
 
@@ -43,18 +43,22 @@ Skipped axioms increment `parse_meta.skipped_axiom_count` and append to `parse_m
 
 ## RDFS materialization scope
 
-| Input in core | Materialized by `ontologos-rdfs` |
-|---------------|----------------------------------|
-| `SubClassOf` | Transitive closure |
-| `SubObjectPropertyOf` | Transitive closure |
-| `ObjectPropertyDomain` / `ObjectPropertyRange` | Inherited along `subPropertyOf` |
-| `EquivalentClasses` | Stored only; mutual `SubClassOf` via `ontologos-rl` |
+`ontologos-rdfs` delegates to **reasonable**. The table below describes intended RDFS semantics; gaps are tracked in [Reasonable adapter limits](reasonable-limits.md) and the [dependency-first ADR](../internal/design/dependency-first.md).
 
-## OWL RL saturation scope (v0.4)
+| Input in core | Intended materialization | Implemented via reasonable |
+|---------------|--------------------------|----------------------------|
+| `SubClassOf` | Transitive closure | Yes |
+| `SubObjectPropertyOf` | Transitive closure | **No** (upstream gap) |
+| `ObjectPropertyDomain` / `ObjectPropertyRange` | Inherited along `subPropertyOf` | **No** (upstream gap) |
+| `EquivalentClasses` | Stored only; mutual `SubClassOf` via `ontologos-rl` | Partial |
 
-`RlEngine::saturate` runs RDFS materialization first, then RL TBox/ABox rules (equivalence, property characteristics, existentials, type/property propagation, `sameAs`, clash detection). See [OWL RL saturation](../getting-started/owl-rl-saturation.md).
+Use `inferred_total()` and axiom counts for saturation metrics. `MaterializationReport::inferred_by_rule` may be empty until reasonable exposes rule-level diagnostics.
 
-**Clash detection (v0.4):** direct disjoint class pairs on an individual's types; `sameAs` / `differentFrom` inconsistency within a `sameAs` cluster. Functional-property duplicate values, asymmetric reverse pairs, and disjointness via subclass closure are not yet reported.
+## OWL RL saturation scope
+
+`RlEngine::saturate` runs RDFS materialization first, then RL TBox/ABox rules (equivalence, property characteristics, existentials, type/property propagation, `sameAs`, clash detection). Some RL rules depend on RDFS gaps above — see [Reasonable adapter limits](reasonable-limits.md). See [OWL RL saturation](../getting-started/owl-rl-saturation.md).
+
+**Clash detection:** direct disjoint class pairs on an individual's types; `sameAs` / `differentFrom` inconsistency within a `sameAs` cluster. Functional-property duplicate values, asymmetric reverse pairs, and disjointness via subclass closure are not yet reported.
 
 ## Profile detection input
 
@@ -68,5 +72,6 @@ See [Profile detection](../guides/profile-detection.md).
 ## Related
 
 - [Load an OWL file](../getting-started/load-owl-file.md)
+- [Reasonable adapter limits](reasonable-limits.md)
 - [Troubleshooting](../guides/troubleshooting.md)
 - Mapper implementation: `crates/ontologos-parser/src/map.rs`

@@ -1,6 +1,6 @@
 # OWL RL Saturation
 
-v0.4 adds OWL 2 RL forward-chaining via [`ontologos-rl`](https://docs.rs/ontologos-rl/0.8.0). The engine runs RDFS materialization first, then applies RL TBox and ABox rules until a fixed point.
+OWL 2 RL forward-chaining via [`ontologos-rl`](https://docs.rs/ontologos-rl/0.9.0). The engine runs RDFS materialization first, then applies RL TBox and ABox rules until a fixed point.
 
 ## Prerequisites
 
@@ -17,20 +17,21 @@ cargo run -p ontologos-rl --example rl_saturation
 
 The Family benchmark is an OWL RL corpus with ABox assertions. Profile detection typically reports `Rl`.
 
-### CLI (profile only)
+### CLI
 
 ```bash
 cargo build -p ontologos-cli --release
 ./target/release/ontologos profile benchmarks/data/family.owl
+./target/release/ontologos classify --profile rl benchmarks/data/family.owl
 ```
 
-Expected output (abbreviated):
+Profile detection output (abbreviated):
 
 ```text
 detected profile: Rl
 ```
 
-The CLI does **not** run OWL RL saturation yet — use the library or Python (see below).
+`classify --profile rl` runs OWL RL saturation and prints subsumption counts or a materialization report. Use `--format json` for machine-readable output. See [CLI reference](../reference/cli.md).
 
 ### Library
 
@@ -38,9 +39,9 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "0.8.0"
-ontologos-parser = "0.8.0"
-ontologos-rl = "0.8.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
+ontologos-rl = "0.9.0"
 ```
 
 Load and saturate:
@@ -143,7 +144,8 @@ See [Python guide](../guides/python.md) for limitations.
 
 ## Next steps
 
-- [Choosing an API](../guides/choosing-an-api.md) — when to use RDFS vs RL vs future EL
+- [Choosing an API](../guides/choosing-an-api.md) — when to use RDFS vs RL vs EL
+- [OWL EL classification](owl-el-classification.md) — completion-based taxonomy
 - [RL rules reference](../reference/rl-rules.md) — rule names and meanings
 - [Profile detection](../guides/profile-detection.md) — confirm your ontology is RL before saturating
 - [Troubleshooting](../guides/troubleshooting.md) — common issues

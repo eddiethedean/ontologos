@@ -2,7 +2,7 @@
 
 Binary: `ontologos` (from `ontologos-cli` crate).
 
-> **v0.5:** `classify` routes by `--profile` (default `auto`) to OWL EL taxonomy, OWL RL saturation, or RDFS materialization — matching Protégé/HermiT "Classify" semantics for EL. Use `materialize` for explicit RDFS.
+> **v0.9.0:** `classify` routes by `--profile` (default `auto`) to OWL EL taxonomy, OWL RL saturation, or RDFS materialization. Use `materialize` for explicit RDFS. `explain` emits proof graphs (JSON or text).
 
 ## Install
 
@@ -41,7 +41,7 @@ ontologos --help
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
 | `classify <file>` | **Works** | Profile-routed classification / saturation |
 | `materialize <file>` | **Works** | Explicit RDFS TBox materialization |
-| `explain <file>` | **v0.8.0** | Proof graph JSON/text; supports `--profile` |
+| `explain <file>` | **v0.9.0** | Proof graph JSON/text; supports `--profile` |
 
 ### `classify`
 
@@ -63,6 +63,51 @@ ontologos classify --profile rdfs ontology.owl
 ontologos classify --profile auto ontology.owl
 ontologos materialize ontology.owl
 ontologos --format json classify --profile el pizza.owl
+ontologos explain --profile el benchmarks/data/pizza.owl
+ontologos --format json explain --profile el benchmarks/data/pizza.owl
+ontologos classify --incremental --profile el ontology.owl
+```
+
+### `--incremental`
+
+Single-shot CLI mode: loads the ontology, runs one incremental pass, and exits. Library and Python workflows can hold session state across multiple `classify()` calls after in-memory edits. See [Incremental reasoning](../guides/incremental-reasoning.md).
+
+### JSON output shapes
+
+**`classify --profile el` (JSON):**
+
+```json
+{
+  "status": "classified",
+  "subsumption_count": 84,
+  "subsumptions": [["http://...", "http://..."]],
+  "equivalences": [],
+  "unsatisfiable": []
+}
+```
+
+**`classify --profile rl|rdfs` / `materialize` (JSON):**
+
+```json
+{
+  "status": "materialized",
+  "initial_axiom_count": 57,
+  "final_axiom_count": 62,
+  "inferred_axioms": 5,
+  "inferred_by_rule": {},
+  "clashes": []
+}
+```
+
+**`explain` (JSON):** Serialized `ProofGraph` — see [Explain API](explain.md).
+
+**`profile` (JSON):**
+
+```json
+{
+  "detected": "RL",
+  "diagnostics": []
+}
 ```
 
 ## Migration from v0.4

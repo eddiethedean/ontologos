@@ -14,6 +14,7 @@ docs_dir: docs
 
 exclude_docs: |
   internal/research/
+  internal/v0.5-docs-plan.md
   README.md
   project/overview.md
   project/roadmap.md
@@ -76,6 +77,9 @@ nav:
       - CLI: reference/cli.md
       - Errors: reference/errors.md
       - Supported constructs: reference/supported-constructs.md
+      - Reasonable adapter limits: reference/reasonable-limits.md
+      - Explain API: reference/explain.md
+      - Query API: reference/query.md
       - JSON snapshot v2: json-snapshot-v2.md
       - RL rules: reference/rl-rules.md
       - Conformance: reference/conformance.md
@@ -90,6 +94,7 @@ nav:
           - ontologos-query: https://docs.rs/ontologos-query/0.9.0
           - ontologos-explain: https://docs.rs/ontologos-explain/0.9.0
   - Migration:
+      - Upgrade to latest: migration/index.md
       - v0.1 to v0.2: migration/v0.1-to-v0.2.md
       - v0.2 to v0.3: migration/v0.2-to-v0.3.md
       - v0.3.0 to v0.3.1: migration/v0.3.0-to-v0.3.1.md
@@ -101,13 +106,13 @@ nav:
       - v0.8.x to v0.9.0: migration/v0.8.x-to-v0.9.0.md
   - Project:
       - FAQ: project/faq.md
+      - Release notes: project/release-notes.md
       - Roadmap summary: project/roadmap-summary.md
       - Changelog: project/changelog.md
       - Contributing: project/contributing.md
       - Documentation build: readthedocs.md
       - Technical spec: project/spec.md
       - Benchmarks: project/benchmarks.md
-      - v0.5 docs plan: project/v0.5-docs-plan.md
       - Security policy: project/security-policy.md
       - Code of conduct: project/code-of-conduct.md
 

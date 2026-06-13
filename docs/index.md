@@ -54,6 +54,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | [load-owl-file.md](getting-started/load-owl-file.md) | Load OWL/RDF files with `ontologos-parser` |
 | [rdfs-materialization.md](getting-started/rdfs-materialization.md) | RDFS TBox materialization |
 | [owl-rl-saturation.md](getting-started/owl-rl-saturation.md) | OWL RL forward-chaining |
+| [owl-el-classification.md](getting-started/owl-el-classification.md) | OWL EL taxonomy classification |
 | [json-snapshot-v2.md](json-snapshot-v2.md) | JSON v2 format, limits, migration |
 
 ## Guides
@@ -80,6 +81,9 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | [errors.md](reference/errors.md) | Error enums (core, parser, profile, engines) |
 | [cli.md](reference/cli.md) | `ontologos` command-line tool |
 | [supported-constructs.md](reference/supported-constructs.md) | Mapped vs skipped OWL constructs |
+| [reasonable-limits.md](reference/reasonable-limits.md) | Upstream reasonable adapter gaps |
+| [explain.md](reference/explain.md) | Proof graphs (Rust, CLI, Python) |
+| [query.md](reference/query.md) | Taxonomy query API |
 | [rl-rules.md](reference/rl-rules.md) | OWL RL rule catalog |
 | [conformance.md](reference/conformance.md) | HermiT-ported test coverage |
 | [json-snapshot-v2.md](json-snapshot-v2.md) | JSON snapshot schema |
@@ -97,6 +101,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 
 | Document | Description |
 |----------|-------------|
+| [Upgrade to latest](migration/index.md) | Jump to v0.9.0 from any version |
 | [v0.1-to-v0.2.md](migration/v0.1-to-v0.2.md) | Upgrade guide |
 | [v0.2-to-v0.3.md](migration/v0.2-to-v0.3.md) | RDFS engine and materialize CLI |
 | [v0.3.0-to-v0.3.1.md](migration/v0.3.0-to-v0.3.1.md) | Patch: classify CLI report |
@@ -112,6 +117,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | Document | Description |
 |----------|-------------|
 | [faq.md](project/faq.md) | Common questions |
+| [release-notes.md](project/release-notes.md) | Version highlights |
 | [roadmap-summary.md](project/roadmap-summary.md) | Release plan overview |
 | [changelog.md](project/changelog.md) | Release history |
 | [contributing.md](project/contributing.md) | Development workflow |

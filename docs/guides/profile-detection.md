@@ -1,6 +1,6 @@
 # Profile Detection
 
-Detect which OWL 2 profile best fits an ontology using [`ontologos-profile`](https://docs.rs/ontologos-profile/0.8.0).
+Detect which OWL 2 profile best fits an ontology using [`ontologos-profile`](https://docs.rs/ontologos-profile/0.9.0).
 
 ## CLI
 
@@ -53,10 +53,23 @@ Classification reflects what the reasoner can use from the core model; diagnosti
 
 | Profile | Meaning |
 |---------|---------|
-| `El` | OWL 2 EL — polynomial EL classification target (v0.5) |
-| `Rl` | OWL 2 RL — rule-based materialization target (v0.4) |
-| `Ql` | OWL 2 QL — query language profile |
-| `Dl` | Outside EL/RL/QL — full DL fallback |
+| `El` | OWL 2 EL — in-house completion classification (`ontologos-el`) |
+| `Rl` | OWL 2 RL — rule-based materialization via reasonable |
+| `Ql` | OWL 2 QL — **detection only** (no reasoning engine in v0.9.0) |
+| `Dl` | Outside EL/RL/QL — **detection only** (full DL reasoning is v2.0) |
+
+## QL and DL: detection only
+
+OntoLogos can **detect** QL and DL profiles but does **not** run a QL or DL reasoner today.
+
+| Action | QL detected | DL detected |
+|--------|-------------|-------------|
+| CLI `classify --profile auto` | Error — no auto route | Error — use explicit `el`, `rl`, or `rdfs` if applicable |
+| CLI `classify --profile el` | May error if mapped axioms are not EL | May classify mapped EL subset or error on forbidden constructs |
+| Python `profile="auto"` | Same as CLI | Same as CLI |
+| Recommended fallback | Use Protégé + HermiT/Konclude for DL; explicit `--profile rl` or `rdfs` for rule-based materialization on RL-shaped subsets |
+
+See [Reasonable adapter limits](../reference/reasonable-limits.md) and [Comparison](../comparison.md).
 
 ## JSON output shape
 

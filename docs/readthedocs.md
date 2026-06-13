@@ -26,7 +26,7 @@ No secrets are required for a standard public MkDocs build.
 python3 -m venv .venv-docs
 source .venv-docs/bin/activate
 pip install -r docs/requirements.txt
-mkdocs serve
+./docs/serve-site.sh
 ```
 
 Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) for live reload.
@@ -34,7 +34,8 @@ Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) for live reload.
 Static output:
 
 ```bash
-NO_MKDOCS_2_WARNING=1 mkdocs build --strict
+chmod +x docs/build-site.sh
+./docs/build-site.sh
 ```
 
 Output directory: `site/` (gitignored).
@@ -48,4 +49,4 @@ Output directory: `site/` (gitignored).
 
 ## CI
 
-GitHub Actions runs `NO_MKDOCS_2_WARNING=1 mkdocs build --strict` on every push/PR to validate the docs site builds cleanly.
+GitHub Actions runs `./docs/build-site.sh` (strict validation, no Material banner) on every push/PR to validate the docs site builds cleanly.

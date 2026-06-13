@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Python:** optional `subsumptions_to_pandas` / `subsumptions_to_polars` export helpers
 - **CI:** Pizza EL golden pytest; macOS Python job; corpora download before Python tests
 
+### Documentation
+
+- Site-wide version sync to **0.9.0**; new Explain/Query/Reasonable-limits reference pages; migration landing page
+- See [docs/migration/v0.8.x-to-v0.9.0.md](docs/migration/v0.8.x-to-v0.9.0.md)
+
 ### Changed
 
 - Workspace and PyPI package bump to **0.9.0**
@@ -295,7 +300,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/eddiethedean/ontologos/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/eddiethedean/ontologos/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/eddiethedean/ontologos/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/eddiethedean/ontologos/compare/v0.6.0...v0.6.1
