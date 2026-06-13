@@ -1,12 +1,12 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos is **not** a drop-in HermiT replacement. From v0.9.0 it **orchestrates** in-house OWL EL completion and **reasonable** (RL/RDFS) behind a unified API.
+Honest positioning for evaluators. OntoLogos is **not** yet a drop-in HermiT replacement. From v1.0.0 it **orchestrates** in-house OWL EL completion, **reasonable** (RL/RDFS), and a growing DL engine behind a unified API.
 
 See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
 
 ## Maturity matrix
 
-| Capability | OntoLogos v0.9.0 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+| Capability | OntoLogos v1.0.0 | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|-----------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
@@ -18,8 +18,8 @@ See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
 | Unified multi-profile CLI/Python | **Yes** | No | No | No | RL only | EL only | Via plugins |
 | Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |
-| Hybrid EL+DL routing | **Preview** (v0.9+ `main`) | No | No | Internal | No | No | MORe plugin |
-| Explanations | EL-first (v0.9.0) | Yes | Yes | Partial | Limited | No | Yes |
+| Hybrid EL+DL routing | **Preview** (v1.0 `main`) | No | No | Internal | No | No | MORe plugin |
+| Explanations | EL-first (v1.0.0) | Yes | Yes | Partial | Limited | No | Yes |
 | Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
 
 CLI `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` routes via `ontologos-facade`. Preview DL/ALC/SWRL are incomplete — see [Preview profiles](guides/preview-profiles.md). Use `materialize` for explicit RDFS.

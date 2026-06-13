@@ -27,6 +27,21 @@ OUT_RUST = REPO / "crates/ontologos-conformance/tests/hermit_generated.rs"
 OUT_WG_RUST = REPO / "crates/ontologos-conformance/tests/hermit_wg_generated.rs"
 OUT_WG_DATA = REPO / "benchmarks/data/hermit/wg"
 OUT_WG_CATALOG = REPO / "benchmarks/data/hermit/catalog/wg_cases.json"
+PROMOTED_AXIOM_PATH = REPO / "benchmarks/data/hermit/catalog/promoted_axiom_ids.txt"
+
+
+def load_promoted_axiom_ids() -> set[str]:
+    if not PROMOTED_AXIOM_PATH.is_file():
+        return set()
+    ids: set[str] = set()
+    for line in PROMOTED_AXIOM_PATH.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            ids.add(line)
+    return ids
+
+
+PROMOTED_AXIOM_IDS = load_promoted_axiom_ids()
 
 # Approved OWL WG DL entailment subset (premise/conclusion RDF vendored from all.rdf).
 # Promote to status=wg only after ontologos-dl passes entailment on each case.
@@ -471,6 +486,11 @@ def infer_status(case: HermitCase) -> None:
     if case.id in MIGRATED_INTERNAL_IDS:
         case.status = "migrated"
         case.ignore_reason = "ported to ontologos-alc/dl unit tests"
+        return
+    if case.id in PROMOTED_AXIOM_IDS and case.axiom_ofn:
+        case.status = "axiom"
+        case.tier = "A"
+        case.ignore_reason = None
         return
     if case.id in DEFERRED_DL_AXIOM_IDS:
         case.status = "planned"

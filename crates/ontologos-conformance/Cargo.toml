@@ -28,6 +28,14 @@ serde_json = { workspace = true }
 name = "dl_ofn_pass_rate"
 path = "src/bin/dl_ofn_pass_rate.rs"
 
+[[bin]]
+name = "promote_catalog"
+path = "src/bin/promote_catalog.rs"
+
+[[bin]]
+name = "dl_failures"
+path = "src/bin/dl_failures.rs"
+
 [dev-dependencies]
 ontologos-conformance = { path = "." }
 ontologos-el = { workspace = true }

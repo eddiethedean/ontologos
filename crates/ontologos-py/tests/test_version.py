@@ -30,7 +30,7 @@ PIZZA_MINIMAL_JSON = (
 def test_version_matches_release() -> None:
     import ontologos
 
-    assert ontologos.__version__ == "0.9.0"
+    assert ontologos.__version__ == "1.0.0"
 
 
 def test_reasoner_import() -> None:

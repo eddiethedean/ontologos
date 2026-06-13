@@ -4,7 +4,9 @@ use horned_owl::model::{
     ClassExpression, DataProperty, DataRange, Individual, Literal, NamedIndividual,
     ObjectPropertyExpression, PropertyExpression, RcStr,
 };
-use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, EntityKind, RoleExpr};
+use ontologos_core::{
+    CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, EntityKind, OwlConstruct, RoleExpr,
+};
 
 use crate::map::Mapper;
 
@@ -174,7 +176,29 @@ impl Mapper<'_> {
             sub: sub_id,
             sup: sup_id,
         });
+        if Self::class_expression_uses_datatype(sub) || Self::class_expression_uses_datatype(sup) {
+            self.report
+                .meta
+                .note_profile_construct(OwlConstruct::Datatype);
+        }
         true
+    }
+
+    fn class_expression_uses_datatype(ce: &ClassExpression<RcStr>) -> bool {
+        use ClassExpression::*;
+        match ce {
+            DataSomeValuesFrom { .. }
+            | DataAllValuesFrom { .. }
+            | DataHasValue { .. }
+            | DataMinCardinality { .. }
+            | DataMaxCardinality { .. }
+            | DataExactCardinality { .. } => true,
+            ObjectIntersectionOf(ops) | ObjectUnionOf(ops) => {
+                ops.iter().any(Self::class_expression_uses_datatype)
+            }
+            ObjectComplementOf(inner) => Self::class_expression_uses_datatype(inner),
+            _ => false,
+        }
     }
 
     pub(crate) fn map_dl_equivalent_classes(&mut self, classes: &[ClassExpression<RcStr>]) -> bool {

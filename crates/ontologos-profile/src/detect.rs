@@ -46,6 +46,10 @@ fn classify_profile(ontology: &Ontology, mapped: &BTreeSet<OwlConstruct>) -> Owl
         return OwlProfile::Dl;
     }
 
+    if mapped.contains(&OwlConstruct::Datatype) {
+        return OwlProfile::Dl;
+    }
+
     if satisfies_ql(mapped) {
         return OwlProfile::Ql;
     }

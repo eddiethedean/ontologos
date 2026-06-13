@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "ontologos"
-version = "0.9.0"
+version = "1.0.0"
 description = "Python bindings for the OntoLogos OWL reasoner — RDFS, OWL RL, and OWL EL classification"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,7 +12,7 @@ license = { text = "MIT OR Apache-2.0" }
 authors = [{ name = "Odo Matthews", email = "odosmatthews@gmail.com" }]
 keywords = ["owl", "ontology", "reasoner", "semantic-web", "description-logic"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",

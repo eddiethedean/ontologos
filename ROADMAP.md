@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds profi
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.9.0** · **Current focus:** expressivity tracks (v1.5–v1.9) → **1.0 HermiT parity**
+**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** HermiT parity toward 1.0 release gates
 
 ---
 

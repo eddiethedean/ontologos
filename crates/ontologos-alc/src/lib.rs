@@ -64,17 +64,6 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
 
 /// Classify with saturation-derived seed facts.
 pub fn classify_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Result<Taxonomy> {
-    let report = detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
-    if !matches!(
-        report.detected,
-        Some(OwlProfile::El | OwlProfile::Ql | OwlProfile::Dl)
-    ) {
-        if let Some(p) = report.detected {
-            if p == OwlProfile::Rl {
-                return Err(Error::NonAlcProfile(p));
-            }
-        }
-    }
     tableau::classify_with_seed(ontology, seed)
 }
 

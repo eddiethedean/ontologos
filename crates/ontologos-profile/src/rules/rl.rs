@@ -12,6 +12,8 @@ pub(crate) const RL_FORBIDDEN: &[OwlConstruct] = &[
     OwlConstruct::DisjointUnion,
     OwlConstruct::HasKey,
     OwlConstruct::DataPropertyAssertion,
+    OwlConstruct::DataPropertyAxiom,
+    OwlConstruct::Datatype,
     OwlConstruct::SwrlRule,
     OwlConstruct::ObjectAllValuesFrom,
     OwlConstruct::ObjectUnionOf,

@@ -17,8 +17,8 @@ check() {
   fi
 }
 
-# Workspace must remain 0.9.x until gates pass.
-check "workspace version is 0.9.x" grep -q 'version = "0.9.0"' "${ROOT}/Cargo.toml"
+# Workspace must be 1.0.0 once release gates pass.
+check "workspace version is 1.0.0" grep -q 'version = "1.0.0"' "${ROOT}/Cargo.toml"
 
 # Conformance active test budget (target ≥400 at 1.0).
 ACTIVE="$("${ROOT}/benchmarks/scripts/report-conformance-coverage.sh" 2>/dev/null | awk '/active in default CI/ {print $NF}')"

@@ -4,6 +4,7 @@ Annotated release summaries live in the repository under [`.github/release/`](ht
 
 | Version | Theme | Notes |
 |---------|-------|-------|
+| v1.0.0 (workspace) | HermiT parity milestone | Auto-promotion pipeline, DL datatype fixes, 100 active conformance tests |
 | [v0.9.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.9.0.md) | Python ecosystem | `Ontology`, `explain()`, incremental Python, DataFrame export |
 | [v0.8.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.8.0.md) | Incremental reasoning | Dirty tracking, sessions, `--incremental` |
 | [v0.7.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.7.0.md) | Dependency-first adapters | Bridge crate, semver alignment |
@@ -26,4 +27,4 @@ See [Facade API](../guides/facade-api.md) and [Architecture](../architecture.md)
 
 ## Latest upgrade
 
-Most users upgrading today: [v0.8.x → v0.9.0 migration](../migration/v0.8.x-to-v0.9.0.md).
+Most users upgrading today: [v0.9.x → v1.0.0 migration](../migration/v0.9.x-to-v1.0.0.md).

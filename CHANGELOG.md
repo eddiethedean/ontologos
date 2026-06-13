@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-13
+
+### Added
+
+- **HermiT conformance:** auto-promotion pipeline (`promote_catalog`, `promoted_axiom_ids.txt`, `promote-hermit-catalog.sh`)
+- **DL engine:** datatype-aware profile detection, ⊤/⊥ seeding in clausification, consistency-only axiom checks
+- **RL/RDFS:** inverse-functional and irreflexive property characteristics; bottom object property chain detection
+- **Metrics:** DL OFN pass-rate report; conformance coverage by catalog status
+
+### Changed
+
+- Workspace and PyPI package bump to **1.0.0**
+- Active HermiT conformance tests: **100** (32 catalog `axiom` cases)
+- JSON snapshot format version **3** (readers accept v2/v3)
+
+### Documentation
+
+- Release status and install pins updated for **1.0.0**
+
 ## [0.9.0] - 2026-06-13
 
 ### Added

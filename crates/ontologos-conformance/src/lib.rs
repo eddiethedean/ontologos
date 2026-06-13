@@ -7,7 +7,8 @@
 mod catalog;
 
 pub use catalog::{
-    load_catalog, load_wg_catalog, run_hermit_case, run_wg_case, HermitCase, WgCase,
+    check_axiom_case, load_catalog, load_wg_catalog, promoted_axiom_ids_path, run_hermit_case,
+    run_wg_case, scan_promotable_axiom_cases, write_promoted_axiom_ids, HermitCase, WgCase,
 };
 
 use std::path::{Path, PathBuf};

@@ -8,6 +8,8 @@ use crate::Error;
 /// Convert ontology axioms + DL store into clausal form.
 pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
     let mut out = ClauseSet::new();
+    let _ = ontology.dl_mut().intern_ce(ClassExpr::Top);
+    let _ = ontology.dl_mut().intern_ce(ClassExpr::Bottom);
     let flat_axioms: Vec<Axiom> = ontology.axioms().iter().map(|(_, a)| a.clone()).collect();
     let dl_axioms: Vec<DlAxiom> = ontology.dl().axioms().cloned().collect();
     let class_ids: Vec<EntityId> = ontology
