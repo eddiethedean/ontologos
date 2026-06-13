@@ -9,7 +9,7 @@
 Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
 **reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
 
-**Status:** **v0.8.0** ready on `main` (tag pending) — incremental EL/RL/RDFS via `ReasonerConfig::incremental`. **Not** full OWL DL / HermiT replacement.
+**Status:** **v0.9.0** ready on `main` (tag pending) — Python ecosystem: in-memory ontologies, `explain()`, incremental mutations. **Not** full OWL DL / HermiT replacement.
 
 | You need… | Use today |
 |-----------|-----------|
@@ -20,7 +20,7 @@ Native Rust ontology reasoning orchestration: load OWL files, detect profiles, a
 | OWL EL taxonomy | `ontologos-el` (in-house completion) |
 | Engine adapters / conversions | `ontologos-bridge` |
 
-**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.8.0)
+**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0)
 
 > **Partial OWL mapping:** `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](docs/reference/supported-constructs.md).
 
@@ -30,18 +30,18 @@ Requires **Rust 1.88+**.
 
 ```toml
 [dependencies]
-ontologos-core = "0.8.0"
-ontologos-parser = "0.8.0"
-ontologos-profile = "0.8.0"
-ontologos-bridge = "0.8.0"
-ontologos-rdfs = "0.8.0"
-ontologos-rl = "0.8.0"
-ontologos-el = "0.8.0"
-ontologos-query = "0.8.0"
-ontologos-explain = "0.8.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
+ontologos-profile = "0.9.0"
+ontologos-bridge = "0.9.0"
+ontologos-rdfs = "0.9.0"
+ontologos-rl = "0.9.0"
+ontologos-el = "0.9.0"
+ontologos-query = "0.9.0"
+ontologos-explain = "0.9.0"
 ```
 
-**Python (alpha):** `pip install ontologos` — pass `profile="rdfs"`, `"rl"`, `"el"`, or `"auto"` ([Python guide](docs/guides/python.md)).
+**Python:** `pip install ontologos` — `Ontology`, `Reasoner`, `explain()`, incremental mutations ([Python guide](docs/guides/python.md)).
 
 ## Quick start (crates.io)
 
@@ -60,9 +60,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ontologos-core = "0.8.0"
-ontologos-parser = "0.8.0"
-ontologos-rdfs = "0.8.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
+ontologos-rdfs = "0.9.0"
 ```
 
 `src/main.rs`:
@@ -135,7 +135,7 @@ Full feature matrix and roadmap: [documentation index](docs/index.md) · [ROADMA
 | **Guides** | [RDFS](docs/getting-started/rdfs-materialization.md) · [OWL RL](docs/getting-started/owl-rl-saturation.md) · [Python](docs/guides/python.md) · [Comparison](docs/comparison.md) |
 | **Reference** | [CLI](docs/reference/cli.md) · [Errors](docs/reference/errors.md) · [Supported constructs](docs/reference/supported-constructs.md) |
 | **Project** | [FAQ](FAQ.md) · [CONTRIBUTING](CONTRIBUTING.md) · [CHANGELOG](CHANGELOG.md) |
-| **v0.8.0 release** | [Release notes](.github/release/v0.8.0.md) · [Migration guide](docs/migration/v0.7.x-to-v0.8.0.md) |
+| **v0.9.0 release** | [Release notes](.github/release/v0.9.0.md) · [Migration guide](docs/migration/v0.8.x-to-v0.9.0.md) |
 
 ## License
 

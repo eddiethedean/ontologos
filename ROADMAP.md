@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.7.0** · **Next release:** **v0.8.0** (ready on `main`; tag pending) · **Current focus:** v0.9 Python maturity
+**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.8.0** · **Next release:** **v0.9.0** (ready on `main`; tag pending) · **Current focus:** v0.9 Python maturity → 1.0 stable
 
 ---
 
@@ -553,7 +553,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 ## v0.9 — Python ecosystem
 
-**Status: In progress (alpha on PyPI)** · **Depends on:** v0.2, v0.5, v0.7 facades
+**Status: Ready on `main` (tag pending)** · **Depends on:** v0.2, v0.5, v0.7 facades
 
 **Crate:** `ontologos-py` · **PyPI name:** `ontologos`
 
@@ -563,14 +563,14 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 - [x] CI: maturin develop + pytest on Linux
 - [x] Python guide documents dependency stack and when to use upstream crates directly
 - [x] Maturin manylinux / macOS / Windows wheels on PyPI (v0.7.0 Release workflow)
-- [ ] `Ontology` construction from Python (builder or dict)
-- [ ] `explain()` bindings with adapter trace limits documented
-- [ ] Optional pandas / polars export for taxonomies
+- [x] `Ontology` construction from Python (builder or dict)
+- [x] `explain()` bindings with adapter trace limits documented
+- [x] Optional pandas / polars export for taxonomies
 
 ### Exit criteria
 
-- [ ] `pip install ontologos` works on Linux and macOS (aarch64 + x86_64)
-- [ ] Python integration test classifies Pizza and matches Rust CLI output
+- [x] `pip install ontologos` works on Linux and macOS (aarch64 + x86_64) — wheels + CI pytest on Linux/macOS
+- [x] Python integration test classifies Pizza and matches Rust CLI output
 - [x] PyPI release in CI on version tag (v0.7.0+)
 
 ---

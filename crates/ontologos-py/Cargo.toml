@@ -21,6 +21,8 @@ ontologos-parser = { workspace = true }
 ontologos-rdfs = { workspace = true }
 ontologos-rl = { workspace = true }
 ontologos-el = { workspace = true }
+ontologos-explain = { workspace = true }
+serde_json = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module", "abi3-py310", "generate-import-lib"] }
 
 [features]

@@ -25,7 +25,25 @@ reasoner.ontology_mut().add_axiom(new_axiom)?;
 classify_reasoner(&mut reasoner)?; // incremental path when session is warm
 ```
 
-**CLI / Python:** The `--incremental` flag and `incremental=True` enable session mode, but **single-shot** file classify/materialize still runs one pass only. Incremental benefit requires a **library workflow**: load once, classify/materialize, edit with `add_axiom` / `remove_axiom`, classify/materialize again. Multi-pass Python APIs are planned for v0.9.
+**CLI / Python:** The `--incremental` flag and `incremental=True` enable session mode, but **single-shot** file classify/materialize still runs one pass only. Incremental benefit requires a **library workflow**: load once, classify/materialize, edit axioms, classify/materialize again.
+
+**Python (v0.9):**
+
+```python
+from ontologos import OntologyBuilder, Reasoner
+
+builder = OntologyBuilder()
+builder.add_class("http://example.org/A")
+builder.add_class("http://example.org/B")
+builder.add_class("http://example.org/C")
+builder.subclass_of("http://example.org/A", "http://example.org/B")
+reasoner = Reasoner(ontology=builder.build(), profile="el", incremental=True)
+reasoner.classify()
+reasoner.add_subclass_of("http://example.org/B", "http://example.org/C")
+reasoner.classify()
+```
+
+See [Python guide](python.md#incremental-mutations).
 
 ## Engines
 

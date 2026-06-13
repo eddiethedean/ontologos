@@ -1,6 +1,6 @@
 # Python Guide
 
-Alpha Python bindings for OntoLogos v0.8.0 via PyO3 (`pip install ontologos`).
+Python bindings for OntoLogos v0.9.0 via PyO3 (`pip install ontologos`).
 
 OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
 (`ontologos-el` in-house EL, `ontologos-rl` / `ontologos-rdfs` → reasonable). Power users who need
@@ -24,13 +24,20 @@ Wheels use the stable Python ABI (`abi3`) — one wheel per platform covers Pyth
 pip install ontologos
 ```
 
+Optional DataFrame export:
+
+```bash
+pip install 'ontologos[pandas]'
+pip install 'ontologos[polars]'
+```
+
 Development install from a clone:
 
 ```bash
 cd crates/ontologos-py
 python -m venv .venv
 source .venv/bin/activate
-pip install 'maturin>=1.7,<2.0' pytest
+pip install 'maturin>=1.7,<2.0' pytest '.[pandas]'
 maturin develop --release
 pytest tests/ -q
 ```
@@ -43,34 +50,40 @@ import ontologos
 print(ontologos.__version__)
 
 # RDFS TBox materialization
-reasoner = ontologos.Reasoner("ontology.owl", profile="rdfs")
+reasoner = ontologos.Reasoner(path="ontology.owl", profile="rdfs")
 report = reasoner.classify()
 print(report["inferred_axioms"])
 
-# OWL RL saturation (RDFS + RL rules)
-reasoner = ontologos.Reasoner("family.owl", profile="rl")
-report = reasoner.classify()
-
 # OWL EL taxonomy
-reasoner = ontologos.Reasoner("pizza.owl", profile="el")
+reasoner = ontologos.Reasoner(path="pizza.owl", profile="el")
 taxonomy = reasoner.classify()
 print(taxonomy["subsumption_count"])
 
-# Auto-detect profile (EL or RL)
-reasoner = ontologos.Reasoner("ontology.owl", profile="auto")
-result = reasoner.classify()
+# Build in memory
+builder = ontologos.OntologyBuilder()
+builder.add_class("http://example.org/A")
+builder.add_class("http://example.org/B")
+builder.subclass_of("http://example.org/A", "http://example.org/B")
+reasoner = ontologos.Reasoner(ontology=builder.build(), profile="el")
+reasoner.classify()
+
+# Explain
+graph = reasoner.explain()
+print(graph["node_count"])
 ```
 
 ## API reference
 
-### `Reasoner(path, profile=None)`
+### `Reasoner(path=None, ontology=None, profile=None, incremental=False)`
 
-Constructs a reasoner by loading an OWL file via the Rust parser.
+Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly one of `path` or `ontology` is required.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `path` | `str` | required | Path to `.owl`, `.rdf`, `.ttl`, or `.ofn` file |
+| `path` | `str` or `None` | `None` | Path to `.owl`, `.rdf`, `.ttl`, or `.ofn` file |
+| `ontology` | `Ontology` or `None` | `None` | In-memory ontology from builder or JSON |
 | `profile` | `str` or `None` | `"auto"` | `"auto"`, `"rdfs"`, `"rl"`, or `"el"` |
+| `incremental` | `bool` | `False` | Enable incremental session for multi-pass workflows |
 
 **Profiles:**
 
@@ -90,6 +103,70 @@ Runs the selected profile engine on the loaded ontology.
 - **EL / auto (EL):** Returns taxonomy dict; also available via `reasoner.taxonomy` after classify.
 - **RDFS / RL:** Returns materialization report dict with axiom counts.
 
+### `explain() -> dict`
+
+Returns a proof graph dict with `node_count`, `nodes` (list of step dicts with `rule`, `premises`, and optional conclusion fields), and `parse_meta` when warnings exist.
+
+#### Explain trace limits
+
+| Profile | Coverage |
+|---------|----------|
+| **EL** | Full inference traces → proof graph with IRI-resolved conclusions |
+| **RL / RDFS** | Proof graph seeds **asserted** axioms; inferred steps lack per-rule premises until reasonable exposes a trace API |
+| **auto** | Routes like `classify`; DL-only ontologies error |
+
+See [Conformance](../reference/conformance.md) for evaluator notes.
+
+### Incremental mutations
+
+With `incremental=True`, edit the ontology between `classify()` calls:
+
+| Method | Description |
+|--------|-------------|
+| `add_subclass_of(sub_iri, sup_iri)` | Add `SubClassOf` axiom |
+| `remove_subclass_of(sub_iri, sup_iri)` | Remove matching asserted axiom |
+| `add_axiom_json(axiom_dict)` | Add axiom using JSON v2 axiom object (e.g. `{"SubClassOf": {...}}`) |
+
+```python
+reasoner = ontologos.Reasoner(ontology=ont, profile="el", incremental=True)
+reasoner.classify()
+reasoner.add_subclass_of("http://example.org/B", "http://example.org/C")
+reasoner.classify()
+```
+
+See [Incremental reasoning](incremental-reasoning.md).
+
+### `Ontology`
+
+| Method | Description |
+|--------|-------------|
+| `Ontology.from_json(str)` | Load from JSON v2 snapshot |
+| `Ontology.from_dict(dict)` | Load from Python dict (same schema as JSON v2) |
+| `to_json()` / `to_dict()` | Serialize |
+| `axiom_count` / `entity_count` | Size getters |
+
+### `OntologyBuilder`
+
+Fluent builder for common TBox/ABox axioms:
+
+- `add_class`, `individual`, `object_property`
+- `subclass_of`, `subproperty_of`, `property_domain`, `property_range`
+- `class_assertion`, `object_property_assertion`
+- `build() -> Ontology`
+
+Exotic axioms (nominals, property characteristics, etc.) use `Ontology.from_json` / `from_dict`.
+
+### DataFrame export
+
+```python
+from ontologos import subsumptions_to_pandas, subsumptions_to_polars
+
+taxonomy = reasoner.classify()
+df = subsumptions_to_pandas(taxonomy)
+```
+
+Requires optional `pandas` or `polars` install (`pip install 'ontologos[pandas]'`).
+
 ### `parse_meta` (property)
 
 Read-only dict after load:
@@ -101,18 +178,21 @@ Read-only dict after load:
 | `skipped_axiom_count` | `int` | Logical components not mapped |
 | `logical_axiom_count` | `int` | Mapped + skipped |
 
-## Limitations (v0.8.0 alpha)
+## Limitations (v0.9.0)
 
-| Capability | Rust v0.8.0 | Python v0.8.0 |
-|------------|-----------|-------------|
+| Capability | Rust v0.9.0 | Python v0.9.0 |
+|------------|-------------|---------------|
 | Load OWL files | Yes (horned-owl) | Yes |
-| Profile detection | Yes | Via `"auto"` only |
-| RDFS / RL / EL classify | Yes (reasonable / in-house EL) | Yes |
-| Per-rule RL/RDFS traces | No (reasonable has no trace API) | No |
-| EL rule traces / explain | Yes (`ontologos explain` CLI; Rust crate) | No |
-| RL/RDFS explain traces | No (reasonable adapter; asserted axioms only) | No |
+| In-memory ontology | Yes (`OntologyBuilder`) | Yes |
+| Profile detection | Yes | Via `"auto"` |
+| RDFS / RL / EL classify | Yes | Yes |
+| Incremental multi-pass | Yes (library API) | Yes |
+| EL explain | Yes | Yes |
+| RL/RDFS explain (full traces) | Partial (asserted-only) | Partial (asserted-only) |
 | Export saturated ontology | Yes (in-process) | No |
-| Query API | Yes (`ontologos-query`, petgraph) | No |
+| Query API | Yes (`ontologos-query`) | No |
+
+`Reasoner` is not thread-safe; do not mutate from multiple threads concurrently.
 
 ## When to use upstream crates directly
 
@@ -131,11 +211,12 @@ All failures surface as `RuntimeError` with a string message. Common messages:
 |-----------------|-------|
 | `unsupported profile` | Invalid profile string |
 | `classification not supported for profile` | Auto-routing hit DL-only ontology |
+| `requires exactly one of path or ontology` | Both or neither constructor args |
 | Parse / I/O errors | Bad path, unsupported format, mapping failure |
 
 ## Related
 
 - [Getting started](../getting-started/index.md)
+- [Incremental reasoning](incremental-reasoning.md)
 - [OWL EL classification](../getting-started/owl-el-classification.md)
-- [Migration v0.6 → v0.7](../migration/v0.6.x-to-v0.7.0.md)
-- [Migration v0.4 → v0.5](../migration/v0.4.x-to-v0.5.0.md)
+- [Migration v0.8 → v0.9](../migration/v0.8.x-to-v0.9.0.md)

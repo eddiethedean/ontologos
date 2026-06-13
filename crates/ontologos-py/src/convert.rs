@@ -1,0 +1,197 @@
+//! Shared conversions between Rust core types and Python dicts.
+
+use ontologos_core::{Axiom, AxiomId, EntityId, EntityKind, Ontology, ParseMetaSummary, Taxonomy};
+use ontologos_explain::{ProofGraph, ProofNode};
+use pyo3::exceptions::PyRuntimeError;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
+
+pub(crate) fn py_err(message: impl ToString) -> PyErr {
+    PyRuntimeError::new_err(message.to_string())
+}
+
+pub(crate) fn parse_profile(profile: Option<&str>) -> PyResult<ontologos_core::Profile> {
+    use ontologos_core::Profile;
+    match profile.unwrap_or("auto").to_ascii_lowercase().as_str() {
+        "auto" => Ok(Profile::Auto),
+        "rdfs" => Ok(Profile::Rdfs),
+        "rl" => Ok(Profile::Rl),
+        "el" => Ok(Profile::El),
+        other => Err(py_err(format!(
+            "unsupported profile {other:?}; use auto, rdfs, rl, or el"
+        ))),
+    }
+}
+
+pub(crate) fn entity_iri(ontology: &Ontology, id: EntityId) -> PyResult<String> {
+    let record = ontology.entity(id).map_err(py_err)?;
+    ontology
+        .resolve_iri(record.iri)
+        .map(|s| s.to_owned())
+        .map_err(py_err)
+}
+
+pub(crate) fn parse_meta_dict<'py>(
+    py: Python<'py>,
+    summary: &ParseMetaSummary,
+) -> PyResult<Bound<'py, PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("warnings", &summary.warnings)?;
+    dict.set_item("mapped_axiom_count", summary.mapped_axiom_count)?;
+    dict.set_item("skipped_axiom_count", summary.skipped_axiom_count)?;
+    dict.set_item("logical_axiom_count", summary.logical_axiom_count)?;
+    Ok(dict)
+}
+
+pub(crate) fn taxonomy_dict<'py>(
+    py: Python<'py>,
+    ontology: &Ontology,
+    taxonomy: &Taxonomy,
+) -> PyResult<Bound<'py, PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("subsumption_count", taxonomy.subsumption_count())?;
+
+    let subs: Vec<(String, String)> = taxonomy
+        .subsumptions
+        .iter()
+        .map(|&(sub, sup)| Ok((entity_iri(ontology, sub)?, entity_iri(ontology, sup)?)))
+        .collect::<PyResult<Vec<_>>>()?;
+    dict.set_item("subsumptions", subs)?;
+
+    let equiv: Vec<Vec<String>> = taxonomy
+        .equivalences
+        .iter()
+        .map(|cluster| {
+            cluster
+                .iter()
+                .map(|&id| entity_iri(ontology, id))
+                .collect::<PyResult<Vec<_>>>()
+        })
+        .collect::<PyResult<Vec<_>>>()?;
+    dict.set_item("equivalences", equiv)?;
+
+    let unsat: Vec<String> = taxonomy
+        .unsatisfiable
+        .iter()
+        .map(|&id| entity_iri(ontology, id))
+        .collect::<PyResult<Vec<_>>>()?;
+    dict.set_item("unsatisfiable", unsat)?;
+    Ok(dict)
+}
+
+fn optional_entity_pair(
+    ontology: &Ontology,
+    pair: Option<(EntityId, EntityId)>,
+) -> PyResult<Option<(String, String)>> {
+    match pair {
+        Some((left, right)) => Ok(Some((
+            entity_iri(ontology, left)?,
+            entity_iri(ontology, right)?,
+        ))),
+        None => Ok(None),
+    }
+}
+
+fn optional_entity_triple(
+    ontology: &Ontology,
+    triple: Option<(EntityId, EntityId, EntityId)>,
+) -> PyResult<Option<(String, String, String)>> {
+    match triple {
+        Some((a, b, c)) => Ok(Some((
+            entity_iri(ontology, a)?,
+            entity_iri(ontology, b)?,
+            entity_iri(ontology, c)?,
+        ))),
+        None => Ok(None),
+    }
+}
+
+fn proof_node_dict<'py>(
+    py: Python<'py>,
+    ontology: &Ontology,
+    node: &ProofNode,
+) -> PyResult<Bound<'py, PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("rule", &node.rule)?;
+    dict.set_item(
+        "premises",
+        node.premises.iter().map(|id| id.0).collect::<Vec<_>>(),
+    )?;
+    if let Some(axiom_id) = node.conclusion_axiom {
+        dict.set_item("conclusion_axiom", axiom_id.index())?;
+    }
+    if let Some(pair) = optional_entity_pair(ontology, node.conclusion_sub)? {
+        dict.set_item("conclusion_sub", pair)?;
+    }
+    if let Some(triple) = optional_entity_triple(ontology, node.conclusion_existential)? {
+        dict.set_item("conclusion_existential", triple)?;
+    }
+    if let Some(pair) = optional_entity_pair(ontology, node.conclusion_subproperty)? {
+        dict.set_item("conclusion_subproperty", pair)?;
+    }
+    Ok(dict)
+}
+
+pub(crate) fn proof_graph_dict<'py>(
+    py: Python<'py>,
+    ontology: &Ontology,
+    graph: &ProofGraph,
+    parse_meta: Option<&ParseMetaSummary>,
+) -> PyResult<Bound<'py, PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("node_count", graph.node_count())?;
+    let nodes: Vec<Bound<'py, PyDict>> = graph
+        .nodes
+        .iter()
+        .map(|node| proof_node_dict(py, ontology, node))
+        .collect::<PyResult<Vec<_>>>()?;
+    dict.set_item("nodes", nodes)?;
+    if let Some(summary) = parse_meta {
+        dict.set_item("parse_meta", parse_meta_dict(py, summary)?)?;
+    }
+    Ok(dict)
+}
+
+pub(crate) fn resolve_class(ontology: &mut Ontology, iri: &str) -> PyResult<EntityId> {
+    ontology.entity_id(iri, EntityKind::Class).map_err(py_err)
+}
+
+pub(crate) fn resolve_individual(ontology: &mut Ontology, iri: &str) -> PyResult<EntityId> {
+    ontology
+        .entity_id(iri, EntityKind::Individual)
+        .map_err(py_err)
+}
+
+pub(crate) fn resolve_object_property(ontology: &mut Ontology, iri: &str) -> PyResult<EntityId> {
+    ontology
+        .entity_id(iri, EntityKind::ObjectProperty)
+        .map_err(py_err)
+}
+
+pub(crate) fn find_subclass_axiom_id(
+    ontology: &Ontology,
+    subclass_iri: &str,
+    superclass_iri: &str,
+) -> PyResult<Option<AxiomId>> {
+    let subclass = ontology
+        .try_lookup_entity(subclass_iri)
+        .map_err(py_err)?
+        .ok_or_else(|| py_err(format!("unknown class IRI: {subclass_iri}")))?;
+    let superclass = ontology
+        .try_lookup_entity(superclass_iri)
+        .map_err(py_err)?
+        .ok_or_else(|| py_err(format!("unknown class IRI: {superclass_iri}")))?;
+
+    for (id, axiom) in ontology.axioms().iter_asserted() {
+        if let Axiom::SubClassOf {
+            subclass: sub,
+            superclass: sup,
+        } = axiom
+        {
+            if *sub == subclass && *sup == superclass {
+                return Ok(Some(id));
+            }
+        }
+    }
+    Ok(None)
+}

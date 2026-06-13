@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-06-13
+
+### Added
+
+- **Python:** `Ontology` and `OntologyBuilder` for in-memory construction (JSON v2 dict or fluent builder)
+- **Python:** `Reasoner(path=...)` or `Reasoner(ontology=...)`; `explain()` proof graph dict
+- **Python:** multi-pass incremental mutations (`add_subclass_of`, `remove_subclass_of`, `add_axiom_json`)
+- **Python:** optional `subsumptions_to_pandas` / `subsumptions_to_polars` export helpers
+- **CI:** Pizza EL golden pytest; macOS Python job; corpora download before Python tests
+
+### Changed
+
+- Workspace and PyPI package bump to **0.9.0**
+- Python guide documents explain trace limits and full v0.9 API
+
 ## [0.8.0] - 2026-06-13
 
 ### Added

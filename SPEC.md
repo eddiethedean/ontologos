@@ -223,22 +223,30 @@ Outputs:
 
 ---
 
-# Python Bindings (alpha v0.5, full API v0.9)
+# Python Bindings (v0.9)
 
-**Status:** Alpha on PyPI; v0.5 exposes load, RDFS/RL materialization, EL taxonomy, and `profile="auto"` routing.
+**Status:** PyPI package `ontologos` v0.9.0 — load OWL files or build in memory, classify (RDFS/RL/EL/auto), explain, incremental mutations, optional pandas/polars export.
 
 ```python
-from ontologos import Reasoner
+from ontologos import Ontology, OntologyBuilder, Reasoner, subsumptions_to_pandas
 
-# RDFS materialization
-r = Reasoner("ontology.owl", profile="rdfs")
+# File load
+r = Reasoner(path="ontology.owl", profile="rdfs")
 r.classify()
 
-# OWL RL saturation
-r = Reasoner("family.owl", profile="rl")
+# In-memory build
+builder = OntologyBuilder()
+builder.add_class("http://example.org/A")
+builder.add_class("http://example.org/B")
+builder.subclass_of("http://example.org/A", "http://example.org/B")
+r = Reasoner(ontology=builder.build(), profile="el", incremental=True)
+r.classify()
+r.add_subclass_of("http://example.org/B", "http://example.org/C")
 r.classify()
 
-# Default profile raises not-implemented until OWL EL taxonomy (v0.5)
+# Explain and export
+graph = r.explain()
+df = subsumptions_to_pandas(r.taxonomy)
 ```
 
 ---
