@@ -122,9 +122,60 @@ impl Mapper<'_> {
     }
 
     fn map_data_restriction_as_ce(&mut self, ce: &ClassExpression<RcStr>) -> Option<ClassExpr> {
-        let _dr = self.map_data_range_from_ce(ce)?;
-        // Represent data restrictions as ⊤ placeholder linked via DL axioms later.
-        Some(ClassExpr::Top)
+        use ClassExpression::*;
+        let range = self.map_data_range_from_ce(ce)?;
+        match ce {
+            DataAllValuesFrom { dp, .. } => {
+                let property = self.map_data_property_id_from_dp(dp)?;
+                Some(ClassExpr::DataAll { property, range })
+            }
+            DataSomeValuesFrom { dp, .. } => {
+                let property = self.map_data_property_id_from_dp(dp)?;
+                Some(ClassExpr::DataSome { property, range })
+            }
+            DataHasValue { dp, l } => {
+                let property = self.map_data_property_id_from_dp(dp)?;
+                let value = self.build_literal(l)?;
+                let value = self.ontology.dl_mut().intern_de(value);
+                Some(ClassExpr::DataHasValue { property, value })
+            }
+            DataMinCardinality { n, dp, dr } => {
+                let property = self.map_data_property_id_from_dp(dp)?;
+                let range = self.map_data_range(dr)?;
+                Some(ClassExpr::DataMinCardinality {
+                    n: *n,
+                    property,
+                    range: Some(range),
+                })
+            }
+            DataMaxCardinality { n, dp, dr } => {
+                let property = self.map_data_property_id_from_dp(dp)?;
+                let range = self.map_data_range(dr)?;
+                Some(ClassExpr::DataMaxCardinality {
+                    n: *n,
+                    property,
+                    range: Some(range),
+                })
+            }
+            DataExactCardinality { n, dp, dr } => {
+                let property = self.map_data_property_id_from_dp(dp)?;
+                let range = self.map_data_range(dr)?;
+                Some(ClassExpr::DataExactCardinality {
+                    n: *n,
+                    property,
+                    range: Some(range),
+                })
+            }
+            _ => None,
+        }
+    }
+
+    fn map_data_property_id_from_dp(
+        &mut self,
+        dp: &horned_owl::model::DataProperty<RcStr>,
+    ) -> Option<EntityId> {
+        self.register_or_warn_entity(iri_of(dp), EntityKind::DataProperty)
+            .or_else(|| self.ontology.lookup_entity(iri_of(dp)))
     }
 
     fn map_role_expr(&mut self, ope: &ObjectPropertyExpression<RcStr>) -> Option<RoleExpr> {
@@ -651,8 +702,21 @@ impl Mapper<'_> {
                 Some(DataExpr::Datatype(id))
             }
             DR::DataOneOf(literals) => {
-                let lit = literals.first()?;
-                self.build_literal(lit)
+                if literals.len() == 1 {
+                    self.build_literal(literals.first()?)
+                } else {
+                    let ids: Vec<DeId> = literals
+                        .iter()
+                        .filter_map(|lit| {
+                            let expr = self.build_literal(lit)?;
+                            Some(self.ontology.dl_mut().intern_de(expr))
+                        })
+                        .collect();
+                    if ids.len() != literals.len() {
+                        return None;
+                    }
+                    Some(DataExpr::Or(ids))
+                }
             }
             DR::DataComplementOf(inner) => {
                 // Complement handled in facet solver; store base.
@@ -669,7 +733,16 @@ impl Mapper<'_> {
                 }
                 Some(DataExpr::And(ids))
             }
-            DR::DataUnionOf(_) => Some(DataExpr::Top),
+            DR::DataUnionOf(ops) => {
+                let ids: Vec<DeId> = ops
+                    .iter()
+                    .filter_map(|op| self.map_data_range(op))
+                    .collect();
+                if ids.len() != ops.len() {
+                    return None;
+                }
+                Some(DataExpr::Or(ids))
+            }
             DR::DatatypeRestriction(dt, facets) => {
                 let mut expr = self.build_data_range(&DataRange::Datatype(dt.clone()))?;
                 for fr in facets {

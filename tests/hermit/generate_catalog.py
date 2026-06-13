@@ -339,19 +339,73 @@ def extract_property_subsumptions(body: str) -> list[dict[str, str | bool]]:
 def extract_subsumptions(body: str) -> list[dict[str, str | bool]]:
     subs = []
     seen: set[tuple[str, str, bool]] = set()
-    for m in re.finditer(
-        r'assertSubsumedBy\s*\(\s*(?:"([^"]+)"|NS_C\s*\(\s*"([^"]+)"\s*\))\s*,\s*(?:"([^"]+)"|NS_C\s*\(\s*"([^"]+)"\s*\))\s*,\s*(true|false)\s*\)',
-        body,
-    ):
-        sub = m.group(1) or m.group(2) or ""
-        sup = m.group(3) or m.group(4) or ""
-        expected = m.group(5) == "true"
+
+    def add(sub: str, sup: str, expected: bool) -> None:
+        sub = sub.strip()
+        sup = sup.strip()
+        if not sub or not sup:
+            return
         key = (sub, sup, expected)
         if key in seen:
-            continue
+            return
         seen.add(key)
         subs.append({"sub": sub, "sup": sup, "expected": expected})
+
+    for m in re.finditer(
+        r'assertSubsumedBy\s*\(\s*(?:"([^"]+)"|NS_C\s*\(\s*"([^"]+)"\s*\)|NS_C\s*\(\s*(:?[\w.-]+)\s*\))\s*,\s*(?:"([^"]+)"|NS_C\s*\(\s*"([^"]+)"\s*\)|NS_C\s*\(\s*(:?[\w.-]+)\s*\))\s*,\s*(true|false)\s*\)',
+        body,
+    ):
+        sub = m.group(1) or m.group(2) or m.group(3) or ""
+        sup = m.group(4) or m.group(5) or m.group(6) or ""
+        add(sub, sup, m.group(7) == "true")
+    for m in re.finditer(
+        r"assertSubsumedBy\s*\(\s*([A-Za-z_][\w]*)\s*,\s*([A-Za-z_][\w]*)\s*,\s*(true|false)\s*\)",
+        body,
+    ):
+        add(m.group(1), m.group(2), m.group(3) == "true")
     return subs
+
+
+def extract_conclusion_axioms(body: str) -> str:
+    """Second `axioms = ...` block after the initial load call (entailment conclusions)."""
+    load_m = re.search(
+        r"load(?:Reasoner|Ontology)WithAxioms\s*\(\s*axioms\s*\)",
+        body,
+    )
+    if not load_m:
+        return ""
+    rest = body[load_m.end() :]
+    if "assertEntails" not in rest and "getOntologyWithAxioms" not in rest:
+        return ""
+    assign_m = re.search(
+        r'\baxioms\s*=\s*((?:"[^"\\]*(?:\\.[^"\\]*)*"\s*)+)',
+        rest,
+    )
+    if assign_m:
+        return extract_string_literals(assign_m.group(1))
+    return ""
+
+
+def subsumptions_from_ofn(axioms: str, expected: bool) -> list[dict[str, str | bool]]:
+    """Atomic `SubClassOf` conclusions from functional-syntax fragments."""
+    subs: list[dict[str, str | bool]] = []
+    for m in re.finditer(
+        r"SubClassOf\s*\(\s*(:[\w-]+|owl:Thing)\s+(:[\w-]+|owl:Thing)\s*\)",
+        axioms,
+    ):
+        subs.append({"sub": m.group(1), "sup": m.group(2), "expected": expected})
+    return subs
+
+
+def extract_entailment_subsumptions(body: str) -> list[dict[str, str | bool]]:
+    ent_m = re.search(r"assertEntails\s*\([^,]+,\s*(true|false)\s*\)", body)
+    if not ent_m:
+        return []
+    expected = ent_m.group(1) == "true"
+    conclusion = extract_conclusion_axioms(body)
+    if not conclusion or not valid_ofn_axioms(conclusion):
+        return []
+    return subsumptions_from_ofn(conclusion, expected)
 
 
 def extract_consistency(body: str) -> bool | None:
@@ -696,6 +750,7 @@ def collect_cases() -> list[HermitCase]:
                     case.axiom_ofn = f"axioms/{safe}.ofn"
 
             case.subsumptions = extract_subsumptions(body)
+            case.subsumptions.extend(extract_entailment_subsumptions(body))
             case.property_subsumptions = extract_property_subsumptions(body)
             case.property_characteristics = extract_property_characteristics(body)
             case.consistent = extract_consistency(body)

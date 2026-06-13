@@ -88,6 +88,12 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
                 }
             }
         }
+        ClassExpr::DataAll { .. }
+        | ClassExpr::DataSome { .. }
+        | ClassExpr::DataHasValue { .. }
+        | ClassExpr::DataMinCardinality { .. }
+        | ClassExpr::DataMaxCardinality { .. }
+        | ClassExpr::DataExactCardinality { .. } => {}
     }
     Ok(())
 }

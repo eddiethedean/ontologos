@@ -1,6 +1,10 @@
 //! XSD datatype literal index and facet checking.
 
+mod consistency;
+
 use ontologos_core::{DataExpr, DeId, DlStore, EntityId};
+
+pub use consistency::is_datatype_consistent;
 
 /// Literal with lexical form and datatype.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,17 +45,41 @@ impl LiteralIndex {
     /// Check whether a literal satisfies a data range expression.
     #[must_use]
     pub fn satisfies(&self, lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
-        facet_check(lit, store, range)
+        facet_check(lit, store, range, None)
+    }
+
+    /// Check with optional ontology for datatype hierarchy (e.g. `rdfs:Literal`).
+    #[must_use]
+    pub fn satisfies_with_ontology(
+        &self,
+        lit: &LiteralValue,
+        ontology: &ontologos_core::Ontology,
+        range: DeId,
+    ) -> bool {
+        facet_check(lit, ontology.dl(), range, Some(ontology))
     }
 }
 
-fn facet_check(lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
+fn facet_check(
+    lit: &LiteralValue,
+    store: &DlStore,
+    range: DeId,
+    ontology: Option<&ontologos_core::Ontology>,
+) -> bool {
     let Some(expr) = store.de(range) else {
         return false;
     };
     match expr {
         DataExpr::Top => true,
-        DataExpr::Datatype(dt) => lit.datatype == *dt,
+        DataExpr::Datatype(dt) => {
+            if lit.datatype == *dt {
+                return true;
+            }
+            if ontology.is_some_and(|ont| datatype_subsumes(ont, lit.datatype, *dt)) {
+                return true;
+            }
+            literal_in_datatype_value_space(ontology, lit, *dt)
+        }
         DataExpr::Literal { lexical, datatype } => {
             lit.lexical == *lexical && lit.datatype == *datatype
         }
@@ -60,7 +88,7 @@ fn facet_check(lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
             facet_iri,
             value,
         } => {
-            if !facet_check(lit, store, *base) {
+            if !facet_check(lit, store, *base, ontology) {
                 return false;
             }
             match facet_iri.as_str() {
@@ -87,8 +115,80 @@ fn facet_check(lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
                 _ => false,
             }
         }
-        DataExpr::And(ops) => ops.iter().all(|op| facet_check(lit, store, *op)),
+        DataExpr::And(ops) => ops.iter().all(|op| facet_check(lit, store, *op, ontology)),
+        DataExpr::Or(ops) => ops.iter().any(|op| facet_check(lit, store, *op, ontology)),
     }
+}
+
+fn literal_in_datatype_value_space(
+    ontology: Option<&ontologos_core::Ontology>,
+    lit: &LiteralValue,
+    target: EntityId,
+) -> bool {
+    let Some(ont) = ontology else {
+        return false;
+    };
+    let Some(target_iri) = ont
+        .entity(target)
+        .ok()
+        .and_then(|r| ont.resolve_iri(r.iri).ok())
+    else {
+        return false;
+    };
+    if target_iri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Literal"
+        || target_iri == "http://www.w3.org/2000/01/rdf-schema#Literal"
+    {
+        return true;
+    }
+    let Ok(value) = lit.lexical.parse::<i64>() else {
+        return false;
+    };
+    match &*target_iri {
+        "http://www.w3.org/2001/XMLSchema#integer"
+        | "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" => value >= 0,
+        "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" => value <= 0,
+        "http://www.w3.org/2001/XMLSchema#positiveInteger" => value >= 1,
+        "http://www.w3.org/2001/XMLSchema#negativeInteger" => value <= -1,
+        "http://www.w3.org/2001/XMLSchema#long"
+        | "http://www.w3.org/2001/XMLSchema#int"
+        | "http://www.w3.org/2001/XMLSchema#short"
+        | "http://www.w3.org/2001/XMLSchema#byte" => true,
+        _ => false,
+    }
+}
+
+fn datatype_subsumes(
+    ontology: &ontologos_core::Ontology,
+    sub: EntityId,
+    sup: EntityId,
+) -> bool {
+    if sub == sup {
+        return true;
+    }
+    let Some(sup_iri) = ontology.entity(sup).ok().and_then(|r| ontology.resolve_iri(r.iri).ok()) else {
+        return false;
+    };
+    if sup_iri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Literal"
+        || sup_iri == "http://www.w3.org/2000/01/rdf-schema#Literal"
+    {
+        return true;
+    }
+    let Some(sub_iri) = ontology.entity(sub).ok().and_then(|r| ontology.resolve_iri(r.iri).ok()) else {
+        return false;
+    };
+    matches!(
+        (sub_iri, sup_iri),
+        (
+            "http://www.w3.org/2001/XMLSchema#integer",
+            "http://www.w3.org/2001/XMLSchema#decimal"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#integer",
+            "http://www.w3.org/2001/XMLSchema#float"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#integer",
+            "http://www.w3.org/2001/XMLSchema#double"
+        )
+    )
 }
 
 fn numeric_compare(a: &str, b: &str) -> i32 {

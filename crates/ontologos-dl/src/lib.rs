@@ -12,7 +12,7 @@ use ontologos_core::{Ontology, Profile, Taxonomy};
 use thiserror::Error;
 
 pub use classify::DlClassifier;
-pub use datatype::{LiteralIndex, LiteralValue};
+pub use datatype::{is_datatype_consistent, LiteralIndex, LiteralValue};
 pub use ontologos_alc::{classify as alc_classify, clausify, Clause, ClauseSet, DlOntology};
 pub use ontologos_alc::{classify_with_seed, TableauSeed};
 pub use ria::RoleHierarchy;
@@ -61,6 +61,9 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
 
 /// Check ontology consistency under DL.
 pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
+    if !datatype::is_datatype_consistent(ontology) {
+        return Ok(false);
+    }
     ontologos_alc::is_consistent(ontology).map_err(Error::Alc)
 }
 

@@ -96,6 +96,54 @@ pub enum ClassExpr {
         /// Optional filler class expression (qualified cardinality).
         filler: Option<CeId>,
     },
+    /// `DataAllValuesFrom`.
+    DataAll {
+        /// Data property.
+        property: EntityId,
+        /// Range data expression.
+        range: DeId,
+    },
+    /// `DataSomeValuesFrom`.
+    DataSome {
+        /// Data property.
+        property: EntityId,
+        /// Range data expression.
+        range: DeId,
+    },
+    /// `DataHasValue`.
+    DataHasValue {
+        /// Data property.
+        property: EntityId,
+        /// Literal data expression.
+        value: DeId,
+    },
+    /// `DataMinCardinality`.
+    DataMinCardinality {
+        /// Minimum cardinality bound.
+        n: u32,
+        /// Data property.
+        property: EntityId,
+        /// Optional range data expression.
+        range: Option<DeId>,
+    },
+    /// `DataMaxCardinality`.
+    DataMaxCardinality {
+        /// Maximum cardinality bound.
+        n: u32,
+        /// Data property.
+        property: EntityId,
+        /// Optional range data expression.
+        range: Option<DeId>,
+    },
+    /// `DataExactCardinality`.
+    DataExactCardinality {
+        /// Exact cardinality bound.
+        n: u32,
+        /// Data property.
+        property: EntityId,
+        /// Optional range data expression.
+        range: Option<DeId>,
+    },
 }
 
 /// Data range expression.
@@ -116,6 +164,8 @@ pub enum DataExpr {
     },
     /// Data intersection.
     And(Vec<DeId>),
+    /// Data union.
+    Or(Vec<DeId>),
     /// Literal value.
     Literal {
         /// Lexical form.
