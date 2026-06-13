@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{BufReader, Read, Seek, SeekFrom};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::Path;
 
 use horned_owl::curie::PrefixMapping;
@@ -31,6 +32,9 @@ pub fn read_horned_owl(
 }
 
 /// Parse ontology bytes from an already-open reader (single-fd load path).
+///
+/// `limits` are enforced during axiom mapping in [`crate::map`]; horned-owl itself
+/// may allocate before mapping caps apply (see `docs/security.md`).
 pub fn read_horned_owl_from_reader<R: Read>(
     reader: R,
     format: Format,
@@ -39,10 +43,10 @@ pub fn read_horned_owl_from_reader<R: Read>(
     let config = parser_config(format);
 
     let (ontology, _prefixes) = match format {
-        Format::OwlXml => {
-            owx_reader::read(&mut BufReader::new(reader), config).map_err(map_horned_error)?
-        }
-        Format::RdfXml | Format::Turtle => {
+        Format::OwlXml => guard_horned_parse(|| {
+            owx_reader::read(&mut BufReader::new(reader), config).map_err(map_horned_error)
+        })?,
+        Format::RdfXml | Format::Turtle => guard_horned_parse(|| {
             let mut reader = BufReader::new(reader);
             let (concrete, incomplete) =
                 rdf_reader::read(&mut reader, config).map_err(map_horned_error)?;
@@ -51,15 +55,38 @@ pub fn read_horned_owl_from_reader<R: Read>(
                     "RDF parse incomplete: input truncated or malformed".into(),
                 ));
             }
-            (concrete.into(), PrefixMapping::default())
-        }
-        Format::Functional => {
+            Ok((concrete.into(), PrefixMapping::default()))
+        })?,
+        Format::Functional => guard_horned_parse(|| {
             let mut reader = BufReader::new(reader);
-            ofn_reader::read(&mut reader, config).map_err(map_horned_error)?
-        }
+            ofn_reader::read(&mut reader, config).map_err(map_horned_error)
+        })?,
     };
 
     Ok(ontology)
+}
+
+/// Horned-owl may panic on some malformed RDF/XML; convert to [`Error::Parse`] for callers.
+fn guard_horned_parse<T, F>(f: F) -> Result<T>
+where
+    F: FnOnce() -> Result<T>,
+{
+    match catch_unwind(AssertUnwindSafe(f)) {
+        Ok(result) => result,
+        Err(payload) => Err(Error::Parse(panic_payload_message(payload))),
+    }
+}
+
+fn panic_payload_message(payload: Box<dyn std::any::Any + Send>) -> String {
+    payload
+        .downcast_ref::<&str>()
+        .map(|s| format!("parser internal error: {s}"))
+        .or_else(|| {
+            payload
+                .downcast_ref::<String>()
+                .map(|s| format!("parser internal error: {s}"))
+        })
+        .unwrap_or_else(|| "parser internal error (unknown panic)".into())
 }
 
 fn check_file_size(len: u64, limits: ParseLimits) -> Result<()> {

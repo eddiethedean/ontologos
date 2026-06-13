@@ -25,9 +25,10 @@ status: materialized
 initial_axiom_count: 57
 final_axiom_count: 62
 inferred_axioms: 5
-inferred_by_rule:
-  rng_inherit: 5
+inferred_by_rule: none
 ```
+
+> **Adapter note:** `ontologos-rdfs` delegates to **reasonable**. `inferred_by_rule` is empty until reasonable exposes rule-level diagnostics; use `inferred_axioms` and axiom counts. Some RDFS rules (e.g. transitive `subPropertyOf`) have known upstream gaps — see [dependency-first ADR](../internal/design/dependency-first.md).
 
 JSON output: `./target/release/ontologos --format json materialize path/to/ontology.owl`
 

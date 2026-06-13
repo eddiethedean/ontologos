@@ -49,10 +49,10 @@ fn assert_hierarchies(
 
 #[test]
 fn hermit_classification_pizza_taxonomy() {
-    if !classification_fixtures_available() {
-        eprintln!("skip: missing vendored pizza classification fixtures");
-        return;
-    }
+    assert!(
+        classification_fixtures_available(),
+        "missing vendored pizza fixtures; run ./benchmarks/scripts/download.sh"
+    );
     let ontology = load_classification_fixture("reasoner/res/pizza.xml");
     let control_path =
         classification_fixture_path("reasoner/res/pizza.xml.txt").expect("pizza control");
@@ -66,10 +66,10 @@ fn hermit_classification_pizza_taxonomy() {
 #[test]
 #[ignore = "horned-owl panics on legacy wine.xml duplicate rdf:ID until parser handles the error"]
 fn hermit_classification_wine_taxonomy() {
-    if !classification_fixtures_available() {
-        eprintln!("skip: missing vendored wine classification fixtures");
-        return;
-    }
+    assert!(
+        classification_fixtures_available(),
+        "missing vendored classification fixtures; run ./benchmarks/scripts/download.sh"
+    );
     let ontology = load_classification_fixture("reasoner/res/wine.xml");
     let control_path =
         classification_fixture_path("reasoner/res/wine.xml.txt").expect("wine control");

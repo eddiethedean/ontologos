@@ -105,6 +105,21 @@ pub fn assert_subproperty(
     transitive_superproperties(ontology, sub, sup)
 }
 
+/// Assert `sub_property` is a **direct** sub-property of `super_property` (no transitive walk).
+pub fn assert_direct_subproperty(
+    ontology: &ontologos_core::Ontology,
+    sub_property: &str,
+    super_property: &str,
+) -> bool {
+    let Some(sub) = ontology.lookup_entity(sub_property) else {
+        return false;
+    };
+    let Some(sup) = ontology.lookup_entity(super_property) else {
+        return false;
+    };
+    ontology.direct_superproperties(sub).contains(&sup)
+}
+
 /// Assert `individual` has an asserted or inferred class type `class` (direct or via `subClassOf`).
 pub fn assert_typed(ontology: &ontologos_core::Ontology, individual: &str, class: &str) -> bool {
     let Some(ind) = ontology.lookup_entity(individual) else {

@@ -13,7 +13,7 @@ pub struct CompletionGraph {
     subsumptions: HashSet<(EntityId, EntityId)>,
     existentials: HashSet<(EntityId, EntityId, EntityId)>,
     subproperties: HashSet<(EntityId, EntityId)>,
-    domains: HashMap<EntityId, EntityId>,
+    domains: HashMap<EntityId, HashSet<EntityId>>,
     todo_sub: VecDeque<(EntityId, EntityId)>,
     todo_ex: VecDeque<(EntityId, EntityId, EntityId)>,
     todo_sp: VecDeque<(EntityId, EntityId)>,
@@ -63,7 +63,7 @@ impl CompletionGraph {
                     }
                 }
                 Axiom::ObjectPropertyDomain { property, domain } => {
-                    graph.domains.insert(*property, *domain);
+                    graph.domains.entry(*property).or_default().insert(*domain);
                 }
                 _ => {}
             }
@@ -255,7 +255,12 @@ impl CompletionGraph {
     }
 
     fn apply_existential(&mut self, class: EntityId, property: EntityId, filler: EntityId) {
-        if let Some(&domain) = self.domains.get(&property) {
+        let domains: Vec<EntityId> = self
+            .domains
+            .get(&property)
+            .map(|set| set.iter().copied().collect())
+            .unwrap_or_default();
+        for domain in domains {
             self.infer_subsumption(
                 ElRule::PropertyDomain,
                 vec![existential_premise(class, property, filler)],

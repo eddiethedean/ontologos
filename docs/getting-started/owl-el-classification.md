@@ -46,6 +46,6 @@ print(taxonomy["subsumption_count"])
 
 - Classifies mapped EL TBox axioms only; complex DL constructs remain skipped by the parser.
 - Hybrid ontologies (EL + RL) should use an explicit `--profile` flag.
-- Explanations for EL inferences ship in v0.6 (`ontologos-explain`).
+- Explanations for EL inferences are available via `ontologos-explain` and CLI `explain` (v0.7.0).
 
 See [Supported constructs](../reference/supported-constructs.md) and [migration guide](../migration/v0.4.x-to-v0.5.0.md).

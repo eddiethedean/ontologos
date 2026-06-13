@@ -1,4 +1,4 @@
-use ontologos_bridge::{core_to_triples, merge_triples_into_ontology};
+use ontologos_bridge::{core_to_triples, merge_triples_into_ontology_with_limits, MergeLimits};
 use ontologos_core::Ontology;
 use reasonable::reasoner::ReasonerBuilder;
 
@@ -8,6 +8,7 @@ use crate::report::MaterializationReport;
 #[derive(Debug, Default)]
 pub struct RdfsEngine {
     _record_traces: bool,
+    merge_limits: MergeLimits,
 }
 
 impl RdfsEngine {
@@ -22,6 +23,13 @@ impl RdfsEngine {
         self
     }
 
+    /// Cap axioms after materialization (default: 10_000_000).
+    #[must_use]
+    pub fn with_merge_limits(mut self, limits: MergeLimits) -> Self {
+        self.merge_limits = limits;
+        self
+    }
+
     /// Materialize RDFS/RL inferences into `ontology` via reasonable.
     pub fn materialize(&self, ontology: &mut Ontology) -> crate::Result<MaterializationReport> {
         let initial_axiom_count = ontology.axiom_count();
@@ -33,8 +41,13 @@ impl RdfsEngine {
         reasoner.reason_full();
         let output = reasoner.view_output().to_vec();
         let diagnostics = reasoner.diagnostics();
-        let merge = merge_triples_into_ontology(ontology, &output, diagnostics)
-            .map_err(crate::Error::Bridge)?;
+        let merge = merge_triples_into_ontology_with_limits(
+            ontology,
+            &output,
+            diagnostics,
+            self.merge_limits,
+        )
+        .map_err(crate::Error::Bridge)?;
 
         Ok(MaterializationReport {
             initial_axiom_count,

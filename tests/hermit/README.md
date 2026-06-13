@@ -14,7 +14,8 @@ export ONTOLOGOS_HERMIT_ROOT=/path/to/HermiT
 # Tier A (always — no HermiT tree required)
 cargo test -p ontologos-conformance
 
-# Tier B (parser loads, classification goldens) — needs HermiT/
+# Tier B (classification goldens) — pizza runs in default CI when vendored;
+# wine and full HermiT tree tests need --ignored and optional HermiT/ checkout
 cargo test -p ontologos-conformance -- --ignored
 ```
 

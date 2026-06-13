@@ -9,10 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] - 2026-06-13
 
+> **Note:** On `main`, untagged. Latest git tag remains **v0.6.1**.
+
 ### Changed
 
 - **Semver:** release **0.7.0** aligns crate versions with ROADMAP v0.7 (dependency-first adapters); no public API changes from 0.6.1
 - Documentation and install examples updated to `0.7.0`
+
+### Fixed
+
+- **EL validation:** `validate_el_profile` uses `el_classification_forbidden_in` (complex TBox constructs the completion engine cannot handle)
+- **EL completion:** multiple `ObjectPropertyDomain` axioms per property are all applied
+- **Parser:** horned-owl panics on malformed RDF/XML (e.g. duplicate `rdf:ID`) converted to `Error::Parse`
+- **CLI:** materialization reports include `clashes`; `parse_meta` errors emit stderr warnings
+- **Conformance:** `sub_and_super_roles` uses direct subproperty assertion; manifest marks reasonable upstream gaps as `ignored`
+- **Bridge:** optional `MergeLimits::max_axioms` cap during RL/RDFS merge
+- **Security:** expanded `security_regressions` tests for JSON limits documented in `docs/security.md`
 
 ## [0.6.1] - 2026-06-13
 
@@ -40,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Query APIs: `explain_subsumption`, `explain_unsatisfiable` with EL-first HST pruning
 - Human-readable `render_text` formatter for proof graphs
 - CLI `ontologos explain --profile auto|el|rl|rdfs` (JSON + text output)
-- Conformance: `explain_benchmarks.rs`; Pizza EL golden vs whelk (`compare-elk.sh`); Family RL triple closure vs reasonable (`compare-reasonable.sh`)
+- Conformance: `explain_benchmarks.rs`; Pizza EL golden vs in-house EL (`compare-pizza-el-golden.sh`); Family RL triple closure vs reasonable (`compare-reasonable.sh`)
 - **petgraph** taxonomy views in `ontologos-query` and proof-graph acyclic checks in `ontologos-explain`
 - RDFS `MaterializationReport::clashes` forwarded from reasonable diagnostics
 
@@ -82,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python `profile="el"` / `"auto"`; `classify()` returns taxonomy or materialization dict
 - Parser: decompose `SubClassOf(C, ObjectIntersectionOf(...))` into EL axioms
 - HermiT `ClassificationTest` pizza harness with vendored fixtures (`benchmarks/data/hermit/`)
-- Pizza EL golden conformance (`pizza-el-golden.json`, `compare-elk.sh` in CI)
+- Pizza EL golden conformance (`pizza-el-golden.json`, `compare-pizza-el-golden.sh` in CI)
 - Vendored `go-subset.owl` EL performance gate (< 10s)
 
 ### Changed
@@ -244,8 +256,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.7.0...HEAD
-[0.7.0]: https://github.com/eddiethedean/ontologos/compare/v0.6.1...v0.7.0
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.6.1...HEAD
+[0.7.0]: https://github.com/eddiethedean/ontologos/compare/v0.6.1...HEAD
 [0.6.1]: https://github.com/eddiethedean/ontologos/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/eddiethedean/ontologos/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/eddiethedean/ontologos/compare/v0.4.0...v0.5.0

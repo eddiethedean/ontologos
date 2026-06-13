@@ -45,6 +45,10 @@ jobs:
         run: ./benchmarks/scripts/download.sh
       - name: Test (MSRV)
         run: cargo test --workspace --locked
+      - name: EL Pizza golden conformance (MSRV)
+        run: ./benchmarks/scripts/compare-pizza-el-golden.sh
+      - name: HermiT conformance Tier A (MSRV)
+        run: cargo test -p ontologos-conformance
 
   python:
     runs-on: ubuntu-latest

@@ -2,8 +2,8 @@
 
 Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materialization and OWL RL saturation.
 
-!!! warning "Early development (v0.5)"
-    OntoLogos maps a **subset** of OWL axioms into its core model — `axiom_count()` is mapper output, not Protégé's total. CLI **`classify --profile auto`** routes to EL or RL; use **`materialize`** for explicit RDFS. Full OWL DL classification is not yet available. See [Supported constructs](reference/supported-constructs.md).
+!!! warning "Early development (v0.7.0)"
+    OntoLogos maps a **subset** of OWL axioms into its core model — `axiom_count()` is mapper output, not Protégé's total. CLI **`classify --profile auto`** routes to EL or RL; use **`materialize`** for explicit RDFS. **`explain`** builds proof graphs (EL-first). Full OWL DL classification is not yet available. See [Supported constructs](reference/supported-constructs.md).
 
 ## Persona quick links
 
@@ -16,7 +16,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | Use Python | [Python guide](guides/python.md) |
 | Contribute | [Contributing](project/contributing.md) |
 
-## Capability matrix (v0.5)
+## Capability matrix (v0.7.0)
 
 | Capability | Library | CLI | Python |
 |------------|---------|-----|--------|
@@ -26,6 +26,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | OWL RL saturation | Yes | `classify --profile rl` | `profile="rl"` |
 | OWL EL taxonomy | Yes | `classify --profile el` | `profile="el"` |
 | Taxonomy queries | Yes (`ontologos-query`) | JSON output | `taxonomy` property |
+| Explanations | Yes (`ontologos-explain`) | `explain` | No |
 | Materialization reports | Yes | Yes (RDFS/RL) | Yes |
 | Export saturated ontology | Yes (in-process) | No | No |
 

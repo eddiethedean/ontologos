@@ -253,6 +253,21 @@ pub fn core_to_triples(ontology: &Ontology) -> Result<Vec<Triple>> {
     Ok(out)
 }
 
+/// Limits applied when merging inferred triples back into core.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MergeLimits {
+    /// Maximum axioms allowed in the ontology after merge (including asserted).
+    pub max_axioms: usize,
+}
+
+impl Default for MergeLimits {
+    fn default() -> Self {
+        Self {
+            max_axioms: 10_000_000,
+        }
+    }
+}
+
 /// Summary of merging reasonable output back into core.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MergeReport {
@@ -266,6 +281,16 @@ pub fn merge_triples_into_ontology(
     triples: &[Triple],
     diagnostics: &[reasonable::reasoner::ReasoningError],
 ) -> Result<MergeReport> {
+    merge_triples_into_ontology_with_limits(ontology, triples, diagnostics, MergeLimits::default())
+}
+
+/// Merge materialized triples with an axiom cap (untrusted reasoning workloads).
+pub fn merge_triples_into_ontology_with_limits(
+    ontology: &mut Ontology,
+    triples: &[Triple],
+    diagnostics: &[reasonable::reasoner::ReasoningError],
+    limits: MergeLimits,
+) -> Result<MergeReport> {
     let before = ontology.axiom_count();
     let mut seen: HashSet<(String, String, String)> = HashSet::new();
 
@@ -276,6 +301,12 @@ pub fn merge_triples_into_ontology(
     }
 
     for axiom in collect_existential_axioms(ontology, triples)? {
+        if ontology.axiom_count() >= limits.max_axioms {
+            return Err(Error::Bridge(format!(
+                "axiom limit {} reached during merge",
+                limits.max_axioms
+            )));
+        }
         if let Some(key) = axiom_triple_key(ontology, &axiom)? {
             if seen.insert(key) {
                 ontology.add_axiom(axiom)?;
@@ -284,6 +315,12 @@ pub fn merge_triples_into_ontology(
     }
 
     for t in triples {
+        if ontology.axiom_count() >= limits.max_axioms {
+            return Err(Error::Bridge(format!(
+                "axiom limit {} reached during merge",
+                limits.max_axioms
+            )));
+        }
         if let Some(axiom) = triple_to_axiom(ontology, t)? {
             if let Some(key) = axiom_triple_key(ontology, &axiom)? {
                 if seen.insert(key) {

@@ -1,6 +1,6 @@
 # Contributing to OntoLogos
 
-Thank you for your interest in contributing. OntoLogos is in early development (v0.6); high-impact contributions include incremental reasoning, conformance, and documentation.
+Thank you for your interest in contributing. OntoLogos is in early development (v0.7.0 on `main`); high-impact contributions include incremental reasoning, conformance, and documentation.
 
 ## Prerequisites
 

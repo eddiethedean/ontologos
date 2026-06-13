@@ -39,7 +39,7 @@ Terms used across OntoLogos documentation. For OWL background, see the [W3C OWL 
 |------|-------|-------|
 | **RDFS materialization** | `ontologos-rdfs` | TBox: transitive subClass/subProperty, domain/range inheritance |
 | **OWL RL saturation** | `ontologos-rl` | RDFS pass + RL TBox/ABox rules |
-| **OWL EL classification** | `ontologos-el` | Stub — completion-based taxonomy (v0.5) |
+| **OWL EL classification** | `ontologos-el` | Available — completion-based taxonomy (v0.7.0) |
 
 ## Related
 

@@ -18,15 +18,17 @@ See [Load an OWL file](https://ontologos.readthedocs.io/en/latest/getting-starte
 
 ## Which crate should I depend on?
 
-For **v0.5**, typical workflows use:
+For **v0.7.0**, typical workflows use:
 
 ```toml
 [dependencies]
-ontologos-core = "0.5.0"
-ontologos-parser = "0.5.0"   # OWL/RDF file loading
-ontologos-profile = "0.5.0"  # EL / RL / QL / DL detection
-ontologos-rdfs = "0.5.0"     # RDFS materialization
-ontologos-rl = "0.5.0"       # OWL RL saturation
+ontologos-core = "0.7.0"
+ontologos-parser = "0.7.0"   # OWL/RDF file loading
+ontologos-profile = "0.7.0"  # EL / RL / QL / DL detection
+ontologos-rdfs = "0.7.0"     # RDFS materialization
+ontologos-rl = "0.7.0"       # OWL RL saturation
+ontologos-el = "0.7.0"       # OWL EL classification
+ontologos-explain = "0.7.0"  # Proof graphs
 ```
 
 Depend on **`ontologos-core` only** if you build ontologies programmatically or from JSON snapshots.
@@ -35,7 +37,7 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Not for full OWL DL classification.** v0.5 loads OWL files, detects profiles, materializes RDFS TBox inferences, saturates OWL RL ontologies, and classifies OWL EL taxonomies via `ontologos-el`. CLI `classify --profile auto|el|rl|rdfs` routes to the correct engine. Use Protégé with HermiT or Konclude for production OWL DL workflows.
+**Not for full OWL DL classification.** v0.7.0 loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. CLI `classify --profile auto|el|rl|rdfs` routes to the correct engine. Use Protégé with HermiT or Konclude for production OWL DL workflows.
 
 OntoLogos is for early adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
 
@@ -91,7 +93,7 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.5.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.5.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.5.0), [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.5.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.5.0)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.7.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.7.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.7.0), [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.7.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.7.0)
 - Guides: [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api/) · [Architecture](https://ontologos.readthedocs.io/en/latest/architecture/) · [OWL RL](https://ontologos.readthedocs.io/en/latest/getting-started/owl-rl-saturation/)
 - Local: `cargo doc -p ontologos-core --open`
 - Error catalog: [Error reference](https://ontologos.readthedocs.io/en/latest/reference/errors/)
@@ -99,7 +101,7 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Does `pip install ontologos` work?
 
-The PyPI package is an **alpha** release (v0.5.0). It supports `profile="auto"`, `"el"`, `"rl"`, and `"rdfs"`:
+The PyPI package is an **alpha** release (v0.7.0). It supports `profile="auto"`, `"el"`, `"rl"`, and `"rdfs"`:
 
 ```python
 Reasoner("ontology.owl", profile="rdfs").classify()  # RDFS materialization

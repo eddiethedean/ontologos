@@ -13,10 +13,11 @@ fn repo_root() -> std::path::PathBuf {
 #[test]
 fn pizza_el_classification_produces_subsumptions() {
     let path = repo_root().join("benchmarks/data/pizza.owl");
-    if !path.exists() {
-        eprintln!("skip: run ./benchmarks/scripts/download.sh");
-        return;
-    }
+    assert!(
+        path.exists(),
+        "missing {}; run ./benchmarks/scripts/download.sh",
+        path.display()
+    );
 
     let ontology = load_ontology(&path).expect("load pizza");
     let taxonomy = ElClassifier::new()

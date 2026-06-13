@@ -18,6 +18,14 @@ fn pizza_path() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/pizza.owl")
 }
 
+fn require_fixture(path: &std::path::Path) {
+    assert!(
+        path.exists(),
+        "missing {}; run ./benchmarks/scripts/download.sh",
+        path.display()
+    );
+}
+
 fn assert_valid_graph(ontology: &Ontology, graph: &ontologos_explain::ProofGraph) {
     assert!(!graph.nodes.is_empty(), "expected non-empty proof graph");
     assert!(graph.is_acyclic(), "proof graph must be acyclic");
@@ -50,10 +58,7 @@ fn reasoner_with_profile(ontology: Ontology, profile: Profile) -> Reasoner {
 #[test]
 fn rdfs_family_materialization_and_graph() {
     let path = family_path();
-    if !path.exists() {
-        eprintln!("skip: missing {}", path.display());
-        return;
-    }
+    require_fixture(&path);
     let mut ontology = load_ontology(&path).expect("load family");
     let before = ontology.axiom_count();
     let graph = explain_rdfs(&mut ontology).expect("rdfs explain");
@@ -67,9 +72,7 @@ fn rdfs_family_materialization_and_graph() {
 #[test]
 fn rl_family_saturation_and_graph() {
     let path = family_path();
-    if !path.exists() {
-        return;
-    }
+    require_fixture(&path);
     let mut ontology = load_ontology(&path).expect("load family");
     let before = ontology.axiom_count();
     let graph = explain_rl(&mut ontology).expect("rl explain");
@@ -117,10 +120,7 @@ fn el_chain_subsumption_via_completion() {
 #[test]
 fn el_pizza_subsumption_explanation() {
     let path = pizza_path();
-    if !path.exists() {
-        eprintln!("skip: run ./benchmarks/scripts/download.sh for pizza.owl");
-        return;
-    }
+    require_fixture(&path);
     let ontology = load_ontology(&path).expect("load pizza");
     let taxonomy = ElClassifier::new().classify(&ontology).expect("classify");
     assert!(taxonomy.subsumption_count() > 0);
@@ -131,9 +131,7 @@ fn el_pizza_subsumption_explanation() {
 #[test]
 fn rdfs_engine_smoke() {
     let path = family_path();
-    if !path.exists() {
-        return;
-    }
+    require_fixture(&path);
     let mut ontology = load_ontology(&path).expect("load");
     RdfsEngine::new()
         .materialize(&mut ontology)
@@ -143,9 +141,7 @@ fn rdfs_engine_smoke() {
 #[test]
 fn rl_engine_smoke() {
     let path = family_path();
-    if !path.exists() {
-        return;
-    }
+    require_fixture(&path);
     let mut ontology = load_ontology(&path).expect("load");
     RlEngine::new(1).saturate(&mut ontology).expect("saturate");
 }
@@ -187,9 +183,7 @@ fn el_existential_subsumption() {
 #[test]
 fn ten_benchmark_inferences_across_engines() {
     let path = family_path();
-    if !path.exists() {
-        return;
-    }
+    require_fixture(&path);
     let mut rdfs_ont = load_ontology(&path).expect("load");
     let rdfs_report = RdfsEngine::new().materialize(&mut rdfs_ont).expect("rdfs");
     let mut rl_ont = load_ontology(&path).expect("load");

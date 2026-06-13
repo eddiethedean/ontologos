@@ -166,7 +166,7 @@ let report = RlEngine::new(1).saturate(&mut ontology)?;
 
 ---
 
-# OWL EL Engine (planned v0.5)
+# OWL EL Engine (v0.5+, in-house completion in 0.6.1/0.7.0)
 
 Algorithms:
 
@@ -182,7 +182,7 @@ Outputs:
 
 ---
 
-# Explanation Engine (planned v0.6)
+# Explanation Engine (v0.6+, shipped in 0.7.0)
 
 Proof graph:
 
@@ -203,7 +203,7 @@ Features:
 
 # CLI Specification
 
-**Status:** `profile`, `materialize`, `classify`, and `explain --profile auto|el|rl|rdfs` work in v0.6. `explain` emits proof graphs (JSON or text).
+**Status:** `profile`, `materialize`, `classify`, and `explain --profile auto|el|rl|rdfs` work in v0.7.0. `explain` emits proof graphs (JSON or text).
 
 Commands:
 
@@ -211,7 +211,7 @@ Commands:
 ontologos profile ontology.owl
 ontologos materialize ontology.owl # RDFS (v0.3+)
 ontologos classify ontology.owl    # RDFS materialization; OWL EL taxonomy in v0.5
-ontologos explain ontology.owl     # Proof graph (v0.6)
+ontologos explain ontology.owl     # Proof graph (v0.7.0)
 ```
 
 Outputs:

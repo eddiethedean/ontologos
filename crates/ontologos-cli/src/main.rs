@@ -17,7 +17,7 @@ use thiserror::Error;
 #[command(
     name = "ontologos",
     about = "Modular Rust ontology reasoner",
-    after_help = "v0.6: profile (detect), materialize (RDFS), classify (EL/RL/RDFS), explain (proof graphs). \
+    after_help = "v0.7.0: profile (detect), materialize (RDFS), classify (EL/RL/RDFS), explain (proof graphs). \
                   Docs: https://ontologos.readthedocs.io/en/latest/reference/cli/"
 )]
 struct Cli {
@@ -154,6 +154,10 @@ fn parse_meta_summary(ontology: &Ontology) -> ParseMetaSummary {
         .unwrap_or_default()
 }
 
+fn skip_empty_clashes(clashes: &&[String]) -> bool {
+    clashes.is_empty()
+}
+
 fn emit_parse_meta_text(format: OutputFormat, parse_meta: &ParseMetaSummary) {
     if matches!(format, OutputFormat::Text) {
         parse_meta.emit_stderr();
@@ -179,6 +183,9 @@ struct RdfsCliOutput<'a> {
     final_axiom_count: usize,
     inferred_axioms: usize,
     inferred_by_rule: &'a BTreeMap<ontologos_rdfs::RdfsRule, usize>,
+    clash_count: usize,
+    #[serde(skip_serializing_if = "skip_empty_clashes")]
+    clashes: &'a [String],
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
@@ -190,6 +197,9 @@ struct RlCliOutput<'a> {
     final_axiom_count: usize,
     inferred_axioms: usize,
     inferred_by_rule: &'a BTreeMap<ontologos_rl::RlRule, usize>,
+    clash_count: usize,
+    #[serde(skip_serializing_if = "skip_empty_clashes")]
+    clashes: &'a [String],
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
@@ -313,6 +323,13 @@ fn emit_rdfs_report(
                     println!("  {}: {count}", rule.as_str());
                 }
             }
+            if !report.clashes.is_empty() {
+                println!("clash_count: {}", report.clashes.len());
+                println!("clashes:");
+                for clash in &report.clashes {
+                    println!("  {clash}");
+                }
+            }
         }
         OutputFormat::Json => emit_json(&RdfsCliOutput {
             status,
@@ -320,6 +337,8 @@ fn emit_rdfs_report(
             final_axiom_count: report.final_axiom_count,
             inferred_axioms: report.inferred_total(),
             inferred_by_rule: &report.inferred_by_rule,
+            clash_count: report.clashes.len(),
+            clashes: &report.clashes,
             parse_meta,
         })?,
     }
@@ -346,6 +365,13 @@ fn emit_rl_report(
                     println!("  {}: {count}", rule.as_str());
                 }
             }
+            if !report.clashes.is_empty() {
+                println!("clash_count: {}", report.clashes.len());
+                println!("clashes:");
+                for clash in &report.clashes {
+                    println!("  {clash}");
+                }
+            }
         }
         OutputFormat::Json => emit_json(&RlCliOutput {
             status,
@@ -353,6 +379,8 @@ fn emit_rl_report(
             final_axiom_count: report.final_axiom_count,
             inferred_axioms: report.inferred_total(),
             inferred_by_rule: &report.inferred_by_rule,
+            clash_count: report.clashes.len(),
+            clashes: &report.clashes,
             parse_meta,
         })?,
     }

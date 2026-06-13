@@ -32,6 +32,7 @@ use thiserror::Error;
 
 pub use construct::OwlConstruct;
 pub use detect::detect_profile;
+pub use rules::{el_classification_forbidden_in, el_diagnostics, el_forbidden_in, satisfies_el};
 
 /// Result type alias for profile operations.
 pub type Result<T> = std::result::Result<T, Error>;

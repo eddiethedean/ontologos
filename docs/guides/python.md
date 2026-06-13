@@ -1,6 +1,6 @@
 # Python Guide
 
-Alpha Python bindings for OntoLogos v0.6 via PyO3 (`pip install ontologos`).
+Alpha Python bindings for OntoLogos v0.7.0 via PyO3 (`pip install ontologos`).
 
 OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
 (`ontologos-el` in-house EL, `ontologos-rl` / `ontologos-rdfs` → reasonable). Power users who need
@@ -101,9 +101,9 @@ Read-only dict after load:
 | `skipped_axiom_count` | `int` | Logical components not mapped |
 | `logical_axiom_count` | `int` | Mapped + skipped |
 
-## Limitations (v0.6 alpha)
+## Limitations (v0.7.0 alpha)
 
-| Capability | Rust v0.6 | Python v0.6 |
+| Capability | Rust v0.7.0 | Python v0.7.0 |
 |------------|-----------|-------------|
 | Load OWL files | Yes (horned-owl) | Yes |
 | Profile detection | Yes | Via `"auto"` only |
@@ -137,5 +137,5 @@ All failures surface as `RuntimeError` with a string message. Common messages:
 
 - [Getting started](../getting-started/index.md)
 - [OWL EL classification](../getting-started/owl-el-classification.md)
-- [Migration v0.5 → v0.6](../migration/v0.5.x-to-v0.6.0.md)
+- [Migration v0.6 → v0.7](../migration/v0.6.x-to-v0.7.0.md)
 - [Migration v0.4 → v0.5](../migration/v0.4.x-to-v0.5.0.md)

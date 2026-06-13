@@ -51,3 +51,21 @@ fn file_size_limit_returns_parse_error() {
         "unexpected message: {err}"
     );
 }
+
+#[test]
+fn legacy_wine_fixture_returns_parse_error_not_panic() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/reasoner/res/wine.xml");
+    assert!(
+        path.exists(),
+        "missing vendored wine.xml at {}",
+        path.display()
+    );
+
+    let err = load_ontology(&path).expect_err("wine.xml should fail to parse");
+    assert!(matches!(err, Error::Parse(_)));
+    assert!(
+        err.to_string().contains("rdf:ID") || err.to_string().contains("parser internal error"),
+        "unexpected message: {err}"
+    );
+}

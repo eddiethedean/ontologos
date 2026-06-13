@@ -205,4 +205,60 @@ mod tests {
                 || taxonomy.is_subsumed(a, b) && taxonomy.is_subsumed(b, a)
         );
     }
+
+    #[test]
+    fn el_classification_forbidden_includes_complex_tbox_constructs() {
+        let mut constructs = std::collections::BTreeSet::new();
+        constructs.insert(ontologos_core::OwlConstruct::ObjectUnionOf);
+        assert!(!ontologos_profile::el_classification_forbidden_in(&constructs).is_empty());
+    }
+
+    #[test]
+    fn symmetric_property_does_not_block_forced_el_classification() {
+        let mut ontology = Ontology::new();
+        let p = ontology
+            .entity_id("http://ex.org/p", EntityKind::ObjectProperty)
+            .expect("property");
+        ontology
+            .add_axiom(Axiom::SymmetricObjectProperty(p))
+            .unwrap();
+
+        ElClassifier::new()
+            .classify(&ontology)
+            .expect("ignored characteristic axioms do not block EL");
+    }
+
+    #[test]
+    fn multiple_property_domains_infer_all() {
+        let mut ontology = Ontology::new();
+        let a = class(&mut ontology, "http://ex.org/A");
+        let d1 = class(&mut ontology, "http://ex.org/D1");
+        let d2 = class(&mut ontology, "http://ex.org/D2");
+        let p = ontology
+            .entity_id("http://ex.org/p", EntityKind::ObjectProperty)
+            .expect("property");
+        ontology
+            .add_axiom(Axiom::SubClassOfExistential {
+                subclass: a,
+                property: p,
+                filler: a,
+            })
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::ObjectPropertyDomain {
+                property: p,
+                domain: d1,
+            })
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::ObjectPropertyDomain {
+                property: p,
+                domain: d2,
+            })
+            .unwrap();
+
+        let taxonomy = ElClassifier::new().classify(&ontology).unwrap();
+        assert!(taxonomy.is_subsumed(a, d1));
+        assert!(taxonomy.is_subsumed(a, d2));
+    }
 }

@@ -40,7 +40,7 @@ ontologos --help
 | `profile <file>` | **Works** | Detect OWL profile (EL/RL/QL/DL) |
 | `classify <file>` | **Works** | Profile-routed classification / saturation |
 | `materialize <file>` | **Works** | Explicit RDFS TBox materialization |
-| `explain <file>` | **v0.6** | Proof graph JSON/text; supports `--profile` |
+| `explain <file>` | **v0.7.0** | Proof graph JSON/text; supports `--profile` |
 
 ### `classify`
 

@@ -1,6 +1,6 @@
 # Conformance Coverage
 
-Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. OntoLogos v0.5 ships EL classification, RL saturation, and growing HermiT ports.
+Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. OntoLogos v0.7.0 ships EL classification, RL/RDFS saturation via reasonable, explanations, and growing HermiT ports.
 
 ## HermiT porting strategy
 
@@ -54,7 +54,7 @@ The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL too
 |------|--------|
 | Full OWL DL | Not shipped (2.0 target) |
 | Complete OWL RL rule set | Partial — see [RL rules](rl-rules.md) |
-| Explanations | Stub (v0.6) |
+| Explanations | Available (EL traces; RL/RDFS asserted-only until reasonable exposes diagnostics) |
 | Large DL corpora (GALEN, SNOMED) | Optional stress tests only |
 | Wine `ClassificationTest` | Parser limitation on legacy RDF/XML |
 
