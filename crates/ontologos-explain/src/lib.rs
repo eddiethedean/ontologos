@@ -272,8 +272,7 @@ mod tests {
         assert!(graph.node_count() > 2);
         assert_valid_proof_graph(&ontology, &graph);
         assert!(graph.nodes.iter().any(|node| {
-            node.rule == "sub_trans_forward"
-                && node.conclusion_sub == Some((a, c))
+            node.rule == "sub_trans_forward" && node.conclusion_sub == Some((a, c))
         }));
     }
 }

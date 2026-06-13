@@ -97,7 +97,10 @@ fn nnf_complement_in_dl_store() -> Result<(), Error> {
     let sub_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(a));
     ontology
         .dl_mut()
-        .push_axiom(ontologos_core::DlAxiom::SubClassOf { sub: sub_ce, sup: not_b });
+        .push_axiom(ontologos_core::DlAxiom::SubClassOf {
+            sub: sub_ce,
+            sup: not_b,
+        });
     let clauses = clausify(&mut ontology)?;
     assert!(
         clauses.clauses().iter().any(|c| matches!(

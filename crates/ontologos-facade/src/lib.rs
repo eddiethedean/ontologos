@@ -160,8 +160,14 @@ mod tests {
             .unwrap();
         let outcome = super::classify(&mut reasoner).unwrap();
         let tax = super::taxonomy_from_outcome(&outcome).expect("EL should return Taxonomy");
-        let a = reasoner.ontology().lookup_entity("http://example.org/A").unwrap();
-        let c = reasoner.ontology().lookup_entity("http://example.org/C").unwrap();
+        let a = reasoner
+            .ontology()
+            .lookup_entity("http://example.org/A")
+            .unwrap();
+        let c = reasoner
+            .ontology()
+            .lookup_entity("http://example.org/C")
+            .unwrap();
         assert!(tax.is_subsumed(a, c));
     }
 
@@ -195,8 +201,14 @@ mod tests {
             .unwrap();
         let outcome = super::classify(&mut reasoner).unwrap();
         let tax = super::taxonomy_from_outcome(&outcome).expect("auto on EL fixture");
-        let a = reasoner.ontology().lookup_entity("http://example.org/A").unwrap();
-        let c = reasoner.ontology().lookup_entity("http://example.org/C").unwrap();
+        let a = reasoner
+            .ontology()
+            .lookup_entity("http://example.org/A")
+            .unwrap();
+        let c = reasoner
+            .ontology()
+            .lookup_entity("http://example.org/C")
+            .unwrap();
         assert!(tax.is_subsumed(a, c));
     }
 
@@ -208,8 +220,14 @@ mod tests {
             .unwrap();
         let outcome = super::classify(&mut reasoner).unwrap();
         let tax = super::taxonomy_from_outcome(&outcome).expect("DL should return Taxonomy");
-        let a = reasoner.ontology().lookup_entity("http://example.org/A").unwrap();
-        let b = reasoner.ontology().lookup_entity("http://example.org/B").unwrap();
+        let a = reasoner
+            .ontology()
+            .lookup_entity("http://example.org/A")
+            .unwrap();
+        let b = reasoner
+            .ontology()
+            .lookup_entity("http://example.org/B")
+            .unwrap();
         assert!(tax.is_subsumed(a, b));
     }
 
