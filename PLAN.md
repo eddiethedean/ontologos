@@ -7,7 +7,7 @@
 
 | Milestone | Status |
 |-----------|--------|
-| **v0.6.1 / v0.7** | **Released** — dependency-first adapters (`ontologos-bridge`), in-house EL, RL/RDFS → reasonable |
+| **v0.7.0** | **Ready on `main`** — semver aligns ROADMAP v0.7 dependency-first adapters; pending tag and publish |
 | **v0.8** | Incremental reasoning + petgraph polish |
 | **v0.9** | Python wheels / PyPI maturity |
 

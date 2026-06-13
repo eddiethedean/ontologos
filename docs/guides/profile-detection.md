@@ -1,6 +1,6 @@
 # Profile Detection
 
-Detect which OWL 2 profile best fits an ontology using [`ontologos-profile`](https://docs.rs/ontologos-profile/0.6.1).
+Detect which OWL 2 profile best fits an ontology using [`ontologos-profile`](https://docs.rs/ontologos-profile/0.7.0).
 
 ## CLI
 

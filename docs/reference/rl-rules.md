@@ -69,4 +69,4 @@ See [Supported constructs](supported-constructs.md).
 ## Related
 
 - [OWL RL saturation guide](../getting-started/owl-rl-saturation.md)
-- [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.6.1)
+- [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.7.0)

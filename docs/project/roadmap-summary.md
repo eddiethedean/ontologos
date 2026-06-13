@@ -1,8 +1,8 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest release:** **v0.6.1** (includes ROADMAP **v0.7** dependency-first adapters) · **On `main`:** v0.6.1
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v0.6.1** · **Next release:** **v0.7.0** (ready on `main`)
 
-## Shipped through v0.6.1 (crates.io + PyPI)
+## Ready in v0.7.0 (pending tag + crates.io / PyPI publish)
 
 | Area | Status |
 |------|--------|
@@ -14,7 +14,7 @@ OntoLogos follows [semantic versioning](https://semver.org/). **Latest release:*
 | **`ontologos-explain`** + proof graphs | Available |
 | **`ontologos-bridge`** (core ↔ horned-owl/oxrdf/reasonable) | Available |
 
-## v0.7 — dependency-first adapters (shipped in v0.6.1)
+## v0.7 — dependency-first adapters (v0.7.0)
 
 | Area | Status |
 |------|--------|

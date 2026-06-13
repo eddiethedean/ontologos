@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-13 · **Latest release:** **v0.6.1** (ROADMAP v0.7 dependency-first adapters) · **On `main`:** v0.6.1 · **Next:** v0.8 incremental reasoning
+**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.6.1** · **Next release:** **v0.7.0** (ready on `main`) · **After v0.7.0:** v0.8 incremental reasoning
 
 ---
 
@@ -467,7 +467,7 @@ v0.5 shipped custom EL completion; v0.6.0 briefly delegated to whelk (git); **v0
 
 ## v0.6 — Explanation engine
 
-**Status: Complete on `main`** (tag v0.6.1 pending) · **Adapter note:** RL/RDFS rule traces empty until reasonable exposes diagnostics · **Depends on:** v0.3–v0.5
+**Status: Complete on `main`** (tag **v0.7.0** pending) · **Adapter note:** RL/RDFS rule traces empty until reasonable exposes diagnostics · **Depends on:** v0.3–v0.5
 
 **Crate:** `ontologos-explain`
 
@@ -484,13 +484,13 @@ v0.5 shipped custom EL completion; v0.6.0 briefly delegated to whelk (git); **v0
 - [x] Benchmark suite validates materialization + taxonomy across engines (≥10 combined inferences)
 - [x] Proof graphs are acyclic and reference valid axiom ids
 - [ ] Per-rule RL/RDFS traces — **deferred to upstream** (EL-first taxonomy explanations today)
-- [ ] `ontologos-explain` and `ontologos-bridge` crates.io publish with **v0.6.1** tag
+- [ ] `ontologos-explain` and `ontologos-bridge` crates.io publish with **v0.7.0** tag
 
 ---
 
 ## v0.7 — Dependency-first adapters
 
-**Status: Complete on `main`** · **Ships in:** **v0.6.1** · **Depends on:** v0.3–v0.6
+**Status: Complete on `main`** · **Ships in:** **v0.7.0** · **Depends on:** v0.3–v0.6
 
 Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house completion (whelk experiment reverted in 0.6.1). Public crate names and CLI/Python APIs unchanged.
 
@@ -520,7 +520,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 - [x] `cargo test --workspace` and `clippy -D warnings` green
 - [x] No duplicate rule implementations in workspace
 - [x] Public API stable: `load_ontology`, `classify_with_profile`, CLI subcommands
-- [x] Tag and publish **v0.6.1** (`ontologos-bridge`, `ontologos-explain`, facade crate updates)
+- [ ] Tag and publish **v0.7.0** (`ontologos-bridge`, facade crate updates; semver aligns ROADMAP v0.7)
 
 > **Upstream gaps:** See [dependency-first ADR](docs/internal/design/dependency-first.md). Track in reasonable issues; do not silently reimplement RL/RDFS rules.
 

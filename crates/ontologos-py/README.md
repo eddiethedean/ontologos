@@ -2,7 +2,7 @@
 
 Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a modular Rust ontology reasoner for OWL EL, RL, and RDFS.
 
-**Alpha package (v0.6.1).** See the full guide: **[docs/guides/python.md](../../docs/guides/python.md)**.
+**Alpha package (v0.7.0).** See the full guide: **[docs/guides/python.md](../../docs/guides/python.md)**.
 
 | Capability | Rust v0.6 | Python v0.6 |
 |------------|-----------|-------------|
