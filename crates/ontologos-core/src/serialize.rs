@@ -6,7 +6,8 @@ use crate::error::{Error, Result};
 use crate::limits::Limits;
 use crate::ontology::Ontology;
 
-const FORMAT_VERSION: u32 = 2;
+const FORMAT_VERSION: u32 = 3;
+const MIN_READ_FORMAT_VERSION: u32 = 2;
 
 /// JSON snapshot format for ontology round-trip (format version 2).
 #[derive(Debug, Serialize, Deserialize)]
@@ -60,6 +61,8 @@ enum SnapshotAxiom {
     SymmetricObjectProperty(String),
     ReflexiveObjectProperty(String),
     FunctionalObjectProperty(String),
+    InverseFunctionalObjectProperty(String),
+    IrreflexiveObjectProperty(String),
     AsymmetricObjectProperty(String),
     EquivalentObjectProperties(Vec<String>),
     ClassAssertion {
@@ -134,7 +137,7 @@ impl Ontology {
             ));
         }
 
-        if format_version != u64::from(FORMAT_VERSION) {
+        if format_version != 1 && format_version != 2 && format_version != 3 {
             return Err(Error::Serialization(format!(
                 "unsupported format_version: {format_version}"
             )));
@@ -169,7 +172,9 @@ impl Ontology {
     }
 
     fn from_snapshot(snapshot: OntologySnapshot, limits: Limits) -> Result<Self> {
-        if snapshot.format_version != FORMAT_VERSION {
+        if snapshot.format_version < MIN_READ_FORMAT_VERSION
+            || snapshot.format_version > FORMAT_VERSION
+        {
             return Err(Error::Serialization(format!(
                 "unsupported format_version: {}",
                 snapshot.format_version
@@ -291,6 +296,12 @@ fn axiom_to_snapshot(axiom: &Axiom, ontology: &Ontology) -> Result<SnapshotAxiom
         Axiom::FunctionalObjectProperty(property) => {
             SnapshotAxiom::FunctionalObjectProperty(entity_iri(ontology, *property)?)
         }
+        Axiom::InverseFunctionalObjectProperty(property) => {
+            SnapshotAxiom::InverseFunctionalObjectProperty(entity_iri(ontology, *property)?)
+        }
+        Axiom::IrreflexiveObjectProperty(property) => {
+            SnapshotAxiom::IrreflexiveObjectProperty(entity_iri(ontology, *property)?)
+        }
         Axiom::AsymmetricObjectProperty(property) => {
             SnapshotAxiom::AsymmetricObjectProperty(entity_iri(ontology, *property)?)
         }
@@ -389,6 +400,12 @@ fn snapshot_axiom_to_axiom(snapshot: &SnapshotAxiom, ontology: &Ontology) -> Res
         SnapshotAxiom::FunctionalObjectProperty(property) => {
             Axiom::FunctionalObjectProperty(resolve_entity(ontology, property)?)
         }
+        SnapshotAxiom::InverseFunctionalObjectProperty(property) => {
+            Axiom::InverseFunctionalObjectProperty(resolve_entity(ontology, property)?)
+        }
+        SnapshotAxiom::IrreflexiveObjectProperty(property) => {
+            Axiom::IrreflexiveObjectProperty(resolve_entity(ontology, property)?)
+        }
         SnapshotAxiom::AsymmetricObjectProperty(property) => {
             Axiom::AsymmetricObjectProperty(resolve_entity(ontology, property)?)
         }
@@ -447,7 +464,7 @@ mod tests {
             .expect("build");
 
         let json = ontology.to_json().expect("to_json");
-        assert!(json.contains("\"format_version\": 2"));
+        assert!(json.contains("\"format_version\": 3"));
         let restored = Ontology::from_json(&json).expect("from_json");
         assert_eq!(restored, ontology);
 

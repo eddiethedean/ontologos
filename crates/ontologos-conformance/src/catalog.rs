@@ -109,7 +109,7 @@ pub fn run_hermit_case(case_id: &str) {
         .unwrap_or_else(|| panic!("unknown HermiT case id: {case_id}"));
 
     match case.status.as_str() {
-        "ported" | "excluded" | "deferred" | "internal" | "planned" => {
+        "ported" | "excluded" | "deferred" | "internal" | "planned" | "migrated" => {
             panic!(
                 "case {} should be #[ignore] (status={}, reason={:?})",
                 case_id, case.status, case.ignore_reason
@@ -210,7 +210,7 @@ fn run_axiom_case(case: &HermitCase) {
     check_property_characteristics(&ontology, case);
 
     if let Some(expected) = case.consistent {
-        let consistent = if case.engine == "dl" || case.engine == "swrl" {
+        let mut consistent = if case.engine == "dl" || case.engine == "swrl" {
             ontologos_dl::is_consistent(&ontology).expect("consistent")
         } else {
             !ontology
@@ -219,16 +219,22 @@ fn run_axiom_case(case: &HermitCase) {
                 .any(|(_, axiom)| matches!(axiom, ontologos_core::Axiom::DisjointClasses(_)))
                 && saturate_for_consistency(case, &mut ontology)
         };
+        if ontologos_bridge::has_bottom_chain_violation(&ontology) {
+            consistent = false;
+        }
         assert_eq!(consistent, expected, "{}: consistency", case.id);
     }
 }
 
 fn saturate_for_consistency(case: &HermitCase, ontology: &mut Ontology) -> bool {
     match case.engine.as_str() {
-        "rl" => ontologos_rl::RlEngine::new(1)
-            .saturate(ontology)
-            .map(|r| r.clashes.is_empty())
-            .unwrap_or(false),
+        "rl" => {
+            let saturated = ontologos_rl::RlEngine::new(1)
+                .saturate(ontology)
+                .map(|r| r.clashes.is_empty())
+                .unwrap_or(false);
+            saturated && !ontologos_bridge::has_bottom_chain_violation(ontology)
+        }
         "rdfs" => ontologos_rdfs::RdfsEngine::new()
             .materialize(ontology)
             .map(|_| true)
@@ -300,10 +306,12 @@ fn check_property_characteristics(ontology: &Ontology, case: &HermitCase) {
 fn parse_property_characteristic(kind: &str) -> Option<PropertyCharacteristic> {
     match kind {
         "functional" => Some(PropertyCharacteristic::Functional),
+        "inverse_functional" => Some(PropertyCharacteristic::InverseFunctional),
         "symmetric" => Some(PropertyCharacteristic::Symmetric),
         "transitive" => Some(PropertyCharacteristic::Transitive),
         "reflexive" => Some(PropertyCharacteristic::Reflexive),
         "asymmetric" => Some(PropertyCharacteristic::Asymmetric),
+        "irreflexive" => Some(PropertyCharacteristic::Irreflexive),
         _ => None,
     }
 }

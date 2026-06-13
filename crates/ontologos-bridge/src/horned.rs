@@ -1,7 +1,8 @@
 use horned_owl::model::{
     AsymmetricObjectProperty, Build, ClassAssertion, ClassExpression, DeclareClass,
     DeclareNamedIndividual, DeclareObjectProperty, DifferentIndividuals, DisjointClasses,
-    EquivalentObjectProperties, FunctionalObjectProperty, Individual, InverseObjectProperties,
+    EquivalentObjectProperties, FunctionalObjectProperty, Individual,
+    InverseFunctionalObjectProperty, InverseObjectProperties, IrreflexiveObjectProperty,
     MutableOntology, ObjectPropertyAssertion, ObjectPropertyDomain, ObjectPropertyExpression,
     ObjectPropertyRange, RcStr, ReflexiveObjectProperty, SameIndividual, SubClassOf,
     SubObjectPropertyExpression, SubObjectPropertyOf, SymmetricObjectProperty,
@@ -163,6 +164,16 @@ fn map_axiom(
         }
         Axiom::FunctionalObjectProperty(property) => {
             set.insert(FunctionalObjectProperty(object_property(
+                ontology, b, *property,
+            )?));
+        }
+        Axiom::InverseFunctionalObjectProperty(property) => {
+            set.insert(InverseFunctionalObjectProperty(object_property(
+                ontology, b, *property,
+            )?));
+        }
+        Axiom::IrreflexiveObjectProperty(property) => {
+            set.insert(IrreflexiveObjectProperty(object_property(
                 ontology, b, *property,
             )?));
         }

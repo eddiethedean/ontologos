@@ -208,6 +208,10 @@ pub fn has_property_characteristic(
             .index()
             .functional_properties()
             .contains(&property_id),
+        PropertyCharacteristic::InverseFunctional => ontology
+            .index()
+            .inverse_functional_properties()
+            .contains(&property_id),
         PropertyCharacteristic::Symmetric => ontology
             .index()
             .symmetric_properties()
@@ -224,6 +228,10 @@ pub fn has_property_characteristic(
             .index()
             .asymmetric_properties()
             .contains(&property_id),
+        PropertyCharacteristic::Irreflexive => ontology
+            .index()
+            .irreflexive_properties()
+            .contains(&property_id),
     }
 }
 
@@ -231,10 +239,12 @@ pub fn has_property_characteristic(
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PropertyCharacteristic {
     Functional,
+    InverseFunctional,
     Symmetric,
     Transitive,
     Reflexive,
     Asymmetric,
+    Irreflexive,
 }
 
 fn assert_subsumed_by_id(

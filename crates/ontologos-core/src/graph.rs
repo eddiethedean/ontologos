@@ -220,6 +220,8 @@ pub struct AxiomIndex {
     symmetric_properties: HashSet<EntityId>,
     reflexive_properties: HashSet<EntityId>,
     functional_properties: HashSet<EntityId>,
+    inverse_functional_properties: HashSet<EntityId>,
+    irreflexive_properties: HashSet<EntityId>,
     asymmetric_properties: HashSet<EntityId>,
     equivalent_classes: HashMap<EntityId, HashSet<EntityId>>,
     equivalent_properties: HashMap<EntityId, HashSet<EntityId>>,
@@ -312,6 +314,12 @@ impl AxiomIndex {
             }
             Axiom::FunctionalObjectProperty(property) => {
                 self.functional_properties.insert(*property);
+            }
+            Axiom::InverseFunctionalObjectProperty(property) => {
+                self.inverse_functional_properties.insert(*property);
+            }
+            Axiom::IrreflexiveObjectProperty(property) => {
+                self.irreflexive_properties.insert(*property);
             }
             Axiom::AsymmetricObjectProperty(property) => {
                 self.asymmetric_properties.insert(*property);
@@ -461,6 +469,18 @@ impl AxiomIndex {
     #[must_use]
     pub fn functional_properties(&self) -> &HashSet<EntityId> {
         &self.functional_properties
+    }
+
+    /// Properties declared inverse-functional.
+    #[must_use]
+    pub fn inverse_functional_properties(&self) -> &HashSet<EntityId> {
+        &self.inverse_functional_properties
+    }
+
+    /// Properties declared irreflexive.
+    #[must_use]
+    pub fn irreflexive_properties(&self) -> &HashSet<EntityId> {
+        &self.irreflexive_properties
     }
 
     /// Properties declared asymmetric.

@@ -18,6 +18,8 @@ const OWL_TRANSITIVE: &str = "http://www.w3.org/2002/07/owl#TransitiveProperty";
 const OWL_SYMMETRIC: &str = "http://www.w3.org/2002/07/owl#SymmetricProperty";
 const OWL_REFLEXIVE: &str = "http://www.w3.org/2002/07/owl#ReflexiveProperty";
 const OWL_FUNCTIONAL: &str = "http://www.w3.org/2002/07/owl#FunctionalProperty";
+const OWL_INVERSE_FUNCTIONAL: &str = "http://www.w3.org/2002/07/owl#InverseFunctionalProperty";
+const OWL_IRREFLEXIVE: &str = "http://www.w3.org/2002/07/owl#IrreflexiveProperty";
 const OWL_ASYMMETRIC: &str = "http://www.w3.org/2002/07/owl#AsymmetricProperty";
 const OWL_CLASS: &str = "http://www.w3.org/2002/07/owl#Class";
 const OWL_OBJECT_PROPERTY: &str = "http://www.w3.org/2002/07/owl#ObjectProperty";
@@ -239,6 +241,20 @@ fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
                 &entity_iri(ontology, *property)?,
                 RDF_TYPE,
                 OWL_FUNCTIONAL,
+            )?);
+        }
+        Axiom::InverseFunctionalObjectProperty(property) => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDF_TYPE,
+                OWL_INVERSE_FUNCTIONAL,
+            )?);
+        }
+        Axiom::IrreflexiveObjectProperty(property) => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDF_TYPE,
+                OWL_IRREFLEXIVE,
             )?);
         }
         Axiom::AsymmetricObjectProperty(property) => {
@@ -571,6 +587,14 @@ fn triple_to_axiom(ontology: &mut Ontology, triple: &Triple) -> Result<Option<Ax
         return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
             .map(Axiom::FunctionalObjectProperty));
     }
+    if pred == RDF_TYPE && obj == OWL_INVERSE_FUNCTIONAL {
+        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
+            .map(Axiom::InverseFunctionalObjectProperty));
+    }
+    if pred == RDF_TYPE && obj == OWL_IRREFLEXIVE {
+        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
+            .map(Axiom::IrreflexiveObjectProperty));
+    }
     if pred == RDF_TYPE && obj == OWL_ASYMMETRIC {
         return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
             .map(Axiom::AsymmetricObjectProperty));
@@ -753,6 +777,16 @@ fn axiom_triple_key(
             entity_iri(ontology, *property)?,
             RDF_TYPE.to_string(),
             OWL_FUNCTIONAL.to_string(),
+        ))),
+        Axiom::InverseFunctionalObjectProperty(property) => Ok(Some((
+            entity_iri(ontology, *property)?,
+            RDF_TYPE.to_string(),
+            OWL_INVERSE_FUNCTIONAL.to_string(),
+        ))),
+        Axiom::IrreflexiveObjectProperty(property) => Ok(Some((
+            entity_iri(ontology, *property)?,
+            RDF_TYPE.to_string(),
+            OWL_IRREFLEXIVE.to_string(),
         ))),
         Axiom::AsymmetricObjectProperty(property) => Ok(Some((
             entity_iri(ontology, *property)?,

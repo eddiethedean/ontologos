@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use ontologos_core::{Axiom, EntityId, Ontology};
+use ontologos_core::{Axiom, DlAxiom, EntityId, Ontology, RoleExpr};
 
 use crate::Result;
 
@@ -148,8 +148,15 @@ pub fn apply_characteristic_propagation(ontology: &mut Ontology) -> Result<usize
     let sub_to_supers = superproperty_edges(ontology);
     let index = ontology.index();
     let mut functional: HashSet<EntityId> = index.functional_properties().iter().copied().collect();
+    let mut inverse_functional: HashSet<EntityId> = index
+        .inverse_functional_properties()
+        .iter()
+        .copied()
+        .collect();
     let mut asymmetric: HashSet<EntityId> = index.asymmetric_properties().iter().copied().collect();
     let mut reflexive: HashSet<EntityId> = index.reflexive_properties().iter().copied().collect();
+    let mut irreflexive: HashSet<EntityId> =
+        index.irreflexive_properties().iter().copied().collect();
 
     let mut added = 0_usize;
     for sub in sub_to_supers.keys() {
@@ -158,8 +165,16 @@ pub fn apply_characteristic_propagation(ontology: &mut Ontology) -> Result<usize
                 ontology.add_inferred_axiom(Axiom::FunctionalObjectProperty(*sub))?;
                 added += 1;
             }
+            if inverse_functional.contains(&sup) && inverse_functional.insert(*sub) {
+                ontology.add_inferred_axiom(Axiom::InverseFunctionalObjectProperty(*sub))?;
+                added += 1;
+            }
             if asymmetric.contains(&sup) && asymmetric.insert(*sub) {
                 ontology.add_inferred_axiom(Axiom::AsymmetricObjectProperty(*sub))?;
+                added += 1;
+            }
+            if irreflexive.contains(&sup) && irreflexive.insert(*sub) {
+                ontology.add_inferred_axiom(Axiom::IrreflexiveObjectProperty(*sub))?;
                 added += 1;
             }
         }
@@ -183,6 +198,92 @@ pub fn apply_reasonable_fallbacks(ontology: &mut Ontology) -> Result<usize> {
     total += propagate_domain_range_along_subproperties(ontology)?;
     total += apply_domain_range_inheritance(ontology)?;
     Ok(total)
+}
+
+/// Detect inconsistency from property chains subsumed by `owl:bottomObjectProperty`.
+#[must_use]
+pub fn has_bottom_chain_violation(ontology: &Ontology) -> bool {
+    let bottom = ontology.entities().iter().find_map(|(id, record)| {
+        ontology
+            .resolve_iri(record.iri)
+            .ok()
+            .filter(|iri| iri.ends_with("bottomObjectProperty"))
+            .map(|_| id)
+    });
+
+    let Some(bottom_id) = bottom else {
+        return false;
+    };
+
+    for axiom in ontology.dl().axioms() {
+        let DlAxiom::SubObjectPropertyChain {
+            chain,
+            super_property,
+        } = axiom
+        else {
+            continue;
+        };
+        if !role_is_bottom(super_property, bottom_id) {
+            continue;
+        }
+        if chain_has_assertion_path(ontology, chain) {
+            return true;
+        }
+    }
+    false
+}
+
+fn role_is_bottom(role: &RoleExpr, bottom_id: EntityId) -> bool {
+    matches!(role, RoleExpr::Atomic(id) if *id == bottom_id)
+}
+
+fn chain_has_assertion_path(ontology: &Ontology, chain: &[RoleExpr]) -> bool {
+    if chain.is_empty() {
+        return false;
+    }
+
+    let starters: Vec<EntityId> = ontology
+        .entities()
+        .iter()
+        .filter_map(|(id, record)| {
+            if record.kind == ontologos_core::EntityKind::Individual {
+                Some(id)
+            } else {
+                None
+            }
+        })
+        .filter(|id| !ontology.object_assertions_of(*id).is_empty())
+        .collect();
+    if starters.is_empty() {
+        return false;
+    }
+
+    let mut current: HashSet<EntityId> = starters.into_iter().collect();
+    for role in chain {
+        let Some(prop) = atomic_role(role) else {
+            return false;
+        };
+        let mut next = HashSet::new();
+        for subject in &current {
+            for &(property, object) in ontology.object_assertions_of(*subject) {
+                if property == prop {
+                    next.insert(object);
+                }
+            }
+        }
+        if next.is_empty() {
+            return false;
+        }
+        current = next;
+    }
+    !current.is_empty()
+}
+
+fn atomic_role(role: &RoleExpr) -> Option<EntityId> {
+    match role {
+        RoleExpr::Atomic(id) => Some(*id),
+        RoleExpr::Inverse(_) => None,
+    }
 }
 
 /// Propagate domain/range from superproperties to subproperties (RDFS 6/8).
@@ -419,5 +520,19 @@ mod tests {
             ontology.lookup_entity(&iri("a")).unwrap(),
             ontology.lookup_entity(&iri("Person")).unwrap()
         ));
+    }
+
+    #[test]
+    fn bottom_object_property_chain_with_assertions_is_inconsistent() {
+        use std::path::Path;
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testbottomobjectpropertyassertion.ofn",
+        );
+        let ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
+        assert!(
+            has_bottom_chain_violation(&ontology),
+            "expected bottom chain clash when r(a,b) and s(b,c) with chain r;s ⊑ bottom"
+        );
     }
 }

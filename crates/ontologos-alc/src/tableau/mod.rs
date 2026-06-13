@@ -266,6 +266,23 @@ impl<'a> Branch<'a> {
                 Clause::RoleSubsumption { sub, sup } => {
                     role_hierarchy.entry(*sub).or_default().insert(*sup);
                 }
+                Clause::RoleChain { chain, sup } => {
+                    if chain.len() == 2 {
+                        if let (RoleExpr::Atomic(r1), RoleExpr::Atomic(r2)) = (&chain[0], &chain[1])
+                        {
+                            role_hierarchy.entry(*r1).or_default().insert(*sup);
+                            role_hierarchy.entry(*r2).or_default().insert(*sup);
+                        }
+                    }
+                }
+                Clause::NominalSubsumption { sub, individual } => {
+                    if let Some(one_of) = dl.core().dl().expressions().find_map(|(id, e)| match e {
+                        ClassExpr::OneOf(v) if v == &[*individual] => Some(id),
+                        _ => None,
+                    }) {
+                        tbox_subsumptions.push((*sub, one_of));
+                    }
+                }
                 _ => {}
             }
         }

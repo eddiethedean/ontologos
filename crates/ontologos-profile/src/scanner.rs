@@ -73,6 +73,12 @@ fn note_axiom_construct(axiom: &ontologos_core::Axiom, constructs: &mut BTreeSet
         Axiom::FunctionalObjectProperty(_) => {
             constructs.insert(OwlConstruct::FunctionalObjectProperty);
         }
+        Axiom::InverseFunctionalObjectProperty(_) => {
+            constructs.insert(OwlConstruct::InverseFunctionalObjectProperty);
+        }
+        Axiom::IrreflexiveObjectProperty(_) => {
+            constructs.insert(OwlConstruct::IrreflexiveObjectProperty);
+        }
         Axiom::AsymmetricObjectProperty(_) => {
             constructs.insert(OwlConstruct::AsymmetricObjectProperty);
         }

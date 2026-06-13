@@ -77,6 +77,10 @@ pub enum Axiom {
     ReflexiveObjectProperty(EntityId),
     /// Functional object property declaration.
     FunctionalObjectProperty(EntityId),
+    /// Inverse-functional object property declaration.
+    InverseFunctionalObjectProperty(EntityId),
+    /// Irreflexive object property declaration.
+    IrreflexiveObjectProperty(EntityId),
     /// Asymmetric object property declaration.
     AsymmetricObjectProperty(EntityId),
     /// Named object property equivalence.
@@ -227,6 +231,8 @@ impl Axiom {
             | Self::SymmetricObjectProperty(property)
             | Self::ReflexiveObjectProperty(property)
             | Self::FunctionalObjectProperty(property)
+            | Self::InverseFunctionalObjectProperty(property)
+            | Self::IrreflexiveObjectProperty(property)
             | Self::AsymmetricObjectProperty(property) => {
                 require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
             }
@@ -259,6 +265,8 @@ impl Axiom {
             Self::SymmetricObjectProperty(_) => "SymmetricObjectProperty",
             Self::ReflexiveObjectProperty(_) => "ReflexiveObjectProperty",
             Self::FunctionalObjectProperty(_) => "FunctionalObjectProperty",
+            Self::InverseFunctionalObjectProperty(_) => "InverseFunctionalObjectProperty",
+            Self::IrreflexiveObjectProperty(_) => "IrreflexiveObjectProperty",
             Self::AsymmetricObjectProperty(_) => "AsymmetricObjectProperty",
             Self::EquivalentObjectProperties(_) => "EquivalentObjectProperties",
             Self::ClassAssertion { .. } => "ClassAssertion",

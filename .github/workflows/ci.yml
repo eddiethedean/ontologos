@@ -40,6 +40,10 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/report-conformance-coverage.sh
           ./benchmarks/scripts/report-conformance-coverage.sh
+      - name: DL OFN pass rate (informational)
+        run: |
+          chmod +x benchmarks/scripts/report-dl-ofn-pass-rate.sh
+          ./benchmarks/scripts/report-dl-ofn-pass-rate.sh || true
       - name: HermiT catalog drift check
         run: |
           chmod +x benchmarks/scripts/check-hermit-catalog.sh

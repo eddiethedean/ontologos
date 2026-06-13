@@ -69,6 +69,46 @@ fn axiom_requires_dl(axiom: &Axiom) -> bool {
     !el_classification_forbidden_in(&axiom_constructs(axiom)).is_empty()
 }
 
+fn axiom_is_rl_rich(axiom: &Axiom) -> bool {
+    matches!(
+        axiom,
+        Axiom::ObjectPropertyAssertion { .. }
+            | Axiom::ClassAssertion { .. }
+            | Axiom::SameIndividual(_)
+            | Axiom::DifferentIndividuals(_)
+            | Axiom::FunctionalObjectProperty(_)
+            | Axiom::InverseFunctionalObjectProperty(_)
+            | Axiom::IrreflexiveObjectProperty(_)
+            | Axiom::AsymmetricObjectProperty(_)
+            | Axiom::SymmetricObjectProperty(_)
+            | Axiom::ReflexiveObjectProperty(_)
+            | Axiom::TransitiveObjectProperty(_)
+            | Axiom::EquivalentObjectProperties(_)
+            | Axiom::InverseObjectProperties { .. }
+            | Axiom::ObjectPropertyDomain { .. }
+            | Axiom::ObjectPropertyRange { .. }
+            | Axiom::SubObjectPropertyOf { .. }
+            | Axiom::DisjointClasses(_)
+    )
+}
+
+/// Split EL-safe axioms into pure EL vs RL-rich fragments.
+fn partition_el_rl(ontology: &Ontology, el_ids: Vec<AxiomId>) -> (Vec<AxiomId>, Vec<AxiomId>) {
+    let mut pure_el = Vec::new();
+    let mut rl_ids = Vec::new();
+    for id in el_ids {
+        let Ok(axiom) = ontology.axioms().get(id) else {
+            continue;
+        };
+        if axiom_is_rl_rich(axiom) {
+            rl_ids.push(id);
+        } else {
+            pure_el.push(id);
+        }
+    }
+    (pure_el, rl_ids)
+}
+
 fn class_entities_in_signature(ontology: &Ontology, sig: &HashSet<EntityId>) -> HashSet<EntityId> {
     sig.iter()
         .copied()
@@ -159,33 +199,37 @@ pub fn subontology_with_axioms(ontology: &Ontology, axiom_ids: &[AxiomId]) -> Re
 pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
     let _report = detect_profile(ontology)?;
     let (el_ids, dl_ids) = partition_axioms(ontology);
+    let (pure_el_ids, rl_ids) = partition_el_rl(ontology, el_ids);
 
-    let modules = if dl_ids.is_empty() {
-        vec![ClassifiedModule {
+    let mut modules = Vec::new();
+    if !pure_el_ids.is_empty() {
+        modules.push(ClassifiedModule {
             profile: OwlProfile::El,
-            signature: signature_for_axioms(ontology, &el_ids),
-            axiom_ids: el_ids,
-        }]
-    } else if el_ids.is_empty() {
-        vec![ClassifiedModule {
+            signature: signature_for_axioms(ontology, &pure_el_ids),
+            axiom_ids: pure_el_ids,
+        });
+    }
+    if !rl_ids.is_empty() {
+        modules.push(ClassifiedModule {
+            profile: OwlProfile::Rl,
+            signature: signature_for_axioms(ontology, &rl_ids),
+            axiom_ids: rl_ids,
+        });
+    }
+    if !dl_ids.is_empty() {
+        modules.push(ClassifiedModule {
             profile: OwlProfile::Dl,
             signature: signature_for_axioms(ontology, &dl_ids),
             axiom_ids: dl_ids,
-        }]
-    } else {
-        vec![
-            ClassifiedModule {
-                profile: OwlProfile::El,
-                signature: signature_for_axioms(ontology, &el_ids),
-                axiom_ids: el_ids,
-            },
-            ClassifiedModule {
-                profile: OwlProfile::Dl,
-                signature: signature_for_axioms(ontology, &dl_ids),
-                axiom_ids: dl_ids,
-            },
-        ]
-    };
+        });
+    }
+    if modules.is_empty() {
+        modules.push(ClassifiedModule {
+            profile: OwlProfile::El,
+            signature: extract_signature(ontology),
+            axiom_ids: Vec::new(),
+        });
+    }
 
     Ok(HybridReport {
         modules,

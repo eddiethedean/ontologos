@@ -25,11 +25,32 @@ TOTAL=$(count_in_dir '#[test]' "$CONF")
 IGNORED=$(count_in_dir '#[ignore' "$CONF")
 ACTIVE=$((TOTAL - IGNORED))
 
+CATALOG="${ROOT}/benchmarks/data/hermit/catalog/cases.json"
+
 echo "ontologos-conformance test inventory"
 echo "  total test functions: $TOTAL"
 echo "  ignored (dormant):    $IGNORED"
 echo "  active in default CI: $ACTIVE"
 echo ""
+
+if [[ -f "$CATALOG" ]]; then
+  python3 - "$CATALOG" <<'PY'
+import json, sys
+from collections import Counter
+cases = json.load(open(sys.argv[1]))
+by_status = Counter(c["status"] for c in cases)
+by_engine = Counter(c["engine"] for c in cases)
+axiom = [c for c in cases if c["status"] == "axiom"]
+print("HermiT catalog (cases.json)")
+print(f"  total cases: {len(cases)}")
+for status in sorted(by_status):
+    print(f"  status {status}: {by_status[status]}")
+print("  by engine:", ", ".join(f"{k}={v}" for k, v in sorted(by_engine.items())))
+print(f"  axiom cases (runnable): {len(axiom)}")
+PY
+  echo ""
+fi
+
 echo "Note: default 'cargo test' skips #[ignore] tests."
 echo "Run ignored tier: cargo test -p ontologos-conformance -- --ignored"
 

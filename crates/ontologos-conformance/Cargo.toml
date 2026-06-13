@@ -13,6 +13,7 @@ publish = false
 
 [dependencies]
 ontologos-alc = { workspace = true }
+ontologos-bridge = { workspace = true }
 ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }
 ontologos-rdfs = { workspace = true }
@@ -22,6 +23,10 @@ ontologos-dl = { workspace = true }
 ontologos-swrl = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+
+[[bin]]
+name = "dl_ofn_pass_rate"
+path = "src/bin/dl_ofn_pass_rate.rs"
 
 [dev-dependencies]
 ontologos-conformance = { path = "." }

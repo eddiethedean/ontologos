@@ -108,6 +108,8 @@ pub fn axiom_signature(axiom: &Axiom) -> HashSet<EntityId> {
         | Axiom::SymmetricObjectProperty(p)
         | Axiom::ReflexiveObjectProperty(p)
         | Axiom::FunctionalObjectProperty(p)
+        | Axiom::InverseFunctionalObjectProperty(p)
+        | Axiom::IrreflexiveObjectProperty(p)
         | Axiom::AsymmetricObjectProperty(p) => {
             sig.insert(*p);
         }

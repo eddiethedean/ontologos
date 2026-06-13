@@ -71,4 +71,9 @@ impl RoleHierarchy {
     pub fn chains(&self) -> &[(Vec<RoleExpr>, EntityId)] {
         &self.chains
     }
+
+    /// Saturated atomic role subsumptions.
+    pub fn subrole_map(&self) -> &HashMap<EntityId, HashSet<EntityId>> {
+        &self.subroles
+    }
 }

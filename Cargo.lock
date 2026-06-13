@@ -999,6 +999,7 @@ name = "ontologos-conformance"
 version = "0.9.0"
 dependencies = [
  "ontologos-alc",
+ "ontologos-bridge",
  "ontologos-conformance",
  "ontologos-core",
  "ontologos-dl",

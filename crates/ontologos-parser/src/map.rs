@@ -206,25 +206,13 @@ impl Mapper<'_> {
                 self.map_functional_property(&axiom.0);
             }
             Component::InverseFunctionalObjectProperty(axiom) => {
-                self.report
-                    .meta
-                    .note_construct(OwlConstruct::InverseFunctionalObjectProperty);
-                self.scan_object_property_expression(&axiom.0);
-                if !self.map_dl_inverse_functional(&axiom.0) {
-                    self.skip("InverseFunctionalObjectProperty not mapped in v0.2");
-                }
+                self.map_inverse_functional_property(&axiom.0);
             }
             Component::ReflexiveObjectProperty(axiom) => {
                 self.map_reflexive_property(&axiom.0);
             }
             Component::IrreflexiveObjectProperty(axiom) => {
-                self.report
-                    .meta
-                    .note_construct(OwlConstruct::IrreflexiveObjectProperty);
-                self.scan_object_property_expression(&axiom.0);
-                if !self.map_dl_irreflexive(&axiom.0) {
-                    self.skip("IrreflexiveObjectProperty not mapped in v0.2");
-                }
+                self.map_irreflexive_property(&axiom.0);
             }
             Component::SymmetricObjectProperty(axiom) => {
                 self.map_symmetric_property(&axiom.0);
@@ -674,6 +662,38 @@ impl Mapper<'_> {
         }
     }
 
+    fn map_inverse_functional_property(&mut self, ope: &ObjectPropertyExpression<RcStr>) {
+        self.report
+            .meta
+            .note_construct(OwlConstruct::InverseFunctionalObjectProperty);
+        let prop_lookup = self.named_object_property(ope);
+        if let Some(prop_id) = prop_lookup.resolved_id() {
+            self.push_axiom(Axiom::InverseFunctionalObjectProperty(prop_id));
+            let _ = self.map_dl_inverse_functional(ope);
+        } else {
+            self.skip_if_unmapped(
+                &[prop_lookup],
+                "InverseFunctionalObjectProperty with non-named property not mapped in v0.2",
+            );
+        }
+    }
+
+    fn map_irreflexive_property(&mut self, ope: &ObjectPropertyExpression<RcStr>) {
+        self.report
+            .meta
+            .note_construct(OwlConstruct::IrreflexiveObjectProperty);
+        let prop_lookup = self.named_object_property(ope);
+        if let Some(prop_id) = prop_lookup.resolved_id() {
+            self.push_axiom(Axiom::IrreflexiveObjectProperty(prop_id));
+            let _ = self.map_dl_irreflexive(ope);
+        } else {
+            self.skip_if_unmapped(
+                &[prop_lookup],
+                "IrreflexiveObjectProperty with non-named property not mapped in v0.2",
+            );
+        }
+    }
+
     fn map_asymmetric_property(&mut self, ope: &ObjectPropertyExpression<RcStr>) {
         self.report
             .meta
@@ -858,6 +878,10 @@ impl Mapper<'_> {
             Axiom::SymmetricObjectProperty(_) => OwlConstruct::SymmetricObjectProperty,
             Axiom::ReflexiveObjectProperty(_) => OwlConstruct::ReflexiveObjectProperty,
             Axiom::FunctionalObjectProperty(_) => OwlConstruct::FunctionalObjectProperty,
+            Axiom::InverseFunctionalObjectProperty(_) => {
+                OwlConstruct::InverseFunctionalObjectProperty
+            }
+            Axiom::IrreflexiveObjectProperty(_) => OwlConstruct::IrreflexiveObjectProperty,
             Axiom::AsymmetricObjectProperty(_) => OwlConstruct::AsymmetricObjectProperty,
             Axiom::EquivalentObjectProperties(_) => OwlConstruct::EquivalentObjectProperties,
             Axiom::ClassAssertion { .. } => OwlConstruct::ClassAssertion,

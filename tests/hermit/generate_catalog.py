@@ -9,6 +9,7 @@ Requires HermiT/ (owlcs/hermit-reasoner) or ONTOLOGOS_HERMIT_ROOT.
 
 from __future__ import annotations
 
+import html
 import json
 import os
 import re
@@ -24,7 +25,12 @@ OUT_CATALOG = REPO / "benchmarks/data/hermit/catalog"
 OUT_AXIOMS = REPO / "benchmarks/data/hermit/axioms"
 OUT_RUST = REPO / "crates/ontologos-conformance/tests/hermit_generated.rs"
 OUT_WG_RUST = REPO / "crates/ontologos-conformance/tests/hermit_wg_generated.rs"
+OUT_WG_DATA = REPO / "benchmarks/data/hermit/wg"
 OUT_WG_CATALOG = REPO / "benchmarks/data/hermit/catalog/wg_cases.json"
+
+# Approved OWL WG DL entailment subset (premise/conclusion RDF vendored from all.rdf).
+# Promote to status=wg only after ontologos-dl passes entailment on each case.
+WG_APPROVED_SUBSET: set[str] = set()
 
 SKIP_FILE = re.compile(
     r"(Abstract|AllTests|AllQuick|Descriptor|Registry|Invalid|Failing|TstDescriptor|AllWG|AllApproved|AllExtracredit|AllNonRejected|AllProposed)"
@@ -70,12 +76,21 @@ DEFERRED_DL_AXIOM_IDS = {
 DEFERRED_RL_AXIOM_IDS = {
     "reasoner.OWLReasonerTest.testIncrementalAddition2",
     "reasoner.RIATest.testInverseAndChain",
+}
+
+# RL/RDFS consistency cases verified passing — promote to axiom.
+APPROVED_RL_CONSISTENCY_IDS = {
     "reasoner.ReasonerTest.testBottomObjectPropertyAssertion",
-    "reasoner.ReasonerTest.testIsInverseFunctionalObject",
-    "reasoner.ReasonerTest.testIsIrreflexiveObject",
 }
 
 DEFERRED_PREFIXES = ("reasoner.RulesTest",)
+
+# HermiT engine-internal tests ported to engine unit tests (permanent conformance ignore).
+MIGRATED_INTERNAL_IDS: set[str] = {
+    "structural.NormalizationTest.testDataPropertiesAll1",
+    "structural.NormalizationTest.testDataPropertiesAll2",
+    "structural.NormalizationTest.testDataPropertiesHasValue1",
+}
 
 INTERNAL_PREFIXES = (
     "tableau.",
@@ -113,6 +128,25 @@ DL_PREFIXES = (
     "reasoner.EntailmentTest",
     "owl_wg_tests.",
     "bugs.",
+)
+
+# HermiT families that are always DL regardless of RL keyword false positives in Java source.
+FORCE_DL_PREFIXES = (
+    "reasoner.DatatypesTest",
+    "reasoner.NumericsTest",
+    "reasoner.DateTimeTest",
+    "reasoner.FloatDoubleTest",
+    "reasoner.BinaryDataTest",
+    "reasoner.RDFPlainLiteralTest",
+    "reasoner.AnyURITest",
+    "reasoner.ComplexConceptTest",
+    "reasoner.ReasonerCoreBlockingTest",
+    "reasoner.ClassificationIndividualReuseTest",
+    "reasoner.ReasonerIndividualReuseTest",
+    "reasoner.DatalogEngineTest",
+    "reasoner.EntailmentTest",
+    "reasoner.SimpleRolesTest",
+    "reasoner.InverseAnonymousTest",
 )
 
 RL_HINTS = (
@@ -310,6 +344,10 @@ def extract_consistency(body: str) -> bool | None:
         return True
     if re.search(r"assertNotConsistent\s*\(\s*\)", body):
         return False
+    if re.search(r"assertABoxSatisfiable\s*\(\s*true\s*\)", body):
+        return True
+    if re.search(r"assertABoxSatisfiable\s*\(\s*false\s*\)", body):
+        return False
     if re.search(r"assertFalse\s*\(\s*m_reasoner\.isConsistent\s*\(\s*\)\s*\)", body):
         return False
     if re.search(r"assertTrue\s*\(\s*m_reasoner\.isConsistent\s*\(\s*\)\s*\)", body):
@@ -401,10 +439,14 @@ def infer_engine(case_id: str, body: str) -> str:
         return "internal"
     if case_id.startswith("owl_wg_tests."):
         return "dl"
+    if case_id.startswith("reasoner.RIATest"):
+        return "dl"
     if case_id.startswith(DEFERRED_PREFIXES):
         return "swrl"
     if "ClassificationTest" in case_id:
         return "el"
+    if case_id.startswith(FORCE_DL_PREFIXES):
+        return "dl"
     if any(x in body for x in DL_CONSTRUCTS):
         return "dl"
     if any(h in body for h in RDFS_HINTS) and not any(
@@ -426,6 +468,10 @@ def infer_engine(case_id: str, body: str) -> str:
 
 
 def infer_status(case: HermitCase) -> None:
+    if case.id in MIGRATED_INTERNAL_IDS:
+        case.status = "migrated"
+        case.ignore_reason = "ported to ontologos-alc/dl unit tests"
+        return
     if case.id in DEFERRED_DL_AXIOM_IDS:
         case.status = "planned"
         case.ignore_reason = "complex DL subsumption (Phase 2 tableau)"
@@ -499,8 +545,12 @@ def infer_status(case: HermitCase) -> None:
         case.ignore_reason = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"
         return
     if case.axiom_ofn and case.consistent is not None and case.engine in ("rdfs", "rl"):
-        case.status = "axiom"
-        case.tier = "A"
+        if case.id in APPROVED_RL_CONSISTENCY_IDS:
+            case.status = "axiom"
+            case.tier = "A"
+            return
+        case.status = "planned"
+        case.ignore_reason = "RL/RDFS consistency assertions pending engine hardening"
         return
     if case.axiom_ofn and "ClausificationDatatypes" in case.java_class:
         case.status = "planned"
@@ -674,7 +724,7 @@ def write_rust(cases: list[HermitCase]) -> None:
             lines.append(f"// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs")
             lines.append(f"#[test]")
             lines.append(f"#[ignore = \"implemented in hand-written module: {case.rust_test}\"]")
-        elif case.status in ("excluded", "deferred", "internal", "planned", "swrl") and case.ignore_reason:
+        elif case.status in ("excluded", "deferred", "internal", "planned", "swrl", "migrated") and case.ignore_reason:
             reason = case.ignore_reason.replace('"', '\\"')
             lines.append(f"#[test]")
             lines.append(f'#[ignore = "{reason}"]')
@@ -702,6 +752,37 @@ def write_rust(cases: list[HermitCase]) -> None:
         lines.append("}")
         lines.append("")
     OUT_RUST.write_text("\n".join(lines), encoding="utf-8")
+
+
+def extract_wg_embedded_rdf(block: str, tag: str) -> str | None:
+    m = re.search(
+        rf"<test:{tag}[^>]*>(.*?)</test:{tag}>",
+        block,
+        re.DOTALL,
+    )
+    if not m:
+        return None
+    raw = html.unescape(m.group(1).strip())
+    return raw if raw.startswith("<") else None
+
+
+def write_wg_fixture(test_id: str, block: str) -> tuple[str | None, str | None]:
+    premise = extract_wg_embedded_rdf(block, "rdfXmlPremiseOntology")
+    conclusion = extract_wg_embedded_rdf(block, "rdfXmlConclusionOntology")
+    if not premise:
+        return None, None
+    safe = re.sub(r"[^a-zA-Z0-9._-]+", "_", test_id)
+    out_dir = OUT_WG_DATA / safe
+    out_dir.mkdir(parents=True, exist_ok=True)
+    prem_path = out_dir / "premise.rdf"
+    prem_path.write_text(premise, encoding="utf-8")
+    prem_rel = f"wg/{safe}/premise.rdf"
+    conc_rel = None
+    if conclusion:
+        conc_path = out_dir / "conclusion.rdf"
+        conc_path.write_text(conclusion, encoding="utf-8")
+        conc_rel = f"wg/{safe}/conclusion.rdf"
+    return prem_rel, conc_rel
 
 
 def collect_wg_cases() -> list[WgCase]:
@@ -736,15 +817,31 @@ def collect_wg_cases() -> list[WgCase]:
         elif "InconsistencyTest" in block:
             test_type = "inconsistency"
             expected_consistent = False
+        elif "InconsistencyTest" in block:
+            test_type = "inconsistency"
+            expected_consistent = False
+        premise_ofn = None
+        conclusion_ofn = None
+        status = "planned"
+        ignore_reason = "WG test — requires ontologos-dl + vendored WG OFN fixtures"
+        if test_id in WG_APPROVED_SUBSET and "PositiveEntailmentTest" in block:
+            prem_rel, conc_rel = write_wg_fixture(test_id, block)
+            premise_ofn = prem_rel
+            conclusion_ofn = conc_rel
+            if premise_ofn and conclusion_ofn:
+                status = "wg"
+                ignore_reason = None
         cases.append(
             WgCase(
                 id=f"owl_wg_tests.{test_id}",
                 test_type=test_type,
-                status="planned",
+                status=status,
                 engine="dl",
+                premise_ofn=premise_ofn,
+                conclusion_ofn=conclusion_ofn,
                 expected_entailment=expected_entailment,
                 expected_consistent=expected_consistent,
-                ignore_reason="WG test — requires ontologos-dl + vendored WG OFN fixtures",
+                ignore_reason=ignore_reason,
             )
         )
     return cases

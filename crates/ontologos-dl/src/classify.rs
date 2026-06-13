@@ -79,7 +79,7 @@ fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
 fn tableau_seed_from_facts(
     dl: &DlOntology,
     facts: &SaturatedFacts,
-    _roles: &RoleHierarchy,
+    roles: &RoleHierarchy,
 ) -> Result<TableauSeed, Error> {
     let store = dl.core().dl();
     let mut seed = TableauSeed::default();
@@ -100,5 +100,16 @@ fn tableau_seed_from_facts(
 
     seed.existentials.extend(facts.existentials.clone());
     seed.role_subsumptions = facts.role_subsumptions.clone();
+    for (sub, supers) in roles.subrole_map() {
+        for &sup in supers {
+            if !seed
+                .role_subsumptions
+                .iter()
+                .any(|&(a, b)| a == *sub && b == sup)
+            {
+                seed.role_subsumptions.push((*sub, sup));
+            }
+        }
+    }
     Ok(seed)
 }

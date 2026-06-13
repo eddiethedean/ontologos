@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Verify ROADMAP 1.0.0 exit criteria. Fails until all gates are green — do not tag 1.0.0 before this passes.
+# Release tagging and publish remain DEFERRED until this script exits 0.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
