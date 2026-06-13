@@ -9,6 +9,7 @@ use crate::entity::EntityId;
 pub struct CeId(pub u32);
 
 impl CeId {
+    /// Zero-based index into the class expression pool.
     #[must_use]
     pub fn index(self) -> u32 {
         self.0
@@ -45,37 +46,54 @@ pub enum ClassExpr {
     Or(Vec<CeId>),
     /// `ObjectSomeValuesFrom`.
     Some {
+        /// Object property expression.
         property: RoleExpr,
+        /// Filler class expression.
         filler: CeId,
     },
     /// `ObjectAllValuesFrom`.
     All {
+        /// Object property expression.
         property: RoleExpr,
+        /// Filler class expression.
         filler: CeId,
     },
     /// `ObjectOneOf` (nominals).
     OneOf(Vec<EntityId>),
     /// `ObjectHasValue`.
     HasValue {
+        /// Object property expression.
         property: RoleExpr,
+        /// Named individual.
         individual: EntityId,
     },
     /// `ObjectHasSelf`.
     HasSelf(EntityId),
     /// Qualified or unqualified cardinality.
     MinCardinality {
+        /// Minimum cardinality bound.
         n: u32,
+        /// Object property expression.
         property: RoleExpr,
+        /// Optional filler class expression (qualified cardinality).
         filler: Option<CeId>,
     },
+    /// `ObjectMaxCardinality`.
     MaxCardinality {
+        /// Maximum cardinality bound.
         n: u32,
+        /// Object property expression.
         property: RoleExpr,
+        /// Optional filler class expression (qualified cardinality).
         filler: Option<CeId>,
     },
+    /// `ObjectExactCardinality`.
     ExactCardinality {
+        /// Exact cardinality bound.
         n: u32,
+        /// Object property expression.
         property: RoleExpr,
+        /// Optional filler class expression (qualified cardinality).
         filler: Option<CeId>,
     },
 }
@@ -89,15 +107,20 @@ pub enum DataExpr {
     Datatype(EntityId),
     /// Facet restriction on a datatype.
     Facet {
+        /// Base datatype expression.
         base: DeId,
+        /// Facet IRI (e.g. `xsd:minInclusive`).
         facet_iri: String,
+        /// Facet lexical value.
         value: String,
     },
     /// Data intersection.
     And(Vec<DeId>),
     /// Literal value.
     Literal {
+        /// Lexical form.
         lexical: String,
+        /// Datatype entity.
         datatype: EntityId,
     },
 }
@@ -107,7 +130,9 @@ pub enum DataExpr {
 pub enum DlAxiom {
     /// Generalized concept inclusion `C ⊑ D`.
     SubClassOf {
+        /// Subsumed class expression.
         sub: CeId,
+        /// Subsumer class expression.
         sup: CeId,
     },
     /// Equivalent class expressions.
@@ -116,75 +141,110 @@ pub enum DlAxiom {
     DisjointClasses(Vec<CeId>),
     /// Complex domain `∃r.C` or named.
     ObjectPropertyDomain {
+        /// The object property.
         property: EntityId,
+        /// Domain class expression.
         domain: CeId,
     },
     /// Complex range.
     ObjectPropertyRange {
+        /// The object property.
         property: EntityId,
+        /// Range class expression.
         range: CeId,
     },
     /// Role chain inclusion.
     SubObjectPropertyChain {
+        /// Property chain.
         chain: Vec<RoleExpr>,
+        /// Super property expression.
         super_property: RoleExpr,
     },
     /// Generalized subproperty `r ⊑ s` (atomic or inverse).
     SubObjectPropertyOf {
+        /// Subsumed property expression.
         sub: RoleExpr,
+        /// Subsumer property expression.
         sup: RoleExpr,
     },
     /// `HasKey(C, object props, data props)`.
     HasKey {
+        /// Key class expression.
         class: CeId,
+        /// Object properties in the key.
         object_properties: Vec<EntityId>,
+        /// Data properties in the key.
         data_properties: Vec<EntityId>,
     },
     /// Class assertion with complex CE.
     ClassAssertion {
+        /// The individual.
         individual: EntityId,
+        /// Asserted class expression.
         class: CeId,
     },
     /// Data property domain/range/subproperty.
     DataPropertyDomain {
+        /// The data property.
         property: EntityId,
+        /// Domain class expression.
         domain: CeId,
     },
+    /// Data property range.
     DataPropertyRange {
+        /// The data property.
         property: EntityId,
+        /// Range data expression.
         range: DeId,
     },
+    /// Data property subsumption.
     SubDataPropertyOf {
+        /// Subsumed data property.
         sub: EntityId,
+        /// Subsumer data property.
         sup: EntityId,
     },
     /// Data property assertion.
     DataPropertyAssertion {
+        /// Subject individual.
         subject: EntityId,
+        /// Data property.
         property: EntityId,
+        /// Literal data expression.
         value: DeId,
     },
     /// Negative object property assertion.
     NegativeObjectPropertyAssertion {
+        /// Subject individual.
         subject: EntityId,
+        /// Object property.
         property: EntityId,
+        /// Object individual.
         object: EntityId,
     },
     /// Negative data property assertion.
     NegativeDataPropertyAssertion {
+        /// Subject individual.
         subject: EntityId,
+        /// Data property.
         property: EntityId,
+        /// Literal data expression.
         value: DeId,
     },
     /// Object property assertion (supports inverse property expressions).
     ObjectPropertyAssertion {
+        /// Subject individual.
         subject: EntityId,
+        /// Object property expression.
         property: RoleExpr,
+        /// Object individual.
         object: EntityId,
     },
     /// Named datatype definition.
     DatatypeDefinition {
+        /// Named datatype.
         datatype: EntityId,
+        /// Defining data range expression.
         range: DeId,
     },
     /// Functional data property declaration.
@@ -197,14 +257,17 @@ pub enum DlAxiom {
     DisjointObjectProperties(Vec<EntityId>),
     /// Individual equality / inequality (including anonymous).
     SameIndividual(Vec<EntityId>),
+    /// `owl:differentFrom` group.
     DifferentIndividuals(Vec<EntityId>),
     /// Transitive / symmetric on complex property expressions.
     TransitiveObjectProperty(RoleExpr),
+    /// Symmetric object property declaration.
     SymmetricObjectProperty(RoleExpr),
     /// SWRL rule placeholder (parsed, execution deferred).
     SwrlRule,
     /// Inverse-functional / irreflexive declarations.
     InverseFunctionalObjectProperty(EntityId),
+    /// Irreflexive object property declaration.
     IrreflexiveObjectProperty(EntityId),
 }
 

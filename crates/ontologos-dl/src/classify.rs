@@ -37,25 +37,34 @@ impl DlClassifier {
 
         match profile {
             Some(OwlProfile::El) | Some(OwlProfile::Ql) => {
-                ElClassifier::new().classify(ontology).map_err(Error::El)
+                let el_tax = ElClassifier::new().classify(ontology).map_err(Error::El)?;
+                let tab_tax = tableau_classify(ontology)?;
+                Ok(merge_taxonomies(vec![el_tax, tab_tax]))
             }
             Some(OwlProfile::Rl) | Some(OwlProfile::Dl) | None => {
-                let dl = DlOntology::from_ontology(ontology)?;
-                let _roles = RoleHierarchy::from_clauses(dl.clauses());
-                let facts = saturate(ontology, dl.clauses())?;
-                let seed = tableau_seed_from_facts(&dl, &facts)?;
                 let el_tax = ElClassifier::new()
                     .classify(ontology)
                     .map_err(Error::El)?;
-                let tab_tax =
-                    ontologos_alc::classify_with_seed(ontology, &seed).map_err(Error::Alc)?;
+                let tab_tax = tableau_classify(ontology)?;
                 Ok(merge_taxonomies(vec![el_tax, tab_tax]))
             }
         }
     }
 }
 
-fn tableau_seed_from_facts(dl: &DlOntology, facts: &SaturatedFacts) -> Result<TableauSeed, Error> {
+fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
+    let dl = DlOntology::from_ontology(ontology)?;
+    let roles = RoleHierarchy::from_clauses(dl.clauses());
+    let facts = saturate(ontology, dl.clauses(), &roles)?;
+    let seed = tableau_seed_from_facts(&dl, &facts, &roles)?;
+    ontologos_alc::classify_with_seed(ontology, &seed).map_err(Error::Alc)
+}
+
+fn tableau_seed_from_facts(
+    dl: &DlOntology,
+    facts: &SaturatedFacts,
+    _roles: &RoleHierarchy,
+) -> Result<TableauSeed, Error> {
     let store = dl.core().dl();
     let mut seed = TableauSeed::default();
 
@@ -74,5 +83,6 @@ fn tableau_seed_from_facts(dl: &DlOntology, facts: &SaturatedFacts) -> Result<Ta
     }
 
     seed.existentials.extend(facts.existentials.clone());
+    seed.role_subsumptions = facts.role_subsumptions.clone();
     Ok(seed)
 }

@@ -13,7 +13,7 @@ fn clausify_named_subclass() -> Result<(), Error> {
         .class("http://ex/B")?
         .subclass_of("http://ex/A", "http://ex/B")?
         .build()
-        .map_err(|e| Error::Core(e))?;
+        .map_err(Error::Core)?;
     let mut ont = ontology;
     let clauses = clausify(&mut ont)?;
     assert!(!clauses.is_empty());
@@ -28,7 +28,7 @@ fn clausify_named_subclass() -> Result<(), Error> {
 fn clausify_asymmetry_fixture() -> Result<(), Error> {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/axioms/hermit_structural_clausificationtest_testasymmetry.ofn");
-    let mut ontology = ontologos_parser::load_ontology(&path).map_err(|e| Error::Parser(e))?;
+    let mut ontology = ontologos_parser::load_ontology(&path).map_err(Error::Parser)?;
     let clauses = clausify(&mut ontology)?;
     assert!(
         clauses.clauses().iter().any(|c| matches!(c, Clause::RoleSubsumption { .. })),
@@ -43,7 +43,7 @@ fn nnf_complement_in_dl_store() -> Result<(), Error> {
         .class("http://ex/A")?
         .class("http://ex/B")?
         .build()
-        .map_err(|e| Error::Core(e))?;
+        .map_err(Error::Core)?;
     let a = ontology.lookup_entity("http://ex/A").unwrap();
     let b = ontology.lookup_entity("http://ex/B").unwrap();
     let b_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(b));

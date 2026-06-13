@@ -194,13 +194,19 @@ def extract_method_body(text: str, method: str) -> str:
 
 def extract_subsumptions(body: str) -> list[dict[str, str | bool]]:
     subs = []
+    seen: set[tuple[str, str, bool]] = set()
     for m in re.finditer(
         r'assertSubsumedBy\s*\(\s*(?:"([^"]+)"|NS_C\s*\(\s*"([^"]+)"\s*\))\s*,\s*(?:"([^"]+)"|NS_C\s*\(\s*"([^"]+)"\s*\))\s*,\s*(true|false)\s*\)',
         body,
     ):
         sub = m.group(1) or m.group(2) or ""
         sup = m.group(3) or m.group(4) or ""
-        subs.append({"sub": sub, "sup": sup, "expected": m.group(5) == "true"})
+        expected = m.group(5) == "true"
+        key = (sub, sup, expected)
+        if key in seen:
+            continue
+        seen.add(key)
+        subs.append({"sub": sub, "sup": sup, "expected": expected})
     return subs
 
 

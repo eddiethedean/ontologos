@@ -26,6 +26,12 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test
         run: cargo test --workspace --locked
+      - name: OFN axiom fixtures load (0 skips)
+        run: cargo test -p ontologos-parser --test ofn_axioms_load --locked
+      - name: HermiT ignore budget
+        run: |
+          chmod +x benchmarks/scripts/check-hermit-ignore-budget.sh
+          ./benchmarks/scripts/check-hermit-ignore-budget.sh
       - name: EL Pizza golden conformance
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
       - name: HermiT conformance (Tier A)

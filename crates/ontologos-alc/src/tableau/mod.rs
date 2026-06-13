@@ -20,6 +20,8 @@ pub struct TableauSeed {
     pub subsumptions: Vec<(CeId, CeId)>,
     /// Derived `∃r.C ⊑ D` clauses.
     pub existentials: Vec<(RoleExpr, CeId, CeId)>,
+    /// Saturated atomic role subsumptions `r ⊑ s`.
+    pub role_subsumptions: Vec<(EntityId, EntityId)>,
 }
 
 /// ALC tableau classifier entry point.
@@ -27,6 +29,7 @@ pub struct TableauSeed {
 pub struct AlcClassifier;
 
 impl AlcClassifier {
+    /// Construct a tableau classifier.
     #[must_use]
     pub fn new() -> Self {
         Self
@@ -61,16 +64,17 @@ pub fn classify_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Result<Tax
 /// Tableau consistency test.
 pub fn is_consistent(ontology: &Ontology) -> Result<bool, Error> {
     let dl = DlOntology::from_ontology(ontology)?;
+    let top = dl
+        .core()
+        .dl()
+        .expressions()
+        .find_map(|(id, e)| match e {
+            ClassExpr::Top => Some(id),
+            _ => None,
+        })
+        .ok_or_else(|| Error::Message("missing ⊤".into()))?;
     let mut branch = Branch::new(&dl, &TableauSeed::default());
-    for clause in dl.clauses().clauses() {
-        match clause {
-            Clause::Subsumption { sub, sup } => {
-                branch.assert(0, *sub);
-                branch.assert_negation_of(0, *sup);
-            }
-            _ => {}
-        }
-    }
+    branch.assert(0, top);
     Ok(branch.expand())
 }
 
@@ -181,23 +185,12 @@ fn atomic_entity(dl: &DlOntology, ce: CeId) -> Option<EntityId> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub(crate) struct World {
     labels: HashSet<CeId>,
     negated: HashSet<CeId>,
     queue: VecDeque<CeId>,
     blocked: bool,
-}
-
-impl Default for World {
-    fn default() -> Self {
-        Self {
-            labels: HashSet::new(),
-            negated: HashSet::new(),
-            queue: VecDeque::new(),
-            blocked: false,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -208,6 +201,7 @@ pub(crate) struct Branch<'a> {
     pub(crate) clash: bool,
     pub(crate) disjoint: Vec<(CeId, CeId)>,
     pub(crate) existentials: Vec<(RoleExpr, CeId, CeId)>,
+    pub(crate) tbox_subsumptions: Vec<(CeId, CeId)>,
     pub(crate) role_hierarchy: HashMap<EntityId, HashSet<EntityId>>,
     pub(crate) cache: cache::UnsatCache,
     pub(crate) expansions: u32,
@@ -217,10 +211,14 @@ impl<'a> Branch<'a> {
     fn new(dl: &'a DlOntology, seed: &TableauSeed) -> Self {
         let mut disjoint = Vec::new();
         let mut existentials = seed.existentials.clone();
+        let mut tbox_subsumptions = seed.subsumptions.clone();
         let mut role_hierarchy: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
 
         for clause in dl.clauses().clauses() {
             match clause {
+                Clause::Subsumption { sub, sup } => {
+                    tbox_subsumptions.push((*sub, *sup));
+                }
                 Clause::Disjoint { left, right } => disjoint.push((*left, *right)),
                 Clause::Existential {
                     property,
@@ -234,24 +232,22 @@ impl<'a> Branch<'a> {
             }
         }
 
-        let mut branch = Self {
+        for &(sub, sup) in &seed.role_subsumptions {
+            role_hierarchy.entry(sub).or_default().insert(sup);
+        }
+
+        Self {
             dl,
             worlds: vec![World::default()],
             edges: Vec::new(),
             clash: false,
             disjoint,
             existentials,
+            tbox_subsumptions,
             role_hierarchy,
             cache: cache::UnsatCache::new(),
             expansions: 0,
-        };
-
-        for &(sub, sup) in &seed.subsumptions {
-            branch.assert(0, sub);
-            branch.assert_negation_of(0, sup);
         }
-
-        branch
     }
 
     fn assert(&mut self, world: usize, ce: CeId) {

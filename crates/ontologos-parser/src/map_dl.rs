@@ -1,15 +1,14 @@
 //! Map horned-owl class expressions into [`DlStore`].
 
 use horned_owl::model::{
-    Class, ClassExpression, DataProperty, DataRange, Individual, Literal, NamedIndividual,
-    ObjectProperty, ObjectPropertyExpression, PropertyExpression, RcStr,
+    ClassExpression, DataProperty, DataRange, Individual, Literal, NamedIndividual,
+    ObjectPropertyExpression, PropertyExpression, RcStr,
 };
 use ontologos_core::{
-    CeId, ClassExpr, DataExpr, DeId, DlAxiom, DlStore, EntityId, EntityKind, RoleExpr,
+    CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, EntityKind, RoleExpr,
 };
 
 use crate::map::Mapper;
-use crate::report::ParseReport;
 
 impl Mapper<'_> {
     /// Map a class expression into the DL store; returns `None` if entities fail to register.
@@ -140,7 +139,7 @@ impl Mapper<'_> {
             ObjectPropertyExpression::InverseObjectProperty(prop) => self
                 .register_or_warn_object_property(prop)
                 .or_else(|| self.ontology.lookup_entity(iri_of(prop)))
-                .map(|id| RoleExpr::Inverse(id)),
+                .map(RoleExpr::Inverse),
         }
     }
 
@@ -647,7 +646,7 @@ impl Mapper<'_> {
                     let base = self.ontology.dl_mut().intern_de(expr);
                     expr = DataExpr::Facet {
                         base,
-                        facet_iri: format!("{:?}", fr.f),
+                        facet_iri: fr.f.as_ref().to_string(),
                         value: literal_lexical(&fr.l),
                     };
                 }
@@ -739,7 +738,6 @@ mod tests {
     use horned_owl::model::RcStr;
     use horned_owl::ontology::set::SetOntology;
 
-    use super::*;
     use crate::limits::ParseLimits;
     use crate::map::map_to_core;
     use crate::read::read_horned_owl_from_reader;

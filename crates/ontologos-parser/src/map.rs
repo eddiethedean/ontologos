@@ -1,6 +1,6 @@
 use horned_owl::model::{
-    AnnotatedComponent, Class, ClassExpression, Component, Individual, NamedIndividual,
-    ObjectProperty, ObjectPropertyExpression, RcStr, SubObjectPropertyExpression,
+    AnnotatedComponent, Class, ClassExpression, Component, Individual, ObjectProperty,
+    ObjectPropertyExpression, RcStr, SubObjectPropertyExpression,
 };
 use horned_owl::ontology::set::SetOntology;
 use ontologos_core::{Axiom, EntityId, EntityKind, Error as CoreError, Ontology, OwlConstruct};

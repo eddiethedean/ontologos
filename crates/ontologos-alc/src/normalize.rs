@@ -75,11 +75,21 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
         match axiom {
             DlAxiom::SubClassOf { sub, sup } => {
                 let sub_nnf = nnf(ontology, sub);
-                let sup_nnf = nnf(ontology, sup);
-                out.push(Clause::Subsumption {
-                    sub: sub_nnf,
-                    sup: sup_nnf,
-                });
+                if let Some(ClassExpr::And(ops)) = ontology.dl().ce(sup).cloned() {
+                    for op in ops {
+                        let op_nnf = nnf(ontology, op);
+                        out.push(Clause::Subsumption {
+                            sub: sub_nnf,
+                            sup: op_nnf,
+                        });
+                    }
+                } else {
+                    let sup_nnf = nnf(ontology, sup);
+                    out.push(Clause::Subsumption {
+                        sub: sub_nnf,
+                        sup: sup_nnf,
+                    });
+                }
             }
             DlAxiom::EquivalentClasses(ids) if ids.len() >= 2 => {
                 for w in ids.windows(2) {
@@ -99,14 +109,12 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
             }
             DlAxiom::SubObjectPropertyChain {
                 chain,
-                super_property,
+                super_property: RoleExpr::Atomic(sup),
             } => {
-                if let RoleExpr::Atomic(sup) = super_property {
-                    out.push(Clause::RoleChain {
-                        chain: chain.clone(),
-                        sup,
-                    });
-                }
+                out.push(Clause::RoleChain {
+                    chain: chain.clone(),
+                    sup,
+                });
             }
             DlAxiom::ClassAssertion { individual, class } => {
                 let nom = ontology
@@ -135,12 +143,10 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
             }
             DlAxiom::ObjectPropertyAssertion {
                 subject,
-                property,
+                property: RoleExpr::Atomic(prop),
                 object,
             } => {
-                if let RoleExpr::Atomic(prop) = property {
-                    emit_nominal_role_clause(ontology, &mut out, subject, prop, object);
-                }
+                emit_nominal_role_clause(ontology, &mut out, subject, prop, object);
             }
             DlAxiom::HasKey {
                 class,

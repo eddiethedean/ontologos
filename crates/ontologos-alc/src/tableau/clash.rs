@@ -34,8 +34,39 @@ pub fn assert_label(branch: &mut Branch<'_>, world: usize, ce: CeId) {
     }
     if w.labels.insert(ce) {
         w.queue.push_back(ce);
+        propagate_subsumptions(branch, world, ce);
     }
     detect_clash(branch);
+}
+
+fn propagate_subsumptions(branch: &mut Branch<'_>, world: usize, _trigger: CeId) {
+    if branch.clash {
+        return;
+    }
+    loop {
+        let mut progressed = false;
+        for &(sub, sup) in branch.tbox_subsumptions.clone().iter() {
+            if branch.worlds[world].labels.contains(&sub)
+                && !branch.worlds[world].labels.contains(&sup)
+            {
+                let w = &mut branch.worlds[world];
+                if w.negated.contains(&sup) {
+                    branch.clash = true;
+                    return;
+                }
+                w.labels.insert(sup);
+                w.queue.push_back(sup);
+                progressed = true;
+            }
+        }
+        if !progressed {
+            break;
+        }
+        detect_clash(branch);
+        if branch.clash {
+            return;
+        }
+    }
 }
 
 /// Assert negation of `ce` into a world.
