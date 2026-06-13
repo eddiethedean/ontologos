@@ -194,7 +194,7 @@ fn run_axiom_case(case: &HermitCase) {
     check_subsumptions(&ontology, case);
 
     if let Some(expected) = case.consistent {
-        let consistent = ontologos_dl::is_consistent(&ontology).unwrap_or(true);
+        let consistent = ontologos_dl::is_consistent(&ontology).expect("consistent");
         assert_eq!(consistent, expected, "{}: consistency", case.id);
     }
 }
@@ -242,8 +242,7 @@ fn check_subsumptions_dl(
         let sup_id = ontology
             .lookup_entity(&sup_iri)
             .unwrap_or_else(|| panic!("{}: missing {sup_iri}", case.id));
-        let actual =
-            taxonomy.is_subsumed(sub_id, sup_id) || assert_subsumed(ontology, &sub_iri, &sup_iri);
+        let actual = taxonomy.is_subsumed(sub_id, sup_id);
         assert_eq!(
             actual, sub.expected,
             "{}: expected {} ⊑ {} = {}",
@@ -320,19 +319,14 @@ fn run_wg_runnable(case: &WgCase) {
 }
 
 fn wg_entailment_holds(premise: &Ontology, conclusion: &Ontology) -> bool {
-    let prem_tax = ontologos_dl::classify(premise).ok();
-    let conc_tax = ontologos_dl::classify(conclusion).ok();
-    match (prem_tax, conc_tax) {
-        (Some(p), Some(c)) => {
-            for &(sub, sup) in &c.subsumptions {
-                if !p.is_subsumed(sub, sup) {
-                    return false;
-                }
-            }
-            true
+    let prem_tax = ontologos_dl::classify(premise).expect("wg premise classify");
+    let conc_tax = ontologos_dl::classify(conclusion).expect("wg conclusion classify");
+    for &(sub, sup) in &conc_tax.subsumptions {
+        if !prem_tax.is_subsumed(sub, sup) {
+            return false;
         }
-        _ => false,
     }
+    true
 }
 
 fn resolve_local_iri(local: &str) -> String {

@@ -47,7 +47,7 @@ impl LiteralIndex {
 
 fn facet_check(lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
     let Some(expr) = store.de(range) else {
-        return true;
+        return false;
     };
     match expr {
         DataExpr::Top => true,
@@ -64,13 +64,17 @@ fn facet_check(lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
                 return false;
             }
             match facet_iri.as_str() {
-                "http://www.w3.org/2001/XMLSchema#maxInclusive"
-                | "http://www.w3.org/2001/XMLSchema#maxExclusive" => {
+                "http://www.w3.org/2001/XMLSchema#maxInclusive" => {
                     numeric_compare(&lit.lexical, value) <= 0
                 }
-                "http://www.w3.org/2001/XMLSchema#minInclusive"
-                | "http://www.w3.org/2001/XMLSchema#minExclusive" => {
+                "http://www.w3.org/2001/XMLSchema#maxExclusive" => {
+                    numeric_compare(&lit.lexical, value) < 0
+                }
+                "http://www.w3.org/2001/XMLSchema#minInclusive" => {
                     numeric_compare(&lit.lexical, value) >= 0
+                }
+                "http://www.w3.org/2001/XMLSchema#minExclusive" => {
+                    numeric_compare(&lit.lexical, value) > 0
                 }
                 "http://www.w3.org/2001/XMLSchema#pattern" => pattern_matches(&lit.lexical, value),
                 "http://www.w3.org/2001/XMLSchema#maxLength"
@@ -80,7 +84,7 @@ fn facet_check(lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
                 "http://www.w3.org/2001/XMLSchema#minLength" => {
                     lit.lexical.len() >= value.parse::<usize>().unwrap_or(0)
                 }
-                _ => true,
+                _ => false,
             }
         }
         DataExpr::And(ops) => ops.iter().all(|op| facet_check(lit, store, *op)),
@@ -119,5 +123,5 @@ fn ssn_like_match(lexical: &str, pattern: &str) -> bool {
                 }
             });
     }
-    true
+    false
 }

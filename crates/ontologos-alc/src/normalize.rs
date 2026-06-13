@@ -38,10 +38,7 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                     property: RoleExpr::Atomic(*property),
                     filler: filler_ce,
                 });
-                out.push(Clause::Subsumption {
-                    sub: exists,
-                    sup: sub,
-                });
+                out.push(Clause::Subsumption { sub, sup: exists });
             }
             Axiom::EquivalentClasses(ids) if ids.len() >= 2 => {
                 for w in ids.windows(2) {
@@ -168,29 +165,22 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
     for axiom in &flat_axioms {
         match axiom {
             Axiom::ObjectPropertyDomain { property, domain } => {
+                let top = ontology.dl_mut().intern_ce(ClassExpr::Top);
                 let dom = atomic_ce(ontology, *domain);
-                let exists = ontology.dl_mut().intern_ce(ClassExpr::Some {
-                    property: RoleExpr::Atomic(*property),
-                    filler: dom,
-                });
                 out.push(Clause::Existential {
                     property: RoleExpr::Atomic(*property),
-                    filler: dom,
-                    sup: exists,
+                    filler: top,
+                    sup: dom,
                 });
             }
             Axiom::ObjectPropertyRange { property, range } => {
+                let top = ontology.dl_mut().intern_ce(ClassExpr::Top);
                 let rng = atomic_ce(ontology, *range);
-                let all = ontology.dl_mut().intern_ce(ClassExpr::All {
-                    property: RoleExpr::Atomic(*property),
-                    filler: rng,
-                });
                 out.push(Clause::Universal {
-                    sub: rng,
+                    sub: top,
                     property: RoleExpr::Atomic(*property),
                     filler: rng,
                 });
-                let _ = all;
             }
             Axiom::ObjectPropertyAssertion {
                 subject,
@@ -205,13 +195,7 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                     sup: *prop,
                 });
             }
-            Axiom::AsymmetricObjectProperty(prop) => {
-                let _ = prop;
-                out.push(Clause::RoleSubsumption {
-                    sub: *prop,
-                    sup: *prop,
-                });
-            }
+            Axiom::AsymmetricObjectProperty(_) => {}
             _ => {}
         }
     }
@@ -233,6 +217,7 @@ fn clausify_domain_range(
     let Some(expr) = store.ce(ce).cloned() else {
         return;
     };
+    let top = ontology.dl_mut().intern_ce(ClassExpr::Top);
     match expr {
         ClassExpr::OneOf(individuals) if individuals.len() == 1 => {
             let ind = individuals[0];
@@ -240,12 +225,12 @@ fn clausify_domain_range(
             if is_domain {
                 out.push(Clause::Existential {
                     property: RoleExpr::Atomic(property),
-                    filler: nom,
+                    filler: top,
                     sup: nom,
                 });
             } else {
                 out.push(Clause::Universal {
-                    sub: nom,
+                    sub: top,
                     property: RoleExpr::Atomic(property),
                     filler: nom,
                 });
@@ -256,12 +241,12 @@ fn clausify_domain_range(
             if is_domain {
                 out.push(Clause::Existential {
                     property: RoleExpr::Atomic(property),
-                    filler,
+                    filler: top,
                     sup: filler,
                 });
             } else {
                 out.push(Clause::Universal {
-                    sub: filler,
+                    sub: top,
                     property: RoleExpr::Atomic(property),
                     filler,
                 });
@@ -272,12 +257,12 @@ fn clausify_domain_range(
             if is_domain {
                 out.push(Clause::Existential {
                     property: RoleExpr::Atomic(property),
-                    filler,
+                    filler: top,
                     sup: filler,
                 });
             } else {
                 out.push(Clause::Universal {
-                    sub: filler,
+                    sub: top,
                     property: RoleExpr::Atomic(property),
                     filler,
                 });

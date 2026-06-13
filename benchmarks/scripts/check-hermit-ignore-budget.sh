@@ -22,8 +22,8 @@ echo "HermiT catalog ignored: $HERMIT_IGNORED"
 echo "OWL WG catalog ignored: $WG_IGNORED"
 echo "Total ignored: $TOTAL_IGNORED"
 
-# Phase 0 gate: runnable subset must pass (non-ignored tests).
-cargo test -p ontologos-conformance --test hermit_generated
+# Phase 0 gate: runnable subset must pass (non-ignored tests only; fast clausify batch).
+cargo test -p ontologos-conformance --test hermit_generated -- --test-threads=4
 
 BUDGET_FILE="$ROOT/benchmarks/data/hermit/catalog/ignore_budget.txt"
 if [[ -f "$BUDGET_FILE" ]]; then

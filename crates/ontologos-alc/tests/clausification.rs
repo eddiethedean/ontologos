@@ -7,6 +7,49 @@ use ontologos_alc::{clausify, Clause};
 use ontologos_core::{ClassExpr, Ontology};
 
 #[test]
+fn clausify_existential_subclass_direction() -> Result<(), Error> {
+    let mut ontology = Ontology::builder()
+        .class("http://ex/A")?
+        .class("http://ex/B")?
+        .object_property("http://ex/r")?
+        .build()
+        .map_err(Error::Core)?;
+    let a = ontology.lookup_entity("http://ex/A").unwrap();
+    let b = ontology.lookup_entity("http://ex/B").unwrap();
+    let r = ontology.lookup_entity("http://ex/r").unwrap();
+    ontology.add_axiom(ontologos_core::Axiom::SubClassOfExistential {
+        subclass: a,
+        property: r,
+        filler: b,
+    })?;
+    let clauses = clausify(&mut ontology)?;
+    let a_ce = ontology
+        .dl()
+        .expressions()
+        .find_map(|(id, e)| match e {
+            ClassExpr::Atomic(c) if *c == a => Some(id),
+            _ => None,
+        })
+        .expect("A ce");
+    let exists = ontology
+        .dl()
+        .expressions()
+        .find_map(|(id, e)| match e {
+            ClassExpr::Some { .. } => Some(id),
+            _ => None,
+        })
+        .expect("exists ce");
+    assert!(
+        clauses.clauses().iter().any(|c| matches!(
+            c,
+            Clause::Subsumption { sub, sup } if *sub == a_ce && *sup == exists
+        )),
+        "expected A ⊑ ∃r.B"
+    );
+    Ok(())
+}
+
+#[test]
 fn clausify_named_subclass() -> Result<(), Error> {
     let ontology = Ontology::builder()
         .class("http://ex/A")?

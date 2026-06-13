@@ -109,7 +109,7 @@ fn apply_universal_on_edge(branch: &mut Branch<'_>, from: usize, to: usize) {
         .filter(|(f, _, t)| *f == from && *t == to)
         .map(|(_, role, _)| role.clone())
         .collect();
-    let universal: Vec<(RoleExpr, CeId)> = branch.worlds[from]
+    let mut universal: Vec<(RoleExpr, CeId)> = branch.worlds[from]
         .labels
         .iter()
         .filter_map(|&ce| match branch.dl.core().dl().ce(ce)? {
@@ -117,6 +117,11 @@ fn apply_universal_on_edge(branch: &mut Branch<'_>, from: usize, to: usize) {
             _ => None,
         })
         .collect();
+    for (sub, property, filler) in &branch.universals {
+        if world_satisfies_subject(branch, from, *sub) {
+            universal.push((property.clone(), *filler));
+        }
+    }
     for role in roles {
         for (property, filler) in &universal {
             if roles_related(branch, &role, property) {
@@ -127,6 +132,13 @@ fn apply_universal_on_edge(branch: &mut Branch<'_>, from: usize, to: usize) {
             }
         }
     }
+}
+
+fn world_satisfies_subject(branch: &Branch<'_>, world: usize, sub: CeId) -> bool {
+    if branch.worlds[world].labels.contains(&sub) {
+        return true;
+    }
+    matches!(branch.dl.core().dl().ce(sub), Some(ClassExpr::Top))
 }
 
 fn apply_existential_clauses(
@@ -170,10 +182,6 @@ pub(crate) fn roles_related(branch: &Branch<'_>, a: &RoleExpr, b: &RoleExpr) -> 
                 .role_hierarchy
                 .get(sa)
                 .is_some_and(|supers| supers.contains(sb))
-                || branch
-                    .role_hierarchy
-                    .get(sb)
-                    .is_some_and(|supers| supers.contains(sa))
         }
         (RoleExpr::Inverse(ia), RoleExpr::Inverse(ib)) => ia == ib,
         _ => a == b,

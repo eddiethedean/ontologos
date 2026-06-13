@@ -3,7 +3,7 @@
 use ontologos_alc::{DlOntology, TableauSeed};
 use ontologos_core::{ClassExpr, Ontology, Taxonomy};
 use ontologos_el::ElClassifier;
-use ontologos_profile::{detect_profile, merge_taxonomies, OwlProfile};
+use ontologos_profile::{detect_profile, el_classification_forbidden_in, merge_taxonomies};
 
 use crate::ria::RoleHierarchy;
 use crate::saturation::{saturate, SaturatedFacts};
@@ -31,23 +31,27 @@ impl DlClassifier {
 
     /// Classify the ontology (EL saturation + tableau merge for hybrid ontologies).
     pub fn classify(&self, ontology: &Ontology) -> Result<Taxonomy, Error> {
-        let profile = detect_profile(ontology)
+        let _profile = detect_profile(ontology)
             .map_err(|e| Error::PreviewLimit(e.to_string()))?
             .detected;
 
-        match profile {
-            Some(OwlProfile::El) | Some(OwlProfile::Ql) => {
-                let el_tax = ElClassifier::new().classify(ontology).map_err(Error::El)?;
-                let tab_tax = tableau_classify(ontology)?;
-                Ok(merge_taxonomies(vec![el_tax, tab_tax]))
-            }
-            Some(OwlProfile::Rl) | Some(OwlProfile::Dl) | None => {
-                let el_tax = ElClassifier::new().classify(ontology).map_err(Error::El)?;
-                let tab_tax = tableau_classify(ontology)?;
-                Ok(merge_taxonomies(vec![el_tax, tab_tax]))
-            }
+        let tab_tax = tableau_classify(ontology)?;
+        match try_el_classify(ontology)? {
+            Some(el_tax) => Ok(merge_taxonomies(vec![el_tax, tab_tax])),
+            None => Ok(tab_tax),
         }
     }
+}
+
+fn try_el_classify(ontology: &Ontology) -> Result<Option<Taxonomy>, Error> {
+    if let Some(meta) = ontology.parse_meta() {
+        if !el_classification_forbidden_in(&meta.profile_constructs).is_empty() {
+            return Ok(None);
+        }
+    }
+    Ok(Some(
+        ElClassifier::new().classify(ontology).map_err(Error::El)?,
+    ))
 }
 
 fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {

@@ -13,6 +13,9 @@ use crate::clause::Clause;
 use crate::dl_ontology::DlOntology;
 use crate::Error;
 
+/// Skip pairwise entailment inference when the ontology has too many named classes.
+const MAX_CLASSES_FOR_ENTAILMENT_INFER: usize = 32;
+
 /// Facts from DL saturation to seed the initial tableau state.
 #[derive(Debug, Default, Clone)]
 pub struct TableauSeed {
@@ -102,13 +105,16 @@ fn run_tableau(dl: &DlOntology, seed: &TableauSeed) -> Result<Taxonomy, Error> {
         .collect();
 
     let mut unsatisfiable = Vec::new();
+    let class_count = classes.len();
     for class in classes {
         if !is_satisfiable(dl, class, seed)? {
             unsatisfiable.push(class);
         }
     }
 
-    subsumptions.extend(infer_named_subsumptions(dl, seed)?);
+    if class_count <= MAX_CLASSES_FOR_ENTAILMENT_INFER {
+        subsumptions.extend(infer_named_subsumptions(dl, seed)?);
+    }
     subsumptions.sort_unstable_by_key(|(a, b)| (a.0, b.0));
     subsumptions.dedup();
 
@@ -206,6 +212,7 @@ pub(crate) struct Branch<'a> {
     pub(crate) clash: bool,
     pub(crate) disjoint: Vec<(CeId, CeId)>,
     pub(crate) existentials: Vec<(RoleExpr, CeId, CeId)>,
+    pub(crate) universals: Vec<(CeId, RoleExpr, CeId)>,
     pub(crate) tbox_subsumptions: Vec<(CeId, CeId)>,
     pub(crate) role_hierarchy: HashMap<EntityId, HashSet<EntityId>>,
     pub(crate) cache: cache::UnsatCache,
@@ -216,6 +223,7 @@ impl<'a> Branch<'a> {
     fn new(dl: &'a DlOntology, seed: &TableauSeed) -> Self {
         let mut disjoint = Vec::new();
         let mut existentials = seed.existentials.clone();
+        let mut universals = Vec::new();
         let mut tbox_subsumptions = seed.subsumptions.clone();
         let mut role_hierarchy: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
 
@@ -230,6 +238,11 @@ impl<'a> Branch<'a> {
                     filler,
                     sup,
                 } => existentials.push((property.clone(), *filler, *sup)),
+                Clause::Universal {
+                    sub,
+                    property,
+                    filler,
+                } => universals.push((*sub, property.clone(), *filler)),
                 Clause::RoleSubsumption { sub, sup } => {
                     role_hierarchy.entry(*sub).or_default().insert(*sup);
                 }
@@ -248,6 +261,7 @@ impl<'a> Branch<'a> {
             clash: false,
             disjoint,
             existentials,
+            universals,
             tbox_subsumptions,
             role_hierarchy,
             cache: cache::UnsatCache::new(),
@@ -275,6 +289,9 @@ impl<'a> Branch<'a> {
             };
 
             if block::is_blocked(self, world) {
+                if block::is_budget_exhausted(self) {
+                    return false;
+                }
                 block::mark_blocked(self, world);
                 continue;
             }

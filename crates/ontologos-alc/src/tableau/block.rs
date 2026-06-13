@@ -9,6 +9,12 @@ use super::Branch;
 /// Maximum tableau expansions before treating a branch as blocked (not SAT).
 const MAX_EXPANSIONS: u32 = 4096;
 
+/// Whether the expansion budget has been exhausted (treat branch as UNSAT).
+#[must_use]
+pub fn is_budget_exhausted(branch: &Branch<'_>) -> bool {
+    branch.expansions >= MAX_EXPANSIONS
+}
+
 /// Whether expansion should stop on this world (feature-style blocking or budget).
 #[must_use]
 pub fn is_blocked(branch: &Branch<'_>, world: usize) -> bool {
