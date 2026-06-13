@@ -97,7 +97,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | [v0.3.0-to-v0.3.1.md](migration/v0.3.0-to-v0.3.1.md) | Patch: classify CLI report |
 | [v0.3.x-to-v0.4.0.md](migration/v0.3.x-to-v0.4.0.md) | ABox, OWL RL, Python `profile="rl"` |
 | [v0.4.x-to-v0.5.0.md](migration/v0.4.x-to-v0.5.0.md) | OWL EL, CLI profile routing, Python `auto`/`el` |
-| [v0.5.x-to-v0.6.0.md](migration/v0.5.x-to-v0.6.0.md) | Explanations, dependency-first adapters, bridge crate |
+| [v0.5.x-to-v0.6.0.md](migration/v0.5.x-to-v0.6.0.md) | Explanations, bridge crate, in-house EL (v0.6.1) |
 
 ## Project
 

@@ -474,7 +474,7 @@ v0.5 shipped custom EL completion; v0.6.0 briefly delegated to whelk (git); **v0
 ### Features
 
 - [x] `ProofGraph`, `ProofNode`, `NodeId` types
-- [x] `ReasonerConfig::explanations` flag (honored; traces empty under facades)
+- [x] `ReasonerConfig::explanations` flag (EL traces populated; RL/RDFS traces empty under reasonable adapter)
 - [x] Proof graph construction from asserted axioms + EL inference traces
 - [x] **petgraph** acyclic validation (`ProofGraph::is_acyclic`)
 - [x] JSON export; CLI `ontologos explain`
