@@ -22,7 +22,13 @@ verify_checksum() {
     return 0
   fi
   local actual
-  actual="$(shasum -a 256 "${file}" | awk '{print $1}')"
+  if command -v shasum >/dev/null 2>&1; then
+    actual="$(shasum -a 256 "${file}" | awk '{print $1}')"
+  elif command -v sha256sum >/dev/null 2>&1; then
+    actual="$(sha256sum "${file}" | awk '{print $1}')"
+  else
+    actual="$(openssl dgst -sha256 "${file}" | awk '{print $NF}')"
+  fi
   if [[ "${actual}" != "${expected}" ]]; then
     echo "checksum mismatch for ${name}" >&2
     echo "  expected: ${expected}" >&2

@@ -11,11 +11,18 @@ count_in_dir() {
     echo 0
     return
   fi
-  rg -c "$pattern" "$dir"/*.rs 2>/dev/null | awk -F: '{s+=$2} END {print s+0}'
+  local total=0
+  local count
+  for file in "$dir"/*.rs; do
+    [[ -f "$file" ]] || continue
+    count=$(grep -cF "$pattern" "$file" 2>/dev/null || true)
+    total=$((total + count))
+  done
+  echo "$total"
 }
 
-TOTAL=$(count_in_dir '#\[test\]' "$CONF")
-IGNORED=$(count_in_dir '#\[ignore' "$CONF")
+TOTAL=$(count_in_dir '#[test]' "$CONF")
+IGNORED=$(count_in_dir '#[ignore' "$CONF")
 ACTIVE=$((TOTAL - IGNORED))
 
 echo "ontologos-conformance test inventory"
