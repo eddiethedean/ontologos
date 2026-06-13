@@ -9,7 +9,7 @@
 Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
 **reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
 
-**Status:** **v0.7.0** — dependency-first adapters (`ontologos-bridge`), in-house EL completion, RL/RDFS over reasonable. **Not** full OWL DL / HermiT replacement.
+**Status:** **v0.8.0** on `main` — incremental EL/RL/RDFS via `ReasonerConfig::incremental`. **Not** full OWL DL / HermiT replacement.
 
 | You need… | Use today |
 |-----------|-----------|
@@ -30,15 +30,15 @@ Requires **Rust 1.88+**.
 
 ```toml
 [dependencies]
-ontologos-core = "0.7.0"
-ontologos-parser = "0.7.0"
-ontologos-profile = "0.7.0"
-ontologos-bridge = "0.7.0"
-ontologos-rdfs = "0.7.0"
-ontologos-rl = "0.7.0"
-ontologos-el = "0.7.0"
-ontologos-query = "0.7.0"
-ontologos-explain = "0.7.0"
+ontologos-core = "0.8.0"
+ontologos-parser = "0.8.0"
+ontologos-profile = "0.8.0"
+ontologos-bridge = "0.8.0"
+ontologos-rdfs = "0.8.0"
+ontologos-rl = "0.8.0"
+ontologos-el = "0.8.0"
+ontologos-query = "0.8.0"
+ontologos-explain = "0.8.0"
 ```
 
 **Python (alpha):** `pip install ontologos` — pass `profile="rdfs"`, `"rl"`, `"el"`, or `"auto"` ([Python guide](docs/guides/python.md)).

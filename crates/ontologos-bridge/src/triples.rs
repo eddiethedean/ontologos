@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{Axiom, EntityId, EntityKind, Ontology};
+use ontologos_core::{Axiom, AxiomId, EntityId, EntityKind, Ontology};
 use oxrdf::{BlankNode, NamedNode, Term, Triple};
 
 use crate::{Error, Result};
@@ -98,158 +98,192 @@ pub fn core_to_triples(ontology: &Ontology) -> Result<Vec<Triple>> {
     }
 
     for (_, axiom) in ontology.axioms().iter() {
-        match axiom {
-            Axiom::SubClassOf {
-                subclass,
-                superclass,
-            } => {
-                out.push(triple(
-                    &entity_iri(ontology, *subclass)?,
-                    RDFS_SUBCLASS,
-                    &entity_iri(ontology, *superclass)?,
-                )?);
-            }
-            Axiom::EquivalentClasses(classes) => {
-                for pair in classes.windows(2) {
-                    out.push(triple(
-                        &entity_iri(ontology, pair[0])?,
-                        OWL_EQUIV_CLASS,
-                        &entity_iri(ontology, pair[1])?,
-                    )?);
-                }
-            }
-            Axiom::SubObjectPropertyOf {
-                sub_property,
-                super_property,
-            } => {
-                out.push(triple(
-                    &entity_iri(ontology, *sub_property)?,
-                    RDFS_SUBPROPERTY,
-                    &entity_iri(ontology, *super_property)?,
-                )?);
-            }
-            Axiom::ObjectPropertyDomain { property, domain } => {
-                out.push(triple(
-                    &entity_iri(ontology, *property)?,
-                    RDFS_DOMAIN,
-                    &entity_iri(ontology, *domain)?,
-                )?);
-            }
-            Axiom::ObjectPropertyRange { property, range } => {
-                out.push(triple(
-                    &entity_iri(ontology, *property)?,
-                    RDFS_RANGE,
-                    &entity_iri(ontology, *range)?,
-                )?);
-            }
-            Axiom::InverseObjectProperties { left, right } => {
-                out.push(triple(
-                    &entity_iri(ontology, *left)?,
-                    OWL_INVERSE,
-                    &entity_iri(ontology, *right)?,
-                )?);
-            }
-            Axiom::TransitiveObjectProperty(property) => {
-                out.push(triple(
-                    &entity_iri(ontology, *property)?,
-                    RDF_TYPE,
-                    OWL_TRANSITIVE,
-                )?);
-            }
-            Axiom::SymmetricObjectProperty(property) => {
-                out.push(triple(
-                    &entity_iri(ontology, *property)?,
-                    RDF_TYPE,
-                    OWL_SYMMETRIC,
-                )?);
-            }
-            Axiom::ReflexiveObjectProperty(property) => {
-                out.push(triple(
-                    &entity_iri(ontology, *property)?,
-                    RDF_TYPE,
-                    OWL_REFLEXIVE,
-                )?);
-            }
-            Axiom::FunctionalObjectProperty(property) => {
-                out.push(triple(
-                    &entity_iri(ontology, *property)?,
-                    RDF_TYPE,
-                    OWL_FUNCTIONAL,
-                )?);
-            }
-            Axiom::AsymmetricObjectProperty(property) => {
-                out.push(triple(
-                    &entity_iri(ontology, *property)?,
-                    RDF_TYPE,
-                    OWL_ASYMMETRIC,
-                )?);
-            }
-            Axiom::EquivalentObjectProperties(properties) => {
-                for pair in properties.windows(2) {
-                    out.push(triple(
-                        &entity_iri(ontology, pair[0])?,
-                        OWL_EQUIV_PROP,
-                        &entity_iri(ontology, pair[1])?,
-                    )?);
-                }
-            }
-            Axiom::ClassAssertion { individual, class } => {
-                out.push(triple(
-                    &entity_iri(ontology, *individual)?,
-                    RDF_TYPE,
-                    &entity_iri(ontology, *class)?,
-                )?);
-            }
-            Axiom::ObjectPropertyAssertion {
-                subject,
-                property,
-                object,
-            } => {
-                out.push(triple(
-                    &entity_iri(ontology, *subject)?,
-                    &entity_iri(ontology, *property)?,
-                    &entity_iri(ontology, *object)?,
-                )?);
-            }
-            Axiom::SameIndividual(individuals) => {
-                for pair in individuals.windows(2) {
-                    out.push(triple(
-                        &entity_iri(ontology, pair[0])?,
-                        OWL_SAME_AS,
-                        &entity_iri(ontology, pair[1])?,
-                    )?);
-                }
-            }
-            Axiom::SubClassOfExistential {
-                subclass,
-                property,
-                filler,
-            } => {
-                out.extend(existential_restriction_triples(
-                    ontology, *subclass, *property, *filler,
-                )?);
-            }
-            Axiom::DisjointClasses(classes) => {
-                for pair in classes.windows(2) {
-                    out.push(triple(
-                        &entity_iri(ontology, pair[0])?,
-                        OWL_DISJOINT_WITH,
-                        &entity_iri(ontology, pair[1])?,
-                    )?);
-                }
-            }
-            Axiom::DifferentIndividuals(individuals) => {
-                for pair in individuals.windows(2) {
-                    out.push(triple(
-                        &entity_iri(ontology, pair[0])?,
-                        OWL_DIFFERENT_FROM,
-                        &entity_iri(ontology, pair[1])?,
-                    )?);
-                }
-            }
+        out.extend(axiom_to_triples(ontology, axiom)?);
+    }
+
+    Ok(out)
+}
+
+/// Serialize triples for a subset of axioms (plus entity type triples for referenced entities).
+pub fn core_to_triples_for_axioms(ontology: &Ontology, ids: &[AxiomId]) -> Result<Vec<Triple>> {
+    use ontologos_core::axiom_signature;
+    use std::collections::HashSet;
+
+    let mut entities: HashSet<EntityId> = HashSet::new();
+    let mut out = Vec::new();
+
+    for id in ids {
+        let axiom = ontology.axioms().get(*id)?;
+        entities.extend(axiom_signature(axiom));
+        out.extend(axiom_to_triples(ontology, axiom)?);
+    }
+
+    for entity in entities {
+        let record = ontology.entity(entity)?;
+        let iri = ontology.resolve_iri(record.iri)?;
+        match record.kind {
+            EntityKind::Class => out.push(triple(iri, RDF_TYPE, OWL_CLASS)?),
+            EntityKind::Individual => out.push(triple(iri, RDF_TYPE, OWL_NAMED_INDIVIDUAL)?),
+            EntityKind::ObjectProperty => out.push(triple(iri, RDF_TYPE, OWL_OBJECT_PROPERTY)?),
+            EntityKind::DataProperty | EntityKind::AnnotationProperty | _ => {}
         }
     }
 
+    Ok(out)
+}
+
+fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
+    let mut out = Vec::new();
+    match axiom {
+        Axiom::SubClassOf {
+            subclass,
+            superclass,
+        } => {
+            out.push(triple(
+                &entity_iri(ontology, *subclass)?,
+                RDFS_SUBCLASS,
+                &entity_iri(ontology, *superclass)?,
+            )?);
+        }
+        Axiom::EquivalentClasses(classes) => {
+            for pair in classes.windows(2) {
+                out.push(triple(
+                    &entity_iri(ontology, pair[0])?,
+                    OWL_EQUIV_CLASS,
+                    &entity_iri(ontology, pair[1])?,
+                )?);
+            }
+        }
+        Axiom::SubObjectPropertyOf {
+            sub_property,
+            super_property,
+        } => {
+            out.push(triple(
+                &entity_iri(ontology, *sub_property)?,
+                RDFS_SUBPROPERTY,
+                &entity_iri(ontology, *super_property)?,
+            )?);
+        }
+        Axiom::ObjectPropertyDomain { property, domain } => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDFS_DOMAIN,
+                &entity_iri(ontology, *domain)?,
+            )?);
+        }
+        Axiom::ObjectPropertyRange { property, range } => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDFS_RANGE,
+                &entity_iri(ontology, *range)?,
+            )?);
+        }
+        Axiom::InverseObjectProperties { left, right } => {
+            out.push(triple(
+                &entity_iri(ontology, *left)?,
+                OWL_INVERSE,
+                &entity_iri(ontology, *right)?,
+            )?);
+        }
+        Axiom::TransitiveObjectProperty(property) => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDF_TYPE,
+                OWL_TRANSITIVE,
+            )?);
+        }
+        Axiom::SymmetricObjectProperty(property) => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDF_TYPE,
+                OWL_SYMMETRIC,
+            )?);
+        }
+        Axiom::ReflexiveObjectProperty(property) => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDF_TYPE,
+                OWL_REFLEXIVE,
+            )?);
+        }
+        Axiom::FunctionalObjectProperty(property) => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDF_TYPE,
+                OWL_FUNCTIONAL,
+            )?);
+        }
+        Axiom::AsymmetricObjectProperty(property) => {
+            out.push(triple(
+                &entity_iri(ontology, *property)?,
+                RDF_TYPE,
+                OWL_ASYMMETRIC,
+            )?);
+        }
+        Axiom::EquivalentObjectProperties(properties) => {
+            for pair in properties.windows(2) {
+                out.push(triple(
+                    &entity_iri(ontology, pair[0])?,
+                    OWL_EQUIV_PROP,
+                    &entity_iri(ontology, pair[1])?,
+                )?);
+            }
+        }
+        Axiom::ClassAssertion { individual, class } => {
+            out.push(triple(
+                &entity_iri(ontology, *individual)?,
+                RDF_TYPE,
+                &entity_iri(ontology, *class)?,
+            )?);
+        }
+        Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => {
+            out.push(triple(
+                &entity_iri(ontology, *subject)?,
+                &entity_iri(ontology, *property)?,
+                &entity_iri(ontology, *object)?,
+            )?);
+        }
+        Axiom::SameIndividual(individuals) => {
+            for pair in individuals.windows(2) {
+                out.push(triple(
+                    &entity_iri(ontology, pair[0])?,
+                    OWL_SAME_AS,
+                    &entity_iri(ontology, pair[1])?,
+                )?);
+            }
+        }
+        Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        } => {
+            out.extend(existential_restriction_triples(
+                ontology, *subclass, *property, *filler,
+            )?);
+        }
+        Axiom::DisjointClasses(classes) => {
+            for pair in classes.windows(2) {
+                out.push(triple(
+                    &entity_iri(ontology, pair[0])?,
+                    OWL_DISJOINT_WITH,
+                    &entity_iri(ontology, pair[1])?,
+                )?);
+            }
+        }
+        Axiom::DifferentIndividuals(individuals) => {
+            for pair in individuals.windows(2) {
+                out.push(triple(
+                    &entity_iri(ontology, pair[0])?,
+                    OWL_DIFFERENT_FROM,
+                    &entity_iri(ontology, pair[1])?,
+                )?);
+            }
+        }
+    }
     Ok(out)
 }
 

@@ -14,7 +14,7 @@ pub fn materialize_reasoner(reasoner: &mut Reasoner) -> crate::Result<Materializ
     let record_traces = reasoner.config().explanations;
     RdfsEngine::new()
         .with_traces(record_traces)
-        .materialize(reasoner.ontology_mut())
+        .materialize_with_reasoner(reasoner)
 }
 
 /// Run classification when the reasoner profile is [`Profile::Rdfs`]; otherwise returns

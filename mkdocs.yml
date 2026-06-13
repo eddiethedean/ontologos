@@ -95,7 +95,9 @@ nav:
       - v0.3.x to v0.4.0: migration/v0.3.x-to-v0.4.0.md
       - v0.4.x to v0.5.0: migration/v0.4.x-to-v0.5.0.md
       - v0.5.x to v0.6.0: migration/v0.5.x-to-v0.6.0.md
+      - Incremental reasoning: guides/incremental-reasoning.md
       - v0.6.x to v0.7.0: migration/v0.6.x-to-v0.7.0.md
+      - v0.7.x to v0.8.0: migration/v0.7.x-to-v0.8.0.md
   - Project:
       - FAQ: project/faq.md
       - Roadmap summary: project/roadmap-summary.md

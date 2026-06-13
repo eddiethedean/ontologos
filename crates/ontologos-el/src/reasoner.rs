@@ -1,6 +1,6 @@
 use ontologos_core::{Error as CoreError, Profile, Reasoner, Taxonomy};
 
-use crate::{ElClassifier, ElReport};
+use crate::{take_el_session, ElClassifier, ElReport};
 
 /// Classify when the reasoner profile is [`Profile::El`].
 pub fn classify_reasoner(reasoner: &mut Reasoner) -> crate::Result<Taxonomy> {
@@ -16,7 +16,20 @@ pub fn classify_with_report(reasoner: &mut Reasoner) -> crate::Result<ElReport> 
         });
     }
     let record_traces = reasoner.config().explanations;
-    ElClassifier::new().classify_with_options(reasoner.ontology(), record_traces)
+    let incremental = reasoner.config().incremental;
+    let session = take_el_session(reasoner);
+
+    let (report, session) = if incremental {
+        ElClassifier::new().classify_incremental(reasoner.ontology_mut(), session, record_traces)?
+    } else {
+        let report =
+            ElClassifier::new().classify_with_options(reasoner.ontology(), record_traces)?;
+        reasoner.clear_session();
+        return Ok(report);
+    };
+
+    reasoner.set_session(Box::new(session));
+    Ok(report)
 }
 
 /// Classify when the reasoner profile is [`Profile::El`]; otherwise returns

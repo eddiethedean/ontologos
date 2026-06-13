@@ -78,6 +78,7 @@ impl ReasonerBuilder {
             ontology,
             profile: self.profile,
             config: self.config,
+            session: None,
         })
     }
 }
@@ -88,6 +89,7 @@ pub struct Reasoner {
     ontology: Ontology,
     profile: Profile,
     config: ReasonerConfig,
+    session: Option<Box<dyn crate::session::ReasonerSession>>,
 }
 
 impl Reasoner {
@@ -118,6 +120,35 @@ impl Reasoner {
     /// Mutably borrow the loaded ontology (e.g. for RDFS materialization).
     pub fn ontology_mut(&mut self) -> &mut Ontology {
         &mut self.ontology
+    }
+
+    /// Borrow incremental session state, if any.
+    #[must_use]
+    pub fn session(&self) -> Option<&dyn crate::session::ReasonerSession> {
+        self.session.as_deref()
+    }
+
+    /// Mutably borrow incremental session state.
+    pub fn session_mut(&mut self) -> Option<&mut dyn crate::session::ReasonerSession> {
+        self.session.as_deref_mut()
+    }
+
+    /// Take session state out of the reasoner (for facade downcasting).
+    pub fn take_session(&mut self) -> Option<Box<dyn crate::session::ReasonerSession>> {
+        self.session.take()
+    }
+
+    /// Install or replace incremental session state.
+    pub fn set_session(&mut self, session: Box<dyn crate::session::ReasonerSession>) {
+        self.session = Some(session);
+    }
+
+    /// Clear incremental session state.
+    pub fn clear_session(&mut self) {
+        if let Some(session) = self.session.as_mut() {
+            session.clear();
+        }
+        self.session = None;
     }
 
     /// Run classification over the loaded ontology.

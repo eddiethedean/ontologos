@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use crate::axiom::{Axiom, AxiomId};
+use crate::dirty::{axiom_signature, DirtySet, OntologyRevision};
 use crate::entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 use crate::error::{Error, Result};
 use crate::graph::{AxiomIndex, AxiomStore};
@@ -14,6 +15,8 @@ pub struct Ontology {
     pub(crate) entities: EntityRegistry,
     pub(crate) axioms: AxiomStore,
     pub(crate) index: AxiomIndex,
+    pub(crate) revision: OntologyRevision,
+    pub(crate) dirty: DirtySet,
     #[doc(hidden)]
     pub parse_meta: Option<ParseMeta>,
 }
@@ -33,6 +36,8 @@ impl Ontology {
             entities: EntityRegistry::new(),
             axioms: AxiomStore::new(),
             index: AxiomIndex::new(),
+            revision: OntologyRevision::default(),
+            dirty: DirtySet::default(),
             parse_meta: None,
         }
     }
@@ -67,10 +72,50 @@ impl Ontology {
         self.entities.len()
     }
 
-    /// Number of stored axioms.
+    /// Number of stored axioms (active, excluding tombstoned).
     #[must_use]
     pub fn axiom_count(&self) -> usize {
-        self.axioms.len()
+        self.axioms.active_len()
+    }
+
+    /// Monotonic edit revision (incremented on add/remove).
+    #[must_use]
+    pub fn revision(&self) -> OntologyRevision {
+        self.revision
+    }
+
+    /// Pending axiom edits since the last [`Self::clear_dirty`].
+    #[must_use]
+    pub fn dirty(&self) -> &DirtySet {
+        &self.dirty
+    }
+
+    /// Clear pending dirty flags after incremental engines consume edits.
+    pub fn clear_dirty(&mut self) {
+        self.dirty.clear();
+    }
+
+    /// Entity signature for a stored axiom.
+    pub fn signature_of_axiom(&self, id: AxiomId) -> Result<std::collections::HashSet<EntityId>> {
+        let axiom = self.axioms.get(id)?;
+        Ok(axiom_signature(axiom))
+    }
+
+    /// Union of entity signatures for all dirty added axioms.
+    #[must_use]
+    pub fn dirty_signatures(&self) -> std::collections::HashSet<EntityId> {
+        let mut sig = std::collections::HashSet::new();
+        for id in self.dirty.added() {
+            if let Ok(axiom) = self.axioms.get(*id) {
+                sig.extend(axiom_signature(axiom));
+            }
+        }
+        for id in self.dirty.removed() {
+            if let Ok(axiom) = self.axioms.get_raw(*id) {
+                sig.extend(axiom_signature(axiom));
+            }
+        }
+        sig
     }
 
     /// Number of unique interned IRIs.
@@ -247,7 +292,19 @@ impl Ontology {
         let id = self.axioms.push(axiom, &self.entities)?;
         let stored = self.axioms.get(id)?;
         self.index.insert(id, stored);
+        self.revision.bump();
+        self.dirty.record_add(id);
         Ok(id)
+    }
+
+    /// Remove an axiom by id (tombstone). Rebuilds indexes.
+    pub fn remove_axiom(&mut self, id: AxiomId) -> Result<()> {
+        self.axioms.get(id)?;
+        self.axioms.remove(id)?;
+        self.index.rebuild_from_store(&self.axioms);
+        self.revision.bump();
+        self.dirty.record_remove(id);
+        Ok(())
     }
 
     /// Intern an IRI without registering an entity.

@@ -8,7 +8,7 @@ use crate::trace::{
 };
 
 /// In-memory EL completion graph (inference overlay; does not mutate asserted axioms).
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CompletionGraph {
     subsumptions: HashSet<(EntityId, EntityId)>,
     existentials: HashSet<(EntityId, EntityId, EntityId)>,
@@ -180,6 +180,79 @@ impl CompletionGraph {
             if !progressed {
                 break;
             }
+        }
+    }
+
+    /// Conservative overdelete: drop derived facts touching any entity in `signature`.
+    pub fn overdelete_signature(&mut self, signature: &HashSet<EntityId>) {
+        if signature.is_empty() {
+            return;
+        }
+        self.subsumptions
+            .retain(|(sub, sup)| !signature.contains(sub) && !signature.contains(sup));
+        self.existentials.retain(|(c, r, d)| {
+            !signature.contains(c) && !signature.contains(r) && !signature.contains(d)
+        });
+        self.subproperties
+            .retain(|(sub, sup)| !signature.contains(sub) && !signature.contains(sup));
+        self.todo_sub.clear();
+        self.todo_ex.clear();
+        self.todo_sp.clear();
+    }
+
+    /// Re-apply seeds from axioms whose signature intersects `signature`.
+    pub fn reseed_signature(&mut self, ontology: &Ontology, signature: &HashSet<EntityId>) {
+        use ontologos_core::axiom_signature;
+        for (_, axiom) in ontology.axioms().iter() {
+            let sig = axiom_signature(axiom);
+            if sig.iter().any(|e| signature.contains(e)) {
+                self.seed_axiom(axiom);
+            }
+        }
+    }
+
+    /// Apply seed edges from a single axiom.
+    pub fn seed_axiom(&mut self, axiom: &Axiom) {
+        match axiom {
+            Axiom::SubClassOf {
+                subclass,
+                superclass,
+            } => {
+                self.add_subsumption_seed(*subclass, *superclass);
+            }
+            Axiom::SubClassOfExistential {
+                subclass,
+                property,
+                filler,
+            } => {
+                self.add_existential_seed(*subclass, *property, *filler);
+            }
+            Axiom::EquivalentClasses(classes) => {
+                for i in 0..classes.len() {
+                    for j in (i + 1)..classes.len() {
+                        self.add_subsumption_seed(classes[i], classes[j]);
+                        self.add_subsumption_seed(classes[j], classes[i]);
+                    }
+                }
+            }
+            Axiom::SubObjectPropertyOf {
+                sub_property,
+                super_property,
+            } => {
+                self.add_subproperty_seed(*sub_property, *super_property);
+            }
+            Axiom::EquivalentObjectProperties(properties) => {
+                for i in 0..properties.len() {
+                    for j in (i + 1)..properties.len() {
+                        self.add_subproperty_seed(properties[i], properties[j]);
+                        self.add_subproperty_seed(properties[j], properties[i]);
+                    }
+                }
+            }
+            Axiom::ObjectPropertyDomain { property, domain } => {
+                self.domains.entry(*property).or_default().insert(*domain);
+            }
+            _ => {}
         }
     }
 

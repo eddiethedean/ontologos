@@ -18,8 +18,10 @@
 
 mod graph;
 mod normal_form;
+mod partition;
 mod reasoner;
 mod route;
+mod session;
 mod taxonomy_extract;
 mod trace;
 
@@ -28,6 +30,7 @@ use thiserror::Error;
 
 pub use reasoner::{classify_reasoner, classify_with_report, try_classify_reasoner};
 pub use route::{classify_with_profile, resolve_profile_flag, ClassifyOutcome, ProfileFlag};
+pub use session::{take_el_session, ElSession};
 pub use trace::ElReport;
 
 /// Result type for EL operations.
@@ -99,6 +102,16 @@ impl ElClassifier {
         let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);
         let trace = graph.into_trace();
         Ok(ElReport { taxonomy, trace })
+    }
+
+    /// Classify and return report plus session for subsequent incremental runs.
+    pub fn classify_with_session(
+        &self,
+        ontology: &mut Ontology,
+        session: Option<ElSession>,
+        record_traces: bool,
+    ) -> Result<(ElReport, ElSession)> {
+        self.classify_incremental(ontology, session, record_traces)
     }
 }
 

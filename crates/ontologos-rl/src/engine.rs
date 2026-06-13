@@ -1,6 +1,7 @@
-use ontologos_bridge::{core_to_triples, merge_triples_into_ontology_with_limits, MergeLimits};
-use ontologos_core::Ontology;
-use reasonable::reasoner::ReasonerBuilder;
+use ontologos_bridge::{
+    materialize_with_session, take_reasonable_session, MaterializeOutcome, MergeLimits,
+};
+use ontologos_core::{Ontology, Reasoner};
 
 use crate::report::MaterializationReport;
 
@@ -48,32 +49,58 @@ impl RlEngine {
     /// Saturate `ontology` via reasonable and merge inferred axioms back into core.
     pub fn saturate(&self, ontology: &mut Ontology) -> crate::Result<MaterializationReport> {
         let initial_axiom_count = ontology.axiom_count();
-        let triples = core_to_triples(ontology).map_err(crate::Error::Bridge)?;
-        let mut reasoner = ReasonerBuilder::new()
-            .with_triples(triples)
-            .build()
-            .map_err(crate::Error::Reasonable)?;
-        reasoner.reason_full();
-        let output = reasoner.view_output().to_vec();
-        let diagnostics = reasoner.diagnostics();
-        let merge = merge_triples_into_ontology_with_limits(
+        let (outcome, _) = materialize_with_session(
             ontology,
-            &output,
-            diagnostics,
+            ontologos_bridge::ReasonableSession::new(),
+            false,
             self.merge_limits,
         )
         .map_err(crate::Error::Bridge)?;
-
-        Ok(MaterializationReport {
+        Ok(report_from_outcome(
             initial_axiom_count,
-            final_axiom_count: ontology.axiom_count(),
-            rdfs_inferred: 0,
-            inferred_by_rule: std::collections::BTreeMap::new(),
-            trace: ontologos_core::InferenceTrace::new(),
-            clashes: merge.clashes,
-            disjoint_clash_keys: std::collections::HashSet::new(),
-            same_as_clash_keys: std::collections::HashSet::new(),
-        })
+            ontology.axiom_count(),
+            outcome,
+        ))
+    }
+
+    /// Saturate using incremental session state on `reasoner`.
+    pub fn saturate_reasoner(
+        &self,
+        reasoner: &mut Reasoner,
+    ) -> crate::Result<MaterializationReport> {
+        let initial_axiom_count = reasoner.ontology().axiom_count();
+        let incremental = reasoner.config().incremental;
+        let session = take_reasonable_session(reasoner);
+        let (outcome, session) = materialize_with_session(
+            reasoner.ontology_mut(),
+            session,
+            incremental,
+            self.merge_limits,
+        )
+        .map_err(crate::Error::Bridge)?;
+        reasoner.set_session(Box::new(session));
+        Ok(report_from_outcome(
+            initial_axiom_count,
+            reasoner.ontology().axiom_count(),
+            outcome,
+        ))
+    }
+}
+
+fn report_from_outcome(
+    initial_axiom_count: usize,
+    final_axiom_count: usize,
+    outcome: MaterializeOutcome,
+) -> MaterializationReport {
+    MaterializationReport {
+        initial_axiom_count,
+        final_axiom_count,
+        rdfs_inferred: 0,
+        inferred_by_rule: std::collections::BTreeMap::new(),
+        trace: ontologos_core::InferenceTrace::new(),
+        clashes: outcome.merge.clashes,
+        disjoint_clash_keys: std::collections::HashSet::new(),
+        same_as_clash_keys: std::collections::HashSet::new(),
     }
 }
 

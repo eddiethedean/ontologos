@@ -35,11 +35,7 @@ fn saturate_rl(reasoner: &mut Reasoner) -> Result<RlReport, Error> {
             actual: reasoner.profile(),
         });
     }
-    let parallelism = reasoner.config().parallelism;
-    let record_traces = reasoner.config().explanations;
-    Ok(RlEngine::try_new(parallelism)?
-        .with_traces(record_traces)
-        .saturate(reasoner.ontology_mut())?)
+    saturate_rl_unchecked(reasoner)
 }
 
 fn saturate_rl_unchecked(reasoner: &mut Reasoner) -> Result<RlReport, Error> {
@@ -47,7 +43,7 @@ fn saturate_rl_unchecked(reasoner: &mut Reasoner) -> Result<RlReport, Error> {
     let record_traces = reasoner.config().explanations;
     Ok(RlEngine::try_new(parallelism)?
         .with_traces(record_traces)
-        .saturate(reasoner.ontology_mut())?)
+        .saturate_reasoner(reasoner)?)
 }
 
 fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
@@ -57,9 +53,17 @@ fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
         .ok_or_else(|| Error::Profile("no profile detected".into()))?;
 
     match detected {
-        OwlProfile::El | OwlProfile::Ql => Ok(ClassifyOutcome::Taxonomy(
-            ElClassifier::new().classify(reasoner.ontology())?,
-        )),
+        OwlProfile::El | OwlProfile::Ql => {
+            if reasoner.config().incremental {
+                Ok(ClassifyOutcome::Taxonomy(
+                    crate::classify_with_report(reasoner)?.taxonomy,
+                ))
+            } else {
+                Ok(ClassifyOutcome::Taxonomy(
+                    ElClassifier::new().classify(reasoner.ontology())?,
+                ))
+            }
+        }
         OwlProfile::Rl => Ok(ClassifyOutcome::Rl(saturate_rl_unchecked(reasoner)?)),
         OwlProfile::Dl => Err(Error::UnsupportedProfile(detected)),
     }

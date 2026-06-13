@@ -37,6 +37,7 @@
 #![warn(missing_docs)]
 
 mod axiom;
+mod dirty;
 mod entity;
 mod error;
 mod graph;
@@ -46,10 +47,12 @@ mod ontology;
 mod parse_meta;
 mod reasoner;
 mod serialize;
+mod session;
 mod taxonomy;
 mod trace;
 
 pub use axiom::{Axiom, AxiomId};
+pub use dirty::{axiom_signature, DirtySet, OntologyRevision};
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 pub use error::{Error, Result};
 pub use graph::{AxiomIndex, AxiomStore};
@@ -58,6 +61,7 @@ pub use limits::Limits;
 pub use ontology::{Ontology, OntologyBuilder};
 pub use parse_meta::{OwlConstruct, ParseMeta, ParseMetaSummary};
 pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
+pub use session::ReasonerSession;
 pub use taxonomy::Taxonomy;
 pub use trace::{InferenceTrace, TraceConclusion, TracePremise, TraceStep};
 

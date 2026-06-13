@@ -3,7 +3,7 @@
 //! v0.5: loads ontologies via `ontologos_parser::load_ontology`.
 //! Pass `profile="rdfs"`, `"rl"`, `"el"`, or `"auto"` to run classification via `classify()`.
 
-use ontologos_core::{ParseMetaSummary, Profile, Reasoner};
+use ontologos_core::{ParseMetaSummary, Profile, Reasoner, ReasonerConfig};
 use ontologos_el::{classify_with_profile, ClassifyOutcome};
 use ontologos_parser::load_ontology;
 use pyo3::exceptions::PyRuntimeError;
@@ -11,7 +11,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
 /// Python wrapper around the OntoLogos reasoner.
-#[pyclass(name = "Reasoner")]
+#[pyclass(name = "Reasoner", unsendable)]
 struct PyReasoner {
     reasoner: Reasoner,
     last_taxonomy: Option<ontologos_core::Taxonomy>,
@@ -93,12 +93,16 @@ fn entity_iri(
 #[pymethods]
 impl PyReasoner {
     #[new]
-    #[pyo3(signature = (path, profile=None))]
-    fn new(path: &str, profile: Option<&str>) -> PyResult<Self> {
+    #[pyo3(signature = (path, profile=None, incremental=false))]
+    fn new(path: &str, profile: Option<&str>, incremental: bool) -> PyResult<Self> {
         let ontology = load_ontology(std::path::Path::new(path))
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
         let reasoner = Reasoner::builder()
             .profile(parse_profile(profile)?)
+            .config(ReasonerConfig {
+                incremental,
+                ..ReasonerConfig::default()
+            })
             .build(ontology)
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
         Ok(Self {

@@ -32,6 +32,8 @@ jobs:
         run: cargo test -p ontologos-conformance
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh
+      - name: EL incremental correctness
+        run: cargo test -p ontologos-el --test incremental_correctness --locked
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
 

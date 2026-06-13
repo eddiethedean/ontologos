@@ -8,6 +8,7 @@ use crate::error::{Error, Result};
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct AxiomStore {
     axioms: Vec<Axiom>,
+    removed: HashSet<AxiomId>,
 }
 
 impl AxiomStore {
@@ -17,7 +18,7 @@ impl AxiomStore {
         Self::default()
     }
 
-    /// Number of stored axioms.
+    /// Number of stored axiom slots (including tombstoned).
     #[must_use]
     pub fn len(&self) -> usize {
         self.axioms.len()
@@ -31,29 +32,33 @@ impl AxiomStore {
 
     /// Look up an axiom by id.
     pub fn get(&self, id: AxiomId) -> Result<&Axiom> {
+        if self.removed.contains(&id) {
+            return Err(Error::InvalidAxiom(format!("removed AxiomId: {}", id.0)));
+        }
         self.axioms
             .get(id.0 as usize)
             .ok_or_else(|| Error::InvalidAxiom(format!("unknown AxiomId: {}", id.0)))
     }
 
-    /// Iterate over all axioms with their ids.
+    /// Iterate over active axioms with their ids.
     pub fn iter(&self) -> impl Iterator<Item = (AxiomId, &Axiom)> {
-        self.axioms
-            .iter()
-            .enumerate()
-            .map(|(i, axiom)| (AxiomId(i as u32), axiom))
+        self.axioms.iter().enumerate().filter_map(|(i, axiom)| {
+            let id = AxiomId(i as u32);
+            if self.removed.contains(&id) {
+                None
+            } else {
+                Some((id, axiom))
+            }
+        })
     }
 
     /// Append a validated axiom and return its id (idempotent on duplicates).
     pub fn push(&mut self, axiom: Axiom, registry: &EntityRegistry) -> Result<AxiomId> {
         let axiom = normalize_class_operands(axiom);
         axiom.validate(registry)?;
-        if let Some((index, _)) = self
-            .axioms
-            .iter()
-            .enumerate()
-            .find(|(_, existing)| **existing == axiom)
-        {
+        if let Some((index, _)) = self.axioms.iter().enumerate().find(|(i, existing)| {
+            !self.removed.contains(&AxiomId(*i as u32)) && **existing == axiom
+        }) {
             return Ok(AxiomId(index as u32));
         }
         let id = AxiomId(
@@ -62,6 +67,32 @@ impl AxiomStore {
         );
         self.axioms.push(axiom);
         Ok(id)
+    }
+
+    /// Look up an axiom by id including tombstoned entries.
+    pub fn get_raw(&self, id: AxiomId) -> Result<&Axiom> {
+        self.axioms
+            .get(id.0 as usize)
+            .ok_or_else(|| Error::InvalidAxiom(format!("unknown AxiomId: {}", id.0)))
+    }
+
+    /// Tombstone an axiom by id (ids remain stable; removed axioms are skipped in iteration).
+    pub fn remove(&mut self, id: AxiomId) -> Result<()> {
+        self.get(id)?;
+        self.removed.insert(id);
+        Ok(())
+    }
+
+    /// Whether an axiom id has been removed.
+    #[must_use]
+    pub fn is_removed(&self, id: AxiomId) -> bool {
+        self.removed.contains(&id)
+    }
+
+    /// Count of non-removed axioms.
+    #[must_use]
+    pub fn active_len(&self) -> usize {
+        self.axioms.len().saturating_sub(self.removed.len())
     }
 }
 
@@ -160,6 +191,14 @@ impl AxiomIndex {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Rebuild all secondary indexes from active axioms.
+    pub fn rebuild_from_store(&mut self, store: &AxiomStore) {
+        *self = Self::default();
+        for (id, axiom) in store.iter() {
+            self.insert(id, axiom);
+        }
     }
 
     /// Update indexes after inserting an axiom.

@@ -1,6 +1,6 @@
 # Performance and Scaling
 
-Guidance for sizing OntoLogos workloads. OntoLogos v0.4 uses **batch fixed-point** engines (not incremental). Benchmark numbers are indicative — run `cargo bench` on your hardware for production decisions.
+Guidance for sizing OntoLogos workloads. **v0.8** adds optional incremental EL/RL/RDFS when `ReasonerConfig::incremental` is set. Benchmark numbers are indicative — run `cargo test -p ontologos-el --test incremental_bench -- --ignored` on your hardware.
 
 ## Default limits
 

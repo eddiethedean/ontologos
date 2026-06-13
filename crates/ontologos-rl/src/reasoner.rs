@@ -15,7 +15,7 @@ pub fn materialize_reasoner(reasoner: &mut Reasoner) -> crate::Result<Materializ
     let record_traces = reasoner.config().explanations;
     RlEngine::try_new(parallelism)?
         .with_traces(record_traces)
-        .saturate(reasoner.ontology_mut())
+        .saturate_reasoner(reasoner)
 }
 
 /// Run classification when the reasoner profile is [`Profile::Rl`].

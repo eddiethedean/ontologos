@@ -8,7 +8,7 @@ use ontologos_el::{classify_with_profile, ClassifyOutcome};
 use ontologos_explain::{explain_with_profile, render_text, ProofGraph};
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, ProfileReport};
-use ontologos_rdfs::{MaterializationReport as RdfsReport, RdfsEngine};
+use ontologos_rdfs::MaterializationReport as RdfsReport;
 use ontologos_rl::MaterializationReport as RlReport;
 use serde::Serialize;
 use thiserror::Error;
@@ -17,7 +17,8 @@ use thiserror::Error;
 #[command(
     name = "ontologos",
     about = "Modular Rust ontology reasoner",
-    after_help = "v0.7.0: profile (detect), materialize (RDFS), classify (EL/RL/RDFS), explain (proof graphs). \
+    after_help = "v0.8.0: profile (detect), materialize (RDFS), classify (EL/RL/RDFS), explain (proof graphs). \
+                  Use --incremental for delta re-classify. \
                   Docs: https://ontologos.readthedocs.io/en/latest/reference/cli/"
 )]
 struct Cli {
@@ -27,6 +28,10 @@ struct Cli {
     /// OWL profile for `classify` (default: auto)
     #[arg(long, value_enum, default_value_t = CliProfile::Auto)]
     profile: CliProfile,
+
+    /// Enable incremental re-classification / materialization when axioms change
+    #[arg(long, default_value_t = false)]
+    incremental: bool,
 
     /// Output format
     #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
@@ -117,15 +122,26 @@ fn run() -> Result<(), CliError> {
             emit_parse_meta_text(cli.format, &parse_meta);
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
+                .config(ReasonerConfig {
+                    incremental: cli.incremental,
+                    ..ReasonerConfig::default()
+                })
                 .build(ontology)?;
             let outcome = classify_with_profile(&mut reasoner)?;
             emit_classify_outcome(cli.format, &outcome, reasoner.ontology(), &parse_meta)?;
         }
         Command::Materialize { ontology } => {
-            let mut ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            let report = RdfsEngine::new().materialize(&mut ontology)?;
+            let mut reasoner = Reasoner::builder()
+                .profile(Profile::Rdfs)
+                .config(ReasonerConfig {
+                    incremental: cli.incremental,
+                    ..ReasonerConfig::default()
+                })
+                .build(ontology)?;
+            let report = ontologos_rdfs::materialize_reasoner(&mut reasoner)?;
             emit_rdfs_report(cli.format, "materialized", &report, &parse_meta)?;
         }
         Command::Explain { ontology } => {

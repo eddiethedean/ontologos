@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-13
+
+### Added
+
+- **Core:** axiom-level dirty tracking (`OntologyRevision`, `DirtySet`), `remove_axiom`, `ReasonerSession` slot on `Reasoner`
+- **EL:** incremental classification via partition overdelete-rederive on `CompletionGraph` (`ElSession`, `ReasonerConfig::incremental`)
+- **RL/RDFS:** `ReasonableSession` wrapper over reasonable incremental `reason()` / `set_base_triples`
+- **`ontologos-watch`:** library file-watch + ontology reload hook for Ontocode (not published)
+- **CLI / Python:** `--incremental` flag and `Reasoner(..., incremental=True)`
+- **Benchmarks:** incremental edit suite, `incremental_correctness` tests, optional `bench-el-incremental.sh` perf gate
+
+### Changed
+
+- Workspace and published crates bump to **0.8.0**
+
 ## [0.7.0] - 2026-06-13
 
 ### Changed
@@ -254,7 +269,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/eddiethedean/ontologos/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/eddiethedean/ontologos/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/eddiethedean/ontologos/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/eddiethedean/ontologos/compare/v0.5.0...v0.6.0

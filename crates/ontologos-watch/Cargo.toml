@@ -1,0 +1,20 @@
+[package]
+name = "ontologos-watch"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "File-watch helpers for OntoLogos ontology reload (Ontocode hook)"
+publish = false
+
+[dependencies]
+ontologos-core = { workspace = true }
+ontologos-parser = { workspace = true }
+notify = "7"
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
