@@ -95,9 +95,9 @@ cargo test --workspace --locked
 cargo test -p ontologos-conformance --locked
 ./benchmarks/scripts/compare-reasonable.sh
 cargo publish -p ontologos-core --dry-run
-cargo publish -p ontologos-bridge --dry-run
 cargo publish -p ontologos-profile --dry-run
 cargo publish -p ontologos-parser --dry-run
+cargo publish -p ontologos-bridge --dry-run
 cargo publish -p ontologos-rdfs --dry-run
 cargo publish -p ontologos-rl --dry-run --allow-dirty
 cargo publish -p ontologos-el --dry-run --allow-dirty
