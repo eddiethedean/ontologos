@@ -59,6 +59,10 @@ fn role_hierarchy_does_not_break_classify() -> Result<(), Error> {
         filler: b,
     })?;
 
-    classify(&ontology)?;
+    let taxonomy = classify(&ontology)?;
+    assert!(
+        taxonomy.unsatisfiable.is_empty(),
+        "role hierarchy with existential should remain consistent"
+    );
     Ok(())
 }

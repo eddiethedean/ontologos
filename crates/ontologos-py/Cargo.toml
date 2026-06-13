@@ -12,7 +12,7 @@ description = "Python bindings for OntoLogos"
 publish = false
 
 [lib]
-name = "ontologos"
+name = "_ontologos"
 crate-type = ["cdylib"]
 
 [dependencies]

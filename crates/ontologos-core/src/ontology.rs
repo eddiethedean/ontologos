@@ -53,7 +53,7 @@ impl Ontology {
 
     /// Load an ontology from a file path.
     ///
-    /// Use [`ontologos_parser::load_ontology`] for OWL/RDF file loading.
+    /// Use `ontologos_parser::load_ontology` for OWL/RDF file loading.
     pub fn from_file(_path: impl AsRef<Path>) -> Result<Self> {
         Err(Error::ParseNotAvailable)
     }

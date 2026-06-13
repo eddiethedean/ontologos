@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use crate::entity::{EntityId, EntityKind};
 
-/// Result type alias using [`Error`].
+/// Result type alias using [`enum@Error`].
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Errors produced by the core ontology model.

@@ -94,11 +94,17 @@ fn nnf_complement_in_dl_store() -> Result<(), Error> {
     let b = ontology.lookup_entity("http://ex/B").unwrap();
     let b_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(b));
     let not_b = ontology.dl_mut().intern_ce(ClassExpr::Not(b_ce));
-    let sub = ontology.dl_mut().intern_ce(ClassExpr::Atomic(a));
+    let sub_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(a));
     ontology
         .dl_mut()
-        .push_axiom(ontologos_core::DlAxiom::SubClassOf { sub, sup: not_b });
+        .push_axiom(ontologos_core::DlAxiom::SubClassOf { sub: sub_ce, sup: not_b });
     let clauses = clausify(&mut ontology)?;
-    assert!(!clauses.is_empty());
+    assert!(
+        clauses.clauses().iter().any(|c| matches!(
+            c,
+            Clause::Subsumption { sub, sup } if *sub == sub_ce && *sup == not_b
+        )),
+        "expected A ⊑ ¬B clause"
+    );
     Ok(())
 }

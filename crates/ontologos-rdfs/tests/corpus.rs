@@ -30,7 +30,7 @@ fn family_corpus_materializes_with_rdfs_inferences() {
 }
 
 #[test]
-fn pizza_corpus_materialized_is_superset_of_parsed_axioms() {
+fn pizza_corpus_materializes_with_rdfs_inferences() {
     let path = repo_root().join("benchmarks/data/pizza.owl");
     assert!(
         path.exists(),
@@ -44,8 +44,9 @@ fn pizza_corpus_materialized_is_superset_of_parsed_axioms() {
         .materialize(&mut ontology)
         .expect("materialize pizza");
 
+    assert!(report.final_axiom_count >= initial);
     assert!(
-        report.final_axiom_count >= initial,
-        "materialized pizza must be a superset of parsed axioms"
+        report.inferred_total() > 0,
+        "pizza corpus must produce RDFS inferences"
     );
 }

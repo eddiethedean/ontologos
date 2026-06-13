@@ -97,7 +97,8 @@ pub fn taxonomy_from_outcome(outcome: &ClassifyOutcome) -> Option<&Taxonomy> {
 
 #[cfg(test)]
 mod tests {
-    use ontologos_core::{Ontology, Profile, Reasoner};
+    use ontologos_core::{Axiom, EntityKind, Ontology, Profile, Reasoner};
+    use ontologos_el::ClassifyOutcome;
 
     fn el_ontology() -> Ontology {
         Ontology::builder()
@@ -111,6 +112,39 @@ mod tests {
             .unwrap()
     }
 
+    fn el_chain_ontology() -> Ontology {
+        Ontology::builder()
+            .class("http://example.org/A")
+            .unwrap()
+            .class("http://example.org/B")
+            .unwrap()
+            .class("http://example.org/C")
+            .unwrap()
+            .subclass_of("http://example.org/A", "http://example.org/B")
+            .unwrap()
+            .subclass_of("http://example.org/B", "http://example.org/C")
+            .unwrap()
+            .build()
+            .unwrap()
+    }
+
+    fn unsatisfiable_el_ontology() -> Ontology {
+        let mut ontology = Ontology::new();
+        let a = ontology
+            .entity_id("http://example.org/A", EntityKind::Class)
+            .expect("A");
+        let nothing = ontology
+            .entity_id("http://www.w3.org/2002/07/owl#Nothing", EntityKind::Class)
+            .expect("Nothing");
+        ontology
+            .add_axiom(Axiom::SubClassOf {
+                subclass: a,
+                superclass: nothing,
+            })
+            .expect("A sub Nothing");
+        ontology
+    }
+
     fn el_reasoner() -> Reasoner {
         Reasoner::builder()
             .profile(Profile::El)
@@ -119,9 +153,89 @@ mod tests {
     }
 
     #[test]
+    fn classify_el_returns_taxonomy_with_subsumption() {
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::El)
+            .build(el_chain_ontology())
+            .unwrap();
+        let outcome = super::classify(&mut reasoner).unwrap();
+        let tax = super::taxonomy_from_outcome(&outcome).expect("EL should return Taxonomy");
+        let a = reasoner.ontology().lookup_entity("http://example.org/A").unwrap();
+        let c = reasoner.ontology().lookup_entity("http://example.org/C").unwrap();
+        assert!(tax.is_subsumed(a, c));
+    }
+
+    #[test]
+    fn classify_rdfs_returns_materialization_report() {
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::Rdfs)
+            .build(el_ontology())
+            .unwrap();
+        let outcome = super::classify(&mut reasoner).unwrap();
+        assert!(matches!(outcome, ClassifyOutcome::Rdfs(_)));
+        assert!(super::taxonomy_from_outcome(&outcome).is_none());
+    }
+
+    #[test]
+    fn classify_rl_returns_saturation_report() {
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::Rl)
+            .build(el_ontology())
+            .unwrap();
+        let outcome = super::classify(&mut reasoner).unwrap();
+        assert!(matches!(outcome, ClassifyOutcome::Rl(_)));
+        assert!(super::taxonomy_from_outcome(&outcome).is_none());
+    }
+
+    #[test]
+    fn classify_auto_routes_el_fixture_to_taxonomy() {
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::Auto)
+            .build(el_chain_ontology())
+            .unwrap();
+        let outcome = super::classify(&mut reasoner).unwrap();
+        let tax = super::taxonomy_from_outcome(&outcome).expect("auto on EL fixture");
+        let a = reasoner.ontology().lookup_entity("http://example.org/A").unwrap();
+        let c = reasoner.ontology().lookup_entity("http://example.org/C").unwrap();
+        assert!(tax.is_subsumed(a, c));
+    }
+
+    #[test]
+    fn classify_dl_returns_taxonomy_for_named_subsumption() {
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::Dl)
+            .build(el_ontology())
+            .unwrap();
+        let outcome = super::classify(&mut reasoner).unwrap();
+        let tax = super::taxonomy_from_outcome(&outcome).expect("DL should return Taxonomy");
+        let a = reasoner.ontology().lookup_entity("http://example.org/A").unwrap();
+        let b = reasoner.ontology().lookup_entity("http://example.org/B").unwrap();
+        assert!(tax.is_subsumed(a, b));
+    }
+
+    #[test]
+    fn taxonomy_from_outcome_none_for_rdfs() {
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::Rdfs)
+            .build(el_ontology())
+            .unwrap();
+        let outcome = super::classify(&mut reasoner).unwrap();
+        assert!(super::taxonomy_from_outcome(&outcome).is_none());
+    }
+
+    #[test]
     fn is_consistent_el_uses_el_classifier() {
         let reasoner = el_reasoner();
         assert!(super::is_consistent(&reasoner).unwrap());
+    }
+
+    #[test]
+    fn is_consistent_el_detects_unsatisfiable() {
+        let reasoner = Reasoner::builder()
+            .profile(Profile::El)
+            .build(unsatisfiable_el_ontology())
+            .unwrap();
+        assert!(!super::is_consistent(&reasoner).unwrap());
     }
 
     #[test]

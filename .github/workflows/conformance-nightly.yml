@@ -1,0 +1,25 @@
+name: Conformance Nightly
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ignored-conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Download benchmark corpora
+        run: ./benchmarks/scripts/download.sh
+      - name: Conformance test inventory
+        run: |
+          chmod +x benchmarks/scripts/report-conformance-coverage.sh
+          ./benchmarks/scripts/report-conformance-coverage.sh
+      - name: Run ignored conformance tier
+        run: cargo test -p ontologos-conformance -- --ignored --test-threads=4

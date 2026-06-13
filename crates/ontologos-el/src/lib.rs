@@ -152,14 +152,20 @@ mod tests {
 
     #[test]
     fn existential_filler_subsumption_in_taxonomy() {
+        use ontologos_core::TraceConclusion;
+
         let mut ontology = Ontology::new();
         let a = class(&mut ontology, "http://ex.org/A");
         let b = class(&mut ontology, "http://ex.org/B");
         let c = class(&mut ontology, "http://ex.org/C");
+        let r = ontology
+            .entity_id("http://ex.org/r", EntityKind::ObjectProperty)
+            .expect("property");
         ontology
-            .add_axiom(Axiom::SubClassOf {
+            .add_axiom(Axiom::SubClassOfExistential {
                 subclass: a,
-                superclass: b,
+                property: r,
+                filler: b,
             })
             .unwrap();
         ontology
@@ -169,9 +175,20 @@ mod tests {
             })
             .unwrap();
 
-        let taxonomy = ElClassifier::new().classify(&ontology).unwrap();
-        assert!(taxonomy.is_subsumed(a, c));
-        assert!(taxonomy.is_subsumed(a, b));
+        let report = ElClassifier::new()
+            .classify_with_options(&ontology, true)
+            .expect("classify");
+        assert!(report.trace.steps.iter().any(|step| {
+            step.rule == "ex_filler_sub"
+                && matches!(
+                    &step.conclusion,
+                    TraceConclusion::Existential {
+                        class,
+                        property,
+                        filler
+                    } if *class == a && *property == r && *filler == c
+                )
+        }));
     }
 
     #[test]

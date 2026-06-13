@@ -83,7 +83,7 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     tableau::is_consistent(ontology)
 }
 
-/// Classify via [`Reasoner`] when profile is ALC-compatible.
+/// Classify via [`ontologos_core::Reasoner`] when profile is ALC-compatible.
 pub fn classify_reasoner(reasoner: &ontologos_core::Reasoner) -> Result<Taxonomy> {
     classify(reasoner.ontology())
 }

@@ -33,7 +33,7 @@ pub fn read_horned_owl(
 
 /// Parse ontology bytes from an already-open reader (single-fd load path).
 ///
-/// `limits` are enforced during axiom mapping in [`crate::map`]; horned-owl itself
+/// `limits` are enforced during axiom mapping (`map_to_core`); horned-owl itself
 /// may allocate before mapping caps apply (see `docs/security.md`).
 pub fn read_horned_owl_from_reader<R: Read>(
     reader: R,

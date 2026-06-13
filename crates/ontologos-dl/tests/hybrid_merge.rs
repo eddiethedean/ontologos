@@ -20,9 +20,10 @@ fn merge_preserves_el_equivalences() {
 
     let taxonomy = classify(&ontology).expect("classify");
     assert!(
-        !taxonomy.equivalences.is_empty() || taxonomy.is_subsumed(a, b),
-        "expected equivalence cluster or mutual subsumption"
+        taxonomy.is_subsumed(a, b) && taxonomy.is_subsumed(b, a),
+        "equivalent classes must be mutually subsumed"
     );
+    assert!(!taxonomy.unsatisfiable.contains(&a));
 }
 
 #[test]

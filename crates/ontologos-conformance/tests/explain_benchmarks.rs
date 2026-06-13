@@ -27,21 +27,7 @@ fn require_fixture(path: &std::path::Path) {
 }
 
 fn assert_valid_graph(ontology: &Ontology, graph: &ontologos_explain::ProofGraph) {
-    assert!(!graph.nodes.is_empty(), "expected non-empty proof graph");
-    assert!(graph.is_acyclic(), "proof graph must be acyclic");
-    for node in &graph.nodes {
-        if let Some(id) = node.conclusion_axiom {
-            ontology
-                .axiom(id)
-                .unwrap_or_else(|_| panic!("valid conclusion axiom id {}", id.0));
-        }
-        for premise in &node.premises {
-            assert!(
-                (premise.0 as usize) < graph.nodes.len(),
-                "premise node id must exist"
-            );
-        }
-    }
+    ontologos_explain::assert_valid_proof_graph(ontology, graph);
 }
 
 fn reasoner_with_profile(ontology: Ontology, profile: Profile) -> Reasoner {
@@ -133,9 +119,13 @@ fn rdfs_engine_smoke() {
     let path = family_path();
     require_fixture(&path);
     let mut ontology = load_ontology(&path).expect("load");
-    RdfsEngine::new()
+    let report = RdfsEngine::new()
         .materialize(&mut ontology)
         .expect("materialize");
+    assert!(
+        report.inferred_total() > 0,
+        "family RDFS materialization must infer axioms"
+    );
 }
 
 #[test]
@@ -143,7 +133,11 @@ fn rl_engine_smoke() {
     let path = family_path();
     require_fixture(&path);
     let mut ontology = load_ontology(&path).expect("load");
-    RlEngine::new(1).saturate(&mut ontology).expect("saturate");
+    let report = RlEngine::new(1).saturate(&mut ontology).expect("saturate");
+    assert!(
+        report.inferred_total() > 0,
+        "family RL saturation must infer axioms"
+    );
 }
 
 #[test]

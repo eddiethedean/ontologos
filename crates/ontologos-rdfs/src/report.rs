@@ -29,7 +29,7 @@ impl RdfsRule {
     }
 }
 
-/// A single recorded inference (legacy alias; prefer [`TraceStep`]).
+/// A single recorded inference (legacy alias; prefer [`ontologos_core::TraceStep`]).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct InferenceRecord {
     pub rule: RdfsRule,

@@ -36,6 +36,10 @@ jobs:
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
       - name: HermiT conformance (Tier A)
         run: cargo test -p ontologos-conformance
+      - name: Conformance test inventory
+        run: |
+          chmod +x benchmarks/scripts/report-conformance-coverage.sh
+          ./benchmarks/scripts/report-conformance-coverage.sh
       - name: HermiT catalog drift check
         run: |
           chmod +x benchmarks/scripts/check-hermit-catalog.sh
@@ -50,6 +54,27 @@ jobs:
         run: cargo test -p ontologos-el --test incremental_correctness --locked
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
+
+  python-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Download benchmark corpora
+        run: bash ./benchmarks/scripts/download.sh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build and test Python package (Windows)
+        working-directory: crates/ontologos-py
+        shell: bash
+        run: |
+          python -m venv .venv
+          source .venv/Scripts/activate
+          pip install 'maturin>=1.7,<2.0' pytest
+          maturin develop --release
+          pytest tests/ -q
 
   msrv:
     runs-on: ubuntu-latest
@@ -82,7 +107,7 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          pip install 'maturin>=1.7,<2.0' pytest '.[pandas]'
+          pip install 'maturin>=1.7,<2.0' pytest '.[pandas,polars]'
           maturin develop --release
           pytest tests/ -q
 

@@ -40,9 +40,14 @@ Hand-written ports are listed in [manifest.toml](manifest.toml) and implemented 
 # Tier A + catalog smoke (no HermiT tree required)
 cargo test -p ontologos-conformance
 
-# Include ignored ports (DL stubs, optional HermiT tree fixtures)
+# Active vs ignored inventory (CI prints this via report-conformance-coverage.sh)
+./benchmarks/scripts/report-conformance-coverage.sh
+
+# Include ignored ports (DL stubs, optional HermiT tree fixtures) — nightly CI
 cargo test -p ontologos-conformance -- --ignored
 ```
+
+**Coverage honesty:** The generated catalog contains hundreds of `#[ignore]` tests that document the path to 1.0 HermiT parity. Only non-ignored tests run in default CI; treat the ignored count as a roadmap, not as active coverage.
 
 ## Add a hand-written port
 

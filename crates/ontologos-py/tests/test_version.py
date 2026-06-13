@@ -47,8 +47,11 @@ def test_classify_el_profile_returns_taxonomy() -> None:
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
     reasoner = Reasoner(path=str(FIXTURE), profile="el")
     result = reasoner.classify()
-    assert "subsumption_count" in result
-    assert "subsumptions" in result
+    pairs = set(map(tuple, result["subsumptions"]))
+    assert (
+        "http://example.org/test#A",
+        "http://example.org/test#B",
+    ) in pairs
     assert result["subsumption_count"] >= 1
 
 
@@ -58,8 +61,11 @@ def test_classify_auto_profile_routes_el_fixture() -> None:
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
     reasoner = Reasoner(path=str(FIXTURE), profile="auto")
     result = reasoner.classify()
-    assert "subsumption_count" in result
-    assert result["subsumption_count"] >= 1
+    pairs = set(map(tuple, result["subsumptions"]))
+    assert (
+        "http://example.org/test#A",
+        "http://example.org/test#B",
+    ) in pairs
 
 
 def test_classify_rdfs_profile_materializes() -> None:
@@ -68,7 +74,8 @@ def test_classify_rdfs_profile_materializes() -> None:
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
     reasoner = Reasoner(path=str(FIXTURE), profile="rdfs")
     result = reasoner.classify()
-    assert "inferred_axioms" in result
+    assert result["inferred_axioms"] >= 0
+    assert result["final_axiom_count"] >= result["initial_axiom_count"]
 
 
 def test_parse_meta_exposes_warnings_for_kind_clash() -> None:

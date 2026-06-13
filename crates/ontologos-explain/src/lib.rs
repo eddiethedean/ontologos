@@ -188,6 +188,26 @@ pub fn explain_el(ontology: &Ontology) -> Result<ProofGraph> {
     build_proof_graph(ontology, &trace)
 }
 
+/// Validate proof graph structure (acyclic, valid axiom ids, premise bounds).
+#[doc(hidden)]
+pub fn assert_valid_proof_graph(ontology: &Ontology, graph: &ProofGraph) {
+    assert!(!graph.nodes.is_empty(), "expected non-empty proof graph");
+    assert!(graph.is_acyclic(), "proof graph must be acyclic");
+    for node in &graph.nodes {
+        if let Some(id) = node.conclusion_axiom {
+            ontology
+                .axiom(id)
+                .unwrap_or_else(|_| panic!("valid conclusion axiom id {}", id.0));
+        }
+        for premise in &node.premises {
+            assert!(
+                (premise.0 as usize) < graph.nodes.len(),
+                "premise node id must exist"
+            );
+        }
+    }
+}
+
 /// Route explanation collection by reasoner profile (like classify).
 pub fn explain_with_profile(reasoner: &mut Reasoner) -> Result<ProofGraph> {
     let trace = collect_trace(reasoner)?;
@@ -225,6 +245,7 @@ mod tests {
 
         let graph = explain_rdfs(&mut ontology).expect("graph");
         assert!(graph.node_count() > 2);
+        assert_valid_proof_graph(&ontology, &graph);
         graph.to_json().expect("json");
     }
 
@@ -249,5 +270,10 @@ mod tests {
 
         let graph = explain_el(&ontology).expect("graph");
         assert!(graph.node_count() > 2);
+        assert_valid_proof_graph(&ontology, &graph);
+        assert!(graph.nodes.iter().any(|node| {
+            node.rule == "sub_trans_forward"
+                && node.conclusion_sub == Some((a, c))
+        }));
     }
 }

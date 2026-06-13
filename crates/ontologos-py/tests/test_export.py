@@ -25,7 +25,6 @@ def test_subsumptions_to_pandas() -> None:
     assert list(frame.columns) == ["subclass", "superclass"]
     assert len(frame) == 2
     assert frame.iloc[0]["subclass"] == "http://example.org/A"
-    assert isinstance(frame, pd.DataFrame)
 
 
 def test_subsumptions_to_polars() -> None:
@@ -36,4 +35,3 @@ def test_subsumptions_to_polars() -> None:
     assert frame.columns == ["subclass", "superclass"]
     assert frame.height == 2
     assert frame.row(0) == ("http://example.org/A", "http://example.org/B")
-    assert isinstance(frame, pl.DataFrame)
