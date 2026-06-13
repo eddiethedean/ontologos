@@ -43,8 +43,8 @@ FORBIDDEN=(
   "v0.8.0: profile"
 )
 for phrase in "${FORBIDDEN[@]}"; do
-  if rg -q --fixed-strings "$phrase" docs FAQ.md README.md crates/ontologos-cli/src/main.rs 2>/dev/null \
-    --glob '!docs/scripts/check-doc-versions.sh'; then
+  if grep -Rql --fixed-strings --exclude=check-doc-versions.sh \
+    "$phrase" docs FAQ.md README.md crates/ontologos-cli/src/main.rs 2>/dev/null; then
     echo "ERROR: forbidden stale phrase still present: ${phrase}"
     FAIL=1
   fi
@@ -54,7 +54,7 @@ done
 PROFILE_MARKERS=( "dl-preview" "alc" "swrl" )
 for marker in "${PROFILE_MARKERS[@]}"; do
   for file in docs/reference/cli.md docs/guides/python.md FAQ.md; do
-    if ! rg -q --fixed-strings "$marker" "$file" 2>/dev/null; then
+    if ! grep -Fq "$marker" "$file" 2>/dev/null; then
       echo "ERROR: ${file} missing preview profile marker: ${marker}"
       FAIL=1
     fi
@@ -62,7 +62,7 @@ for marker in "${PROFILE_MARKERS[@]}"; do
 done
 
 # CLI after_help must match workspace version
-if ! rg -q "v${WORKSPACE_VERSION}:" crates/ontologos-cli/src/main.rs; then
+if ! grep -q "v${WORKSPACE_VERSION}:" crates/ontologos-cli/src/main.rs; then
   echo "ERROR: CLI after_help does not advertise v${WORKSPACE_VERSION}"
   FAIL=1
 fi
