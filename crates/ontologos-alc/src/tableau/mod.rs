@@ -78,7 +78,7 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool, Error> {
         .ok_or_else(|| Error::Message("missing ⊤".into()))?;
     let mut branch = Branch::new(&dl, &TableauSeed::default());
     branch.assert(0, top);
-    Ok(branch.expand())
+    branch.expand()
 }
 
 fn run_tableau(dl: &DlOntology, seed: &TableauSeed) -> Result<Taxonomy, Error> {
@@ -137,7 +137,7 @@ fn is_satisfiable(dl: &DlOntology, class: EntityId, seed: &TableauSeed) -> Resul
         .ok_or_else(|| Error::Message(format!("missing CE for class {:?}", class.0)))?;
     let mut branch = Branch::new(dl, seed);
     branch.assert(0, ce);
-    Ok(branch.expand())
+    branch.expand()
 }
 
 fn infer_named_subsumptions(
@@ -186,7 +186,27 @@ fn entails(
     let mut branch = Branch::new(dl, seed);
     branch.assert(0, sub_ce);
     branch.assert_negation_of(0, sup_ce);
-    Ok(!branch.expand())
+    Ok(!branch.expand()?)
+}
+
+fn saturate_role_hierarchy(role_hierarchy: &mut HashMap<EntityId, HashSet<EntityId>>) {
+    let mut changed = true;
+    while changed {
+        changed = false;
+        let pairs: Vec<(EntityId, EntityId)> = role_hierarchy
+            .iter()
+            .flat_map(|(&a, ss)| ss.iter().map(move |&b| (a, b)))
+            .collect();
+        for (a, b) in pairs {
+            if let Some(bb) = role_hierarchy.get(&b).cloned() {
+                for c in bb {
+                    if role_hierarchy.entry(a).or_default().insert(c) {
+                        changed = true;
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn atomic_entity(dl: &DlOntology, ce: CeId) -> Option<EntityId> {
@@ -254,6 +274,8 @@ impl<'a> Branch<'a> {
             role_hierarchy.entry(sub).or_default().insert(sup);
         }
 
+        saturate_role_hierarchy(&mut role_hierarchy);
+
         Self {
             dl,
             worlds: vec![World::default()],
@@ -277,30 +299,30 @@ impl<'a> Branch<'a> {
         clash::assert_negation(self, world, ce);
     }
 
-    fn expand(&mut self) -> bool {
+    fn expand(&mut self) -> Result<bool, Error> {
         loop {
             if self.clash {
-                return false;
+                return Ok(false);
             }
 
             let pending = self.next_pending();
             let Some((world, ce)) = pending else {
-                return true;
+                return Ok(true);
             };
 
             if block::is_blocked(self, world) {
                 if block::is_budget_exhausted(self) {
-                    return false;
+                    return Err(Error::ResourceLimit(block::MAX_EXPANSIONS));
                 }
                 block::mark_blocked(self, world);
                 continue;
             }
 
             if self.cache.is_unsat(&self.worlds[world].labels) {
-                return false;
+                return Ok(false);
             }
 
-            expand::process(self, world, ce);
+            expand::process(self, world, ce)?;
         }
     }
 

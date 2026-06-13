@@ -976,7 +976,9 @@ version = "0.9.0"
 dependencies = [
  "assert_cmd",
  "clap",
+ "ontologos-alc",
  "ontologos-core",
+ "ontologos-dl",
  "ontologos-el",
  "ontologos-explain",
  "ontologos-facade",
@@ -984,6 +986,7 @@ dependencies = [
  "ontologos-profile",
  "ontologos-rdfs",
  "ontologos-rl",
+ "ontologos-swrl",
  "predicates",
  "serde",
  "serde_json",
@@ -1100,8 +1103,10 @@ name = "ontologos-py"
 version = "0.9.0"
 dependencies = [
  "ontologos-core",
+ "ontologos-dl",
  "ontologos-el",
  "ontologos-explain",
+ "ontologos-facade",
  "ontologos-parser",
  "ontologos-rdfs",
  "ontologos-rl",
@@ -1160,6 +1165,7 @@ dependencies = [
  "ontologos-core",
  "ontologos-dl",
  "ontologos-parser",
+ "ontologos-profile",
  "thiserror 2.0.18",
 ]
 

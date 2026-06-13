@@ -51,15 +51,25 @@ pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
 #[must_use]
 pub fn merge_taxonomies(mut parts: Vec<Taxonomy>) -> Taxonomy {
     let mut subsumptions = Vec::new();
+    let mut equivalences = Vec::new();
+    let mut unsatisfiable = Vec::new();
     for t in &mut parts {
         subsumptions.append(&mut t.subsumptions);
+        equivalences.append(&mut t.equivalences);
+        unsatisfiable.append(&mut t.unsatisfiable);
     }
     subsumptions.sort_unstable_by_key(|(a, b)| (a.0, b.0));
     subsumptions.dedup();
+    equivalences.sort_by_cached_key(|cluster| {
+        cluster.iter().map(|id| id.0).min().unwrap_or(0)
+    });
+    equivalences.dedup();
+    unsatisfiable.sort_unstable_by_key(|id| id.0);
+    unsatisfiable.dedup();
     Taxonomy {
         subsumptions,
-        equivalences: Vec::new(),
-        unsatisfiable: parts.into_iter().flat_map(|t| t.unsatisfiable).collect(),
+        equivalences,
+        unsatisfiable,
     }
 }
 

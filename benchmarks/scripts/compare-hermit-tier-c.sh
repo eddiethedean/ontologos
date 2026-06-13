@@ -5,11 +5,38 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DATA="${ROOT}/benchmarks/data"
+GOLDEN="${DATA}/dl-family-golden.json"
 
 echo "OntoLogos Tier C smoke (Pizza EL golden already gated separately)"
 
 if [[ -f "${DATA}/pizza-el-golden.json" ]]; then
   "${ROOT}/benchmarks/scripts/compare-pizza-el-golden.sh"
+fi
+
+# DL smoke: classify family.owl and compare subsumption count to golden baseline.
+if [[ -f "${DATA}/family.owl" ]]; then
+  echo "DL smoke: classifying family.owl"
+  OUT="$(mktemp)"
+  cargo run -q -p ontologos-cli --release -- classify "${DATA}/family.owl" --profile dl --format json >"${OUT}" 2>/dev/null || \
+    cargo run -q -p ontologos-cli -- classify "${DATA}/family.owl" --profile dl --format json >"${OUT}"
+  SUBS="$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('subsumption_count', len(d.get('subsumptions', []))))" "${OUT}")"
+  echo "family.owl DL subsumptions: ${SUBS}"
+  if [[ -f "${GOLDEN}" ]]; then
+    EXPECT="$(python3 -c "import json; g=json.load(open('${GOLDEN}')); print(g.get('subsumption_count', -1))")"
+    if [[ "${EXPECT}" -gt 0 ]]; then
+      if [[ "${SUBS}" != "${EXPECT}" ]]; then
+        echo "DL golden mismatch: expected ${EXPECT}, got ${SUBS}" >&2
+        rm -f "${OUT}"
+        exit 1
+      fi
+      echo "DL golden match (${SUBS} subsumptions)"
+    else
+      echo "note: DL golden baseline not pinned (subsumption_count=${EXPECT}); logged ${SUBS}"
+    fi
+  else
+    echo "note: no ${GOLDEN}; skipping DL subsumption count check"
+  fi
+  rm -f "${OUT}"
 fi
 
 if [[ -f "${DATA}/hermit/reasoner/res/pizza.xml" ]]; then

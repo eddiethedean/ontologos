@@ -46,6 +46,9 @@ pub enum Error {
     /// Preview-only limitation.
     #[error("DL preview: {0}")]
     PreviewLimit(String),
+    /// Profile detection failed.
+    #[error("profile detection failed: {0}")]
+    Profile(String),
     /// General message.
     #[error("{0}")]
     Message(String),

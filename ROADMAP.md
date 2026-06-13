@@ -130,6 +130,7 @@ These run alongside version milestones and are not tied to a single release.
 | HermiT replacement matrix | **Complete** | [hermit-replacement.md](docs/internal/research/hermit-replacement.md) |
 | Pizza EL golden regression (`compare-pizza-el-golden.sh`) | **Complete** (v0.6.1) | CI gate on `main` |
 | Family RL triple closure vs reasonable (`compare-reasonable.sh`) | **Complete** (v0.7) | CI gate on `main` |
+| RL semantic gap tracker (6 ignored regression tests) | **In progress** | [upstream-reasonable-gaps.md](docs/internal/upstream-reasonable-gaps.md) |
 | Engine conformance suites (ELK CLI, Konclude) | Planned (v1.0+) | Optional external baselines |
 | Criterion regression tracking in CI | Planned (v1.1) | Fail on >5% regression |
 
@@ -825,7 +826,7 @@ Full DL requires individual assertions. EL/RL pipelines also benefit from typed 
 
 ## v1.7 — ALC expressivity (pre-DL TBox)
 
-**Status: Planned** · **Effort:** Large · **Depends on:** 1.6
+**Status: In progress on `main`** · **Effort:** Large · **Depends on:** 1.6
 
 **Crate:** `ontologos-alc`
 
@@ -874,7 +875,7 @@ OWL QL supports query answering via rewriting over EL/RL class hierarchies. Inte
 
 ## v1.9 — DL engine foundations
 
-**Status: Planned** · **Effort:** Very large · **Depends on:** 1.7, 1.8 · **Blocks:** 1.0
+**Status: In progress on `main`** · **Effort:** Very large · **Depends on:** 1.7, 1.8 · **Blocks:** 1.0
 
 **Crate:** `ontologos-dl` (workspace preview until **1.0** promotes to stable)
 

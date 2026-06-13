@@ -19,9 +19,10 @@ pub(crate) fn parse_profile(profile: Option<&str>) -> PyResult<ontologos_core::P
         "el" => Ok(Profile::El),
         "alc" => Ok(Profile::Alc),
         "dl" => Ok(Profile::Dl),
+        "dl-preview" | "dl_preview" => Ok(Profile::Dl),
         "swrl" => Ok(Profile::Swrl),
         other => Err(py_err(format!(
-            "unsupported profile {other:?}; use auto, rdfs, rl, el, alc, dl, or swrl"
+            "unsupported profile {other:?}; use auto, rdfs, rl, el, alc, dl, dl-preview, or swrl"
         ))),
     }
 }

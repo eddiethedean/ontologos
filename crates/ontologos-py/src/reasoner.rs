@@ -1,7 +1,7 @@
 //! Python `Reasoner` bindings.
 
 use ontologos_core::{Axiom, ParseMetaSummary, Reasoner, ReasonerConfig};
-use ontologos_el::{classify_with_profile, ClassifyOutcome};
+use ontologos_el::ClassifyOutcome;
 use ontologos_explain::explain_with_profile;
 use ontologos_parser::load_ontology;
 use pyo3::prelude::*;
@@ -18,6 +18,7 @@ use crate::ontology::PyOntology;
 pub(crate) struct PyReasoner {
     pub(crate) reasoner: Reasoner,
     pub(crate) last_taxonomy: Option<ontologos_core::Taxonomy>,
+    pub(crate) dl_preview: bool,
 }
 
 fn build_reasoner(
@@ -59,10 +60,15 @@ impl PyReasoner {
             ontology.expect("ontology checked above").inner.clone()
         };
 
+        let dl_preview = matches!(
+            profile.map(str::to_ascii_lowercase).as_deref(),
+            Some("dl-preview") | Some("dl_preview")
+        );
         let reasoner = build_reasoner(core_ontology, profile, incremental)?;
         Ok(Self {
             reasoner,
             last_taxonomy: None,
+            dl_preview,
         })
     }
 
@@ -88,7 +94,17 @@ impl PyReasoner {
     }
 
     fn classify(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        let outcome = classify_with_profile(&mut self.reasoner).map_err(py_err)?;
+        let outcome = match self.reasoner.profile() {
+            ontologos_core::Profile::Dl if self.dl_preview => {
+                ClassifyOutcome::Taxonomy(
+                    ontologos_dl::DlClassifier::new()
+                        .preview(true)
+                        .classify(self.reasoner.ontology())
+                        .map_err(py_err)?,
+                )
+            }
+            _ => ontologos_facade::classify(&mut self.reasoner).map_err(map_facade_py_err)?,
+        };
         match outcome {
             ClassifyOutcome::Taxonomy(taxonomy) => {
                 let dict = taxonomy_dict(py, self.reasoner.ontology(), &taxonomy)?;
@@ -293,4 +309,13 @@ fn apply_snapshot_axiom(
     Err(py_err(
         "unsupported axiom JSON; use format v2 axiom objects (e.g. {\"SubClassOf\": {...}})",
     ))
+}
+
+fn map_facade_py_err(error: ontologos_facade::Error) -> PyErr {
+    match error {
+        ontologos_facade::Error::El(e) => py_err(e.to_string()),
+        ontologos_facade::Error::Alc(e) => py_err(e.to_string()),
+        ontologos_facade::Error::Dl(e) => py_err(e.to_string()),
+        ontologos_facade::Error::Swrl(e) => py_err(e.to_string()),
+    }
 }

@@ -14,7 +14,7 @@ Load `.owl` / `.ttl` files or build ontologies in memory, run the same profile e
 ## Features
 
 - **File or in-memory** — `Reasoner(path=...)` or `Ontology` / `OntologyBuilder`
-- **Profiles** — `"rdfs"`, `"rl"`, `"el"`, or `"auto"` (detects EL vs RL)
+- **Profiles** — `"rdfs"`, `"rl"`, `"el"`, `"alc"`, `"dl"`, `"dl-preview"`, `"swrl"`, or `"auto"` (detects EL vs RL vs DL)
 - **Classify** — RDFS/RL materialization reports or EL taxonomy dicts
 - **Explain** — proof graph dicts with IRI-resolved conclusions (EL full traces)
 - **Incremental** — multi-pass `add_subclass_of` / `remove_subclass_of` with `incremental=True`

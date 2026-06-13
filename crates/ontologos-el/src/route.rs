@@ -24,10 +24,11 @@ pub fn classify_with_profile(reasoner: &mut Reasoner) -> Result<ClassifyOutcome,
         )),
         Profile::Rdfs => Ok(ClassifyOutcome::Rdfs(materialize_reasoner(reasoner)?)),
         Profile::Rl => Ok(ClassifyOutcome::Rl(saturate_rl(reasoner)?)),
-        Profile::Alc | Profile::Dl => Ok(ClassifyOutcome::Taxonomy(
+        Profile::Alc => Ok(ClassifyOutcome::Taxonomy(
             ontologos_alc::classify(reasoner.ontology())
                 .map_err(|e| Error::Profile(e.to_string()))?,
         )),
+        Profile::Dl => Err(Error::UnsupportedProfile(OwlProfile::Dl)),
         Profile::Swrl => Err(Error::UnsupportedProfile(ontologos_profile::OwlProfile::Dl)),
         Profile::Auto => classify_auto(reasoner),
     }
@@ -70,10 +71,7 @@ fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
             }
         }
         OwlProfile::Rl => Ok(ClassifyOutcome::Rl(saturate_rl_unchecked(reasoner)?)),
-        OwlProfile::Dl => Ok(ClassifyOutcome::Taxonomy(
-            ontologos_alc::classify(reasoner.ontology())
-                .map_err(|e| Error::Profile(e.to_string()))?,
-        )),
+        OwlProfile::Dl => Err(Error::UnsupportedProfile(OwlProfile::Dl)),
     }
 }
 

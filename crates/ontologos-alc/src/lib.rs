@@ -41,6 +41,9 @@ pub enum Error {
     /// General message.
     #[error("{0}")]
     Message(String),
+    /// Tableau expansion budget exhausted (incomplete reasoning).
+    #[error("tableau expansion budget exhausted ({0} expansions)")]
+    ResourceLimit(u32),
 }
 
 /// Classify an ontology under ALC tableau semantics.
@@ -56,7 +59,7 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
             }
         }
     }
-    tableau::classify(ontology).map_err(|e| Error::Message(e.to_string()))
+    tableau::classify(ontology)
 }
 
 /// Classify with saturation-derived seed facts.
@@ -72,12 +75,12 @@ pub fn classify_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Result<Tax
             }
         }
     }
-    tableau::classify_with_seed(ontology, seed).map_err(|e| Error::Message(e.to_string()))
+    tableau::classify_with_seed(ontology, seed)
 }
 
 /// Tableau consistency check.
 pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
-    tableau::is_consistent(ontology).map_err(|e| Error::Message(e.to_string()))
+    tableau::is_consistent(ontology)
 }
 
 /// Classify via [`Reasoner`] when profile is ALC-compatible.

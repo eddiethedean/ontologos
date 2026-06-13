@@ -3,7 +3,7 @@
 use ontologos_alc::{DlOntology, TableauSeed};
 use ontologos_core::{ClassExpr, Ontology, Taxonomy};
 use ontologos_el::ElClassifier;
-use ontologos_profile::{detect_profile, el_classification_forbidden_in, merge_taxonomies};
+use ontologos_profile::{detect_profile, el_classification_forbidden_in, merge_taxonomies, scanner::scan_constructs};
 
 use crate::ria::RoleHierarchy;
 use crate::saturation::{saturate, SaturatedFacts};
@@ -31,9 +31,17 @@ impl DlClassifier {
 
     /// Classify the ontology (EL saturation + tableau merge for hybrid ontologies).
     pub fn classify(&self, ontology: &Ontology) -> Result<Taxonomy, Error> {
-        let _profile = detect_profile(ontology)
-            .map_err(|e| Error::PreviewLimit(e.to_string()))?
-            .detected;
+        detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+
+        if self.preview {
+            let forbidden = preview_forbidden_constructs(ontology);
+            if !forbidden.is_empty() {
+                return Err(Error::PreviewLimit(format!(
+                    "DL preview does not support: {:?}",
+                    forbidden.iter().cloned().collect::<Vec<_>>()
+                )));
+            }
+        }
 
         let tab_tax = tableau_classify(ontology)?;
         match try_el_classify(ontology)? {
@@ -43,11 +51,15 @@ impl DlClassifier {
     }
 }
 
+fn preview_forbidden_constructs(
+    ontology: &Ontology,
+) -> std::collections::BTreeSet<ontologos_profile::OwlConstruct> {
+    el_classification_forbidden_in(&scan_constructs(ontology))
+}
+
 fn try_el_classify(ontology: &Ontology) -> Result<Option<Taxonomy>, Error> {
-    if let Some(meta) = ontology.parse_meta() {
-        if !el_classification_forbidden_in(&meta.profile_constructs).is_empty() {
-            return Ok(None);
-        }
+    if !el_classification_forbidden_in(&scan_constructs(ontology)).is_empty() {
+        return Ok(None);
     }
     Ok(Some(
         ElClassifier::new().classify(ontology).map_err(Error::El)?,

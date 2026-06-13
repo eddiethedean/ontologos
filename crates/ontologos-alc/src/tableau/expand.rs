@@ -7,12 +7,12 @@ use super::clash::{assert_label, assert_negation};
 use super::Branch;
 
 /// Process one queued class expression in `world`.
-pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) {
+pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), crate::Error> {
     if branch.clash || block::is_blocked(branch, world) {
-        return;
+        return Ok(());
     }
     let Some(expr) = branch.dl.core().dl().ce(ce).cloned() else {
-        return;
+        return Ok(());
     };
     branch.expansions += 1;
     match expr {
@@ -23,12 +23,12 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) {
             for op in ops {
                 assert_label(branch, world, op);
                 if branch.clash {
-                    return;
+                    return Ok(());
                 }
             }
         }
         ClassExpr::Or(ops) => {
-            if !expand_disjunction(branch, world, ops) {
+            if !expand_disjunction(branch, world, ops)? {
                 branch.clash = true;
             }
         }
@@ -77,6 +77,7 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) {
             }
         }
     }
+    Ok(())
 }
 
 fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr, filler: CeId) {
@@ -91,7 +92,7 @@ fn expand_universal(branch: &mut Branch<'_>, world: usize, property: &RoleExpr, 
     let targets: Vec<usize> = branch
         .edges
         .iter()
-        .filter(|(from, role, _)| *from == world && roles_related(branch, role, property))
+        .filter(|(from, role, _)| *from == world && role_subsumes(branch, property, role))
         .map(|(_, _, to)| *to)
         .collect();
     for target in targets {
@@ -124,7 +125,7 @@ fn apply_universal_on_edge(branch: &mut Branch<'_>, from: usize, to: usize) {
     }
     for role in roles {
         for (property, filler) in &universal {
-            if roles_related(branch, &role, property) {
+            if role_subsumes(branch, property, &role) {
                 assert_label(branch, to, *filler);
                 if branch.clash {
                     return;
@@ -148,7 +149,9 @@ fn apply_existential_clauses(
     filler: CeId,
 ) {
     for (r, f, sup) in branch.existentials.clone() {
-        if filler == f && roles_related(branch, &r, property) {
+        if existential_clause_filler_matches(branch, f, filler)
+            && role_subsumes(branch, &r, property)
+        {
             assert_label(branch, world, sup);
             if branch.clash {
                 return;
@@ -157,33 +160,56 @@ fn apply_existential_clauses(
     }
 }
 
-fn expand_disjunction(branch: &mut Branch<'_>, world: usize, ops: Vec<CeId>) -> bool {
+fn existential_clause_filler_matches(
+    branch: &Branch<'_>,
+    clause_filler: CeId,
+    expanded_filler: CeId,
+) -> bool {
+    if clause_filler == expanded_filler {
+        return true;
+    }
+    matches!(
+        branch.dl.core().dl().ce(clause_filler),
+        Some(ClassExpr::Top)
+    )
+}
+
+fn expand_disjunction(branch: &mut Branch<'_>, world: usize, ops: Vec<CeId>) -> Result<bool, crate::Error> {
     for alt in ops {
         let mut child = branch.clone();
         assert_label(&mut child, world, alt);
-        if child.expand() {
-            *branch = child;
-            return true;
-        }
-        if child.cache.is_unsat(&child.worlds[world].labels) {
-            branch.cache.record_unsat(&child.worlds[world].labels);
+        match child.expand() {
+            Ok(true) => {
+                *branch = child;
+                return Ok(true);
+            }
+            Ok(false) => {
+                if child.cache.is_unsat(&child.worlds[world].labels) {
+                    branch.cache.record_unsat(&child.worlds[world].labels);
+                }
+            }
+            Err(crate::Error::ResourceLimit(limit)) => {
+                return Err(crate::Error::ResourceLimit(limit));
+            }
+            Err(e) => return Err(e),
         }
     }
-    false
+    Ok(false)
 }
 
-pub(crate) fn roles_related(branch: &Branch<'_>, a: &RoleExpr, b: &RoleExpr) -> bool {
-    match (a, b) {
-        (RoleExpr::Atomic(sa), RoleExpr::Atomic(sb)) => {
-            if sa == sb {
+/// Whether `sub_role` ⊑ `super_role` in the saturated role hierarchy.
+pub(crate) fn role_subsumes(branch: &Branch<'_>, super_role: &RoleExpr, sub_role: &RoleExpr) -> bool {
+    match (super_role, sub_role) {
+        (RoleExpr::Atomic(sup), RoleExpr::Atomic(sub)) => {
+            if sup == sub {
                 return true;
             }
             branch
                 .role_hierarchy
-                .get(sa)
-                .is_some_and(|supers| supers.contains(sb))
+                .get(sub)
+                .is_some_and(|supers| supers.contains(sup))
         }
         (RoleExpr::Inverse(ia), RoleExpr::Inverse(ib)) => ia == ib,
-        _ => a == b,
+        _ => super_role == sub_role,
     }
 }

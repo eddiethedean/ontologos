@@ -6,10 +6,10 @@ use ontologos_core::RoleExpr;
 
 use super::Branch;
 
-/// Maximum tableau expansions before treating a branch as blocked (not SAT).
-const MAX_EXPANSIONS: u32 = 4096;
+/// Maximum tableau expansions before returning [`Error::ResourceLimit`].
+pub(crate) const MAX_EXPANSIONS: u32 = 4096;
 
-/// Whether the expansion budget has been exhausted (treat branch as UNSAT).
+/// Whether the expansion budget has been exhausted.
 #[must_use]
 pub fn is_budget_exhausted(branch: &Branch<'_>) -> bool {
     branch.expansions >= MAX_EXPANSIONS

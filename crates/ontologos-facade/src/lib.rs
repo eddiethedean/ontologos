@@ -4,6 +4,7 @@
 
 use ontologos_core::{Profile, Reasoner, Taxonomy};
 use ontologos_el::{classify_with_profile as el_classify, ClassifyOutcome};
+use ontologos_profile::{detect_profile, OwlProfile};
 use thiserror::Error;
 
 /// Result type for facade operations.
@@ -38,8 +39,20 @@ pub fn classify(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
         Profile::Swrl => Ok(ClassifyOutcome::Taxonomy(
             ontologos_swrl::classify_with_swrl(reasoner.ontology())?.0,
         )),
+        Profile::Auto => classify_auto(reasoner),
         _ => el_classify(reasoner).map_err(Error::El),
     }
+}
+
+fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
+    let report = detect_profile(reasoner.ontology())
+        .map_err(|e| Error::El(ontologos_el::Error::Profile(e.to_string())))?;
+    if report.detected == Some(OwlProfile::Dl) {
+        return Ok(ClassifyOutcome::Taxonomy(ontologos_dl::classify(
+            reasoner.ontology(),
+        )?));
+    }
+    el_classify(reasoner).map_err(Error::El)
 }
 
 /// Check ontology consistency for the configured profile.

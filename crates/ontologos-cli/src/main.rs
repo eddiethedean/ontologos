@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use ontologos_core::ReasonerConfig;
 use ontologos_core::{EntityId, Ontology, ParseMetaSummary, Profile, Reasoner, Taxonomy};
-use ontologos_el::{classify_with_profile, ClassifyOutcome};
+use ontologos_el::ClassifyOutcome;
 use ontologos_explain::{explain_with_profile, render_text, ProofGraph};
 use ontologos_parser::load_ontology;
 use ontologos_profile::{detect_profile, ProfileReport};
@@ -50,7 +50,7 @@ enum Command {
     Explain { ontology: PathBuf },
 }
 
-#[derive(Debug, Clone, Copy, ValueEnum, Default)]
+#[derive(Debug, Clone, Copy, ValueEnum, Default, PartialEq, Eq)]
 enum CliProfile {
     #[default]
     Auto,
@@ -59,6 +59,8 @@ enum CliProfile {
     Rdfs,
     Alc,
     Dl,
+    /// OWL 2 DL preview (subset checks, explicit warning)
+    DlPreview,
     Swrl,
 }
 
@@ -71,6 +73,7 @@ impl From<CliProfile> for Profile {
             CliProfile::Rdfs => Profile::Rdfs,
             CliProfile::Alc => Profile::Alc,
             CliProfile::Dl => Profile::Dl,
+            CliProfile::DlPreview => Profile::Dl,
             CliProfile::Swrl => Profile::Swrl,
         }
     }
@@ -93,9 +96,24 @@ enum CliError {
     #[error(transparent)]
     El(#[from] ontologos_el::Error),
     #[error(transparent)]
+    Alc(#[from] ontologos_alc::Error),
+    #[error(transparent)]
+    Dl(#[from] ontologos_dl::Error),
+    #[error(transparent)]
+    Swrl(#[from] ontologos_swrl::Error),
+    #[error(transparent)]
     Rdfs(#[from] ontologos_rdfs::Error),
     #[error(transparent)]
     Explain(#[from] ontologos_explain::Error),
+}
+
+fn map_facade_error(error: ontologos_facade::Error) -> CliError {
+    match error {
+        ontologos_facade::Error::El(inner) => CliError::El(inner),
+        ontologos_facade::Error::Alc(inner) => CliError::Alc(inner),
+        ontologos_facade::Error::Dl(inner) => CliError::Dl(inner),
+        ontologos_facade::Error::Swrl(inner) => CliError::Swrl(inner),
+    }
 }
 
 fn main() {
@@ -133,16 +151,18 @@ fn run() -> Result<(), CliError> {
                     ..ReasonerConfig::default()
                 })
                 .build(ontology)?;
-            let outcome = match cli.profile {
-                CliProfile::Alc | CliProfile::Dl | CliProfile::Swrl => {
-                    ontologos_facade::classify(&mut reasoner).map_err(|e| match e {
-                        ontologos_facade::Error::El(inner) => CliError::El(inner),
-                        _ => CliError::El(ontologos_el::Error::UnsupportedProfile(
-                            ontologos_profile::OwlProfile::Dl,
-                        )),
-                    })?
-                }
-                _ => classify_with_profile(&mut reasoner)?,
+            let outcome = if cli.profile == CliProfile::DlPreview {
+                eprintln!(
+                    "warning: DL preview mode — incomplete reasoning, not suitable for production"
+                );
+                ClassifyOutcome::Taxonomy(
+                    ontologos_dl::DlClassifier::new()
+                        .preview(true)
+                        .classify(reasoner.ontology())
+                        .map_err(CliError::Dl)?,
+                )
+            } else {
+                ontologos_facade::classify(&mut reasoner).map_err(map_facade_error)?
             };
             emit_classify_outcome(cli.format, &outcome, reasoner.ontology(), &parse_meta)?;
         }

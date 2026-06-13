@@ -4,7 +4,8 @@
 
 mod rules;
 
-use ontologos_core::Ontology;
+use ontologos_core::{Ontology, OwlConstruct};
+use ontologos_profile::scanner::scan_constructs;
 use thiserror::Error;
 
 pub use rules::{apply_swrl_rules, SwrlReport, SwrlRule};
@@ -21,14 +22,25 @@ pub enum Error {
     /// Core error.
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),
-    /// No SWRL rules found.
-    #[error("no SWRL rules in ontology")]
-    NoRules,
+    /// SWRL profile not yet implemented.
+    #[error("SWRL rule execution is not implemented (preview); ontology has no executable SWRL rules")]
+    NotImplemented,
+    /// Preview-only limitation.
+    #[error("SWRL preview: {0}")]
+    PreviewLimit(String),
 }
 
 /// Classify with SWRL rules materialized post-DL.
 pub fn classify_with_swrl(ontology: &Ontology) -> Result<(ontologos_core::Taxonomy, SwrlReport)> {
+    if !scan_constructs(ontology).contains(&OwlConstruct::SwrlRule) {
+        return Err(Error::NotImplemented);
+    }
     let taxonomy = ontologos_dl::classify(ontology)?;
     let report = apply_swrl_rules(ontology)?;
+    if report.rules_found == 0 {
+        return Err(Error::PreviewLimit(
+            "SWRL rules detected in profile scan but not mapped for execution".into(),
+        ));
+    }
     Ok((taxonomy, report))
 }
