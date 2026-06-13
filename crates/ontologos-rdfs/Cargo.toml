@@ -12,7 +12,7 @@ description = "RDFS materialization facade over reasonable for OntoLogos"
 readme = "README.md"
 keywords = ["owl", "ontology", "rdfs", "reasoner", "semantic-web"]
 categories = ["science"]
-publish = false # depends on ontologos-bridge (whelk git dep)
+publish = true
 
 [dependencies]
 ontologos-core = { workspace = true }

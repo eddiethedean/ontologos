@@ -183,7 +183,7 @@ impl<'a> ProofGraphBuilder<'a> {
             self.nodes.push(node);
         }
 
-        validate_acyclic(&self.nodes)?;
+        validate_proof_acyclic(&self.nodes)?;
         Ok(())
     }
 
@@ -240,7 +240,7 @@ impl<'a> ProofGraphBuilder<'a> {
     }
 }
 
-fn validate_acyclic(nodes: &[ProofNode]) -> Result<()> {
+pub(crate) fn validate_proof_acyclic(nodes: &[ProofNode]) -> Result<()> {
     let mut visiting = vec![false; nodes.len()];
     let mut done = vec![false; nodes.len()];
 

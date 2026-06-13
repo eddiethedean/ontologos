@@ -2,5 +2,5 @@
 # Verify with: shasum -a 256 -c benchmarks/checksums.sha256
 0de2cd4df0bc09dfd9403df46ae7aa9d26ec31c32cc9a59c514f459c312a751c  pizza.owl
 6801d19656461f3ae5d030471cd8c196a4a01dea0f755ece6e424837e474ab41  family.owl
-8c18f0bf9376925ebe49e12d1cf78f3ea1781675d3b8e5cb11db698ea7bc5095  pizza-el-golden.json
+d835601e09bfd3dd76f81e8505099d5b3ed0c26d8d25fb5dabc0c00d67ca247c  pizza-el-golden.json
 7aaf9d07f2dbd68213120912bbc9ca597dcdda8b11e630d2468ceb8382122c3b  go-subset.owl

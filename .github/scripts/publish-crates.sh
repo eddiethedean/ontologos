@@ -4,20 +4,18 @@ set -euo pipefail
 # Publish workspace crates in dependency order. crates.io index propagation
 # can lag behind uploads, so each crate is retried before failing the job.
 #
-# v0.6.x publishes core, profile, parser, and query only. bridge, rdfs, rl,
-# el, and explain depend on whelk (git-only until INCATools publishes to
-# crates.io) and are workspace-only (`publish = false` in their manifests).
+# v0.6.x: core → bridge → profile → parser → rdfs → rl → el → query → explain.
 
 CRATES=(
   ontologos-core
+  ontologos-bridge
   ontologos-profile
   ontologos-parser
+  ontologos-rdfs
+  ontologos-rl
+  ontologos-el
   ontologos-query
-  # ontologos-bridge   # whelk git dep — not publishable yet
-  # ontologos-rdfs     # depends on bridge
-  # ontologos-rl       # depends on bridge
-  # ontologos-el       # depends on bridge + whelk
-  # ontologos-explain  # depends on el
+  ontologos-explain
   # ontologos-cli
   # ontologos-py
 )

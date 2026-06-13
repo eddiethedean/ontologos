@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Compare OntoLogos EL taxonomy against a committed golden file.
-# Primary reference: regenerate golden from ELK/whelk-rs when updating baselines.
+# Primary reference: regenerate golden from the in-house EL engine when updating baselines.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"

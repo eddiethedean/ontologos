@@ -12,7 +12,7 @@ description = "OWL RL facade over reasonable for OntoLogos"
 readme = "README.md"
 keywords = ["owl", "ontology", "owl-rl", "reasoner", "semantic-web"]
 categories = ["science"]
-publish = false # depends on ontologos-bridge (whelk git dep)
+publish = true
 
 [package.metadata.docs.rs]
 all-features = true

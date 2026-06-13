@@ -1,6 +1,6 @@
 //! v0.6 explanation exit criteria with dependency-first adapters.
 //!
-//! EL explanations are taxonomy/subsumption checks via whelk; RDFS/RL traces remain
+//! EL explanations use in-house completion traces; RDFS/RL traces remain
 //! empty until reasonable exposes rule-level diagnostics.
 
 use ontologos_core::{EntityKind, Ontology, Profile, Reasoner, ReasonerConfig};
@@ -78,7 +78,7 @@ fn rl_family_saturation_and_graph() {
 }
 
 #[test]
-fn el_chain_subsumption_via_whelk() {
+fn el_chain_subsumption_via_completion() {
     let mut ontology = Ontology::new();
     let a = ontology
         .entity_id("http://ex.org/A", EntityKind::Class)

@@ -44,7 +44,7 @@ Representative ported cases (see manifest for full list):
 
 ## EL golden conformance
 
-Pizza EL taxonomy is checked in CI via [`benchmarks/scripts/compare-elk.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-elk.sh) against committed `benchmarks/data/pizza-el-golden.json`. Regenerate baselines from ELK or whelk-rs when updating the EL engine.
+Pizza EL taxonomy is checked in CI via [`benchmarks/scripts/compare-elk.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-elk.sh) against committed `benchmarks/data/pizza-el-golden.json`. Regenerate baselines from the in-house EL engine when updating completion rules.
 
 ## Known gaps (v0.5)
 

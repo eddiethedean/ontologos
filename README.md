@@ -7,9 +7,9 @@
 ![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)
 
 Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
-**whelk** (EL), **reasonable** (RL/RDFS), and **horned-owl** (parsing) through stable facades.
+**reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
 
-**Status:** v0.6.0 release candidate on `main` — explanations plus dependency-first adapters over whelk + reasonable. **Not** full OWL DL / HermiT replacement.
+**Status:** v0.6.0 on `main` — explanations plus EL completion and RL/RDFS adapters over reasonable. **Not** full OWL DL / HermiT replacement.
 
 | You need… | Use today |
 |-----------|-----------|
@@ -17,7 +17,7 @@ Native Rust ontology reasoning orchestration: load OWL files, detect profiles, a
 | Load `.owl` / `.ttl` files | `ontologos-parser` (horned-owl) |
 | RDFS TBox inferences | `ontologos-rdfs` → reasonable |
 | OWL RL saturation | `ontologos-rl` → reasonable |
-| OWL EL taxonomy | `ontologos-el` → whelk |
+| OWL EL taxonomy | `ontologos-el` (in-house completion) |
 | Engine adapters / conversions | `ontologos-bridge` |
 
 **5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.6.0)
@@ -111,14 +111,14 @@ cargo build -p ontologos-cli --release
 | Crate | Description | Published |
 |-------|-------------|-----------|
 | `ontologos-core` | Data model, builder, JSON v2 | crates.io |
+| `ontologos-bridge` | core ↔ horned-owl/oxrdf adapters | crates.io |
 | `ontologos-parser` | OWL/RDF loading (horned-owl) | crates.io |
 | `ontologos-profile` | Profile detection | crates.io |
+| `ontologos-rdfs` | RDFS facade → reasonable | crates.io |
+| `ontologos-rl` | OWL RL facade → reasonable | crates.io |
+| `ontologos-el` | OWL EL completion engine | crates.io |
+| `ontologos-explain` | Proof graphs and explanations | crates.io |
 | `ontologos-query` | Taxonomy queries | crates.io |
-| `ontologos-bridge` | core ↔ horned-owl/oxrdf/whelk adapters | Workspace only (whelk git dep) |
-| `ontologos-rdfs` | RDFS facade → reasonable | Workspace only |
-| `ontologos-rl` | OWL RL facade → reasonable | Workspace only |
-| `ontologos-el` | OWL EL facade → whelk | Workspace only |
-| `ontologos-explain` | Proof graphs and explanations | Workspace only |
 | `ontologos-cli` | CLI binary | Source-build only |
 | `ontologos-py` | Python bindings | PyPI (alpha) |
 

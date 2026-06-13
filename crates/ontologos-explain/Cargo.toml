@@ -9,7 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Explanation and proof graph generation for OntoLogos"
-publish = false # depends on ontologos-el (whelk git dep chain)
+publish = true
 
 [dependencies]
 ontologos-core = { workspace = true }

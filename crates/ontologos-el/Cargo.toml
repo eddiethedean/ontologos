@@ -8,12 +8,11 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "OWL EL classification facade over whelk for OntoLogos"
-publish = false # depends on ontologos-bridge (whelk git dep)
+description = "OWL EL classification engine for OntoLogos"
+publish = true
 
 [dependencies]
 ontologos-core = { workspace = true }
-ontologos-bridge = { workspace = true }
 ontologos-profile = { workspace = true }
 ontologos-rdfs = { workspace = true }
 ontologos-rl = { workspace = true }

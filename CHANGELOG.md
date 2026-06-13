@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **EL engine:** restore in-house ELK-style completion in `ontologos-el`; remove git `whelk` dependency
+- **`ontologos-bridge`:** horned-owl/oxrdf/reasonable adapters only (no whelk)
+- Pizza EL golden baseline regenerated from in-house EL (`84` direct subsumptions)
+
 ## [0.6.0] - 2026-06-12
 
 ### Added

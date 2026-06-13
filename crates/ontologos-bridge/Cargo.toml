@@ -8,16 +8,15 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "Model adapters between ontologos-core, horned-owl, whelk, and reasonable"
+description = "Model adapters between ontologos-core, horned-owl, and reasonable"
 keywords = ["owl", "ontology", "adapter", "reasoner"]
 categories = ["science"]
-publish = false # whelk is a git dependency until it lands on crates.io
+publish = true
 
 [dependencies]
 ontologos-core = { workspace = true }
 horned-owl = { workspace = true }
 reasonable = { workspace = true }
-whelk = { workspace = true }
 oxrdf = { workspace = true }
 petgraph = { workspace = true }
 thiserror = { workspace = true }
