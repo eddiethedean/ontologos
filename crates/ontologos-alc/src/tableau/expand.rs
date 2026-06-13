@@ -3,7 +3,7 @@
 use ontologos_core::{CeId, ClassExpr, RoleExpr};
 
 use super::block;
-use super::clash::{assert_label, assert_negation};
+use super::clash::{self, assert_label, assert_negation};
 use super::Branch;
 
 /// Process one queued class expression in `world`.
@@ -63,12 +63,12 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         }
         ClassExpr::HasSelf(_) => {}
         ClassExpr::MinCardinality { n: 0, .. } => {}
-        ClassExpr::MinCardinality { n, filler, .. } => {
-            if let Some(f) = filler {
-                for _ in 0..n {
-                    assert_label(branch, world, f);
-                }
-            }
+        ClassExpr::MinCardinality {
+            n,
+            property,
+            filler,
+        } => {
+            expand_min_cardinality(branch, world, n, property, filler);
         }
         ClassExpr::MaxCardinality { n: 0, .. } => branch.clash = true,
         ClassExpr::MaxCardinality {
@@ -76,15 +76,27 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
             property,
             filler,
         } => {
+            let filler = effective_cardinality_filler(branch, filler);
             let count = count_role_successors(branch, world, &property, filler);
             if count > n as usize {
                 branch.clash = true;
             }
         }
-        ClassExpr::ExactCardinality { n, filler, .. } => {
-            if let Some(f) = filler {
-                for _ in 0..n {
-                    assert_label(branch, world, f);
+        ClassExpr::ExactCardinality {
+            n,
+            property,
+            filler,
+        } => {
+            let filler = effective_cardinality_filler(branch, filler);
+            let count = count_role_successors(branch, world, &property, filler);
+            if count > n as usize {
+                branch.clash = true;
+            } else if count < n as usize {
+                let filler = filler.or_else(|| top_ce(branch));
+                if let Some(f) = filler {
+                    for _ in 0..(n as usize - count) {
+                        expand_existential(branch, world, property.clone(), f);
+                    }
                 }
             }
         }
@@ -96,6 +108,63 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         | ClassExpr::DataExactCardinality { .. } => {}
     }
     Ok(())
+}
+
+fn expand_min_cardinality(
+    branch: &mut Branch<'_>,
+    world: usize,
+    n: u32,
+    property: RoleExpr,
+    filler: Option<CeId>,
+) {
+    let filler = effective_cardinality_filler(branch, filler);
+    let count = count_role_successors(branch, world, &property, filler);
+    if count >= n as usize {
+        return;
+    }
+    let filler = filler.or_else(|| top_ce(branch));
+    let Some(f) = filler else {
+        return;
+    };
+    for _ in 0..(n as usize - count) {
+        expand_existential(branch, world, property.clone(), f);
+        if branch.clash {
+            return;
+        }
+    }
+}
+
+fn top_ce(branch: &Branch<'_>) -> Option<CeId> {
+    branch.dl.core().dl().expressions().find_map(|(id, e)| match e {
+        ClassExpr::Top => Some(id),
+        _ => None,
+    })
+}
+
+pub(crate) fn effective_cardinality_filler(branch: &Branch<'_>, filler: Option<CeId>) -> Option<CeId> {
+    let Some(f) = filler else {
+        return None;
+    };
+    if is_universal_filler(branch, f) {
+        None
+    } else {
+        Some(f)
+    }
+}
+
+fn is_universal_filler(branch: &Branch<'_>, ce: CeId) -> bool {
+    let store = branch.dl.core().dl();
+    match store.ce(ce) {
+        Some(ClassExpr::Top) => true,
+        Some(ClassExpr::Atomic(id)) => branch
+            .dl
+            .core()
+            .entity(*id)
+            .ok()
+            .and_then(|rec| branch.dl.core().resolve_iri(rec.iri).ok())
+            .is_some_and(|iri| iri == "http://www.w3.org/2002/07/owl#Thing"),
+        _ => false,
+    }
 }
 
 fn expand_has_value(
@@ -124,6 +193,7 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
     branch.edges.push((world, property, new_world));
     assert_label(branch, new_world, filler);
     apply_universal_on_edge(branch, world, new_world);
+    clash::check_negated_cardinality(branch);
 }
 
 fn expand_universal(branch: &mut Branch<'_>, world: usize, property: &RoleExpr, filler: CeId) {
@@ -239,12 +309,13 @@ fn expand_disjunction(
     Ok(false)
 }
 
-fn count_role_successors(
+pub(crate) fn count_role_successors(
     branch: &Branch<'_>,
     world: usize,
     property: &RoleExpr,
     filler: Option<CeId>,
 ) -> usize {
+    let filler = effective_cardinality_filler(branch, filler);
     branch
         .edges
         .iter()

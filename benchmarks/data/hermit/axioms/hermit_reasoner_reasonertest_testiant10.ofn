@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+InverseObjectProperties(:s :s-)InverseObjectProperties(:f :f-)InverseObjectProperties(:f1 :f1-)FunctionalObjectProperty(:f)FunctionalObjectProperty(:f1)SubObjectPropertyOf(:s :f)SubObjectPropertyOf(:s :f1)
+)

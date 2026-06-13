@@ -36,6 +36,32 @@ fn domain_axiom_infers_subsumption() -> Result<(), Error> {
 }
 
 #[test]
+fn heinsohn_tbox3_complex1_subsumption() -> Result<(), Error> {
+    use ontologos_parser::load_ontology;
+    use std::path::PathBuf;
+
+    const NS: &str = "file:/c/test.owl#";
+
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testheinsohntbox3.ofn");
+    let ontology = load_ontology(&path).map_err(|e| Error::Message(e.to_string()))?;
+    let taxonomy = classify(&ontology).map_err(|e| Error::Message(e.to_string()))?;
+
+    let complex1a = ontology
+        .lookup_entity(&format!("{NS}complex1a"))
+        .expect("complex1a");
+    let complex1b = ontology
+        .lookup_entity(&format!("{NS}complex1b"))
+        .expect("complex1b");
+
+    assert!(
+        taxonomy.is_subsumed(complex1a, complex1b),
+        "complex1a ⊑ complex1b"
+    );
+    Ok(())
+}
+
+#[test]
 fn role_hierarchy_does_not_break_classify() -> Result<(), Error> {
     let mut ontology = Ontology::builder()
         .class("http://ex/A")?

@@ -7,6 +7,7 @@ use ontologos_profile::{
     detect_profile, el_classification_forbidden_in, merge_taxonomies, scanner::scan_constructs,
 };
 
+use crate::cardinality::derive_cardinality_subsumptions;
 use crate::ria::RoleHierarchy;
 use crate::saturation::{saturate, SaturatedFacts};
 use crate::Error;
@@ -73,7 +74,18 @@ fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
     let roles = RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturate(ontology, dl.clauses(), &roles)?;
     let seed = tableau_seed_from_facts(&dl, &facts, &roles)?;
-    ontologos_alc::classify_with_seed(ontology, &seed).map_err(Error::Alc)
+    let mut taxonomy = ontologos_alc::classify_with_seed(ontology, &seed).map_err(Error::Alc)?;
+    let derived = derive_cardinality_subsumptions(ontology);
+    for (sub, sup) in derived {
+        if !taxonomy
+            .subsumptions
+            .iter()
+            .any(|&(a, b)| a == sub && b == sup)
+        {
+            taxonomy.subsumptions.push((sub, sup));
+        }
+    }
+    Ok(taxonomy)
 }
 
 fn tableau_seed_from_facts(

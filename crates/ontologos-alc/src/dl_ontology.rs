@@ -27,6 +27,11 @@ impl DlOntology {
         &self.core
     }
 
+    /// Mutable core for interning derived class expressions during reasoning.
+    pub(crate) fn core_mut(&mut self) -> &mut Ontology {
+        &mut self.core
+    }
+
     /// Clausified TBox/ABox constraints.
     #[must_use]
     pub fn clauses(&self) -> &ClauseSet {

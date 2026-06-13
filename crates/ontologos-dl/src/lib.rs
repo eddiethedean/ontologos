@@ -2,6 +2,7 @@
 
 #![warn(missing_docs)]
 
+mod cardinality;
 mod classify;
 mod datatype;
 mod ria;

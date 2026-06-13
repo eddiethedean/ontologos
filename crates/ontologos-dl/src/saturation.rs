@@ -1,5 +1,7 @@
 //! Coupled EL-style saturation feeding the tableau.
 
+use std::collections::HashSet;
+
 use ontologos_core::{CeId, ClassExpr, EntityId, Ontology, RoleExpr};
 
 use ontologos_alc::{Clause, ClauseSet, DlOntology};
@@ -27,10 +29,15 @@ pub fn saturate(
     let _dl = DlOntology::from_ontology(ontology)?;
     let mut facts = SaturatedFacts::default();
     let mut worklist: Vec<(CeId, CeId)> = Vec::new();
+    let mut all_pairs: Vec<(CeId, CeId)> = Vec::new();
+    let mut seen_pairs: HashSet<(CeId, CeId)> = HashSet::new();
 
     for clause in clauses.clauses() {
         match clause {
-            Clause::Subsumption { sub, sup } => worklist.push((*sub, *sup)),
+            Clause::Subsumption { sub, sup } => {
+                worklist.push((*sub, *sup));
+                all_pairs.push((*sub, *sup));
+            }
             Clause::Existential {
                 property,
                 filler,
@@ -43,20 +50,74 @@ pub fn saturate(
         }
     }
 
-    while let Some((sub, sup)) = worklist.pop() {
-        if let (Some(a), Some(b)) = (as_atomic(ontology, sub), as_atomic(ontology, sup)) {
-            push_subsumption(&mut facts.subsumptions, a, b);
-        }
-        propagate_intersection(ontology, sub, sup, &mut worklist, roles);
-    }
-
     for (chain, sup) in roles.chains() {
         if let [RoleExpr::Atomic(r)] = chain.as_slice() {
             push_role_subsumption(&mut facts.role_subsumptions, *r, *sup);
         }
     }
 
+    while let Some((sub, sup)) = worklist.pop() {
+        if !seen_pairs.insert((sub, sup)) {
+            continue;
+        }
+        if let (Some(a), Some(b)) = (as_atomic(ontology, sub), as_atomic(ontology, sup)) {
+            push_subsumption(&mut facts.subsumptions, a, b);
+        }
+        propagate_intersection(ontology, sub, sup, &mut worklist, roles);
+        propagate_existential_role(ontology, sub, sup, &mut worklist, &facts.role_subsumptions);
+        propagate_through(ontology, sub, sup, &mut worklist, &all_pairs);
+    }
+
     Ok(facts)
+}
+
+fn propagate_through(
+    _ontology: &Ontology,
+    sub: CeId,
+    sup: CeId,
+    worklist: &mut Vec<(CeId, CeId)>,
+    all_pairs: &[(CeId, CeId)],
+) {
+    for &(mid, top) in all_pairs {
+        if mid == sup && mid != top && sub != top {
+            worklist.push((sub, top));
+        }
+    }
+}
+
+fn propagate_existential_role(
+    ontology: &Ontology,
+    sub: CeId,
+    sup: CeId,
+    worklist: &mut Vec<(CeId, CeId)>,
+    role_subs: &[(EntityId, EntityId)],
+) {
+    let store = ontology.dl();
+    let Some(ClassExpr::Some {
+        property: RoleExpr::Atomic(r),
+        filler,
+    }) = store.ce(sup).cloned()
+    else {
+        return;
+    };
+    for &(r_sub, r_sup) in role_subs {
+        if r != r_sub {
+            continue;
+        }
+        if let Some(exists_sup) = find_some_ce(ontology, RoleExpr::Atomic(r_sup), filler) {
+            worklist.push((sub, exists_sup));
+        }
+    }
+}
+
+fn find_some_ce(ontology: &Ontology, property: RoleExpr, filler: CeId) -> Option<CeId> {
+    ontology.dl().expressions().find_map(|(id, expr)| match expr {
+        ClassExpr::Some {
+            property: p,
+            filler: f,
+        } if *p == property && *f == filler => Some(id),
+        _ => None,
+    })
 }
 
 fn push_subsumption(out: &mut Vec<(EntityId, EntityId)>, sub: EntityId, sup: EntityId) {
@@ -99,6 +160,21 @@ fn propagate_intersection(
         {
             if properties_related(property, p2, roles) {
                 worklist.push((*filler, *f2));
+            }
+        }
+    }
+    if let Some(ClassExpr::Some {
+        property: RoleExpr::Atomic(r),
+        filler,
+    }) = store.ce(sub).cloned()
+    {
+        if let Some(ClassExpr::Some {
+            property: RoleExpr::Atomic(r2),
+            filler: f2,
+        }) = store.ce(sup).cloned()
+        {
+            if filler == f2 && roles.is_subrole(r, r2) {
+                worklist.push((sub, sup));
             }
         }
     }

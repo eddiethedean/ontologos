@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+ClassAssertion(:A :a) SubClassOf(:A ObjectSomeValuesFrom(:R :A)) SubClassOf(:A ObjectSomeValuesFrom(:S ObjectOneOf(:n))) ClassAssertion(:B :b) SubClassOf(:B ObjectSomeValuesFrom(:R :B)) SubClassOf(:B ObjectSomeValuesFrom(:S ObjectOneOf(:n))) DisjointClasses(:A :B) ClassAssertion(ObjectMaxCardinality(5 ObjectInverseOf(:S)) :n)
+)

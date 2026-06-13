@@ -7,7 +7,7 @@ mod expand;
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use ontologos_core::{CeId, ClassExpr, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy};
+use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy};
 
 use crate::clause::Clause;
 use crate::dl_ontology::DlOntology;
@@ -168,7 +168,8 @@ fn entails(
     sup: EntityId,
     seed: &TableauSeed,
 ) -> Result<bool, Error> {
-    let store = dl.core().dl();
+    let mut working = dl.clone();
+    let store = working.core().dl();
     let sub_ce = store
         .expressions()
         .find_map(|(id, e)| match e {
@@ -183,10 +184,44 @@ fn entails(
             _ => None,
         })
         .ok_or_else(|| Error::Message("missing sup CE".into()))?;
-    let mut branch = Branch::new(dl, seed);
+    let sup_def = equivalent_definition_ce(&working, sup).unwrap_or(sup_ce);
+    let neg_target = match working.core().dl().ce(sup_def) {
+        Some(
+            ClassExpr::And(_)
+            | ClassExpr::MinCardinality { .. }
+            | ClassExpr::MaxCardinality { .. }
+            | ClassExpr::ExactCardinality { .. },
+        ) => sup_def,
+        _ => sup_ce,
+    };
+    let neg_sup = crate::normalize::negate_ce(working.core_mut(), neg_target);
+    let mut branch = Branch::new(&working, seed);
     branch.assert(0, sub_ce);
-    branch.assert_negation_of(0, sup_ce);
+    branch.assert(0, neg_sup);
     Ok(!branch.expand()?)
+}
+
+fn equivalent_definition_ce(dl: &DlOntology, class: EntityId) -> Option<CeId> {
+    let store = dl.core().dl();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        if ids.len() < 2 {
+            continue;
+        }
+        for w in ids.windows(2) {
+            let a = w[0];
+            let b = w[1];
+            if matches!(store.ce(a), Some(ClassExpr::Atomic(c)) if *c == class) {
+                return Some(b);
+            }
+            if matches!(store.ce(b), Some(ClassExpr::Atomic(c)) if *c == class) {
+                return Some(a);
+            }
+        }
+    }
+    None
 }
 
 fn saturate_role_hierarchy(role_hierarchy: &mut HashMap<EntityId, HashSet<EntityId>>) {
@@ -310,10 +345,6 @@ impl<'a> Branch<'a> {
 
     fn assert(&mut self, world: usize, ce: CeId) {
         clash::assert_label(self, world, ce);
-    }
-
-    fn assert_negation_of(&mut self, world: usize, ce: CeId) {
-        clash::assert_negation(self, world, ce);
     }
 
     fn expand(&mut self) -> Result<bool, Error> {

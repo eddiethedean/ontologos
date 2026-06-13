@@ -67,6 +67,18 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                     sup: *super_property,
                 });
             }
+            Axiom::EquivalentObjectProperties(ids) if ids.len() >= 2 => {
+                for w in ids.windows(2) {
+                    out.push(Clause::RoleSubsumption {
+                        sub: w[0],
+                        sup: w[1],
+                    });
+                    out.push(Clause::RoleSubsumption {
+                        sub: w[1],
+                        sup: w[0],
+                    });
+                }
+            }
             _ => {}
         }
     }
@@ -348,4 +360,9 @@ fn nnf_negate(ontology: &mut Ontology, id: CeId) -> CeId {
             ontology.dl_mut().intern_ce(ClassExpr::Not(inner))
         }
     }
+}
+
+/// Negate a class expression into NNF (may intern new CEs in `ontology`).
+pub(crate) fn negate_ce(ontology: &mut Ontology, id: CeId) -> CeId {
+    nnf_negate(ontology, id)
 }

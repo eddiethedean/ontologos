@@ -173,6 +173,8 @@ pub enum DataExpr {
         /// Datatype entity.
         datatype: EntityId,
     },
+    /// Data complement.
+    Not(DeId),
 }
 
 /// DL axiom beyond flat core `Axiom` enum.

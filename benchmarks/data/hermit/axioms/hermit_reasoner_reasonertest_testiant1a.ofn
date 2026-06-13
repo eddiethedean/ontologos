@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+SubClassOf(:p1 ObjectComplementOf(ObjectUnionOf(:p2 :p3 :p4 :p5)))SubClassOf(:p2 ObjectComplementOf(ObjectUnionOf(:p3 :p4 :p5)))SubClassOf(:p3 ObjectComplementOf(ObjectUnionOf(:p4 :p5)))SubClassOf(:p4 ObjectComplementOf(:p5))
+)

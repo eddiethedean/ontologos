@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+DisjointClasses(:c :d :e)SubClassOf(:a ObjectUnionOf(:c :d))SubObjectPropertyOf(:r1 :r)SubObjectPropertyOf(:r2 :r)SubObjectPropertyOf(:r3 :r)SubObjectPropertyOf(:t1 :tt)SubObjectPropertyOf(:t2 :tt)SubObjectPropertyOf(:t3 :tt)EquivalentClasses(:complex1a ObjectIntersectionOf(ObjectMinCardinality(1 :r)ObjectSomeValuesFrom(:r :c)ObjectSomeValuesFrom(:r :d)))EquivalentClasses(:complex1b ObjectMinCardinality(2 :r))EquivalentClasses(:complex2a ObjectIntersectionOf(ObjectMaxCardinality(2 :r)ObjectSomeValuesFrom(:r :c)ObjectSomeValuesFrom(:r :d)))EquivalentClasses(:complex2b ObjectIntersectionOf(ObjectMaxCardinality(1 :r :c)ObjectMaxCardinality(1 :r :d)))EquivalentClasses(:complex3a ObjectIntersectionOf(ObjectAllValuesFrom(:r :a)ObjectMinCardinality(3 :r)ObjectMaxCardinality(1 :r :c)))EquivalentClasses(:complex3b ObjectMinCardinality(2 :r :d))EquivalentClasses(:complex4a ObjectIntersectionOf(ObjectSomeValuesFrom(:r1 ObjectIntersectionOf(ObjectMaxCardinality(1 :tt) ObjectSomeValuesFrom(:t1 :c)))ObjectSomeValuesFrom(:r2 ObjectIntersectionOf(ObjectMaxCardinality(1 :tt) ObjectSomeValuesFrom(:t2 :d)))ObjectSomeValuesFrom(:r2 ObjectIntersectionOf(ObjectMaxCardinality(1 :tt) ObjectSomeValuesFrom(:t2 :d)))ObjectSomeValuesFrom(:r3 ObjectIntersectionOf(ObjectMaxCardinality(1 :tt) ObjectSomeValuesFrom(:t3 :e)))))EquivalentClasses(:complex4b ObjectMinCardinality(2 :r))
+)

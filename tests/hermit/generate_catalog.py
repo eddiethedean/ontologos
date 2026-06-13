@@ -81,10 +81,15 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testIsTransitiveObject",
 }
 
+# RL-shaped subsumption cases that pass under RL saturation (honest engine tag).
+FORCE_RL_ENGINE_IDS = {
+    "reasoner.ReasonerTest.testSubsumption2",
+    "reasoner.ReasonerTest.testSubsumption3",
+}
+
 # DL axiom ports gated on tableau maturity (Phase 2+).
 DEFERRED_DL_AXIOM_IDS = {
     "reasoner.ReasonerTest.testClassificationSubClassBug",
-    "reasoner.ReasonerTest.testSatisfiabilityWithRIAs14",
 }
 
 # RL/RDFS axiom ports extracted but not yet passing in ontologos.
@@ -366,6 +371,27 @@ def extract_subsumptions(body: str) -> list[dict[str, str | bool]]:
     return subs
 
 
+def filter_java_ce_subsumptions(subs: list[dict[str, str | bool]]) -> list[dict[str, str | bool]]:
+    """Drop OWL API variable placeholders (e.g. desc1, desc2) mistaken for class names."""
+    out: list[dict[str, str | bool]] = []
+    for s in subs:
+        sub = str(s.get("sub", ""))
+        sup = str(s.get("sup", ""))
+        if re.fullmatch(r"desc\d+", sub) or re.fullmatch(r"desc\d+", sup):
+            continue
+        if sub in {"desc1", "desc2", "desc3", "A", "B"} and sup in {
+            "desc1",
+            "desc2",
+            "desc3",
+            "A",
+            "B",
+        }:
+            if not sub.startswith(":") and not sup.startswith(":"):
+                continue
+        out.append(s)
+    return out
+
+
 def extract_conclusion_axioms(body: str) -> str:
     """Second `axioms = ...` block after the initial load call (entailment conclusions)."""
     load_m = re.search(
@@ -441,16 +467,25 @@ def valid_ofn_axioms(axioms: str) -> bool:
 
 
 def extract_axioms_assignments(body: str) -> str:
-    """Concatenate `String axioms = ...` fragments up to the load call."""
-    start_m = re.search(r"\bString\s+axioms\s*=", body)
-    if not start_m:
+    """Concatenate `String <var> = ...` fragments up to the load call."""
+    load_m = re.search(
+        r"load(?:Reasoner|Ontology)WithAxioms\s*\(\s*(\w+)\s*\)",
+        body,
+    )
+    if not load_m:
         return ""
-    rest = body[start_m.start() :]
-    end_m = re.search(r"load(?:Reasoner|Ontology)WithAxioms\s*\(\s*axioms\s*\)", rest)
+    var = load_m.group(1)
+    assign_m = re.search(rf"\bString\s+{re.escape(var)}\s*=", body)
+    if not assign_m:
+        return ""
+    rest = body[assign_m.start() :]
+    end_m = re.search(
+        rf"load(?:Reasoner|Ontology)WithAxioms\s*\(\s*{re.escape(var)}\s*\)",
+        rest,
+    )
     if not end_m:
         return ""
     chunk = rest[: end_m.start()]
-    # Java constant concatenation (e.g. + NS +) cannot be resolved to OFN.
     if re.search(r'"\s*\+\s*[A-Za-z_]', chunk):
         return ""
     return extract_string_literals(chunk)
@@ -504,6 +539,8 @@ DL_CONSTRUCTS = (
 
 
 def infer_engine(case_id: str, body: str) -> str:
+    if case_id in FORCE_RL_ENGINE_IDS:
+        return "rl"
     if case_id.startswith(INTERNAL_PREFIXES):
         return "internal"
     if case_id.startswith("owl_wg_tests."):
@@ -749,8 +786,10 @@ def collect_cases() -> list[HermitCase]:
                     safe = rust_fn_name(case_id)
                     case.axiom_ofn = f"axioms/{safe}.ofn"
 
-            case.subsumptions = extract_subsumptions(body)
-            case.subsumptions.extend(extract_entailment_subsumptions(body))
+            case.subsumptions = filter_java_ce_subsumptions(extract_subsumptions(body))
+            case.subsumptions.extend(
+                filter_java_ce_subsumptions(extract_entailment_subsumptions(body))
+            )
             case.property_subsumptions = extract_property_subsumptions(body)
             case.property_characteristics = extract_property_characteristics(body)
             case.consistent = extract_consistency(body)

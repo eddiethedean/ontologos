@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology};
 
-use super::{LiteralIndex, LiteralValue};
+use super::{canonical_plain_literal, LiteralIndex, LiteralValue, literals_equal};
 
 #[derive(Debug, Clone)]
 enum DataRestriction {
@@ -62,6 +62,17 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
                 }
             }
         }
+        if let DlAxiom::DataPropertyAssertion {
+            subject,
+            property,
+            value,
+        } = axiom
+        {
+            individual_restrictions
+                .entry(*subject)
+                .or_default()
+                .push((*property, DataRestriction::HasValue(*value)));
+        }
     }
 
     for (_, axiom) in ontology.axioms().iter() {
@@ -83,13 +94,192 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
         }
     }
 
-    for (_, restrictions) in &individual_restrictions {
+    let disjoint_pairs = disjoint_data_property_pairs(store);
+
+    for (individual, restrictions) in &individual_restrictions {
         if !restrictions_satisfiable(ontology, &idx, restrictions) {
+            return false;
+        }
+        if !negative_assertions_consistent(ontology, &idx, store, *individual, restrictions) {
+            return false;
+        }
+        if !disjoint_assertions_consistent(ontology, *individual, restrictions, &disjoint_pairs) {
             return false;
         }
     }
 
     true
+}
+
+fn disjoint_data_property_pairs(store: &ontologos_core::DlStore) -> Vec<(EntityId, EntityId)> {
+    let mut pairs = Vec::new();
+    for axiom in store.axioms() {
+        if let DlAxiom::DisjointDataProperties(props) = axiom {
+            for w in props.windows(2) {
+                pairs.push((w[0], w[1]));
+            }
+            if props.len() > 2 {
+                for i in 0..props.len() {
+                    for j in (i + 1)..props.len() {
+                        pairs.push((props[i], props[j]));
+                    }
+                }
+            }
+        }
+    }
+    pairs
+}
+
+fn negative_assertions_consistent(
+    ontology: &Ontology,
+    idx: &LiteralIndex,
+    store: &ontologos_core::DlStore,
+    individual: EntityId,
+    restrictions: &[(EntityId, DataRestriction)],
+) -> bool {
+    for axiom in store.axioms() {
+        let DlAxiom::NegativeDataPropertyAssertion {
+            subject,
+            property,
+            value,
+        } = axiom
+        else {
+            continue;
+        };
+        if *subject != individual {
+            continue;
+        }
+        let Some(lit) = literal_from_de(ontology, value) else {
+            continue;
+        };
+        let prop_restrictions: Vec<_> = restrictions
+            .iter()
+            .filter(|(p, _)| p == property)
+            .collect();
+        if prop_restrictions.is_empty() {
+            continue;
+        }
+        if property_requires_literal(ontology, idx, &prop_restrictions, &lit) {
+            return false;
+        }
+    }
+    true
+}
+
+fn property_requires_literal(
+    ontology: &Ontology,
+    idx: &LiteralIndex,
+    group: &[&(EntityId, DataRestriction)],
+    lit: &LiteralValue,
+) -> bool {
+    let mut all_ranges: Vec<DeId> = Vec::new();
+    let mut some_ranges: Vec<DeId> = Vec::new();
+    let mut min_card: u32 = 0;
+    let mut fixed_values: Vec<DeId> = Vec::new();
+
+    for (_, r) in group {
+        match r {
+            DataRestriction::All(range) => all_ranges.push(*range),
+            DataRestriction::Some(range) => some_ranges.push(*range),
+            DataRestriction::HasValue(value) => fixed_values.push(*value),
+            DataRestriction::MinCardinality(n, range) => {
+                min_card = min_card.max(*n);
+                if let Some(dr) = range {
+                    some_ranges.push(*dr);
+                }
+            }
+            DataRestriction::MaxCardinality(_, range) => {
+                if let Some(dr) = range {
+                    all_ranges.push(*dr);
+                }
+            }
+            DataRestriction::ExactCardinality(n, range) => {
+                min_card = min_card.max(*n);
+                if let Some(dr) = range {
+                    all_ranges.push(*dr);
+                    some_ranges.push(*dr);
+                }
+            }
+        }
+    }
+
+    for value in &fixed_values {
+        if let Some(fixed) = literal_from_de(ontology, value) {
+            if literals_equal_local(&fixed, lit) {
+                return true;
+            }
+        }
+    }
+
+    if min_card > 0 {
+        let mut witness_ranges = all_ranges.clone();
+        witness_ranges.extend(some_ranges.clone());
+        if witness_ranges.is_empty() {
+            return false;
+        }
+        if idx.satisfies_with_ontology(lit, ontology, witness_ranges[0])
+            && (witness_ranges.len() == 1
+                || satisfies_all_ranges(ontology, idx, lit, &witness_ranges))
+        {
+            return true;
+        }
+    }
+
+    if !some_ranges.is_empty() {
+        return some_ranges
+            .iter()
+            .any(|&r| idx.satisfies_with_ontology(lit, ontology, r));
+    }
+
+    false
+}
+
+fn disjoint_assertions_consistent(
+    ontology: &Ontology,
+    individual: EntityId,
+    restrictions: &[(EntityId, DataRestriction)],
+    disjoint_pairs: &[(EntityId, EntityId)],
+) -> bool {
+    let store = ontology.dl();
+    let mut used_props: HashSet<EntityId> = HashSet::new();
+
+    for axiom in store.axioms() {
+        if let DlAxiom::DataPropertyAssertion {
+            subject,
+            property,
+            ..
+        } = axiom
+        {
+            if *subject == individual {
+                used_props.insert(*property);
+            }
+        }
+    }
+
+    for (prop, _) in restrictions {
+        if restrictions
+            .iter()
+            .any(|(p, r)| p == prop && requires_nonempty_property(r))
+        {
+            used_props.insert(*prop);
+        }
+    }
+
+    for &(a, b) in disjoint_pairs {
+        if used_props.contains(&a) && used_props.contains(&b) {
+            return false;
+        }
+    }
+    true
+}
+
+fn requires_nonempty_property(r: &DataRestriction) -> bool {
+    match r {
+        DataRestriction::Some(_) | DataRestriction::HasValue(_) => true,
+        DataRestriction::MinCardinality(n, _) => *n > 0,
+        DataRestriction::ExactCardinality(n, _) => *n > 0,
+        _ => false,
+    }
 }
 
 fn restriction_from_ce(
@@ -216,13 +406,22 @@ fn property_restrictions_satisfiable(
     }
 
     if let Some(max) = max_card {
+        let mut distinct_fixed = HashSet::new();
+        for value in &fixed_values {
+            if let Some(lit) = literal_from_de(ontology, value) {
+                distinct_fixed.insert(distinct_literal_key(&lit));
+            }
+        }
+        if (distinct_fixed.len() as u32) > max {
+            return false;
+        }
         let mut witness_ranges = combined_all.clone();
         witness_ranges.extend(some_ranges.clone());
-        if witness_ranges.is_empty() {
-            return max > 0;
-        }
-        if distinct_values_satisfying_ranges(ontology, idx, &witness_ranges) < max {
-            return false;
+        if !witness_ranges.is_empty() {
+            let count = distinct_values_satisfying_ranges(ontology, idx, &witness_ranges);
+            if count > max {
+                return false;
+            }
         }
     }
 
@@ -251,6 +450,10 @@ fn literal_from_de(ontology: &Ontology, value: &DeId) -> Option<LiteralValue> {
     })
 }
 
+fn literals_equal_local(a: &LiteralValue, b: &LiteralValue) -> bool {
+    literals_equal(a, b)
+}
+
 fn distinct_values_satisfying_ranges(
     ontology: &Ontology,
     idx: &LiteralIndex,
@@ -262,9 +465,9 @@ fn distinct_values_satisfying_ranges(
     if ranges.len() == 1 {
         return max_distinct_values(ontology, idx, ranges[0]);
     }
-    let mut candidates = sample_literals(ontology, ranges[0]);
+    let mut candidates = sample_literals(ontology, idx, ranges[0]);
     for &range in &ranges[1..] {
-        candidates.extend(sample_literals(ontology, range));
+        candidates.extend(sample_literals(ontology, idx, range));
     }
     let mut seen = HashSet::new();
     let mut count = 0_u32;
@@ -281,7 +484,11 @@ fn distinct_values_satisfying_ranges(
 }
 
 fn distinct_literal_key(lit: &LiteralValue) -> String {
-    lit.lexical.clone()
+    let n = parse_numeric(&lit.lexical);
+    if n.is_finite() && !n.is_nan() {
+        return format!("n:{n}");
+    }
+    canonical_plain_literal(&lit.lexical)
 }
 
 fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> u32 {
@@ -291,13 +498,32 @@ fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> 
     };
     match expr {
         DataExpr::Literal { .. } => 1,
+        DataExpr::Not(inner) => {
+            let mut candidates = literal_universe(ontology);
+            let mut seen = HashSet::new();
+            let mut count = 0_u32;
+            for lit in candidates.drain(..) {
+                let key = distinct_literal_key(&lit);
+                if !seen.insert(key) {
+                    continue;
+                }
+                if !idx.satisfies_with_ontology(&lit, ontology, *inner) {
+                    count += 1;
+                }
+            }
+            if count == 0 {
+                u32::MAX
+            } else {
+                count.min(100)
+            }
+        }
         DataExpr::And(ops) => {
             let Some(first) = ops.first().copied() else {
                 return 0;
             };
-            let mut candidates = sample_literals(ontology, first);
+            let mut candidates = sample_literals(ontology, idx, first);
             for &op in &ops[1..] {
-                candidates.extend(sample_literals(ontology, op));
+                candidates.extend(sample_literals(ontology, idx, op));
             }
             let mut seen = HashSet::new();
             let mut count = 0_u32;
@@ -317,7 +543,10 @@ fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> 
             let mut count = 0_u32;
             for &op in ops {
                 if let Some(DataExpr::Literal { lexical, datatype }) = store.de(op) {
-                    let key = (lexical.clone(), *datatype);
+                    let key = distinct_literal_key(&LiteralValue {
+                        lexical: lexical.clone(),
+                        datatype: *datatype,
+                    });
                     if seen.insert(key) {
                         count += 1;
                     }
@@ -396,7 +625,7 @@ fn facet_contradiction_on_base(
     false
 }
 
-fn sample_literals(ontology: &Ontology, range: DeId) -> Vec<LiteralValue> {
+fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<LiteralValue> {
     let store = ontology.dl();
     let Some(expr) = store.de(range) else {
         return Vec::new();
@@ -407,25 +636,49 @@ fn sample_literals(ontology: &Ontology, range: DeId) -> Vec<LiteralValue> {
             datatype: *datatype,
         }],
         DataExpr::Datatype(dt) => default_witness_literals(ontology, *dt),
+        DataExpr::Not(inner) => {
+            let mut candidates = literal_universe(ontology);
+            candidates.retain(|lit| !idx.satisfies_with_ontology(lit, ontology, *inner));
+            candidates
+        }
         DataExpr::And(ops) => {
             let mut out = Vec::new();
             for &op in ops {
                 if let Some(DataExpr::Datatype(dt)) = store.de(op) {
                     out.extend(default_witness_literals(ontology, *dt));
                 } else {
-                    out.extend(sample_literals(ontology, op));
+                    out.extend(sample_literals(ontology, idx, op));
                 }
             }
             out
         }
-        DataExpr::Or(ops) => {
-            ops.first()
-                .map(|&op| sample_literals(ontology, op))
-                .unwrap_or_default()
-        }
-        DataExpr::Facet { base, .. } => sample_literals(ontology, *base),
-        DataExpr::Top => Vec::new(),
+        DataExpr::Or(ops) => ops
+            .iter()
+            .flat_map(|&op| sample_literals(ontology, idx, op))
+            .collect(),
+        DataExpr::Facet { base, .. } => sample_literals(ontology, idx, *base),
+        DataExpr::Top => literal_universe(ontology),
     }
+}
+
+fn literal_universe(ontology: &Ontology) -> Vec<LiteralValue> {
+    let mut out = Vec::new();
+    for dt_iri in [
+        "http://www.w3.org/2001/XMLSchema#string",
+        "http://www.w3.org/2001/XMLSchema#integer",
+        "http://www.w3.org/2001/XMLSchema#decimal",
+        "http://www.w3.org/2001/XMLSchema#float",
+        "http://www.w3.org/2001/XMLSchema#double",
+        "http://www.w3.org/2002/07/owl#rational",
+        "http://www.w3.org/2002/07/owl#real",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
+        "http://www.w3.org/2001/XMLSchema#dateTime",
+    ] {
+        if let Some(id) = ontology.lookup_entity(dt_iri) {
+            out.extend(default_witness_literals(ontology, id));
+        }
+    }
+    out
 }
 
 fn owl_thing_id(ontology: &Ontology) -> Option<EntityId> {
@@ -444,15 +697,23 @@ fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<Lite
         return Vec::new();
     };
     let witnesses: &[&str] = match iri.as_str() {
-        "http://www.w3.org/2001/XMLSchema#integer" => &["0", "1", "2"],
+        "http://www.w3.org/2001/XMLSchema#integer" => &["0", "1", "2", "-1"],
         "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" => &["0", "1"],
         "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" => &["0", "-1"],
-        "http://www.w3.org/2001/XMLSchema#string" => &["a"],
-        "http://www.w3.org/2001/XMLSchema#decimal" => &["0", "1"],
-        "http://www.w3.org/2001/XMLSchema#float" => &["0", "1"],
-        "http://www.w3.org/2001/XMLSchema#double" => &["0", "1"],
+        "http://www.w3.org/2001/XMLSchema#int" => &["0", "1", "2"],
+        "http://www.w3.org/2001/XMLSchema#short" => &["0", "1"],
+        "http://www.w3.org/2001/XMLSchema#byte" => &["0", "1"],
+        "http://www.w3.org/2001/XMLSchema#unsignedInt" => &["0", "1"],
+        "http://www.w3.org/2001/XMLSchema#string" => &["a", "b", "c", "abc"],
+        "http://www.w3.org/2001/XMLSchema#decimal" => &["0", "1", "1.5", "-1"],
+        "http://www.w3.org/2001/XMLSchema#float" => &["0", "1", "INF", "-INF", "-0"],
+        "http://www.w3.org/2001/XMLSchema#double" => &["0", "1", "INF", "-INF"],
+        "http://www.w3.org/2002/07/owl#rational" => &["0", "1/2", "1"],
+        "http://www.w3.org/2002/07/owl#real" => &["0", "1", "1.5"],
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" => &["en"],
-        "http://www.w3.org/2001/XMLSchema#dateTime" => &["2000-01-01T00:00:00"],
+        "http://www.w3.org/2001/XMLSchema#dateTime" => {
+            &["2000-01-01T00:00:00", "2000-01-01T00:00:00Z", "2000-01-01T00:00:00+05:00"]
+        }
         _ => &["0"],
     };
     witnesses
@@ -476,11 +737,37 @@ fn primitive_datatype_is_infinite(ontology: &Ontology, dt: EntityId) -> bool {
             | "http://www.w3.org/2001/XMLSchema#double"
             | "http://www.w3.org/2001/XMLSchema#string"
             | "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+            | "http://www.w3.org/2002/07/owl#rational"
+            | "http://www.w3.org/2002/07/owl#real"
     )
 }
 
 fn numeric_compare(a: &str, b: &str) -> i32 {
-    let fa: f64 = a.parse().unwrap_or(0.0);
-    let fb: f64 = b.parse().unwrap_or(0.0);
+    let fa = parse_numeric(a);
+    let fb = parse_numeric(b);
     fa.partial_cmp(&fb).unwrap_or(std::cmp::Ordering::Equal) as i32
+}
+
+fn parse_numeric(s: &str) -> f64 {
+    match s {
+        "INF" | "+INF" => f64::INFINITY,
+        "-INF" => f64::NEG_INFINITY,
+        "NaN" => f64::NAN,
+        _ => {
+            let trimmed = s.strip_prefix('+').unwrap_or(s);
+            if trimmed == "-0" {
+                0.0
+            } else if trimmed.contains('/') {
+                let parts: Vec<_> = trimmed.split('/').collect();
+                if parts.len() == 2 {
+                    let num: f64 = parts[0].parse().unwrap_or(0.0);
+                    let den: f64 = parts[1].parse().unwrap_or(1.0);
+                    return if den == 0.0 { f64::NAN } else { num / den };
+                }
+                0.0
+            } else {
+                trimmed.parse().unwrap_or(0.0)
+            }
+        }
+    }
 }

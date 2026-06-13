@@ -81,7 +81,12 @@ fn facet_check(
             literal_in_datatype_value_space(ontology, lit, *dt)
         }
         DataExpr::Literal { lexical, datatype } => {
-            lit.lexical == *lexical && lit.datatype == *datatype
+            let other = LiteralValue {
+                lexical: lexical.clone(),
+                datatype: *datatype,
+            };
+            (lit.lexical == *lexical && lit.datatype == *datatype)
+                || literals_equal(lit, &other)
         }
         DataExpr::Facet {
             base,
@@ -117,6 +122,7 @@ fn facet_check(
         }
         DataExpr::And(ops) => ops.iter().all(|op| facet_check(lit, store, *op, ontology)),
         DataExpr::Or(ops) => ops.iter().any(|op| facet_check(lit, store, *op, ontology)),
+        DataExpr::Not(inner) => !facet_check(lit, store, *inner, ontology),
     }
 }
 
@@ -140,19 +146,30 @@ fn literal_in_datatype_value_space(
     {
         return true;
     }
-    let Ok(value) = lit.lexical.parse::<i64>() else {
-        return false;
-    };
+    if let Ok(value) = lit.lexical.parse::<i64>() {
+        let value = if value == 0 { 0 } else { value };
+        return match &*target_iri {
+            "http://www.w3.org/2001/XMLSchema#integer"
+            | "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" => value >= 0,
+            "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" => value <= 0,
+            "http://www.w3.org/2001/XMLSchema#positiveInteger" => value >= 1,
+            "http://www.w3.org/2001/XMLSchema#negativeInteger" => value <= -1,
+            "http://www.w3.org/2001/XMLSchema#long"
+            | "http://www.w3.org/2001/XMLSchema#int"
+            | "http://www.w3.org/2001/XMLSchema#short"
+            | "http://www.w3.org/2001/XMLSchema#byte" => true,
+            _ => false,
+        };
+    }
     match &*target_iri {
-        "http://www.w3.org/2001/XMLSchema#integer"
-        | "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" => value >= 0,
-        "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" => value <= 0,
-        "http://www.w3.org/2001/XMLSchema#positiveInteger" => value >= 1,
-        "http://www.w3.org/2001/XMLSchema#negativeInteger" => value <= -1,
-        "http://www.w3.org/2001/XMLSchema#long"
-        | "http://www.w3.org/2001/XMLSchema#int"
-        | "http://www.w3.org/2001/XMLSchema#short"
-        | "http://www.w3.org/2001/XMLSchema#byte" => true,
+        "http://www.w3.org/2001/XMLSchema#decimal"
+        | "http://www.w3.org/2001/XMLSchema#float"
+        | "http://www.w3.org/2001/XMLSchema#double"
+        | "http://www.w3.org/2002/07/owl#real" => parse_numeric(&lit.lexical).is_finite(),
+        "http://www.w3.org/2002/07/owl#rational" => {
+            lit.lexical.contains('/') || lit.lexical.parse::<i64>().is_ok()
+        }
+        "http://www.w3.org/2001/XMLSchema#dateTime" => !lit.lexical.is_empty(),
         _ => false,
     }
 }
@@ -187,14 +204,91 @@ fn datatype_subsumes(
         ) | (
             "http://www.w3.org/2001/XMLSchema#integer",
             "http://www.w3.org/2001/XMLSchema#double"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#integer",
+            "http://www.w3.org/2001/XMLSchema#real"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#int",
+            "http://www.w3.org/2001/XMLSchema#integer"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#short",
+            "http://www.w3.org/2001/XMLSchema#int"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#byte",
+            "http://www.w3.org/2001/XMLSchema#short"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#unsignedInt",
+            "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#decimal",
+            "http://www.w3.org/2001/XMLSchema#float"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#decimal",
+            "http://www.w3.org/2001/XMLSchema#double"
+        ) | (
+            "http://www.w3.org/2001/XMLSchema#decimal",
+            "http://www.w3.org/2001/XMLSchema#real"
+        ) | (
+            "http://www.w3.org/2002/07/owl#rational",
+            "http://www.w3.org/2002/07/owl#real"
         )
     )
 }
 
+pub(crate) fn literals_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
+    let iri_a = None;
+    let iri_b = None;
+    let key_a = plain_literal_key(&a.lexical, iri_a);
+    let key_b = plain_literal_key(&b.lexical, iri_b);
+    if key_a == key_b && a.datatype == b.datatype {
+        return true;
+    }
+    numeric_values_equal(a, b)
+}
+
+pub(crate) fn canonical_plain_literal(lex: &str) -> String {
+    if let Some((text, lang)) = lex.split_once('@') {
+        return format!("{text}@{lang}");
+    }
+    if lex == "-0" || lex == "+0" {
+        return "0".to_string();
+    }
+    lex.to_string()
+}
+
+/// Normalize plain literal forms: `abc@es` and `abc` with language tag.
+pub(crate) fn plain_literal_key(lex: &str, datatype_iri: Option<&str>) -> String {
+    if let Some(iri) = datatype_iri {
+        if iri.contains("PlainLiteral") || iri.contains("langString") {
+            return canonical_plain_literal(lex);
+        }
+    }
+    if lex.contains('@') {
+        return canonical_plain_literal(lex);
+    }
+    canonical_plain_literal(lex)
+}
+
+fn numeric_values_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
+    parse_numeric(&a.lexical).to_bits() == parse_numeric(&b.lexical).to_bits()
+}
+
 fn numeric_compare(a: &str, b: &str) -> i32 {
-    let fa: f64 = a.parse().unwrap_or(0.0);
-    let fb: f64 = b.parse().unwrap_or(0.0);
+    let fa = parse_numeric(a);
+    let fb = parse_numeric(b);
     fa.partial_cmp(&fb).unwrap_or(std::cmp::Ordering::Equal) as i32
+}
+
+fn parse_numeric(s: &str) -> f64 {
+    match s {
+        "INF" | "+INF" => f64::INFINITY,
+        "-INF" => f64::NEG_INFINITY,
+        "NaN" => f64::NAN,
+        _ => {
+            let trimmed = s.strip_prefix('+').unwrap_or(s);
+            trimmed.parse().unwrap_or(0.0)
+        }
+    }
 }
 
 fn pattern_matches(lexical: &str, pattern: &str) -> bool {

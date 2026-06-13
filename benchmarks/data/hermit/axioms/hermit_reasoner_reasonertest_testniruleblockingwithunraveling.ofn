@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+ClassAssertion(:A :a)ClassAssertion(ObjectSomeValuesFrom(:R :B) :a)SubClassOf(ObjectSomeValuesFrom(:R :A) owl:Nothing)SubClassOf(:B ObjectSomeValuesFrom(:R :B))SubClassOf(:B ObjectHasValue(:S :a))InverseFunctionalObjectProperty(:R)InverseObjectProperties(:S :Si)SubClassOf( owl:Thing ObjectMaxCardinality(3 :Si owl:Thing))
+)

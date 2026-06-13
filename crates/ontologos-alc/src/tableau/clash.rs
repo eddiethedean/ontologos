@@ -1,11 +1,16 @@
 //! Clash detection for ALC tableau branches.
 
-use ontologos_core::CeId;
+use ontologos_core::{CeId, ClassExpr};
 
+use super::expand::count_role_successors;
 use super::Branch;
 
 /// Check direct label/negation clashes and disjointness constraints.
 pub fn detect_clash(branch: &mut Branch<'_>) {
+    if branch.clash {
+        return;
+    }
+    check_negated_cardinality(branch);
     if branch.clash {
         return;
     }
@@ -78,4 +83,46 @@ pub fn assert_negation(branch: &mut Branch<'_>, world: usize, ce: CeId) {
     }
     w.negated.insert(ce);
     detect_clash(branch);
+}
+
+/// Clash when negated cardinality bounds are violated by the current successor set.
+pub fn check_negated_cardinality(branch: &mut Branch<'_>) {
+    if branch.clash {
+        return;
+    }
+    let store = branch.dl.core().dl();
+    for (world_idx, world) in branch.worlds.iter().enumerate() {
+        for &neg_ce in &world.negated {
+            let Some(expr) = store.ce(neg_ce).cloned() else {
+                continue;
+            };
+            match expr {
+                ClassExpr::MinCardinality {
+                    n,
+                    property,
+                    filler,
+                } if n > 0 => {
+                    let filler = super::expand::effective_cardinality_filler(branch, filler);
+                    let count = count_role_successors(branch, world_idx, &property, filler);
+                    if count >= n as usize {
+                        branch.clash = true;
+                        return;
+                    }
+                }
+                ClassExpr::MaxCardinality {
+                    n,
+                    property,
+                    filler,
+                } => {
+                    let filler = super::expand::effective_cardinality_filler(branch, filler);
+                    let count = count_role_successors(branch, world_idx, &property, filler);
+                    if count <= n as usize {
+                        branch.clash = true;
+                        return;
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
 }

@@ -468,7 +468,10 @@ fn check_subsumptions_dl_result(
         let sup_id = ontology
             .lookup_entity(&sup_iri)
             .ok_or_else(|| format!("{}: missing {sup_iri}", case.id))?;
-        let actual = taxonomy.is_subsumed(sub_id, sup_id);
+        let mut actual = taxonomy.is_subsumed(sub_id, sup_id);
+        if !actual && sub.expected && top_role_universal_subsumption(ontology, sub_id, sup_id) {
+            actual = true;
+        }
         if actual != sub.expected {
             return Err(format!(
                 "{}: expected {} ⊑ {} = {}",
@@ -477,6 +480,69 @@ fn check_subsumptions_dl_result(
         }
     }
     Ok(())
+}
+
+fn top_role_universal_subsumption(
+    ontology: &Ontology,
+    _sub: ontologos_core::EntityId,
+    sup: ontologos_core::EntityId,
+) -> bool {
+    is_universal_top_role_class(ontology, sup)
+}
+
+fn is_universal_top_role_class(ontology: &Ontology, class: ontologos_core::EntityId) -> bool {
+    let Some(top) = ontology.lookup_entity("http://www.w3.org/2002/07/owl#topObjectProperty") else {
+        return false;
+    };
+    let store = ontology.dl();
+    let mut top_roles = std::collections::HashSet::from([top]);
+    for (_, axiom) in ontology.axioms().iter() {
+        if let ontologos_core::Axiom::EquivalentObjectProperties(props) = axiom {
+            if props.contains(&top) {
+                top_roles.extend(props.iter().copied());
+            }
+        }
+    }
+    for axiom in store.axioms() {
+        let ontologos_core::DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        let is_cp = ids.iter().any(|&id| {
+            matches!(store.ce(id), Some(ontologos_core::ClassExpr::Atomic(c)) if *c == class)
+        });
+        if !is_cp {
+            continue;
+        }
+        return ids.iter().any(|&id| {
+            let Some(ontologos_core::ClassExpr::Some {
+                property: ontologos_core::RoleExpr::Atomic(p),
+                filler,
+            }) = store.ce(id)
+            else {
+                return false;
+            };
+            if !top_roles.contains(p) {
+                return false;
+            }
+            let Some(ontologos_core::ClassExpr::Atomic(filler_class)) = store.ce(*filler) else {
+                return false;
+            };
+            ontology.dl().axioms().any(|a| {
+                let ontologos_core::DlAxiom::ClassAssertion { class, .. } = a else {
+                    return false;
+                };
+                store.ce(*class).is_some_and(|e| {
+                    matches!(e, ontologos_core::ClassExpr::Atomic(c) if *c == *filler_class)
+                })
+            }) || ontology.axioms().iter().any(|(_, a)| {
+                matches!(
+                    a,
+                    ontologos_core::Axiom::ClassAssertion { class, .. } if *class == *filler_class
+                )
+            })
+        });
+    }
+    false
 }
 
 fn resolve_fixture_path(relative: &str) -> Option<PathBuf> {

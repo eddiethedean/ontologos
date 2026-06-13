@@ -84,7 +84,7 @@ impl Mapper<'_> {
             }
             ClassExpression::ObjectMinCardinality { n, ope, bce } => {
                 let property = self.map_role_expr(ope)?;
-                let filler = self.map_class_expression(bce);
+                let filler = self.universal_or_class_filler(bce);
                 Some(ClassExpr::MinCardinality {
                     n: *n,
                     property,
@@ -93,7 +93,7 @@ impl Mapper<'_> {
             }
             ClassExpression::ObjectMaxCardinality { n, ope, bce } => {
                 let property = self.map_role_expr(ope)?;
-                let filler = self.map_class_expression(bce);
+                let filler = self.universal_or_class_filler(bce);
                 Some(ClassExpr::MaxCardinality {
                     n: *n,
                     property,
@@ -102,7 +102,7 @@ impl Mapper<'_> {
             }
             ClassExpression::ObjectExactCardinality { n, ope, bce } => {
                 let property = self.map_role_expr(ope)?;
-                let filler = self.map_class_expression(bce);
+                let filler = self.universal_or_class_filler(bce);
                 Some(ClassExpr::ExactCardinality {
                     n: *n,
                     property,
@@ -719,9 +719,8 @@ impl Mapper<'_> {
                 }
             }
             DR::DataComplementOf(inner) => {
-                // Complement handled in facet solver; store base.
-                let _base = self.map_data_range(inner)?;
-                Some(DataExpr::Top)
+                let base = self.map_data_range(inner)?;
+                Some(DataExpr::Not(base))
             }
             DR::DataIntersectionOf(ops) => {
                 let ids: Vec<DeId> = ops
@@ -828,6 +827,19 @@ impl Mapper<'_> {
         };
         self.push_dl_axiom(DlAxiom::SymmetricObjectProperty(role));
         true
+    }
+
+    /// Map cardinality filler; `owl:Thing` means unqualified (no filler).
+    fn universal_or_class_filler(
+        &mut self,
+        bce: &ClassExpression<RcStr>,
+    ) -> Option<CeId> {
+        if let ClassExpression::Class(class) = bce {
+            if iri_of(&class.0) == "http://www.w3.org/2002/07/owl#Thing" {
+                return None;
+            }
+        }
+        self.map_class_expression(bce)
     }
 }
 
