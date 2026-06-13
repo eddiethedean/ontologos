@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Compare OntoLogos EL taxonomy against a committed golden file.
-# Primary reference: regenerate golden from the in-house EL engine when updating baselines.
+# Pizza EL golden regression gate — NOT an ELK or whelk diff.
+# Classifies pizza.owl with in-house EL and compares to committed golden JSON.
+# Regenerate golden: UPDATE_GOLDEN=1 ./benchmarks/scripts/compare-pizza-el-golden.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"

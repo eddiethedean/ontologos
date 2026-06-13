@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.0] - 2026-06-12
 
+> **Note:** The `v0.6.0` tag shipped a brief **whelk** EL delegation experiment and **partial** crates.io publish (core, parser, profile, query only). **v0.6.1** is the corrected public release: in-house EL restored, full library publish. See [0.6.1] below.
+
 ### Added
 
 - **`ontologos-explain`**: `ProofGraph`, `build_proof_graph`, `explain_with_profile`, `explain_rdfs`/`explain_rl`/`explain_el`

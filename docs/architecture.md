@@ -20,12 +20,11 @@ flowchart TB
     bridge[ontologos_bridge]
     rdfs[ontologos_rdfs facade]
     rl[ontologos_rl facade]
-    el[ontologos_el facade]
+    el[ontologos_el in_house]
   end
 
   subgraph external [External engines]
     horned[horned_owl]
-    whelk[whelk git]
     reasonable[reasonable]
     petgraph[petgraph]
   end
@@ -34,14 +33,16 @@ flowchart TB
   parser --> core
   parser --> profile
   bridge --> horned
-  bridge --> whelk
   bridge --> reasonable
   bridge --> core
-  el --> bridge
+  el --> core
+  el --> rdfs
+  el --> rl
   rl --> bridge
   rdfs --> bridge
   query --> petgraph
   explain --> petgraph
+  explain --> el
   cli --> profile
   cli --> el
   cli --> rl
@@ -76,8 +77,8 @@ flowchart LR
     bridgeTriples[core to oxrdf]
   end
 
-  subgraph engines [Delegated engines]
-    whelkEng[whelk classify]
+  subgraph engines [Engines]
+    elEng[in_house EL completion]
     reasonableEng[reasonable reason]
   end
 
@@ -85,15 +86,15 @@ flowchart LR
   json --> ontology
   owl --> parser[load_ontology] --> ontology
   ontology --> profileDet[detect_profile]
-  ontology --> bridgeHorned --> whelkEng
-  whelkEng --> taxonomy[Taxonomy]
+  ontology --> elEng
+  elEng --> taxonomy[Taxonomy]
   ontology --> bridgeTriples --> reasonableEng
   reasonableEng --> saturated[Ontology plus inferred axioms]
 ```
 
 1. **Construct or load** an `Ontology` (builder, JSON, or parser).
 2. **Optionally detect profile** with `ontologos_profile::detect_profile`.
-3. **Run a facade** — EL returns `Taxonomy` via whelk; RL/RDFS materialize via reasonable into the same `Ontology`.
+3. **Run a facade** — EL returns `Taxonomy` via in-house completion in `ontologos-el`; RL/RDFS materialize via reasonable into the same `Ontology`.
 4. **Query** via `ontologos-query` (petgraph-backed hierarchy views).
 
 ## Core model (`ontologos-core`)
@@ -115,24 +116,23 @@ Serialization: JSON snapshot v2 (`to_json` / `from_json`).
 
 ## Bridge (`ontologos-bridge`)
 
-Owns conversions between models:
+Owns conversions between models for parsing and RL/RDFS adapters:
 
 | Module | Direction |
 |--------|-----------|
 | `horned` | `Ontology` ↔ horned-owl `SetOntology` |
 | `triples` | `Ontology` ↔ oxrdf triples for reasonable |
-| `whelk` | whelk `ReasonerState` → core `Taxonomy` |
 | `taxonomy` | Transitive reduction via petgraph |
 
 ## Engine facades
 
-| Profile | Facade crate | Delegates to |
-|---------|--------------|--------------|
+| Profile | Facade crate | Implementation |
+|---------|--------------|----------------|
 | RDFS | `ontologos-rdfs` | `reasonable` (RDFS rules subset of RL) |
 | OWL RL | `ontologos-rl` | `reasonable` |
-| OWL EL | `ontologos-el` | `whelk` via horned-owl |
+| OWL EL | `ontologos-el` | In-house ELK-style completion |
 | Query | `ontologos-query` | petgraph over `Taxonomy` |
-| Explain | `ontologos-explain` | petgraph proof graphs; EL-first traces |
+| Explain | `ontologos-explain` | petgraph proof graphs; EL inference traces |
 
 ## Reasoner facade
 
@@ -156,11 +156,11 @@ Owns conversions between models:
 
 | Choice | Rationale |
 |--------|-----------|
-| Delegate don't duplicate | whelk and reasonable are maintained peers |
+| Delegate RL/RDFS, own EL | reasonable is maintained for RL/RDFS; EL uses in-house completion (v0.6.1 restored after whelk git dependency blocked publish) |
 | Stable facade crate names | Semver and docs.rs URLs unchanged |
 | Core stays embed boundary | No re-export of horned-owl/reasonable types |
 | petgraph for views only | Not a second completion engine |
-| Adapter fidelity gates | HermiT Tier A + reasonable/whelk baselines in CI |
+| Adapter fidelity gates | HermiT Tier A + Pizza EL golden + Family RL reasonable closure in CI |
 
 ## Related
 

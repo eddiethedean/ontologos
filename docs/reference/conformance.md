@@ -44,7 +44,9 @@ Representative ported cases (see manifest for full list):
 
 ## EL golden conformance
 
-Pizza EL taxonomy is checked in CI via [`benchmarks/scripts/compare-elk.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-elk.sh) against committed `benchmarks/data/pizza-el-golden.json`. Regenerate baselines from the in-house EL engine when updating completion rules.
+Pizza EL taxonomy is checked in CI via [`benchmarks/scripts/compare-pizza-el-golden.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-pizza-el-golden.sh) against committed `benchmarks/data/pizza-el-golden.json`. This is a **regression gate** against the in-house EL engine baseline (84 direct subsumptions), not a diff against ELK or whelk. Regenerate baselines when updating completion rules.
+
+The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL tools emit for orphan classes; HermiT vendored Pizza tests do not require those edges.
 
 ## Known gaps (v0.5)
 

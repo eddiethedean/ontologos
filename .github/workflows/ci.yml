@@ -27,7 +27,7 @@ jobs:
       - name: Test
         run: cargo test --workspace --locked
       - name: EL Pizza golden conformance
-        run: ./benchmarks/scripts/compare-elk.sh
+        run: ./benchmarks/scripts/compare-pizza-el-golden.sh
       - name: HermiT conformance (Tier A)
         run: cargo test -p ontologos-conformance
       - name: Reasonable RL adapter conformance

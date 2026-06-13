@@ -77,13 +77,13 @@ Real biomedical ontologies are **mostly EL with occasional expressive axioms**. 
 - **whelk-rs** — experimental EL classifier (INCATools / OBO community)
 - **reasonable** — active OWL RL reasoner with Python bindings
 
-OntoLogos competes on **unified profiles + CLI + Python + Ontocode + hybrid routing**, delegating EL to **whelk** and RL/RDFS to **reasonable** (see [dependency-first ADR](docs/internal/design/dependency-first.md)).
+OntoLogos competes on **unified profiles + CLI + Python + Ontocode + hybrid routing**, with in-house EL and RL/RDFS via **reasonable** (see [dependency-first ADR](docs/internal/design/dependency-first.md)).
 
 ### Revelation 5 — ELK implementation details matter
 
 ELK uses goal-directed Closure/Todo saturation, parallel rules, ELK-specific taxonomy transitive reduction, partition-based incremental classification **without bookkeeping**, and built-in explanations. Naive completion or full re-classify will not match ELK on SNOMED/GO-scale corpora.
 
-**Plan impact:** EL classification delegates to **whelk** (v0.7+); incremental EL (v0.8) should follow Kazakov et al. via whelk/ELK-style algorithms or upstream incremental APIs — not a custom completion engine in OntoLogos.
+**Plan impact (updated v0.6.1):** EL uses in-house Kazakov-style completion in `ontologos-el`; incremental EL (v0.8) should follow ELK algorithms or upstream incremental APIs.
 
 ### Revelation 6 — IDE path over Protégé plugin
 
@@ -91,9 +91,11 @@ HermiT's stagnation as the default Protégé reasoner increases value for **Onto
 
 ### Architectural decisions (from research)
 
-1. **Parse with horned-owl; classify with whelk; materialize with reasonable** — facades in `ontologos-*` crates; conversions in `ontologos-bridge`; do not re-export upstream types.
-2. **Conformance harnesses** — adapter output must match whelk (EL) and reasonable (RL); Konclude CLI for DL preview/2.0.
-3. **2.0 engine** — Konclude-style coupled saturation + tableau, extending whelk/horned-owl kernel — not a greenfield HermiT port.
+> **Superseded in v0.6.1:** brief whelk EL delegation reverted; EL is in-house again. RL/RDFS still use reasonable.
+
+1. **Parse with horned-owl; EL in-house; materialize RL/RDFS with reasonable** — facades in `ontologos-*` crates; conversions in `ontologos-bridge`; do not re-export upstream types.
+2. **Conformance harnesses** — Pizza EL golden regression; Family RL vs reasonable; Konclude CLI for DL preview/2.0.
+3. **2.0 engine** — Konclude-style coupled saturation + tableau — not a greenfield HermiT port.
 4. **Benchmark manifest** — add hybrid test ontologies for v1.5 (EL + sparse DL axioms).
 5. **Upstream gaps** — track in whelk/reasonable issues; do not silently reimplement (see [dependency-first ADR](docs/internal/design/dependency-first.md)).
 
@@ -116,16 +118,18 @@ See [ROADMAP.md](ROADMAP.md) for the authoritative semver release plan.
 
 ### Dependency-first migration (v0.7 — complete on `main`)
 
+> **Updated v0.6.1:** whelk EL delegation reverted; in-house EL restored for crates.io publish.
+
 | Deliverable | Engine | Status |
 |-------------|--------|--------|
-| `ontologos-bridge` | core ↔ horned-owl / oxrdf / whelk | Done |
-| `ontologos-el` facade | whelk (git) | Done |
+| `ontologos-bridge` | core ↔ horned-owl / oxrdf | Done |
+| `ontologos-el` facade | in-house EL completion | Done |
 | `ontologos-rl` / `ontologos-rdfs` facades | reasonable | Done |
 | petgraph query/explain views | petgraph | Partial (v0.7); polish in v0.8 |
-| CI: `compare-elk.sh`, `compare-reasonable.sh` | whelk + reasonable baselines | Done |
-| Custom rule engines removed | — | Done |
+| CI: `compare-pizza-el-golden.sh`, `compare-reasonable.sh` | in-house EL + reasonable baselines | Done |
+| Custom RL/RDFS rule engines removed | — | Done |
 
-**Not in OntoLogos scope:** RDFS rdfs5–8 inheritance, RL existential TBox subsumption between named classes, per-rule explanation traces — tracked as upstream gaps until whelk/reasonable implement them.
+**Not in OntoLogos scope:** RDFS rdfs5–8 inheritance, RL existential TBox subsumption between named classes, per-rule RL/RDFS explanation traces — tracked as reasonable upstream gaps.
 
 ## Phase 0 – Research (complete)
 

@@ -179,7 +179,7 @@ fn el_existential_subsumption() {
         })
         .unwrap();
 
-    // whelk maps A ⊑ ∃r.B; filler propagation yields ∃r.C in the completion, not A ⊑ C.
+    // In-house EL: B ⊑ C via subsumption transitivity; A ⊑ ∃r.B is asserted, not A ⊑ C directly.
     let taxonomy = ElClassifier::new().classify(&ontology).expect("classify");
     assert!(taxonomy.is_subsumed(b, c));
 }

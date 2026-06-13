@@ -17,7 +17,7 @@ OntoLogos follows [semantic versioning](https://semver.org/). **Latest on crates
 | Area | Status |
 |------|--------|
 | **`ontologos-explain`** + CLI `explain` | Ready |
-| **`ontologos-bridge`**; EL → whelk; RL/RDFS → reasonable | Ready |
+| **`ontologos-bridge`**; in-house EL; RL/RDFS → reasonable | Ready |
 | petgraph query/explain views | Ready |
 | CI: Pizza EL golden, Family RL triple closure | Ready |
 
@@ -29,7 +29,7 @@ OntoLogos follows [semantic versioning](https://semver.org/). **Latest on crates
 | **0.9** | Python ecosystem | PyPI wheels, full bindings |
 | **1.0** | Stable release | Semver-stable facades; documented upstream gaps |
 | **1.3** | Ontocode / LSP | IDE integration |
-| **1.5+** | Hybrid routing | MORe-style whelk + reasonable modules |
-| **2.0** | Full OWL DL | Extend whelk/horned-owl kernel |
+| **1.5+** | Hybrid routing | MORe-style EL + reasonable modules |
+| **2.0** | Full OWL DL | Extend horned-owl / Konclude-style kernel |
 
 See [ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md) for full milestone detail.

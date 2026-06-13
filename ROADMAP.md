@@ -33,7 +33,7 @@ Checklists use GitHub task syntax (`- [x]` / `- [ ]`) so progress is visible in 
 | **0.4** | OWL RL engine | `+rl` | — | `+rl` |
 | **0.5** | OWL EL & query | `+el`, `+query` | `classify` (OWL EL/RL) | `+el`, `+query` |
 | **0.6** | Explanations | `+explain` | `explain` | `+explain` |
-| **0.7** | Dependency-first adapters | `+bridge`; facades over whelk + reasonable | — | `+bridge` |
+| **0.7** | Dependency-first adapters | `+bridge`; reasonable RL/RDFS; in-house EL restored in 0.6.1 | — | `+bridge` |
 | **0.8** | Incremental + petgraph polish | query, explain, bridge | — | — |
 | **0.9** | Python ecosystem | `+py` | — | PyPI `ontologos` |
 | **1.0** | Stable release | all 0.x crates | all four | full set |
@@ -104,12 +104,12 @@ flowchart TB
 ## Design principles
 
 1. **Core first** — All facades read and write through `ontologos-core`; no engine-specific ontology types in the public API.
-2. **Delegate don't duplicate** — OWL parsing via **horned-owl**; EL via **whelk**; RL/RDFS via **reasonable**; graph views via **petgraph**. See [dependency-first ADR](docs/internal/design/dependency-first.md).
+2. **Delegate don't duplicate** — OWL parsing via **horned-owl**; EL via **in-house completion** in `ontologos-el`; RL/RDFS via **reasonable**; graph views via **petgraph**. See [dependency-first ADR](docs/internal/design/dependency-first.md).
 3. **Fail honestly** — Unimplemented paths return typed errors (`NotImplemented`, `ParseNotAvailable`), not empty success.
-4. **Adapter fidelity gates** — HermiT Tier A, Pizza EL golden, and Family RL must pass through facades matching whelk/reasonable baselines.
+4. **Adapter fidelity gates** — HermiT Tier A, Pizza EL golden regression, and Family RL reasonable closure in CI.
 5. **Security by default** — Untrusted input (files, JSON) goes through validation and resource limits ([docs/security.md](docs/security.md)).
 6. **Incremental publish** — Crates ship to crates.io when their API is stable enough for the milestone.
-7. **Upstream gaps** — Track as issues/PRs to whelk/reasonable; do not silently reimplement rule engines in OntoLogos.
+7. **Upstream gaps** — Track as issues/PRs to reasonable; do not silently reimplement RL/RDFS rule engines in OntoLogos.
 
 ---
 
@@ -128,7 +128,7 @@ These run alongside version milestones and are not tied to a single release.
 | RDFS corpus conformance (Family, Pizza) | **Complete** (v0.3) | Extend per engine |
 | HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A) | Tier A in CI (23 tests); Tier B with local `HermiT/` |
 | HermiT replacement matrix | **Complete** | [hermit-replacement.md](docs/internal/research/hermit-replacement.md) |
-| Pizza EL golden vs whelk (`compare-elk.sh`) | **Complete** (v0.7) | CI gate on `main` |
+| Pizza EL golden regression (`compare-pizza-el-golden.sh`) | **Complete** (v0.6.1) | CI gate on `main` |
 | Family RL triple closure vs reasonable (`compare-reasonable.sh`) | **Complete** (v0.7) | CI gate on `main` |
 | Engine conformance suites (ELK CLI, Konclude) | Planned (v1.0+) | Optional external baselines |
 | Criterion regression tracking in CI | Planned (v1.1) | Fail on >5% regression |
@@ -424,15 +424,15 @@ v0.4 shipped custom OWL RL forward-chaining; **v0.7 replaces internals** with `r
 
 ## v0.5 — OWL EL classifier & query
 
-**Status: Complete** · **Facade migration:** v0.7 delegates to **whelk** · **Depends on:** v0.2
+**Status: Complete** · **EL engine:** in-house completion restored in **v0.6.1** (supersedes brief whelk experiment) · **Depends on:** v0.2
 
 **Crates:** `ontologos-el`, `ontologos-query`
 
-v0.5 shipped custom EL completion; **v0.7 replaces internals** with **whelk** (git) via `ontologos-bridge`. Custom `graph.rs` / `taxonomy_extract.rs` removed.
+v0.5 shipped custom EL completion; v0.6.0 briefly delegated to whelk (git); **v0.6.1** restored in-house `graph.rs` / `taxonomy_extract.rs`.
 
 ### `ontologos-el`
 
-- [x] EL classification via **whelk** `reasoner::assert` (v0.7+)
+- [x] EL classification via in-house ELK-style completion (v0.6.1+)
 - [x] `core_to_horned` / taxonomy mapping in `ontologos-bridge`
 - [x] Taxonomy extraction with petgraph transitive reduction
 - [x] Unsatisfiable class detection, equivalence clustering
@@ -457,17 +457,17 @@ v0.5 shipped custom EL completion; **v0.7 replaces internals** with **whelk** (g
 
 ### Exit criteria
 
-- [x] Pizza EL taxonomy golden (`pizza-el-golden.json`) — **whelk baseline** via `compare-elk.sh` in CI
+- [x] Pizza EL taxonomy golden (`pizza-el-golden.json`) — in-house EL baseline via `compare-pizza-el-golden.sh` in CI
 - [x] `go-subset` classifies within performance budget
 - [x] `ontologos-el` and `ontologos-query` on crates.io
 
-> **Research:** ELK remains the performance reference; **whelk-rs** is the delegated EL engine. HermiT `ClassificationTest` is a secondary cross-check.
+> **Research:** ELK remains the performance reference; **whelk-rs** is an ecosystem peer. HermiT `ClassificationTest` is a secondary cross-check.
 
 ---
 
 ## v0.6 — Explanation engine
 
-**Status: Complete on `main`** (tag v0.6.0) · **Adapter note:** rule traces empty until whelk/reasonable expose diagnostics · **Depends on:** v0.3–v0.5
+**Status: Complete on `main`** (tag v0.6.1 pending) · **Adapter note:** RL/RDFS rule traces empty until reasonable exposes diagnostics · **Depends on:** v0.3–v0.5
 
 **Crate:** `ontologos-explain`
 
@@ -475,7 +475,7 @@ v0.5 shipped custom EL completion; **v0.7 replaces internals** with **whelk** (g
 
 - [x] `ProofGraph`, `ProofNode`, `NodeId` types
 - [x] `ReasonerConfig::explanations` flag (honored; traces empty under facades)
-- [x] Proof graph construction from asserted axioms + empty adapter traces
+- [x] Proof graph construction from asserted axioms + EL inference traces
 - [x] **petgraph** acyclic validation (`ProofGraph::is_acyclic`)
 - [x] JSON export; CLI `ontologos explain`
 
@@ -484,19 +484,19 @@ v0.5 shipped custom EL completion; **v0.7 replaces internals** with **whelk** (g
 - [x] Benchmark suite validates materialization + taxonomy across engines (≥10 combined inferences)
 - [x] Proof graphs are acyclic and reference valid axiom ids
 - [ ] Per-rule RL/RDFS traces — **deferred to upstream** (EL-first taxonomy explanations today)
-- [ ] `ontologos-explain` and `ontologos-bridge` crates.io publish with **v0.6.0** tag
+- [ ] `ontologos-explain` and `ontologos-bridge` crates.io publish with **v0.6.1** tag
 
 ---
 
 ## v0.7 — Dependency-first adapters
 
-**Status: Complete on `main`** · **Ships in:** **v0.6.0** · **Depends on:** v0.3–v0.6
+**Status: Complete on `main`** · **Ships in:** **v0.6.1** · **Depends on:** v0.3–v0.6
 
-Replace in-house rule engines with maintained dependencies. Public crate names and CLI/Python APIs unchanged.
+Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house completion (whelk experiment reverted in 0.6.1). Public crate names and CLI/Python APIs unchanged.
 
 ### `ontologos-bridge` (new)
 
-- [x] `core_to_horned` / horned → whelk classification path
+- [x] `core_to_horned` / horned-owl conversions
 - [x] `core_to_triples` / `merge_triples_into_ontology` for reasonable
 - [x] Existential restriction encoding (blank-node OWL RDF)
 - [x] Taxonomy mapping + petgraph transitive reduction
@@ -504,13 +504,13 @@ Replace in-house rule engines with maintained dependencies. Public crate names a
 
 ### Facades
 
-- [x] `ontologos-el` → **whelk** (git rev pinned in workspace `Cargo.toml`)
+- [x] `ontologos-el` → in-house ELK-style completion (v0.6.1; supersedes brief whelk delegation)
 - [x] `ontologos-rl` / `ontologos-rdfs` → **reasonable**
-- [x] Delete custom `ontologos-rl/src/rules/`, `triple_index.rs`, `ontologos-rdfs/src/rules.rs`, `ontologos-el` completion graph
+- [x] Delete custom `ontologos-rl/src/rules/`, `triple_index.rs`, `ontologos-rdfs/src/rules.rs`
 
 ### CI & docs
 
-- [x] `compare-elk.sh` — Pizza golden vs whelk output
+- [x] `compare-pizza-el-golden.sh` — Pizza golden regression gate
 - [x] `compare-reasonable.sh` — Family triple-closure gate
 - [x] ADR, architecture, comparison, Python guide updated
 - [x] HermiT Tier A tests annotated; upstream gaps `#[ignore]` not reimplemented
@@ -520,9 +520,9 @@ Replace in-house rule engines with maintained dependencies. Public crate names a
 - [x] `cargo test --workspace` and `clippy -D warnings` green
 - [x] No duplicate rule implementations in workspace
 - [x] Public API stable: `load_ontology`, `classify_with_profile`, CLI subcommands
-- [ ] Tag and publish **v0.6.0** (`ontologos-bridge`, `ontologos-explain`, facade crate updates)
+- [ ] Tag and publish **v0.6.1** (`ontologos-bridge`, `ontologos-explain`, facade crate updates)
 
-> **Upstream gaps:** See [dependency-first ADR](docs/internal/design/dependency-first.md). Track in whelk/reasonable issues; do not silently reimplement.
+> **Upstream gaps:** See [dependency-first ADR](docs/internal/design/dependency-first.md). Track in reasonable issues; do not silently reimplement RL/RDFS rules.
 
 ---
 
