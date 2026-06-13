@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.6.1** · **Next release:** **v0.7.0** (ready on `main`) · **After v0.7.0:** v0.8 incremental reasoning
+**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.7.0** · **Next release:** **v0.8** incremental reasoning · **Current focus:** axiom dirty tracking, incremental EL/RL classify
 
 ---
 
@@ -156,7 +156,8 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Catalo
 
 **Next ports:**
 
-- [ ] `ClassificationTest` (pizza, wine, galen taxonomy `.txt` goldens) — **0.5** EL
+- [x] `ClassificationTest` pizza taxonomy golden — **0.5** EL (CI via `compare-pizza-el-golden.sh`)
+- [ ] `ClassificationTest` wine / galen taxonomy goldens — wine blocked on `wine.xml` parse error
 - [ ] `owl_wg_tests` approved entailment subset — **1.0**
 - [ ] `structural/ClausificationTest` — **2.0** DL internal
 - [ ] SWRL `RulesTest` — **deferred** (out of scope 1.x)
@@ -467,7 +468,7 @@ v0.5 shipped custom EL completion; v0.6.0 briefly delegated to whelk (git); **v0
 
 ## v0.6 — Explanation engine
 
-**Status: Complete on `main`** (ready to tag **v0.7.0**) · **Adapter note:** RL/RDFS rule traces empty until reasonable exposes diagnostics · **Depends on:** v0.3–v0.5
+**Status: Complete** ([v0.7.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.7.0)) · **Adapter note:** RL/RDFS rule traces empty until reasonable exposes diagnostics · **Depends on:** v0.3–v0.5
 
 **Crate:** `ontologos-explain`
 
@@ -484,13 +485,13 @@ v0.5 shipped custom EL completion; v0.6.0 briefly delegated to whelk (git); **v0
 - [x] Benchmark suite validates materialization + taxonomy across engines (≥10 combined inferences)
 - [x] Proof graphs are acyclic and reference valid axiom ids
 - [ ] Per-rule RL/RDFS traces — **deferred to upstream** (EL-first taxonomy explanations today)
-- [ ] `ontologos-explain` and `ontologos-bridge` crates.io publish with **v0.7.0** tag
+- [x] `ontologos-explain` and `ontologos-bridge` on crates.io (**v0.7.0**)
 
 ---
 
 ## v0.7 — Dependency-first adapters
 
-**Status: Complete on `main`** · **Ships in:** **v0.7.0** · **Depends on:** v0.3–v0.6
+**Status: Complete** ([v0.7.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.7.0), 2026-06-13) · **Depends on:** v0.3–v0.6
 
 Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house completion (whelk experiment reverted in 0.6.1). Public crate names and CLI/Python APIs unchanged.
 
@@ -520,7 +521,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 - [x] `cargo test --workspace` and `clippy -D warnings` green
 - [x] No duplicate rule implementations in workspace
 - [x] Public API stable: `load_ontology`, `classify_with_profile`, CLI subcommands
-- [ ] Tag and publish **v0.7.0** — see [`.github/release/v0.7.0.md`](.github/release/v0.7.0.md) checklist (`git tag v0.7.0 && git push origin v0.7.0`)
+- [x] Tag and publish **v0.7.0** — [release notes](.github/release/v0.7.0.md); 9 crates on crates.io + PyPI `ontologos` **0.7.0**
 
 > **Upstream gaps:** See [dependency-first ADR](docs/internal/design/dependency-first.md). Track in reasonable issues; do not silently reimplement RL/RDFS rules.
 
@@ -528,7 +529,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 ## v0.8 — Incremental reasoning + petgraph polish
 
-**Status: Planned** · **Effort:** Medium · **Depends on:** v0.7
+**Status: Planned (next)** · **Effort:** Medium · **Depends on:** v0.7 ✓
 
 ### Capabilities
 
@@ -550,7 +551,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 ## v0.9 — Python ecosystem
 
-**Status: In progress (alpha on `main`)** · **Depends on:** v0.2, v0.5, v0.7 facades
+**Status: In progress (alpha on PyPI)** · **Depends on:** v0.2, v0.5, v0.7 facades
 
 **Crate:** `ontologos-py` · **PyPI name:** `ontologos`
 
@@ -559,7 +560,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 - [x] PyO3 `Reasoner` with `profile="rdfs"|"rl"|"el"|"auto"` (routes to facades)
 - [x] CI: maturin develop + pytest on Linux
 - [x] Python guide documents dependency stack and when to use upstream crates directly
-- [ ] Maturin manylinux / macOS wheels on PyPI
+- [x] Maturin manylinux / macOS / Windows wheels on PyPI (v0.7.0 Release workflow)
 - [ ] `Ontology` construction from Python (builder or dict)
 - [ ] `explain()` bindings with adapter trace limits documented
 - [ ] Optional pandas / polars export for taxonomies
@@ -568,7 +569,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 - [ ] `pip install ontologos` works on Linux and macOS (aarch64 + x86_64)
 - [ ] Python integration test classifies Pizza and matches Rust CLI output
-- [ ] PyPI release in CI (manual approval gate)
+- [x] PyPI release in CI on version tag (v0.7.0+)
 
 ---
 

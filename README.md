@@ -9,7 +9,7 @@
 Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
 **reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
 
-**Status:** v0.7.0 ready on `main` — tag `v0.7.0` and push to trigger crates.io/PyPI publish. **Not** full OWL DL / HermiT replacement.
+**Status:** **v0.7.0** — dependency-first adapters (`ontologos-bridge`), in-house EL completion, RL/RDFS over reasonable. **Not** full OWL DL / HermiT replacement.
 
 | You need… | Use today |
 |-----------|-----------|
