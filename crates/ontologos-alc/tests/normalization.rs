@@ -2,8 +2,10 @@
 
 use ontologos_alc::clausify;
 use ontologos_parser::load_ontology;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 const NS: &str = "file:/c/test.owl#";
+static TEMP_OFN_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 fn wrap_axioms(axioms: &str) -> String {
     format!(
@@ -15,7 +17,12 @@ fn wrap_axioms(axioms: &str) -> String {
 }
 
 fn clausify_axioms(axioms: &str) -> ontologos_alc::ClauseSet {
-    let dir = std::env::temp_dir().join("ontologos_norm_test.ofn");
+    let id = TEMP_OFN_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let dir = std::env::temp_dir().join(format!(
+        "ontologos_norm_test_{}_{}.ofn",
+        std::process::id(),
+        id
+    ));
     std::fs::write(&dir, wrap_axioms(axioms)).expect("write temp ofn");
     let mut ontology = load_ontology(&dir).expect("load");
     clausify(&mut ontology).expect("clausify")
