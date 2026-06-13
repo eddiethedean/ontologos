@@ -2,8 +2,8 @@
 
 use std::path::Path;
 
-use ontologos_alc::{clausify, Clause};
 use ontologos_alc::Error;
+use ontologos_alc::{clausify, Clause};
 use ontologos_core::{ClassExpr, Ontology};
 
 #[test]
@@ -31,7 +31,10 @@ fn clausify_asymmetry_fixture() -> Result<(), Error> {
     let mut ontology = ontologos_parser::load_ontology(&path).map_err(Error::Parser)?;
     let clauses = clausify(&mut ontology)?;
     assert!(
-        clauses.clauses().iter().any(|c| matches!(c, Clause::RoleSubsumption { .. })),
+        clauses
+            .clauses()
+            .iter()
+            .any(|c| matches!(c, Clause::RoleSubsumption { .. })),
         "expected role subsumption clause"
     );
     Ok(())
@@ -49,7 +52,9 @@ fn nnf_complement_in_dl_store() -> Result<(), Error> {
     let b_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(b));
     let not_b = ontology.dl_mut().intern_ce(ClassExpr::Not(b_ce));
     let sub = ontology.dl_mut().intern_ce(ClassExpr::Atomic(a));
-    ontology.dl_mut().push_axiom(ontologos_core::DlAxiom::SubClassOf { sub, sup: not_b });
+    ontology
+        .dl_mut()
+        .push_axiom(ontologos_core::DlAxiom::SubClassOf { sub, sup: not_b });
     let clauses = clausify(&mut ontology)?;
     assert!(!clauses.is_empty());
     Ok(())

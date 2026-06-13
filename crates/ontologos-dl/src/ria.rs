@@ -64,9 +64,7 @@ impl RoleHierarchy {
         if sub == sup {
             return true;
         }
-        self.subroles
-            .get(&sub)
-            .is_some_and(|ss| ss.contains(&sup))
+        self.subroles.get(&sub).is_some_and(|ss| ss.contains(&sup))
     }
 
     /// Complex role chains registered.

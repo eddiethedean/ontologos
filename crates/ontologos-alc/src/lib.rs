@@ -14,11 +14,11 @@ use thiserror::Error;
 pub use clause::{Clause, ClauseSet};
 pub use dl_ontology::DlOntology;
 pub use normalize::clausify;
+pub use tableau::AlcClassifier;
 pub use tableau::{
     classify as tableau_classify, classify_with_seed as tableau_classify_with_seed,
     is_consistent as tableau_is_consistent, TableauSeed,
 };
-pub use tableau::AlcClassifier;
 
 /// Result type for ALC operations.
 pub type Result<T> = std::result::Result<T, Error>;

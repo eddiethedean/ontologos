@@ -233,11 +233,8 @@ impl Mapper<'_> {
                 self.report
                     .meta
                     .note_construct(OwlConstruct::DataPropertyAssertion);
-                if !self.map_dl_negative_data_property_assertion(
-                    &axiom.dp,
-                    &axiom.from,
-                    &axiom.to,
-                ) {
+                if !self.map_dl_negative_data_property_assertion(&axiom.dp, &axiom.from, &axiom.to)
+                {
                     self.skip("ABox assertion not mapped in v0.2");
                 }
             }
@@ -866,7 +863,11 @@ impl Mapper<'_> {
         }
     }
 
-    pub(crate) fn register_or_warn_entity(&mut self, iri: &str, kind: EntityKind) -> Option<EntityId> {
+    pub(crate) fn register_or_warn_entity(
+        &mut self,
+        iri: &str,
+        kind: EntityKind,
+    ) -> Option<EntityId> {
         match self.register_entity(iri, kind) {
             Ok(id) => Some(id),
             Err(err) => {

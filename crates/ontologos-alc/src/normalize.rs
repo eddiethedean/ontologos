@@ -1,8 +1,6 @@
 //! OWL 2 DL clausification and NNF.
 
-use ontologos_core::{
-    Axiom, CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr,
-};
+use ontologos_core::{Axiom, CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr};
 
 use crate::clause::{Clause, ClauseSet};
 use crate::Error;
@@ -40,7 +38,10 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                     property: RoleExpr::Atomic(*property),
                     filler: filler_ce,
                 });
-                out.push(Clause::Subsumption { sub: exists, sup: sub });
+                out.push(Clause::Subsumption {
+                    sub: exists,
+                    sup: sub,
+                });
             }
             Axiom::EquivalentClasses(ids) if ids.len() >= 2 => {
                 for w in ids.windows(2) {
@@ -200,10 +201,7 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
             }
             Axiom::TransitiveObjectProperty(prop) => {
                 out.push(Clause::RoleChain {
-                    chain: vec![
-                        RoleExpr::Atomic(*prop),
-                        RoleExpr::Atomic(*prop),
-                    ],
+                    chain: vec![RoleExpr::Atomic(*prop), RoleExpr::Atomic(*prop)],
                     sup: *prop,
                 });
             }
@@ -238,9 +236,7 @@ fn clausify_domain_range(
     match expr {
         ClassExpr::OneOf(individuals) if individuals.len() == 1 => {
             let ind = individuals[0];
-            let nom = ontology
-                .dl_mut()
-                .intern_ce(ClassExpr::OneOf(vec![ind]));
+            let nom = ontology.dl_mut().intern_ce(ClassExpr::OneOf(vec![ind]));
             if is_domain {
                 out.push(Clause::Existential {
                     property: RoleExpr::Atomic(property),
@@ -297,12 +293,8 @@ fn emit_nominal_role_clause(
     property: EntityId,
     object: EntityId,
 ) {
-    let sub_nom = ontology
-        .dl_mut()
-        .intern_ce(ClassExpr::OneOf(vec![subject]));
-    let obj_nom = ontology
-        .dl_mut()
-        .intern_ce(ClassExpr::OneOf(vec![object]));
+    let sub_nom = ontology.dl_mut().intern_ce(ClassExpr::OneOf(vec![subject]));
+    let obj_nom = ontology.dl_mut().intern_ce(ClassExpr::OneOf(vec![object]));
     out.push(Clause::NominalSubsumption {
         sub: sub_nom,
         individual: subject,
@@ -347,12 +339,16 @@ fn nnf_negate(ontology: &mut Ontology, id: CeId) -> CeId {
         ClassExpr::Some { property, filler } => {
             let property = property.clone();
             let filler = nnf_negate(ontology, filler);
-            ontology.dl_mut().intern_ce(ClassExpr::All { property, filler })
+            ontology
+                .dl_mut()
+                .intern_ce(ClassExpr::All { property, filler })
         }
         ClassExpr::All { property, filler } => {
             let property = property.clone();
             let filler = nnf_negate(ontology, filler);
-            ontology.dl_mut().intern_ce(ClassExpr::Some { property, filler })
+            ontology
+                .dl_mut()
+                .intern_ce(ClassExpr::Some { property, filler })
         }
         ClassExpr::Top => ontology.dl_mut().intern_ce(ClassExpr::Bottom),
         ClassExpr::Bottom => ontology.dl_mut().intern_ce(ClassExpr::Top),

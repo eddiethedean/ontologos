@@ -13,7 +13,7 @@ pub struct DlReport {
 
 /// Classify via [`Reasoner`] when profile is DL.
 pub fn classify_reasoner(reasoner: &Reasoner) -> Result<DlReport, Error> {
-  if !matches!(reasoner.profile(), Profile::Dl | Profile::Auto) {
+    if !matches!(reasoner.profile(), Profile::Dl | Profile::Auto) {
         return Err(Error::WrongProfile(reasoner.profile()));
     }
     let taxonomy = classify(reasoner.ontology())?;

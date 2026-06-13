@@ -6,7 +6,9 @@
 
 mod catalog;
 
-pub use catalog::{load_catalog, load_wg_catalog, run_hermit_case, run_wg_case, HermitCase, WgCase};
+pub use catalog::{
+    load_catalog, load_wg_catalog, run_hermit_case, run_wg_case, HermitCase, WgCase,
+};
 
 use std::path::{Path, PathBuf};
 
@@ -54,7 +56,9 @@ pub fn hermit_test_path(relative: &str) -> Option<PathBuf> {
         if modern.exists() {
             return Some(modern);
         }
-        let legacy = root.join("project/test/org/semanticweb/HermiT").join(relative);
+        let legacy = root
+            .join("project/test/org/semanticweb/HermiT")
+            .join(relative);
         legacy.exists().then_some(legacy)
     })
 }

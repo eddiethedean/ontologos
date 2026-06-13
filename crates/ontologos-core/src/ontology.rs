@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use crate::axiom::{Axiom, AxiomId};
-use crate::dl::DlStore;
 use crate::dirty::{axiom_signature, DirtySet, OntologyRevision};
+use crate::dl::DlStore;
 use crate::entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 use crate::error::{Error, Result};
 use crate::graph::{AxiomIndex, AxiomStore};

@@ -8,9 +8,7 @@ use ontologos_parser::load_ontology;
 use ontologos_rdfs::RdfsEngine;
 use serde::Deserialize;
 
-use crate::{
-    assert_subsumed, classification_fixture_path, HERMIT_DEFAULT_NS,
-};
+use crate::{assert_subsumed, classification_fixture_path, HERMIT_DEFAULT_NS};
 
 static CATALOG: OnceLock<Vec<HermitCase>> = OnceLock::new();
 static WG_CATALOG: OnceLock<Vec<WgCase>> = OnceLock::new();
@@ -244,8 +242,8 @@ fn check_subsumptions_dl(
         let sup_id = ontology
             .lookup_entity(&sup_iri)
             .unwrap_or_else(|| panic!("{}: missing {sup_iri}", case.id));
-        let actual = taxonomy.is_subsumed(sub_id, sup_id)
-            || assert_subsumed(ontology, &sub_iri, &sup_iri);
+        let actual =
+            taxonomy.is_subsumed(sub_id, sup_id) || assert_subsumed(ontology, &sub_iri, &sup_iri);
         assert_eq!(
             actual, sub.expected,
             "{}: expected {} ⊑ {} = {}",
@@ -255,10 +253,7 @@ fn check_subsumptions_dl(
 }
 
 fn resolve_fixture_path(relative: &str) -> Option<PathBuf> {
-    let mut candidates = vec![
-        relative.to_string(),
-        format!("reasoner/{relative}"),
-    ];
+    let mut candidates = vec![relative.to_string(), format!("reasoner/{relative}")];
     if let Some(stripped) = relative.strip_prefix("res/") {
         candidates.push(format!("reasoner/res/{stripped}"));
     }
@@ -273,10 +268,10 @@ fn resolve_fixture_path(relative: &str) -> Option<PathBuf> {
 fn run_fixture_case(case: &HermitCase) {
     let fixture = case.fixture.as_ref().expect("fixture path");
     let golden = case.golden.as_ref().expect("golden path");
-    let fixture_path = resolve_fixture_path(fixture)
-        .unwrap_or_else(|| panic!("missing fixture {fixture}"));
-    let golden_path = resolve_fixture_path(golden)
-        .unwrap_or_else(|| panic!("missing golden {golden}"));
+    let fixture_path =
+        resolve_fixture_path(fixture).unwrap_or_else(|| panic!("missing fixture {fixture}"));
+    let golden_path =
+        resolve_fixture_path(golden).unwrap_or_else(|| panic!("missing golden {golden}"));
 
     let ontology = load_ontology(&fixture_path).expect("load fixture");
     let golden_text = std::fs::read_to_string(&golden_path).expect("read golden");
@@ -293,15 +288,15 @@ fn run_fixture_case(case: &HermitCase) {
             let taxonomy = ontologos_dl::classify(&ontology).expect("dl classify");
             assert_hierarchy_pairs(&ontology, &taxonomy, &pairs, &case.id);
         }
-        other => panic!("fixture runner not implemented for engine {other} ({})", case.id),
+        other => panic!(
+            "fixture runner not implemented for engine {other} ({})",
+            case.id
+        ),
     }
 }
 
 fn run_wg_runnable(case: &WgCase) {
-    let premise = case
-        .premise_ofn
-        .as_ref()
-        .expect("wg premise");
+    let premise = case.premise_ofn.as_ref().expect("wg premise");
     let path = hermit_data_path(premise);
     let ontology = load_ontology(&path).expect("load wg premise");
 
@@ -311,8 +306,7 @@ fn run_wg_runnable(case: &WgCase) {
         return;
     }
 
-    if let (Some(conclusion_rel), Some(expected)) =
-        (&case.conclusion_ofn, case.expected_entailment)
+    if let (Some(conclusion_rel), Some(expected)) = (&case.conclusion_ofn, case.expected_entailment)
     {
         let conclusion_path = hermit_data_path(conclusion_rel);
         let conclusion = load_ontology(&conclusion_path).expect("wg conclusion");

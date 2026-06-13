@@ -8,7 +8,7 @@ use ontologos_core::{EntityId, Ontology, Taxonomy};
 use ontologos_query::QueryEngine;
 use thiserror::Error;
 
-pub use query::{ConjunctiveQuery, QueryAtom, QueryAnswer};
+pub use query::{ConjunctiveQuery, QueryAnswer, QueryAtom};
 
 /// Result type for QL operations.
 pub type Result<T> = std::result::Result<T, Error>;

@@ -52,10 +52,9 @@ fn facet_check(lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
     match expr {
         DataExpr::Top => true,
         DataExpr::Datatype(dt) => lit.datatype == *dt,
-        DataExpr::Literal {
-            lexical,
-            datatype,
-        } => lit.lexical == *lexical && lit.datatype == *datatype,
+        DataExpr::Literal { lexical, datatype } => {
+            lit.lexical == *lexical && lit.datatype == *datatype
+        }
         DataExpr::Facet {
             base,
             facet_iri,
@@ -73,9 +72,7 @@ fn facet_check(lit: &LiteralValue, store: &DlStore, range: DeId) -> bool {
                 | "http://www.w3.org/2001/XMLSchema#minExclusive" => {
                     numeric_compare(&lit.lexical, value) >= 0
                 }
-                "http://www.w3.org/2001/XMLSchema#pattern" => {
-                    pattern_matches(&lit.lexical, value)
-                }
+                "http://www.w3.org/2001/XMLSchema#pattern" => pattern_matches(&lit.lexical, value),
                 "http://www.w3.org/2001/XMLSchema#maxLength"
                 | "http://www.w3.org/2001/XMLSchema#length" => {
                     lit.lexical.len() <= value.parse::<usize>().unwrap_or(usize::MAX)

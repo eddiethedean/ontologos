@@ -41,10 +41,15 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) {
         }
         ClassExpr::OneOf(individuals) => {
             for ind in individuals {
-                let nom = branch.dl.core().dl().expressions().find_map(|(id, e)| match e {
-                    ClassExpr::OneOf(v) if v == &[ind] => Some(id),
-                    _ => None,
-                });
+                let nom = branch
+                    .dl
+                    .core()
+                    .dl()
+                    .expressions()
+                    .find_map(|(id, e)| match e {
+                        ClassExpr::OneOf(v) if v == &[ind] => Some(id),
+                        _ => None,
+                    });
                 if let Some(id) = nom {
                     assert_label(branch, world, id);
                 }

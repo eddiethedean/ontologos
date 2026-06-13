@@ -6,8 +6,7 @@ use ontologos_parser::load_ontology;
 
 #[test]
 fn hermit_ofn_axioms_load_without_skips() {
-    let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/hermit/axioms");
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/hermit/axioms");
     assert!(dir.is_dir(), "missing axiom dir: {}", dir.display());
 
     let mut loaded = 0usize;
@@ -39,6 +38,14 @@ fn hermit_ofn_axioms_load_without_skips() {
             ));
         }
     }
-    assert!(loaded > 0, "expected OFN axiom fixtures in {}", dir.display());
-    assert!(failures.is_empty(), "OFN load failures:\n{}", failures.join("\n"));
+    assert!(
+        loaded > 0,
+        "expected OFN axiom fixtures in {}",
+        dir.display()
+    );
+    assert!(
+        failures.is_empty(),
+        "OFN load failures:\n{}",
+        failures.join("\n")
+    );
 }

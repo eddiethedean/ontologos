@@ -42,9 +42,7 @@ impl DlClassifier {
                 Ok(merge_taxonomies(vec![el_tax, tab_tax]))
             }
             Some(OwlProfile::Rl) | Some(OwlProfile::Dl) | None => {
-                let el_tax = ElClassifier::new()
-                    .classify(ontology)
-                    .map_err(Error::El)?;
+                let el_tax = ElClassifier::new().classify(ontology).map_err(Error::El)?;
                 let tab_tax = tableau_classify(ontology)?;
                 Ok(merge_taxonomies(vec![el_tax, tab_tax]))
             }

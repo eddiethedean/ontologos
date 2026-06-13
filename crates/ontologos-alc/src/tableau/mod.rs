@@ -156,7 +156,12 @@ fn infer_named_subsumptions(
     Ok(out)
 }
 
-fn entails(dl: &DlOntology, sub: EntityId, sup: EntityId, seed: &TableauSeed) -> Result<bool, Error> {
+fn entails(
+    dl: &DlOntology,
+    sub: EntityId,
+    sup: EntityId,
+    seed: &TableauSeed,
+) -> Result<bool, Error> {
     let store = dl.core().dl();
     let sub_ce = store
         .expressions()

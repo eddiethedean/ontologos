@@ -5224,11 +5224,6 @@
         "sub": "c2",
         "sup": "c4",
         "expected": true
-      },
-      {
-        "sub": "c2",
-        "sup": "c4",
-        "expected": true
       }
     ],
     "consistent": null,

@@ -76,8 +76,12 @@ mod tests {
     #[test]
     fn same_as_clusters_merge() {
         let mut o = Ontology::new();
-        let a = o.entity_id("http://ex.org/a", EntityKind::Individual).unwrap();
-        let b = o.entity_id("http://ex.org/b", EntityKind::Individual).unwrap();
+        let a = o
+            .entity_id("http://ex.org/a", EntityKind::Individual)
+            .unwrap();
+        let b = o
+            .entity_id("http://ex.org/b", EntityKind::Individual)
+            .unwrap();
         o.add_axiom(Axiom::SameIndividual(vec![a, b])).unwrap();
         let c = same_as_closure(&o);
         assert_eq!(c.representative(a), c.representative(b));

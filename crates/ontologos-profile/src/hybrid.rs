@@ -59,10 +59,7 @@ pub fn merge_taxonomies(mut parts: Vec<Taxonomy>) -> Taxonomy {
     Taxonomy {
         subsumptions,
         equivalences: Vec::new(),
-        unsatisfiable: parts
-            .into_iter()
-            .flat_map(|t| t.unsatisfiable)
-            .collect(),
+        unsatisfiable: parts.into_iter().flat_map(|t| t.unsatisfiable).collect(),
     }
 }
 

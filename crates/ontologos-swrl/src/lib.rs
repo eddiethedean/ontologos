@@ -7,7 +7,7 @@ mod rules;
 use ontologos_core::Ontology;
 use thiserror::Error;
 
-pub use rules::{apply_swrl_rules, SwrlRule, SwrlReport};
+pub use rules::{apply_swrl_rules, SwrlReport, SwrlRule};
 
 /// Result type for SWRL operations.
 pub type Result<T> = std::result::Result<T, Error>;

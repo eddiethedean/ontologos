@@ -4,18 +4,13 @@ use horned_owl::model::{
     ClassExpression, DataProperty, DataRange, Individual, Literal, NamedIndividual,
     ObjectPropertyExpression, PropertyExpression, RcStr,
 };
-use ontologos_core::{
-    CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, EntityKind, RoleExpr,
-};
+use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, EntityKind, RoleExpr};
 
 use crate::map::Mapper;
 
 impl Mapper<'_> {
     /// Map a class expression into the DL store; returns `None` if entities fail to register.
-    pub(crate) fn map_class_expression(
-        &mut self,
-        ce: &ClassExpression<RcStr>,
-    ) -> Option<CeId> {
+    pub(crate) fn map_class_expression(&mut self, ce: &ClassExpression<RcStr>) -> Option<CeId> {
         let expr = self.build_class_expr(ce)?;
         Some(self.ontology.dl_mut().intern_ce(expr))
     }
@@ -143,7 +138,10 @@ impl Mapper<'_> {
         }
     }
 
-    pub(crate) fn map_individual_entity(&mut self, individual: &Individual<RcStr>) -> Option<EntityId> {
+    pub(crate) fn map_individual_entity(
+        &mut self,
+        individual: &Individual<RcStr>,
+    ) -> Option<EntityId> {
         match individual {
             Individual::Named(NamedIndividual(iri)) => {
                 self.register_or_warn_entity(iri.as_ref(), EntityKind::Individual)
@@ -296,7 +294,10 @@ impl Mapper<'_> {
         true
     }
 
-    pub(crate) fn map_dl_inverse_functional(&mut self, ope: &ObjectPropertyExpression<RcStr>) -> bool {
+    pub(crate) fn map_dl_inverse_functional(
+        &mut self,
+        ope: &ObjectPropertyExpression<RcStr>,
+    ) -> bool {
         let Some(prop_id) = self.named_object_property_id(ope) else {
             return false;
         };
@@ -478,10 +479,12 @@ impl Mapper<'_> {
         sub: &DataProperty<RcStr>,
         sup: &DataProperty<RcStr>,
     ) -> bool {
-        let Some(sub_id) = self.register_or_warn_entity(iri_of(sub), EntityKind::DataProperty) else {
+        let Some(sub_id) = self.register_or_warn_entity(iri_of(sub), EntityKind::DataProperty)
+        else {
             return false;
         };
-        let Some(sup_id) = self.register_or_warn_entity(iri_of(sup), EntityKind::DataProperty) else {
+        let Some(sup_id) = self.register_or_warn_entity(iri_of(sup), EntityKind::DataProperty)
+        else {
             return false;
         };
         self.push_dl_axiom(DlAxiom::SubDataPropertyOf {
@@ -633,7 +636,10 @@ impl Mapper<'_> {
                 Some(DataExpr::Top)
             }
             DR::DataIntersectionOf(ops) => {
-                let ids: Vec<DeId> = ops.iter().filter_map(|op| self.map_data_range(op)).collect();
+                let ids: Vec<DeId> = ops
+                    .iter()
+                    .filter_map(|op| self.map_data_range(op))
+                    .collect();
                 if ids.len() != ops.len() {
                     return None;
                 }
@@ -691,7 +697,10 @@ impl Mapper<'_> {
         }
     }
 
-    fn named_object_property_id(&mut self, ope: &ObjectPropertyExpression<RcStr>) -> Option<EntityId> {
+    fn named_object_property_id(
+        &mut self,
+        ope: &ObjectPropertyExpression<RcStr>,
+    ) -> Option<EntityId> {
         match ope {
             ObjectPropertyExpression::ObjectProperty(prop) => self
                 .register_or_warn_object_property(prop)
@@ -755,7 +764,11 @@ mod tests {
             read_horned_owl_from_reader(ofn.as_bytes(), Format::Functional, ParseLimits::default())
                 .unwrap();
         let (ont, report) = map_to_core(&parsed, ParseLimits::default()).unwrap();
-        assert_eq!(report.meta.skipped_axiom_count, 0, "{:?}", report.meta.warnings);
+        assert_eq!(
+            report.meta.skipped_axiom_count, 0,
+            "{:?}",
+            report.meta.warnings
+        );
         assert!(ont.dl().axiom_count() >= 1);
         assert!(ont.dl().ce_count() >= 2);
     }
