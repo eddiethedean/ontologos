@@ -3,7 +3,9 @@
 use ontologos_alc::{DlOntology, TableauSeed};
 use ontologos_core::{ClassExpr, Ontology, Taxonomy};
 use ontologos_el::ElClassifier;
-use ontologos_profile::{detect_profile, el_classification_forbidden_in, merge_taxonomies, scanner::scan_constructs};
+use ontologos_profile::{
+    detect_profile, el_classification_forbidden_in, merge_taxonomies, scanner::scan_constructs,
+};
 
 use crate::ria::RoleHierarchy;
 use crate::saturation::{saturate, SaturatedFacts};

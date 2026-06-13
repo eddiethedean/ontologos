@@ -23,7 +23,9 @@ pub enum Error {
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),
     /// SWRL profile not yet implemented.
-    #[error("SWRL rule execution is not implemented (preview); ontology has no executable SWRL rules")]
+    #[error(
+        "SWRL rule execution is not implemented (preview); ontology has no executable SWRL rules"
+    )]
     NotImplemented,
     /// Preview-only limitation.
     #[error("SWRL preview: {0}")]

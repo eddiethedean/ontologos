@@ -60,9 +60,7 @@ pub fn merge_taxonomies(mut parts: Vec<Taxonomy>) -> Taxonomy {
     }
     subsumptions.sort_unstable_by_key(|(a, b)| (a.0, b.0));
     subsumptions.dedup();
-    equivalences.sort_by_cached_key(|cluster| {
-        cluster.iter().map(|id| id.0).min().unwrap_or(0)
-    });
+    equivalences.sort_by_cached_key(|cluster| cluster.iter().map(|id| id.0).min().unwrap_or(0));
     equivalences.dedup();
     unsatisfiable.sort_unstable_by_key(|id| id.0);
     unsatisfiable.dedup();

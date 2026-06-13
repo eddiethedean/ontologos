@@ -174,7 +174,11 @@ fn existential_clause_filler_matches(
     )
 }
 
-fn expand_disjunction(branch: &mut Branch<'_>, world: usize, ops: Vec<CeId>) -> Result<bool, crate::Error> {
+fn expand_disjunction(
+    branch: &mut Branch<'_>,
+    world: usize,
+    ops: Vec<CeId>,
+) -> Result<bool, crate::Error> {
     for alt in ops {
         let mut child = branch.clone();
         assert_label(&mut child, world, alt);
@@ -198,7 +202,11 @@ fn expand_disjunction(branch: &mut Branch<'_>, world: usize, ops: Vec<CeId>) -> 
 }
 
 /// Whether `sub_role` ⊑ `super_role` in the saturated role hierarchy.
-pub(crate) fn role_subsumes(branch: &Branch<'_>, super_role: &RoleExpr, sub_role: &RoleExpr) -> bool {
+pub(crate) fn role_subsumes(
+    branch: &Branch<'_>,
+    super_role: &RoleExpr,
+    sub_role: &RoleExpr,
+) -> bool {
     match (super_role, sub_role) {
         (RoleExpr::Atomic(sup), RoleExpr::Atomic(sub)) => {
             if sup == sub {

@@ -95,14 +95,12 @@ impl PyReasoner {
 
     fn classify(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let outcome = match self.reasoner.profile() {
-            ontologos_core::Profile::Dl if self.dl_preview => {
-                ClassifyOutcome::Taxonomy(
-                    ontologos_dl::DlClassifier::new()
-                        .preview(true)
-                        .classify(self.reasoner.ontology())
-                        .map_err(py_err)?,
-                )
-            }
+            ontologos_core::Profile::Dl if self.dl_preview => ClassifyOutcome::Taxonomy(
+                ontologos_dl::DlClassifier::new()
+                    .preview(true)
+                    .classify(self.reasoner.ontology())
+                    .map_err(py_err)?,
+            ),
             _ => ontologos_facade::classify(&mut self.reasoner).map_err(map_facade_py_err)?,
         };
         match outcome {
