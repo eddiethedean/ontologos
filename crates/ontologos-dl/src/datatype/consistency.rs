@@ -562,13 +562,7 @@ fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> 
             }
             max_distinct_values(ontology, idx, *base)
         }
-        DataExpr::Datatype(dt) => {
-            if primitive_datatype_is_infinite(ontology, *dt) {
-                u32::MAX
-            } else {
-                u32::MAX
-            }
-        }
+        DataExpr::Datatype(_dt) => u32::MAX,
         DataExpr::Top => u32::MAX,
     }
 }
@@ -727,23 +721,6 @@ fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<Lite
             datatype,
         })
         .collect()
-}
-
-fn primitive_datatype_is_infinite(ontology: &Ontology, dt: EntityId) -> bool {
-    let Some(iri) = entity_iri(ontology, dt) else {
-        return true;
-    };
-    matches!(
-        iri.as_str(),
-        "http://www.w3.org/2001/XMLSchema#integer"
-            | "http://www.w3.org/2001/XMLSchema#decimal"
-            | "http://www.w3.org/2001/XMLSchema#float"
-            | "http://www.w3.org/2001/XMLSchema#double"
-            | "http://www.w3.org/2001/XMLSchema#string"
-            | "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
-            | "http://www.w3.org/2002/07/owl#rational"
-            | "http://www.w3.org/2002/07/owl#real"
-    )
 }
 
 fn numeric_compare(a: &str, b: &str) -> i32 {

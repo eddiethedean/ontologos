@@ -147,7 +147,7 @@ fn literal_in_datatype_value_space(
     }
     if let Ok(value) = lit.lexical.parse::<i64>() {
         let value = if value == 0 { 0 } else { value };
-        return match &*target_iri {
+        return match target_iri {
             "http://www.w3.org/2001/XMLSchema#integer"
             | "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" => value >= 0,
             "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" => value <= 0,
@@ -160,7 +160,7 @@ fn literal_in_datatype_value_space(
             _ => false,
         };
     }
-    match &*target_iri {
+    match target_iri {
         "http://www.w3.org/2001/XMLSchema#decimal"
         | "http://www.w3.org/2001/XMLSchema#float"
         | "http://www.w3.org/2001/XMLSchema#double"
