@@ -64,7 +64,7 @@ fn hermit_classification_pizza_taxonomy() {
 }
 
 #[test]
-#[ignore = "horned-owl panics on legacy wine.xml duplicate rdf:ID until parser handles the error"]
+#[ignore = "wine.xml fails to parse (duplicate rdf:ID); vendored golden deferred until fixture is repaired"]
 fn hermit_classification_wine_taxonomy() {
     assert!(
         classification_fixtures_available(),

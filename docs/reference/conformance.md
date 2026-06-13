@@ -40,7 +40,7 @@ Representative ported cases (see manifest for full list):
 | HermiT test | Status | Notes |
 |-------------|--------|-------|
 | `ClassificationTest.testPizza` | **CI** | Vendored `pizza.xml` + golden `.txt` |
-| `ClassificationTest.testWine` | Optional | Skips when horned-owl cannot parse `wine.xml` |
+| `ClassificationTest.testWine` | Optional | Ignored: `wine.xml` fails to parse (duplicate `rdf:ID`) |
 
 ## EL golden conformance
 

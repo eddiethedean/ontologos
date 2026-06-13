@@ -6,7 +6,7 @@
 
 ## Overview
 
-OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, and explanation generation. **v0.7.0** (on `main`, pending tag) ships dependency-first adapters: `ontologos-explain`, `ontologos-bridge`, in-house EL completion, and reasonable (RL/RDFS). v0.5 added EL classification, taxonomy queries, and CLI profile routing; v0.4 added ABox and OWL RL saturation.
+OntoLogos is a modular Rust ontology reasoner supporting OWL EL, OWL RL, RDFS reasoning, and explanation generation. **v0.7.0** (ready on `main`) ships dependency-first adapters: `ontologos-explain`, `ontologos-bridge`, in-house EL completion, and reasonable (RL/RDFS). v0.5 added EL classification, taxonomy queries, and CLI profile routing; v0.4 added ABox and OWL RL saturation.
 
 ---
 

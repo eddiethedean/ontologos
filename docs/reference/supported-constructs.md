@@ -1,4 +1,4 @@
-# Supported OWL Constructs (v0.5)
+# Supported OWL Constructs (v0.7.0)
 
 The parser **maps** a subset of OWL TBox axioms into `ontologos-core`. Other constructs are **scanned** for profile detection (`ParseMeta.constructs`) but **skipped** with warnings.
 

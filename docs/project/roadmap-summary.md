@@ -2,7 +2,7 @@
 
 OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v0.6.1** · **Next release:** **v0.7.0** (ready on `main`)
 
-## Ready in v0.7.0 (pending tag + crates.io / PyPI publish)
+## Ready in v0.7.0 (tag + crates.io / PyPI publish)
 
 | Area | Status |
 |------|--------|

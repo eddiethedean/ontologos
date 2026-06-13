@@ -305,7 +305,7 @@ status = "ignored"
 fixture = "reasoner/res/wine.xml"
 control = "reasoner/res/wine.xml.txt"
 rust_test = "hermit_classification_wine_taxonomy"
-notes = "horned-owl panics on wine.xml duplicate rdf:ID; load must return Err not panic"
+notes = "wine.xml fails to parse (duplicate rdf:ID); vendored golden deferred"
 
 [[case]]
 id = "owl_wg_tests.EntailmentTest"

@@ -1,6 +1,6 @@
 # OWL EL classification
 
-v0.5 adds completion-based **OWL EL taxonomy classification** via `ontologos-el`.
+Completion-based **OWL EL taxonomy classification** via `ontologos-el` (v0.7.0).
 
 ## Library
 

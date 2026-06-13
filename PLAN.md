@@ -7,7 +7,7 @@
 
 | Milestone | Status |
 |-----------|--------|
-| **v0.7.0** | **Ready on `main`** — semver aligns ROADMAP v0.7 dependency-first adapters; pending tag and publish |
+| **v0.7.0** | **Ready on `main`** — semver aligns ROADMAP v0.7 dependency-first adapters; tag and publish per [`.github/release/v0.7.0.md`](.github/release/v0.7.0.md) |
 | **v0.8** | Incremental reasoning + petgraph polish |
 | **v0.9** | Python wheels / PyPI maturity |
 

@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **EL validation:** `validate_el_profile` uses `el_classification_forbidden_in` (complex TBox constructs the completion engine cannot handle)
 - **EL completion:** multiple `ObjectPropertyDomain` axioms per property are all applied
 - **Parser:** horned-owl panics on malformed RDF/XML (e.g. duplicate `rdf:ID`) converted to `Error::Parse`
-- **CLI:** materialization reports include `clashes`; `parse_meta` errors emit stderr warnings
+- **CLI:** materialization reports include `clashes` in text and JSON output
 - **Conformance:** `sub_and_super_roles` uses direct subproperty assertion; manifest marks reasonable upstream gaps as `ignored`
 - **Bridge:** optional `MergeLimits::max_axioms` cap during RL/RDFS merge
 - **Security:** expanded `security_regressions` tests for JSON limits documented in `docs/security.md`

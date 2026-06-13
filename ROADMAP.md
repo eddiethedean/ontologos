@@ -467,7 +467,7 @@ v0.5 shipped custom EL completion; v0.6.0 briefly delegated to whelk (git); **v0
 
 ## v0.6 — Explanation engine
 
-**Status: Complete on `main`** (tag **v0.7.0** pending) · **Adapter note:** RL/RDFS rule traces empty until reasonable exposes diagnostics · **Depends on:** v0.3–v0.5
+**Status: Complete on `main`** (ready to tag **v0.7.0**) · **Adapter note:** RL/RDFS rule traces empty until reasonable exposes diagnostics · **Depends on:** v0.3–v0.5
 
 **Crate:** `ontologos-explain`
 
@@ -520,7 +520,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 - [x] `cargo test --workspace` and `clippy -D warnings` green
 - [x] No duplicate rule implementations in workspace
 - [x] Public API stable: `load_ontology`, `classify_with_profile`, CLI subcommands
-- [ ] Tag and publish **v0.7.0** (`ontologos-bridge`, facade crate updates; semver aligns ROADMAP v0.7)
+- [ ] Tag and publish **v0.7.0** — see [`.github/release/v0.7.0.md`](.github/release/v0.7.0.md) checklist (`git tag v0.7.0 && git push origin v0.7.0`)
 
 > **Upstream gaps:** See [dependency-first ADR](docs/internal/design/dependency-first.md). Track in reasonable issues; do not silently reimplement RL/RDFS rules.
 
