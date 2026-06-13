@@ -1,5 +1,5 @@
-//! Regression tests for confirmed bugs tracked on GitHub.
-//! Run ignored tests: `cargo test -p ontologos-parser -- --ignored`
+//! Regression tests for confirmed parser bugs tracked on GitHub.
+//! All tests run in CI by default.
 
 use std::path::Path;
 

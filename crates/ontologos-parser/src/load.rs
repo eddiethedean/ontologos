@@ -81,8 +81,19 @@ pub fn load_ontology_with_limits_and_base(
             .map_err(|e| Error::Parse(e.to_string()))?;
         file.read_to_end(&mut bytes)
             .map_err(|e| Error::Parse(e.to_string()))?;
+        if bytes.len() > limits.max_file_bytes {
+            return Err(Error::Parse(format!(
+                "file size {} exceeds limit of {} bytes",
+                bytes.len(),
+                limits.max_file_bytes
+            )));
+        }
         let text = String::from_utf8_lossy(&bytes);
-        let expanded = crate::rdf_preprocess::expand_xml_entities(&text);
+        let deduped = crate::rdf_preprocess::dedupe_rdf_xml_ids(&text);
+        let expanded = crate::rdf_preprocess::expand_xml_entities_with_limit(
+            &deduped,
+            limits.max_expanded_bytes,
+        )?;
         read_horned_owl_from_reader(
             &mut std::io::Cursor::new(expanded.as_bytes().to_vec()),
             format,
@@ -94,6 +105,12 @@ pub fn load_ontology_with_limits_and_base(
         read_horned_owl_from_reader(&mut file, format, limits)?
     };
     let (mut ontology, report) = map_to_core(&set_ontology, limits)?;
+    if limits.strict && report.meta.skipped_axiom_count > 0 {
+        return Err(Error::Parse(format!(
+            "strict parse: skipped {} axioms due to limits or mapping failures",
+            report.meta.skipped_axiom_count
+        )));
+    }
     ontology.set_parse_meta(report.into_meta());
     Ok(ontology)
 }

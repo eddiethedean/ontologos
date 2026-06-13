@@ -59,6 +59,7 @@ fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
         .ok_or_else(|| Error::Profile("no profile detected".into()))?;
 
     match detected {
+        // OWL QL TBox is a subset of EL for mapped axioms; EL completion is sound for QL corpora.
         OwlProfile::El | OwlProfile::Ql => {
             if reasoner.config().incremental {
                 Ok(ClassifyOutcome::Taxonomy(

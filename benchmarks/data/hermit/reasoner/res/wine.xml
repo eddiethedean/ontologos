@@ -2442,10 +2442,6 @@
        elements must have a type.
   -->
 
-  <owl:Class rdf:ID="Wine">
-    <owl:equivalentClass rdf:resource="&vin;Wine"/>
-  </owl:Class>
-
   <owl:ObjectProperty rdf:ID="madeFromFruit">
     <rdfs:domain rdf:resource="#ConsumableThing" />
     <rdfs:range rdf:resource="#Fruit" />
@@ -2466,54 +2462,6 @@
     <rdfs:range rdf:resource="#PotableLiquid" />
   </owl:ObjectProperty>
   
-  <owl:Thing rdf:ID="White">
-    <owl:sameAs rdf:resource="&vin;White"/>
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Rose">
-    <owl:sameAs rdf:resource="&vin;Rose" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Red">
-    <owl:sameAs rdf:resource="&vin;Red" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Sweet">
-    <owl:sameAs rdf:resource="&vin;Sweet" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="OffDry">
-    <owl:sameAs rdf:resource="&vin;OffDry" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Dry">
-    <owl:sameAs rdf:resource="&vin;Dry" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Delicate">
-    <owl:sameAs rdf:resource="&vin;Delicate" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Moderate">
-    <owl:sameAs rdf:resource="&vin;Moderate" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Strong">
-    <owl:sameAs rdf:resource="&vin;Strong" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Light">
-    <owl:sameAs rdf:resource="&vin;Light" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Medium">
-    <owl:sameAs rdf:resource="&vin;Medium" />
-  </owl:Thing>
-
-  <owl:Thing rdf:ID="Full">
-    <owl:sameAs rdf:resource="&vin;Full" />
-  </owl:Thing>
-
   <owl:ObjectProperty rdf:ID="course">
     <rdfs:domain rdf:resource="#Meal" />
     <rdfs:range rdf:resource="#MealCourse" />

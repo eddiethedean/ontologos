@@ -37,7 +37,6 @@ fn sc_trans_infers_transitive_subclass() {
 }
 
 #[test]
-#[ignore = "reasonable implements rdfs11 (subClassOf) but not subPropertyOf transitivity"]
 fn sp_trans_infers_transitive_subproperty() {
     let mut ontology = Ontology::builder()
         .object_property(&format!("{NS}p"))
@@ -65,7 +64,6 @@ fn sp_trans_infers_transitive_subproperty() {
 }
 
 #[test]
-#[ignore = "reasonable does not implement RDFS domain inheritance along subPropertyOf"]
 fn dom_inherit_infers_domain_from_superproperty() {
     let mut ontology = Ontology::builder()
         .class(&format!("{NS}Person"))
@@ -97,7 +95,6 @@ fn dom_inherit_infers_domain_from_superproperty() {
 }
 
 #[test]
-#[ignore = "reasonable does not implement RDFS range inheritance along subPropertyOf"]
 fn rng_inherit_infers_range_from_superproperty() {
     let mut ontology = Ontology::builder()
         .class(&format!("{NS}Person"))

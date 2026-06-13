@@ -4,8 +4,8 @@ use ontologos_core::{Ontology, OntologyRevision, Profile, Reasoner, ReasonerSess
 use reasonable::reasoner::Reasoner as ReasonableReasoner;
 
 use crate::{
-    core_to_triples, core_to_triples_for_axioms, merge_triples_into_ontology_with_limits, Error,
-    MergeLimits, MergeReport,
+    apply_reasonable_fallbacks, core_to_triples, core_to_triples_for_axioms,
+    merge_triples_into_ontology_with_limits, Error, MergeLimits, MergeReport,
 };
 
 /// Persistent reasonable state for incremental RL/RDFS materialization.
@@ -159,6 +159,10 @@ pub fn materialize_with_session(
             Ok(m) => m,
             Err(e) => return Err(Box::new((e, session))),
         };
+
+    if let Err(e) = apply_reasonable_fallbacks(ontology) {
+        return Err(Box::new((e, session)));
+    }
 
     session.last_revision = ontology.revision();
     ontology.clear_dirty();

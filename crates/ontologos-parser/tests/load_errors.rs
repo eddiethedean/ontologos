@@ -53,7 +53,7 @@ fn file_size_limit_returns_parse_error() {
 }
 
 #[test]
-fn legacy_wine_fixture_returns_parse_error_not_panic() {
+fn legacy_wine_fixture_loads_after_duplicate_rdf_id_dedup() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/reasoner/res/wine.xml");
     assert!(
@@ -62,10 +62,9 @@ fn legacy_wine_fixture_returns_parse_error_not_panic() {
         path.display()
     );
 
-    let err = load_ontology(&path).expect_err("wine.xml should fail to parse");
-    assert!(matches!(err, Error::Parse(_)));
+    let ontology = load_ontology(&path).expect("wine.xml should load after rdf:ID dedup");
     assert!(
-        err.to_string().contains("rdf:ID") || err.to_string().contains("parser internal error"),
-        "unexpected message: {err}"
+        ontology.axiom_count() > 0,
+        "expected mapped axioms from wine.xml"
     );
 }

@@ -109,10 +109,24 @@ fn family_rl_closure_matches_reasonable() {
         expected.difference(&actual).count()
     );
 
-    let extra: Vec<_> = actual.difference(&expected).take(10).collect();
+    let extra: Vec<_> = actual
+        .difference(&expected)
+        .filter(|key| !allowed_bridge_fallback_triple(key))
+        .take(10)
+        .collect();
     assert!(
         extra.is_empty(),
         "ontologos-rl has {} triples not in reasonable closure (sample: {extra:?})",
-        actual.difference(&expected).count()
+        actual
+            .difference(&expected)
+            .filter(|key| !allowed_bridge_fallback_triple(key))
+            .count()
     );
+}
+
+/// Bridge fallbacks may add RDFS domain/range/subProperty closure beyond reasonable.
+fn allowed_bridge_fallback_triple(key: &str) -> bool {
+    key.contains("|http://www.w3.org/2000/01/rdf-schema#domain|")
+        || key.contains("|http://www.w3.org/2000/01/rdf-schema#range|")
+        || key.contains("|http://www.w3.org/2000/01/rdf-schema#subPropertyOf|")
 }

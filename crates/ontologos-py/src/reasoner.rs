@@ -11,7 +11,7 @@ use crate::convert::{
     find_subclass_axiom_id, parse_meta_dict, parse_profile, proof_graph_dict, py_err,
     resolve_class, resolve_individual, resolve_object_property, taxonomy_dict,
 };
-use crate::ontology::PyOntology;
+use crate::ontology::{PyOntology, SharedOntology};
 
 /// Python wrapper around the OntoLogos reasoner.
 #[pyclass(name = "Reasoner", unsendable)]
@@ -19,6 +19,8 @@ pub(crate) struct PyReasoner {
     pub(crate) reasoner: Reasoner,
     pub(crate) last_taxonomy: Option<ontologos_core::Taxonomy>,
     pub(crate) dl_preview: bool,
+    /// When constructed from `Ontology`, mutations sync back to this shared handle.
+    shared_ontology: Option<SharedOntology>,
 }
 
 fn build_reasoner(
@@ -54,10 +56,15 @@ impl PyReasoner {
             ));
         }
 
-        let core_ontology = if let Some(path) = path {
-            load_ontology(std::path::Path::new(path)).map_err(py_err)?
+        let (core_ontology, shared_ontology) = if let Some(path) = path {
+            (
+                load_ontology(std::path::Path::new(path)).map_err(py_err)?,
+                None,
+            )
         } else {
-            ontology.expect("ontology checked above").inner.clone()
+            let shared = ontology.expect("ontology checked above").inner.clone();
+            let core_ontology = shared.borrow().clone();
+            (core_ontology, Some(shared))
         };
 
         let dl_preview = matches!(
@@ -69,6 +76,7 @@ impl PyReasoner {
             reasoner,
             last_taxonomy: None,
             dl_preview,
+            shared_ontology,
         })
     }
 
@@ -80,7 +88,7 @@ impl PyReasoner {
             .ontology()
             .parse_meta()
             .map(ParseMetaSummary::from)
-            .unwrap_or_default();
+            .ok_or_else(|| py_err("ontology has no parse metadata"))?;
         Ok(parse_meta_dict(py, &summary)?.into())
     }
 
@@ -94,6 +102,7 @@ impl PyReasoner {
     }
 
     fn classify(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        self.sync_from_shared()?;
         let outcome = match self.reasoner.profile() {
             ontologos_core::Profile::Dl if self.dl_preview => ClassifyOutcome::Taxonomy(
                 ontologos_dl::DlClassifier::new()
@@ -103,7 +112,7 @@ impl PyReasoner {
             ),
             _ => ontologos_facade::classify(&mut self.reasoner).map_err(map_facade_py_err)?,
         };
-        match outcome {
+        let result = match outcome {
             ClassifyOutcome::Taxonomy(taxonomy) => {
                 let dict = taxonomy_dict(py, self.reasoner.ontology(), &taxonomy)?;
                 self.last_taxonomy = Some(taxonomy);
@@ -125,21 +134,26 @@ impl PyReasoner {
                 dict.set_item("inferred_axioms", report.inferred_total())?;
                 Ok(dict.into())
             }
-        }
+        };
+        self.sync_to_shared();
+        result
     }
 
     fn explain(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        self.sync_from_shared()?;
         let graph = explain_with_profile(&mut self.reasoner).map_err(py_err)?;
         let summary = self
             .reasoner
             .ontology()
             .parse_meta()
             .map(ParseMetaSummary::from)
-            .unwrap_or_default();
+            .ok_or_else(|| py_err("ontology has no parse metadata"))?;
+        self.sync_to_shared();
         Ok(proof_graph_dict(py, self.reasoner.ontology(), &graph, Some(&summary))?.into())
     }
 
     fn add_subclass_of(&mut self, subclass: &str, superclass: &str) -> PyResult<()> {
+        self.sync_from_shared()?;
         let ontology = self.reasoner.ontology_mut();
         let sub = resolve_class(ontology, subclass)?;
         let sup = resolve_class(ontology, superclass)?;
@@ -149,20 +163,24 @@ impl PyReasoner {
                 superclass: sup,
             })
             .map_err(py_err)?;
+        self.sync_to_shared();
         Ok(())
     }
 
     fn remove_subclass_of(&mut self, subclass: &str, superclass: &str) -> PyResult<()> {
+        self.sync_from_shared()?;
         let id = find_subclass_axiom_id(self.reasoner.ontology(), subclass, superclass)?
             .ok_or_else(|| py_err(format!("no SubClassOf axiom for {subclass} ⊑ {superclass}")))?;
         self.reasoner
             .ontology_mut()
             .remove_axiom(id)
             .map_err(py_err)?;
+        self.sync_to_shared();
         Ok(())
     }
 
     fn add_axiom_json(&mut self, py: Python<'_>, axiom: &Bound<'_, PyAny>) -> PyResult<()> {
+        self.sync_from_shared()?;
         let json_mod = PyModule::import(py, "json")?;
         let axiom_json: String = json_mod.call_method1("dumps", (axiom,))?.extract()?;
         let snapshot: serde_json::Value =
@@ -170,7 +188,23 @@ impl PyReasoner {
 
         let ontology = self.reasoner.ontology_mut();
         apply_snapshot_axiom(ontology, &snapshot)?;
+        self.sync_to_shared();
         Ok(())
+    }
+}
+
+impl PyReasoner {
+    fn sync_from_shared(&mut self) -> PyResult<()> {
+        if let Some(shared) = &self.shared_ontology {
+            *self.reasoner.ontology_mut() = shared.borrow().clone();
+        }
+        Ok(())
+    }
+
+    fn sync_to_shared(&mut self) {
+        if let Some(shared) = &self.shared_ontology {
+            *shared.borrow_mut() = self.reasoner.ontology().clone();
+        }
     }
 }
 

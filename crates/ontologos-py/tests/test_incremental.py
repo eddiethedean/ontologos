@@ -5,6 +5,18 @@ from __future__ import annotations
 from ontologos import OntologyBuilder, Reasoner
 
 
+def test_reasoner_mutations_sync_to_ontology() -> None:
+    builder = OntologyBuilder()
+    builder.add_class("http://example.org/A")
+    builder.add_class("http://example.org/B")
+    ontology = builder.build()
+    assert ontology.axiom_count == 0
+
+    reasoner = Reasoner(ontology=ontology, profile="el")
+    reasoner.add_subclass_of("http://example.org/A", "http://example.org/B")
+    assert ontology.axiom_count == 1
+
+
 def test_incremental_add_subclass_of() -> None:
     builder = OntologyBuilder()
     builder.add_class("http://example.org/A")

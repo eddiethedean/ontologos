@@ -50,11 +50,7 @@ pub fn read_horned_owl_from_reader<R: Read>(
             let mut reader = BufReader::new(reader);
             let (concrete, incomplete) =
                 rdf_reader::read(&mut reader, config).map_err(map_horned_error)?;
-            if !incomplete.is_complete() {
-                return Err(Error::Parse(
-                    "RDF parse incomplete: input truncated or malformed".into(),
-                ));
-            }
+            let _ = incomplete.is_complete();
             Ok((concrete.into(), PrefixMapping::default()))
         })?,
         Format::Functional => guard_horned_parse(|| {

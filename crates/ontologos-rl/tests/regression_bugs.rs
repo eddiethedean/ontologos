@@ -38,7 +38,6 @@ fn saturate(ontology: &mut Ontology) {
 
 /// Domain on subproperty Q should type assertion on superproperty P (prp-dom2).
 #[test]
-#[ignore = "reasonable prp-dom does not inherit domain from subProperty to superProperty assertions"]
 fn domain_on_subproperty_types_superproperty_assertion() {
     let mut ontology = Ontology::builder()
         .class(&iri("Person"))
@@ -101,7 +100,6 @@ fn equivalent_property_domain_types_sibling_property_assertion() {
 
 /// Domain on R should type assertion on P when R ⊑ Q ⊑ P (transitive subproperty chain).
 #[test]
-#[ignore = "reasonable prp-dom does not inherit domain along subProperty chains to superProperty assertions"]
 fn domain_on_transitive_subproperty_types_superproperty_assertion() {
     let mut ontology = Ontology::builder()
         .class(&iri("Person"))
@@ -137,7 +135,6 @@ fn domain_on_transitive_subproperty_types_superproperty_assertion() {
 
 /// Range on subproperty Q should type assertion object on superproperty P.
 #[test]
-#[ignore = "reasonable prp-rng does not inherit range from subProperty to superProperty assertions"]
 fn range_on_subproperty_types_superproperty_assertion_object() {
     let mut ontology = Ontology::builder()
         .class(&iri("Person"))

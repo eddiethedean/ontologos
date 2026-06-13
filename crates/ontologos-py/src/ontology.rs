@@ -1,5 +1,8 @@
 //! Python `Ontology` and `OntologyBuilder` bindings.
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use ontologos_core::{Ontology, OntologyBuilder};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
@@ -7,10 +10,21 @@ use pyo3::types::{PyDict, PyString, PyType};
 
 use crate::convert::py_err;
 
+/// Shared in-memory ontology handle used by `Ontology` and `Reasoner`.
+pub(crate) type SharedOntology = Rc<RefCell<Ontology>>;
+
 /// In-memory ontology constructed from JSON or the builder API.
 #[pyclass(name = "Ontology", unsendable)]
 pub(crate) struct PyOntology {
-    pub(crate) inner: Ontology,
+    pub(crate) inner: SharedOntology,
+}
+
+impl PyOntology {
+    pub(crate) fn from_owned(ontology: Ontology) -> Self {
+        Self {
+            inner: Rc::new(RefCell::new(ontology)),
+        }
+    }
 }
 
 #[pymethods]
@@ -18,7 +32,7 @@ impl PyOntology {
     #[classmethod]
     fn from_json(_cls: &Bound<'_, PyType>, json: &str) -> PyResult<Self> {
         let inner = Ontology::from_json(json).map_err(py_err)?;
-        Ok(Self { inner })
+        Ok(Self::from_owned(inner))
     }
 
     #[classmethod]
@@ -33,7 +47,7 @@ impl PyOntology {
     }
 
     fn to_json(&self) -> PyResult<String> {
-        self.inner.to_json().map_err(py_err)
+        self.inner.borrow().to_json().map_err(py_err)
     }
 
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
@@ -47,12 +61,12 @@ impl PyOntology {
 
     #[getter]
     fn axiom_count(&self) -> usize {
-        self.inner.axiom_count()
+        self.inner.borrow().axiom_count()
     }
 
     #[getter]
     fn entity_count(&self) -> usize {
-        self.inner.entity_count()
+        self.inner.borrow().entity_count()
     }
 }
 
@@ -142,6 +156,6 @@ impl PyOntologyBuilder {
 
     fn build(mut slf: PyRefMut<'_, Self>) -> PyResult<PyOntology> {
         let inner = std::mem::take(&mut slf.builder).build().map_err(py_err)?;
-        Ok(PyOntology { inner })
+        Ok(PyOntology::from_owned(inner))
     }
 }

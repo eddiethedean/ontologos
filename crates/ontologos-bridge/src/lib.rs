@@ -3,6 +3,7 @@
 mod error;
 mod horned;
 mod reasonable_session;
+mod rl_postprocess;
 mod taxonomy;
 mod triples;
 
@@ -11,6 +12,9 @@ pub use horned::core_to_horned;
 pub use reasonable_session::{
     downcast_reasonable_session, materialize_with_session, take_reasonable_session,
     MaterializeOutcome, ReasonableSession,
+};
+pub use rl_postprocess::{
+    apply_domain_range_inheritance, apply_reasonable_fallbacks, apply_transitive_subproperties,
 };
 pub use taxonomy::{equivalence_clusters, reduce_subsumptions};
 pub use triples::{

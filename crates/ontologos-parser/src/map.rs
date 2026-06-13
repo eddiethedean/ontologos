@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use horned_owl::model::{
     AnnotatedComponent, Class, ClassExpression, Component, Individual, ObjectProperty,
     ObjectPropertyExpression, RcStr, SubObjectPropertyExpression,
@@ -15,19 +17,36 @@ pub fn map_to_core(
 ) -> Result<(Ontology, ParseReport)> {
     let mut ontology = Ontology::new();
     let mut report = ParseReport::new();
+
+    // Pass 1: explicit declarations only, so axiom mapping cannot pin entity kinds
+    // before declared types are known (issue #3). Conflicting declarations for the same
+    // IRI use last-wins with a warning.
+    let mut declaration_kinds: BTreeMap<String, EntityKind> = BTreeMap::new();
+    let mut declaration_warnings: Vec<String> = Vec::new();
+    for annotated in source.iter() {
+        if is_declaration(&annotated.component) {
+            if let Some((iri, kind)) = declaration_component(&annotated.component) {
+                if let Some(prev) = declaration_kinds.insert(iri.clone(), kind) {
+                    if prev != kind {
+                        declaration_warnings.push(format!(
+                            "entity kind mismatch on declaration for {iri}: {prev:?} then {kind:?}; using last declaration"
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    for warning in declaration_warnings {
+        report.meta.warn(warning);
+    }
+
     let mut mapper = Mapper {
         ontology: &mut ontology,
         report: &mut report,
         limits,
     };
-
-    // Pass 1: explicit declarations only, so axiom mapping cannot pin entity kinds
-    // before declared types are known (issue #3). Conflicting declarations for the same
-    // IRI within pass 1 (e.g. Class then DataProperty) remain visit-order dependent.
-    for annotated in source.iter() {
-        if is_declaration(&annotated.component) {
-            mapper.visit(annotated);
-        }
+    for (iri, kind) in declaration_kinds {
+        let _ = mapper.register_or_warn_entity(&iri, kind);
     }
     // Pass 2: logical axioms and metadata.
     for annotated in source.iter() {
@@ -51,6 +70,31 @@ fn is_declaration(component: &Component<RcStr>) -> bool {
             | Component::DeclareDatatype(_)
             | Component::DeclareAnnotationProperty(_)
     )
+}
+
+fn declaration_component(component: &Component<RcStr>) -> Option<(String, EntityKind)> {
+    match component {
+        Component::DeclareClass(decl) => {
+            Some((iri_of(&decl.0).to_owned(), EntityKind::Class))
+        }
+        Component::DeclareObjectProperty(decl) => Some((
+            iri_of(&decl.0).to_owned(),
+            EntityKind::ObjectProperty,
+        )),
+        Component::DeclareNamedIndividual(decl) => {
+            Some((iri_of(&decl.0).to_owned(), EntityKind::Individual))
+        }
+        Component::DeclareDataProperty(decl) => Some((
+            iri_of(&decl.0).to_owned(),
+            EntityKind::DataProperty,
+        )),
+        Component::DeclareDatatype(_decl) => None,
+        Component::DeclareAnnotationProperty(decl) => Some((
+            iri_of(&decl.0).to_owned(),
+            EntityKind::AnnotationProperty,
+        )),
+        _ => None,
+    }
 }
 
 pub(crate) struct Mapper<'a> {

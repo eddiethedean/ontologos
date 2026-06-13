@@ -9,14 +9,33 @@ pub struct ParseLimits {
     pub max_axioms: usize,
     /// Maximum entities registered during parse.
     pub max_entities: usize,
+    /// Maximum expanded RDF/XML size after entity expansion (defaults to 4× `max_file_bytes`).
+    pub max_expanded_bytes: usize,
+    /// When true, return an error if axioms or entities are skipped due to limits.
+    pub strict: bool,
 }
 
 impl Default for ParseLimits {
     fn default() -> Self {
+        let max_file_bytes = 64 * 1024 * 1024;
         Self {
-            max_file_bytes: 64 * 1024 * 1024,
+            max_file_bytes,
             max_axioms: 10_000_000,
             max_entities: 1_000_000,
+            max_expanded_bytes: max_file_bytes.saturating_mul(4),
+            strict: false,
+        }
+    }
+}
+
+impl ParseLimits {
+    /// Build limits with `max_expanded_bytes` derived from `max_file_bytes`.
+    #[must_use]
+    pub fn with_file_bytes(max_file_bytes: usize) -> Self {
+        Self {
+            max_file_bytes,
+            max_expanded_bytes: max_file_bytes.saturating_mul(4),
+            ..Self::default()
         }
     }
 }

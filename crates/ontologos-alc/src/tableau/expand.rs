@@ -55,8 +55,8 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
                 }
             }
         }
-        ClassExpr::HasValue { individual, .. } => {
-            let _ = individual;
+        ClassExpr::HasValue { property, individual } => {
+            expand_has_value(branch, world, property, individual);
         }
         ClassExpr::HasSelf(_) => {}
         ClassExpr::MinCardinality { n: 0, .. } => {}
@@ -78,6 +78,21 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         }
     }
     Ok(())
+}
+
+fn expand_has_value(
+    branch: &mut Branch<'_>,
+    world: usize,
+    property: RoleExpr,
+    individual: ontologos_core::EntityId,
+) {
+    let filler = branch.dl.core().dl().expressions().find_map(|(id, e)| match e {
+        ClassExpr::OneOf(v) if v == &[individual] => Some(id),
+        _ => None,
+    });
+    if let Some(filler) = filler {
+        expand_existential(branch, world, property, filler);
+    }
 }
 
 fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr, filler: CeId) {

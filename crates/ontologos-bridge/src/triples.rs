@@ -362,34 +362,35 @@ pub fn merge_triples_into_ontology_with_limits(
         }
     }
 
+    let mut to_add: Vec<Axiom> = Vec::new();
     for axiom in collect_existential_axioms(ontology, triples)? {
-        if ontology.axiom_count() >= limits.max_axioms {
-            return Err(Error::Bridge(format!(
-                "axiom limit {} reached during merge",
-                limits.max_axioms
-            )));
-        }
         if let Some(key) = axiom_triple_key(ontology, &axiom)? {
             if seen.insert(key) {
-                ontology.add_inferred_axiom(axiom)?;
+                to_add.push(axiom);
             }
         }
     }
 
     for t in triples {
-        if ontology.axiom_count() >= limits.max_axioms {
-            return Err(Error::Bridge(format!(
-                "axiom limit {} reached during merge",
-                limits.max_axioms
-            )));
-        }
         if let Some(axiom) = triple_to_axiom(ontology, t)? {
             if let Some(key) = axiom_triple_key(ontology, &axiom)? {
                 if seen.insert(key) {
-                    ontology.add_inferred_axiom(axiom)?;
+                    to_add.push(axiom);
                 }
             }
         }
+    }
+
+    if ontology.axiom_count().saturating_add(to_add.len()) > limits.max_axioms {
+        return Err(Error::Bridge(format!(
+            "axiom limit {} would be exceeded during merge ({} new axioms)",
+            limits.max_axioms,
+            to_add.len()
+        )));
+    }
+
+    for axiom in to_add {
+        ontology.add_inferred_axiom(axiom)?;
     }
 
     let clashes = diagnostics

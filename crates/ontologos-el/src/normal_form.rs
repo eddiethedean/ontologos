@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use ontologos_core::{Ontology, OwlConstruct};
 use ontologos_profile::scanner::scan_constructs;
-use ontologos_profile::{detect_profile, el_classification_forbidden_in, OwlProfile};
+use ontologos_profile::{detect_profile, el_classification_forbidden_in};
 
 use crate::Error;
 
@@ -15,9 +15,8 @@ pub fn validate_el_profile(ontology: &Ontology) -> crate::Result<()> {
         return Ok(());
     }
     let report = detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
-    Err(Error::NonElProfile {
-        detected: report.detected.unwrap_or(OwlProfile::Dl),
-    })
+    let detected = report.detected.ok_or_else(|| Error::Profile("no profile detected".into()))?;
+    Err(Error::NonElProfile { detected })
 }
 
 /// Constructs that block EL classification when present in mapped axioms.
