@@ -9,7 +9,7 @@ This guide walks through building a small ontology with the builder API.
 
 Unfamiliar with OWL terms (TBox, ABox, materialization)? See the [Glossary](../guides/glossary.md).
 
-> **Note:** `ontologos_core::Reasoner::classify()` is a facade stub. For file-based workflows use **CLI** (`ontologos classify`), **Python** (`Reasoner.classify()`), or profile crates (`ElClassifier`, `RlEngine`, `RdfsEngine`).
+> **Note:** `ontologos_core::Reasoner::classify()` is a facade stub. For file-based workflows use **CLI** (`ontologos classify`), **Python** (`Reasoner(path=...).classify()`), **`ontologos_facade::classify`**, or profile crates (`ElClassifier`, `RlEngine`, `RdfsEngine`). See [Choosing an API](../guides/choosing-an-api.md).
 
 ## Run the example
 

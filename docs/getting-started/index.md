@@ -4,9 +4,11 @@ Five-minute success paths for common goals.
 
 ## Crates.io only (no clone)
 
-Use any OWL file on disk — no repository clone or benchmark download required.
+Download a sample ontology, then build a minimal Rust project:
 
 ```bash
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
 cargo new ontologos-demo && cd ontologos-demo
 ```
 
@@ -26,7 +28,7 @@ use ontologos_parser::load_ontology;
 use ontologos_rdfs::RdfsEngine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
+    let mut ontology = load_ontology(std::path::Path::new("family.owl"))?;
     let report = RdfsEngine::new().materialize(&mut ontology)?;
     println!(
         "mapped {} → {} axioms (inferred {})",
@@ -38,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Place your OWL file at `ontology.owl`, then `cargo run`.
+Then `cargo run`.
 
 For OWL RL saturation, add `ontologos-rl = "0.9.0"` and see [OWL RL saturation](owl-rl-saturation.md).
 

@@ -11,7 +11,7 @@ Native Rust ontology reasoning orchestration: load OWL files, detect profiles, a
 
 **Try in 5 minutes:** `pip install ontologos` or add `ontologos-parser = "0.9.0"` to Cargo.toml — no clone required.
 
-**Status:** **v0.9.0** ready on `main` (tag pending) — Python ecosystem: in-memory ontologies, `explain()`, incremental mutations. **Not** full OWL DL / HermiT replacement.
+**Status:** **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/) — Python ecosystem: in-memory ontologies, `explain()`, incremental mutations. **Not** full OWL DL / HermiT replacement (DL preview available). See [Release status](docs/project/release-status.md).
 
 | You need… | Use today |
 |-----------|-----------|
@@ -20,7 +20,10 @@ Native Rust ontology reasoning orchestration: load OWL files, detect profiles, a
 | RDFS TBox inferences | `ontologos-rdfs` → reasonable |
 | OWL RL saturation | `ontologos-rl` → reasonable |
 | OWL EL taxonomy | `ontologos-el` (in-house completion) |
+| Multi-profile routing | `ontologos-facade` (CLI, Python, DL preview) |
 | Engine adapters / conversions | `ontologos-bridge` |
+
+> **New to the workspace?** Start with `pip install ontologos` or `ontologos-parser` + `ontologos-rdfs`. See [Choosing an API](docs/guides/choosing-an-api.md).
 
 **5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0)
 
@@ -47,9 +50,11 @@ ontologos-explain = "0.9.0"
 
 ## Quick start (crates.io)
 
-No repository clone required — use any OWL file on disk:
+No repository clone required — download a sample ontology:
 
 ```bash
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
 cargo new ontologos-demo && cd ontologos-demo
 ```
 
@@ -74,7 +79,7 @@ use ontologos_parser::load_ontology;
 use ontologos_rdfs::RdfsEngine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = std::path::Path::new("ontology.owl"); // your file here
+    let path = std::path::Path::new("family.owl");
     let mut ontology = load_ontology(path)?;
 
     let report = RdfsEngine::new().materialize(&mut ontology)?;

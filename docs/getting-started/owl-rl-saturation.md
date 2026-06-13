@@ -121,7 +121,7 @@ let report = RlEngine::try_new(4)?.saturate(&mut ontology)?;
 ```python
 from ontologos import Reasoner
 
-reasoner = Reasoner("benchmarks/data/family.owl", profile="rl")
+reasoner = Reasoner(path="benchmarks/data/family.owl", profile="rl")
 reasoner.classify()
 meta = reasoner.parse_meta
 print(meta["mapped_axiom_count"])

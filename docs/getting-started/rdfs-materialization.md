@@ -111,7 +111,7 @@ println!("axioms: {}", reasoner.ontology().axiom_count());
 ```python
 from ontologos import Reasoner
 
-reasoner = Reasoner("ontology.owl", profile="rdfs")
+reasoner = Reasoner(path="ontology.owl", profile="rdfs")
 reasoner.classify()
 print(reasoner.parse_meta["mapped_axiom_count"])
 ```

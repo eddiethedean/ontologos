@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Fail CI when user-facing docs pin a crate version that differs from the workspace.
+# Fail CI when user-facing docs pin a crate version that differs from the workspace,
+# or when profile/version strings drift across surfaces.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -36,13 +37,35 @@ FORBIDDEN=(
   "not available in the CLI until v0.5"
   "CLI does **not** run OWL RL saturation"
   "default \"auto\" fails in v0.4"
+  "tag pending"
+  "Latest tagged release:** **v0.7.0"
+  "Latest tagged release:** **v0.8.0"
+  "v0.8.0: profile"
 )
 for phrase in "${FORBIDDEN[@]}"; do
-  if rg -q --fixed-strings "$phrase" docs/getting-started FAQ.md 2>/dev/null; then
+  if rg -q --fixed-strings "$phrase" docs FAQ.md README.md crates/ontologos-cli/src/main.rs 2>/dev/null \
+    --glob '!docs/scripts/check-doc-versions.sh'; then
     echo "ERROR: forbidden stale phrase still present: ${phrase}"
     FAIL=1
   fi
 done
+
+# Profile list must appear in canonical doc surfaces
+PROFILE_MARKERS=( "dl-preview" "alc" "swrl" )
+for marker in "${PROFILE_MARKERS[@]}"; do
+  for file in docs/reference/cli.md docs/guides/python.md FAQ.md; do
+    if ! rg -q --fixed-strings "$marker" "$file" 2>/dev/null; then
+      echo "ERROR: ${file} missing preview profile marker: ${marker}"
+      FAIL=1
+    fi
+  done
+done
+
+# CLI after_help must match workspace version
+if ! rg -q "v${WORKSPACE_VERSION}:" crates/ontologos-cli/src/main.rs; then
+  echo "ERROR: CLI after_help does not advertise v${WORKSPACE_VERSION}"
+  FAIL=1
+fi
 
 if [[ "$FAIL" -ne 0 ]]; then
   exit 1

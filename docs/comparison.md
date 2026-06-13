@@ -13,15 +13,16 @@ See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs
 | OWL EL classification | **Yes** (in-house) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
 | OWL RL reasoning | **Yes** (via reasonable) | No | Partial | Partial | **Yes** | No | Via plugin |
 | RDFS materialization | **Yes** (via reasonable) | No | Yes | Yes | Partial | No | Yes |
-| OWL DL | No (2.0) | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| OWL DL (preview) | **Partial** (`ontologos-dl` on `main`) | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| OWL DL (production parity) | Planned **1.0** | No | Yes (stagnant) | Yes | No | No | Via plugin |
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
 | Unified multi-profile CLI/Python | **Yes** | No | No | No | RL only | EL only | Via plugins |
 | Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |
-| Hybrid EL+DL routing | Planned (v1.5) | No | No | Internal | No | No | MORe plugin |
+| Hybrid EL+DL routing | **Preview** (v0.9+ `main`) | No | No | Internal | No | No | MORe plugin |
 | Explanations | EL-first (v0.9.0) | Yes | Yes | Partial | Limited | No | Yes |
 | Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
 
-CLI `classify --profile auto|el|rl|rdfs` routes to in-house EL or reasonable (RL/RDFS). Use `materialize` for explicit RDFS.
+CLI `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` routes via `ontologos-facade`. Preview DL/ALC/SWRL are incomplete — see [Preview profiles](guides/preview-profiles.md). Use `materialize` for explicit RDFS.
 
 ## What OntoLogos adds over raw dependencies
 
@@ -59,8 +60,10 @@ OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid ro
 - **Protégé + HermiT/ELK:** interactive OWL editing
 - **owlready2:** Python-centric workflows with JVM backends
 
-## OntoLogos target (1.0)
+## OntoLogos target (1.0 vs 2.0)
 
-Replace JVM-bound **batch** reasoning in Rust/Python pipelines via stable facade APIs, with CLI, Python, and Ontocode integration. Full OWL DL in 2.0 extends the horned-owl ecosystem rather than a greenfield rewrite.
+**1.0** delivers stable OWL DL HermiT parity (preview DL on `main` today). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
+
+Replace JVM-bound **batch** reasoning in Rust/Python pipelines via stable facade APIs, with CLI, Python, and Ontocode integration.
 
 See [Roadmap summary](project/roadmap-summary.md) and [dependency-first ADR](internal/design/dependency-first.md).

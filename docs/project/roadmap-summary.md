@@ -1,6 +1,6 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v0.8.0** · **v0.9.0** ready on `main` (Python ecosystem; tag pending)
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v0.9.0** · See [Release status](release-status.md) for crates.io, PyPI, and preview status.
 
 ## Shipped in v0.9.0 (ready on `main`)
 

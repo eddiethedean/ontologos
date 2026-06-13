@@ -13,6 +13,10 @@ flowchart TB
     explain[ontologos_explain]
   end
 
+  subgraph routing [Unified routing]
+    facade[ontologos_facade]
+  end
+
   subgraph orchestration [Orchestration]
     core[ontologos_core]
     parser[ontologos_parser]
@@ -21,6 +25,9 @@ flowchart TB
     rdfs[ontologos_rdfs facade]
     rl[ontologos_rl facade]
     el[ontologos_el in_house]
+    alc[ontologos_alc preview]
+    dl[ontologos_dl preview]
+    swrl[ontologos_swrl preview]
   end
 
   subgraph external [External engines]
@@ -38,23 +45,31 @@ flowchart TB
   el --> core
   el --> rdfs
   el --> rl
+  alc --> core
+  dl --> el
+  dl --> alc
+  swrl --> dl
   rl --> bridge
   rdfs --> bridge
   query --> petgraph
   explain --> petgraph
   explain --> el
+  facade --> el
+  facade --> rl
+  facade --> rdfs
+  facade --> alc
+  facade --> dl
+  facade --> swrl
+  cli --> facade
   cli --> profile
-  cli --> el
-  cli --> rl
-  cli --> rdfs
   cli --> explain
-  py --> el
-  py --> rl
-  py --> rdfs
+  py --> facade
   core --> serde
 ```
 
-Published to crates.io: `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`.
+Published to crates.io: `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, `ontologos-facade`.
+
+Preview (workspace): `ontologos-alc`, `ontologos-dl`, `ontologos-swrl`.
 
 Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`.
 
@@ -72,29 +87,35 @@ flowchart LR
     ontology[Ontology]
   end
 
-  subgraph adapters [Adapters]
-    bridgeHorned[core to horned_owl]
-    bridgeTriples[core to oxrdf]
+  subgraph routing [Routing]
+    facadeRoute[ontologos_facade_classify]
   end
 
   subgraph engines [Engines]
     elEng[in_house EL completion]
-    reasonableEng[reasonable reason]
+    rlEng[reasonable RL]
+    rdfsEng[reasonable RDFS]
+    dlEng[DL hybrid EL plus tableau]
   end
 
   builder --> ontology
   json --> ontology
   owl --> parser[load_ontology] --> ontology
   ontology --> profileDet[detect_profile]
-  ontology --> elEng
+  ontology --> facadeRoute
+  facadeRoute --> elEng
+  facadeRoute --> rlEng
+  facadeRoute --> rdfsEng
+  facadeRoute --> dlEng
   elEng --> taxonomy[Taxonomy]
-  ontology --> bridgeTriples --> reasonableEng
-  reasonableEng --> saturated[Ontology plus inferred axioms]
+  dlEng --> taxonomy
+  rlEng --> saturated[MaterializationReport]
+  rdfsEng --> saturated
 ```
 
 1. **Construct or load** an `Ontology` (builder, JSON, or parser).
 2. **Optionally detect profile** with `ontologos_profile::detect_profile`.
-3. **Run a facade** — EL returns `Taxonomy` via in-house completion in `ontologos-el`; RL/RDFS materialize via reasonable into the same `Ontology`.
+3. **Route via facade** — `ontologos_facade::classify` dispatches to EL, RL/RDFS, DL, ALC, or SWRL engines.
 4. **Query** via `ontologos-query` (petgraph-backed hierarchy views).
 
 ## Core model (`ontologos-core`)
@@ -108,7 +129,7 @@ Single embed-facing representation:
 | `AxiomStore` | Structured TBox and ABox axioms |
 | `AxiomIndex` | Secondary indexes for traversal |
 | `ParseMeta` | Parser scan metadata (optional) |
-| `Taxonomy` | EL classification output |
+| `Taxonomy` | EL/DL classification output |
 
 Serialization: JSON snapshot v2 (`to_json` / `from_json`).
 
@@ -131,32 +152,41 @@ Owns conversions between models for parsing and RL/RDFS adapters:
 | RDFS | `ontologos-rdfs` | `reasonable` (RDFS rules subset of RL) |
 | OWL RL | `ontologos-rl` | `reasonable` |
 | OWL EL | `ontologos-el` | In-house ELK-style completion |
+| ALC | `ontologos-alc` | Tableau-lite (preview) |
+| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (preview) |
+| SWRL | `ontologos-swrl` | Preview stub |
 | Query | `ontologos-query` | petgraph over `Taxonomy` |
 | Explain | `ontologos-explain` | petgraph proof graphs; EL inference traces |
 
-## Reasoner facade
+## Unified facade (`ontologos-facade`)
 
-`Reasoner` in core is a configuration wrapper. Use profile crates for actual work:
+CLI and Python call **`ontologos_facade::classify`**. Prefer it in Rust when using `Profile::Auto`, `Dl`, `Alc`, or `Swrl`.
 
-| `Profile` | Use |
-|-----------|-----|
-| `Auto` | `ontologos_el::classify_with_profile` |
-| `El` | `ontologos_el::ElClassifier` |
-| `Rdfs` | `ontologos_rdfs::materialize_reasoner` |
-| `Rl` | `ontologos_rl::classify_reasoner` |
+| `Profile` | Routed to |
+|-----------|-----------|
+| `Auto` | EL/RL if detected; **DL** if profile detection returns DL |
+| `El`, `Rdfs`, `Rl` | `ontologos-el` router (EL/RL/RDFS paths) |
+| `Alc` | `ontologos-alc::classify` |
+| `Dl` | `ontologos-dl::classify` |
+| `Swrl` | `ontologos-swrl::classify_with_swrl` (preview) |
+
+See [Facade API](guides/facade-api.md) and [Preview profiles](guides/preview-profiles.md).
+
+**Do not** call `ontologos_core::Reasoner::classify()` — it is a stub.
 
 ## CLI surface
 
 - `profile` — detect OWL profile
-- `classify --profile auto|el|rl|rdfs` — routed classification
+- `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` — routed classification
 - `materialize` — RDFS materialization via reasonable
-- `explain` — proof graphs (EL-first for RL)
+- `explain` — proof graphs (EL full; RL/RDFS asserted-only)
 
 ## Design choices
 
 | Choice | Rationale |
 |--------|-----------|
-| Delegate RL/RDFS, own EL | reasonable is maintained for RL/RDFS; EL uses in-house completion (v0.6.1 restored after whelk git dependency blocked publish) |
+| Delegate RL/RDFS, own EL | reasonable is maintained for RL/RDFS; EL uses in-house completion |
+| Unified facade crate | Breaks EL↔DL cycles; single entry for CLI/Python |
 | Stable facade crate names | Semver and docs.rs URLs unchanged |
 | Core stays embed boundary | No re-export of horned-owl/reasonable types |
 | petgraph for views only | Not a second completion engine |
@@ -164,6 +194,7 @@ Owns conversions between models for parsing and RL/RDFS adapters:
 
 ## Related
 
+- [Facade API](guides/facade-api.md)
 - [Choosing an API](guides/choosing-an-api.md)
 - [Supported constructs](reference/supported-constructs.md)
 - [Comparison with other tools](comparison.md)

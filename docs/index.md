@@ -3,7 +3,15 @@
 Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materialization and OWL RL saturation.
 
 !!! warning "Early development (v0.9.0)"
-    OntoLogos maps a **subset** of OWL axioms into its core model — `axiom_count()` is mapper output, not Protégé's total. CLI **`classify --profile auto`** routes to EL or RL; use **`materialize`** for explicit RDFS. **`explain`** builds proof graphs (EL-first). Full OWL DL classification is not yet available. See [Supported constructs](reference/supported-constructs.md).
+    OntoLogos maps a **subset** of OWL axioms into its core model — `axiom_count()` is mapper output, not Protégé's total. CLI **`classify --profile auto`** routes to EL, RL, or DL (preview). Use **`materialize`** for explicit RDFS. **`explain`** builds proof graphs (EL full; RL/RDFS asserted-only). Full OWL DL HermiT parity is planned for **1.0**. See [Supported constructs](reference/supported-constructs.md).
+
+!!! tip "Integration DO / DON'T"
+    **DO** use CLI `ontologos classify`, Python `Reasoner(path=...).classify()`, or `ontologos_facade::classify` / profile crates (`ElClassifier`, `RlEngine`, `RdfsEngine`).
+
+    **DON'T** call `ontologos_core::Reasoner::classify()` directly — it is a stub (`NotImplemented` or delegate hints). See [Choosing an API](guides/choosing-an-api.md).
+
+!!! note "DL preview (main branch)"
+    `--profile dl` and `--profile dl-preview` are available in CLI/Python for early testing. Preview mode may return `PreviewLimit` or `ResourceLimit`. Not suitable for production DL workflows. See [Preview profiles](guides/preview-profiles.md).
 
 ## Persona quick links
 
@@ -11,6 +19,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 |------------|------------|
 | Try it in 5 minutes (no clone) | [Crates.io quick start](getting-started/index.md#cratesio-only-no-clone) |
 | Try it from a clone | [Getting started index](getting-started/index.md) |
+| Evaluate in 30 minutes | [Evaluator playbook](guides/evaluator-playbook.md) |
 | Evaluate vs ELK / reasonable | [Comparison](comparison.md) |
 | Integrate in Rust | [Choosing an API](guides/choosing-an-api.md) |
 | Use Python | [Python guide](guides/python.md) |
@@ -26,9 +35,10 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | RDFS materialization | Yes | `materialize` / `classify --profile rdfs` | `profile="rdfs"` |
 | OWL RL saturation | Yes | `classify --profile rl` | `profile="rl"` |
 | OWL EL taxonomy | Yes | `classify --profile el` | `profile="el"` |
+| OWL DL (preview) | Yes (`ontologos-dl`) | `classify --profile dl\|dl-preview` | `profile="dl"` / `"dl-preview"` |
 | Incremental reasoning | Yes (`ReasonerConfig::incremental`) | `--incremental` (session; multi-pass library) | `incremental=True` + mutation methods |
 | Taxonomy queries | Yes (`ontologos-query`) | JSON output | `taxonomy` property |
-| Explanations | Yes (`ontologos-explain`) | `explain` | `explain()` |
+| Explanations (EL full; RL/RDFS asserted-only) | Yes (`ontologos-explain`) | `explain` | `explain()` |
 | Materialization reports | Yes | Yes (RDFS/RL) | Yes |
 | Export saturated ontology | Yes (in-process) | No | No |
 | Taxonomy DataFrame export | No | No | Yes (optional pandas/polars) |
@@ -62,6 +72,9 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | Document | Description |
 |----------|-------------|
 | [choosing-an-api.md](guides/choosing-an-api.md) | Which crate and entry point to use |
+| [facade-api.md](guides/facade-api.md) | Unified `ontologos-facade::classify` routing |
+| [preview-profiles.md](guides/preview-profiles.md) | DL, ALC, SWRL preview status and limits |
+| [evaluator-playbook.md](guides/evaluator-playbook.md) | 30-minute Pizza/Family evaluation |
 | [profile-detection.md](guides/profile-detection.md) | OWL profile detection and diagnostics |
 | [python.md](guides/python.md) | Python bindings (`pip install ontologos`) |
 | [glossary.md](guides/glossary.md) | OWL and OntoLogos terminology |
@@ -117,6 +130,7 @@ Native Rust ontology reasoning: load OWL files, detect profiles, run RDFS materi
 | Document | Description |
 |----------|-------------|
 | [faq.md](project/faq.md) | Common questions |
+| [release-status.md](project/release-status.md) | Version and channel truth |
 | [release-notes.md](project/release-notes.md) | Version highlights |
 | [roadmap-summary.md](project/roadmap-summary.md) | Release plan overview |
 | [changelog.md](project/changelog.md) | Release history |

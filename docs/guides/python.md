@@ -82,7 +82,7 @@ Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly o
 |-----------|------|---------|-------------|
 | `path` | `str` or `None` | `None` | Path to `.owl`, `.rdf`, `.ttl`, or `.ofn` file |
 | `ontology` | `Ontology` or `None` | `None` | In-memory ontology from builder or JSON |
-| `profile` | `str` or `None` | `"auto"` | `"auto"`, `"rdfs"`, `"rl"`, or `"el"` |
+| `profile` | `str` or `None` | `"auto"` | `"auto"`, `"rdfs"`, `"rl"`, `"el"`, `"alc"`, `"dl"`, `"dl-preview"`, `"swrl"` |
 | `incremental` | `bool` | `False` | Enable incremental session for multi-pass workflows |
 
 **Profiles:**
@@ -92,7 +92,9 @@ Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly o
 | `"rdfs"` | `dict` with `initial_axiom_count`, `final_axiom_count`, `inferred_axioms` |
 | `"rl"` | Same report shape as RDFS (includes RL inferences) |
 | `"el"` | `dict` with `subsumption_count`, `subsumptions`, `equivalences`, `unsatisfiable` |
-| `"auto"` | EL taxonomy or RL report based on profile detection |
+| `"auto"` | EL taxonomy, RL report, or DL taxonomy based on profile detection |
+| `"dl"`, `"dl-preview"`, `"alc"` | Taxonomy dict (preview — see [Preview profiles](preview-profiles.md)) |
+| `"swrl"` | Preview — usually errors (`NotImplemented` / `PreviewLimit`) |
 
 Invalid profile strings raise `RuntimeError`.
 
@@ -113,7 +115,7 @@ Returns a proof graph dict with `node_count`, `nodes` (list of step dicts with `
 |---------|----------|
 | **EL** | Full inference traces → proof graph with IRI-resolved conclusions |
 | **RL / RDFS** | Proof graph seeds **asserted** axioms; inferred steps lack per-rule premises until reasonable exposes a trace API |
-| **auto** | Routes like `classify`; DL-only ontologies error |
+| **auto** | Routes like `classify`; DL-detected ontologies use DL preview classifier |
 
 See [Conformance](../reference/conformance.md) for evaluator notes.
 
@@ -186,6 +188,7 @@ Read-only dict after load:
 | In-memory ontology | Yes (`OntologyBuilder`) | Yes |
 | Profile detection | Yes | Via `"auto"` |
 | RDFS / RL / EL classify | Yes | Yes |
+| DL / ALC preview | Yes (preview) | Yes (`dl`, `dl-preview`, `alc`) |
 | Incremental multi-pass | Yes (library API) | Yes |
 | EL explain | Yes | Yes |
 | RL/RDFS explain (full traces) | Partial (asserted-only) | Partial (asserted-only) |
@@ -210,12 +213,15 @@ All failures surface as `RuntimeError` with a string message. Common messages:
 | Message pattern | Cause |
 |-----------------|-------|
 | `unsupported profile` | Invalid profile string |
-| `classification not supported for profile` | Auto-routing hit DL-only ontology |
+| `classification not supported for profile` | Invalid profile or SWRL not implemented |
+| `PreviewLimit` / `ResourceLimit` | DL preview limits — see [Preview profiles](preview-profiles.md) |
 | `requires exactly one of path or ontology` | Both or neither constructor args |
 | Parse / I/O errors | Bad path, unsupported format, mapping failure |
 
 ## Related
 
+- [Preview profiles](preview-profiles.md)
+- [Facade API](facade-api.md)
 - [Getting started](../getting-started/index.md)
 - [Incremental reasoning](incremental-reasoning.md)
 - [OWL EL classification](../getting-started/owl-el-classification.md)

@@ -17,7 +17,8 @@ use thiserror::Error;
 #[command(
     name = "ontologos",
     about = "Modular Rust ontology reasoner",
-    after_help = "v0.8.0: profile (detect), materialize (RDFS), classify (EL/RL/RDFS), explain (proof graphs). \
+    after_help = "v0.9.0: profile (detect), materialize (RDFS), classify (auto|el|rl|rdfs|alc|dl|dl-preview|swrl), \
+                  explain (proof graphs). Preview profiles: see docs/guides/preview-profiles.md. \
                   Use --incremental for delta re-classify. \
                   Docs: https://ontologos.readthedocs.io/en/latest/reference/cli/"
 )]

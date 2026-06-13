@@ -26,12 +26,14 @@ flowchart TD
   goal --> rdfsGoal[RDFS_TBox]
   goal --> rlGoal[OWL_RL]
   goal --> elGoal[OWL_EL_taxonomy]
+  goal --> dlGoal[OWL_DL_preview]
 
   none --> coreOnly[ontologos_core_only]
   profile --> detect[ontologos_profile_detect_profile]
   rdfsGoal --> rdfsEng[RdfsEngine_materialize]
   rlGoal --> rlEng[RlEngine_saturate]
   elGoal --> elEng[ElClassifier_classify]
+  dlGoal --> facadeEng[ontologos_facade_classify]
 ```
 
 ## By task
@@ -112,7 +114,7 @@ let mut reasoner = Reasoner::builder().profile(Profile::Rdfs).build(ontology)?;
 classify_reasoner(&mut reasoner)?;
 ```
 
-CLI: `ontologos materialize` (RDFS) or `ontologos classify --profile rdfs|rl|el|auto`.
+CLI: `ontologos materialize` (RDFS) or `ontologos classify --profile rdfs|rl|el|auto|dl|dl-preview|alc|swrl`.
 
 See [RDFS materialization](../getting-started/rdfs-materialization.md).
 
@@ -140,7 +142,7 @@ classify_reasoner(&mut reasoner)?;
 
 Do **not** call `Reasoner::classify()` on core for RL — it returns a delegate hint.
 
-CLI: `ontologos classify --profile rl`. Python: `Reasoner(path, profile="rl").classify()`.
+CLI: `ontologos classify --profile rl`. Python: `Reasoner(path="file.owl", profile="rl").classify()`.
 
 See [OWL RL saturation](../getting-started/owl-rl-saturation.md).
 
@@ -154,15 +156,17 @@ use ontologos_el::ElClassifier;
 let taxonomy = ElClassifier::new().classify(&ontology)?;
 ```
 
-**Routed classification:**
+**Routed classification (multi-profile, including DL):**
 
 ```rust
-use ontologos_el::classify_with_profile;
+use ontologos_facade;
 
-let outcome = classify_with_profile(&mut reasoner)?;
+let outcome = ontologos_facade::classify(&mut reasoner)?;
 ```
 
-CLI: `ontologos classify --profile el`. Python: `Reasoner(path, profile="el").classify()`.
+For EL-only routing without DL: `ontologos_el::classify_with_profile`.
+
+CLI: `ontologos classify --profile el`. Python: `Reasoner(path="file.owl", profile="el").classify()`.
 
 See [OWL EL classification](../getting-started/owl-el-classification.md).
 
@@ -173,13 +177,14 @@ See [OWL EL classification](../getting-started/owl-el-classification.md).
 ```python
 from ontologos import Reasoner
 
-Reasoner("file.owl", profile="rdfs").classify()
-Reasoner("file.owl", profile="rl").classify()
-Reasoner("file.owl", profile="el").classify()
-Reasoner("file.owl", profile="auto").classify()
+Reasoner(path="file.owl", profile="rdfs").classify()
+Reasoner(path="file.owl", profile="rl").classify()
+Reasoner(path="file.owl", profile="el").classify()
+Reasoner(path="file.owl", profile="auto").classify()
+Reasoner(path="file.owl", profile="dl-preview").classify()  # preview
 ```
 
-See [Python guide](python.md).
+See [Python guide](python.md) and [Preview profiles](preview-profiles.md).
 
 ## Dependency cheat sheet
 
@@ -191,6 +196,7 @@ See [Python guide](python.md).
 | + RDFS | `+ ontologos-rdfs` |
 | + OWL RL | `+ ontologos-rl` (pulls in rdfs transitively) |
 | + OWL EL + queries | `+ ontologos-el`, `+ ontologos-query` |
+| + Multi-profile / DL preview | `+ ontologos-facade` (pulls el, dl, alc, swrl) |
 
 There is no single `ontologos` meta-crate on crates.io.
 
@@ -199,13 +205,15 @@ There is no single `ontologos` meta-crate on crates.io.
 | Mistake | Fix |
 |---------|-----|
 | `Ontology::from_file` | Use `ontologos_parser::load_ontology` |
-| `Reasoner::classify()` for RL/RDFS | Use profile crate helpers |
-| Expect CLI `classify` to run DL | Use EL/RL/RDFS profiles; full DL is v2.0 |
+| `Reasoner::classify()` for RL/RDFS/EL/DL | Use `ontologos_facade::classify` or profile crate helpers |
+| Expect CLI `classify` to match HermiT DL | Preview only — see [Preview profiles](preview-profiles.md) |
 | Compare axiom count to Protégé | See [supported constructs](../reference/supported-constructs.md) |
-| `Profile::Auto` on core reasoner | Use `classify_with_profile`, CLI `classify --profile auto`, or Python `profile="auto"` |
+| `Profile::Auto` on core reasoner | Use `ontologos_facade::classify`, CLI `classify --profile auto`, or Python `profile="auto"` |
 
 ## Related
 
+- [Facade API](facade-api.md)
+- [Preview profiles](preview-profiles.md)
 - [Architecture](../architecture.md)
 - [Error reference](../reference/errors.md)
 - [FAQ](../project/faq.md)

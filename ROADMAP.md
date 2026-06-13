@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds profi
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.8.0** · **Next release:** **v0.9.0** (ready on `main`; tag pending) · **Current focus:** v0.9 Python → expressivity tracks (v1.5–v1.9) → **1.0 HermiT parity**
+**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.9.0** · **Current focus:** expressivity tracks (v1.5–v1.9) → **1.0 HermiT parity**
 
 ---
 
@@ -558,7 +558,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 ## v0.9 — Python ecosystem
 
-**Status: Ready on `main` (tag pending)** · **Depends on:** v0.2, v0.5, v0.7 facades
+**Status: Released v0.9.0** · **Depends on:** v0.2, v0.5, v0.7 facades
 
 **Crate:** `ontologos-py` · **PyPI name:** `ontologos`
 

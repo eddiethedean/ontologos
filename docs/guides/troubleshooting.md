@@ -53,9 +53,20 @@ Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology l
 
 ## `classify` / `explain` behavior
 
-CLI **`classify --profile auto|el|rl|rdfs`** routes to EL taxonomy, RL saturation, or RDFS materialization. Use **`materialize`** for explicit RDFS. **`explain`** is available in v0.9.0.
+CLI **`classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl`** routes via `ontologos-facade`. Use **`materialize`** for explicit RDFS. **`explain`** is available in v0.9.0 (EL full traces; RL/RDFS asserted-only).
 
-Library users: call `ontologos_el::classify_with_profile`, `ontologos_rdfs::classify_reasoner`, or `ontologos_rl::classify_reasoner`. **Do not** call `ontologos_core::Reasoner::classify()` directly — it returns delegate hints for RDFS/RL and `NotImplemented` for EL/Auto. CLI and Python route correctly. See [CLI reference](../reference/cli.md), [errors.md](../reference/errors.md), and [Choosing an API](../guides/choosing-an-api.md).
+Library users: call **`ontologos_facade::classify`** or profile crate helpers (`ontologos_el::classify_with_profile`, `ontologos_rdfs::classify_reasoner`, `ontologos_rl::classify_reasoner`, `ontologos_dl::classify`). **Do not** call `ontologos_core::Reasoner::classify()` directly — it returns delegate hints for RDFS/RL and `NotImplemented` for EL/Auto. CLI and Python route correctly. See [Facade API](facade-api.md), [CLI reference](../reference/cli.md), [errors.md](../reference/errors.md), and [Choosing an API](../guides/choosing-an-api.md).
+
+## DL preview errors
+
+| Error | Symptom | Fix |
+|-------|---------|-----|
+| `PreviewLimit` | Construct not in preview scope | Use stable profile or simplify ontology |
+| `ResourceLimit` | Tableau expansion budget exhausted (4096) | Reduce ontology size or retry with smaller corpus |
+| `NotImplemented` (SWRL) | `--profile swrl` | SWRL rules not executable yet — use EL/RL/DL |
+| Wrong profile on DL ontology | Unexpected taxonomy shape | Run `ontologos profile file.owl`; try `--profile dl-preview` |
+
+See [Preview profiles](preview-profiles.md).
 
 ## RDFS does not expand `EquivalentClasses`
 

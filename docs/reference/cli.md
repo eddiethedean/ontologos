@@ -2,7 +2,7 @@
 
 Binary: `ontologos` (from `ontologos-cli` crate).
 
-> **v0.9.0:** `classify` routes by `--profile` (default `auto`) to OWL EL taxonomy, OWL RL saturation, or RDFS materialization. Use `materialize` for explicit RDFS. `explain` emits proof graphs (JSON or text).
+> **v0.9.0:** `classify` routes by `--profile` (default `auto`) to OWL EL taxonomy, OWL RL saturation, RDFS materialization, or preview DL/ALC. Use `materialize` for explicit RDFS. `explain` emits proof graphs (JSON or text). Preview profiles: [Preview profiles](../guides/preview-profiles.md).
 
 ## Install
 
@@ -30,7 +30,7 @@ ontologos --help
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
-| `--profile` | `auto`, `el`, `rl`, `rdfs` | `auto` | Engine for `classify` |
+| `--profile` | `auto`, `el`, `rl`, `rdfs`, `alc`, `dl`, `dl-preview`, `swrl` | `auto` | Engine for `classify` |
 | `--format` | `text`, `json` | `text` | Output format |
 | `--incremental` | flag | off | Enable incremental session mode (library multi-pass; single file load runs one pass) |
 
@@ -50,9 +50,13 @@ ontologos --help
 | `el` | `ontologos-el` | Taxonomy (subsumptions, equivalences, unsatisfiable) |
 | `rl` | `ontologos-rl` | Materialization report |
 | `rdfs` | `ontologos-rdfs` | Materialization report |
-| `auto` | detect → EL or RL | Taxonomy or materialization report |
+| `auto` | detect → EL, RL, or DL | Taxonomy or materialization report |
+| `dl-preview` | `ontologos-dl` (gated) | Taxonomy + preview warning |
+| `dl` | `ontologos-dl` | Taxonomy (preview) |
+| `alc` | `ontologos-alc` | Taxonomy (preview) |
+| `swrl` | `ontologos-swrl` | Preview — often errors |
 
-DL-detected ontologies with `--profile auto` return an error; use an explicit profile or `materialize` for RDFS.
+With `--profile auto`, DL-detected ontologies route through the DL hybrid classifier. Use `dl-preview` for explicit preview gating. See [Preview profiles](../guides/preview-profiles.md).
 
 ### Examples
 
@@ -61,6 +65,8 @@ ontologos classify --profile el benchmarks/data/pizza.owl
 ontologos classify --profile rl benchmarks/data/family.owl
 ontologos classify --profile rdfs ontology.owl
 ontologos classify --profile auto ontology.owl
+ontologos classify --profile dl-preview benchmarks/data/family.owl
+ontologos classify --profile alc ontology.owl
 ontologos materialize ontology.owl
 ontologos --format json classify --profile el pizza.owl
 ontologos explain --profile el benchmarks/data/pizza.owl

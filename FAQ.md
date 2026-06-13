@@ -39,7 +39,7 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Not for full OWL DL classification.** v0.9.0 loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. CLI `classify --profile auto|el|rl|rdfs` routes to the correct engine. Use Protégé with HermiT or Konclude for production OWL DL workflows.
+**Not for production OWL DL classification.** v0.9.0 loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. CLI and Python support `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` (preview profiles are incomplete). Use Protégé with HermiT or Konclude for production OWL DL workflows. See [Preview profiles](https://ontologos.readthedocs.io/en/latest/guides/preview-profiles/).
 
 OntoLogos is for early adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
 
@@ -103,7 +103,7 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Does `pip install ontologos` work?
 
-The PyPI package is **v0.9.0** (pre-1.0). It supports file and in-memory ontologies, `profile="auto"|"el"|"rl"|"rdfs"`, incremental mutations, `explain()`, and optional pandas/polars export:
+The PyPI package is **v0.9.0** (pre-1.0). It supports file and in-memory ontologies, `profile="auto"|"el"|"rl"|"rdfs"|"alc"|"dl"|"dl-preview"|"swrl"`, incremental mutations, `explain()`, and optional pandas/polars export:
 
 ```python
 from ontologos import Reasoner, OntologyBuilder
@@ -111,6 +111,7 @@ from ontologos import Reasoner, OntologyBuilder
 Reasoner(path="ontology.owl", profile="auto").classify()
 Reasoner(path="ontology.owl", profile="el").classify()
 Reasoner(path="ontology.owl", profile="rl").classify()
+Reasoner(path="ontology.owl", profile="dl-preview").classify()  # preview
 ```
 
 Optional extras: `pip install 'ontologos[pandas]'` or `'ontologos[polars]'`.
@@ -129,7 +130,7 @@ Use **`OntologyBuilder`** or **`Ontology.from_dict`** when constructing ontologi
 |---------|----------|
 | **EL** | Full inference traces → proof graph with IRI-resolved conclusions |
 | **RL / RDFS** | Proof graph seeds **asserted** axioms; inferred steps lack per-rule premises until reasonable exposes a trace API |
-| **auto** | Routes like `classify`; DL-only ontologies error |
+| **auto** | Routes like `classify`; DL-detected ontologies use DL preview |
 
 See [Explain API reference](https://ontologos.readthedocs.io/en/latest/reference/explain/).
 
@@ -145,7 +146,7 @@ No. Each `Reasoner` instance should be used from one thread at a time. Create se
 
 ## Why does `Reasoner::classify()` on core return `NotImplemented`?
 
-`ontologos_core::Reasoner::classify()` is a facade stub: it returns delegate hints for RDFS/RL and `NotImplemented` for EL. Use **CLI** (`ontologos classify`), **Python** (`Reasoner.classify()`), or profile crates directly (`ElClassifier`, `RlEngine`, `RdfsEngine`, `classify_with_profile`).
+`ontologos_core::Reasoner::classify()` is a facade stub: it returns delegate hints for RDFS/RL and `NotImplemented` for EL. Use **CLI** (`ontologos classify`), **Python** (`Reasoner.classify()`), **`ontologos_facade::classify`**, or profile crates directly (`ElClassifier`, `RlEngine`, `RdfsEngine`).
 
 ## Where do I ask questions?
 
