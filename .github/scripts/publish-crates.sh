@@ -4,7 +4,7 @@ set -euo pipefail
 # Publish workspace crates in dependency order. crates.io index propagation
 # can lag behind uploads, so each crate is retried before failing the job.
 #
-# v0.7.x: core → profile → parser → bridge → rdfs → rl → el → query → explain.
+# v0.8.x: core → profile → parser → bridge → rdfs → rl → el → query → explain.
 # profile/parser must precede bridge (bridge dev-depends on parser).
 
 CRATES=(

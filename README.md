@@ -9,7 +9,7 @@
 Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
 **reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
 
-**Status:** **v0.8.0** on `main` — incremental EL/RL/RDFS via `ReasonerConfig::incremental`. **Not** full OWL DL / HermiT replacement.
+**Status:** **v0.8.0** ready on `main` (tag pending) — incremental EL/RL/RDFS via `ReasonerConfig::incremental`. **Not** full OWL DL / HermiT replacement.
 
 | You need… | Use today |
 |-----------|-----------|
@@ -135,6 +135,7 @@ Full feature matrix and roadmap: [documentation index](docs/index.md) · [ROADMA
 | **Guides** | [RDFS](docs/getting-started/rdfs-materialization.md) · [OWL RL](docs/getting-started/owl-rl-saturation.md) · [Python](docs/guides/python.md) · [Comparison](docs/comparison.md) |
 | **Reference** | [CLI](docs/reference/cli.md) · [Errors](docs/reference/errors.md) · [Supported constructs](docs/reference/supported-constructs.md) |
 | **Project** | [FAQ](FAQ.md) · [CONTRIBUTING](CONTRIBUTING.md) · [CHANGELOG](CHANGELOG.md) |
+| **v0.8.0 release** | [Release notes](.github/release/v0.8.0.md) · [Migration guide](docs/migration/v0.7.x-to-v0.8.0.md) |
 
 ## License
 

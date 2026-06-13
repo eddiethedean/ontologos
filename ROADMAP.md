@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds capab
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.7.0** · **Next release:** **v0.8.0** incremental reasoning · **Current focus:** v0.9 Python maturity
+**Last updated:** 2026-06-13 · **Latest tagged release:** **v0.7.0** · **Next release:** **v0.8.0** (ready on `main`; tag pending) · **Current focus:** v0.9 Python maturity
 
 ---
 
@@ -529,7 +529,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 ## v0.8 — Incremental reasoning + petgraph polish
 
-**Status: Complete on `main`** (ships in **v0.8.0**) · **Effort:** Medium · **Depends on:** v0.7 ✓
+**Status: Ready for release on `main`** (tag **v0.8.0** pending) · **Effort:** Medium · **Depends on:** v0.7 ✓
 
 ### Capabilities
 
@@ -544,6 +544,8 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 - [x] Incremental EL re-classification is ≥ 5× faster than full classify on 10-axiom delta (local: `./benchmarks/scripts/bench-el-incremental.sh` with `--ignored` perf test)
 - [x] Correctness: incremental taxonomy equals full classify on documented edit suite (`incremental_correctness.rs`); RL/RDFS removal tests in bridge and engine crates
+- [x] `cargo test --workspace`, clippy `-D warnings`, release verify gates green on `main`
+- [ ] Tag and publish **v0.8.0** — [release notes](.github/release/v0.8.0.md); 9 crates on crates.io + PyPI `ontologos` **0.8.0**
 
 > **Research:** ELK incremental design in [elk.md](docs/internal/research/elk.md); prefer reasonable/whelk upstream incremental APIs over custom rule replay.
 

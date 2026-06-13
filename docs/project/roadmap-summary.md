@@ -1,8 +1,8 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v0.7.0** · **Next release:** **v0.8.0** incremental reasoning (on `main`)
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v0.7.0** · **v0.8.0** is ready on `main` (incremental reasoning; tag pending)
 
-## Shipped in v0.8.0 (on `main`)
+## Shipped in v0.8.0 (ready on `main`)
 
 | Area | Status |
 |------|--------|
@@ -10,7 +10,8 @@ OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged re
 | EL incremental classify (`ElSession`, partitions) | Complete |
 | RL/RDFS reasonable incremental session | Complete |
 | `ontologos-watch` library (Ontocode hook) | Complete |
-| CLI `--incremental`, Python `incremental=True` | Complete |
+| Asserted/inferred axiom tracking (removal correctness) | Complete |
+| Incremental bugfix pass (sessions, perf gate, tests) | Complete |
 
 ## Next releases
 

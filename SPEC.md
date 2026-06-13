@@ -1,7 +1,7 @@
 
 # OntoLogos Technical Specification
 
-> **Document status:** Mixed. Sections marked **(v0.1)** … **(v0.5)** reflect earlier shipped crates; **v0.6** adds explain + dependency-first adapters; **v0.8.0** aligns semver with ROADMAP v0.7 (no API changes from v0.6.1).
+> **Document status:** Mixed. Sections marked **(v0.1)** … **(v0.5)** reflect earlier shipped crates; **v0.6** adds explain + dependency-first adapters; **v0.8.0** adds incremental reasoning (dirty tracking, sessions, `ontologos-watch`).
 > Last reviewed: 2026-06-13
 
 ## Overview

@@ -8,7 +8,7 @@
 | Milestone | Status |
 |-----------|--------|
 | **v0.7.0** | **Shipped** ([v0.7.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.7.0)) — dependency-first adapters; 9 crates + PyPI |
-| **v0.8.0** | **Ready on `main`** — incremental EL/RL/RDFS, dirty tracking, `ontologos-watch` |
+| **v0.8.0** | **Ready for release** on `main` — incremental EL/RL/RDFS, dirty tracking, `ontologos-watch`, removal correctness |
 | **v0.9** | Python wheels / PyPI maturity |
 
 OntoLogos ships in-house EL completion in `ontologos-el`; RL/RDFS use **reasonable** via `ontologos-bridge`. Adapter fidelity gates: Pizza EL golden (in-house EL), Family RL closure (reasonable), HermiT Tier A through facades (with documented upstream gaps ignored, not reimplemented).
