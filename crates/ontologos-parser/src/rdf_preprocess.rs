@@ -92,7 +92,9 @@ fn find_element_end(input: &str, open_start: usize) -> Option<usize> {
         }
         search = abs + tag_end + 1;
     }
-    input[open_start..].find(&close).map(|idx| open_start + idx + close.len())
+    input[open_start..]
+        .find(&close)
+        .map(|idx| open_start + idx + close.len())
 }
 
 fn element_name(open_tag: &str) -> Option<&str> {

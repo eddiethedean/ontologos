@@ -202,7 +202,9 @@ fn superproperty_edges(ontology: &Ontology) -> HashMap<EntityId, Vec<EntityId>> 
     edges
 }
 
-fn invert_subproperty_graph(sub_to_supers: &HashMap<EntityId, Vec<EntityId>>) -> HashMap<EntityId, Vec<EntityId>> {
+fn invert_subproperty_graph(
+    sub_to_supers: &HashMap<EntityId, Vec<EntityId>>,
+) -> HashMap<EntityId, Vec<EntityId>> {
     let mut supers_to_subs = HashMap::new();
     for (sub, supers) in sub_to_supers {
         for sup in supers {
@@ -332,6 +334,10 @@ mod tests {
 
         let added = apply_domain_range_inheritance(&mut ontology).expect("postprocess");
         assert!(added >= 1, "expected at least one inferred ClassAssertion");
-        assert!(is_typed(&ontology, ontology.lookup_entity(&iri("a")).unwrap(), ontology.lookup_entity(&iri("Person")).unwrap()));
+        assert!(is_typed(
+            &ontology,
+            ontology.lookup_entity(&iri("a")).unwrap(),
+            ontology.lookup_entity(&iri("Person")).unwrap()
+        ));
     }
 }

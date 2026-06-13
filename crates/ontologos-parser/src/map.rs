@@ -74,25 +74,20 @@ fn is_declaration(component: &Component<RcStr>) -> bool {
 
 fn declaration_component(component: &Component<RcStr>) -> Option<(String, EntityKind)> {
     match component {
-        Component::DeclareClass(decl) => {
-            Some((iri_of(&decl.0).to_owned(), EntityKind::Class))
+        Component::DeclareClass(decl) => Some((iri_of(&decl.0).to_owned(), EntityKind::Class)),
+        Component::DeclareObjectProperty(decl) => {
+            Some((iri_of(&decl.0).to_owned(), EntityKind::ObjectProperty))
         }
-        Component::DeclareObjectProperty(decl) => Some((
-            iri_of(&decl.0).to_owned(),
-            EntityKind::ObjectProperty,
-        )),
         Component::DeclareNamedIndividual(decl) => {
             Some((iri_of(&decl.0).to_owned(), EntityKind::Individual))
         }
-        Component::DeclareDataProperty(decl) => Some((
-            iri_of(&decl.0).to_owned(),
-            EntityKind::DataProperty,
-        )),
+        Component::DeclareDataProperty(decl) => {
+            Some((iri_of(&decl.0).to_owned(), EntityKind::DataProperty))
+        }
         Component::DeclareDatatype(_decl) => None,
-        Component::DeclareAnnotationProperty(decl) => Some((
-            iri_of(&decl.0).to_owned(),
-            EntityKind::AnnotationProperty,
-        )),
+        Component::DeclareAnnotationProperty(decl) => {
+            Some((iri_of(&decl.0).to_owned(), EntityKind::AnnotationProperty))
+        }
         _ => None,
     }
 }

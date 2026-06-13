@@ -15,7 +15,9 @@ pub fn validate_el_profile(ontology: &Ontology) -> crate::Result<()> {
         return Ok(());
     }
     let report = detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
-    let detected = report.detected.ok_or_else(|| Error::Profile("no profile detected".into()))?;
+    let detected = report
+        .detected
+        .ok_or_else(|| Error::Profile("no profile detected".into()))?;
     Err(Error::NonElProfile { detected })
 }
 
