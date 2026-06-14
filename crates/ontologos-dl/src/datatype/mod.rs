@@ -60,7 +60,13 @@ impl LiteralIndex {
         range: DeId,
     ) -> bool {
         let defs = datatype_definitions(ontology.dl());
-        facet_check(lit, ontology.dl(), normalize_range(ontology.dl(), &defs, range), Some(ontology), &defs)
+        facet_check(
+            lit,
+            ontology.dl(),
+            normalize_range(ontology.dl(), &defs, range),
+            Some(ontology),
+            &defs,
+        )
     }
 }
 
@@ -78,7 +84,11 @@ pub(crate) fn datatype_definitions(store: &DlStore) -> HashMap<EntityId, DeId> {
 
 /// Expand user-defined datatype IRIs to their defining range expression.
 #[must_use]
-pub(crate) fn normalize_range(store: &DlStore, defs: &HashMap<EntityId, DeId>, range: DeId) -> DeId {
+pub(crate) fn normalize_range(
+    store: &DlStore,
+    defs: &HashMap<EntityId, DeId>,
+    range: DeId,
+) -> DeId {
     let mut current = range;
     let mut seen = HashSet::new();
     loop {
@@ -180,8 +190,12 @@ fn facet_check(
                 _ => false,
             }
         }
-        DataExpr::And(ops) => ops.iter().all(|op| facet_check(lit, store, *op, ontology, defs)),
-        DataExpr::Or(ops) => ops.iter().any(|op| facet_check(lit, store, *op, ontology, defs)),
+        DataExpr::And(ops) => ops
+            .iter()
+            .all(|op| facet_check(lit, store, *op, ontology, defs)),
+        DataExpr::Or(ops) => ops
+            .iter()
+            .any(|op| facet_check(lit, store, *op, ontology, defs)),
         DataExpr::Not(inner) => !facet_check(lit, store, *inner, ontology, defs),
     }
 }
@@ -280,9 +294,7 @@ fn literal_in_datatype_value_space(
         "http://www.w3.org/2001/XMLSchema#dateTime" => !lit.lexical.is_empty(),
         "http://www.w3.org/2001/XMLSchema#unsignedInt"
         | "http://www.w3.org/2001/XMLSchema#unsignedShort"
-        | "http://www.w3.org/2001/XMLSchema#unsignedByte" => {
-            lit.lexical.parse::<u64>().is_ok()
-        }
+        | "http://www.w3.org/2001/XMLSchema#unsignedByte" => lit.lexical.parse::<u64>().is_ok(),
         "http://www.w3.org/2001/XMLSchema#boolean" => {
             matches!(lit.lexical.as_str(), "true" | "false" | "1" | "0")
         }

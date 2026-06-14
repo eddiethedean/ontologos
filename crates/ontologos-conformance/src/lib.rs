@@ -8,8 +8,8 @@ mod catalog;
 
 pub use catalog::{
     check_axiom_case, load_catalog, load_wg_catalog, promoted_axiom_ids_path, run_hermit_case,
-    run_wg_case, scan_all_passing_axiom_cases, scan_planned_dl_failures, scan_promotable_axiom_cases, write_promoted_axiom_ids,
-    HermitCase, WgCase,
+    run_wg_case, scan_all_passing_axiom_cases, scan_planned_dl_failures,
+    scan_promotable_axiom_cases, write_promoted_axiom_ids, HermitCase, WgCase,
 };
 
 use std::path::{Path, PathBuf};

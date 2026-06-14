@@ -139,22 +139,20 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                 let ce = nnf(ontology, class);
                 out.push(Clause::Subsumption { sub: nom, sup: ce });
             }
-            DlAxiom::SubObjectPropertyOf { sub, sup } => {
-                match (&sub, &sup) {
-                    (RoleExpr::Atomic(sub_id), RoleExpr::Atomic(sup_id)) => {
-                        out.push(Clause::RoleSubsumption {
-                            sub: *sub_id,
-                            sup: *sup_id,
-                        });
-                    }
-                    _ => {
-                        out.push(Clause::RoleChain {
-                            chain: vec![sub.clone()],
-                            sup: sup.clone(),
-                        });
-                    }
+            DlAxiom::SubObjectPropertyOf { sub, sup } => match (&sub, &sup) {
+                (RoleExpr::Atomic(sub_id), RoleExpr::Atomic(sup_id)) => {
+                    out.push(Clause::RoleSubsumption {
+                        sub: *sub_id,
+                        sup: *sup_id,
+                    });
                 }
-            }
+                _ => {
+                    out.push(Clause::RoleChain {
+                        chain: vec![sub.clone()],
+                        sup: sup.clone(),
+                    });
+                }
+            },
             DlAxiom::ObjectPropertyDomain { property, domain } => {
                 clausify_domain_range(ontology, &mut out, property, domain, true);
             }

@@ -177,12 +177,7 @@ fn apply_reflexive_loops(
     }
     for &world_idx in worlds.values() {
         for &role in roles {
-            expand::add_role_edge(
-                branch,
-                world_idx,
-                RoleExpr::Atomic(role),
-                world_idx,
-            );
+            expand::add_role_edge(branch, world_idx, RoleExpr::Atomic(role), world_idx);
         }
     }
 }
@@ -220,9 +215,7 @@ fn negative_role_assertion_entailed(
     let inv = expand::inverse_role(&property);
     branch.edges.iter().any(|(edge_from, role, edge_to)| {
         (*edge_from == from && *edge_to == to && expand::role_subsumes(branch, &property, role))
-            || (*edge_from == to
-                && *edge_to == from
-                && expand::role_subsumes(branch, &inv, role))
+            || (*edge_from == to && *edge_to == from && expand::role_subsumes(branch, &inv, role))
     })
 }
 
@@ -800,11 +793,7 @@ impl<'a> Branch<'a> {
                     class,
                     object_properties,
                     data_properties,
-                } => has_keys.push((
-                    *class,
-                    object_properties.clone(),
-                    data_properties.clone(),
-                )),
+                } => has_keys.push((*class, object_properties.clone(), data_properties.clone())),
                 Clause::NominalSubsumption { sub, individual } => {
                     if let Some(one_of) = dl.core().dl().expressions().find_map(|(id, e)| match e {
                         ClassExpr::OneOf(v) if v == &[*individual] => Some(id),
@@ -857,12 +846,14 @@ impl<'a> Branch<'a> {
         }
         for (from, role, to) in self.edges.clone() {
             if from == drop {
-                self.edges.push((keep, role, if to == drop { keep } else { to }));
+                self.edges
+                    .push((keep, role, if to == drop { keep } else { to }));
             } else if to == drop {
                 self.edges.push((from, role, keep));
             }
         }
-        self.edges.retain(|(from, _, to)| *from != drop && *to != drop);
+        self.edges
+            .retain(|(from, _, to)| *from != drop && *to != drop);
         self.worlds[drop] = World::default();
     }
 

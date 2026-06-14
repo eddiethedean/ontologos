@@ -4,7 +4,10 @@ use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology};
 
-use super::{canonical_plain_literal, datatype_definitions, lexical_looks_numeric, literals_equal, normalize_range, rational_pair, simplify_double_complement, LiteralIndex, LiteralValue};
+use super::{
+    canonical_plain_literal, datatype_definitions, lexical_looks_numeric, literals_equal,
+    normalize_range, rational_pair, simplify_double_complement, LiteralIndex, LiteralValue,
+};
 
 #[derive(Debug, Clone)]
 enum DataRestriction {
@@ -119,7 +122,13 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
         if !negative_assertions_consistent(ontology, &idx, store, *individual, restrictions) {
             return false;
         }
-        if !disjoint_assertions_consistent(ontology, store, *individual, restrictions, &disjoint_pairs) {
+        if !disjoint_assertions_consistent(
+            ontology,
+            store,
+            *individual,
+            restrictions,
+            &disjoint_pairs,
+        ) {
             return false;
         }
     }
@@ -164,7 +173,10 @@ fn data_existential_subclass_consistent(
         let Some(negated) = atomic_class_id(store, *inner) else {
             continue;
         };
-        negated_atomic.entry(*individual).or_default().insert(negated);
+        negated_atomic
+            .entry(*individual)
+            .or_default()
+            .insert(negated);
     }
 
     for axiom in store.axioms() {
@@ -343,9 +355,7 @@ fn disjoint_assertions_consistent(
         }
         let keys_a = definite_literal_keys(ontology, &idx, store, individual, restrictions, a);
         let keys_b = definite_literal_keys(ontology, &idx, store, individual, restrictions, b);
-        if !keys_a.is_empty()
-            && !keys_b.is_empty()
-            && keys_a.iter().any(|key| keys_b.contains(key))
+        if !keys_a.is_empty() && !keys_b.is_empty() && keys_a.iter().any(|key| keys_b.contains(key))
         {
             return false;
         }
@@ -371,7 +381,9 @@ fn shared_required_subproperty(
     false
 }
 
-fn data_subproperty_supers(store: &ontologos_core::DlStore) -> HashMap<EntityId, HashSet<EntityId>> {
+fn data_subproperty_supers(
+    store: &ontologos_core::DlStore,
+) -> HashMap<EntityId, HashSet<EntityId>> {
     let mut map: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
     for axiom in store.axioms() {
         if let DlAxiom::SubDataPropertyOf { sub, sup } = axiom {
@@ -454,7 +466,11 @@ fn required_witness_keys(
             keys.insert(distinct_literal_key(&lit));
         }
     }
-    if keys.len() == 1 { Some(keys) } else { None }
+    if keys.len() == 1 {
+        Some(keys)
+    } else {
+        None
+    }
 }
 
 fn oneof_literal_keys(
@@ -535,8 +551,7 @@ fn is_empty_float_window(ontology: &Ontology, range: DeId) -> bool {
     let Some((min_ex, max_ex)) = float_exclusive_bounds(store, range) else {
         return false;
     };
-    min_ex == 0.0
-        && (max_ex == 1.401_298_464_324_817e-45 || max_ex <= f64::from(f32::MIN))
+    min_ex == 0.0 && (max_ex == 1.401_298_464_324_817e-45 || max_ex <= f64::from(f32::MIN))
 }
 
 fn float_exclusive_bounds(store: &ontologos_core::DlStore, range: DeId) -> Option<(f64, f64)> {
@@ -784,7 +799,8 @@ fn property_restrictions_satisfiable(
                 let Some(lit) = literal_from_de(ontology, value) else {
                     continue;
                 };
-                if !all_ranges.is_empty() && !satisfies_all_ranges(ontology, idx, &lit, &all_ranges) {
+                if !all_ranges.is_empty() && !satisfies_all_ranges(ontology, idx, &lit, &all_ranges)
+                {
                     continue;
                 }
                 if seen.insert(distinct_literal_key(&lit)) {
@@ -1061,20 +1077,24 @@ fn singleton_facet_point_literal(
 ) -> Option<LiteralValue> {
     const MIN_IN: &str = "http://www.w3.org/2001/XMLSchema#minInclusive";
     const MAX_IN: &str = "http://www.w3.org/2001/XMLSchema#maxInclusive";
-    let Some(base_expr) = store.de(base) else {
-        return None;
-    };
+    let base_expr = store.de(base)?;
     let (point_value, inner_base) = match (facet_iri, base_expr) {
-        (MIN_IN, DataExpr::Facet {
-            facet_iri: max_facet,
-            value: max_value,
-            base: inner,
-        }) if max_facet == MAX_IN && value == max_value => (value, *inner),
-        (MAX_IN, DataExpr::Facet {
-            facet_iri: min_facet,
-            value: min_value,
-            base: inner,
-        }) if min_facet == MIN_IN && value == min_value => (value, *inner),
+        (
+            MIN_IN,
+            DataExpr::Facet {
+                facet_iri: max_facet,
+                value: max_value,
+                base: inner,
+            },
+        ) if max_facet == MAX_IN && value == max_value => (value, *inner),
+        (
+            MAX_IN,
+            DataExpr::Facet {
+                facet_iri: min_facet,
+                value: min_value,
+                base: inner,
+            },
+        ) if min_facet == MIN_IN && value == min_value => (value, *inner),
         _ => return None,
     };
     let dt = facet_base_datatype(ontology, store, inner_base)?;
@@ -1142,7 +1162,8 @@ fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<
             facet_iri,
             value,
         } => {
-            if let Some(lit) = singleton_facet_point_literal(ontology, store, *base, facet_iri, value)
+            if let Some(lit) =
+                singleton_facet_point_literal(ontology, store, *base, facet_iri, value)
             {
                 return vec![lit];
             }
@@ -1186,7 +1207,8 @@ fn owl_thing_id(ontology: &Ontology) -> Option<EntityId> {
 }
 
 fn is_bottom_data_property(ontology: &Ontology, property: EntityId) -> bool {
-    entity_iri(ontology, property).as_deref() == Some("http://www.w3.org/2002/07/owl#bottomDataProperty")
+    entity_iri(ontology, property).as_deref()
+        == Some("http://www.w3.org/2002/07/owl#bottomDataProperty")
 }
 
 fn entity_iri(ontology: &Ontology, id: EntityId) -> Option<String> {

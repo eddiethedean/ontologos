@@ -872,14 +872,15 @@ mod tests {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testdatatypeunionintersection1.ofn");
         let bytes = std::fs::read(&path).unwrap();
-        let parsed: SetOntology<RcStr> = read_horned_owl_from_reader(
-            &bytes[..],
-            Format::Functional,
-            ParseLimits::default(),
-        )
-        .unwrap();
+        let parsed: SetOntology<RcStr> =
+            read_horned_owl_from_reader(&bytes[..], Format::Functional, ParseLimits::default())
+                .unwrap();
         let (ont, report) = map_to_core(&parsed, ParseLimits::default()).unwrap();
-        assert_eq!(report.meta.skipped_axiom_count, 0, "{:?}", report.meta.warnings);
+        assert_eq!(
+            report.meta.skipped_axiom_count, 0,
+            "{:?}",
+            report.meta.warnings
+        );
         let store = ont.dl();
         let min_card = store
             .ce(CeId(0))
@@ -904,14 +905,15 @@ mod tests {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testallvaluesfrommixed1.ofn");
         let bytes = std::fs::read(&path).unwrap();
-        let parsed: SetOntology<RcStr> = read_horned_owl_from_reader(
-            &bytes[..],
-            Format::Functional,
-            ParseLimits::default(),
-        )
-        .unwrap();
+        let parsed: SetOntology<RcStr> =
+            read_horned_owl_from_reader(&bytes[..], Format::Functional, ParseLimits::default())
+                .unwrap();
         let (ont, report) = map_to_core(&parsed, ParseLimits::default()).unwrap();
-        assert_eq!(report.meta.skipped_axiom_count, 0, "{:?}", report.meta.warnings);
+        assert_eq!(
+            report.meta.skipped_axiom_count, 0,
+            "{:?}",
+            report.meta.warnings
+        );
         let store = ont.dl();
         let mut all_ranges = Vec::new();
         let mut some_ranges = Vec::new();
@@ -926,9 +928,16 @@ mod tests {
         }
         assert_eq!(all_ranges.len(), 2);
         assert_eq!(some_ranges.len(), 1);
-        assert!(all_ranges.iter().any(|&r| matches!(store.de(r), Some(DataExpr::Or(_)))));
-        assert!(all_ranges.iter().any(|&r| matches!(store.de(r), Some(DataExpr::Literal { .. }))));
-        assert!(matches!(store.de(some_ranges[0]), Some(DataExpr::Facet { .. })));
+        assert!(all_ranges
+            .iter()
+            .any(|&r| matches!(store.de(r), Some(DataExpr::Or(_)))));
+        assert!(all_ranges
+            .iter()
+            .any(|&r| matches!(store.de(r), Some(DataExpr::Literal { .. }))));
+        assert!(matches!(
+            store.de(some_ranges[0]),
+            Some(DataExpr::Facet { .. })
+        ));
     }
 
     #[test]
@@ -936,14 +945,15 @@ mod tests {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testdatatypedef6.ofn");
         let bytes = std::fs::read(&path).unwrap();
-        let parsed: SetOntology<RcStr> = read_horned_owl_from_reader(
-            &bytes[..],
-            Format::Functional,
-            ParseLimits::default(),
-        )
-        .unwrap();
+        let parsed: SetOntology<RcStr> =
+            read_horned_owl_from_reader(&bytes[..], Format::Functional, ParseLimits::default())
+                .unwrap();
         let (ont, report) = map_to_core(&parsed, ParseLimits::default()).unwrap();
-        assert_eq!(report.meta.skipped_axiom_count, 0, "{:?}", report.meta.warnings);
+        assert_eq!(
+            report.meta.skipped_axiom_count, 0,
+            "{:?}",
+            report.meta.warnings
+        );
         let store = ont.dl();
         let mut range_id = None;
         for ax in store.axioms() {

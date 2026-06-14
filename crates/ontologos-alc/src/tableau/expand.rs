@@ -76,7 +76,9 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
             expand_has_value(branch, world, property, individual);
         }
         ClassExpr::HasSelf(property) => {
-            branch.edges.push((world, RoleExpr::Atomic(property), world));
+            branch
+                .edges
+                .push((world, RoleExpr::Atomic(property), world));
             apply_universal_on_edge(branch, world, world);
             saturate_composed_edges(branch);
         }
@@ -257,7 +259,11 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
     clash::check_negated_cardinality(branch);
 }
 
-fn existing_role_successor(branch: &Branch<'_>, world: usize, property: &RoleExpr) -> Option<usize> {
+fn existing_role_successor(
+    branch: &Branch<'_>,
+    world: usize,
+    property: &RoleExpr,
+) -> Option<usize> {
     branch
         .edges
         .iter()
@@ -265,11 +271,7 @@ fn existing_role_successor(branch: &Branch<'_>, world: usize, property: &RoleExp
         .map(|(_, _, to)| *to)
 }
 
-fn has_universal_has_self_for_role(
-    branch: &Branch<'_>,
-    world: usize,
-    role: &RoleExpr,
-) -> bool {
+fn has_universal_has_self_for_role(branch: &Branch<'_>, world: usize, role: &RoleExpr) -> bool {
     let store = branch.dl.core().dl();
     let mut candidates: Vec<(RoleExpr, CeId)> = branch.worlds[world]
         .labels
@@ -304,10 +306,16 @@ fn ensure_named_world(branch: &mut Branch<'_>, id: EntityId) -> usize {
     }
     let w = branch.worlds.len();
     branch.worlds.push(super::World::default());
-    if let Some(nom) = branch.dl.core().dl().expressions().find_map(|(ce, e)| match e {
-        ClassExpr::OneOf(v) if v == &[id] => Some(ce),
-        _ => None,
-    }) {
+    if let Some(nom) = branch
+        .dl
+        .core()
+        .dl()
+        .expressions()
+        .find_map(|(ce, e)| match e {
+            ClassExpr::OneOf(v) if v == &[id] => Some(ce),
+            _ => None,
+        })
+    {
         assert_label(branch, w, nom);
     }
     branch.named_worlds.insert(id, w);
@@ -315,10 +323,8 @@ fn ensure_named_world(branch: &mut Branch<'_>, id: EntityId) -> usize {
 }
 
 fn world_satisfies_filler(branch: &Branch<'_>, world: usize, filler: CeId) -> bool {
-    if matches!(
-        branch.dl.core().dl().ce(filler),
-        Some(ClassExpr::Top)
-    ) || clash::is_thing_ce(branch, filler)
+    if matches!(branch.dl.core().dl().ce(filler), Some(ClassExpr::Top))
+        || clash::is_thing_ce(branch, filler)
     {
         return true;
     }
@@ -386,7 +392,7 @@ fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce: CeId) -> 
     match expr {
         ClassExpr::Some { property, filler } => branch.edges.iter().any(|(from, role, to)| {
             *from == world
-                && role_subsumes(branch, &property, &role)
+                && role_subsumes(branch, &property, role)
                 && world_structurally_satisfies(branch, *to, filler)
         }),
         _ => false,
@@ -404,7 +410,7 @@ pub(crate) fn materialize_existential_successors(branch: &mut Branch<'_>) {
                 continue;
             };
             for (from, role, to) in branch.edges.clone() {
-                if from == world && role_subsumes(branch, &property, &role) {
+                if from == world && role_subsumes(branch, property, &role) {
                     assert_label(branch, to, *filler);
                     if branch.clash {
                         return;
@@ -521,15 +527,15 @@ fn saturate_transitive_edges(branch: &mut Branch<'_>) -> bool {
                     continue;
                 }
                 for (b2, r2, c) in &snapshot {
-                    if b == b2 && *r2 == role {
-                        if !branch
+                    if b == b2
+                        && *r2 == role
+                        && !branch
                             .edges
                             .iter()
                             .any(|(x, role2, y)| x == a && role2 == &role && y == c)
-                        {
-                            add_role_edge(branch, *a, role.clone(), *c);
-                            added = true;
-                        }
+                    {
+                        add_role_edge(branch, *a, role.clone(), *c);
+                        added = true;
                     }
                 }
             }
@@ -550,14 +556,14 @@ fn saturate_chain_edges(branch: &mut Branch<'_>) -> bool {
         for start in 0..world_count {
             let targets = chain_targets(branch, chain, start, &snapshot);
             for end in targets {
-                    if !branch
-                        .edges
-                        .iter()
-                        .any(|(f, r, t)| *f == start && role_subsumes(branch, sup, r) && *t == end)
-                    {
-                        add_role_edge(branch, start, sup.clone(), end);
-                        added = true;
-                    }
+                if !branch
+                    .edges
+                    .iter()
+                    .any(|(f, r, t)| *f == start && role_subsumes(branch, sup, r) && *t == end)
+                {
+                    add_role_edge(branch, start, sup.clone(), end);
+                    added = true;
+                }
             }
         }
     }
@@ -669,8 +675,7 @@ fn world_satisfies_subject(branch: &Branch<'_>, world: usize, sub: CeId) -> bool
         return true;
     }
     if clash::is_thing_ce(branch, sub) {
-        return branch
-            .worlds[world]
+        return branch.worlds[world]
             .labels
             .iter()
             .any(|&label| clash::is_thing_ce(branch, label));

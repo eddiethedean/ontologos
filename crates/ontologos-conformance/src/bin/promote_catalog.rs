@@ -7,7 +7,10 @@ use ontologos_conformance::{
 fn main() {
     let newly_planned = scan_promotable_axiom_cases();
     let passing = scan_all_passing_axiom_cases();
-    println!("newly promotable planned axiom cases: {}", newly_planned.len());
+    println!(
+        "newly promotable planned axiom cases: {}",
+        newly_planned.len()
+    );
     for id in &newly_planned {
         println!("  {id}");
     }

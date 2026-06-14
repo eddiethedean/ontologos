@@ -17,8 +17,8 @@ pub use normalize::clausify;
 pub use tableau::AlcClassifier;
 pub use tableau::{
     classify as tableau_classify, classify_with_seed as tableau_classify_with_seed,
-    is_consistent as tableau_is_consistent, is_consistent_with_seed as tableau_is_consistent_with_seed,
-    TableauSeed,
+    is_consistent as tableau_is_consistent,
+    is_consistent_with_seed as tableau_is_consistent_with_seed, TableauSeed,
 };
 
 /// Result type for ALC operations.

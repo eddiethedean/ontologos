@@ -3,8 +3,9 @@ use ontologos_parser::load_ontology;
 use std::path::PathBuf;
 
 fn ofn(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join(format!("../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_{name}.ofn"))
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+        "../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_{name}.ofn"
+    ))
 }
 
 fn check(name: &str, expected: bool) {

@@ -1,4 +1,4 @@
-use ontologos_dl::{is_consistent, is_datatype_consistent};
+use ontologos_dl::is_consistent;
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;
 

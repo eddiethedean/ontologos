@@ -60,6 +60,9 @@ fn exists_self2_is_consistent() {
 
 #[test]
 fn nominal_merging_is_consistent() {
-    let ont = load_ontology(&axiom("hermit_reasoner_reasonertest_testnominalmerging.ofn")).unwrap();
+    let ont = load_ontology(&axiom(
+        "hermit_reasoner_reasonertest_testnominalmerging.ofn",
+    ))
+    .unwrap();
     assert!(is_consistent(&ont).unwrap());
 }

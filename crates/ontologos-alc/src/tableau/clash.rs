@@ -20,10 +20,7 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
                 branch.clash = true;
                 return;
             }
-            if matches!(
-                branch.dl.core().dl().ce(ce),
-                Some(ClassExpr::Bottom)
-            ) {
+            if matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::Bottom)) {
                 branch.clash = true;
                 return;
             }
@@ -45,10 +42,7 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
 
 /// Assert `ce` into a world, detecting immediate clashes.
 pub fn assert_label(branch: &mut Branch<'_>, world: usize, ce: CeId) {
-    if matches!(
-        branch.dl.core().dl().ce(ce),
-        Some(ClassExpr::Bottom)
-    ) {
+    if matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::Bottom)) {
         branch.clash = true;
         return;
     }
