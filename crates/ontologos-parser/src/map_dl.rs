@@ -887,11 +887,9 @@ mod tests {
         for i in 0..store.ce_count() {
             if let Some(ce) = store.ce(CeId(i as u32)) {
                 match ce {
-                    ontologos_core::ClassExpr::DataMinCardinality { range, .. } => {
-                        if let Some(range) = range {
-                            min_card_ranges.push(*range);
-                        }
-                    }
+                    ontologos_core::ClassExpr::DataMinCardinality {
+                        range: Some(range), ..
+                    } => min_card_ranges.push(*range),
                     ontologos_core::ClassExpr::DataAll { range, .. } => all_ranges.push(*range),
                     _ => {}
                 }
