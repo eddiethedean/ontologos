@@ -882,22 +882,32 @@ mod tests {
             report.meta.warnings
         );
         let store = ont.dl();
-        let min_card = store
-            .ce(CeId(0))
-            .and_then(|ce| match ce {
-                ontologos_core::ClassExpr::DataMinCardinality { range, .. } => *range,
-                _ => None,
-            })
-            .expect("MinCard CE");
-        let all_range = store
-            .ce(CeId(2))
-            .and_then(|ce| match ce {
-                ontologos_core::ClassExpr::DataAll { range, .. } => Some(*range),
-                _ => None,
-            })
-            .expect("All CE range");
-        assert!(matches!(store.de(min_card), Some(DataExpr::Datatype(_))));
-        assert!(matches!(store.de(all_range), Some(DataExpr::Not(_))));
+        let mut min_card_ranges = Vec::new();
+        let mut all_ranges = Vec::new();
+        for i in 0..store.ce_count() {
+            if let Some(ce) = store.ce(CeId(i as u32)) {
+                match ce {
+                    ontologos_core::ClassExpr::DataMinCardinality { range, .. } => {
+                        if let Some(range) = range {
+                            min_card_ranges.push(*range);
+                        }
+                    }
+                    ontologos_core::ClassExpr::DataAll { range, .. } => all_ranges.push(*range),
+                    _ => {}
+                }
+            }
+        }
+        assert_eq!(
+            min_card_ranges.len(),
+            1,
+            "expected one DataMinCardinality CE"
+        );
+        assert_eq!(all_ranges.len(), 1, "expected one DataAll CE");
+        assert!(matches!(
+            store.de(min_card_ranges[0]),
+            Some(DataExpr::Datatype(_))
+        ));
+        assert!(matches!(store.de(all_ranges[0]), Some(DataExpr::Not(_))));
     }
 
     #[test]
