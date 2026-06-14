@@ -130,6 +130,13 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
     if !branch.clash {
         propagate_structural_existential_subsumptions(branch);
         materialize_existential_successors(branch);
+        let named_worlds: Vec<usize> = branch.named_worlds.values().copied().collect();
+        for named_world in named_worlds {
+            recheck_cardinality_on_world(branch, named_world);
+            if branch.clash {
+                return Ok(());
+            }
+        }
     }
     Ok(())
 }
@@ -360,6 +367,36 @@ fn ce_subsumes(branch: &Branch<'_>, sub: CeId, sup: CeId) -> bool {
     false
 }
 
+/// Apply atomic `C ⊑ ∃R.D` and `C ⊑ HasValue(R, a)` when a world is labelled with `C`.
+pub(crate) fn drive_atomic_existential_subsumptions(branch: &mut Branch<'_>) {
+    let subs = branch.tbox_subsumptions.clone();
+    for world in 0..branch.worlds.len() {
+        for &(sub, sup) in &subs {
+            if !branch.worlds[world].labels.contains(&sub) {
+                continue;
+            }
+            let Some(ClassExpr::Atomic(_)) = branch.dl.core().dl().ce(sub) else {
+                continue;
+            };
+            match branch.dl.core().dl().ce(sup).cloned() {
+                Some(ClassExpr::Some { property, filler }) => {
+                    expand_existential(branch, world, property, filler);
+                }
+                Some(ClassExpr::HasValue {
+                    property,
+                    individual,
+                }) => {
+                    expand_has_value(branch, world, property, individual);
+                }
+                _ => {}
+            }
+            if branch.clash {
+                return;
+            }
+        }
+    }
+}
+
 /// Apply `C ⊑ D` when a world structurally satisfies `C` (e.g. nested `∃` chains).
 pub(crate) fn propagate_structural_existential_subsumptions(branch: &mut Branch<'_>) {
     let subs = branch.tbox_subsumptions.clone();
@@ -423,6 +460,7 @@ pub(crate) fn materialize_existential_successors(branch: &mut Branch<'_>) {
 
 /// Insert a role edge and its declared inverse, applying universal propagation.
 pub(crate) fn add_role_edge(branch: &mut Branch<'_>, from: usize, property: RoleExpr, to: usize) {
+    let to = merge_inverse_functional_successor(branch, from, &property, to);
     branch.edges.push((from, property.clone(), to));
     apply_domain_on_edge(branch, from, &property);
     apply_universal_on_edge(branch, from, to);
@@ -430,12 +468,98 @@ pub(crate) fn add_role_edge(branch: &mut Branch<'_>, from: usize, property: Role
         branch.edges.push((to, property.clone(), from));
         apply_domain_on_edge(branch, to, &property);
         apply_universal_on_edge(branch, to, from);
+        recheck_cardinality_on_world(branch, from);
+        recheck_cardinality_on_world(branch, to);
     } else if let Some(inverse) = inverse_partner(branch, &property) {
         branch.edges.push((to, inverse.clone(), from));
         apply_domain_on_edge(branch, to, &inverse);
         apply_universal_on_edge(branch, to, from);
+        recheck_cardinality_on_world(branch, from);
+        recheck_cardinality_on_world(branch, to);
+    } else {
+        recheck_cardinality_on_world(branch, from);
+        recheck_cardinality_on_world(branch, to);
     }
     propagate_structural_existential_subsumptions(branch);
+}
+
+fn merge_inverse_functional_successor(
+    branch: &mut Branch<'_>,
+    from: usize,
+    property: &RoleExpr,
+    to: usize,
+) -> usize {
+    if !is_inverse_functional_role(branch, property) {
+        return to;
+    }
+    let duplicate = branch
+        .edges
+        .iter()
+        .find(|(f, role, t)| {
+            *f == from
+                && *t != to
+                && is_inverse_functional_role(branch, role)
+                && (role_subsumes(branch, property, role) || role_subsumes(branch, role, property))
+        })
+        .map(|(_, _, t)| *t);
+    if let Some(existing) = duplicate {
+        if existing != to {
+            branch.merge_worlds(existing, to);
+        }
+        if branch.clash {
+            return to;
+        }
+        existing
+    } else {
+        to
+    }
+}
+
+fn is_inverse_functional_role(branch: &Branch<'_>, role: &RoleExpr) -> bool {
+    match role {
+        RoleExpr::Atomic(id) => branch.inverse_functional.contains(id),
+        RoleExpr::Inverse(id) => branch.inverse_functional.contains(id),
+    }
+}
+
+pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize) {
+    if branch.clash {
+        return;
+    }
+    let labels = branch.worlds[world].labels.clone();
+    for ce in labels {
+        let Some(expr) = branch.dl.core().dl().ce(ce).cloned() else {
+            continue;
+        };
+        match expr {
+            ClassExpr::MaxCardinality {
+                n,
+                property,
+                filler,
+            } => {
+                let filler = effective_cardinality_filler(branch, filler);
+                let count = count_role_successors(branch, world, &property, filler);
+                if count > n as usize {
+                    branch.clash = true;
+                    return;
+                }
+            }
+            ClassExpr::ExactCardinality {
+                n,
+                property,
+                filler,
+            } => {
+                let filler = effective_cardinality_filler(branch, filler);
+                let count = count_role_successors(branch, world, &property, filler);
+                if count > n as usize {
+                    branch.clash = true;
+                    return;
+                }
+            }
+            _ => {}
+        }
+    }
+    clash::check_negated_cardinality(branch);
 }
 
 fn apply_domain_on_edge(branch: &mut Branch<'_>, from: usize, property: &RoleExpr) {

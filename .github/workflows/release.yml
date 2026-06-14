@@ -57,6 +57,13 @@ jobs:
       - name: HermiT conformance (Tier A)
         run: cargo test -p ontologos-conformance --locked
 
+      - name: Conformance coverage and 1.0 gates (informational)
+        run: |
+          chmod +x benchmarks/scripts/report-conformance-coverage.sh
+          chmod +x benchmarks/scripts/check-1.0-release-gates.sh
+          ./benchmarks/scripts/report-conformance-coverage.sh
+          ./benchmarks/scripts/check-1.0-release-gates.sh || true
+
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh
 

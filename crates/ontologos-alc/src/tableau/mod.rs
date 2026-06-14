@@ -134,6 +134,30 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     if negative_object_property_assertions_clash(&branch) {
         return Ok(false);
     }
+    for world in 0..branch.worlds.len() {
+        expand::recheck_cardinality_on_world(&mut branch, world);
+        if branch.clash {
+            return Ok(false);
+        }
+    }
+    // Drive B ⊑ ∃R.B unraveling for nominal cardinality clashes (NI-rule pattern).
+    if !branch.clash && !branch.named_worlds.is_empty() {
+        for _ in 0..64 {
+            let before = branch.edges.len();
+            expand::materialize_existential_successors(&mut branch);
+            expand::drive_atomic_existential_subsumptions(&mut branch);
+            expand::propagate_structural_existential_subsumptions(&mut branch);
+            for world in 0..branch.worlds.len() {
+                expand::recheck_cardinality_on_world(&mut branch, world);
+                if branch.clash {
+                    return Ok(false);
+                }
+            }
+            if branch.clash || branch.edges.len() == before {
+                break;
+            }
+        }
+    }
     Ok(ok)
 }
 
@@ -735,6 +759,7 @@ pub(crate) struct Branch<'a> {
     pub(crate) symmetric_roles: Vec<RoleExpr>,
     pub(crate) role_chains: Vec<(Vec<RoleExpr>, RoleExpr)>,
     pub(crate) has_keys: Vec<(CeId, Vec<EntityId>, Vec<EntityId>)>,
+    pub(crate) inverse_functional: HashSet<EntityId>,
     pub(crate) named_worlds: HashMap<EntityId, usize>,
     pub(crate) cache: cache::UnsatCache,
     pub(crate) expansions: u32,
@@ -752,6 +777,7 @@ impl<'a> Branch<'a> {
         let mut has_keys: Vec<(CeId, Vec<EntityId>, Vec<EntityId>)> = Vec::new();
         let mut role_inverses: HashMap<EntityId, EntityId> = HashMap::new();
         let mut symmetric_roles: Vec<RoleExpr> = Vec::new();
+        let mut inverse_functional: HashSet<EntityId> = HashSet::new();
         for (_, axiom) in dl.core().axioms().iter() {
             if let Axiom::InverseObjectProperties { left, right } = axiom {
                 role_inverses.insert(*left, *right);
@@ -760,10 +786,19 @@ impl<'a> Branch<'a> {
             if let Axiom::SymmetricObjectProperty(prop) = axiom {
                 symmetric_roles.push(RoleExpr::Atomic(*prop));
             }
+            if let Axiom::InverseFunctionalObjectProperty(prop) = axiom {
+                inverse_functional.insert(*prop);
+            }
         }
         for axiom in dl.core().dl().axioms() {
-            if let DlAxiom::SymmetricObjectProperty(role) = axiom {
-                symmetric_roles.push(role.clone());
+            match axiom {
+                DlAxiom::SymmetricObjectProperty(role) => {
+                    symmetric_roles.push(role.clone());
+                }
+                DlAxiom::InverseFunctionalObjectProperty(prop) => {
+                    inverse_functional.insert(*prop);
+                }
+                _ => {}
             }
         }
 
@@ -826,6 +861,7 @@ impl<'a> Branch<'a> {
             symmetric_roles,
             role_chains,
             has_keys,
+            inverse_functional,
             named_worlds: HashMap::new(),
             cache: cache::UnsatCache::new(),
             expansions: 0,

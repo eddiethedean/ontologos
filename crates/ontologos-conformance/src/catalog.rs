@@ -143,11 +143,7 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
     check_property_characteristics_result(&ontology, case)?;
 
     if let Some(expected) = case.consistent {
-        let mut consistent = !ontology
-            .axioms()
-            .iter()
-            .any(|(_, axiom)| matches!(axiom, ontologos_core::Axiom::DisjointClasses(_)))
-            && saturate_for_consistency(case, &mut ontology);
+        let mut consistent = saturate_for_consistency(case, &mut ontology);
         if ontologos_bridge::has_bottom_chain_violation(&ontology) {
             consistent = false;
         }
@@ -352,11 +348,7 @@ fn run_axiom_case(case: &HermitCase) {
         let mut consistent = if case.engine == "dl" || case.engine == "swrl" {
             ontologos_dl::is_consistent(&ontology).expect("consistent")
         } else {
-            !ontology
-                .axioms()
-                .iter()
-                .any(|(_, axiom)| matches!(axiom, ontologos_core::Axiom::DisjointClasses(_)))
-                && saturate_for_consistency(case, &mut ontology)
+            saturate_for_consistency(case, &mut ontology)
         };
         if ontologos_bridge::has_bottom_chain_violation(&ontology) {
             consistent = false;
@@ -376,7 +368,7 @@ fn saturate_for_consistency(case: &HermitCase, ontology: &mut Ontology) -> bool 
         }
         "rdfs" => ontologos_rdfs::RdfsEngine::new()
             .materialize(ontology)
-            .map(|_| true)
+            .map(|r| r.clashes.is_empty())
             .unwrap_or(false),
         _ => true,
     }
@@ -647,14 +639,36 @@ fn run_wg_runnable(case: &WgCase) {
 }
 
 fn wg_entailment_holds(premise: &Ontology, conclusion: &Ontology) -> bool {
-    let prem_tax = ontologos_dl::classify(premise).expect("wg premise classify");
-    let conc_tax = ontologos_dl::classify(conclusion).expect("wg conclusion classify");
-    for &(sub, sup) in &conc_tax.subsumptions {
+    let Ok(prem_tax) = ontologos_dl::classify(premise) else {
+        return false;
+    };
+    let merged = merge_ontologies_for_entailment(premise, conclusion);
+    let Ok(merged_tax) = ontologos_dl::classify(&merged) else {
+        return false;
+    };
+
+    for &(sub, sup) in &merged_tax.subsumptions {
         if !prem_tax.is_subsumed(sub, sup) {
             return false;
         }
     }
+    for &class in &merged_tax.unsatisfiable {
+        if !prem_tax.unsatisfiable.contains(&class) {
+            return false;
+        }
+    }
     true
+}
+
+fn merge_ontologies_for_entailment(premise: &Ontology, conclusion: &Ontology) -> Ontology {
+    let mut merged = premise.clone();
+    for (_, axiom) in conclusion.axioms().iter() {
+        let _ = merged.add_axiom(axiom.clone());
+    }
+    for axiom in conclusion.dl().axioms() {
+        merged.dl_mut().push_axiom(axiom.clone());
+    }
+    merged
 }
 
 fn resolve_local_iri(local: &str) -> String {

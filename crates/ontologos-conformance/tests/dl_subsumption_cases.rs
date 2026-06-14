@@ -35,7 +35,6 @@ fn reasoner_test_heinsohn_tbox3() {
 }
 
 #[test]
-#[ignore = "complex cardinality flower ontology — tableau completion in progress"]
 fn reasoner_test_classification_subclass_bug() {
     let case = case_by_id("reasoner.ReasonerTest.testClassificationSubClassBug");
     // Large flower ontology — allow slow tableau classification.

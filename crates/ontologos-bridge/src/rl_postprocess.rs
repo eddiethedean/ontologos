@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use ontologos_core::{Axiom, DlAxiom, EntityId, Ontology, RoleExpr};
+use ontologos_core::{Axiom, CeId, ClassExpr, DlAxiom, EntityId, Ontology, RoleExpr};
 
 use crate::Result;
 
@@ -190,6 +190,138 @@ pub fn apply_characteristic_propagation(ontology: &mut Ontology) -> Result<usize
     Ok(added)
 }
 
+/// Infer named `SubClassOf` from existential class definitions and property subsumption.
+pub fn apply_existential_subclass_subsumption(ontology: &mut Ontology) -> Result<usize> {
+    let defs = existential_class_definitions(ontology);
+    if defs.len() < 2 {
+        return Ok(0);
+    }
+
+    let sub_to_supers = superproperty_edges(ontology);
+    let mut added = 0_usize;
+    for i in 0..defs.len() {
+        for j in 0..defs.len() {
+            if i == j {
+                continue;
+            }
+            let (sub, sub_prop, filler) = defs[i];
+            let (sup, sup_prop, sup_filler) = defs[j];
+            if filler != sup_filler {
+                continue;
+            }
+            if !property_subsumed(sub_prop, sup_prop, &sub_to_supers) {
+                continue;
+            }
+            if push_subclass_if_missing(ontology, sub, sup)? {
+                added += 1;
+            }
+        }
+    }
+    Ok(added)
+}
+
+fn existential_class_definitions(ontology: &Ontology) -> Vec<(EntityId, EntityId, EntityId)> {
+    let mut out = Vec::new();
+    let store = ontology.dl();
+
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        for w in ids.windows(2) {
+            push_existential_def(&mut out, store, w[0], w[1]);
+            push_existential_def(&mut out, store, w[1], w[0]);
+        }
+    }
+
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        } = axiom
+        {
+            out.push((*subclass, *property, *filler));
+        }
+    }
+
+    out.sort_unstable_by_key(|(c, p, f)| (c.0, p.0, f.0));
+    out.dedup();
+    out
+}
+
+fn push_existential_def(
+    out: &mut Vec<(EntityId, EntityId, EntityId)>,
+    store: &ontologos_core::DlStore,
+    class: CeId,
+    expr: CeId,
+) {
+    let (Some(ClassExpr::Atomic(class_id)), Some(ClassExpr::Some { property, filler })) =
+        (store.ce(class), store.ce(expr))
+    else {
+        return;
+    };
+    let RoleExpr::Atomic(prop_id) = property else {
+        return;
+    };
+    let Some(ClassExpr::Atomic(filler_id)) = store.ce(*filler) else {
+        return;
+    };
+    out.push((*class_id, *prop_id, *filler_id));
+}
+
+fn property_subsumed(
+    sub: EntityId,
+    sup: EntityId,
+    sub_to_supers: &HashMap<EntityId, Vec<EntityId>>,
+) -> bool {
+    if sub == sup {
+        return true;
+    }
+    let mut queue = VecDeque::from([sub]);
+    let mut seen = HashSet::from([sub]);
+    while let Some(current) = queue.pop_front() {
+        if current == sup {
+            return true;
+        }
+        if let Some(next) = sub_to_supers.get(&current) {
+            for &n in next {
+                if seen.insert(n) {
+                    queue.push_back(n);
+                }
+            }
+        }
+    }
+    false
+}
+
+fn push_subclass_if_missing(
+    ontology: &mut Ontology,
+    subclass: EntityId,
+    superclass: EntityId,
+) -> Result<bool> {
+    if subclass == superclass {
+        return Ok(false);
+    }
+    let exists = ontology.axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            Axiom::SubClassOf {
+                subclass: sub,
+                superclass: sup,
+            } if *sub == subclass && *sup == superclass
+        )
+    });
+    if exists {
+        return Ok(false);
+    }
+    ontology.add_inferred_axiom(Axiom::SubClassOf {
+        subclass,
+        superclass,
+    })?;
+    Ok(true)
+}
+
 /// Run all reasonable semantic fallbacks after materialization.
 pub fn apply_reasonable_fallbacks(ontology: &mut Ontology) -> Result<usize> {
     let mut total = apply_equivalent_property_subproperties(ontology)?;
@@ -197,6 +329,7 @@ pub fn apply_reasonable_fallbacks(ontology: &mut Ontology) -> Result<usize> {
     total += apply_characteristic_propagation(ontology)?;
     total += propagate_domain_range_along_subproperties(ontology)?;
     total += apply_domain_range_inheritance(ontology)?;
+    total += apply_existential_subclass_subsumption(ontology)?;
     Ok(total)
 }
 
@@ -520,6 +653,34 @@ mod tests {
             ontology.lookup_entity(&iri("a")).unwrap(),
             ontology.lookup_entity(&iri("Person")).unwrap()
         ));
+    }
+
+    #[test]
+    fn subsumption2_existential_property_hierarchy() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testsubsumption2.ofn",
+        );
+        let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
+        let added = apply_existential_subclass_subsumption(&mut ontology).expect("postprocess");
+        assert!(added >= 1, "expected A ⊑ B from ∃R.C / ∃S.C with R ⊑ S");
+        let a = ontology.lookup_entity("file:/c/test.owl#A").expect("A");
+        let b = ontology.lookup_entity("file:/c/test.owl#B").expect("B");
+        assert!(ontology.direct_superclasses(a).contains(&b));
+    }
+
+    #[test]
+    fn subsumption3_existential_equivalent_properties() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testsubsumption3.ofn",
+        );
+        let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
+        apply_equivalent_property_subproperties(&mut ontology).expect("equiv props");
+        let added = apply_existential_subclass_subsumption(&mut ontology).expect("postprocess");
+        assert!(added >= 2, "expected mutual A/B subsumption");
+        let a = ontology.lookup_entity("file:/c/test.owl#A").expect("A");
+        let b = ontology.lookup_entity("file:/c/test.owl#B").expect("B");
+        assert!(ontology.direct_superclasses(a).contains(&b));
+        assert!(ontology.direct_superclasses(b).contains(&a));
     }
 
     #[test]

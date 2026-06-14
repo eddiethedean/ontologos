@@ -394,6 +394,9 @@ impl Mapper<'_> {
 
         if let Some(sub_id) = sub_lookup.resolved_id() {
             if self.map_intersection_superclass(sub_id, sup) {
+                // Keep the full DL subclass axiom when EL decomposition only maps a subset
+                // of intersection operands (e.g. cardinality restrictions in flower ontologies).
+                let _ = self.map_dl_subclass_of(sub, sup);
                 return;
             }
         }

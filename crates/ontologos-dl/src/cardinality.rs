@@ -94,6 +94,53 @@ pub fn derive_cardinality_subsumptions(ontology: &Ontology) -> Vec<(EntityId, En
         }
     }
 
+    for axiom in ontology.dl().axioms() {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            continue;
+        };
+        let Some(ClassExpr::Atomic(sub_e)) = ontology.dl().ce(*sub) else {
+            continue;
+        };
+        let Some(ClassExpr::And(ops)) = ontology.dl().ce(*sup) else {
+            continue;
+        };
+        let mut exact_by_prop: HashMap<RoleExpr, Vec<(u32, CeId)>> = HashMap::new();
+        for &op in ops {
+            let Some(ClassExpr::ExactCardinality {
+                n,
+                property,
+                filler: Some(f),
+            }) = ontology.dl().ce(op)
+            else {
+                continue;
+            };
+            exact_by_prop
+                .entry(property.clone())
+                .or_default()
+                .push((*n, *f));
+        }
+        for (property, entries) in exact_by_prop {
+            if entries.len() < 2 {
+                continue;
+            }
+            let Some(base) = cardinality_filler_base(ontology, entries[0].1) else {
+                continue;
+            };
+            if !entries
+                .iter()
+                .all(|(_, f)| cardinality_filler_base(ontology, *f) == Some(base))
+            {
+                continue;
+            }
+            let sum: u32 = entries.iter().map(|(n, _)| *n).sum();
+            if let Some(sup_e) =
+                find_named_exact_card(&equivalences, property, sum, base, ontology)
+            {
+                push_sub(&mut out, *sub_e, sup_e);
+            }
+        }
+    }
+
     out
 }
 
@@ -299,5 +346,70 @@ fn find_named_max_pair(
 fn push_sub(out: &mut Vec<(EntityId, EntityId)>, sub: EntityId, sup: EntityId) {
     if sub != sup && !out.iter().any(|&(a, b)| a == sub && b == sup) {
         out.push((sub, sup));
+    }
+}
+
+fn cardinality_filler_base(ontology: &Ontology, filler: CeId) -> Option<EntityId> {
+    match ontology.dl().ce(filler)? {
+        ClassExpr::Atomic(id) => Some(*id),
+        ClassExpr::And(ops) => ops.iter().find_map(|&op| atomic_entity(ontology, op)),
+        _ => None,
+    }
+}
+
+fn find_named_exact_card(
+    equivalences: &HashMap<EntityId, ClassExpr>,
+    property: RoleExpr,
+    n: u32,
+    filler: EntityId,
+    ontology: &Ontology,
+) -> Option<EntityId> {
+    equivalences.iter().find_map(|(&entity, def)| {
+        ce_contains_exact_card(ontology, def, &property, n, filler).then_some(entity)
+    })
+}
+
+fn ce_contains_exact_card(
+    ontology: &Ontology,
+    ce: &ClassExpr,
+    property: &RoleExpr,
+    n: u32,
+    filler: EntityId,
+) -> bool {
+    match ce {
+        ClassExpr::ExactCardinality {
+            n: card_n,
+            property: prop,
+            filler: Some(f),
+        } if *card_n == n && prop == property && atomic_entity(ontology, *f) == Some(filler) => true,
+        ClassExpr::And(ops) => ops.iter().any(|&id| {
+            ontology
+                .dl()
+                .ce(id)
+                .is_some_and(|e| ce_contains_exact_card(ontology, e, property, n, filler))
+        }),
+        _ => false,
+    }
+}
+
+#[cfg(test)]
+mod flower_tests {
+    use super::*;
+    use ontologos_parser::load_ontology;
+    use std::path::PathBuf;
+
+    #[test]
+    fn classification_subclass_bug_derives_c2_sub_c4() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testclassificationsubclassbug.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        let c2 = ont.lookup_entity("file:/c/test.owl#c2").expect("c2");
+        let c4 = ont.lookup_entity("file:/c/test.owl#c4").expect("c4");
+        let derived = derive_cardinality_subsumptions(&ont);
+        assert!(
+            derived.iter().any(|&(s, t)| s == c2 && t == c4),
+            "expected c2 ⊑ c4 in {derived:?}"
+        );
     }
 }

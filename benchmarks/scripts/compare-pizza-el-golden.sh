@@ -13,19 +13,22 @@ if [[ ! -f "${PIZZA}" ]]; then
   exit 1
 fi
 
-cargo run --quiet -p ontologos-cli --release -- --profile el --format json classify "${PIZZA}" > /tmp/ontologos-pizza-el.json
+TMP_JSON="$(mktemp "${TMPDIR:-/tmp}/ontologos-pizza-el.XXXXXX.json")"
+trap 'rm -f "${TMP_JSON}"' EXIT
+
+cargo run --quiet -p ontologos-cli --release -- --profile el --format json classify "${PIZZA}" > "${TMP_JSON}"
 
 if [[ -f "${GOLDEN}" ]]; then
   if [[ "${UPDATE_GOLDEN:-0}" == "1" ]]; then
-    cp /tmp/ontologos-pizza-el.json "${GOLDEN}"
+    cp "${TMP_JSON}" "${GOLDEN}"
     echo "updated ${GOLDEN}"
   else
-  python3 - <<'PY'
+  python3 - <<PY
 import json, sys
 from pathlib import Path
 
 golden = json.loads(Path("benchmarks/data/pizza-el-golden.json").read_text())
-actual = json.loads(Path("/tmp/ontologos-pizza-el.json").read_text())
+actual = json.loads(Path("${TMP_JSON}").read_text())
 
 g = set(map(tuple, golden["subsumptions"]))
 a = set(map(tuple, actual["subsumptions"]))
@@ -40,7 +43,7 @@ PY
 else
   echo "no golden file at ${GOLDEN}; run with UPDATE_GOLDEN=1 to create"
   if [[ "${UPDATE_GOLDEN:-0}" == "1" ]]; then
-    cp /tmp/ontologos-pizza-el.json "${GOLDEN}"
+    cp "${TMP_JSON}" "${GOLDEN}"
     echo "wrote ${GOLDEN}"
   fi
 fi

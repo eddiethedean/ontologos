@@ -44,6 +44,10 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/report-dl-ofn-pass-rate.sh
           ./benchmarks/scripts/report-dl-ofn-pass-rate.sh || true
+      - name: 1.0 release gates (informational)
+        run: |
+          chmod +x benchmarks/scripts/check-1.0-release-gates.sh
+          ./benchmarks/scripts/check-1.0-release-gates.sh || true
       - name: HermiT catalog drift check
         run: |
           chmod +x benchmarks/scripts/check-hermit-catalog.sh

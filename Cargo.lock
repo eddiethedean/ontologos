@@ -1072,6 +1072,7 @@ name = "ontologos-facade"
 version = "1.0.0"
 dependencies = [
  "ontologos-alc",
+ "ontologos-bridge",
  "ontologos-core",
  "ontologos-dl",
  "ontologos-el",

@@ -9,7 +9,7 @@ Single source of truth for version and distribution channels. Update this page w
 | **crates.io** (library crates) | **0.9.0** (published) · **1.0.0** (workspace) | `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, `ontologos-facade` |
 | **PyPI** | **0.9.0** (published) · **1.0.0** (workspace) | `pip install ontologos` |
 | **Latest git tag** | **v0.9.0** | Annotated semver tags on `main` |
-| **`main` branch** | **1.0.0** workspace | Tag **v1.0.0** pending release gates (≥400 active conformance tests) |
+| **`main` branch** | **1.0.0** workspace | Tag **v1.0.0** blocked until `check-1.0-release-gates.sh` exits 0 (≥400 active conformance tests) |
 
 CLI (`ontologos-cli`) and conformance crates are **source-build only** — not on crates.io.
 
@@ -21,7 +21,11 @@ CLI (`ontologos-cli`) and conformance crates are **source-build only** — not o
 | Python bindings, explain (EL) | **Stable** (1.0.0) |
 | Incremental EL/RL/RDFS | **Stable** (0.8+) |
 | DL / ALC / SWRL profiles | **Preview** on `main` — see [Preview profiles](../guides/preview-profiles.md) |
-| Full HermiT OWL DL parity | **In progress** — 100/400+ active conformance tests |
+| Full HermiT OWL DL parity | **In progress** — ~211 active / 400 gate; 133 semantic axiom cases |
+
+## Conformance snapshot (live)
+
+Run `bash benchmarks/scripts/report-conformance-coverage.sh` and `bash benchmarks/scripts/check-1.0-release-gates.sh` for current counts. CI runs both (gates step is informational until the 400-test target is met).
 
 ## Install pins
 

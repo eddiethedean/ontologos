@@ -99,8 +99,25 @@ pub fn is_consistent(reasoner: &Reasoner) -> Result<bool> {
         Profile::Dl | Profile::Swrl => Ok(ontologos_dl::is_consistent(reasoner.ontology())?),
         Profile::Auto => is_consistent_auto(reasoner),
         Profile::El => el_is_consistent(reasoner.ontology()),
-        Profile::Rl | Profile::Rdfs => Ok(true),
+        Profile::Rl => rl_is_consistent(reasoner.ontology()),
+        Profile::Rdfs => rdfs_is_consistent(reasoner.ontology()),
     }
+}
+
+fn rl_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
+    let mut working = ontology.clone();
+    let report = ontologos_rl::RlEngine::new(1)
+        .saturate(&mut working)
+        .map_err(|e| Error::El(ontologos_el::Error::Profile(format!("rl saturate: {e}"))))?;
+    Ok(report.clashes.is_empty() && !ontologos_bridge::has_bottom_chain_violation(&working))
+}
+
+fn rdfs_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
+    let mut working = ontology.clone();
+    let report = ontologos_rdfs::RdfsEngine::new()
+        .materialize(&mut working)
+        .map_err(|e| Error::El(ontologos_el::Error::Profile(format!("rdfs materialize: {e}"))))?;
+    Ok(report.clashes.is_empty())
 }
 
 fn el_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
@@ -116,7 +133,7 @@ fn is_consistent_auto(reasoner: &Reasoner) -> Result<bool> {
     match report.detected {
         Some(OwlProfile::Dl) => Ok(ontologos_dl::is_consistent(reasoner.ontology())?),
         Some(OwlProfile::El) | Some(OwlProfile::Ql) => el_is_consistent(reasoner.ontology()),
-        Some(OwlProfile::Rl) => Ok(true),
+        Some(OwlProfile::Rl) => rl_is_consistent(reasoner.ontology()),
         None => Err(Error::El(ontologos_el::Error::Profile(
             "no profile detected".into(),
         ))),
@@ -303,7 +320,7 @@ mod tests {
     }
 
     #[test]
-    fn is_consistent_rl_returns_true_without_dl_tableau() {
+    fn is_consistent_rl_saturates_without_dl_tableau() {
         let ontology = Ontology::builder()
             .class("http://example.org/A")
             .unwrap()
@@ -314,6 +331,45 @@ mod tests {
             .build(ontology)
             .unwrap();
         assert!(super::is_consistent(&reasoner).unwrap());
+    }
+
+    #[test]
+    fn is_consistent_rl_detects_disjoint_clash() {
+        let mut ontology = Ontology::builder()
+            .class("http://example.org/A")
+            .unwrap()
+            .class("http://example.org/B")
+            .unwrap()
+            .class("http://example.org/D")
+            .unwrap()
+            .individual("http://example.org/x")
+            .unwrap()
+            .class_assertion("http://example.org/x", "http://example.org/B")
+            .unwrap()
+            .class_assertion("http://example.org/x", "http://example.org/D")
+            .unwrap()
+            .build()
+            .unwrap();
+        let a = ontology
+            .lookup_entity("http://example.org/A")
+            .unwrap();
+        let b = ontology
+            .lookup_entity("http://example.org/B")
+            .unwrap();
+        let d = ontology
+            .lookup_entity("http://example.org/D")
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::EquivalentClasses(vec![a, b]))
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::DisjointClasses(vec![a, d]))
+            .unwrap();
+        let reasoner = Reasoner::builder()
+            .profile(Profile::Rl)
+            .build(ontology)
+            .unwrap();
+        assert!(!super::is_consistent(&reasoner).unwrap());
     }
 
     #[test]

@@ -17,7 +17,6 @@ fn saturate(ontology: &mut Ontology) {
 
 /// HermiT `ReasonerTest.testSubsumption2` (inlined existential encoding).
 #[test]
-#[ignore = "reasonable does not materialize named subClassOf from existential TBox patterns yet"]
 fn subsumption2_property_subsumption_existential() {
     let mut ontology = Ontology::builder()
         .class(&iri("A"))
@@ -64,7 +63,6 @@ fn subsumption2_property_subsumption_existential() {
 
 /// HermiT `ReasonerTest.testSubsumption3` (inlined equivalent properties).
 #[test]
-#[ignore = "reasonable does not materialize named subClassOf from existential TBox patterns yet"]
 fn subsumption3_equivalent_properties_existential() {
     let mut ontology = Ontology::builder()
         .class(&iri("A"))

@@ -23,9 +23,14 @@ fn missing_file_returns_parse_error() {
 
 #[test]
 fn unsupported_extension_returns_unsupported_format() {
-    let dir = std::env::temp_dir().join("ontologos_parser_load_errors");
-    let _ = std::fs::create_dir_all(&dir);
-    let path = dir.join("ontology.txt");
+    let path = std::env::temp_dir().join(format!(
+        "ontologos_parser_load_errors_{}_{}.txt",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time")
+            .as_nanos()
+    ));
     {
         let mut file = std::fs::File::create(&path).expect("create temp file");
         writeln!(file, "not an ontology").expect("write");

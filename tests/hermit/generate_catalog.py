@@ -55,6 +55,17 @@ SKIP_FILE = re.compile(
     r"(Abstract|AllTests|AllQuick|Descriptor|Registry|Invalid|Failing|TstDescriptor|AllWG|AllApproved|AllExtracredit|AllNonRejected|AllProposed)"
 )
 
+# Hand-authored subsumption expectations for OFN fixtures Java cannot extract.
+HARDCODED_AXIOM_SUBSUMPTIONS: dict[str, list[dict[str, str | bool]]] = {
+    "reasoner.ReasonerTest.testSubsumption2": [
+        {"sub": ":A", "sup": ":B", "expected": True},
+    ],
+    "reasoner.ReasonerTest.testSubsumption3": [
+        {"sub": ":A", "sup": ":B", "expected": True},
+        {"sub": ":B", "sup": ":A", "expected": True},
+    ],
+}
+
 # Already implemented in hand-written Rust modules (manifest rust_test name).
 IMPLEMENTED: dict[str, str] = {
     "reasoner.ReasonerTest.testSubsumption1": "subsumption1_transitive_subclass",
@@ -94,14 +105,17 @@ OFN_WRITE_SKIP_IDS = {
 }
 
 # DL axiom ports gated on tableau maturity (Phase 2+).
-DEFERRED_DL_AXIOM_IDS = {
-    "reasoner.ReasonerTest.testClassificationSubClassBug",
-}
+DEFERRED_DL_AXIOM_IDS: set[str] = set()
 
 # RL/RDFS axiom ports extracted but not yet passing in ontologos.
 DEFERRED_RL_AXIOM_IDS = {
     "reasoner.OWLReasonerTest.testIncrementalAddition2",
-    "reasoner.RIATest.testInverseAndChain",
+}
+
+# ReasonerTest cases that pass via RL engine, not DL tableau.
+FORCE_RL_ENGINE_IDS = {
+    "reasoner.ReasonerTest.testSubsumption2",
+    "reasoner.ReasonerTest.testSubsumption3",
 }
 
 # RL/RDFS consistency cases verified passing — promote to axiom.
@@ -127,7 +141,6 @@ INTERNAL_PREFIXES = (
 
 # RDF/XML fixtures that horned-owl cannot parse yet (DOCTYPE entities, duplicate rdf:ID).
 PARSER_IGNORE_FIXTURES = {
-    "res/wine.xml",
     "res/galen-ians-full-undoctored.xml",
     "res/propreo.xml",
     "res/dolce_all.xml",
@@ -810,6 +823,8 @@ def collect_cases() -> list[HermitCase]:
             case.subsumptions.extend(
                 filter_java_ce_subsumptions(extract_entailment_subsumptions(body))
             )
+            if not case.subsumptions and case.id in HARDCODED_AXIOM_SUBSUMPTIONS:
+                case.subsumptions = HARDCODED_AXIOM_SUBSUMPTIONS[case.id]
             case.property_subsumptions = extract_property_subsumptions(body)
             case.property_characteristics = extract_property_characteristics(body)
             case.consistent = extract_consistency(body)
@@ -870,10 +885,6 @@ def write_rust(cases: list[HermitCase]) -> None:
             if case.fixture in PARSER_IGNORE_FIXTURES:
                 lines.append(
                     '#[ignore = "RDF/XML fixture not supported by parser yet (entities or duplicate rdf:ID)"]'
-                )
-            elif case.id == "reasoner.ClassificationTest.testWine":
-                lines.append(
-                    '#[ignore = "wine.xml fails to parse (duplicate rdf:ID)"]'
                 )
             elif not (RES_ROOT / case.fixture.replace("res/", "reasoner/res/")).exists():
                 lines.append(

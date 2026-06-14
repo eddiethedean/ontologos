@@ -136,9 +136,14 @@ mod tests {
 
     #[test]
     fn plain_xml_extension_without_sniff_returns_none() {
-        let dir = std::env::temp_dir().join("ontologos_parser_test");
-        let _ = std::fs::create_dir_all(&dir);
-        let path = dir.join("config.xml");
+        let path = std::env::temp_dir().join(format!(
+            "ontologos_parser_test_{}_{}.xml",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time")
+                .as_nanos()
+        ));
         {
             let mut file = std::fs::File::create(&path).expect("create");
             file.write_all(b"<config><item/></config>").expect("write");

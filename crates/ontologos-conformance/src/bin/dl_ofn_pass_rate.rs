@@ -1,68 +1,9 @@
 //! Report DL OFN fixture semantic pass rate from the HermiT catalog.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
 
-use ontologos_conformance::{load_catalog, HermitCase};
-use ontologos_core::Ontology;
-use ontologos_parser::load_ontology;
+use ontologos_conformance::{load_catalog, check_axiom_case, HermitCase};
 use rayon::prelude::*;
-
-fn hermit_data_path(rel: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/hermit")
-        .join(rel)
-}
-
-fn resolve_local_iri(local: &str) -> String {
-    const NS: &str = "file:/c/test.owl#";
-    if local.contains("://") || local.starts_with("file:") {
-        local.to_owned()
-    } else {
-        let name = local.strip_prefix(':').unwrap_or(local);
-        format!("{NS}{name}")
-    }
-}
-
-fn case_passes(case: &HermitCase, ontology: &Ontology) -> bool {
-    if case.engine != "dl" && case.engine != "alc" {
-        return false;
-    }
-
-    if let Some(expected) = case.consistent {
-        let Ok(actual) = ontologos_dl::is_consistent(ontology) else {
-            return false;
-        };
-        if actual != expected {
-            return false;
-        }
-    }
-
-    if !case.subsumptions.is_empty() {
-        let Ok(taxonomy) = ontologos_dl::classify(ontology) else {
-            return false;
-        };
-        for sub in &case.subsumptions {
-            let sub_iri = resolve_local_iri(&sub.sub);
-            let sup_iri = resolve_local_iri(&sub.sup);
-            let Some(sub_id) = ontology.lookup_entity(&sub_iri) else {
-                return false;
-            };
-            let Some(sup_id) = ontology.lookup_entity(&sup_iri) else {
-                return false;
-            };
-            if taxonomy.is_subsumed(sub_id, sup_id) != sub.expected {
-                return false;
-            }
-        }
-    }
-
-    if case.subsumptions.is_empty() && case.consistent.is_none() {
-        return false;
-    }
-
-    true
-}
 
 fn family(java_class: &str) -> String {
     java_class
@@ -88,8 +29,12 @@ fn evaluate_case(case: &HermitCase) -> Option<CaseOutcome> {
         return None;
     }
 
-    let path = hermit_data_path(ofn_rel);
-    if !path.is_file() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit")
+        .join(ofn_rel);
+    let skipped = !path.is_file();
+
+    if skipped {
         return Some(CaseOutcome {
             family: family(&case.java_class),
             passed: false,
@@ -97,17 +42,9 @@ fn evaluate_case(case: &HermitCase) -> Option<CaseOutcome> {
         });
     }
 
-    let Ok(ontology) = load_ontology(&path) else {
-        return Some(CaseOutcome {
-            family: family(&case.java_class),
-            passed: false,
-            skipped: false,
-        });
-    };
-
     Some(CaseOutcome {
         family: family(&case.java_class),
-        passed: case_passes(case, &ontology),
+        passed: check_axiom_case(case).is_ok(),
         skipped: false,
     })
 }

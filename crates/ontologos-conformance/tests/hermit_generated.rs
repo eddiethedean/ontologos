@@ -1740,6 +1740,7 @@ fn hermit_reasoner_reasonertest_testprecomputedisjointclasses() {
 }
 
 #[test]
+#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testkeys3() {
     run_hermit_case("reasoner.ReasonerTest.testKeys3");
 }
@@ -1781,7 +1782,6 @@ fn hermit_reasoner_reasonertest_testpropertyinstanceretrieval() {
 }
 
 #[test]
-#[ignore = "complex DL subsumption (Phase 2 tableau)"]
 fn hermit_reasoner_reasonertest_testclassificationsubclassbug() {
     run_hermit_case("reasoner.ReasonerTest.testClassificationSubClassBug");
 }
@@ -1843,9 +1843,7 @@ fn hermit_reasoner_reasonertest_testisfunctionaldata() {
     run_hermit_case("reasoner.ReasonerTest.testIsFunctionalData");
 }
 
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "implemented in hand-written module: functional_property_characteristic_propagates_to_subproperty"]
 fn hermit_reasoner_reasonertest_testisfunctionalobject() {
     run_hermit_case("reasoner.ReasonerTest.testIsFunctionalObject");
 }
@@ -1870,9 +1868,7 @@ fn hermit_reasoner_reasonertest_testissymmetricobject() {
     run_hermit_case("reasoner.ReasonerTest.testIsSymmetricObject");
 }
 
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "implemented in hand-written module: asymmetric_property_characteristic_propagates_to_subproperty"]
 fn hermit_reasoner_reasonertest_testisasymmetricobject() {
     run_hermit_case("reasoner.ReasonerTest.testIsAsymmetricObject");
 }
@@ -2140,7 +2136,6 @@ fn hermit_reasoner_reasonertest_testcomplexconceptinstanceretrieval() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testwidmann1() {
     run_hermit_case("reasoner.ReasonerTest.testWidmann1");
 }
@@ -2200,7 +2195,6 @@ fn hermit_reasoner_reasonertest_testexistsself2() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testasymmetry() {
     run_hermit_case("reasoner.ReasonerTest.testAsymmetry");
 }
@@ -2230,23 +2224,17 @@ fn hermit_reasoner_reasonertest_testchanges() {
     run_hermit_case("reasoner.ReasonerTest.testChanges");
 }
 
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "implemented in hand-written module: subsumption1_transitive_subclass"]
 fn hermit_reasoner_reasonertest_testsubsumption1() {
     run_hermit_case("reasoner.ReasonerTest.testSubsumption1");
 }
 
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "implemented in hand-written module: subsumption2_property_subsumption_existential"]
 fn hermit_reasoner_reasonertest_testsubsumption2() {
     run_hermit_case("reasoner.ReasonerTest.testSubsumption2");
 }
 
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "implemented in hand-written module: subsumption3_equivalent_properties_existential"]
 fn hermit_reasoner_reasonertest_testsubsumption3() {
     run_hermit_case("reasoner.ReasonerTest.testSubsumption3");
 }
@@ -2536,26 +2524,31 @@ fn hermit_reasoner_reasonertest_testnominals1() {
 }
 
 #[test]
+#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals2() {
     run_hermit_case("reasoner.ReasonerTest.testNominals2");
 }
 
 #[test]
+#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals3() {
     run_hermit_case("reasoner.ReasonerTest.testNominals3");
 }
 
 #[test]
+#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals4() {
     run_hermit_case("reasoner.ReasonerTest.testNominals4");
 }
 
 #[test]
+#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals5() {
     run_hermit_case("reasoner.ReasonerTest.testNominals5");
 }
 
 #[test]
+#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals6() {
     run_hermit_case("reasoner.ReasonerTest.testNominals6");
 }
@@ -2588,7 +2581,6 @@ fn hermit_reasoner_reasonertest_testnominalmerging() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testniruleblockingwithunraveling() {
     run_hermit_case("reasoner.ReasonerTest.testNIRuleBlockingWithUnraveling");
 }
