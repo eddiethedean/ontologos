@@ -2,24 +2,24 @@
   {
     "id": "owl_wg_tests.Bnode2somevaluesfrom",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
-    "premise_ofn": null,
-    "conclusion_ofn": null,
+    "premise_ofn": "wg/Bnode2somevaluesfrom/premise.rdf",
+    "conclusion_ofn": "wg/Bnode2somevaluesfrom/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 requires ontologos-dl + vendored WG OFN fixtures"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Chain2trans",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
-    "premise_ofn": null,
-    "conclusion_ofn": null,
+    "premise_ofn": "wg/Chain2trans/premise.rdf",
+    "conclusion_ofn": "wg/Chain2trans/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 requires ontologos-dl + vendored WG OFN fixtures"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Datatype-2Drestrictions-2Ddifferent-2Dtypes",
@@ -651,13 +651,13 @@
   {
     "id": "owl_wg_tests.New-2DFeature-2DObjectPropertyChain-2D001",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
-    "premise_ofn": null,
-    "conclusion_ofn": null,
+    "premise_ofn": "wg/New-2DFeature-2DObjectPropertyChain-2D001/premise.rdf",
+    "conclusion_ofn": "wg/New-2DFeature-2DObjectPropertyChain-2D001/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 requires ontologos-dl + vendored WG OFN fixtures"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.New-2DFeature-2DObjectPropertyChain-2DBJP-2D002",

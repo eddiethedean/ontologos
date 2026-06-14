@@ -48,9 +48,26 @@ pub fn map_to_core(
     for (iri, kind) in declaration_kinds {
         let _ = mapper.register_or_warn_entity(&iri, kind);
     }
-    // Pass 2: logical axioms and metadata.
+    // Pass 2a: datatype definitions before property ranges that reference them.
     for annotated in source.iter() {
-        if !is_declaration(&annotated.component) {
+        if matches!(annotated.component, Component::DatatypeDefinition(_)) {
+            mapper.visit(annotated);
+        }
+    }
+    // Pass 2b: logical axioms except datatype definitions and data property ranges.
+    for annotated in source.iter() {
+        if !is_declaration(&annotated.component)
+            && !matches!(
+                annotated.component,
+                Component::DatatypeDefinition(_) | Component::DataPropertyRange(_)
+            )
+        {
+            mapper.visit(annotated);
+        }
+    }
+    // Pass 2c: data property ranges after assertions so individuals are known.
+    for annotated in source.iter() {
+        if matches!(annotated.component, Component::DataPropertyRange(_)) {
             mapper.visit(annotated);
         }
     }

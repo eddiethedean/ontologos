@@ -53,12 +53,12 @@ pub enum Clause {
         /// Super-role entity id.
         sup: EntityId,
     },
-    /// Complex role chain `r1 ∘ r2 ⊑ s`.
+    /// Complex role chain `r1 ∘ r2 ⊑ s` (super may be atomic or inverse).
     RoleChain {
         /// Chain of role expressions.
         chain: Vec<RoleExpr>,
-        /// Super-role entity id.
-        sup: EntityId,
+        /// Super property expression.
+        sup: RoleExpr,
     },
     /// Nominal equality hint `C ⊑ {a}`.
     NominalSubsumption {
@@ -66,6 +66,15 @@ pub enum Clause {
         sub: CeId,
         /// Named individual entity id.
         individual: EntityId,
+    },
+    /// Key constraint on instances of `class`.
+    HasKey {
+        /// Key class expression.
+        class: CeId,
+        /// Object properties in the key (may be empty).
+        object_properties: Vec<EntityId>,
+        /// Data properties in the key (may be empty).
+        data_properties: Vec<EntityId>,
     },
 }
 

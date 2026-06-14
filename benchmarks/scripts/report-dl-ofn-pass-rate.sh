@@ -6,4 +6,5 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
 
-cargo run -p ontologos-conformance --bin dl_ofn_pass_rate --quiet
+BIN="$("${ROOT}/benchmarks/scripts/build-conformance-tools.sh")"
+"${BIN}/dl_ofn_pass_rate"

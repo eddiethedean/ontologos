@@ -20,8 +20,12 @@ impl Mapper<'_> {
     fn build_class_expr(&mut self, ce: &ClassExpression<RcStr>) -> Option<ClassExpr> {
         match ce {
             ClassExpression::Class(class) => {
-                let id = self.register_or_warn_class(class)?;
-                Some(ClassExpr::Atomic(id))
+                if iri_of(&class.0) == "http://www.w3.org/2002/07/owl#Nothing" {
+                    Some(ClassExpr::Bottom)
+                } else {
+                    let id = self.register_or_warn_class(class)?;
+                    Some(ClassExpr::Atomic(id))
+                }
             }
             ClassExpression::ObjectIntersectionOf(ops) => {
                 let ids: Vec<CeId> = ops
@@ -845,18 +849,123 @@ fn iri_of<T: horned_owl::model::ForIRI>(entity: &horned_owl::model::IRI<T>) -> &
 }
 
 fn literal_lexical(lit: &Literal<RcStr>) -> String {
-    lit.literal().clone()
+    match lit {
+        Literal::Language { literal, lang } => format!("{literal}@{lang}"),
+        _ => lit.literal().clone(),
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use horned_owl::model::RcStr;
     use horned_owl::ontology::set::SetOntology;
+    use ontologos_core::{CeId, DataExpr};
+    use ontologos_dl::{is_datatype_consistent, LiteralIndex, LiteralValue};
 
     use crate::limits::ParseLimits;
     use crate::map::map_to_core;
     use crate::read::read_horned_owl_from_reader;
     use crate::Format;
+
+    #[test]
+    fn maps_datatype_union_intersection_axioms() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testdatatypeunionintersection1.ofn");
+        let bytes = std::fs::read(&path).unwrap();
+        let parsed: SetOntology<RcStr> = read_horned_owl_from_reader(
+            &bytes[..],
+            Format::Functional,
+            ParseLimits::default(),
+        )
+        .unwrap();
+        let (ont, report) = map_to_core(&parsed, ParseLimits::default()).unwrap();
+        assert_eq!(report.meta.skipped_axiom_count, 0, "{:?}", report.meta.warnings);
+        let store = ont.dl();
+        let min_card = store
+            .ce(CeId(0))
+            .and_then(|ce| match ce {
+                ontologos_core::ClassExpr::DataMinCardinality { range, .. } => *range,
+                _ => None,
+            })
+            .expect("MinCard CE");
+        let all_range = store
+            .ce(CeId(2))
+            .and_then(|ce| match ce {
+                ontologos_core::ClassExpr::DataAll { range, .. } => Some(*range),
+                _ => None,
+            })
+            .expect("All CE range");
+        assert!(matches!(store.de(min_card), Some(DataExpr::Datatype(_))));
+        assert!(matches!(store.de(all_range), Some(DataExpr::Not(_))));
+    }
+
+    #[test]
+    fn maps_all_values_from_mixed1_axioms() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testallvaluesfrommixed1.ofn");
+        let bytes = std::fs::read(&path).unwrap();
+        let parsed: SetOntology<RcStr> = read_horned_owl_from_reader(
+            &bytes[..],
+            Format::Functional,
+            ParseLimits::default(),
+        )
+        .unwrap();
+        let (ont, report) = map_to_core(&parsed, ParseLimits::default()).unwrap();
+        assert_eq!(report.meta.skipped_axiom_count, 0, "{:?}", report.meta.warnings);
+        let store = ont.dl();
+        let mut all_ranges = Vec::new();
+        let mut some_ranges = Vec::new();
+        for i in 0..store.ce_count() {
+            if let Some(ce) = store.ce(CeId(i as u32)) {
+                match ce {
+                    ontologos_core::ClassExpr::DataAll { range, .. } => all_ranges.push(*range),
+                    ontologos_core::ClassExpr::DataSome { range, .. } => some_ranges.push(*range),
+                    _ => {}
+                }
+            }
+        }
+        assert_eq!(all_ranges.len(), 2);
+        assert_eq!(some_ranges.len(), 1);
+        assert!(all_ranges.iter().any(|&r| matches!(store.de(r), Some(DataExpr::Or(_)))));
+        assert!(all_ranges.iter().any(|&r| matches!(store.de(r), Some(DataExpr::Literal { .. }))));
+        assert!(matches!(store.de(some_ranges[0]), Some(DataExpr::Facet { .. })));
+    }
+
+    #[test]
+    fn maps_datatype_def6_before_property_range() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testdatatypedef6.ofn");
+        let bytes = std::fs::read(&path).unwrap();
+        let parsed: SetOntology<RcStr> = read_horned_owl_from_reader(
+            &bytes[..],
+            Format::Functional,
+            ParseLimits::default(),
+        )
+        .unwrap();
+        let (ont, report) = map_to_core(&parsed, ParseLimits::default()).unwrap();
+        assert_eq!(report.meta.skipped_axiom_count, 0, "{:?}", report.meta.warnings);
+        let store = ont.dl();
+        let mut range_id = None;
+        for ax in store.axioms() {
+            if let ontologos_core::DlAxiom::DataPropertyRange { range, .. } = ax {
+                range_id = Some(*range);
+            }
+        }
+        let range_id = range_id.expect("range");
+        let idx = LiteralIndex::from_store(store);
+        let lit = LiteralValue {
+            lexical: "16".into(),
+            datatype: ont
+                .lookup_entity("http://www.w3.org/2001/XMLSchema#integer")
+                .unwrap(),
+        };
+        assert!(
+            idx.satisfies_with_ontology(&lit, &ont, range_id),
+            "de={:?}",
+            store.de(range_id)
+        );
+        assert!(is_datatype_consistent(&ont));
+    }
 
     #[test]
     fn maps_complement_subclass_into_dl_store() {

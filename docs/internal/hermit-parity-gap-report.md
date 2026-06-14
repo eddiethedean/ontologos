@@ -1,12 +1,14 @@
 # HermiT parity gap report
 
-**Baseline commit:** `410a06c` (2026-06-13)  
+**Baseline commit:** `410a06c` (2026-06-13) · **Updated:** 2026-06-14  
 **Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) §1.0)  
+**Current metrics:** **177** active CI tests · **105** axiom cases · **34** planned DL failures  
 **Triage commands:**
 
 ```bash
-cargo run -p ontologos-conformance --bin dl_failures
-cargo run -p ontologos-conformance --bin promote_catalog
+bash benchmarks/scripts/parity-scan.sh          # all three scans, release + parallel
+cargo run --release -p ontologos-conformance --bin dl_failures
+cargo run --release -p ontologos-conformance --bin promote_catalog
 bash benchmarks/scripts/promote-hermit-catalog.sh
 cargo test -p ontologos-conformance --test hermit_generated
 cargo test -p ontologos-dl --test datatype_consistency
@@ -22,7 +24,7 @@ OntoLogos has cataloged **594** HermiT Java test methods and runs **59** of them
 | Layer | Status |
 |-------|--------|
 | **Tier A** (hand-written RL/RDFS/EL) | Green in CI |
-| **Semantic DL axiom fixtures** | **26** promoted; **67** planned failures |
+| **Semantic DL axiom fixtures** | **105** promoted; **34** planned failures |
 | **Clausification (structural)** | **33** cases — not started |
 | **OWL WG entailment** | **428** cases — all `planned` |
 | **Tier B/C** (goldens, JAR/Konclude, corpora) | Not gated in CI yet |
@@ -37,8 +39,9 @@ OntoLogos has cataloged **594** HermiT Java test methods and runs **59** of them
 
 | Status | Count | Meaning |
 |--------|------:|---------|
-| `planned` | 456 | OFN/fixture present; engine not yet passing |
-| `axiom` | 26 | Active semantic checks (`run_hermit_case`) |
+| `planned` | 432 | OFN/fixture present; engine not yet passing |
+| `axiom` | 50 | Active semantic checks (`run_hermit_case`) |
+| `wg` | 3 | OWL WG entailment (vendored RDF) |
 | `clausify` | 33 | Structural DL clausification regression |
 | `ported` | 15 | Hand-written in `hermit_rl` / `hermit_rdfs` / `hermit_el` |
 | `internal` | 55 | Parser/normalization smoke |
@@ -52,9 +55,9 @@ OntoLogos has cataloged **594** HermiT Java test methods and runs **59** of them
 
 | Metric | Value |
 |--------|------:|
-| Tests defined | 594 |
-| **Passing (active)** | **59** |
-| Ignored (`planned` / deferred) | 535 |
+| Tests defined | 594 (+428 WG) |
+| **Passing (active)** | **125** |
+| Ignored (`planned` / deferred) | **941** |
 | Failing | 0 |
 
 ### Planned DL failures (`dl_failures` bin)
@@ -229,7 +232,7 @@ From [ROADMAP.md](../../ROADMAP.md) §1.0 — not measured by `dl_failures`:
 | HermiT JAR + Konclude reference harness | Not in CI |
 | DL corpora taxonomy tolerance (Pizza-DL, Galen, OBO) | Not gated |
 | Performance targets (medium DL < 30s) | Not benchmarked |
-| `promote_catalog` / `infer_named_subsumptions` O(n²) | Slow on large ontologies |
+| Parity scan tooling | Release build + parallel case scan (`parity-scan.sh`); `infer_named_subsumptions` still O(n²) on large ontologies |
 
 ---
 
@@ -292,6 +295,6 @@ Documented for regression awareness:
 
 ```bash
 python3 tests/hermit/generate_catalog.py
-cargo run -p ontologos-conformance --bin dl_failures 2>&1 | head -3
+cargo run --release -p ontologos-conformance --bin dl_failures 2>&1 | head -3
 cargo test -p ontologos-conformance --test hermit_generated 2>&1 | tail -1
 ```

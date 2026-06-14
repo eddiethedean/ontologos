@@ -52,7 +52,9 @@ pub fn saturate(
 
     for (chain, sup) in roles.chains() {
         if let [RoleExpr::Atomic(r)] = chain.as_slice() {
-            push_role_subsumption(&mut facts.role_subsumptions, *r, *sup);
+            if let RoleExpr::Atomic(s) = sup {
+                push_role_subsumption(&mut facts.role_subsumptions, *r, *s);
+            }
         }
     }
 

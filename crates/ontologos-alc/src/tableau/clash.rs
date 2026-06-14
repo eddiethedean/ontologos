@@ -20,6 +20,19 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
                 branch.clash = true;
                 return;
             }
+            if matches!(
+                branch.dl.core().dl().ce(ce),
+                Some(ClassExpr::Bottom)
+            ) {
+                branch.clash = true;
+                return;
+            }
+            if let Some(ClassExpr::Not(inner)) = branch.dl.core().dl().ce(ce) {
+                if world.labels.contains(inner) {
+                    branch.clash = true;
+                    return;
+                }
+            }
         }
         for &(left, right) in &branch.disjoint {
             if world.labels.contains(&left) && world.labels.contains(&right) {
@@ -32,6 +45,13 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
 
 /// Assert `ce` into a world, detecting immediate clashes.
 pub fn assert_label(branch: &mut Branch<'_>, world: usize, ce: CeId) {
+    if matches!(
+        branch.dl.core().dl().ce(ce),
+        Some(ClassExpr::Bottom)
+    ) {
+        branch.clash = true;
+        return;
+    }
     let w = &mut branch.worlds[world];
     if w.negated.contains(&ce) {
         branch.clash = true;
@@ -51,7 +71,7 @@ fn propagate_subsumptions(branch: &mut Branch<'_>, world: usize, _trigger: CeId)
     loop {
         let mut progressed = false;
         for &(sub, sup) in branch.tbox_subsumptions.clone().iter() {
-            if branch.worlds[world].labels.contains(&sub)
+            if world_satisfies_sub(branch, world, sub)
                 && !branch.worlds[world].labels.contains(&sup)
             {
                 let w = &mut branch.worlds[world];
@@ -71,6 +91,38 @@ fn propagate_subsumptions(branch: &mut Branch<'_>, world: usize, _trigger: CeId)
         if branch.clash {
             return;
         }
+    }
+}
+
+fn world_satisfies_sub(branch: &Branch<'_>, world: usize, sub: CeId) -> bool {
+    if branch.worlds[world].labels.contains(&sub) {
+        return true;
+    }
+    if is_thing_ce(branch, sub) {
+        return branch.worlds[world]
+            .labels
+            .iter()
+            .any(|&label| is_thing_ce(branch, label));
+    }
+    false
+}
+
+pub(crate) fn is_thing_ce(branch: &Branch<'_>, ce: CeId) -> bool {
+    let store = branch.dl.core().dl();
+    match store.ce(ce) {
+        Some(ClassExpr::Top) => true,
+        Some(ClassExpr::Atomic(id)) => branch
+            .dl
+            .core()
+            .entity(*id)
+            .ok()
+            .and_then(|record| branch.dl.core().resolve_iri(record.iri).ok())
+            .is_some_and(|iri| {
+                iri == "http://www.w3.org/2002/07/owl#Thing"
+                    || iri.ends_with("#Thing")
+                    || iri.ends_with("/Thing")
+            }),
+        _ => false,
     }
 }
 

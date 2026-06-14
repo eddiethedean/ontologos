@@ -19,3 +19,7 @@ ontologos-el = { workspace = true }
 ontologos-alc = { workspace = true }
 horned-owl = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

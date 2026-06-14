@@ -1,6 +1,8 @@
 //! Tableau expansion rules (∧, ∨, ∃, ∀, ¬).
 
-use ontologos_core::{CeId, ClassExpr, RoleExpr};
+use std::collections::HashSet;
+
+use ontologos_core::{CeId, ClassExpr, EntityId, RoleExpr};
 
 use super::block;
 use super::clash::{self, assert_label, assert_negation};
@@ -40,6 +42,18 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
             expand_universal(branch, world, &property, filler);
         }
         ClassExpr::OneOf(individuals) => {
+            let mut active_world = world;
+            if individuals.len() == 1 {
+                if let Some(&named_world) = branch.named_worlds.get(&individuals[0]) {
+                    if named_world != active_world {
+                        branch.merge_worlds(named_world, active_world);
+                        if branch.clash {
+                            return Ok(());
+                        }
+                    }
+                    active_world = named_world;
+                }
+            }
             for ind in individuals {
                 let nom = branch
                     .dl
@@ -51,7 +65,7 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
                         _ => None,
                     });
                 if let Some(id) = nom {
-                    assert_label(branch, world, id);
+                    assert_label(branch, active_world, id);
                 }
             }
         }
@@ -61,7 +75,11 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         } => {
             expand_has_value(branch, world, property, individual);
         }
-        ClassExpr::HasSelf(_) => {}
+        ClassExpr::HasSelf(property) => {
+            branch.edges.push((world, RoleExpr::Atomic(property), world));
+            apply_universal_on_edge(branch, world, world);
+            saturate_composed_edges(branch);
+        }
         ClassExpr::MinCardinality { n: 0, .. } => {}
         ClassExpr::MinCardinality {
             n,
@@ -106,6 +124,10 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         | ClassExpr::DataMinCardinality { .. }
         | ClassExpr::DataMaxCardinality { .. }
         | ClassExpr::DataExactCardinality { .. } => {}
+    }
+    if !branch.clash {
+        propagate_structural_existential_subsumptions(branch);
+        materialize_existential_successors(branch);
     }
     Ok(())
 }
@@ -194,21 +216,401 @@ fn expand_has_value(
 }
 
 fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr, filler: CeId) {
+    apply_existential_clauses(branch, world, &property, filler);
+    if branch.clash {
+        return;
+    }
+    if world_satisfies_filler(branch, world, filler) {
+        add_role_edge(branch, world, property.clone(), world);
+        clash::check_negated_cardinality(branch);
+        return;
+    }
+    if let Some(individual) = nominal_individual(branch, filler) {
+        let target = ensure_named_world(branch, individual);
+        add_role_edge(branch, world, property, target);
+        clash::check_negated_cardinality(branch);
+        return;
+    }
+    if has_universal_has_self_for_role(branch, world, &property) {
+        add_role_edge(branch, world, property.clone(), world);
+        assert_label(branch, world, filler);
+        if branch.clash {
+            return;
+        }
+        clash::check_negated_cardinality(branch);
+        return;
+    }
+    if let Some(target) = existing_role_successor(branch, world, &property) {
+        assert_label(branch, target, filler);
+        if branch.clash {
+            return;
+        }
+        clash::check_negated_cardinality(branch);
+        return;
+    }
     let new_world = branch.worlds.len();
     branch.worlds.push(super::World::default());
     branch.edges.push((world, property, new_world));
     assert_label(branch, new_world, filler);
     apply_universal_on_edge(branch, world, new_world);
+    saturate_composed_edges(branch);
     clash::check_negated_cardinality(branch);
 }
 
+fn existing_role_successor(branch: &Branch<'_>, world: usize, property: &RoleExpr) -> Option<usize> {
+    branch
+        .edges
+        .iter()
+        .find(|(from, role, _)| *from == world && role_subsumes(branch, property, role))
+        .map(|(_, _, to)| *to)
+}
+
+fn has_universal_has_self_for_role(
+    branch: &Branch<'_>,
+    world: usize,
+    role: &RoleExpr,
+) -> bool {
+    let store = branch.dl.core().dl();
+    let mut candidates: Vec<(RoleExpr, CeId)> = branch.worlds[world]
+        .labels
+        .iter()
+        .filter_map(|&ce| match store.ce(ce)? {
+            ClassExpr::All { property, filler } => Some((property.clone(), *filler)),
+            _ => None,
+        })
+        .collect();
+    for (sub, property, filler) in &branch.universals {
+        if world_satisfies_subject(branch, world, *sub) {
+            candidates.push((property.clone(), *filler));
+        }
+    }
+    candidates.iter().any(|(universal_role, filler)| {
+        role_subsumes(branch, universal_role, role)
+            && matches!(store.ce(*filler), Some(ClassExpr::HasSelf(has_self_role))
+                if role_subsumes(branch, role, &RoleExpr::Atomic(*has_self_role)))
+    })
+}
+
+fn nominal_individual(branch: &Branch<'_>, filler: CeId) -> Option<EntityId> {
+    match branch.dl.core().dl().ce(filler)? {
+        ClassExpr::OneOf(v) if v.len() == 1 => Some(v[0]),
+        _ => None,
+    }
+}
+
+fn ensure_named_world(branch: &mut Branch<'_>, id: EntityId) -> usize {
+    if let Some(&w) = branch.named_worlds.get(&id) {
+        return w;
+    }
+    let w = branch.worlds.len();
+    branch.worlds.push(super::World::default());
+    if let Some(nom) = branch.dl.core().dl().expressions().find_map(|(ce, e)| match e {
+        ClassExpr::OneOf(v) if v == &[id] => Some(ce),
+        _ => None,
+    }) {
+        assert_label(branch, w, nom);
+    }
+    branch.named_worlds.insert(id, w);
+    w
+}
+
+fn world_satisfies_filler(branch: &Branch<'_>, world: usize, filler: CeId) -> bool {
+    if matches!(
+        branch.dl.core().dl().ce(filler),
+        Some(ClassExpr::Top)
+    ) || clash::is_thing_ce(branch, filler)
+    {
+        return true;
+    }
+    let labels = &branch.worlds[world].labels;
+    if labels.contains(&filler) {
+        return true;
+    }
+    for &label in labels {
+        if ce_subsumes(branch, label, filler) {
+            return true;
+        }
+    }
+    false
+}
+
+fn ce_subsumes(branch: &Branch<'_>, sub: CeId, sup: CeId) -> bool {
+    if sub == sup {
+        return true;
+    }
+    let mut work = vec![sub];
+    let mut seen = HashSet::from([sub]);
+    while let Some(cur) = work.pop() {
+        for &(left, right) in &branch.tbox_subsumptions {
+            if left == cur && !seen.contains(&right) {
+                if right == sup {
+                    return true;
+                }
+                seen.insert(right);
+                work.push(right);
+            }
+        }
+    }
+    false
+}
+
+/// Apply `C ⊑ D` when a world structurally satisfies `C` (e.g. nested `∃` chains).
+pub(crate) fn propagate_structural_existential_subsumptions(branch: &mut Branch<'_>) {
+    let subs = branch.tbox_subsumptions.clone();
+    let world_count = branch.worlds.len();
+    for world in 0..world_count {
+        for &(sub, sup) in &subs {
+            if branch.worlds[world].labels.contains(&sup) {
+                continue;
+            }
+            if world_structurally_satisfies(branch, world, sub) {
+                assert_label(branch, world, sup);
+                if branch.clash {
+                    return;
+                }
+            }
+        }
+    }
+}
+
+fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce: CeId) -> bool {
+    if branch.worlds[world].labels.contains(&ce) {
+        return true;
+    }
+    if world_satisfies_filler(branch, world, ce) {
+        return true;
+    }
+    let Some(expr) = branch.dl.core().dl().ce(ce).cloned() else {
+        return false;
+    };
+    match expr {
+        ClassExpr::Some { property, filler } => branch.edges.iter().any(|(from, role, to)| {
+            *from == world
+                && role_subsumes(branch, &property, &role)
+                && world_structurally_satisfies(branch, *to, filler)
+        }),
+        _ => false,
+    }
+}
+
+/// If `world` is labelled with `∃property.filler`, materialize `filler` on known successors.
+pub(crate) fn materialize_existential_successors(branch: &mut Branch<'_>) {
+    let store = branch.dl.core().dl();
+    let world_count = branch.worlds.len();
+    for world in 0..world_count {
+        let labels = branch.worlds[world].labels.clone();
+        for ce in labels {
+            let Some(ClassExpr::Some { property, filler }) = store.ce(ce) else {
+                continue;
+            };
+            for (from, role, to) in branch.edges.clone() {
+                if from == world && role_subsumes(branch, &property, &role) {
+                    assert_label(branch, to, *filler);
+                    if branch.clash {
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Insert a role edge and its declared inverse, applying universal propagation.
+pub(crate) fn add_role_edge(branch: &mut Branch<'_>, from: usize, property: RoleExpr, to: usize) {
+    branch.edges.push((from, property.clone(), to));
+    apply_domain_on_edge(branch, from, &property);
+    apply_universal_on_edge(branch, from, to);
+    if is_symmetric_role(branch, &property) {
+        branch.edges.push((to, property.clone(), from));
+        apply_domain_on_edge(branch, to, &property);
+        apply_universal_on_edge(branch, to, from);
+    } else if let Some(inverse) = inverse_partner(branch, &property) {
+        branch.edges.push((to, inverse.clone(), from));
+        apply_domain_on_edge(branch, to, &inverse);
+        apply_universal_on_edge(branch, to, from);
+    }
+    propagate_structural_existential_subsumptions(branch);
+}
+
+fn apply_domain_on_edge(branch: &mut Branch<'_>, from: usize, property: &RoleExpr) {
+    if let Some(top) = top_ce(branch) {
+        apply_existential_clauses(branch, from, property, top);
+    }
+}
+
+fn is_symmetric_role(branch: &Branch<'_>, role: &RoleExpr) -> bool {
+    branch
+        .symmetric_roles
+        .iter()
+        .any(|sym| role_subsumes(branch, sym, role))
+}
+
+pub(crate) fn inverse_partner(branch: &Branch<'_>, role: &RoleExpr) -> Option<RoleExpr> {
+    match role {
+        RoleExpr::Atomic(id) => Some(
+            branch
+                .role_inverses
+                .get(id)
+                .map(|partner| RoleExpr::Atomic(*partner))
+                .unwrap_or(RoleExpr::Inverse(*id)),
+        ),
+        RoleExpr::Inverse(id) => Some(
+            branch
+                .role_inverses
+                .get(id)
+                .map(|partner| RoleExpr::Atomic(*partner))
+                .unwrap_or(RoleExpr::Atomic(*id)),
+        ),
+    }
+}
+
+/// Close role edges under subproperty hierarchy, transitivity, and chain inclusions.
+pub(crate) fn saturate_composed_edges(branch: &mut Branch<'_>) {
+    let mut changed = true;
+    while changed {
+        changed = false;
+        if saturate_subrole_edges(branch) {
+            changed = true;
+        }
+        if saturate_transitive_edges(branch) {
+            changed = true;
+        }
+        if saturate_chain_edges(branch) {
+            changed = true;
+        }
+    }
+}
+
+fn saturate_subrole_edges(branch: &mut Branch<'_>) -> bool {
+    let mut added = false;
+    let snapshot = branch.edges.clone();
+    for (a, r, b) in &snapshot {
+        if let RoleExpr::Atomic(sub) = r {
+            let supers: Vec<EntityId> = branch
+                .role_hierarchy
+                .get(sub)
+                .map(|s| s.iter().copied().collect())
+                .unwrap_or_default();
+            for sup in supers {
+                let sup_role = RoleExpr::Atomic(sup);
+                if !branch
+                    .edges
+                    .iter()
+                    .any(|(x, role, y)| x == a && role == &sup_role && y == b)
+                {
+                    add_role_edge(branch, *a, sup_role, *b);
+                    added = true;
+                }
+            }
+        }
+    }
+    added
+}
+
+fn saturate_transitive_edges(branch: &mut Branch<'_>) -> bool {
+    let mut added = false;
+    let snapshot = branch.edges.clone();
+    for (chain, sup) in &branch.role_chains.clone() {
+        if chain.len() == 2 && chain[0] == chain[1] {
+            if chain[0] != *sup {
+                continue;
+            }
+            let role = chain[0].clone();
+            for (a, r, b) in &snapshot {
+                if *r != role {
+                    continue;
+                }
+                for (b2, r2, c) in &snapshot {
+                    if b == b2 && *r2 == role {
+                        if !branch
+                            .edges
+                            .iter()
+                            .any(|(x, role2, y)| x == a && role2 == &role && y == c)
+                        {
+                            add_role_edge(branch, *a, role.clone(), *c);
+                            added = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    added
+}
+
+fn saturate_chain_edges(branch: &mut Branch<'_>) -> bool {
+    let mut added = false;
+    let snapshot = branch.edges.clone();
+    let chains = branch.role_chains.clone();
+    let world_count = branch.worlds.len();
+    for (chain, sup) in &chains {
+        if chain.is_empty() {
+            continue;
+        }
+        for start in 0..world_count {
+            let targets = chain_targets(branch, chain, start, &snapshot);
+            for end in targets {
+                    if !branch
+                        .edges
+                        .iter()
+                        .any(|(f, r, t)| *f == start && role_subsumes(branch, sup, r) && *t == end)
+                    {
+                        add_role_edge(branch, start, sup.clone(), end);
+                        added = true;
+                    }
+            }
+        }
+    }
+    added
+}
+
+fn chain_targets(
+    branch: &Branch<'_>,
+    chain: &[RoleExpr],
+    from: usize,
+    edges: &[(usize, RoleExpr, usize)],
+) -> Vec<usize> {
+    let mut frontier = vec![from];
+    for want in chain {
+        let mut next = Vec::new();
+        for w in frontier {
+            for (f, r, t) in edges {
+                if *f == w && role_subsumes(branch, want, r) {
+                    next.push(*t);
+                }
+            }
+        }
+        if next.is_empty() {
+            return vec![];
+        }
+        frontier = next;
+    }
+    frontier
+}
+
 fn expand_universal(branch: &mut Branch<'_>, world: usize, property: &RoleExpr, filler: CeId) {
-    let targets: Vec<usize> = branch
+    if is_top_object_property(branch, property) {
+        let targets: Vec<usize> = branch.named_worlds.values().copied().collect();
+        for target in targets {
+            assert_label(branch, target, filler);
+            if branch.clash {
+                return;
+            }
+        }
+        return;
+    }
+    let mut targets: Vec<usize> = branch
         .edges
         .iter()
         .filter(|(from, role, _)| *from == world && role_subsumes(branch, property, role))
         .map(|(_, _, to)| *to)
         .collect();
+    let inv = inverse_role(property);
+    for (from, role, to) in &branch.edges {
+        if *to == world && role_subsumes(branch, &inv, role) {
+            targets.push(*from);
+        }
+    }
     for target in targets {
         assert_label(branch, target, filler);
         if branch.clash {
@@ -217,7 +619,14 @@ fn expand_universal(branch: &mut Branch<'_>, world: usize, property: &RoleExpr, 
     }
 }
 
-fn apply_universal_on_edge(branch: &mut Branch<'_>, from: usize, to: usize) {
+pub(crate) fn inverse_role(role: &RoleExpr) -> RoleExpr {
+    match role {
+        RoleExpr::Atomic(id) => RoleExpr::Inverse(*id),
+        RoleExpr::Inverse(id) => RoleExpr::Atomic(*id),
+    }
+}
+
+pub(crate) fn apply_universal_on_edge(branch: &mut Branch<'_>, from: usize, to: usize) {
     let roles: Vec<RoleExpr> = branch
         .edges
         .iter()
@@ -245,6 +654,12 @@ fn apply_universal_on_edge(branch: &mut Branch<'_>, from: usize, to: usize) {
                     return;
                 }
             }
+            if role_subsumes(branch, &inverse_role(property), &role) {
+                assert_label(branch, from, *filler);
+                if branch.clash {
+                    return;
+                }
+            }
         }
     }
 }
@@ -252,6 +667,13 @@ fn apply_universal_on_edge(branch: &mut Branch<'_>, from: usize, to: usize) {
 fn world_satisfies_subject(branch: &Branch<'_>, world: usize, sub: CeId) -> bool {
     if branch.worlds[world].labels.contains(&sub) {
         return true;
+    }
+    if clash::is_thing_ce(branch, sub) {
+        return branch
+            .worlds[world]
+            .labels
+            .iter()
+            .any(|&label| clash::is_thing_ce(branch, label));
     }
     matches!(branch.dl.core().dl().ce(sub), Some(ClassExpr::Top))
 }
@@ -339,6 +761,16 @@ pub(crate) fn role_subsumes(
     super_role: &RoleExpr,
     sub_role: &RoleExpr,
 ) -> bool {
+    if role_equivalent(branch, super_role, sub_role) {
+        return true;
+    }
+    if branch.role_chains.iter().any(|(chain, sup)| {
+        chain.len() == 1
+            && role_exprs_equal(&chain[0], sub_role)
+            && (role_exprs_equal(sup, super_role) || role_subsumes(branch, super_role, sup))
+    }) {
+        return true;
+    }
     match (super_role, sub_role) {
         (RoleExpr::Atomic(sup), RoleExpr::Atomic(sub)) => {
             if sup == sub {
@@ -349,7 +781,46 @@ pub(crate) fn role_subsumes(
                 .get(sub)
                 .is_some_and(|supers| supers.contains(sup))
         }
-        (RoleExpr::Inverse(ia), RoleExpr::Inverse(ib)) => ia == ib,
-        _ => super_role == sub_role,
+        (RoleExpr::Inverse(is), RoleExpr::Inverse(it)) => {
+            role_subsumes(branch, &RoleExpr::Atomic(*it), &RoleExpr::Atomic(*is))
+        }
+        (RoleExpr::Inverse(is), RoleExpr::Atomic(sub)) => {
+            role_subsumes(branch, &RoleExpr::Atomic(*sub), &RoleExpr::Atomic(*is))
+        }
+        (RoleExpr::Atomic(sup), RoleExpr::Inverse(it)) => {
+            role_subsumes(branch, &RoleExpr::Inverse(*it), &RoleExpr::Atomic(*sup))
+        }
+    }
+}
+
+fn role_exprs_equal(left: &RoleExpr, right: &RoleExpr) -> bool {
+    left == right
+}
+
+fn is_top_object_property(branch: &Branch<'_>, property: &RoleExpr) -> bool {
+    const TOP: &str = "http://www.w3.org/2002/07/owl#topObjectProperty";
+    let RoleExpr::Atomic(id) = property else {
+        return false;
+    };
+    branch
+        .dl
+        .core()
+        .entity(*id)
+        .ok()
+        .and_then(|record| branch.dl.core().resolve_iri(record.iri).ok())
+        .is_some_and(|iri| iri == TOP)
+}
+
+fn role_equivalent(branch: &Branch<'_>, left: &RoleExpr, right: &RoleExpr) -> bool {
+    if left == right {
+        return true;
+    }
+    match (left, right) {
+        (RoleExpr::Atomic(prop), RoleExpr::Inverse(inv))
+        | (RoleExpr::Inverse(inv), RoleExpr::Atomic(prop)) => branch
+            .role_inverses
+            .get(prop)
+            .is_some_and(|partner| *partner == *inv),
+        _ => false,
     }
 }

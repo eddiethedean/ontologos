@@ -3,13 +3,11 @@
 use ontologos_conformance::run_wg_case;
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_bnode2somevaluesfrom() {
     run_wg_case("owl_wg_tests.Bnode2somevaluesfrom");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_chain2trans() {
     run_wg_case("owl_wg_tests.Chain2trans");
 }
@@ -357,7 +355,6 @@ fn hermit_owl_wg_tests_new_2dfeature_2dnegativeobjectpropertyassertion_2d001() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_new_2dfeature_2dobjectpropertychain_2d001() {
     run_wg_case("owl_wg_tests.New-2DFeature-2DObjectPropertyChain-2D001");
 }

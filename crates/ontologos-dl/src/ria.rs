@@ -10,7 +10,7 @@ use ontologos_alc::{Clause, ClauseSet};
 #[derive(Debug, Default)]
 pub struct RoleHierarchy {
     subroles: HashMap<EntityId, HashSet<EntityId>>,
-    chains: Vec<(Vec<RoleExpr>, EntityId)>,
+    chains: Vec<(Vec<RoleExpr>, RoleExpr)>,
 }
 
 impl RoleHierarchy {
@@ -24,7 +24,7 @@ impl RoleHierarchy {
                     h.add_subrole(*sub, *sup);
                 }
                 Clause::RoleChain { chain, sup } => {
-                    h.chains.push((chain.clone(), *sup));
+                    h.chains.push((chain.clone(), sup.clone()));
                 }
                 _ => {}
             }
@@ -68,7 +68,7 @@ impl RoleHierarchy {
     }
 
     /// Complex role chains registered.
-    pub fn chains(&self) -> &[(Vec<RoleExpr>, EntityId)] {
+    pub fn chains(&self) -> &[(Vec<RoleExpr>, RoleExpr)] {
         &self.chains
     }
 

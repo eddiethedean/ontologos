@@ -45,7 +45,11 @@ PROMOTED_AXIOM_IDS = load_promoted_axiom_ids()
 
 # Approved OWL WG DL entailment subset (premise/conclusion RDF vendored from all.rdf).
 # Promote to status=wg only after ontologos-dl passes entailment on each case.
-WG_APPROVED_SUBSET: set[str] = set()
+WG_APPROVED_SUBSET: set[str] = {
+    "Chain2trans",
+    "Bnode2somevaluesfrom",
+    "New-2DFeature-2DObjectPropertyChain-2D001",
+}
 
 SKIP_FILE = re.compile(
     r"(Abstract|AllTests|AllQuick|Descriptor|Registry|Invalid|Failing|TstDescriptor|AllWG|AllApproved|AllExtracredit|AllNonRejected|AllProposed)"
@@ -87,10 +91,6 @@ OFN_WRITE_SKIP_IDS = {
     "reasoner.ReasonerTest.testPunning2",
     "reasoner.ReasonerTest.testPunning3",
     "reasoner.ReasonerTest.testInverses",
-}
-
-    "reasoner.ReasonerTest.testSubsumption2",
-    "reasoner.ReasonerTest.testSubsumption3",
 }
 
 # DL axiom ports gated on tableau maturity (Phase 2+).
@@ -440,7 +440,21 @@ def extract_entailment_subsumptions(body: str) -> list[dict[str, str | bool]]:
     return subsumptions_from_ofn(conclusion, expected)
 
 
+def is_incremental_consistency_test(body: str) -> bool:
+    """True when isConsistent is checked after incremental addAxioms (static OFN is initial load only)."""
+    add_m = re.search(r"addAxioms\s*\(", body)
+    if not add_m:
+        return False
+    after_add = body[add_m.start() :]
+    return bool(
+        re.search(r"assertFalse\s*\(\s*m_reasoner\.isConsistent\s*\(\s*\)\s*\)", after_add)
+        or re.search(r"assertNotConsistent\s*\(\s*\)", after_add)
+    )
+
+
 def extract_consistency(body: str) -> bool | None:
+    if is_incremental_consistency_test(body):
+        return None
     if re.search(r"assertConsistent\s*\(\s*\)", body):
         return True
     if re.search(r"assertNotConsistent\s*\(\s*\)", body):
@@ -989,7 +1003,60 @@ def write_wg_rust(cases: list[WgCase]) -> None:
     OUT_WG_RUST.write_text("\n".join(lines), encoding="utf-8")
 
 
+def promote_wg_from_disk() -> None:
+    """Activate WG cases with vendored premise/conclusion RDF on disk."""
+    wg_path = OUT_WG_CATALOG
+    raw = json.loads(wg_path.read_text(encoding="utf-8"))
+    updated: list[dict] = []
+    active = 0
+    for row in raw:
+        test_id = row["id"].split(".", 1)[-1]
+        prem = OUT_WG_DATA / test_id / "premise.rdf"
+        conc = OUT_WG_DATA / test_id / "conclusion.rdf"
+        if test_id in WG_APPROVED_SUBSET and prem.is_file() and conc.is_file():
+            row["status"] = "wg"
+            row["premise_ofn"] = f"wg/{test_id}/premise.rdf"
+            row["conclusion_ofn"] = f"wg/{test_id}/conclusion.rdf"
+            row["ignore_reason"] = None
+            active += 1
+        updated.append(row)
+    wg_path.write_text(json.dumps(updated, indent=2) + "\n", encoding="utf-8")
+    cases = [WgCase(**row) for row in updated]
+    write_wg_rust(cases)
+    print(f"WG promote-only: {active} active of {len(updated)}")
+
+
+def promote_only_from_disk() -> None:
+    """Re-apply promoted_axiom_ids.txt to existing cases.json without HermiT checkout."""
+    global PROMOTED_AXIOM_IDS
+    PROMOTED_AXIOM_IDS = load_promoted_axiom_ids()
+    catalog_path = OUT_CATALOG / "cases.json"
+    raw = json.loads(catalog_path.read_text(encoding="utf-8"))
+    cases: list[HermitCase] = []
+    for row in raw:
+        case = HermitCase(**row)
+        infer_status(case)
+        cases.append(case)
+    catalog_path.write_text(
+        json.dumps([asdict(c) for c in cases], indent=2) + "\n", encoding="utf-8"
+    )
+    write_rust(cases)
+    by_status: dict[str, int] = {}
+    for c in cases:
+        by_status[c.status] = by_status.get(c.status, 0) + 1
+    print(f"promoted-only refresh: {len(cases)} cases")
+    print(f"  by status: {by_status}")
+    print(f"  wrote {catalog_path.relative_to(REPO)}")
+    print(f"  wrote {OUT_RUST.relative_to(REPO)}")
+
+
 def main() -> None:
+    if len(sys.argv) > 1 and sys.argv[1] == "--promote-only":
+        promote_only_from_disk()
+        return
+    if len(sys.argv) > 1 and sys.argv[1] == "--promote-wg-only":
+        promote_wg_from_disk()
+        return
     cases = collect_cases()
     wg_cases = collect_wg_cases()
     OUT_CATALOG.mkdir(parents=True, exist_ok=True)

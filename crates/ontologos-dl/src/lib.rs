@@ -65,7 +65,11 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if !datatype::is_datatype_consistent(ontology) {
         return Ok(false);
     }
-    ontologos_alc::is_consistent(ontology).map_err(Error::Alc)
+    let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
+    let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
+    let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
+    let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)
 }
 
 /// Check named class subsumption after DL classification.

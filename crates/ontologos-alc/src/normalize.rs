@@ -121,11 +121,11 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
             }
             DlAxiom::SubObjectPropertyChain {
                 chain,
-                super_property: RoleExpr::Atomic(sup),
+                super_property,
             } => {
                 out.push(Clause::RoleChain {
                     chain: chain.clone(),
-                    sup,
+                    sup: super_property.clone(),
                 });
             }
             DlAxiom::ClassAssertion { individual, class } => {
@@ -140,11 +140,19 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                 out.push(Clause::Subsumption { sub: nom, sup: ce });
             }
             DlAxiom::SubObjectPropertyOf { sub, sup } => {
-                if let (RoleExpr::Atomic(sub_id), RoleExpr::Atomic(sup_id)) = (&sub, &sup) {
-                    out.push(Clause::RoleSubsumption {
-                        sub: *sub_id,
-                        sup: *sup_id,
-                    });
+                match (&sub, &sup) {
+                    (RoleExpr::Atomic(sub_id), RoleExpr::Atomic(sup_id)) => {
+                        out.push(Clause::RoleSubsumption {
+                            sub: *sub_id,
+                            sup: *sup_id,
+                        });
+                    }
+                    _ => {
+                        out.push(Clause::RoleChain {
+                            chain: vec![sub.clone()],
+                            sup: sup.clone(),
+                        });
+                    }
                 }
             }
             DlAxiom::ObjectPropertyDomain { property, domain } => {
@@ -160,16 +168,22 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
             } => {
                 emit_nominal_role_clause(ontology, &mut out, subject, prop, object);
             }
+            DlAxiom::TransitiveObjectProperty(role) => {
+                out.push(Clause::RoleChain {
+                    chain: vec![role.clone(), role.clone()],
+                    sup: role.clone(),
+                });
+            }
+            DlAxiom::SymmetricObjectProperty(_) => {}
             DlAxiom::HasKey {
                 class,
                 object_properties,
                 data_properties,
             } => {
-                let _ = (class, object_properties, data_properties);
-                // Key clauses materialized during tableau (Phase 3).
-                out.push(Clause::Subsumption {
-                    sub: nnf(ontology, class),
-                    sup: nnf(ontology, class),
+                out.push(Clause::HasKey {
+                    class: nnf(ontology, class),
+                    object_properties: object_properties.clone(),
+                    data_properties: data_properties.clone(),
                 });
             }
             _ => {}
@@ -206,7 +220,7 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
             Axiom::TransitiveObjectProperty(prop) => {
                 out.push(Clause::RoleChain {
                     chain: vec![RoleExpr::Atomic(*prop), RoleExpr::Atomic(*prop)],
-                    sup: *prop,
+                    sup: RoleExpr::Atomic(*prop),
                 });
             }
             Axiom::AsymmetricObjectProperty(_) => {}

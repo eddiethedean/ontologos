@@ -73,7 +73,7 @@ fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
     let dl = DlOntology::from_ontology(ontology)?;
     let roles = RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturate(ontology, dl.clauses(), &roles)?;
-    let seed = tableau_seed_from_facts(&dl, &facts, &roles)?;
+    let seed = build_tableau_seed(ontology, &dl, &facts, &roles)?;
     let mut taxonomy = ontologos_alc::classify_with_seed(ontology, &seed).map_err(Error::Alc)?;
     let derived = derive_cardinality_subsumptions(ontology);
     for (sub, sup) in derived {
@@ -88,7 +88,9 @@ fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
     Ok(taxonomy)
 }
 
-fn tableau_seed_from_facts(
+/// Build tableau seed from saturation (used by consistency checking).
+pub fn build_tableau_seed(
+    _ontology: &Ontology,
     dl: &DlOntology,
     facts: &SaturatedFacts,
     roles: &RoleHierarchy,
