@@ -113,11 +113,10 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
 
     apply_has_key_merges(&mut branch, &mut worlds, dl);
 
-    for axiom in dl.core().dl().axioms() {
-        apply_kb_axiom(&mut branch, &mut worlds, dl, axiom, true);
-    }
-    for (_, axiom) in dl.core().axioms().iter() {
-        apply_graph_axiom(&mut branch, &mut worlds, dl, axiom, true);
+    apply_same_individual_axioms(&mut branch, &mut worlds, dl);
+    apply_different_individual_axioms(&mut branch, &mut worlds, dl);
+    if branch.clash {
+        return Ok(false);
     }
 
     expand::saturate_composed_edges(&mut branch);
@@ -330,17 +329,74 @@ fn add_property_edge(
     expand::saturate_composed_edges(branch);
 }
 
+fn apply_same_individual_axioms(
+    branch: &mut Branch<'_>,
+    worlds: &mut HashMap<EntityId, usize>,
+    dl: &DlOntology,
+) {
+    for axiom in dl.core().dl().axioms() {
+        if let DlAxiom::SameIndividual(ids) = axiom {
+            merge_individuals(branch, worlds, ids);
+        }
+    }
+    for (_, axiom) in dl.core().axioms().iter() {
+        if let Axiom::SameIndividual(ids) = axiom {
+            merge_individuals(branch, worlds, ids);
+        }
+    }
+}
+
+fn apply_different_individual_axioms(
+    branch: &mut Branch<'_>,
+    worlds: &mut HashMap<EntityId, usize>,
+    dl: &DlOntology,
+) {
+    for axiom in dl.core().dl().axioms() {
+        if let DlAxiom::DifferentIndividuals(ids) = axiom {
+            mark_different_individuals(branch, worlds, ids);
+        }
+    }
+    for (_, axiom) in dl.core().axioms().iter() {
+        if let Axiom::DifferentIndividuals(ids) = axiom {
+            mark_different_individuals(branch, worlds, ids);
+        }
+    }
+}
+
+fn different_pair(left: EntityId, right: EntityId) -> (EntityId, EntityId) {
+    if left.0 <= right.0 {
+        (left, right)
+    } else {
+        (right, left)
+    }
+}
+
 fn merge_individuals(
     branch: &mut Branch<'_>,
     worlds: &mut HashMap<EntityId, usize>,
     ids: &[EntityId],
 ) {
+    if ids.len() < 2 {
+        return;
+    }
+    for i in 0..ids.len() {
+        for &other in &ids[i + 1..] {
+            if branch
+                .different_pairs
+                .contains(&different_pair(ids[i], other))
+            {
+                branch.clash = true;
+                return;
+            }
+        }
+    }
     let first = ensure_individual_world(branch, worlds, ids[0]);
     for &other in &ids[1..] {
         let w = ensure_individual_world(branch, worlds, other);
         if first != w {
             branch.merge_worlds(first, w);
             worlds.insert(other, first);
+            branch.named_worlds.insert(other, first);
         }
     }
 }
@@ -350,8 +406,12 @@ fn mark_different_individuals(
     worlds: &mut HashMap<EntityId, usize>,
     ids: &[EntityId],
 ) {
+    if ids.len() < 2 {
+        return;
+    }
     let w0 = ensure_individual_world(branch, worlds, ids[0]);
     for &other in &ids[1..] {
+        branch.different_pairs.insert(different_pair(ids[0], other));
         let w1 = ensure_individual_world(branch, worlds, other);
         if w0 == w1 {
             branch.clash = true;
@@ -770,6 +830,7 @@ pub(crate) struct Branch<'a> {
     pub(crate) has_keys: Vec<(CeId, Vec<EntityId>, Vec<EntityId>)>,
     pub(crate) inverse_functional: HashSet<EntityId>,
     pub(crate) named_worlds: HashMap<EntityId, usize>,
+    pub(crate) different_pairs: HashSet<(EntityId, EntityId)>,
     pub(crate) cache: cache::UnsatCache,
     pub(crate) expansions: u32,
 }
@@ -875,6 +936,7 @@ impl<'a> Branch<'a> {
             has_keys,
             inverse_functional,
             named_worlds: HashMap::new(),
+            different_pairs: HashSet::new(),
             cache: cache::UnsatCache::new(),
             expansions: 0,
         }
@@ -907,6 +969,11 @@ impl<'a> Branch<'a> {
         self.edges
             .retain(|(from, _, to)| *from != drop && *to != drop);
         self.worlds[drop] = World::default();
+        for world_idx in self.named_worlds.values_mut() {
+            if *world_idx == drop {
+                *world_idx = keep;
+            }
+        }
         clash::check_existential_bottom_subsumptions(self);
     }
 

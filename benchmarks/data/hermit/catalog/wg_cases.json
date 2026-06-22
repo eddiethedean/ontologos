@@ -4655,13 +4655,13 @@
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2DsomeValuesFrom-2D003",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2DsomeValuesFrom-2D003/premise.rdf",
     "conclusion_ofn": "wg/TestCase-3AWebOnt-2DsomeValuesFrom-2D003/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2DunionOf-2D001",

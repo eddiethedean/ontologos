@@ -1879,7 +1879,6 @@ fn hermit_reasoner_reasonertest_testistransitiveobject() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testlearningbacktracking() {
     run_hermit_case("reasoner.ReasonerTest.testLearningBacktracking");
 }
@@ -2079,7 +2078,6 @@ fn hermit_reasoner_reasonertest_testnonunarykeys() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnonunarykeys2() {
     run_hermit_case("reasoner.ReasonerTest.testNonUnaryKeys2");
 }
@@ -2521,13 +2519,11 @@ fn hermit_reasoner_reasonertest_testianbackjumping3() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals1() {
     run_hermit_case("reasoner.ReasonerTest.testNominals1");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals2() {
     run_hermit_case("reasoner.ReasonerTest.testNominals2");
 }

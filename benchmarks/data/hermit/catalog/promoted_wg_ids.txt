@@ -280,6 +280,7 @@ TestCase-3AWebOnt-2DoneOf-2D004
 TestCase-3AWebOnt-2DsameAs-2D001
 TestCase-3AWebOnt-2DsomeValuesFrom-2D001
 TestCase-3AWebOnt-2DsomeValuesFrom-2D002
+TestCase-3AWebOnt-2DsomeValuesFrom-2D003
 TestCase-3AWebOnt-2DunionOf-2D001
 TestCase-3AWebOnt-2DunionOf-2D002
 TestCase-3AWebOnt-2DunionOf-2D003
