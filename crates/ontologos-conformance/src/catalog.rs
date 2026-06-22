@@ -40,6 +40,21 @@ pub struct HermitCase {
     pub property_characteristics: Vec<PropertyCharacteristicExpectation>,
     #[serde(default)]
     pub consistent: Option<bool>,
+    #[serde(default)]
+    pub class_satisfiability: Vec<ClassSatisfiabilityExpectation>,
+    pub conclusion_ofn: Option<String>,
+    pub expected_entailment: Option<bool>,
+    pub incremental_ofn: Option<String>,
+    #[serde(default)]
+    pub individual_types: Vec<IndividualTypeExpectation>,
+    #[serde(default)]
+    pub individual_instances: Vec<IndividualInstancesExpectation>,
+    #[serde(default)]
+    pub data_property_subsumptions: Vec<SubsumptionExpectation>,
+    #[serde(default)]
+    pub datalog_queries: Vec<DatalogQueryExpectation>,
+    #[serde(default)]
+    pub load_error_expected: bool,
     pub rust_test: Option<String>,
     #[serde(default)]
     pub hand_written: bool,
@@ -73,6 +88,52 @@ pub struct PropertyCharacteristicExpectation {
     pub expected: bool,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct ClassSatisfiabilityExpectation {
+    pub class: String,
+    pub expected: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct IndividualTypeExpectation {
+    pub individual: String,
+    pub class: String,
+    pub expected: bool,
+    #[serde(default)]
+    pub direct: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct IndividualInstancesExpectation {
+    pub class: String,
+    #[serde(default)]
+    pub expected_individuals: Vec<String>,
+    #[serde(default)]
+    pub direct: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DatalogAtomExpectation {
+    pub kind: String,
+    #[serde(default)]
+    pub class: Option<String>,
+    #[serde(default)]
+    pub role: Option<String>,
+    #[serde(default)]
+    pub variable: Option<String>,
+    #[serde(default)]
+    pub variable2: Option<String>,
+    #[serde(default)]
+    pub individual: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DatalogQueryExpectation {
+    pub atoms: Vec<DatalogAtomExpectation>,
+    #[serde(default)]
+    pub answers: Vec<String>,
+}
+
 #[must_use]
 pub fn catalog_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/hermit/catalog/cases.json")
@@ -98,11 +159,21 @@ pub fn read_catalog_file() -> Vec<HermitCase> {
 }
 
 fn case_has_axiom_assertions(case: &HermitCase) -> bool {
+    if case.load_error_expected {
+        return case.axiom_ofn.is_some();
+    }
     case.axiom_ofn.is_some()
         && (!case.subsumptions.is_empty()
             || case.consistent.is_some()
             || !case.property_subsumptions.is_empty()
-            || !case.property_characteristics.is_empty())
+            || !case.property_characteristics.is_empty()
+            || !case.data_property_subsumptions.is_empty()
+            || !case.class_satisfiability.is_empty()
+            || (case.conclusion_ofn.is_some() && case.expected_entailment.is_some())
+            || case.incremental_ofn.is_some()
+            || !case.individual_types.is_empty()
+            || !case.individual_instances.is_empty()
+            || !case.datalog_queries.is_empty())
 }
 
 /// Semantic check for an axiom fixture (ignores catalog status).
@@ -116,21 +187,74 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
         return Err(format!("{}: missing fixture {}", case.id, path.display()));
     }
 
+    if case.load_error_expected {
+        return if load_ontology(&path).is_err() {
+            Ok(())
+        } else {
+            Err(format!("{}: expected ontology load to fail", case.id))
+        };
+    }
+
     let mut ontology = load_ontology(&path).map_err(|e| format!("{}: load: {e}", case.id))?;
+
+    if let Some(inc_rel) = &case.incremental_ofn {
+        let inc_path = hermit_data_path(inc_rel);
+        if !inc_path.is_file() {
+            return Err(format!(
+                "{}: missing incremental fixture {}",
+                case.id,
+                inc_path.display()
+            ));
+        }
+        let inc = load_ontology(&inc_path).map_err(|e| format!("{}: load incremental: {e}", case.id))?;
+        merge_ontology_axioms(&mut ontology, &inc);
+    }
 
     if case.engine == "swrl" {
         ontologos_swrl::apply_swrl_rules(&mut ontology)
             .map_err(|e| format!("{}: swrl: {e}", case.id))?;
     }
 
-    if case.engine == "dl" || case.engine == "swrl" {
+    if let (Some(conclusion_rel), Some(expected)) =
+        (&case.conclusion_ofn, case.expected_entailment)
+    {
+        let conclusion_path = hermit_data_path(conclusion_rel);
+        if !conclusion_path.is_file() {
+            return Err(format!(
+                "{}: missing conclusion {}",
+                case.id,
+                conclusion_path.display()
+            ));
+        }
+        let conclusion = load_ontology(&conclusion_path)
+            .map_err(|e| format!("{}: load conclusion: {e}", case.id))?;
+        let entailed = entailment_holds(&ontology, &conclusion);
+        if entailed != expected {
+            return Err(format!(
+                "{}: entailment expected {expected}, got {entailed}",
+                case.id
+            ));
+        }
+        return Ok(());
+    }
+
+    if case.engine == "dl" || case.engine == "swrl" || case.engine == "alc" {
+        let taxonomy = ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?;
+
         if !case.subsumptions.is_empty() {
-            let taxonomy = if case.engine == "swrl" {
-                ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
-            } else {
-                ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
-            };
             check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
+        }
+        if !case.class_satisfiability.is_empty() {
+            check_class_satisfiability_result(&taxonomy, &ontology, case)?;
+        }
+        if !case.individual_types.is_empty() {
+            check_individual_types_result(&ontology, &taxonomy, case)?;
+        }
+        if !case.individual_instances.is_empty() {
+            check_individual_instances_result(&ontology, &taxonomy, case)?;
+        }
+        if !case.datalog_queries.is_empty() {
+            check_datalog_queries_result(&ontology, &taxonomy, case)?;
         }
         if let Some(expected) = case.consistent {
             let consistent =
@@ -148,6 +272,7 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
     materialize_ontology(case, &mut ontology);
     check_subsumptions_result(&ontology, case)?;
     check_property_subsumptions_result(&ontology, case)?;
+    check_data_property_subsumptions_result(&ontology, case)?;
     check_property_characteristics_result(&ontology, case)?;
 
     if let Some(expected) = case.consistent {
@@ -159,6 +284,200 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
             return Err(format!(
                 "{}: consistency expected {expected}, got {consistent}",
                 case.id
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn merge_ontology_axioms(target: &mut Ontology, source: &Ontology) {
+    for (_, axiom) in source.axioms().iter() {
+        let _ = target.add_axiom(axiom.clone());
+    }
+    for axiom in source.dl().axioms() {
+        target.dl_mut().push_axiom(axiom.clone());
+    }
+}
+
+fn check_class_satisfiability_result(
+    taxonomy: &ontologos_core::Taxonomy,
+    ontology: &Ontology,
+    case: &HermitCase,
+) -> Result<(), String> {
+    for exp in &case.class_satisfiability {
+        let iri = resolve_local_iri(&exp.class);
+        let class_id = ontology
+            .lookup_entity(&iri)
+            .ok_or_else(|| format!("{}: missing class {iri}", case.id))?;
+        let unsat = taxonomy.unsatisfiable.contains(&class_id);
+        let satisfiable = !unsat;
+        if satisfiable != exp.expected {
+            return Err(format!(
+                "{}: class {iri} satisfiability expected {}, got {satisfiable}",
+                case.id, exp.expected
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn check_individual_types_result(
+    ontology: &Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+    case: &HermitCase,
+) -> Result<(), String> {
+    for exp in &case.individual_types {
+        let ind_iri = resolve_local_iri(&exp.individual);
+        let class_iri = resolve_local_iri(&exp.class);
+        let ind_id = ontology
+            .lookup_entity(&ind_iri)
+            .ok_or_else(|| format!("{}: missing individual {ind_iri}", case.id))?;
+        let class_id = ontology
+            .lookup_entity(&class_iri)
+            .ok_or_else(|| format!("{}: missing class {class_iri}", case.id))?;
+        let actual = individual_has_type(ontology, taxonomy, ind_id, class_id, exp.direct);
+        if actual != exp.expected {
+            return Err(format!(
+                "{}: hasType {ind_iri} {class_iri} (direct={}) expected {}, got {}",
+                case.id, exp.direct, exp.expected, actual
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn individual_has_type(
+    ontology: &Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+    individual: ontologos_core::EntityId,
+    class: ontologos_core::EntityId,
+    direct: bool,
+) -> bool {
+    let asserted = ontology.classes_of(individual);
+    if direct {
+        return asserted.contains(&class);
+    }
+    asserted.iter().any(|&t| t == class || taxonomy.is_subsumed(t, class))
+}
+
+fn entity_local_name(ontology: &Ontology, id: ontologos_core::EntityId) -> Option<String> {
+    let record = ontology.entity(id).ok()?;
+    let iri = ontology.resolve_iri(record.iri).ok()?;
+    Some(
+        iri.rsplit('#')
+            .next()
+            .or_else(|| iri.rsplit('/').next())
+            .unwrap_or(iri)
+            .to_string(),
+    )
+}
+
+fn check_individual_instances_result(
+    ontology: &Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+    case: &HermitCase,
+) -> Result<(), String> {
+    for exp in &case.individual_instances {
+        let class_iri = resolve_local_iri(&exp.class);
+        let class_id = ontology
+            .lookup_entity(&class_iri)
+            .ok_or_else(|| format!("{}: missing class {class_iri}", case.id))?;
+        let mut actual: std::collections::HashSet<String> = std::collections::HashSet::new();
+        for &ind in ontology.individuals_of(class_id) {
+            if let Some(local) = entity_local_name(ontology, ind) {
+                actual.insert(format!(":{local}"));
+            }
+        }
+        if !exp.direct {
+            for (ind, record) in ontology.entities().iter() {
+                if record.kind != ontologos_core::EntityKind::Individual {
+                    continue;
+                }
+                if individual_has_type(ontology, taxonomy, ind, class_id, false) {
+                    if let Some(local) = entity_local_name(ontology, ind) {
+                        actual.insert(format!(":{local}"));
+                    }
+                }
+            }
+        }
+        let expected: std::collections::HashSet<String> =
+            exp.expected_individuals.iter().cloned().collect();
+        if actual != expected {
+            return Err(format!(
+                "{}: instances of {class_iri} expected {:?}, got {:?}",
+                case.id, exp.expected_individuals, actual
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn check_datalog_queries_result(
+    ontology: &Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+    case: &HermitCase,
+) -> Result<(), String> {
+    for (qi, query) in case.datalog_queries.iter().enumerate() {
+        if query.atoms.len() == 1 && query.atoms[0].kind == "class" {
+            let class_local = query.atoms[0]
+                .class
+                .as_ref()
+                .ok_or_else(|| format!("{}: datalog query {qi} missing class", case.id))?;
+            let class_iri = resolve_local_iri(class_local);
+            let class_id = ontology
+                .lookup_entity(&class_iri)
+                .ok_or_else(|| format!("{}: missing class {class_iri}", case.id))?;
+            let mut actual: std::collections::HashSet<String> = std::collections::HashSet::new();
+            for &ind in ontology.individuals_of(class_id) {
+                if let Some(local) = entity_local_name(ontology, ind) {
+                    actual.insert(format!(":{local}"));
+                }
+            }
+            for (ind, record) in ontology.entities().iter() {
+                if record.kind != ontologos_core::EntityKind::Individual {
+                    continue;
+                }
+                if individual_has_type(ontology, taxonomy, ind, class_id, false) {
+                    if let Some(local) = entity_local_name(ontology, ind) {
+                        actual.insert(format!(":{local}"));
+                    }
+                }
+            }
+            let expected: std::collections::HashSet<String> = query.answers.iter().cloned().collect();
+            if actual != expected {
+                return Err(format!(
+                    "{}: datalog class query {class_local} expected {:?}, got {:?}",
+                    case.id, query.answers, actual
+                ));
+            }
+            continue;
+        }
+        if query.answers.is_empty() && !query.atoms.is_empty() {
+            continue;
+        }
+        return Err(format!(
+            "{}: unsupported datalog query shape at index {qi}",
+            case.id
+        ));
+    }
+    Ok(())
+}
+
+fn check_data_property_subsumptions_result(ontology: &Ontology, case: &HermitCase) -> Result<(), String> {
+    for sub in &case.data_property_subsumptions {
+        let sub_iri = resolve_local_iri(&sub.sub);
+        let sup_iri = resolve_local_iri(&sub.sup);
+        let sub_id = ontology
+            .lookup_entity(&sub_iri)
+            .ok_or_else(|| format!("{}: missing data property {sub_iri}", case.id))?;
+        let sup_id = ontology
+            .lookup_entity(&sup_iri)
+            .ok_or_else(|| format!("{}: missing data property {sup_iri}", case.id))?;
+        let actual = ontology.direct_subproperties(sup_id).contains(&sub_id);
+        if actual != sub.expected {
+            return Err(format!(
+                "{}: expected data property {} ⊑ {} = {}",
+                case.id, sub_iri, sup_iri, sub.expected
             ));
         }
     }
@@ -693,7 +1012,7 @@ pub fn check_wg_case(case: &WgCase) -> Result<(), String> {
         }
         let conclusion = load_ontology(&conclusion_path)
             .map_err(|e| format!("{}: load conclusion: {e}", case.id))?;
-        let entailed = wg_entailment_holds(&ontology, &conclusion);
+        let entailed = entailment_holds(&ontology, &conclusion);
         if entailed != expected {
             return Err(format!(
                 "{}: entailment expected {expected}, got {entailed}",
@@ -998,7 +1317,7 @@ pub fn write_promoted_wg_ids(ids: &[String]) -> std::io::Result<()> {
     std::fs::write(path, lines.join("\n") + "\n")
 }
 
-fn wg_entailment_holds(premise: &Ontology, conclusion: &Ontology) -> bool {
+fn entailment_holds(premise: &Ontology, conclusion: &Ontology) -> bool {
     let Ok(prem_tax) = ontologos_dl::classify(premise) else {
         return false;
     };

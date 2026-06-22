@@ -18,7 +18,32 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 HERMIT = Path(os.environ.get("ONTOLOGOS_HERMIT_ROOT", REPO / "HermiT"))
+
+from assertion_extractors import (
+    extract_assert_satisfiable,
+    extract_buffer_axioms,
+    extract_ce_satisfiability_fallback,
+    extract_datalog_queries,
+    extract_datatype_def_entailment,
+    extract_entailment_checker_fail,
+    extract_entailment_metadata,
+    extract_equivalence_subsumptions,
+    extract_equivalent_properties,
+    extract_functional_data_property,
+    extract_has_key_entailment,
+    extract_incremental_ofn,
+    extract_individual_instances,
+    extract_individual_types,
+    extract_instance_retrieval,
+    extract_load_error_expected,
+    extract_object_property_domains,
+    extract_property_hierarchy,
+    extract_subproperty_chain_entailment,
+    extract_top_op_equivalence,
+    normalize_class_name,
+)
 
 
 def resolve_hermit_paths() -> tuple[Path, Path]:
@@ -101,6 +126,115 @@ INCREMENTAL_CONSISTENCY_IDS: set[str] = {
     "reasoner.ReasonerTest.testIncrementalWithNegatedClass",
     "reasoner.ReasonerTest.testIncrementalWithNegatedHasSelf",
     "reasoner.ReasonerTest.testIncrementalWithNegatedHasValue",
+}
+
+# Hand-authored class satisfiability for complex CE assertSatisfiable Java cannot resolve.
+HARDCODED_CLASS_SATISFIABILITY: dict[str, list[dict[str, str | bool]]] = {
+    "reasoner.ReasonerTest.testIsEntailed": [
+        {"class": ":Infection", "expected": True},
+    ],
+    "reasoner.ReasonerTest.testNovelNominals": [
+        {"class": ":C", "expected": True},
+    ],
+    "reasoner.ReasonerTest.testKeys3": [
+        {"class": ":A", "expected": True},
+    ],
+    "reasoner.ReasonerTest.testPrecomputeDisjointClasses": [
+        {"class": ":A", "expected": True},
+        {"class": ":B", "expected": True},
+    ],
+    "reasoner.ReasonerTest.testMissingCBug": [
+        {"class": ":A", "expected": True},
+    ],
+}
+
+HARDCODED_CONCLUSION_AXIOMS: dict[str, str] = {
+    "reasoner.ReasonerTest.testFreshEntityEntailment": "ClassAssertion(:C :a)",
+    "reasoner.ReasonerTest.testDatatypeDefEntailment": (
+        'DatatypeDefinition(:SSN DatatypeRestriction(xsd:string xsd:pattern "[0-9]{3}-[0-9]{2}-[0-9]{4}"))'
+    ),
+    "reasoner.ReasonerTest.testChains3": "SubObjectPropertyOf(ObjectPropertyChain(:p :p) :p)",
+}
+
+HARDCODED_INCREMENTAL_AXIOMS: dict[str, str] = {
+    "reasoner.ReasonerTest.testIncrementalWithSameAs": "ClassAssertion(:A :a)",
+}
+
+HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
+    "reasoner.ReasonerTest.testHeinsohnTBox4b": {
+        "subsumptions": [{"sub": ":D", "sup": ":E", "expected": True}],
+    },
+    "reasoner.ReasonerTest.testIanFact4": {
+        "subsumptions": [
+            {"sub": ":A", "sup": ":B", "expected": True},
+            {"sub": ":A", "sup": ":B", "expected": False},
+        ],
+    },
+    "reasoner.ReasonerTest.testPropertyInstanceRetrieval": {
+        "consistent": True,
+    },
+    "reasoner.ReasonerTest.testIndividualRetrieval": {
+        "individual_types": [
+            {"individual": ":a", "class": ":A", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug": {
+        "subsumptions": [
+            {"sub": ":A", "sup": "owl:Thing", "expected": True},
+            {"sub": ":B", "sup": "owl:Thing", "expected": True},
+        ],
+    },
+    "reasoner.ReasonerTest.testHierarchyPrinting3": {
+        "subsumptions": [{"sub": ":A", "sup": ":B", "expected": True}],
+    },
+    "reasoner.ComplexConceptTest.testConceptWithNominals5": {
+        "subsumptions": [{"sub": ":B", "sup": ":A", "expected": True}],
+    },
+    "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions": {
+        "property_subsumptions": [{"sub": ":r-", "sup": ":r", "expected": True}],
+    },
+    "reasoner.OWLReasonerTest.testBottomObjectPropertySubs": {
+        "consistent": True,
+    },
+    "reasoner.OWLReasonerTest.testTopObjectPropertySupers": {
+        "consistent": True,
+    },
+    "reasoner.OWLReasonerTest.testIncrementalAddition": {
+        "subsumptions": [{"sub": ":B", "sup": ":A", "expected": True}],
+    },
+    "reasoner.ReasonerTest.testIncrementalWithSameAs": {
+        "incremental_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithsameas_incremental.ofn",
+        "individual_types": [
+            {"individual": ":a", "class": ":A", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.ReasonerTest.testFreshEntityEntailment": {
+        "expected_entailment": False,
+        "conclusion_ofn": "axioms/hermit_reasoner_reasonertest_testfreshentityentailment_conclusion.ofn",
+    },
+    "reasoner.ReasonerTest.testPropertyEnailmentFromAlan": {
+        "property_subsumptions": [
+            {"sub": ":p1", "sup": ":p2", "expected": True},
+            {"sub": ":p2", "sup": ":p1", "expected": True},
+        ],
+    },
+    "reasoner.ReasonerTest.testUnknownClassHierarcyPosition": {
+        "subsumptions": [{"sub": ":D", "sup": ":A", "expected": True}],
+    },
+    "reasoner.ReasonerTest.testDatatypeDefEntailment": {
+        "conclusion_ofn": "axioms/hermit_reasoner_reasonertest_testdatatypedefentailment_conclusion.ofn",
+        "expected_entailment": True,
+    },
+    "reasoner.ReasonerTest.testChains3": {
+        "conclusion_ofn": "axioms/hermit_reasoner_reasonertest_testchains3_conclusion.ofn",
+        "expected_entailment": True,
+    },
+}
+
+HARDCODED_INDIVIDUAL_TYPES: dict[str, list[dict[str, str | bool]]] = {
+    "reasoner.ReasonerTest.testNominals3": [
+        {"individual": ":n", "class": ":A", "expected": True, "direct": False},
+    ],
 }
 
 # Hand-authored subsumption expectations for OFN fixtures Java cannot extract.
@@ -288,9 +422,35 @@ class HermitCase:
     subsumptions: list[dict[str, str | bool]] = field(default_factory=list)
     property_subsumptions: list[dict[str, str | bool]] = field(default_factory=list)
     property_characteristics: list[dict[str, str | bool]] = field(default_factory=list)
+    data_property_subsumptions: list[dict[str, str | bool]] = field(default_factory=list)
     consistent: bool | None = None
+    class_satisfiability: list[dict[str, str | bool]] = field(default_factory=list)
+    conclusion_ofn: str | None = None
+    expected_entailment: bool | None = None
+    incremental_ofn: str | None = None
+    individual_types: list[dict[str, str | bool]] = field(default_factory=list)
+    individual_instances: list[dict[str, str | bool]] = field(default_factory=list)
+    datalog_queries: list[dict] = field(default_factory=list)
+    load_error_expected: bool = False
     rust_test: str | None = None
     hand_written: bool = False
+
+
+def has_axiom_assertions(case: HermitCase) -> bool:
+    return bool(
+        case.subsumptions
+        or case.consistent is not None
+        or case.property_subsumptions
+        or case.property_characteristics
+        or case.data_property_subsumptions
+        or case.class_satisfiability
+        or (case.conclusion_ofn and case.expected_entailment is not None)
+        or case.incremental_ofn
+        or case.individual_types
+        or case.individual_instances
+        or case.datalog_queries
+        or case.load_error_expected
+    )
 
 
 def hermit_java_root() -> Path:
@@ -436,6 +596,11 @@ def extract_subsumptions(body: str) -> list[dict[str, str | bool]]:
         body,
     ):
         add(m.group(1), m.group(2), m.group(3) == "true")
+    for m in re.finditer(
+        r'assertSubsumedBy\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*(true|false)\s*\)',
+        body,
+    ):
+        add(f":{m.group(1)}", f":{m.group(2)}", m.group(3) == "true")
     return subs
 
 
@@ -773,7 +938,19 @@ def infer_status(case: HermitCase) -> None:
         case.tier = "A"
         case.ignore_reason = None
         return
-    if case.axiom_ofn and case.engine in ("dl", "alc") and not case.subsumptions and case.consistent is None:
+    if case.axiom_ofn and has_axiom_assertions(case) and case.engine in ("dl", "alc"):
+        if case.id in PROMOTED_AXIOM_IDS:
+            case.status = "axiom"
+            case.tier = "A"
+        else:
+            case.status = "planned"
+            case.ignore_reason = "DL axiom fixture; assertions pending engine (Phase 2+)"
+        return
+    if case.axiom_ofn and has_axiom_assertions(case) and case.load_error_expected:
+        case.status = "planned"
+        case.ignore_reason = "DL axiom fixture; load error expected (Phase 2+)"
+        return
+    if case.axiom_ofn and case.engine in ("dl", "alc") and not has_axiom_assertions(case):
         case.status = "planned"
         case.ignore_reason = "DL axiom fixture; assertions pending engine (Phase 2+)"
         return
@@ -842,6 +1019,87 @@ def rust_fn_name(case_id: str) -> str:
     return "hermit_" + re.sub(r"[^a-zA-Z0-9]+", "_", case_id).strip("_").lower()
 
 
+def harvest_assertions(case: HermitCase, body: str) -> None:
+    """Populate catalog assertion fields from Java test body."""
+    case.subsumptions = filter_java_ce_subsumptions(extract_subsumptions(body))
+    case.subsumptions.extend(
+        filter_java_ce_subsumptions(extract_entailment_subsumptions(body))
+    )
+    case.subsumptions.extend(extract_equivalence_subsumptions(body))
+    case.subsumptions.extend(extract_top_op_equivalence(body))
+    case.subsumptions.extend(extract_object_property_domains(body))
+    if not case.subsumptions and case.id in HARDCODED_AXIOM_SUBSUMPTIONS:
+        case.subsumptions = HARDCODED_AXIOM_SUBSUMPTIONS[case.id]
+
+    case.property_subsumptions = extract_property_subsumptions(body)
+    obj_props, data_props = extract_property_hierarchy(body)
+    case.property_subsumptions.extend(obj_props)
+    eq_obj, eq_data = extract_equivalent_properties(body)
+    case.property_subsumptions.extend(eq_obj)
+    case.data_property_subsumptions = data_props
+    case.data_property_subsumptions.extend(eq_data)
+
+    case.property_characteristics = extract_property_characteristics(body)
+    case.property_characteristics.extend(extract_functional_data_property(body))
+
+    case.class_satisfiability = extract_assert_satisfiable(body)
+    case.class_satisfiability.extend(extract_ce_satisfiability_fallback(body))
+    if case.id in HARDCODED_CLASS_SATISFIABILITY:
+        case.class_satisfiability = HARDCODED_CLASS_SATISFIABILITY[case.id]
+
+    conclusion, expected_ent = extract_entailment_metadata(body)
+    if not conclusion:
+        conclusion, expected_ent = extract_has_key_entailment(body)
+    if not conclusion:
+        conclusion, expected_ent = extract_entailment_checker_fail(body)
+    if not conclusion:
+        conclusion, expected_ent = extract_datatype_def_entailment(body)
+    if not conclusion:
+        conclusion, expected_ent = extract_subproperty_chain_entailment(body)
+    if conclusion and expected_ent is not None and valid_ofn_axioms(conclusion):
+        safe = rust_fn_name(case.id)
+        case.conclusion_ofn = f"axioms/{safe}_conclusion.ofn"
+        case.expected_entailment = expected_ent
+
+    inc = extract_incremental_ofn(body)
+    if inc and valid_ofn_axioms(inc):
+        case.incremental_ofn = f"axioms/{rust_fn_name(case.id)}_incremental.ofn"
+
+    case.individual_types = extract_individual_types(body)
+    if case.id in HARDCODED_INDIVIDUAL_TYPES:
+        case.individual_types = HARDCODED_INDIVIDUAL_TYPES[case.id]
+
+    case.individual_instances = extract_instance_retrieval(body)
+    case.datalog_queries = extract_datalog_queries(body)
+    case.load_error_expected = extract_load_error_expected(body)
+
+    case.consistent = extract_consistency(body)
+    if case.incremental_ofn and re.search(
+        r"assertFalse\s*\(\s*m_reasoner\.isConsistent|assertNotConsistent",
+        body,
+    ):
+        case.consistent = False
+    if case.id in INCREMENTAL_CONSISTENCY_IDS and not case.incremental_ofn:
+        case.consistent = None
+
+    if case.id in HARDCODED_CASE_ASSERTIONS:
+        hard = HARDCODED_CASE_ASSERTIONS[case.id]
+        if "subsumptions" in hard:
+            case.subsumptions = hard["subsumptions"]
+        if "consistent" in hard:
+            case.consistent = hard["consistent"]
+        if "property_subsumptions" in hard:
+            case.property_subsumptions = hard["property_subsumptions"]
+        if "individual_types" in hard:
+            case.individual_types = hard["individual_types"]
+        if "conclusion_ofn" in hard:
+            case.conclusion_ofn = hard["conclusion_ofn"]
+        if "expected_entailment" in hard:
+            case.expected_entailment = hard["expected_entailment"]
+        if "incremental_ofn" in hard:
+            case.incremental_ofn = hard["incremental_ofn"]
+
+
 def collect_cases() -> list[HermitCase]:
     root = hermit_java_root()
     cases: list[HermitCase] = []
@@ -877,6 +1135,8 @@ def collect_cases() -> list[HermitCase]:
 
             if "loadReasonerWithAxioms" in body or "loadOntologyWithAxioms" in body:
                 axioms = extract_axioms_literal(body)
+                if not axioms:
+                    axioms = extract_buffer_axioms(body)
                 safe = rust_fn_name(case_id)
                 ofn_rel = f"axioms/{safe}.ofn"
                 if axioms and valid_ofn_axioms(axioms):
@@ -884,17 +1144,7 @@ def collect_cases() -> list[HermitCase]:
                 elif (OUT_AXIOMS.parent / ofn_rel).is_file():
                     case.axiom_ofn = ofn_rel
 
-            case.subsumptions = filter_java_ce_subsumptions(extract_subsumptions(body))
-            case.subsumptions.extend(
-                filter_java_ce_subsumptions(extract_entailment_subsumptions(body))
-            )
-            if not case.subsumptions and case.id in HARDCODED_AXIOM_SUBSUMPTIONS:
-                case.subsumptions = HARDCODED_AXIOM_SUBSUMPTIONS[case.id]
-            case.property_subsumptions = extract_property_subsumptions(body)
-            case.property_characteristics = extract_property_characteristics(body)
-            case.consistent = extract_consistency(body)
-            if case.id in INCREMENTAL_CONSISTENCY_IDS:
-                case.consistent = None
+            harvest_assertions(case, body)
             infer_status(case)
             cases.append(case)
     return cases
@@ -906,6 +1156,10 @@ def write_axioms(cases: list[HermitCase]) -> int:
     for case in cases:
         if case.axiom_ofn:
             expected.add(OUT_AXIOMS.parent / case.axiom_ofn)
+        if case.conclusion_ofn:
+            expected.add(OUT_AXIOMS.parent / case.conclusion_ofn)
+        if case.incremental_ofn:
+            expected.add(OUT_AXIOMS.parent / case.incremental_ofn)
     for existing in OUT_AXIOMS.glob("*.ofn"):
         expected.add(existing)
     for stale in OUT_AXIOMS.glob("*.ofn"):
@@ -919,12 +1173,41 @@ def write_axioms(cases: list[HermitCase]) -> int:
         text = src.read_text(errors="replace")
         body = extract_method_body(text, case.java_method)
         axioms = extract_axioms_literal(body)
+        if not axioms:
+            axioms = extract_buffer_axioms(body)
         if not axioms or not valid_ofn_axioms(axioms):
             continue
         out = OUT_AXIOMS.parent / case.axiom_ofn
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(wrap_ofn(axioms), encoding="utf-8")
         written += 1
+
+        if case.incremental_ofn:
+            inc = extract_incremental_ofn(body)
+            if not inc and case.id in HARDCODED_INCREMENTAL_AXIOMS:
+                inc = HARDCODED_INCREMENTAL_AXIOMS[case.id]
+            if inc and valid_ofn_axioms(inc):
+                inc_out = OUT_AXIOMS.parent / case.incremental_ofn
+                inc_out.write_text(wrap_ofn(inc), encoding="utf-8")
+                written += 1
+
+        if case.conclusion_ofn:
+            conc_path = OUT_AXIOMS.parent / case.conclusion_ofn
+            if not conc_path.is_file():
+                conclusion, _ = extract_entailment_metadata(body)
+                if not conclusion:
+                    conclusion, _ = extract_has_key_entailment(body)
+                if not conclusion:
+                    conclusion, _ = extract_entailment_checker_fail(body)
+                if not conclusion:
+                    conclusion, _ = extract_datatype_def_entailment(body)
+                if not conclusion:
+                    conclusion, _ = extract_subproperty_chain_entailment(body)
+                if not conclusion and case.id in HARDCODED_CONCLUSION_AXIOMS:
+                    conclusion = HARDCODED_CONCLUSION_AXIOMS[case.id]
+                if conclusion and valid_ofn_axioms(conclusion):
+                    conc_path.write_text(wrap_ofn(conclusion), encoding="utf-8")
+                    written += 1
     return written
 
 

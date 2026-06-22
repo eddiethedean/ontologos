@@ -177,13 +177,13 @@ flowchart TB
 - [x] 361/361 active OWL WG tests green in CI
 - [x] `check-1.0-release-gates.sh` passes on `main`
 
-### Phase 2 — Assertion harvest (~87 Java cases)
+### Phase 2 — Assertion harvest (~87 Java cases) (Complete)
 
 Clear `missing_assertions` in planned-backlog triage.
 
-- [ ] Extend Java `assertSubsumedBy` / consistency extraction in `generate_catalog.py`
-- [ ] Grow `HARDCODED_AXIOM_SUBSUMPTIONS` for OFN-only cases
-- [ ] Run `promote_catalog` → regenerate catalog → update `promoted_axiom_ids.txt`
+- [x] Extend Java `assertSubsumedBy` / consistency extraction in `generate_catalog.py` and `assertion_extractors.py`
+- [x] Grow `HARDCODED_AXIOM_SUBSUMPTIONS` / `HARDCODED_CLASS_SATISFIABILITY` for OFN-only cases
+- [x] Run `promote_catalog` → regenerate catalog → update `promoted_axiom_ids.txt`
 
 **Exit:** `audit_planned_backlog` reports `missing_assertions: 0`; `dl_ofn_pass_rate` candidate count grows.
 

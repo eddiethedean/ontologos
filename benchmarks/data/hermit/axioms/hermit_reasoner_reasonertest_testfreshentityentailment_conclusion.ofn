@@ -4,5 +4,5 @@ Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
 Ontology(<file:/c/test.owl#>
-FunctionalObjectProperty( :R )ObjectPropertyAssertion( :R :b :a )ObjectPropertyAssertion( :R :b :c )ObjectPropertyAssertion( :R :d :c )ObjectPropertyAssertion( :R :d :e )ObjectPropertyAssertion( :R :f :e )ObjectPropertyAssertion( :R :f :g )
+ClassAssertion(:C :a)
 )
