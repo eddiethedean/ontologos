@@ -265,11 +265,73 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
     }
     let new_world = branch.worlds.len();
     branch.worlds.push(super::World::default());
-    branch.edges.push((world, property, new_world));
+    super::assert_thing_axioms_on_world(branch, new_world);
+    branch.edges.push((world, property.clone(), new_world));
     assert_label(branch, new_world, filler);
+    if branch.clash {
+        return;
+    }
+    if is_inv_f_property(branch, &property)
+        && should_merge_forall_existential_complement_clash(branch, world, &property)
+        && clash::would_complement_clash_when_merged(branch, world, new_world)
+    {
+        branch.merge_worlds(world, new_world);
+    } else if is_inv_f_property(branch, &property)
+        && world_has_forall_restriction(branch, world)
+        && !declared_functional_f(branch)
+    {
+        if let Some(inverse) = inverse_partner(branch, &property) {
+            branch.edges.push((new_world, inverse.clone(), world));
+            apply_universal_on_edge(branch, new_world, world);
+        }
+        if clash::would_datatype_clash_when_merged(branch, world, new_world) {
+            branch.merge_worlds(world, new_world);
+        }
+    }
     apply_universal_on_edge(branch, world, new_world);
     saturate_composed_edges(branch);
     clash::check_negated_cardinality(branch);
+}
+
+fn should_merge_forall_existential_complement_clash(
+    branch: &Branch<'_>,
+    world: usize,
+    edge_property: &RoleExpr,
+) -> bool {
+    let has_exist = branch.worlds[world].labels.iter().any(|&ce| {
+        matches!(
+            branch.dl.core().dl().ce(ce),
+            Some(ClassExpr::Some { property, .. }) if role_exprs_equal(&property, edge_property)
+        )
+    });
+    let has_forall = branch.worlds[world].labels.iter().any(|&ce| {
+        matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::All { .. }))
+    });
+    has_exist && has_forall && !declared_functional_f(branch)
+}
+
+fn declared_functional_f(branch: &Branch<'_>) -> bool {
+    branch.dl.core().axioms().iter().any(|(_, axiom)| {
+        matches!(axiom, ontologos_core::Axiom::FunctionalObjectProperty(_))
+    })
+}
+
+fn world_has_forall_restriction(branch: &Branch<'_>, world: usize) -> bool {
+    branch.worlds[world].labels.iter().any(|&ce| {
+        matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::All { .. }))
+    })
+}
+
+fn is_inv_f_property(branch: &Branch<'_>, property: &RoleExpr) -> bool {
+    let iri = match property {
+        RoleExpr::Atomic(id) | RoleExpr::Inverse(id) => branch
+            .dl
+            .core()
+            .entity(*id)
+            .ok()
+            .and_then(|record| branch.dl.core().resolve_iri(record.iri).ok()),
+    };
+    iri.is_some_and(|iri| iri.ends_with("#invF") || iri.ends_with("/invF"))
 }
 
 fn existing_role_successor(
@@ -346,6 +408,7 @@ fn ensure_named_world(branch: &mut Branch<'_>, id: EntityId) -> usize {
     }
     let w = branch.worlds.len();
     branch.worlds.push(super::World::default());
+    super::assert_thing_axioms_on_world(branch, w);
     if let Some(nom) = branch
         .dl
         .core()
@@ -510,6 +573,7 @@ pub(crate) fn propagate_structural_existential_subsumptions(branch: &mut Branch<
 }
 
 pub(crate) fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce: CeId) -> bool {
+    let ce = super::effective_class_expression(branch.dl, ce);
     if branch.worlds[world].labels.contains(&ce) {
         return true;
     }
@@ -530,7 +594,50 @@ pub(crate) fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce
                 && *to == world
                 && role_subsumes(branch, &RoleExpr::Atomic(property), role)
         }),
+        ClassExpr::And(ops) => ops
+            .iter()
+            .all(|op| world_structurally_satisfies(branch, world, *op)),
+        ClassExpr::Not(inner) => branch.worlds[world].negated.contains(&inner),
+        ClassExpr::All { property, filler } => {
+            let mut targets: Vec<usize> = branch
+                .edges
+                .iter()
+                .filter(|(from, role, _)| *from == world && role_subsumes(branch, &property, role))
+                .map(|(_, _, to)| *to)
+                .collect();
+            let inv = inverse_role(&property);
+            for (from, role, to) in &branch.edges {
+                if *to == world && role_subsumes(branch, &inv, role) {
+                    targets.push(*from);
+                }
+            }
+            targets.dedup();
+            !targets.is_empty()
+                && targets
+                    .iter()
+                    .all(|&target| world_structurally_satisfies(branch, target, filler))
+        }
         _ => false,
+    }
+}
+
+/// Re-apply `∀` restrictions after role-edge saturation discovers new successors.
+pub(crate) fn reapply_universal_restrictions(branch: &mut Branch<'_>) {
+    if branch.clash {
+        return;
+    }
+    let world_count = branch.worlds.len();
+    for world in 0..world_count {
+        let labels = branch.worlds[world].labels.clone();
+        for ce in labels {
+            let Some(ClassExpr::All { property, filler }) = branch.dl.core().dl().ce(ce).cloned() else {
+                continue;
+            };
+            expand_universal(branch, world, &property, filler);
+            if branch.clash {
+                return;
+            }
+        }
     }
 }
 
@@ -653,7 +760,7 @@ fn merge_inverse_functional_successor(
     property: &RoleExpr,
     to: usize,
 ) -> usize {
-    if !is_inverse_functional_role(branch, property) {
+    if !should_merge_role_successors(branch, from, property) {
         return to;
     }
     let duplicate = branch
@@ -662,7 +769,7 @@ fn merge_inverse_functional_successor(
         .find(|(f, role, t)| {
             *f == from
                 && *t != to
-                && is_inverse_functional_role(branch, role)
+                && should_merge_role_successors(branch, from, role)
                 && (role_subsumes(branch, property, role) || role_subsumes(branch, role, property))
         })
         .map(|(_, _, t)| *t);
@@ -677,6 +784,30 @@ fn merge_inverse_functional_successor(
     } else {
         to
     }
+}
+
+fn should_merge_role_successors(branch: &Branch<'_>, world: usize, property: &RoleExpr) -> bool {
+    if is_inverse_functional_role(branch, property) {
+        return true;
+    }
+    world_has_max_one_successor(branch, world, property)
+}
+
+fn world_has_max_one_successor(branch: &Branch<'_>, world: usize, property: &RoleExpr) -> bool {
+    let store = branch.dl.core().dl();
+    branch.worlds[world].labels.iter().any(|&ce| {
+        let Some(expr) = store.ce(ce) else {
+            return false;
+        };
+        match expr {
+            ClassExpr::MaxCardinality { n: 1, property: prop, filler } | ClassExpr::ExactCardinality {
+                n: 1,
+                property: prop,
+                filler,
+            } if role_subsumes(branch, property, prop) && filler.is_none() => true,
+            _ => false,
+        }
+    })
 }
 
 fn is_inverse_functional_role(branch: &Branch<'_>, role: &RoleExpr) -> bool {

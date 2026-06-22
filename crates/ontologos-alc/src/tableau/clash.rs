@@ -3,7 +3,7 @@
 use ontologos_core::{CeId, ClassExpr, EntityId, RoleExpr};
 
 use super::expand::{count_role_successors, effective_cardinality_filler};
-use super::Branch;
+use super::{effective_class_expression, Branch};
 
 /// Check direct label/negation clashes and disjointness constraints.
 pub fn detect_clash(branch: &mut Branch<'_>) {
@@ -221,6 +221,108 @@ pub fn check_conflicting_datatype_cardinality_bounds(branch: &mut Branch<'_>, wo
                 return;
             }
         }
+    }
+}
+
+/// Whether merging two worlds would violate datatype cardinality bounds.
+pub fn would_datatype_clash_when_merged(branch: &super::Branch<'_>, left: usize, right: usize) -> bool {
+    let left_bounds = datatype_bounds_from_world(branch, left);
+    let right_bounds = datatype_bounds_from_world(branch, right);
+    for (prop, (lmin, lmax)) in &left_bounds {
+        let (rmin, rmax) = right_bounds.get(prop).copied().unwrap_or((0, u32::MAX));
+        if (*lmin).max(rmin) > (*lmax).min(rmax) {
+            return true;
+        }
+    }
+    for (prop, (rmin, rmax)) in &right_bounds {
+        if left_bounds.contains_key(prop) {
+            continue;
+        }
+        let (lmin, lmax) = (0, u32::MAX);
+        if lmin.max(*rmin) > lmax.min(*rmax) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Whether merging would place an atomic class and its negation on one world.
+pub fn would_complement_clash_when_merged(
+    branch: &super::Branch<'_>,
+    left: usize,
+    right: usize,
+) -> bool {
+    let left_pos = atomic_class_entities(branch, left);
+    let left_neg = negated_atomic_entities(branch, left);
+    let right_pos = atomic_class_entities(branch, right);
+    let right_neg = negated_atomic_entities(branch, right);
+    left_pos.iter().any(|c| right_neg.contains(c))
+        || right_pos.iter().any(|c| left_neg.contains(c))
+}
+
+fn atomic_class_entities(branch: &super::Branch<'_>, world: usize) -> std::collections::HashSet<EntityId> {
+    let mut out = std::collections::HashSet::new();
+    for &label in &branch.worlds[world].labels {
+        if let Some(ClassExpr::Atomic(id)) = branch.dl.core().dl().ce(label) {
+            out.insert(*id);
+        }
+    }
+    out
+}
+
+fn negated_atomic_entities(
+    branch: &super::Branch<'_>,
+    world: usize,
+) -> std::collections::HashSet<EntityId> {
+    let mut out = std::collections::HashSet::new();
+    for &neg in &branch.worlds[world].negated {
+        if let Some(ClassExpr::Atomic(id)) = branch.dl.core().dl().ce(neg) {
+            out.insert(*id);
+        }
+    }
+    out
+}
+
+fn datatype_bounds_from_world(
+    branch: &super::Branch<'_>,
+    world: usize,
+) -> std::collections::HashMap<EntityId, (u32, u32)> {
+    let mut bounds = std::collections::HashMap::new();
+    for &label in &branch.worlds[world].labels {
+        collect_datatype_bounds(branch, label, &mut bounds);
+    }
+    bounds
+}
+
+fn collect_datatype_bounds(
+    branch: &super::Branch<'_>,
+    ce: CeId,
+    bounds: &mut std::collections::HashMap<EntityId, (u32, u32)>,
+) {
+    let ce = effective_class_expression(branch.dl, ce);
+    let Some(expr) = branch.dl.core().dl().ce(ce).cloned() else {
+        return;
+    };
+    match expr {
+        ClassExpr::DataMinCardinality { n, property, .. } if n > 0 => {
+            let entry = bounds.entry(property).or_insert((0, u32::MAX));
+            entry.0 = entry.0.max(n);
+        }
+        ClassExpr::DataMaxCardinality { n, property, .. } => {
+            let entry = bounds.entry(property).or_insert((0, u32::MAX));
+            entry.1 = entry.1.min(n);
+        }
+        ClassExpr::DataExactCardinality { n, property, .. } => {
+            let entry = bounds.entry(property).or_insert((0, u32::MAX));
+            entry.0 = entry.0.max(n);
+            entry.1 = entry.1.min(n);
+        }
+        ClassExpr::And(ops) => {
+            for op in ops {
+                collect_datatype_bounds(branch, op, bounds);
+            }
+        }
+        _ => {}
     }
 }
 

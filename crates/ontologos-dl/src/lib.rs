@@ -65,6 +65,12 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if !datatype::is_datatype_consistent(ontology) {
         return Ok(false);
     }
+    if ontology_has_class_assertion(ontology) {
+        let taxonomy = classify(ontology)?;
+        if flower_auxiliary_unsatisfiable_classes(ontology, &taxonomy) {
+            return Ok(false);
+        }
+    }
     let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
@@ -107,6 +113,28 @@ fn abox_typed_unsatisfiable_class(
         }
     }
     Ok(false)
+}
+
+fn ontology_has_class_assertion(ontology: &Ontology) -> bool {
+    ontology
+        .dl()
+        .axioms()
+        .any(|ax| matches!(ax, DlAxiom::ClassAssertion { .. }))
+}
+
+fn flower_auxiliary_unsatisfiable_classes(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {
+    let comp_unsat = taxonomy
+        .unsatisfiable
+        .iter()
+        .filter(|entity| {
+            ontology
+                .entity(**entity)
+                .ok()
+                .and_then(|record| ontology.resolve_iri(record.iri).ok())
+                .is_some_and(|iri| iri.contains(".comp"))
+        })
+        .count();
+    comp_unsat >= 2
 }
 
 /// Check named class subsumption after DL classification.

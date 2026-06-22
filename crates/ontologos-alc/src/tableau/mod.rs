@@ -182,6 +182,10 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     }
 
     expand::saturate_composed_edges(&mut branch);
+    expand::reapply_universal_restrictions(&mut branch);
+    if branch.clash {
+        return Ok(false);
+    }
     for (from, _, to) in branch.edges.clone() {
         expand::apply_universal_on_edge(&mut branch, from, to);
     }
@@ -199,6 +203,10 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
 
     let ok = branch.expand()?;
     expand::saturate_composed_edges(&mut branch);
+    expand::reapply_universal_restrictions(&mut branch);
+    if branch.clash {
+        return Ok(false);
+    }
     if negative_object_property_assertions_clash(&branch) {
         return Ok(false);
     }
@@ -211,8 +219,11 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     // Drive B ⊑ ∃R.B unraveling for nominal cardinality clashes (NI-rule pattern).
     if !branch.clash && !branch.named_worlds.is_empty() {
         for _ in 0..256 {
-            let before = branch.edges.len();
+            let before_edges = branch.edges.len();
+            let before_labels: usize = branch.worlds.iter().map(|w| w.labels.len()).sum();
             expand::materialize_existential_successors(&mut branch);
+            expand::saturate_composed_edges(&mut branch);
+            expand::reapply_universal_restrictions(&mut branch);
             expand::drive_atomic_existential_subsumptions(&mut branch);
             expand::propagate_structural_existential_subsumptions(&mut branch);
             clash::check_existential_bottom_subsumptions(&mut branch);
@@ -225,7 +236,10 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
                     return Ok(false);
                 }
             }
-            if branch.clash || branch.edges.len() == before {
+            let after_labels: usize = branch.worlds.iter().map(|w| w.labels.len()).sum();
+            if branch.clash
+                || (branch.edges.len() == before_edges && after_labels == before_labels)
+            {
                 break;
             }
         }
@@ -237,32 +251,22 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     Ok(ok && !branch.clash)
 }
 
+pub(crate) fn assert_thing_axioms_on_world(branch: &mut Branch<'_>, world: usize) {
+    if let Some(top) = branch.top_ce {
+        branch.assert(world, top);
+    }
+    for &sup in &branch.thing_restrictions.clone() {
+        branch.assert(world, sup);
+    }
+}
+
 fn assert_thing_on_named_individuals(
     branch: &mut Branch<'_>,
     worlds: &HashMap<EntityId, usize>,
-    dl: &DlOntology,
+    _dl: &DlOntology,
 ) {
-    let store = dl.core().dl();
-    let Some(top) = store.expressions().find_map(|(id, e)| match e {
-        ClassExpr::Top => Some(id),
-        _ => None,
-    }) else {
-        return;
-    };
-    let thing_restrictions: Vec<CeId> = store
-        .axioms()
-        .filter_map(|axiom| {
-            let DlAxiom::SubClassOf { sub, sup } = axiom else {
-                return None;
-            };
-            clash::is_thing_ce(branch, *sub).then_some(*sup)
-        })
-        .collect();
     for &world in worlds.values() {
-        branch.assert(world, top);
-        for &sup in &thing_restrictions {
-            branch.assert(world, sup);
-        }
+        assert_thing_axioms_on_world(branch, world);
     }
 }
 
@@ -699,6 +703,7 @@ fn ensure_individual_world(
     }
     let w = branch.worlds.len();
     branch.worlds.push(World::default());
+    assert_thing_axioms_on_world(branch, w);
     let nom = branch
         .dl
         .core()
@@ -935,6 +940,8 @@ pub(crate) struct Branch<'a> {
     pub(crate) role_chains: Vec<(Vec<RoleExpr>, RoleExpr)>,
     pub(crate) has_keys: Vec<(CeId, Vec<EntityId>, Vec<EntityId>)>,
     pub(crate) inverse_functional: HashSet<EntityId>,
+    pub(crate) top_ce: Option<CeId>,
+    pub(crate) thing_restrictions: Vec<CeId>,
     pub(crate) named_worlds: HashMap<EntityId, usize>,
     pub(crate) different_pairs: HashSet<(EntityId, EntityId)>,
     pub(crate) cache: cache::UnsatCache,
@@ -1025,6 +1032,36 @@ impl<'a> Branch<'a> {
 
         saturate_role_hierarchy(&mut role_hierarchy);
 
+        let top_ce = dl.core().dl().expressions().find_map(|(id, e)| match e {
+            ClassExpr::Top => Some(id),
+            _ => None,
+        });
+        let thing_restrictions: Vec<CeId> = dl
+            .core()
+            .dl()
+            .axioms()
+            .filter_map(|axiom| {
+                let DlAxiom::SubClassOf { sub, sup } = axiom else {
+                    return None;
+                };
+                match dl.core().dl().ce(*sub) {
+                    Some(ClassExpr::Top) => Some(*sup),
+                    Some(ClassExpr::Atomic(id)) => dl
+                        .core()
+                        .entity(*id)
+                        .ok()
+                        .and_then(|record| dl.core().resolve_iri(record.iri).ok())
+                        .is_some_and(|iri| {
+                            iri == "http://www.w3.org/2002/07/owl#Thing"
+                                || iri.ends_with("#Thing")
+                                || iri.ends_with("/Thing")
+                        })
+                        .then_some(*sup),
+                    _ => None,
+                }
+            })
+            .collect();
+
         Self {
             dl,
             worlds: vec![World::default()],
@@ -1041,6 +1078,8 @@ impl<'a> Branch<'a> {
             role_chains,
             has_keys,
             inverse_functional,
+            top_ce,
+            thing_restrictions,
             named_worlds: HashMap::new(),
             different_pairs: HashSet::new(),
             cache: cache::UnsatCache::new(),
