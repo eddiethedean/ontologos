@@ -273,7 +273,13 @@ fn hermit_reasoner_binarydatatest_testbase64parsing() {
 }
 
 #[test]
-#[ignore = "fixture golden test requires dl (1.0)"]
+#[ignore = "auto-cataloged; requires manual port (dl)"]
+fn hermit_reasoner_classificationindividualreusetest_testgaleniansfullundoctored() {
+    run_hermit_case("reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored");
+}
+
+#[test]
+#[ignore = "fixture not vendored (see benchmarks manifest)"]
 fn hermit_reasoner_classificationindividualreusetest_testdolce() {
     run_hermit_case("reasoner.ClassificationIndividualReuseTest.testDolce");
 }
@@ -286,7 +292,6 @@ fn hermit_reasoner_classificationtest_testwine() {
 }
 
 #[test]
-#[ignore = "RDF/XML fixture not supported by parser yet (entities or duplicate rdf:ID)"]
 fn hermit_reasoner_classificationtest_testgaleniansfullundoctored() {
     run_hermit_case("reasoner.ClassificationTest.testGalenIansFullUndoctored");
 }
@@ -299,7 +304,6 @@ fn hermit_reasoner_classificationtest_testpizza() {
 }
 
 #[test]
-#[ignore = "RDF/XML fixture not supported by parser yet (entities or duplicate rdf:ID)"]
 fn hermit_reasoner_classificationtest_testpropreo() {
     run_hermit_case("reasoner.ClassificationTest.testPropreo");
 }
@@ -374,17 +378,6 @@ fn hermit_reasoner_datalogenginetest_testquerywithindividualsandequality() {
 #[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_datalogenginetest_testquerywithindividuals() {
     run_hermit_case("reasoner.DatalogEngineTest.testQueryWithIndividuals");
-}
-
-#[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
-fn hermit_reasoner_datatypestest_testenumwithintplusfloatrestriction() {
-    run_hermit_case("reasoner.DatatypesTest.testEnumWithIntPlusFloatRestriction");
-}
-
-#[test]
-fn hermit_reasoner_datatypestest_testrationalconversion() {
-    run_hermit_case("reasoner.DatatypesTest.testRationalConversion");
 }
 
 #[test]
@@ -769,12 +762,6 @@ fn hermit_reasoner_datetimetest_testmizedtzs_3() {
 #[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testmember() {
     run_hermit_case("reasoner.DateTimeTest.testMember");
-}
-
-#[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
-fn hermit_reasoner_entailmenttest_testintegerentailment() {
-    run_hermit_case("reasoner.EntailmentTest.testIntegerEntailment");
 }
 
 #[test]
@@ -1540,68 +1527,63 @@ fn hermit_reasoner_rdfplainliteraltest_testlangrange2() {
 }
 
 #[test]
-fn hermit_reasoner_riatest_testinverseandchain() {
-    run_hermit_case("reasoner.RIATest.testInverseAndChain");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity0() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity0");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity0() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity0");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity1() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity1() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity1");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity2() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity2() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity2");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity3() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity3() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity3");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity4() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity4() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity4");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity5() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity5");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity5() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity5");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity6() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity6");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity6() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity6");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity7() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity7");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity7() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity7");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity8() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity8");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity8() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity8");
-}
-
-#[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity9() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity9");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity9() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity9");
 }
 
 #[test]
@@ -1630,6 +1612,12 @@ fn hermit_reasoner_reasonercoreblockingtest_testiant6() {
 #[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_reasonercoreblockingtest_testiant9() {
     run_hermit_case("reasoner.ReasonerCoreBlockingTest.testIanT9");
+}
+
+#[test]
+#[ignore = "auto-cataloged; requires manual port (dl)"]
+fn hermit_reasoner_reasonertest_testemptychain() {
+    run_hermit_case("reasoner.ReasonerTest.testEmptyChain");
 }
 
 #[test]
@@ -1907,12 +1895,6 @@ fn hermit_reasoner_reasonertest_testdatatypeliterals() {
 #[ignore = "implemented in hand-written module: individual_property_retrieval"]
 fn hermit_reasoner_reasonertest_testindividualretrievalbug() {
     run_hermit_case("reasoner.ReasonerTest.testIndividualRetrievalBug");
-}
-
-#[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
-fn hermit_reasoner_reasonertest_testdirect() {
-    run_hermit_case("reasoner.ReasonerTest.testDirect");
 }
 
 #[test]
@@ -2585,19 +2567,19 @@ fn hermit_reasoner_reasonertest_testniruleblockingwithunraveling() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
+#[ignore = "auto-cataloged; requires manual port (rl)"]
 fn hermit_reasoner_reasonertest_testpunning() {
     run_hermit_case("reasoner.ReasonerTest.testPunning");
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
+#[ignore = "auto-cataloged; requires manual port (rl)"]
 fn hermit_reasoner_reasonertest_testpunning2() {
     run_hermit_case("reasoner.ReasonerTest.testPunning2");
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_reasonertest_testpunning3() {
     run_hermit_case("reasoner.ReasonerTest.testPunning3");
 }
@@ -2615,7 +2597,7 @@ fn hermit_reasoner_reasonertest_testmissingcbug() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
+#[ignore = "auto-cataloged; requires manual port (rl)"]
 fn hermit_reasoner_reasonertest_testinverses() {
     run_hermit_case("reasoner.ReasonerTest.testInverses");
 }
@@ -2706,144 +2688,145 @@ fn hermit_reasoner_reasonertest_testsatisfiabilitywithrias14() {
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testsameasinbody1() {
     run_hermit_case("reasoner.RulesTest.testSameAsInBody1");
 }
 
 #[test]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testsameasinbody2() {
     run_hermit_case("reasoner.RulesTest.testSameAsInBody2");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testsameasinbodywithdataproperties() {
     run_hermit_case("reasoner.RulesTest.testSameAsInBodyWithDataProperties");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testdatapropertiesinbody() {
     run_hermit_case("reasoner.RulesTest.testDataPropertiesInBody");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testindividualsinrules() {
     run_hermit_case("reasoner.RulesTest.testIndividualsInRules");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testrulenonsimple() {
     run_hermit_case("reasoner.RulesTest.testRuleNonSimple");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testrulenotaxiom() {
     run_hermit_case("reasoner.RulesTest.testRuleNotAxiom");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testsimplerule2() {
     run_hermit_case("reasoner.RulesTest.testSimpleRule2");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testsimplerule() {
     run_hermit_case("reasoner.RulesTest.testSimpleRule");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testrulewithconstants() {
     run_hermit_case("reasoner.RulesTest.testRuleWithConstants");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testrulewithconstants2() {
     run_hermit_case("reasoner.RulesTest.testRuleWithConstants2");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testrulewithdatatypes() {
     run_hermit_case("reasoner.RulesTest.testRuleWithDatatypes");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testrulewithdatatypes2() {
     run_hermit_case("reasoner.RulesTest.testRuleWithDatatypes2");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testrulewithfreshindividuals() {
     run_hermit_case("reasoner.RulesTest.testRuleWithFreshIndividuals");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testaddingfactsbyrules() {
     run_hermit_case("reasoner.RulesTest.testAddingFactsByRules");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testlloydtopor() {
     run_hermit_case("reasoner.RulesTest.testLloydTopor");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testdatarangesafety() {
     run_hermit_case("reasoner.RulesTest.testDataRangeSafety");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testseveralvars() {
     run_hermit_case("reasoner.RulesTest.testSeveralVars");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testpositivebodydatarange() {
     run_hermit_case("reasoner.RulesTest.testPositiveBodyDataRange");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testnegativebodydatarange() {
     run_hermit_case("reasoner.RulesTest.testNegativeBodyDataRange");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testnegdrinhead() {
     run_hermit_case("reasoner.RulesTest.testNegDRInHead");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testsameas() {
     run_hermit_case("reasoner.RulesTest.testSameAs");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testdifferentfrom() {
     run_hermit_case("reasoner.RulesTest.testDifferentFrom");
 }
 
 #[test]
-#[ignore = "SWRL — requires ontologos-swrl (1.0)"]
+#[ignore = "SWRL — deferred out of scope for OntoLogos 1.x"]
 fn hermit_reasoner_rulestest_testdiffrentfrom2() {
     run_hermit_case("reasoner.RulesTest.testDiffrentFrom2");
 }

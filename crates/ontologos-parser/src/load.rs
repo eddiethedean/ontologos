@@ -90,8 +90,9 @@ pub fn load_ontology_with_limits_and_base(
         }
         let text = String::from_utf8_lossy(&bytes);
         let deduped = crate::rdf_preprocess::dedupe_rdf_xml_ids(&text);
+        let normalized_ids = crate::rdf_preprocess::normalize_invalid_rdf_ids(&deduped);
         let expanded = crate::rdf_preprocess::expand_xml_entities_with_limit(
-            &deduped,
+            &normalized_ids,
             limits.max_expanded_bytes,
         )?;
         let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&expanded);

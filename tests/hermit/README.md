@@ -30,7 +30,7 @@ This writes:
 | `fixture` | EL classification golden (`pizza.xml` only in default CI) |
 | `ported` | Hand-written in `hermit_rl.rs`, `hermit_rdfs.rs`, or `hermit_el.rs` |
 
-**Ignored until 1.0** (`planned`, `internal`, `deferred`, `excluded`): DL tableau, OWL WG, SWRL, parser-blocked RDF/XML goldens (galen, propreo, wine, dolce).
+**Ignored until 1.0** (`planned`, `internal`, `deferred`, `excluded`): DL tableau, OWL WG, SWRL (`RulesTest` deferred 1.x), missing `dolce_all.xml` fixture.
 
 Hand-written ports are listed in [manifest.toml](manifest.toml) and implemented in dedicated test modules.
 

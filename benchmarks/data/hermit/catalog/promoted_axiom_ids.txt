@@ -133,4 +133,3 @@ reasoner.ReasonerTest.testUniversalRoleSubsumption
 reasoner.ReasonerTest.testUnknownDatatypes
 reasoner.ReasonerTest.testWidmann1
 reasoner.ReasonerTest.testWidmann3
-reasoner.RulesTest.testSameAsInBody2

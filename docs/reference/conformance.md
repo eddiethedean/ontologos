@@ -40,7 +40,10 @@ Representative ported cases (see manifest for full list):
 | HermiT test | Status | Notes |
 |-------------|--------|-------|
 | `ClassificationTest.testPizza` | **CI** | Vendored `pizza.xml` + golden `.txt` |
-| `ClassificationTest.testWine` | Optional | Ignored: `wine.xml` fails to parse (duplicate `rdf:ID`) |
+| `ClassificationTest.testWine` | **CI** | Hand-written `hermit_el`; `wine.xml` loads after `rdf:ID` dedup |
+| `ClassificationTest.testGalenIansFullUndoctored` | **CI** | Entity expansion + numeric `rdf:ID` normalization |
+| `ClassificationTest.testPropreo` | **CI** | Entity expansion (single-quoted `DOCTYPE`) |
+| `ClassificationIndividualReuseTest.testDolce` | Excluded | `dolce_all.xml` not vendored |
 
 ## EL golden conformance
 
@@ -56,7 +59,8 @@ The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL too
 | Complete OWL RL rule set | Partial — see [RL rules](rl-rules.md) |
 | Explanations | Available (EL traces; RL/RDFS asserted-only until reasonable exposes diagnostics) |
 | Large DL corpora (GALEN, SNOMED) | Optional stress tests only |
-| Wine `ClassificationTest` | Parser limitation on legacy RDF/XML |
+| Wine / galen / propreo `ClassificationTest` | Active via parser preprocess (entities, `rdf:ID`) |
+| SWRL `RulesTest` (24 cases) | Deferred out of scope for 1.x |
 
 ## Benchmark corpora
 

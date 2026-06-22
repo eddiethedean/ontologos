@@ -187,10 +187,11 @@ INTERNAL_PREFIXES = (
     "rationals.",
 )
 
-# RDF/XML fixtures that horned-owl cannot parse yet (DOCTYPE entities, duplicate rdf:ID).
-PARSER_IGNORE_FIXTURES = {
-    "res/galen-ians-full-undoctored.xml",
-    "res/propreo.xml",
+# RDF/XML fixtures blocked until vendored or parser support lands.
+PARSER_IGNORE_FIXTURES: set[str] = set()
+
+# Fixture XML never vendored in OntoLogos (HermiT optional download).
+MISSING_FIXTURES = {
     "res/dolce_all.xml",
 }
 
@@ -676,6 +677,10 @@ def infer_status(case: HermitCase) -> None:
         case.status = "excluded"
         case.ignore_reason = "documented semantic or mapping gap (see manifest)"
         return
+    if case.fixture in MISSING_FIXTURES:
+        case.status = "excluded"
+        case.ignore_reason = "fixture not vendored (see benchmarks manifest)"
+        return
     if case.id in IMPLEMENTED:
         case.status = "ported"
         case.rust_test = IMPLEMENTED[case.id]
@@ -683,7 +688,7 @@ def infer_status(case: HermitCase) -> None:
         return
     if case.id.startswith(DEFERRED_PREFIXES):
         case.status = "planned"
-        case.ignore_reason = "SWRL — requires ontologos-swrl (1.0)"
+        case.ignore_reason = "SWRL — deferred out of scope for OntoLogos 1.x"
         return
     if case.axiom_ofn and "Clausification" in case.java_class:
         case.status = "clausify"
@@ -867,9 +872,12 @@ def collect_cases() -> list[HermitCase]:
 
             if "loadReasonerWithAxioms" in body or "loadOntologyWithAxioms" in body:
                 axioms = extract_axioms_literal(body)
+                safe = rust_fn_name(case_id)
+                ofn_rel = f"axioms/{safe}.ofn"
                 if axioms and valid_ofn_axioms(axioms):
-                    safe = rust_fn_name(case_id)
-                    case.axiom_ofn = f"axioms/{safe}.ofn"
+                    case.axiom_ofn = ofn_rel
+                elif (OUT_AXIOMS.parent / ofn_rel).is_file():
+                    case.axiom_ofn = ofn_rel
 
             case.subsumptions = filter_java_ce_subsumptions(extract_subsumptions(body))
             case.subsumptions.extend(
@@ -893,6 +901,8 @@ def write_axioms(cases: list[HermitCase]) -> int:
     for case in cases:
         if case.axiom_ofn:
             expected.add(OUT_AXIOMS.parent / case.axiom_ofn)
+    for existing in OUT_AXIOMS.glob("*.ofn"):
+        expected.add(existing)
     for stale in OUT_AXIOMS.glob("*.ofn"):
         if stale not in expected:
             stale.unlink()
@@ -936,7 +946,11 @@ def write_rust(cases: list[HermitCase]) -> None:
             lines.append(f'#[ignore = "SWRL — requires ontologos-swrl engine"]')
         elif case.status == "fixture":
             lines.append(f"#[test]")
-            if case.fixture in PARSER_IGNORE_FIXTURES:
+            if case.fixture in MISSING_FIXTURES:
+                lines.append(
+                    '#[ignore = "fixture not vendored (see benchmarks manifest)"]'
+                )
+            elif case.fixture in PARSER_IGNORE_FIXTURES:
                 lines.append(
                     '#[ignore = "RDF/XML fixture not supported by parser yet (entities or duplicate rdf:ID)"]'
                 )

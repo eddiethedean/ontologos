@@ -53,6 +53,68 @@ pub fn dedupe_rdf_xml_ids(input: &str) -> String {
     out
 }
 
+/// Rewrite legacy `rdf:ID` values that are not valid NCNames (HermiT `galen` uses `1.0`, etc.).
+#[must_use]
+pub fn normalize_invalid_rdf_ids(input: &str) -> String {
+    let mut remap = HashMap::new();
+    for id in collect_rdf_ids(input) {
+        if !is_valid_rdf_id(&id) {
+            let sanitized = sanitize_rdf_id(&id);
+            remap.insert(id, sanitized);
+        }
+    }
+    if remap.is_empty() {
+        return input.to_owned();
+    }
+    let mut pairs: Vec<_> = remap.into_iter().collect();
+    pairs.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+    let mut out = input.to_owned();
+    for (old, new) in pairs {
+        out = out.replace(&format!("rdf:ID=\"{old}\""), &format!("rdf:ID=\"{new}\""));
+        out = out.replace(&format!("rdf:ID='{old}'"), &format!("rdf:ID='{new}'"));
+        out = out.replace(&format!("#{old}"), &format!("#{new}"));
+    }
+    out
+}
+
+fn collect_rdf_ids(input: &str) -> HashSet<String> {
+    let mut ids = HashSet::new();
+    let mut pos = 0usize;
+    while pos < input.len() {
+        let Some(rel) = input[pos..].find("rdf:ID=\"") else {
+            break;
+        };
+        let start = pos + rel + 8;
+        let Some(end_rel) = input[start..].find('"') else {
+            break;
+        };
+        ids.insert(input[start..start + end_rel].to_owned());
+        pos = start + end_rel + 1;
+    }
+    ids
+}
+
+fn is_valid_rdf_id(id: &str) -> bool {
+    let mut chars = id.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
+        _ => return false,
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
+}
+
+fn sanitize_rdf_id(id: &str) -> String {
+    let mut out = String::from("_");
+    for c in id.chars() {
+        if c.is_ascii_alphanumeric() {
+            out.push(c);
+        } else {
+            out.push('_');
+        }
+    }
+    out
+}
+
 fn extract_rdf_id(tag: &str) -> Option<&str> {
     const MARKER: &str = "rdf:ID=\"";
     let idx = tag.find(MARKER)?;
@@ -132,7 +194,7 @@ pub fn expand_xml_entities_with_limit(input: &str, max_bytes: usize) -> Result<S
                 input.len()
             )));
         }
-        return Ok(input.to_owned());
+        return Ok(strip_xml_internal_subset(input));
     }
     let mut out = input.to_owned();
     for _ in 0..8 {
@@ -149,7 +211,42 @@ pub fn expand_xml_entities_with_limit(input: &str, max_bytes: usize) -> Result<S
             break;
         }
     }
-    Ok(out)
+    Ok(strip_xml_internal_subset(&out))
+}
+
+/// Remove `<!DOCTYPE ...>` after entity expansion so horned-owl does not re-parse declarations.
+fn strip_xml_internal_subset(input: &str) -> String {
+    let Some(start) = input.find("<!DOCTYPE") else {
+        return input.to_owned();
+    };
+    let Some(end) = find_doctype_end(input, start) else {
+        return input.to_owned();
+    };
+    let mut out = String::with_capacity(input.len());
+    out.push_str(&input[..start]);
+    out.push_str(&input[end..]);
+    out
+}
+
+fn find_doctype_end(input: &str, start: usize) -> Option<usize> {
+    let bytes = input.as_bytes();
+    let mut i = start;
+    let mut in_quote: Option<u8> = None;
+    let mut bracket_depth = 0i32;
+    while i < bytes.len() {
+        let b = bytes[i];
+        match in_quote {
+            Some(q) if b == q => in_quote = None,
+            Some(_) => {}
+            None if b == b'"' || b == b'\'' => in_quote = Some(b),
+            None if b == b'[' => bracket_depth += 1,
+            None if b == b']' => bracket_depth = bracket_depth.saturating_sub(1),
+            None if b == b'>' && bracket_depth == 0 => return Some(i + 1),
+            _ => {}
+        }
+        i += 1;
+    }
+    None
 }
 
 /// Inject explicit `owl:Class` / property declarations for RDF-Based Semantics punning.
@@ -1320,9 +1417,14 @@ fn parse_entity_decl(rest: &str) -> Option<(String, String)> {
     let rest = rest.strip_prefix("<!ENTITY")?.trim();
     let (name, rest) = rest.split_once(|c: char| c.is_whitespace())?;
     let name = name.trim().to_owned();
-    let value_start = rest.find('"')? + 1;
-    let value_end = rest[value_start..].find('"')? + value_start;
-    let value = rest[value_start..value_end].to_owned();
+    let rest = rest.trim_start();
+    let quote = rest.as_bytes().first().copied()?;
+    if quote != b'"' && quote != b'\'' {
+        return None;
+    }
+    let rest = &rest[1..];
+    let value_end = rest.find(quote as char)?;
+    let value = rest[..value_end].to_owned();
     Some((name, value))
 }
 
@@ -1355,6 +1457,28 @@ mod tests {
             }
         }
         out
+    }
+
+    #[test]
+    fn normalizes_numeric_rdf_ids() {
+        let input = "<owl:Class rdf:ID=\"1.0\"/><owl:someValuesFrom rdf:resource=\"#1.0\"/>";
+        let out = normalize_invalid_rdf_ids(input);
+        assert!(out.contains("rdf:ID=\"_1_0\""));
+        assert!(out.contains("rdf:resource=\"#_1_0\""));
+        assert!(!out.contains("1.0"));
+    }
+
+    #[test]
+    fn expands_single_quoted_entity() {
+        let input = r#"<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl 'http://www.w3.org/2002/07/owl#'>
+]>
+<rdf:RDF xmlns:owl="&owl;"><owl:Ontology rdf:about=""/></rdf:RDF>"#;
+        let expanded = expand_xml_entities(input);
+        assert!(!expanded.contains("<!ENTITY"));
+        assert!(!expanded.contains("<!DOCTYPE"));
+        assert!(expanded.contains("http://www.w3.org/2002/07/owl#"));
     }
 
     #[test]

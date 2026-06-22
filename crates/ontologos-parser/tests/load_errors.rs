@@ -58,6 +58,32 @@ fn file_size_limit_returns_parse_error() {
 }
 
 #[test]
+fn legacy_galen_fixture_loads_after_entity_expansion() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/reasoner/res/galen-ians-full-undoctored.xml");
+    assert!(path.exists(), "missing galen fixture at {}", path.display());
+
+    let ontology = load_ontology(&path).expect("galen.xml should load after entity expansion");
+    assert!(
+        ontology.axiom_count() > 0,
+        "expected mapped axioms from galen.xml"
+    );
+}
+
+#[test]
+fn legacy_propreo_fixture_loads_after_entity_expansion() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/reasoner/res/propreo.xml");
+    assert!(path.exists(), "missing propreo fixture at {}", path.display());
+
+    let ontology = load_ontology(&path).expect("propreo.xml should load after entity expansion");
+    assert!(
+        ontology.axiom_count() > 0,
+        "expected mapped axioms from propreo.xml"
+    );
+}
+
+#[test]
 fn legacy_wine_fixture_loads_after_duplicate_rdf_id_dedup() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/reasoner/res/wine.xml");
