@@ -162,6 +162,7 @@ TestCase-3AWebOnt-2DFunctionalProperty-2D004
 TestCase-3AWebOnt-2DFunctionalProperty-2D005
 TestCase-3AWebOnt-2DI4.5-2D001
 TestCase-3AWebOnt-2DI4.5-2D002
+TestCase-3AWebOnt-2DI4.6-2D003
 TestCase-3AWebOnt-2DI4.6-2D005
 TestCase-3AWebOnt-2DI4.6-2D005-2DDirect
 TestCase-3AWebOnt-2DI5.1-2D001
@@ -260,8 +261,10 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D101
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D102
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D103
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D104
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D105
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D106
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D107
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D109
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D110
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D207
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D602

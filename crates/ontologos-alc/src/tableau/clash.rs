@@ -1,8 +1,8 @@
 //! Clash detection for ALC tableau branches.
 
-use ontologos_core::{CeId, ClassExpr};
+use ontologos_core::{CeId, ClassExpr, RoleExpr};
 
-use super::expand::count_role_successors;
+use super::expand::{count_role_successors, effective_cardinality_filler};
 use super::Branch;
 
 /// Check direct label/negation clashes and disjointness constraints.
@@ -13,6 +13,12 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
     check_negated_cardinality(branch);
     if branch.clash {
         return;
+    }
+    for world_idx in 0..branch.worlds.len() {
+        check_conflicting_cardinality_bounds(branch, world_idx);
+        if branch.clash {
+            return;
+        }
     }
     for (world_idx, world) in branch.worlds.iter().enumerate() {
         for &ce in &world.labels {
@@ -170,6 +176,47 @@ pub fn check_existential_bottom_subsumptions(branch: &mut Branch<'_>) {
     for world in 0..branch.worlds.len() {
         for &(sub, _) in &subs {
             if super::expand::world_structurally_satisfies(branch, world, sub) {
+                branch.clash = true;
+                return;
+            }
+        }
+    }
+}
+
+/// Clash when positive min/max cardinality bounds on the same role/filler disagree.
+pub fn check_conflicting_cardinality_bounds(branch: &mut Branch<'_>, world: usize) {
+    if branch.clash {
+        return;
+    }
+    let labels = branch.worlds[world].labels.clone();
+    let store = branch.dl.core().dl();
+    let mut mins: Vec<(u32, RoleExpr, Option<CeId>)> = Vec::new();
+    let mut maxs: Vec<(u32, RoleExpr, Option<CeId>)> = Vec::new();
+    for ce in labels {
+        let Some(expr) = store.ce(ce).cloned() else {
+            continue;
+        };
+        match expr {
+            ClassExpr::MinCardinality {
+                n,
+                property,
+                filler,
+            } if n > 0 => {
+                mins.push((n, property, effective_cardinality_filler(branch, filler)));
+            }
+            ClassExpr::MaxCardinality {
+                n,
+                property,
+                filler,
+            } => {
+                maxs.push((n, property, effective_cardinality_filler(branch, filler)));
+            }
+            _ => {}
+        }
+    }
+    for (min_n, min_p, min_f) in mins {
+        for (max_n, max_p, max_f) in &maxs {
+            if min_p == *max_p && min_f == *max_f && min_n > *max_n {
                 branch.clash = true;
                 return;
             }

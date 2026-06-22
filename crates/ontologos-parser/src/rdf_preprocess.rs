@@ -548,6 +548,119 @@ pub fn normalize_class_intersection_definitions(input: &str) -> String {
     out
 }
 
+/// Normalize `owl:sameAs` on `owl:Class` into `owl:equivalentClass`.
+///
+/// Horned-OWL's RDF reader does not emit class equality from nested `owl:sameAs`.
+#[must_use]
+pub fn normalize_class_same_as(input: &str) -> String {
+    if !input.contains("<owl:Class") || !input.contains("owl:sameAs") {
+        return input.to_owned();
+    }
+    let base = parse_xml_base(input);
+    let mut out = String::with_capacity(input.len() + 128);
+    let mut pos = 0usize;
+    while let Some(rel) = input[pos..].find("<owl:Class") {
+        let start = pos + rel;
+        out.push_str(&input[pos..start]);
+        let Some(end) = owl_class_element_end(input, start) else {
+            out.push_str(&input[start..]);
+            return out;
+        };
+        let block = &input[start..end];
+        out.push_str(&rewrite_class_same_as_block(block, &base));
+        pos = end;
+    }
+    out.push_str(&input[pos..]);
+    out
+}
+
+fn rewrite_class_same_as_block(block: &str, base: &str) -> String {
+    let open_end = match block.find('>') {
+        Some(i) => i + 1,
+        None => return block.to_owned(),
+    };
+    let close_start = match block.rfind("</owl:Class>") {
+        Some(i) => i,
+        None => return block.to_owned(),
+    };
+    if open_end > close_start {
+        return block.to_owned();
+    }
+    let inner = &block[open_end..close_start];
+    let Some(partner_iri) = extract_class_same_as_partner(inner, base) else {
+        return block.to_owned();
+    };
+    let Some((same_start, same_end, _)) = find_top_level_element_bounds(inner, "owl:sameAs") else {
+        return block.to_owned();
+    };
+
+    let mut remainder = String::new();
+    remainder.push_str(inner[..same_start].trim_end());
+    if !remainder.is_empty() && !remainder.ends_with('\n') {
+        remainder.push('\n');
+    }
+    remainder.push_str(inner[same_end..].trim_start());
+
+    let mut rewritten = String::new();
+    rewritten.push_str(&block[..open_end]);
+    if !remainder.trim().is_empty() {
+        rewritten.push_str(remainder.trim_end());
+        rewritten.push('\n');
+    }
+    rewritten.push_str("  <owl:equivalentClass>\n");
+    rewritten.push_str(&format!(
+        "    <owl:Class rdf:about=\"{partner_iri}\"/>\n"
+    ));
+    rewritten.push_str("  </owl:equivalentClass>\n");
+    rewritten.push_str(&block[close_start..]);
+    rewritten
+}
+
+fn extract_class_same_as_partner(inner: &str, base: &str) -> Option<String> {
+    let (_, _, same_block) = find_top_level_element_bounds(inner, "owl:sameAs")?;
+    let open_end = same_block.find('>')?;
+    let open_tag = &same_block[..=open_end];
+    if let Some(resource) = extract_attribute(open_tag, "rdf:resource") {
+        return Some(resolve_relative_iri(&resource, base));
+    }
+    if open_tag.ends_with("/>") {
+        return None;
+    }
+    let close = "</owl:sameAs>";
+    let same_inner_end = same_block.rfind(close)?;
+    let same_inner = &same_block[open_end + 1..same_inner_end];
+    let class_start = same_inner.find("<owl:Class")?;
+    let class_open_end = same_inner[class_start..].find('>')? + class_start;
+    resolve_class_iri_from_tag(&same_inner[class_start..=class_open_end], base)
+}
+
+fn find_top_level_element_bounds<'a>(
+    inner: &'a str,
+    tag: &str,
+) -> Option<(usize, usize, &'a str)> {
+    find_top_level_element(inner, tag)
+}
+
+fn resolve_class_iri_from_tag(open_tag: &str, base: &str) -> Option<String> {
+    if let Some(about) = extract_attribute(open_tag, "rdf:about") {
+        return Some(resolve_relative_iri(&about, base));
+    }
+    if let Some(id) = extract_attribute(open_tag, "rdf:ID") {
+        return Some(format!("{base}#{id}"));
+    }
+    None
+}
+
+fn resolve_relative_iri(iri: &str, base: &str) -> String {
+    if iri.contains("://") || iri.starts_with("file:") {
+        iri.to_owned()
+    } else if let Some(stripped) = iri.strip_prefix('#') {
+        format!("{base}#{stripped}")
+    } else {
+        format!("{base}/{iri}")
+    }
+}
+
 fn typed_node_class_iri(tag: &str, xmlns: &HashMap<String, String>) -> Option<String> {
     if !is_typed_node_element(tag) {
         return None;
@@ -1309,6 +1422,23 @@ mod tests {
         let out = normalize_class_intersection_definitions(input);
         assert!(out.contains("<owl:equivalentClass>"));
         assert!(!out.contains("</owl:equivalentClass>\n  <owl:intersectionOf"));
+    }
+
+    #[test]
+    fn normalize_class_same_as_to_equivalent_class() {
+        let input = r#"<rdf:RDF xmlns:owl="http://www.w3.org/2002/07/owl#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xml:base="http://www.w3.org/2002/03owlt/I4.6/premises003">
+ <owl:Class rdf:ID="C1">
+  <owl:sameAs>
+   <owl:Class rdf:ID="C2"/>
+  </owl:sameAs>
+ </owl:Class>
+</rdf:RDF>"#;
+        let out = normalize_class_same_as(input);
+        assert!(out.contains("<owl:equivalentClass>"));
+        assert!(out.contains("rdf:about=\"http://www.w3.org/2002/03owlt/I4.6/premises003#C2\""));
+        assert!(!out.contains("owl:sameAs"));
     }
 
     #[test]
