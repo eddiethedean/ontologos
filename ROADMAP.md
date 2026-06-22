@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds profi
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-22 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag) — **~58%** in-scope catalog parity (Phase 2)
+**Last updated:** 2026-06-22 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag) — **~63%** in-scope catalog parity (Phase 3)
 
 ---
 
@@ -103,7 +103,7 @@ flowchart TB
 
 ## HermiT parity phases (path to v1.0.0 tag)
 
-The **v1.0.0 git tag** ships only when **in-scope HermiT catalog parity reaches 100%** and [Phase 8–9](#phase-8--expressivity-prerequisites-v15v19) expressivity gates are met. The automated script `check-1.0-release-gates.sh` (≥400 active tests, Tier A + C) is **necessary but not sufficient** — it can pass while ~40% of the catalog remains `planned`.
+The **v1.0.0 git tag** ships only when **in-scope HermiT catalog parity reaches 100%** and [Phase 8–9](#phase-8--expressivity-prerequisites-v15v19) expressivity gates are met. The automated script `check-1.0-release-gates.sh` (≥400 active tests, Tier A + C) is **necessary but not sufficient** — it can pass while ~37% of the catalog remains `planned`.
 
 Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-report.md) · `bash benchmarks/scripts/report-ci-gate-status.sh` · `bash benchmarks/scripts/audit-planned-backlog.sh`
 
@@ -123,7 +123,9 @@ in_scope_total = (591 − internal − excluded − migrated) + 428 WG = 958
 parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 ```
 
-**Baseline (2026-06-22):** 330 Java `planned` + 67 WG `planned` = 397 backlog → **~58% parity**. **593** active conformance tests (56% of 1063 defined).
+**Baseline (2026-06-22, pre–Phase 2):** 330 Java `planned` + 67 WG `planned` = 397 backlog → **~58% parity**. **593** active conformance tests (56% of 1063 defined).
+
+**Current (post–Phase 2):** 284 Java `planned` + 67 WG `planned` = 351 backlog → **~63% parity** (`parity_pct` ≈ 63.4). **640** active conformance tests (60% of 1063 defined); **183** catalog `axiom` cases; **176** in [promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt). `missing_assertions: 0` in [planned-backlog-triage.md](docs/internal/planned-backlog-triage.md).
 
 Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 
@@ -133,8 +135,8 @@ Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 |-------|------|--------|------------------|--------|
 | **0** | Baseline & metrics | **Complete** | Honest accounting | `report-conformance-coverage.sh` |
 | **1** | Harness integrity | **Complete** | WG catalog generator stable | `cargo test -p ontologos-conformance --test hermit_wg_generated` |
-| **2** | Assertion harvest | **In progress** | `missing_assertions → 0` (~87 cases) | `audit-planned-backlog.sh` |
-| **3** | DL engine gaps | Planned | `engine_gap → 0` (~8 cases) | `parity-scan.sh` |
+| **2** | Assertion harvest | **Complete** | `missing_assertions → 0`; 176 promoted axiom IDs | `audit-planned-backlog.sh` |
+| **3** | DL engine gaps | **In progress** | Fix `engine_gap` failures (~111 harvested cases) | `parity-scan.sh` · `promote_catalog` |
 | **4** | WG fixtures | Planned | `wg_planned → 0` (~67 cases) | `cargo test --test hermit_wg_generated` |
 | **5** | Manual ports | Planned | `java_planned → 0` (~235 cases) | `generate_catalog.py` + full conformance |
 | **6** | Tier B corpora | Planned | `ClassificationTest` in CI | `compare-pizza-el-golden.sh` |
@@ -177,19 +179,19 @@ flowchart TB
 - [x] 361/361 active OWL WG tests green in CI
 - [x] `check-1.0-release-gates.sh` passes on `main`
 
-### Phase 2 — Assertion harvest (~87 Java cases) (Complete)
+### Phase 2 — Assertion harvest (Complete)
 
 Clear `missing_assertions` in planned-backlog triage.
 
-- [x] Extend Java `assertSubsumedBy` / consistency extraction in `generate_catalog.py` and `assertion_extractors.py`
+- [x] Extend Java `assertSubsumedBy` / consistency extraction in [generate_catalog.py](tests/hermit/generate_catalog.py) and [assertion_extractors.py](tests/hermit/assertion_extractors.py)
 - [x] Grow `HARDCODED_AXIOM_SUBSUMPTIONS` / `HARDCODED_CLASS_SATISFIABILITY` for OFN-only cases
-- [x] Run `promote_catalog` → regenerate catalog → update `promoted_axiom_ids.txt`
+- [x] Run `promote_catalog` → regenerate catalog → update [promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)
 
-**Exit:** `audit_planned_backlog` reports `missing_assertions: 0`; `dl_ofn_pass_rate` candidate count grows.
+**Exit (met):** `audit_planned_backlog` reports `missing_assertions: 0`; promoted axiom set grew **136 → 176**; catalog `axiom` status **138 → 183**; active conformance tests **593 → 640**.
 
-### Phase 3 — DL engine correctness (~8 engine gaps)
+### Phase 3 — DL engine correctness (~111 engine gaps)
 
-Fix [ontologos-dl](crates/ontologos-dl) / [ontologos-alc](crates/ontologos-alc) for known planned failures:
+Fix [ontologos-dl](crates/ontologos-dl) / [ontologos-alc](crates/ontologos-alc) for planned cases that have harvested assertions but fail semantic checks (`engine_gap` in triage). Priority known failures from pre–Phase 2 triage:
 
 - [ ] Role chains (`testChains`, `testChains2`)
 - [ ] Role disjointness (`testRoleDisjointness_1/2`)
@@ -255,7 +257,7 @@ Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressiv
 
 | Tension | Resolution |
 |---------|------------|
-| `check-1.0-release-gates.sh` passes at ~58% parity | Phase 9 makes parity script blocking; current gate is necessary not sufficient |
+| `check-1.0-release-gates.sh` passes at ~63% parity | Phase 9 makes parity script blocking; current gate is necessary not sufficient |
 | SWRL `RulesTest` deferred vs 19 active `swrl` tests | Phase 5d: semantic SWRL only; full JVM rules deferred |
 | v1.5–v1.9 block 1.0 | Phase 8 required alongside Phases 5–7 |
 | Workspace `1.0.0` vs git tag `v0.9.0` | Phase 9 is when workspace version matches published tag |
@@ -287,7 +289,7 @@ These run alongside version milestones and are not tied to a single release.
 | Corpus download script | **Complete** | `benchmarks/scripts/download.sh` |
 | Manifest-driven integration tests | **Complete** | Skip when `local_path` missing |
 | RDFS corpus conformance (Family, Pizza) | **Complete** (v0.3) | Extend per engine |
-| HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A) | **591** Java tests cataloged in `hermit_generated.rs`; **593** active conformance tests; see [parity phases](#hermit-parity-phases-path-to-v100-tag) |
+| HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A) | **591** Java tests cataloged in `hermit_generated.rs`; **640** active conformance tests; **183** axiom cases; see [parity phases](#hermit-parity-phases-path-to-v100-tag) |
 | HermiT replacement matrix | **Complete** | [hermit-replacement.md](docs/internal/research/hermit-replacement.md) |
 | Pizza EL golden regression (`compare-pizza-el-golden.sh`) | **Complete** (v0.6.1) | CI gate on `main` |
 | Family RL triple closure vs reasonable (`compare-reasonable.sh`) | **Complete** (v0.7) | CI gate on `main` |
@@ -743,11 +745,11 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 # 1.0 — Full HermiT parity
 
-**Status: Planned** · **Gate for JVM-free DL replacement** · **Blocked by:** [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag) (Phases 2–9) and [v1.5–v1.9 expressivity tracks](#path-to-10--expressivity-tracks-v15v19)
+**Status: Planned** · **Gate for JVM-free DL replacement** · **Blocked by:** [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag) (Phases 3–9) and [v1.5–v1.9 expressivity tracks](#path-to-10--expressivity-tracks-v15v19)
 
 **1.0** is the release where OntoLogos **replaces HermiT** as the default OWL 2 DL reasoner for batch classification, materialization, and explanation in Rust/Python/CLI workflows. Not a line-by-line hypertableau port — a **profile-modular** stack (EL, RL/RDFS, hybrid routing, `ontologos-dl`) that passes the HermiT conformance harness and matches classification results on standard corpora within documented tolerance.
 
-**Do not tag v1.0.0** until **Phase 9** exit criteria are met (`parity_pct = 100%`, expressivity complete). Passing `check-1.0-release-gates.sh` alone is insufficient (~58% catalog parity today).
+**Do not tag v1.0.0** until **Phase 9** exit criteria are met (`parity_pct = 100%`, expressivity complete). Passing `check-1.0-release-gates.sh` alone is insufficient (~63% catalog parity today).
 
 See [hermit-replacement.md](docs/internal/research/hermit-replacement.md) and [hermit.md](docs/internal/research/hermit.md).
 

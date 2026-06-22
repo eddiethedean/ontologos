@@ -206,7 +206,8 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
                 inc_path.display()
             ));
         }
-        let inc = load_ontology(&inc_path).map_err(|e| format!("{}: load incremental: {e}", case.id))?;
+        let inc =
+            load_ontology(&inc_path).map_err(|e| format!("{}: load incremental: {e}", case.id))?;
         merge_ontology_axioms(&mut ontology, &inc);
     }
 
@@ -215,8 +216,7 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
             .map_err(|e| format!("{}: swrl: {e}", case.id))?;
     }
 
-    if let (Some(conclusion_rel), Some(expected)) =
-        (&case.conclusion_ofn, case.expected_entailment)
+    if let (Some(conclusion_rel), Some(expected)) = (&case.conclusion_ofn, case.expected_entailment)
     {
         let conclusion_path = hermit_data_path(conclusion_rel);
         if !conclusion_path.is_file() {
@@ -239,7 +239,8 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
     }
 
     if case.engine == "dl" || case.engine == "swrl" || case.engine == "alc" {
-        let taxonomy = ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?;
+        let taxonomy =
+            ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?;
 
         if !case.subsumptions.is_empty() {
             check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
@@ -357,7 +358,9 @@ fn individual_has_type(
     if direct {
         return asserted.contains(&class);
     }
-    asserted.iter().any(|&t| t == class || taxonomy.is_subsumed(t, class))
+    asserted
+        .iter()
+        .any(|&t| t == class || taxonomy.is_subsumed(t, class))
 }
 
 fn entity_local_name(ontology: &Ontology, id: ontologos_core::EntityId) -> Option<String> {
@@ -443,7 +446,8 @@ fn check_datalog_queries_result(
                     }
                 }
             }
-            let expected: std::collections::HashSet<String> = query.answers.iter().cloned().collect();
+            let expected: std::collections::HashSet<String> =
+                query.answers.iter().cloned().collect();
             if actual != expected {
                 return Err(format!(
                     "{}: datalog class query {class_local} expected {:?}, got {:?}",
@@ -463,7 +467,10 @@ fn check_datalog_queries_result(
     Ok(())
 }
 
-fn check_data_property_subsumptions_result(ontology: &Ontology, case: &HermitCase) -> Result<(), String> {
+fn check_data_property_subsumptions_result(
+    ontology: &Ontology,
+    case: &HermitCase,
+) -> Result<(), String> {
     for sub in &case.data_property_subsumptions {
         let sub_iri = resolve_local_iri(&sub.sub);
         let sup_iri = resolve_local_iri(&sub.sup);
@@ -1131,9 +1138,11 @@ fn classify_planned_java(case: &HermitCase) -> PlannedJavaAudit {
     if matches!(
         case.engine.as_str(),
         "internal" | "parser" | "normalization"
-    ) || case.ignore_reason.as_deref().is_some_and(|r| {
-        r.contains("engine-internal") || r.contains("manual port")
-    }) {
+    ) || case
+        .ignore_reason
+        .as_deref()
+        .is_some_and(|r| r.contains("engine-internal") || r.contains("manual port"))
+    {
         return PlannedJavaAudit {
             id,
             engine,

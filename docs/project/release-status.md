@@ -22,7 +22,7 @@ CLI (`ontologos-cli`) and conformance crates are **source-build only** — not o
 | Python bindings, explain (EL + DL smoke) | **Stable** (1.0.0) |
 | Incremental EL/RL/RDFS | **Stable** (0.8+) |
 | ALC / `dl-preview` | **Preview** — explicit gating and subset checks |
-| Full HermiT OWL DL parity | **In progress** — [ROADMAP parity phases](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#hermit-parity-phases-path-to-v100-tag) Phase 2; [gap report](../internal/hermit-parity-gap-report.md) |
+| Full HermiT OWL DL parity | **In progress** — [ROADMAP parity phases](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#hermit-parity-phases-path-to-v100-tag) Phase 3; [gap report](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/hermit-parity-gap-report.md) |
 
 **Production OWL DL:** use Protégé + HermiT or Konclude ([FAQ](../../FAQ.md)).
 

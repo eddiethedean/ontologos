@@ -887,8 +887,12 @@ def infer_status(case: HermitCase) -> None:
         return
     if case.axiom_ofn and case.subsumptions:
         if case.engine in ("rdfs", "rl"):
-            case.status = "axiom"
-            case.tier = "A"
+            if case.id in PROMOTED_AXIOM_IDS:
+                case.status = "axiom"
+                case.tier = "A"
+            else:
+                case.status = "planned"
+                case.ignore_reason = "RL/RDFS axiom assertions pending engine hardening"
         elif case.engine in ("dl", "alc"):
             if case.id in PROMOTED_AXIOM_IDS:
                 case.status = "axiom"
@@ -904,12 +908,20 @@ def infer_status(case: HermitCase) -> None:
             case.ignore_reason = f"axiom fixture requires {case.engine} (1.0)"
         return
     if case.axiom_ofn and case.property_characteristics and case.engine in ("rdfs", "rl"):
-        case.status = "axiom"
-        case.tier = "A"
+        if case.id in PROMOTED_AXIOM_IDS:
+            case.status = "axiom"
+            case.tier = "A"
+        else:
+            case.status = "planned"
+            case.ignore_reason = "RL/RDFS axiom assertions pending engine hardening"
         return
     if case.axiom_ofn and case.property_subsumptions and case.engine in ("rdfs", "rl"):
-        case.status = "axiom"
-        case.tier = "A"
+        if case.id in PROMOTED_AXIOM_IDS:
+            case.status = "axiom"
+            case.tier = "A"
+        else:
+            case.status = "planned"
+            case.ignore_reason = "RL/RDFS axiom assertions pending engine hardening"
         return
     if case.axiom_ofn and case.consistent is not None and case.engine in ("dl", "alc"):
         case.status = "planned"

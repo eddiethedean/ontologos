@@ -18,10 +18,7 @@ fn main() {
     }
 
     let s = &audit.summary;
-    eprintln!(
-        "planned backlog: java={} wg={}",
-        s.java_total, s.wg_total
-    );
+    eprintln!("planned backlog: java={} wg={}", s.java_total, s.wg_total);
     for (k, v) in &s.java_by_category {
         eprintln!("  java {k}: {v}");
     }
