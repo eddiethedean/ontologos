@@ -90,7 +90,7 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         } => {
             expand_min_cardinality(branch, world, n, property, filler);
         }
-        ClassExpr::MaxCardinality { n: 0, .. } => branch.clash = true,
+        ClassExpr::MaxCardinality { n: 0, .. } => {}
         ClassExpr::MaxCardinality { .. } => {
             recheck_cardinality_on_world(branch, world);
         }

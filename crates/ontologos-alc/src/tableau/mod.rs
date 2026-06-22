@@ -78,6 +78,68 @@ pub fn is_consistent_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Resul
     kb_consistent(&dl, seed)
 }
 
+/// Test whether a class expression is satisfiable in the TBox (empty ABox).
+pub fn is_ce_satisfiable_with_seed(dl: &DlOntology, ce: CeId, seed: &TableauSeed) -> Result<bool, Error> {
+    let mut branch = Branch::new(dl, seed);
+    assert_top_tbox_axioms(&mut branch, 0);
+    branch.assert(0, ce);
+    run_tbox_saturation(&mut branch)
+}
+
+/// Test whether a named class is satisfiable, expanding `EquivalentClasses` definitions.
+pub fn is_named_class_satisfiable_with_seed(
+    dl: &DlOntology,
+    class: EntityId,
+    seed: &TableauSeed,
+) -> Result<bool, Error> {
+    let ce = dl
+        .core()
+        .dl()
+        .expressions()
+        .find_map(|(id, e)| match e {
+            ClassExpr::Atomic(c) if *c == class => Some(id),
+            _ => None,
+        })
+        .ok_or_else(|| Error::Message(format!("missing CE for class {:?}", class.0)))?;
+    let test_ce = equivalent_definition_ce(dl, class).unwrap_or(ce);
+    is_ce_satisfiable_with_seed(dl, test_ce, seed)
+}
+
+fn assert_top_tbox_axioms(branch: &mut Branch<'_>, world: usize) {
+    let Some(top) = branch.dl.core().dl().expressions().find_map(|(id, e)| match e {
+        ClassExpr::Top => Some(id),
+        _ => None,
+    }) else {
+        return;
+    };
+    branch.assert(world, top);
+}
+
+/// Drive tableau expansion for class-satisfiability tests (TBox + optional seed).
+fn run_tbox_saturation(branch: &mut Branch<'_>) -> Result<bool, Error> {
+    expand::materialize_existential_successors(branch);
+    if branch.clash {
+        return Ok(false);
+    }
+    expand::saturate_composed_edges(branch);
+    for (from, _, to) in branch.edges.clone() {
+        expand::apply_universal_on_edge(branch, from, to);
+    }
+    clash::detect_clash(branch);
+    if branch.clash {
+        return Ok(false);
+    }
+    let ok = branch.expand()?;
+    expand::saturate_composed_edges(branch);
+    for world in 0..branch.worlds.len() {
+        expand::recheck_cardinality_on_world(branch, world);
+        if branch.clash {
+            return Ok(false);
+        }
+    }
+    Ok(ok && !branch.clash)
+}
+
 fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     let mut branch = Branch::new(dl, seed);
     let mut worlds: HashMap<EntityId, usize> = HashMap::new();
@@ -686,18 +748,7 @@ fn run_tableau(dl: &DlOntology, seed: &TableauSeed) -> Result<Taxonomy, Error> {
 }
 
 fn is_satisfiable(dl: &DlOntology, class: EntityId, seed: &TableauSeed) -> Result<bool, Error> {
-    let ce = dl
-        .core()
-        .dl()
-        .expressions()
-        .find_map(|(id, e)| match e {
-            ClassExpr::Atomic(c) if *c == class => Some(id),
-            _ => None,
-        })
-        .ok_or_else(|| Error::Message(format!("missing CE for class {:?}", class.0)))?;
-    let mut branch = Branch::new(dl, seed);
-    branch.assert(0, ce);
-    branch.expand()
+    is_named_class_satisfiable_with_seed(dl, class, seed)
 }
 
 fn infer_named_subsumptions(
@@ -763,6 +814,8 @@ fn entails(
 
 fn equivalent_definition_ce(dl: &DlOntology, class: EntityId) -> Option<CeId> {
     let store = dl.core().dl();
+    let mut best: Option<CeId> = None;
+    let mut best_score = 0u8;
     for axiom in store.axioms() {
         let DlAxiom::EquivalentClasses(ids) = axiom else {
             continue;
@@ -770,18 +823,51 @@ fn equivalent_definition_ce(dl: &DlOntology, class: EntityId) -> Option<CeId> {
         if ids.len() < 2 {
             continue;
         }
-        for w in ids.windows(2) {
-            let a = w[0];
-            let b = w[1];
-            if matches!(store.ce(a), Some(ClassExpr::Atomic(c)) if *c == class) {
-                return Some(b);
+        for &id in ids {
+            if !matches!(store.ce(id), Some(ClassExpr::Atomic(c)) if *c == class) {
+                continue;
             }
-            if matches!(store.ce(b), Some(ClassExpr::Atomic(c)) if *c == class) {
-                return Some(a);
+            for &other in ids {
+                if other == id {
+                    continue;
+                }
+                let score = equivalent_partner_preference(store, other);
+                if score > best_score {
+                    best_score = score;
+                    best = Some(other);
+                }
             }
         }
     }
-    None
+    best
+}
+
+fn equivalent_partner_preference(store: &ontologos_core::DlStore, ce: CeId) -> u8 {
+    match store.ce(ce) {
+        Some(ClassExpr::Atomic(_)) => 1,
+        Some(
+            ClassExpr::Some { .. }
+            | ClassExpr::All { .. }
+            | ClassExpr::MinCardinality { .. }
+            | ClassExpr::MaxCardinality { .. }
+            | ClassExpr::ExactCardinality { .. }
+            | ClassExpr::DataMinCardinality { .. }
+            | ClassExpr::DataMaxCardinality { .. }
+            | ClassExpr::DataExactCardinality { .. },
+        ) => 4,
+        Some(ClassExpr::And(_) | ClassExpr::Or(_)) => 5,
+        Some(ClassExpr::Not(_)) => 3,
+        _ => 2,
+    }
+}
+
+/// Resolve atomic class labels to their `EquivalentClasses` definition when present.
+pub(crate) fn effective_class_expression(dl: &DlOntology, ce: CeId) -> CeId {
+    let store = dl.core().dl();
+    match store.ce(ce) {
+        Some(ClassExpr::Atomic(entity)) => equivalent_definition_ce(dl, *entity).unwrap_or(ce),
+        _ => ce,
+    }
 }
 
 fn saturate_role_hierarchy(role_hierarchy: &mut HashMap<EntityId, HashSet<EntityId>>) {

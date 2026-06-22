@@ -522,6 +522,32 @@ pub fn materialize_typed_node_elements(input: &str) -> String {
     out
 }
 
+/// Normalize `owl:intersectionOf` on `owl:Class` into `owl:equivalentClass` form.
+///
+/// Horned-OWL drops the RDF/XML class-expression shortcut where `intersectionOf` is a direct
+/// child of `owl:Class`.
+#[must_use]
+pub fn normalize_class_intersection_definitions(input: &str) -> String {
+    if !input.contains("<owl:Class") || !input.contains("owl:intersectionOf") {
+        return input.to_owned();
+    }
+    let mut out = String::with_capacity(input.len() + 256);
+    let mut pos = 0usize;
+    while let Some(rel) = input[pos..].find("<owl:Class") {
+        let start = pos + rel;
+        out.push_str(&input[pos..start]);
+        let Some(end) = owl_class_element_end(input, start) else {
+            out.push_str(&input[start..]);
+            return out;
+        };
+        let block = &input[start..end];
+        out.push_str(&rewrite_class_intersection_block(block));
+        pos = end;
+    }
+    out.push_str(&input[pos..]);
+    out
+}
+
 fn typed_node_class_iri(tag: &str, xmlns: &HashMap<String, String>) -> Option<String> {
     if !is_typed_node_element(tag) {
         return None;
@@ -555,6 +581,7 @@ fn is_typed_node_element(tag: &str) -> bool {
 /// Assign stable `rdf:about` IRIs to blank `rdf:Description` nodes carrying `rdf:type`.
 ///
 /// Horned-OWL drops anonymous individual typings; OWL WG description-logic fixtures rely on them.
+/// Blank nodes used for datatype facet collections (`owl:withRestrictions`) must stay anonymous.
 #[must_use]
 pub fn materialize_anonymous_individual_descriptions(input: &str) -> String {
     if !input.contains("<rdf:Description") || !input.contains("rdf:type") {
@@ -564,34 +591,169 @@ pub fn materialize_anonymous_individual_descriptions(input: &str) -> String {
     let mut counter = 0usize;
     let mut out = String::with_capacity(input.len() + 256);
     let mut pos = 0usize;
-    while pos < input.len() {
-        let Some(rel) = input[pos..].find('<') else {
-            out.push_str(&input[pos..]);
-            break;
-        };
+    while let Some(rel) = input[pos..].find("<rdf:Description") {
         let start = pos + rel;
+        if !input[start..].starts_with("<rdf:Description")
+            || input[start..].starts_with("</rdf:Description")
+        {
+            pos = start + 1;
+            continue;
+        }
         out.push_str(&input[pos..start]);
-        let Some(tag_end) = input[start..].find('>') else {
+        let open_end = input[start..].find('>').unwrap_or(0);
+        let open_tag = &input[start..start + open_end + 1];
+        let Some(end) = named_description_element_end(input, start) else {
             out.push_str(&input[start..]);
-            break;
+            return out;
         };
-        let tag = &input[start..start + tag_end + 1];
-        if is_anonymous_description_open(tag) {
+        let block = &input[start..end];
+        if is_anonymous_description_open(open_tag)
+            && (block.contains("<rdf:type") || block.contains("<rdf:type "))
+        {
             counter += 1;
             let iri = format!("{base}#_:{counter}");
-            if tag.ends_with("/>") {
-                let inner = tag.strip_prefix('<').unwrap_or(tag).trim_end_matches("/>").trim();
-                out.push_str(&format!("<{inner} rdf:about=\"{iri}\"/>"));
-            } else {
-                let inner = tag.strip_prefix('<').unwrap_or(tag).trim_end_matches('>').trim();
-                out.push_str(&format!("<{inner} rdf:about=\"{iri}\">"));
-            }
+            out.push_str(&rewrite_anonymous_description_block(block, &iri));
         } else {
-            out.push_str(tag);
+            out.push_str(block);
         }
-        pos = start + tag_end + 1;
+        pos = end;
     }
+    out.push_str(&input[pos..]);
     out
+}
+
+fn rewrite_anonymous_description_block(block: &str, iri: &str) -> String {
+    let close_tag = "</rdf:Description>";
+    let open_end = block.find('>').unwrap_or(0);
+    let open = &block[..=open_end];
+    if open.ends_with("/>") {
+        let inner = open.strip_prefix('<').unwrap_or(open).trim_end_matches("/>").trim();
+        return format!("<{inner} rdf:about=\"{iri}\"/>");
+    }
+    if !block.ends_with(close_tag) {
+        return block.to_owned();
+    }
+    let inner = open.strip_prefix('<').unwrap_or(open).trim_end_matches('>').trim();
+    let mut rewritten = format!("<{inner} rdf:about=\"{iri}\">");
+    rewritten.push_str(&block[open_end + 1..block.len() - close_tag.len()]);
+    rewritten.push_str(close_tag);
+    rewritten
+}
+
+/// Convert typed `rdf:Description rdf:about="..."` to `owl:NamedIndividual`.
+///
+/// Horned-OWL's RDF reader does not emit `ClassAssertion` from `rdf:Description` typings.
+#[must_use]
+pub fn materialize_named_individual_descriptions(input: &str) -> String {
+    if !input.contains("<rdf:Description") || !input.contains("rdf:type") {
+        return input.to_owned();
+    }
+    let mut out = String::with_capacity(input.len() + 128);
+    let mut pos = 0usize;
+    while let Some(rel) = input[pos..].find("<rdf:Description") {
+        let start = pos + rel;
+        if !input[start..].starts_with("<rdf:Description")
+            || input[start..].starts_with("</rdf:Description")
+        {
+            pos = start + 1;
+            continue;
+        }
+        out.push_str(&input[pos..start]);
+        let Some(end) = named_description_element_end(input, start) else {
+            out.push_str(&input[start..]);
+            return out;
+        };
+        let block = &input[start..end];
+        if is_named_description_with_individual_type(block) {
+            out.push_str(&rewrite_description_to_named_individual(block));
+        } else {
+            out.push_str(block);
+        }
+        pos = end;
+    }
+    out.push_str(&input[pos..]);
+    out
+}
+
+fn is_named_description_with_individual_type(block: &str) -> bool {
+    let open_end = block.find('>').unwrap_or(0);
+    let open = &block[..=open_end];
+    if !(open.contains("rdf:about=\"")
+        || open.contains("rdf:about='")
+        || open.contains("rdf:ID=\"")
+        || open.contains("rdf:ID='"))
+    {
+        return false;
+    }
+    if !(block.contains("<rdf:type") || block.contains("<rdf:type ")) {
+        return false;
+    }
+    !is_typed_entity_declaration(block)
+}
+
+/// RDF/XML shortcuts that type a named node as a class or property, not an individual.
+fn is_typed_entity_declaration(block: &str) -> bool {
+    const ENTITY_TYPES: [&str; 13] = [
+        "owl#Class",
+        "owl#ObjectProperty",
+        "owl#DatatypeProperty",
+        "owl#AnnotationProperty",
+        "owl#OntologyProperty",
+        "owl#InverseFunctionalProperty",
+        "owl#FunctionalProperty",
+        "owl#SymmetricProperty",
+        "owl#AsymmetricProperty",
+        "owl#ReflexiveProperty",
+        "owl#IrreflexiveProperty",
+        "owl#TransitiveProperty",
+        "owl#NamedIndividual",
+    ];
+    ENTITY_TYPES.iter().any(|marker| {
+        block.contains(marker)
+            && (block.contains("rdf:type rdf:resource=") || block.contains("rdf:type rdf:resource ="))
+    })
+}
+
+fn rewrite_description_to_named_individual(block: &str) -> String {
+    let close_tag = "</rdf:Description>";
+    if !block.ends_with(close_tag) {
+        return block.to_owned();
+    }
+    let mut rewritten = block.replacen("<rdf:Description", "<owl:NamedIndividual", 1);
+    let close_start = rewritten
+        .rfind(close_tag)
+        .expect("matching close tag after open rewrite");
+    rewritten.replace_range(close_start..close_start + close_tag.len(), "</owl:NamedIndividual>");
+    rewritten
+}
+
+fn named_description_element_end(input: &str, start: usize) -> Option<usize> {
+    let slice = &input[start..];
+    let open = "<rdf:Description";
+    let close = "</rdf:Description>";
+    if !slice.starts_with(open) {
+        return None;
+    }
+    let gt = slice.find('>')?;
+    let mut pos = gt + 1;
+    let mut depth = 1usize;
+    while pos < slice.len() {
+        let rel = slice[pos..].find('<')?;
+        let tag_start = pos + rel;
+        if slice[tag_start..].starts_with(open) {
+            let inner_gt = slice[tag_start..].find('>')?;
+            if &slice[tag_start + inner_gt - 1..=tag_start + inner_gt] != "/>" {
+                depth += 1;
+            }
+        } else if slice[tag_start..].starts_with(close) {
+            depth -= 1;
+            if depth == 0 {
+                return Some(start + tag_start + close.len());
+            }
+        }
+        pos = tag_start + 1;
+    }
+    None
 }
 
 /// Rewrite `owl:members` collections to `owl:distinctMembers` and flatten member nodes.
@@ -703,6 +865,179 @@ fn expand_disjoint_block(
     out.push_str(&input[..start]);
     out.push_str(&injections);
     out.push_str(&input[container_end..]);
+    out
+}
+
+fn owl_class_element_end(input: &str, class_start: usize) -> Option<usize> {
+    tagged_element_end(input, class_start, "owl:Class")
+}
+
+fn tagged_element_end(input: &str, start: usize, tag: &str) -> Option<usize> {
+    let slice = &input[start..];
+    let open = format!("<{tag}");
+    if !slice.starts_with(&open) {
+        return None;
+    }
+    if let Some(rel) = slice.find("/>") {
+        let gt = slice[..rel].find('>')?;
+        let candidate = &slice[..=gt + 1];
+        let has_nested_markup = candidate[open.len()..].contains('<');
+        if candidate.ends_with("/>") && candidate.starts_with(&open) && !has_nested_markup {
+            return Some(start + gt + 1);
+        }
+    }
+    let close = format!("</{tag}>");
+    let mut depth = 0usize;
+    let mut pos = 0usize;
+    while pos < slice.len() {
+        let rel = slice[pos..].find('<')?;
+        let tag_start = pos + rel;
+        if slice[tag_start..].starts_with(&open) {
+            let gt = slice[tag_start..].find('>')?;
+            let is_self_close = &slice[tag_start + gt - 1..=tag_start + gt] == "/>";
+            if is_self_close {
+                if depth == 0 {
+                    return Some(start + tag_start + gt + 1);
+                }
+            } else {
+                depth += 1;
+            }
+        } else if slice[tag_start..].starts_with(&close) {
+            depth = depth.saturating_sub(1);
+            if depth == 0 {
+                return Some(start + tag_start + close.len());
+            }
+        }
+        pos = tag_start + 1;
+    }
+    None
+}
+
+fn rewrite_class_intersection_block(block: &str) -> String {
+    let open_end = match block.find('>') {
+        Some(i) => i + 1,
+        None => return block.to_owned(),
+    };
+    let close_start = match block.rfind("</owl:Class>") {
+        Some(i) => i,
+        None => return block.to_owned(),
+    };
+    if open_end > close_start {
+        return block.to_owned();
+    }
+    let open_tag = &block[..open_end];
+    let inner = &block[open_end..close_start];
+    let close_tag = &block[close_start..];
+
+    let Some((is, ie, intersection)) = find_top_level_element(inner, "owl:intersectionOf") else {
+        return block.to_owned();
+    };
+    let equiv = find_top_level_element(inner, "owl:equivalentClass");
+
+    let mut remainder = String::new();
+    let mut pos = 0usize;
+    while pos < inner.len() {
+        while pos < inner.len() && inner.as_bytes()[pos].is_ascii_whitespace() {
+            pos += 1;
+        }
+        if pos >= inner.len() {
+            break;
+        }
+        if inner.as_bytes()[pos] != b'<' {
+            return block.to_owned();
+        }
+        let start = pos;
+        let tag_name = inner[start + 1..]
+            .split(|c: char| c.is_whitespace() || c == '>' || c == '/')
+            .next()
+            .unwrap_or("");
+        let Some(end) = tagged_element_end(inner, start, tag_name) else {
+            return block.to_owned();
+        };
+        if (start, end) != (is, ie) && equiv.is_none_or(|(es, ee, _)| (start, end) != (es, ee)) {
+            remainder.push_str(&inner[start..end]);
+            if !remainder.ends_with('\n') {
+                remainder.push('\n');
+            }
+        }
+        pos = end;
+    }
+
+    let merged_intersection = if let Some((es, ee, _)) = equiv {
+        let equiv_inner = element_inner(&inner[es..ee], "owl:equivalentClass");
+        merge_intersection_first_member(intersection, &equiv_inner)
+    } else {
+        intersection.to_owned()
+    };
+
+    let mut rewritten = String::new();
+    rewritten.push_str(open_tag);
+    if !remainder.trim().is_empty() {
+        rewritten.push_str(remainder.trim_end());
+        rewritten.push('\n');
+    }
+    rewritten.push_str("  <owl:equivalentClass>\n    <owl:Class>\n      ");
+    rewritten.push_str(&merged_intersection);
+    rewritten.push_str("\n    </owl:Class>\n  </owl:equivalentClass>\n");
+    rewritten.push_str(close_tag);
+    rewritten
+}
+
+fn find_top_level_element<'a>(inner: &'a str, tag: &str) -> Option<(usize, usize, &'a str)> {
+    let mut pos = 0usize;
+    while pos < inner.len() {
+        while pos < inner.len() && inner.as_bytes()[pos].is_ascii_whitespace() {
+            pos += 1;
+        }
+        if pos >= inner.len() {
+            break;
+        }
+        if inner.as_bytes()[pos] != b'<' {
+            pos += 1;
+            continue;
+        }
+        let start = pos;
+        let tag_name = inner[start + 1..]
+            .split(|c: char| c.is_whitespace() || c == '>' || c == '/')
+            .next()
+            .unwrap_or("");
+        let end = tagged_element_end(inner, start, tag_name)?;
+        if tag_name == tag {
+            return Some((start, end, &inner[start..end]));
+        }
+        pos = end;
+    }
+    None
+}
+
+fn element_inner(block: &str, tag: &str) -> String {
+    let open = format!("<{tag}");
+    let close = format!("</{tag}>");
+    let open_end = block.find('>').map(|i| i + 1).unwrap_or(block.len());
+    if block.starts_with(&open) && block[open_end - 2..open_end].starts_with("/") {
+        return String::new();
+    }
+    let Some(close_start) = block.find(&close) else {
+        return String::new();
+    };
+    block[open_end..close_start].trim().to_owned()
+}
+
+fn merge_intersection_first_member(intersection_block: &str, first_member: &str) -> String {
+    if first_member.is_empty() {
+        return intersection_block.to_owned();
+    }
+    let Some(open_end) = intersection_block.find('>') else {
+        return intersection_block.to_owned();
+    };
+    let mut out = String::new();
+    out.push_str(&intersection_block[..open_end + 1]);
+    out.push('\n');
+    out.push_str(first_member);
+    if !first_member.ends_with('\n') {
+        out.push('\n');
+    }
+    out.push_str(&intersection_block[open_end + 1..]);
     out
 }
 
@@ -962,6 +1297,21 @@ mod tests {
     }
 
     #[test]
+    fn normalize_class_intersection_wraps_direct_intersection_of() {
+        let input = r#"<rdf:RDF xmlns:owl="http://www.w3.org/2002/07/owl#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <owl:Class rdf:about="http://ex.org#C">
+  <owl:intersectionOf rdf:parseType="Collection">
+   <owl:Class rdf:about="http://ex.org#A"/>
+   <owl:Class rdf:about="http://ex.org#B"/>
+  </owl:intersectionOf>
+ </owl:Class>
+</rdf:RDF>"#;
+        let out = normalize_class_intersection_definitions(input);
+        assert!(out.contains("<owl:equivalentClass>"));
+        assert!(!out.contains("</owl:equivalentClass>\n  <owl:intersectionOf"));
+    }
+
+    #[test]
     fn materialize_typed_node_element_adds_class_assertion() {
         let input = r#"<rdf:RDF xmlns:oiled="http://oiled.man.example.net/test#"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -972,6 +1322,165 @@ mod tests {
         assert!(out.contains("rdf:about=\"http://ex.org#_:tn1\""));
         assert!(out.contains("rdf:resource=\"http://oiled.man.example.net/test#Unsatisfiable\""));
         assert!(!out.contains("<oiled:Unsatisfiable/>"));
+    }
+
+    #[test]
+    fn named_description_element_end_finds_outer_close() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/Datatype-2DFloat-2DDiscrete-2D001/premise.rdf");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let injected = inject_rdf_based_punning_declarations(&expanded);
+        let typed = materialize_typed_node_elements(&injected);
+        let intersections = normalize_class_intersection_definitions(&typed);
+        let start = intersections
+            .find("<rdf:Description rdf:about=\"a\">")
+            .unwrap_or_else(|| intersections.find("<rdf:Description").unwrap());
+        let end = named_description_element_end(&intersections, start).expect("end");
+        let block = &intersections[start..end];
+        assert!(block.contains("</rdf:type>"), "block missing type close: {block}");
+        assert!(block.ends_with("</rdf:Description>"));
+    }
+
+    #[test]
+    fn float_discrete_horned_emits_class_assertion() {
+        use crate::limits::ParseLimits;
+        use crate::read::read_horned_owl_from_reader;
+        use crate::map::map_to_core;
+        use crate::Format;
+        use std::io::Cursor;
+
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/Datatype-2DFloat-2DDiscrete-2D001/premise.rdf");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let injected = inject_rdf_based_punning_declarations(&expanded);
+        let typed = materialize_typed_node_elements(&injected);
+        let intersections = normalize_class_intersection_definitions(&typed);
+        let named = materialize_named_individual_descriptions(&intersections);
+        let individuals = materialize_anonymous_individual_descriptions(&named);
+        assert!(
+            !individuals.contains("rdf:about=\"urn:ontologos:anon:"),
+            "facet collection nodes must stay blank"
+        );
+        let parsed = read_horned_owl_from_reader(
+            &mut Cursor::new(individuals.as_bytes()),
+            Format::RdfXml,
+            ParseLimits::default(),
+        )
+        .unwrap();
+        let (ont, report) = map_to_core(&parsed, ParseLimits::default()).unwrap();
+        assert!(
+            ont.dl().axiom_count() > 0,
+            "dl axioms skipped={}",
+            report.meta.skipped_axiom_count
+        );
+    }
+
+    #[test]
+    fn anonymous_individual_materialization_skips_facet_collections() {
+        let input = r#"<rdf:RDF xml:base="http://ex.org/"
+ xmlns:owl="http://www.w3.org/2002/07/owl#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+ <owl:withRestrictions rdf:parseType="Collection">
+  <rdf:Description>
+   <xsd:minExclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#float">0.0</xsd:minExclusive>
+  </rdf:Description>
+ </owl:withRestrictions>
+ <rdf:Description>
+  <rdf:type rdf:resource="http://ex.org/C"/>
+ </rdf:Description>
+</rdf:RDF>"#;
+        let out = materialize_anonymous_individual_descriptions(input);
+        assert!(out.contains("rdf:about=\"http://ex.org#_:1\""));
+        assert!(out.contains("<rdf:Description>\n   <xsd:minExclusive"));
+    }
+
+    #[test]
+    fn named_description_skips_inverse_functional_property_typing() {
+        let input = r#"<rdf:RDF xml:base="http://ex.org/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <rdf:Description rdf:about="http://ex.org/p">
+  <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#DatatypeProperty"/>
+ </rdf:Description>
+</rdf:RDF>"#;
+        let out = materialize_named_individual_descriptions(input);
+        assert!(out.contains("<rdf:Description rdf:about=\"http://ex.org/p\">"));
+        assert!(!out.contains("NamedIndividual"));
+    }
+
+    #[test]
+    fn manual_rewrite_once_on_float() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/Datatype-2DFloat-2DDiscrete-2D001/premise.rdf");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let injected = inject_rdf_based_punning_declarations(&expanded);
+        let typed = materialize_typed_node_elements(&injected);
+        let intersections = normalize_class_intersection_definitions(&typed);
+        let start = intersections.find("<rdf:Description rdf:about=\"a\">").unwrap();
+        let end = named_description_element_end(&intersections, start).unwrap();
+        let block = &intersections[start..end];
+        assert!(block.ends_with("</rdf:Description>"), "block end: {:?}", &block[block.len().saturating_sub(40)..]);
+        let rewritten = rewrite_description_to_named_individual(block);
+        assert!(!rewritten.contains("rdf:ty</owl:NamedIndividual>"), "{rewritten}");
+    }
+
+    #[test]
+    fn float_discrete_preprocess_produces_valid_xml() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/Datatype-2DFloat-2DDiscrete-2D001/premise.rdf");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let injected = inject_rdf_based_punning_declarations(&expanded);
+        let typed = materialize_typed_node_elements(&injected);
+        let intersections = normalize_class_intersection_definitions(&typed);
+        let named = materialize_named_individual_descriptions(&intersections);
+        if named.contains("rdf:ty</owl:NamedIndividual>") {
+            panic!("bad output:\n{named}");
+        }
+        assert!(named.contains("<owl:NamedIndividual"));
+    }
+
+    #[test]
+    fn materialize_named_description_to_individual() {
+        let input = r#"<rdf:RDF xml:base="http://ex.org/ontology/"
+ xmlns:owl="http://www.w3.org/2002/07/owl#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <rdf:Description rdf:about="a">
+  <rdf:type>
+   <owl:Restriction>
+    <owl:onProperty rdf:resource="dp"/>
+   </owl:Restriction>
+  </rdf:type>
+ </rdf:Description>
+</rdf:RDF>"#;
+        let out = materialize_named_individual_descriptions(input);
+        assert!(out.contains("<owl:NamedIndividual"));
+        assert!(!out.contains("<rdf:Description rdf:about=\"a\">"));
+    }
+
+    #[test]
+    fn materialize_named_description_skips_thing_subclass() {
+        let input = r#"<rdf:RDF xmlns:owl="http://www.w3.org/2002/07/owl#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+ <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Thing">
+  <rdfs:subClassOf>
+   <owl:Restriction>
+    <owl:onProperty rdf:resource="http://ex.org#f"/>
+   </owl:Restriction>
+  </rdfs:subClassOf>
+ </rdf:Description>
+</rdf:RDF>"#;
+        let out = materialize_named_individual_descriptions(input);
+        assert!(out.contains("<rdf:Description"));
+        assert!(!out.contains("<owl:NamedIndividual"));
     }
 
     #[test]

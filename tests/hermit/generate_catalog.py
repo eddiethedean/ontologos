@@ -984,6 +984,17 @@ def write_wg_fixture(test_id: str, block: str) -> tuple[str | None, str | None]:
     return prem_rel, conc_rel
 
 
+# Manifest extraction sometimes tags inconsistency fixtures as ConsistencyTest.
+WG_CONSISTENCY_OVERRIDES: dict[str, tuple[str, bool]] = {
+    "TestCase-3AWebOnt-2Ddescription-2Dlogic-2D017": ("inconsistency", False),
+    "TestCase-3AWebOnt-2Ddescription-2Dlogic-2D033": ("inconsistency", False),
+    "TestCase-3AWebOnt-2Ddescription-2Dlogic-2D633": ("inconsistency", False),
+    "TestCase-3AWebOnt-2DRestriction-2D001": ("inconsistency", False),
+    "TestCase-3AWebOnt-2DRestriction-2D002": ("inconsistency", False),
+    "TestCase-3AWebOnt-2DmaxCardinality-2D001": ("inconsistency", False),
+}
+
+
 def collect_wg_cases() -> list[WgCase]:
     """Catalog OWL WG approved DL tests from all.rdf (stub entries until OFN extraction)."""
     all_rdf = RES_ROOT / "owl_wg_tests/ontologies/all.rdf"
@@ -1091,6 +1102,12 @@ def promote_wg_from_disk() -> None:
             row["premise_ofn"] = f"wg/{test_id}/premise.rdf"
             if conc.is_file():
                 row["conclusion_ofn"] = f"wg/{test_id}/conclusion.rdf"
+            if row.get("expected_entailment") is None:
+                override = WG_CONSISTENCY_OVERRIDES.get(test_id)
+                if override is not None:
+                    test_type, expected = override
+                    row["test_type"] = test_type
+                    row["expected_consistent"] = expected
             if test_id in PROMOTED_WG_IDS:
                 row["status"] = "wg"
                 row["ignore_reason"] = None

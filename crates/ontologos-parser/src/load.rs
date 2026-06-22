@@ -97,8 +97,12 @@ pub fn load_ontology_with_limits_and_base(
         let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&expanded);
         let typed_nodes =
             crate::rdf_preprocess::materialize_typed_node_elements(&injected);
+        let intersections =
+            crate::rdf_preprocess::normalize_class_intersection_definitions(&typed_nodes);
+        let named_individuals =
+            crate::rdf_preprocess::materialize_named_individual_descriptions(&intersections);
         let individuals =
-            crate::rdf_preprocess::materialize_anonymous_individual_descriptions(&typed_nodes);
+            crate::rdf_preprocess::materialize_anonymous_individual_descriptions(&named_individuals);
         let normalized =
             crate::rdf_preprocess::normalize_all_different_members(&individuals);
         let disjoint =

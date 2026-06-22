@@ -64,7 +64,6 @@ fn hermit_owl_wg_tests_datatype_2ddatacomplementof_2d001() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_datatype_2dfloat_2ddiscrete_2d001() {
     run_wg_case("owl_wg_tests.Datatype-2DFloat-2DDiscrete-2D001");
 }
@@ -1307,13 +1306,11 @@ fn hermit_owl_wg_tests_testcase_3awebont_2dontology_2d004() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2drestriction_2d001() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D001");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2drestriction_2d002() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D002");
 }
@@ -1508,7 +1505,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d016() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d017() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D017");
 }
@@ -1596,7 +1592,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d032() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d033() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D033");
 }
@@ -1742,7 +1737,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d602() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d603() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D603");
 }
@@ -1775,31 +1769,26 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d609() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d610() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D610");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d611() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D611");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d612() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D612");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d613() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D613");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d614() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D614");
 }
@@ -1815,7 +1804,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d616() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d617() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D617");
 }
@@ -1852,7 +1840,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d628() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d629() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D629");
 }
@@ -1868,7 +1855,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d631() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d632() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D632");
 }
@@ -1884,19 +1870,16 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d634() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d641() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D641");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d642() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D642");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d643() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D643");
 }
@@ -1907,7 +1890,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d644() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d646() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D646");
 }
@@ -1936,7 +1918,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d667() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d901() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D901");
 }
@@ -2055,7 +2036,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2dequivalentclass_2d003() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2dequivalentclass_2d004() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DequivalentClass-2D004");
 }
@@ -2156,7 +2136,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2dinverseof_2d001() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2dmaxcardinality_2d001() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DmaxCardinality-2D001");
 }

@@ -65,27 +65,36 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if !datatype::is_datatype_consistent(ontology) {
         return Ok(false);
     }
-    if abox_typed_unsatisfiable_class(ontology)? {
-        return Ok(false);
-    }
     let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    if abox_typed_unsatisfiable_class(ontology, &dl, &seed)? {
+        return Ok(false);
+    }
     ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)
 }
 
-fn abox_typed_unsatisfiable_class(ontology: &Ontology) -> Result<bool> {
-    let taxonomy = classify(ontology)?;
+fn abox_typed_unsatisfiable_class(
+    ontology: &Ontology,
+    dl: &ontologos_alc::DlOntology,
+    seed: &TableauSeed,
+) -> Result<bool> {
     let store = ontology.dl();
     for axiom in store.axioms() {
         let DlAxiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
-        let Some(ontologos_core::ClassExpr::Atomic(entity)) = store.ce(*class) else {
-            continue;
+        let test_ce = match store.ce(*class) {
+            Some(ontologos_core::ClassExpr::Atomic(entity)) => {
+                if !ontologos_alc::is_named_class_satisfiable_with_seed(dl, *entity, seed)? {
+                    return Ok(true);
+                }
+                continue;
+            }
+            _ => *class,
         };
-        if taxonomy.unsatisfiable.contains(entity) {
+        if !ontologos_alc::is_ce_satisfiable_with_seed(dl, test_ce, seed)? {
             return Ok(true);
         }
     }
@@ -93,7 +102,7 @@ fn abox_typed_unsatisfiable_class(ontology: &Ontology) -> Result<bool> {
         let ontologos_core::Axiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
-        if taxonomy.unsatisfiable.contains(class) {
+        if !ontologos_alc::is_named_class_satisfiable_with_seed(dl, *class, seed)? {
             return Ok(true);
         }
     }
