@@ -108,11 +108,7 @@ impl HyperClauseSet {
     /// Serialize to HermiT test strings (sorted multiset).
     #[must_use]
     pub fn to_strings(&self) -> Vec<String> {
-        let mut out: Vec<String> = self
-            .clauses
-            .iter()
-            .map(format_hyper_clause)
-            .collect();
+        let mut out: Vec<String> = self.clauses.iter().map(format_hyper_clause).collect();
         out.extend(self.facts.iter().map(format_hyper_atom));
         out.sort();
         out

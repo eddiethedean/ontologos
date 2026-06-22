@@ -61,8 +61,7 @@ fn triage(case: &str) -> bool {
     let seed = TableauSeed::default();
     let unsat_iri = "http://oiled.man.example.net/test#Unsatisfiable";
     if let Some(unsat) = ont.lookup_entity(unsat_iri) {
-        let class_sat =
-            is_named_class_satisfiable_with_seed(&dl, unsat, &seed).expect("class sat");
+        let class_sat = is_named_class_satisfiable_with_seed(&dl, unsat, &seed).expect("class sat");
         eprintln!("Unsatisfiable class SAT={class_sat}");
     }
 
