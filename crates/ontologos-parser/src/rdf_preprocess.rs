@@ -243,7 +243,8 @@ fn parse_xmlns(input: &str) -> HashMap<String, String> {
         return map;
     };
     let root_tag = &input[root_start..root_start + root_end + 1];
-    for token in root_tag.split_whitespace() {
+    let root_inner = root_tag.trim_end().strip_suffix('>').unwrap_or(root_tag);
+    for token in root_inner.split_whitespace() {
         if let Some((prefix, iri)) = token.strip_prefix("xmlns:").and_then(|rest| rest.split_once('='))
         {
             if let Some(iri) = trim_xml_attr_value(iri) {
@@ -1720,5 +1721,58 @@ mod tests {
             }
         }
         assert!(dupes.is_empty(), "duplicate ids remain: {dupes:?}");
+    }
+
+    #[test]
+    fn parse_xmlns_multiline_root_with_trailing_angle() {
+        let input = r#"<rdf:RDF 
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:oiled="http://oiled.man.example.net/test#">
+ <oiled:Unsatisfiable/>
+</rdf:RDF>"#;
+        let xmlns = parse_xmlns(input);
+        assert_eq!(
+            xmlns.get("oiled"),
+            Some(&"http://oiled.man.example.net/test#".to_owned())
+        );
+        let out = materialize_typed_node_elements(input);
+        assert!(out.contains("#_:tn1"));
+        assert!(!out.contains("<oiled:Unsatisfiable/>"));
+    }
+
+    #[test]
+    fn dl035_materialize_typed_node_on_fixture() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D035/premise.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let out = materialize_typed_node_elements(&expanded);
+        assert!(out.contains("#_:tn1"));
+        assert!(!out.contains("<oiled:Unsatisfiable/>"));
+    }
+
+    #[test]
+    fn dl035_preprocess_retains_typed_node_and_spy_individual() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D035/premise.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let injected = inject_rdf_based_punning_declarations(&expanded);
+        let typed = materialize_typed_node_elements(&injected);
+        assert!(
+            typed.contains("#_:tn1"),
+            "typed node not materialized:\n{typed}"
+        );
+        assert!(!typed.contains("<oiled:Unsatisfiable/>"));
+        let intersections = normalize_class_intersection_definitions(&typed);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let individuals = materialize_anonymous_individual_descriptions(&named);
+        assert!(individuals.contains("test#spy"));
+        assert!(individuals.contains("owl:NamedIndividual"));
     }
 }

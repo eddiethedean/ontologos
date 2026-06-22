@@ -1558,7 +1558,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d034() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d035() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D035");
 }

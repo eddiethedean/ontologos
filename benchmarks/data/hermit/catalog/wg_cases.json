@@ -3324,13 +3324,13 @@
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D035",
     "test_type": "inconsistency",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D035/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
     "expected_consistent": false,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D040",

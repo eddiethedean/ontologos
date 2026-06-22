@@ -31,7 +31,6 @@ fn check(case: &str) {
 }
 
 #[test]
-#[ignore = "tableau completeness: dl-035 spy-point"]
 fn wg_dl035() {
     check("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D035");
 }
