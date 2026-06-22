@@ -83,7 +83,7 @@ def load_promoted_wg_ids() -> set[str]:
     for line in PROMOTED_WG_PATH.read_text().splitlines():
         line = line.strip()
         if line and not line.startswith("#"):
-            out.add(line.split(".")[-1] if "." in line else line)
+            out.add(line)
     return out
 
 
@@ -984,7 +984,8 @@ def write_wg_fixture(test_id: str, block: str) -> tuple[str | None, str | None]:
     return prem_rel, conc_rel
 
 
-# Manifest extraction sometimes tags inconsistency fixtures as ConsistencyTest.
+# Manifest extraction sometimes tags inconsistency fixtures as ConsistencyTest or
+# PositiveEntailmentTest when the WG export embeds a bogus conclusion document.
 WG_CONSISTENCY_OVERRIDES: dict[str, tuple[str, bool]] = {
     "TestCase-3AWebOnt-2Ddescription-2Dlogic-2D017": ("inconsistency", False),
     "TestCase-3AWebOnt-2Ddescription-2Dlogic-2D033": ("inconsistency", False),
@@ -992,6 +993,7 @@ WG_CONSISTENCY_OVERRIDES: dict[str, tuple[str, bool]] = {
     "TestCase-3AWebOnt-2DRestriction-2D001": ("inconsistency", False),
     "TestCase-3AWebOnt-2DRestriction-2D002": ("inconsistency", False),
     "TestCase-3AWebOnt-2DmaxCardinality-2D001": ("inconsistency", False),
+    "TestCase-3AWebOnt-2DI4.5-2D002": ("inconsistency", False),
 }
 
 
@@ -1100,14 +1102,15 @@ def promote_wg_from_disk() -> None:
         conc = OUT_WG_DATA / test_id / "conclusion.rdf"
         if prem.is_file():
             row["premise_ofn"] = f"wg/{test_id}/premise.rdf"
-            if conc.is_file():
+            override = WG_CONSISTENCY_OVERRIDES.get(test_id)
+            if override is not None:
+                test_type, expected = override
+                row["test_type"] = test_type
+                row["expected_consistent"] = expected
+                row["expected_entailment"] = None
+                row["conclusion_ofn"] = None
+            elif conc.is_file():
                 row["conclusion_ofn"] = f"wg/{test_id}/conclusion.rdf"
-            if row.get("expected_entailment") is None:
-                override = WG_CONSISTENCY_OVERRIDES.get(test_id)
-                if override is not None:
-                    test_type, expected = override
-                    row["test_type"] = test_type
-                    row["expected_consistent"] = expected
             if test_id in PROMOTED_WG_IDS:
                 row["status"] = "wg"
                 row["ignore_reason"] = None

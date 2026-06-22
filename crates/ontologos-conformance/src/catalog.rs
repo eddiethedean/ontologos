@@ -709,7 +709,7 @@ pub fn write_promoted_wg_ids(ids: &[String]) -> std::io::Result<()> {
         "# Re-run: cargo run --release -p ontologos-conformance --bin promote_wg".to_string(),
     ];
     for id in ids {
-        let short = id.rsplit('.').next().unwrap_or(id);
+        let short = id.split_once('.').map(|(_, rest)| rest).unwrap_or(id);
         lines.push(short.to_string());
     }
     std::fs::write(path, lines.join("\n") + "\n")
