@@ -22,6 +22,7 @@ mod limits;
 mod load;
 mod map;
 mod map_dl;
+mod map_swrl;
 mod rdf_preprocess;
 mod read;
 mod report;

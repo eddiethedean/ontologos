@@ -687,8 +687,13 @@ def infer_status(case: HermitCase) -> None:
         case.hand_written = True
         return
     if case.id.startswith(DEFERRED_PREFIXES):
-        case.status = "planned"
-        case.ignore_reason = "SWRL — deferred out of scope for OntoLogos 1.x"
+        if case.axiom_ofn:
+            case.status = "swrl"
+            case.tier = "A"
+            case.ignore_reason = None
+        else:
+            case.status = "planned"
+            case.ignore_reason = "SWRL — deferred out of scope for OntoLogos 1.x"
         return
     if case.axiom_ofn and "Clausification" in case.java_class:
         case.status = "clausify"
@@ -937,13 +942,10 @@ def write_rust(cases: list[HermitCase]) -> None:
             lines.append(f"// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs")
             lines.append(f"#[test]")
             lines.append(f"#[ignore = \"implemented in hand-written module: {case.rust_test}\"]")
-        elif case.status in ("excluded", "deferred", "internal", "planned", "swrl", "migrated") and case.ignore_reason:
+        elif case.status in ("excluded", "deferred", "internal", "planned", "migrated") and case.ignore_reason:
             reason = case.ignore_reason.replace('"', '\\"')
             lines.append(f"#[test]")
             lines.append(f'#[ignore = "{reason}"]')
-        elif case.status == "swrl":
-            lines.append(f"#[test]")
-            lines.append(f'#[ignore = "SWRL — requires ontologos-swrl engine"]')
         elif case.status == "fixture":
             lines.append(f"#[test]")
             if case.fixture in MISSING_FIXTURES:

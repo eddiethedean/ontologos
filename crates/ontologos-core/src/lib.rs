@@ -49,6 +49,7 @@ mod parse_meta;
 mod reasoner;
 mod serialize;
 mod session;
+mod swrl;
 mod taxonomy;
 mod trace;
 
@@ -64,6 +65,7 @@ pub use ontology::{Ontology, OntologyBuilder};
 pub use parse_meta::{OwlConstruct, ParseMeta, ParseMetaSummary};
 pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
 pub use session::ReasonerSession;
+pub use swrl::{SwrlAtom, SwrlDArg, SwrlIArg, SwrlRule};
 pub use taxonomy::Taxonomy;
 pub use trace::{InferenceTrace, TraceConclusion, TracePremise, TraceStep};
 

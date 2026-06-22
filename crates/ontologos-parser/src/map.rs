@@ -352,9 +352,12 @@ impl Mapper<'_> {
             }
             Component::DeclareAnnotationProperty(_) => {}
             Component::OntologyID(_) | Component::DocIRI(_) => {}
-            Component::Rule(_) => {
+            Component::Rule(rule) => {
                 self.report.meta.note_construct(OwlConstruct::SwrlRule);
-                if !self.map_dl_swrl_rule() {
+                if let Some(swrl) = self.map_swrl_rule(&rule) {
+                    let _ = self.ontology.push_swrl_rule(swrl);
+                    let _ = self.map_dl_swrl_rule();
+                } else {
                     self.skip("SWRL rule not mapped in v0.2");
                 }
             }

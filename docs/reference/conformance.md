@@ -60,7 +60,7 @@ The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL too
 | Explanations | Available (EL traces; RL/RDFS asserted-only until reasonable exposes diagnostics) |
 | Large DL corpora (GALEN, SNOMED) | Optional stress tests only |
 | Wine / galen / propreo `ClassificationTest` | Active via parser preprocess (entities, `rdf:ID`) |
-| SWRL `RulesTest` (24 cases) | Deferred out of scope for 1.x |
+| SWRL `RulesTest` (24 cases) | Active via `ontologos-swrl` forward chaining |
 
 ## Benchmark corpora
 

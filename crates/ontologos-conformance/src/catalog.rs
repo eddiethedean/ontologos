@@ -118,15 +118,23 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
 
     let mut ontology = load_ontology(&path).map_err(|e| format!("{}: load: {e}", case.id))?;
 
+    if case.engine == "swrl" {
+        ontologos_swrl::apply_swrl_rules(&mut ontology)
+            .map_err(|e| format!("{}: swrl: {e}", case.id))?;
+    }
+
     if case.engine == "dl" || case.engine == "swrl" {
         if !case.subsumptions.is_empty() {
-            let taxonomy =
-                ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?;
+            let taxonomy = if case.engine == "swrl" {
+                ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+            } else {
+                ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+            };
             check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
         }
         if let Some(expected) = case.consistent {
-            let consistent =
-                ontologos_dl::is_consistent(&ontology).map_err(|e| format!("{}: {e}", case.id))?;
+            let consistent = ontologos_dl::is_consistent(&ontology)
+                .map_err(|e| format!("{}: {e}", case.id))?;
             if consistent != expected {
                 return Err(format!(
                     "{}: consistency expected {expected}, got {consistent}",
@@ -367,6 +375,10 @@ fn run_axiom_case(case: &HermitCase) {
 
     let mut ontology = load_ontology(&path).expect("load axiom ofn");
 
+    if case.engine == "swrl" {
+        ontologos_swrl::apply_swrl_rules(&mut ontology).expect("swrl rules");
+    }
+
     if case.engine == "dl" || case.engine == "swrl" {
         if !case.subsumptions.is_empty() {
             let taxonomy = ontologos_dl::classify(&ontology).expect("dl classify");
@@ -415,19 +427,7 @@ fn saturate_for_consistency(case: &HermitCase, ontology: &mut Ontology) -> bool 
 }
 
 fn run_swrl_case(case: &HermitCase) {
-    let rel = case
-        .axiom_ofn
-        .as_ref()
-        .expect("swrl case missing axiom_ofn");
-    let path = hermit_data_path(rel);
-    let ontology = load_ontology(&path).expect("load swrl ofn");
-    let (_taxonomy, _report) =
-        ontologos_swrl::classify_with_swrl(&ontology).expect("swrl classify");
-    check_subsumptions_dl(
-        &ontology,
-        &ontologos_dl::classify(&ontology).expect("dl"),
-        case,
-    );
+    check_axiom_case(case).expect("swrl case");
 }
 
 fn check_subsumptions(ontology: &Ontology, case: &HermitCase) {

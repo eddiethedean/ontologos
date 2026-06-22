@@ -8,6 +8,7 @@ use crate::error::{Error, Result};
 use crate::graph::{AxiomIndex, AxiomStore};
 use crate::iri::{validate_iri, InternPool, IriId};
 use crate::parse_meta::ParseMeta;
+use crate::swrl::SwrlRule;
 
 /// In-memory ontology with interned IRIs, typed entities, and indexed axioms.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,6 +20,7 @@ pub struct Ontology {
     pub(crate) revision: OntologyRevision,
     pub(crate) dirty: DirtySet,
     pub(crate) dl: DlStore,
+    pub(crate) swrl_rules: Vec<SwrlRule>,
     #[doc(hidden)]
     pub parse_meta: Option<ParseMeta>,
 }
@@ -41,6 +43,7 @@ impl Ontology {
             revision: OntologyRevision::default(),
             dirty: DirtySet::default(),
             dl: DlStore::new(),
+            swrl_rules: Vec::new(),
             parse_meta: None,
         }
     }
@@ -90,6 +93,18 @@ impl Ontology {
     /// Mutable DL store (parser / reasoner ingestion).
     pub fn dl_mut(&mut self) -> &mut DlStore {
         &mut self.dl
+    }
+
+    /// DLSafe SWRL rules parsed from the ontology.
+    #[must_use]
+    pub fn swrl_rules(&self) -> &[SwrlRule] {
+        &self.swrl_rules
+    }
+
+    /// Append a parsed SWRL rule (parser / tests).
+    pub fn push_swrl_rule(&mut self, rule: SwrlRule) -> Result<()> {
+        self.swrl_rules.push(rule);
+        Ok(())
     }
 
     /// Monotonic edit revision (incremented on add/remove).
