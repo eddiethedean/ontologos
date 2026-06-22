@@ -4,6 +4,8 @@ use std::collections::{HashMap, HashSet};
 
 use crate::{Error, Result};
 
+const BUILTIN_PREFIXES: &[&str] = &["rdf", "owl", "rdfs", "xsd", "xml"];
+
 /// Expand `<!ENTITY ...>` declarations in RDF/XML prolog.
 #[must_use]
 pub fn expand_xml_entities(input: &str) -> String {
@@ -150,6 +152,335 @@ pub fn expand_xml_entities_with_limit(input: &str, max_bytes: usize) -> Result<S
     Ok(out)
 }
 
+/// Inject explicit `owl:Class` / property declarations for RDF-Based Semantics punning.
+///
+/// Horned-OWL requires typed entities before `equivalentClass`, `disjointWith`, and
+/// `equivalentProperty` axioms; OWL WG RDF-based fixtures often rely on punning only.
+#[must_use]
+pub fn inject_rdf_based_punning_declarations(input: &str) -> String {
+    if !input.contains("equivalentClass")
+        && !input.contains("equivalentProperty")
+        && !input.contains("propertyDisjointWith")
+        && !input.contains("disjointWith")
+    {
+        return input.to_owned();
+    }
+
+    let Some(insert_at) = find_rdf_open_body_start(input) else {
+        return input.to_owned();
+    };
+
+    let xmlns = parse_xmlns(input);
+    let declared_classes = declared_iris(input, "owl:Class");
+    let declared_object = declared_iris(input, "owl:ObjectProperty");
+    let declared_datatype = declared_iris(input, "owl:DatatypeProperty");
+
+    let mut classes = HashSet::new();
+    let mut object_props = HashSet::new();
+    let mut datatype_props = HashSet::new();
+
+    collect_class_axiom_iris(input, &mut classes);
+    collect_property_axiom_iris(input, &mut object_props);
+    collect_punned_class_iris(input, &xmlns, &mut classes);
+    collect_punned_property_iris(input, &xmlns, &mut object_props, &mut datatype_props);
+
+    classes.retain(|iri| !declared_classes.contains(iri));
+    object_props.retain(|iri| {
+        !declared_object.contains(iri) && !declared_datatype.contains(iri)
+    });
+    datatype_props.retain(|iri| {
+        !declared_object.contains(iri) && !declared_datatype.contains(iri)
+    });
+
+    // Property axioms without usage clues default to object properties, except WG `dp`.
+    for iri in object_props.clone() {
+        if datatype_property_fallback(&iri) {
+            object_props.remove(&iri);
+            datatype_props.insert(iri);
+        }
+    }
+
+    if classes.is_empty() && object_props.is_empty() && datatype_props.is_empty() {
+        return input.to_owned();
+    }
+
+    let mut injections = String::new();
+    let mut class_list: Vec<_> = classes.into_iter().collect();
+    class_list.sort();
+    for iri in class_list {
+        injections.push_str(&format!("  <owl:Class rdf:about=\"{iri}\"/>\n"));
+    }
+    let mut object_list: Vec<_> = object_props.into_iter().collect();
+    object_list.sort();
+    for iri in object_list {
+        injections.push_str(&format!("  <owl:ObjectProperty rdf:about=\"{iri}\"/>\n"));
+    }
+    let mut datatype_list: Vec<_> = datatype_props.into_iter().collect();
+    datatype_list.sort();
+    for iri in datatype_list {
+        injections.push_str(&format!("  <owl:DatatypeProperty rdf:about=\"{iri}\"/>\n"));
+    }
+
+    let mut out = String::with_capacity(input.len() + injections.len());
+    out.push_str(&input[..insert_at]);
+    out.push_str(&injections);
+    out.push_str(&input[insert_at..]);
+    out
+}
+
+fn find_rdf_open_body_start(input: &str) -> Option<usize> {
+    let root_start = input.find("<rdf:RDF")?;
+    let root_end = input[root_start..].find('>')? + root_start + 1;
+    Some(root_end)
+}
+
+fn parse_xmlns(input: &str) -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    let Some(root_start) = input.find("<rdf:RDF") else {
+        return map;
+    };
+    let Some(root_end) = input[root_start..].find('>') else {
+        return map;
+    };
+    let root_tag = &input[root_start..root_start + root_end + 1];
+    for token in root_tag.split_whitespace() {
+        if let Some((prefix, iri)) = token.strip_prefix("xmlns:").and_then(|rest| rest.split_once('='))
+        {
+            if let Some(iri) = trim_xml_attr_value(iri) {
+                map.insert(prefix.to_owned(), iri);
+            }
+        } else if let Some(iri) = token.strip_prefix("xmlns=").and_then(trim_xml_attr_value) {
+            map.insert(String::new(), iri);
+        }
+    }
+    map
+}
+
+fn trim_xml_attr_value(raw: &str) -> Option<String> {
+    let raw = raw.trim();
+    if (raw.starts_with('"') && raw.ends_with('"')) || (raw.starts_with('\'') && raw.ends_with('\''))
+    {
+        Some(raw[1..raw.len() - 1].to_owned())
+    } else {
+        None
+    }
+}
+
+fn expand_qname(qname: &str, xmlns: &HashMap<String, String>) -> Option<String> {
+    let (prefix, local) = qname.split_once(':')?;
+    if BUILTIN_PREFIXES.contains(&prefix) {
+        return None;
+    }
+    let base = xmlns.get(prefix)?;
+    Some(format!("{base}{local}"))
+}
+
+fn declared_iris(input: &str, element: &str) -> HashSet<String> {
+    let open = format!("<{element}");
+    let mut out = HashSet::new();
+    let mut pos = 0usize;
+    while let Some(rel) = input[pos..].find(&open) {
+        let start = pos + rel;
+        let Some(tag_end) = input[start..].find('>') else {
+            break;
+        };
+        let tag = &input[start..start + tag_end + 1];
+        if let Some(iri) = extract_attribute(tag, "rdf:about") {
+            out.insert(iri);
+        }
+        pos = start + tag_end + 1;
+    }
+    out
+}
+
+fn extract_attribute(tag: &str, name: &str) -> Option<String> {
+    let needle = format!("{name}=\"");
+    let idx = tag.find(&needle)?;
+    let rest = &tag[idx + needle.len()..];
+    let end = rest.find('"')?;
+    Some(rest[..end].to_owned())
+}
+
+fn collect_class_axiom_iris(input: &str, out: &mut HashSet<String>) {
+    for tag in ["owl:equivalentClass", "owl:disjointWith"] {
+        collect_axiom_endpoint_iris(input, tag, out);
+    }
+}
+
+fn collect_property_axiom_iris(input: &str, out: &mut HashSet<String>) {
+    for tag in ["owl:equivalentProperty", "owl:propertyDisjointWith"] {
+        collect_axiom_endpoint_iris(input, tag, out);
+    }
+}
+
+fn collect_axiom_endpoint_iris(input: &str, tag: &str, out: &mut HashSet<String>) {
+    let open = format!("<{tag}");
+    let mut pos = 0usize;
+    while let Some(rel) = input[pos..].find(&open) {
+        let start = pos + rel;
+        let Some(tag_end) = input[start..].find('>') else {
+            break;
+        };
+        let end = start + tag_end + 1;
+        let fragment = &input[start..end];
+        if let Some(iri) = extract_attribute(fragment, "rdf:resource") {
+            out.insert(iri);
+        }
+        if let Some(iri) = find_enclosing_rdf_about(input, start) {
+            out.insert(iri);
+        }
+        pos = end;
+    }
+}
+
+fn find_enclosing_rdf_about(input: &str, from: usize) -> Option<String> {
+    let head = &input[..from];
+    let desc = "<rdf:Description";
+    let mut search = head.len();
+    while search > 0 {
+        let Some(rel) = head[..search].rfind(desc) else {
+            break;
+        };
+        let start = rel;
+        let Some(tag_end) = head[start..].find('>') else {
+            search = start;
+            continue;
+        };
+        let tag = &head[start..start + tag_end + 1];
+        let Some(about) = extract_attribute(tag, "rdf:about") else {
+            search = start;
+            continue;
+        };
+        if description_encloses_position(input, start, from) {
+            return Some(about);
+        }
+        search = start;
+    }
+    None
+}
+
+fn description_encloses_position(input: &str, desc_start: usize, pos: usize) -> bool {
+    let Some(open_end) = input[desc_start..].find('>') else {
+        return false;
+    };
+    let open_tag = &input[desc_start..desc_start + open_end + 1];
+    if !open_tag.starts_with("<rdf:Description") {
+        return false;
+    }
+    let mut depth = 1usize;
+    let mut search = desc_start + open_end + 1;
+    while depth > 0 && search < input.len() {
+        let Some(rel) = input[search..].find('<') else {
+            break;
+        };
+        let abs = search + rel;
+        let Some(tag_end) = input[abs..].find('>') else {
+            break;
+        };
+        let tag = &input[abs..abs + tag_end + 1];
+        if tag.starts_with("</rdf:Description") {
+            depth -= 1;
+            if depth == 0 {
+                return pos < abs + tag_end + 1;
+            }
+        } else if tag.starts_with("<rdf:Description") && !tag.ends_with("/>") {
+            depth += 1;
+        }
+        search = abs + tag_end + 1;
+    }
+    false
+}
+
+fn collect_punned_class_iris(input: &str, xmlns: &HashMap<String, String>, out: &mut HashSet<String>) {
+    let mut pos = 0usize;
+    while pos < input.len() {
+        let Some(rel) = input[pos..].find('<') else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(tag_end) = input[start..].find('>') else {
+            break;
+        };
+        let tag = &input[start..start + tag_end + 1];
+        if tag.starts_with("<!--") || tag.starts_with("<!") || tag.starts_with("<?") {
+            pos = start + tag_end + 1;
+            continue;
+        }
+        if let Some(name) = element_qname(tag) {
+            if let Some(iri) = expand_qname(name, xmlns) {
+                if tag.contains("rdf:about=\"") {
+                    out.insert(iri);
+                }
+            }
+        }
+        pos = start + tag_end + 1;
+    }
+}
+
+fn collect_punned_property_iris(
+    input: &str,
+    xmlns: &HashMap<String, String>,
+    object_props: &mut HashSet<String>,
+    datatype_props: &mut HashSet<String>,
+) {
+    let mut pos = 0usize;
+    while pos < input.len() {
+        let Some(rel) = input[pos..].find('<') else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(tag_end) = input[start..].find('>') else {
+            break;
+        };
+        let tag = &input[start..start + tag_end + 1];
+        if tag.starts_with("<!--") || tag.starts_with("<!") || tag.starts_with("<?") {
+            pos = start + tag_end + 1;
+            continue;
+        }
+        let Some(name) = element_qname(tag) else {
+            pos = start + tag_end + 1;
+            continue;
+        };
+        let Some(iri) = expand_qname(name, xmlns) else {
+            pos = start + tag_end + 1;
+            continue;
+        };
+        if tag.contains("rdf:resource=\"") {
+            object_props.insert(iri);
+        } else if tag.contains("rdf:datatype=\"") || has_literal_body(input, start + tag_end + 1, name)
+        {
+            datatype_props.insert(iri);
+        }
+        pos = start + tag_end + 1;
+    }
+}
+
+fn element_qname(open_tag: &str) -> Option<&str> {
+    let inner = open_tag.strip_prefix('<')?.trim_end_matches('>').trim();
+    if inner.starts_with('/') {
+        return None;
+    }
+    let name = inner.split_whitespace().next()?;
+    if name.contains(':') && !name.starts_with("rdf:") && !name.starts_with("owl:") {
+        Some(name)
+    } else {
+        None
+    }
+}
+
+fn has_literal_body(input: &str, body_start: usize, qname: &str) -> bool {
+    let close = format!("</{qname}>");
+    let Some(rel) = input[body_start..].find(&close) else {
+        return false;
+    };
+    let body = input[body_start..body_start + rel].trim();
+    !body.is_empty() && !body.starts_with('<')
+}
+
+fn datatype_property_fallback(iri: &str) -> bool {
+    iri.rsplit('#').next().is_some_and(|local| local == "dp")
+}
+
 fn parse_entity_decl(rest: &str) -> Option<(String, String)> {
     let rest = rest.strip_prefix("<!ENTITY")?.trim();
     let (name, rest) = rest.split_once(|c: char| c.is_whitespace())?;
@@ -227,6 +558,46 @@ mod tests {
         assert_eq!(out.matches("rdf:ID=\"Wine\"").count(), 1);
         assert!(out.contains("first"));
         assert!(!out.contains("equivalentClass"));
+    }
+
+    #[test]
+    fn injects_nested_class_declarations_for_subst_fixture() {
+        let input = include_str!(
+            "../../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubst/premise.rdf"
+        );
+        let out = inject_rdf_based_punning_declarations(input);
+        assert!(out.contains("<owl:Class rdf:about=\"http://www.example.org#c1\"/>"));
+        assert!(out.contains("<owl:Class rdf:about=\"http://www.example.org#d1\"/>"));
+    }
+
+    #[test]
+    fn injects_class_declarations_for_rdf_based_equivalent_class() {
+        let input = include_str!(
+            "../../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dinst/premise.rdf"
+        );
+        let out = inject_rdf_based_punning_declarations(input);
+        assert!(out.contains("<owl:Class rdf:about=\"http://www.example.org#c1\"/>"));
+        assert!(out.contains("<owl:Class rdf:about=\"http://www.example.org#c2\"/>"));
+    }
+
+    #[test]
+    fn injects_property_declarations_for_rdf_based_equivalent_property() {
+        let input = include_str!(
+            "../../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dinst/premise.rdf"
+        );
+        let out = inject_rdf_based_punning_declarations(input);
+        assert!(out.contains("<owl:ObjectProperty rdf:about=\"http://www.example.org#p1\"/>"));
+        assert!(out.contains("<owl:ObjectProperty rdf:about=\"http://www.example.org#p2\"/>"));
+    }
+
+    #[test]
+    fn injects_datatype_property_for_rdf_based_rflxv_conclusion() {
+        let input = include_str!(
+            "../../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Drflxv/conclusion.rdf"
+        );
+        let out = inject_rdf_based_punning_declarations(input);
+        assert!(out.contains("<owl:DatatypeProperty rdf:about=\"http://www.example.org#dp\"/>"));
+        assert!(out.contains("<owl:ObjectProperty rdf:about=\"http://www.example.org#op\"/>"));
     }
 
     #[test]

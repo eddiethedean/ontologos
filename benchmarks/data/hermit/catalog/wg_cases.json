@@ -1256,13 +1256,13 @@
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisclass-2Deqclass",
     "test_type": "inconsistency",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Ddisclass-2Deqclass/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
     "expected_consistent": false,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisclass-2Dinst",
@@ -1289,189 +1289,189 @@
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Deqprop",
     "test_type": "inconsistency",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Deqprop/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
     "expected_consistent": false,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dinst",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dinst/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dinst/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dirrflxv",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dirrflxv/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dirrflxv/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dinst",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dinst/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dinst/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Drflxv",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Drflxv/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Drflxv/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubclass-2D1",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubclass-2D1/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubclass-2D1/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubclass-2D2",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubclass-2D2/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubclass-2D2/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubst",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubst/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubst/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsym",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsym/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsym/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dtrans",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dtrans/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dtrans/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dinst",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dinst/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dinst/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Drflxv",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Drflxv/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Drflxv/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubprop-2D1",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubprop-2D1/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubprop-2D1/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubprop-2D2",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubprop-2D2/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubprop-2D2/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubst",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubst/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubst/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsym",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsym/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsym/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dtrans",
     "test_type": "positive_entailment",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dtrans/premise.rdf",
     "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dtrans/conclusion.rdf",
     "expected_entailment": true,
     "expected_consistent": null,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Dsameas-2Drflxv",

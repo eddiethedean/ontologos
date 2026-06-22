@@ -600,7 +600,6 @@ fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2ddifferent_2dsameas() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2ddisclass_2deqclass() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisclass-2Deqclass");
 }
@@ -617,103 +616,86 @@ fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2ddisclass_2dirrflxv() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2ddisprop_2deqprop() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Deqprop");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2ddisprop_2dinst() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dinst");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2ddisprop_2dirrflxv() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dirrflxv");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqclass_2dinst() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dinst");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqclass_2drflxv() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Drflxv");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqclass_2dsubclass_2d1() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubclass-2D1");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqclass_2dsubclass_2d2() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubclass-2D2");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqclass_2dsubst() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsubst");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqclass_2dsym() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dsym");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqclass_2dtrans() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqclass-2Dtrans");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqprop_2dinst() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dinst");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqprop_2drflxv() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Drflxv");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqprop_2dsubprop_2d1() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubprop-2D1");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqprop_2dsubprop_2d2() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubprop-2D2");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqprop_2dsubst() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsubst");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqprop_2dsym() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dsym");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2deqdis_2deqprop_2dtrans() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Deqdis-2Deqprop-2Dtrans");
 }
