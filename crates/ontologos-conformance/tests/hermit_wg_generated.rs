@@ -151,7 +151,6 @@ fn hermit_owl_wg_tests_fs2rdf_2dsame_2dindividual_2d3_2dannotation_2dar() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_footnote_2dnot_2dabout_2dself() {
     run_wg_case("owl_wg_tests.Footnote-2Dnot-2Dabout-2Dself");
 }
@@ -379,7 +378,6 @@ fn hermit_owl_wg_tests_new_2dfeature_2dselfrestriction_2d002() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_new_2dfeature_2dtopobjectproperty_2d001() {
     run_wg_case("owl_wg_tests.New-2DFeature-2DTopObjectProperty-2D001");
 }

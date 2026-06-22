@@ -41,6 +41,10 @@ path = "src/bin/promote_wg.rs"
 name = "dl_failures"
 path = "src/bin/dl_failures.rs"
 
+[[bin]]
+name = "wg_failures"
+path = "src/bin/wg_failures.rs"
+
 [dev-dependencies]
 ontologos-conformance = { path = "." }
 ontologos-el = { workspace = true }

@@ -1,6 +1,6 @@
 //! Tableau expansion rules (∧, ∨, ∃, ∀, ¬).
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{CeId, ClassExpr, EntityId, RoleExpr};
 
@@ -284,7 +284,7 @@ fn existing_role_successor(
         .map(|(_, _, to)| *to)
 }
 
-fn existential_already_satisfied(
+pub(crate) fn existential_already_satisfied(
     branch: &Branch<'_>,
     world: usize,
     property: &RoleExpr,
@@ -400,6 +400,66 @@ fn ce_subsumes(branch: &Branch<'_>, sub: CeId, sup: CeId) -> bool {
     false
 }
 
+/// If a world has a reflexive role edge, assert matching `HasSelf` class expressions.
+pub(crate) fn materialize_has_self_from_loops(branch: &mut Branch<'_>) {
+    let store = branch.dl.core().dl();
+    let has_self: Vec<(CeId, EntityId)> = store
+        .expressions()
+        .filter_map(|(id, e)| match e {
+            ClassExpr::HasSelf(prop) => Some((id, *prop)),
+            _ => None,
+        })
+        .collect();
+    if has_self.is_empty() {
+        return;
+    }
+    let edges = branch.edges.clone();
+    for (from, role, to) in edges {
+        if from != to {
+            continue;
+        }
+        for &(ce, prop) in &has_self {
+            if role_subsumes(branch, &RoleExpr::Atomic(prop), &role) {
+                clash::assert_label(branch, from, ce);
+                if branch.clash {
+                    return;
+                }
+            }
+        }
+    }
+}
+
+/// Connect each named world to itself via `owl:topObjectProperty` when declared.
+pub(crate) fn materialize_top_object_property_loops(
+    branch: &mut Branch<'_>,
+    worlds: &HashMap<EntityId, usize>,
+) {
+    const TOP: &str = "http://www.w3.org/2002/07/owl#topObjectProperty";
+    let top = branch
+        .dl
+        .core()
+        .entities()
+        .iter()
+        .find_map(|(id, record)| {
+            branch
+                .dl
+                .core()
+                .resolve_iri(record.iri)
+                .ok()
+                .filter(|iri| *iri == TOP)
+                .map(|_| RoleExpr::Atomic(id))
+        });
+    let Some(top) = top else {
+        return;
+    };
+    for &world in worlds.values() {
+        add_role_edge(branch, world, top.clone(), world);
+        if branch.clash {
+            return;
+        }
+    }
+}
+
 /// Apply atomic `C ⊑ ∃R.D` and `C ⊑ HasValue(R, a)` when a world is labelled with `C`.
 pub(crate) fn drive_atomic_existential_subsumptions(branch: &mut Branch<'_>) {
     let subs = branch.tbox_subsumptions.clone();
@@ -464,6 +524,11 @@ pub(crate) fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce
             *from == world
                 && role_subsumes(branch, &property, role)
                 && world_structurally_satisfies(branch, *to, filler)
+        }),
+        ClassExpr::HasSelf(property) => branch.edges.iter().any(|(from, role, to)| {
+            *from == world
+                && *to == world
+                && role_subsumes(branch, &RoleExpr::Atomic(property), role)
         }),
         _ => false,
     }

@@ -128,6 +128,13 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
         return Ok(false);
     }
 
+    expand::materialize_top_object_property_loops(&mut branch, &worlds);
+    expand::materialize_has_self_from_loops(&mut branch);
+    clash::detect_clash(&mut branch);
+    if branch.clash {
+        return Ok(false);
+    }
+
     let ok = branch.expand()?;
     expand::saturate_composed_edges(&mut branch);
     if negative_object_property_assertions_clash(&branch) {
@@ -978,7 +985,11 @@ impl<'a> Branch<'a> {
     }
 
     fn assert(&mut self, world: usize, ce: CeId) {
-        clash::assert_label(self, world, ce);
+        if let Some(ClassExpr::Not(inner)) = self.dl.core().dl().ce(ce).cloned() {
+            clash::assert_negation(self, world, inner);
+        } else {
+            clash::assert_label(self, world, ce);
+        }
     }
 
     fn expand(&mut self) -> Result<bool, Error> {

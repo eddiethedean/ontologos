@@ -20,6 +20,7 @@ FS2RDF-2Dpropertychain-2D2-2Dar
 FS2RDF-2Dsame-2Dindividual-2D2-2Dannotation-2Dar
 FS2RDF-2Dsame-2Dindividual-2D2-2Dar
 FS2RDF-2Dsame-2Dindividual-2D3-2Dannotation-2Dar
+Footnote-2Dnot-2Dabout-2Dself
 Minus-2Dinf-2Dnot-2Dowlreal
 New-2DFeature-2DAnnotationAnnotations-2D001
 New-2DFeature-2DAsymmetricProperty-2D001
@@ -50,6 +51,7 @@ New-2DFeature-2DRational-2D003
 New-2DFeature-2DReflexiveProperty-2D001
 New-2DFeature-2DSelfRestriction-2D001
 New-2DFeature-2DSelfRestriction-2D002
+New-2DFeature-2DTopObjectProperty-2D001
 Owl2-2Drl-2Danonymous-2Dindividual
 Owl2-2Drl-2Dinvalid-2Dleftside-2Dallvaluesfrom
 Owl2-2Drl-2Dinvalid-2Dleftside-2Dmaxcard

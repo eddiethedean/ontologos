@@ -686,6 +686,17 @@ pub fn scan_all_passing_wg_cases() -> Vec<String> {
     passing
 }
 
+/// Planned WG cases that fail semantic checks (for triage).
+pub fn scan_planned_wg_failures() -> Vec<(String, String)> {
+    let mut failures: Vec<(String, String)> = read_wg_catalog_file()
+        .par_iter()
+        .filter(|case| case.status == "planned" && wg_case_runnable(case))
+        .filter_map(|case| check_wg_case(case).err().map(|e| (case.id.clone(), e)))
+        .collect();
+    failures.sort_by(|a, b| a.0.cmp(&b.0));
+    failures
+}
+
 pub fn promoted_wg_ids_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/catalog/promoted_wg_ids.txt")

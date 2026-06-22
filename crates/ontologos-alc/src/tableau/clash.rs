@@ -14,7 +14,7 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
     if branch.clash {
         return;
     }
-    for world in &branch.worlds {
+    for (world_idx, world) in branch.worlds.iter().enumerate() {
         for &ce in &world.labels {
             if world.negated.contains(&ce) {
                 branch.clash = true;
@@ -31,8 +31,32 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
                 }
             }
         }
+        for &neg_ce in &world.negated {
+            let Some(expr) = branch.dl.core().dl().ce(neg_ce).cloned() else {
+                continue;
+            };
+            if let ClassExpr::Some { property, filler } = expr {
+                if super::expand::existential_already_satisfied(
+                    branch,
+                    world_idx,
+                    &property,
+                    filler,
+                ) {
+                    branch.clash = true;
+                    return;
+                }
+            }
+        }
         for &(left, right) in &branch.disjoint {
             if world.labels.contains(&left) && world.labels.contains(&right) {
+                branch.clash = true;
+                return;
+            }
+            if (world.labels.contains(&left)
+                && super::expand::world_structurally_satisfies(branch, world_idx, right))
+                || (world.labels.contains(&right)
+                    && super::expand::world_structurally_satisfies(branch, world_idx, left))
+            {
                 branch.clash = true;
                 return;
             }
