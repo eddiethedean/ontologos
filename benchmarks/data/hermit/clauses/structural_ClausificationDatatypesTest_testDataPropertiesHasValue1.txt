@@ -1,0 +1,1 @@
+atLeast(1 :hasAge { "18"^^xsd:int })(X) :- :Eighteen(X)

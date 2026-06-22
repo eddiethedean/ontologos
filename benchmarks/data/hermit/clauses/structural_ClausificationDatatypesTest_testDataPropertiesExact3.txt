@@ -1,0 +1,1 @@
+:A(X) v atLeast(2 :dp xsd:integer)(X) v not(xsd:integer)(Y) :- :dp(X,Y)

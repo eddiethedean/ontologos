@@ -1,0 +1,3 @@
+{ "4.3"^^xsd:double "5"^^xsd:int }(X) :- defdata:0(X)
+{ "5"^^xsd:int }(X) :- defdata:0(X)
+:A(X) v atLeast(1 :dp defdata:0)(X) :- owl:Thing(X)

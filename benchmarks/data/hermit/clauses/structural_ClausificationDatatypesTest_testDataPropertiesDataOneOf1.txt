@@ -1,0 +1,1 @@
+{ "Peter" "19"^^xsd:int }(Y) :- :A(X), :dp(X,Y)

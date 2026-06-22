@@ -1,0 +1,1 @@
+:A(X) v not(xsd:string)(Y) :- :dp(X,Y)

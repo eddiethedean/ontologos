@@ -1,0 +1,1 @@
+:Eighteen(X) v not({ "18"^^xsd:int })(Y) :- :hasAge(X,Y)

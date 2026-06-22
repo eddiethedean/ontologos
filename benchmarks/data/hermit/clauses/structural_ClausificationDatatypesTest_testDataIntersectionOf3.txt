@@ -1,0 +1,6 @@
+def:0(:a)
+xsd:nonNegativeInteger(X) :- defdata:0(X)
+xsd:decimal(X) :- defdata:0(X)
+atLeast(2 :dp rdfs:Literal)(X) :- def:0(X)
+defdata:0(Y) :- :dp(X,Y)
+xsd:nonPositiveInteger(X) :- defdata:0(X)

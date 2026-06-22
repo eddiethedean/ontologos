@@ -313,8 +313,48 @@ fn run_clausify_case(case: &HermitCase) {
         "{}: skipped axioms during load: {:?}",
         case.id, meta.warnings
     );
-    let clauses = ontologos_alc::clausify(&mut ontology).expect("clausify");
-    assert!(!clauses.is_empty(), "{}: empty clause set", case.id);
+    let actual = ontologos_alc::clausify_hyper(&mut ontology).expect("clausify_hyper");
+    let golden_path = clause_golden_path(case);
+    assert!(
+        golden_path.is_file(),
+        "{}: missing clause golden {}",
+        case.id,
+        golden_path.display()
+    );
+    let golden_text = std::fs::read_to_string(&golden_path).expect("read clause golden");
+    let expected: Vec<String> = golden_text
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(str::to_owned)
+        .collect();
+    assert_clause_multiset_eq(&case.id, &expected, &actual);
+}
+
+fn clause_golden_path(case: &HermitCase) -> PathBuf {
+    let safe = case.id.replace('.', "_");
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/clauses")
+        .join(format!("{safe}.txt"))
+}
+
+fn assert_clause_multiset_eq(case_id: &str, expected: &[String], actual: &[String]) {
+    let mut exp = expected.to_vec();
+    let mut act = actual.to_vec();
+    exp.sort();
+    act.sort();
+    if exp == act {
+        return;
+    }
+    let missing: Vec<_> = exp.iter().filter(|c| !act.contains(c)).collect();
+    let extra: Vec<_> = act.iter().filter(|c| !exp.contains(c)).collect();
+    panic!(
+        "{case_id}: clause multiset mismatch\n  missing ({}): {missing:#?}\n  extra ({}): {extra:#?}\n  expected ({}): {exp:#?}\n  actual ({}): {act:#?}",
+        missing.len(),
+        extra.len(),
+        exp.len(),
+        act.len()
+    );
 }
 
 fn run_axiom_case(case: &HermitCase) {

@@ -1,0 +1,1 @@
+:A(X) v atLeast(1 :dp not(xsd:integer))(X) :- owl:Thing(X)

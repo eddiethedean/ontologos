@@ -1,0 +1,1 @@
+not({ "19"^^xsd:int "18"^^xsd:int })(Y) :- :A(X), :dp(X,Y)

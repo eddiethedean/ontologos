@@ -1,0 +1,1 @@
+Y1 == Y2 v not(xsd:string)(Y1) v not(xsd:string)(Y2) :- :A(X), :dp(X,Y1), :dp(X,Y2)

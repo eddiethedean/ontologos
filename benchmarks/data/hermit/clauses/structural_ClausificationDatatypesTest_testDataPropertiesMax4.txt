@@ -1,0 +1,1 @@
+:A(X) v atLeast(4 :dp xsd:integer)(X) :- owl:Thing(X)

@@ -4,6 +4,8 @@
 
 mod clause;
 mod dl_ontology;
+mod hyper_clausify;
+mod hyperclause;
 mod normalize;
 mod tableau;
 
@@ -13,6 +15,8 @@ use thiserror::Error;
 
 pub use clause::{Clause, ClauseSet};
 pub use dl_ontology::DlOntology;
+pub use hyper_clausify::clausify_hyper;
+pub use hyperclause::{format_hyper_clauses, HyperClauseSet};
 pub use normalize::clausify;
 pub use tableau::AlcClassifier;
 pub use tableau::{

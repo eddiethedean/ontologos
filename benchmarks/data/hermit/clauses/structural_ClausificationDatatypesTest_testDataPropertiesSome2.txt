@@ -1,0 +1,1 @@
+atLeast(1 :dp xsd:string)(X) :- :A(X)

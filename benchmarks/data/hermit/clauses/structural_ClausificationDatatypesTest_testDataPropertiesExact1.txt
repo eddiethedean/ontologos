@@ -1,0 +1,2 @@
+Y1 == Y2 v not(xsd:integer)(Y1) v not(xsd:integer)(Y2) :- :A(X), :dp(X,Y1), :dp(X,Y2)
+atLeast(1 :dp xsd:integer)(X) :- :A(X)

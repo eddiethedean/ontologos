@@ -1,0 +1,3 @@
+not(xsd:nonNegativeInteger)(X) :- defdata:0(X)
+defdata:0(Y) :- :dp(X,Y)
+not(xsd:double)(X) :- defdata:0(X)

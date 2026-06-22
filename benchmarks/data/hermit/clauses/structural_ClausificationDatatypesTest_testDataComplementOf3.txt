@@ -1,0 +1,2 @@
+not({ "4.3"^^xsd:double "5"^^xsd:int })(X) v not({ "5"^^xsd:int })(X) :- defdata:0(X)
+defdata:0(Y) :- :dp(X,Y)
