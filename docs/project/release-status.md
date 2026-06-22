@@ -18,10 +18,11 @@ CLI (`ontologos-cli`) and conformance crates are **source-build only** — not o
 | Area | Status |
 |------|--------|
 | OWL EL, RL, RDFS classification | **Stable** (1.0.0) |
-| Python bindings, explain (EL) | **Stable** (1.0.0) |
+| OWL DL (`--profile dl`) | **Stable** (1.0.0) — Tier C taxonomy gate on `family.owl` |
+| Python bindings, explain (EL + DL smoke) | **Stable** (1.0.0) |
 | Incremental EL/RL/RDFS | **Stable** (0.8+) |
-| DL / ALC / SWRL profiles | **Preview** on `main` — see [Preview profiles](../guides/preview-profiles.md) |
-| Full HermiT OWL DL parity | **In progress** — ~211 active / 400 gate; 133 semantic axiom cases |
+| ALC / `dl-preview` | **Preview** — explicit gating and subset checks |
+| Full HermiT OWL DL parity | **In progress** — Tier A/B/C harness; see [taxonomy tolerance](../reference/taxonomy-tolerance.md) |
 
 ## Conformance snapshot (live)
 

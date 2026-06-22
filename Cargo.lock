@@ -1058,6 +1058,7 @@ version = "1.0.0"
 dependencies = [
  "ontologos-alc",
  "ontologos-core",
+ "ontologos-dl",
  "ontologos-el",
  "ontologos-profile",
  "ontologos-rdfs",

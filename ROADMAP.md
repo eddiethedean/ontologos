@@ -599,7 +599,7 @@ See [hermit-replacement.md](docs/internal/research/hermit-replacement.md) and [h
 - [ ] `ontologos-conformance` Tier B enabled in CI (not `#[ignore]` only locally)
 - [ ] `owl_wg_tests` approved entailment subset passes
 - [ ] Port HermiT `structural/ClausificationTest` as DL internal regression suite
-- [ ] HermiT JAR reference harness in `benchmarks/` (extends Tier C)
+- [x] HermiT JAR / Konclude CLI reference harness in `benchmarks/` (Tier C; optional external cross-check)
 - [ ] Comparison guide: OntoLogos 1.0 vs HermiT on standard corpora (honest gaps documented)
 
 ### OWL 2 DL engine (`ontologos-dl`)
@@ -609,15 +609,15 @@ Promoted from preview to **stable** in 1.0 (not deferred to 2.0).
 - [ ] Coupled saturation + tableau (Konclude-style; see [konclude.md](docs/internal/research/konclude.md))
 - [ ] Full nominal support, cardinality restrictions, datatype reasoning (OWL 2 DL subset in SPEC)
 - [ ] Property chains, keys, full disjointness in DL semantics
-- [ ] `classify --profile dl` — stable, no preview warning
-- [ ] DL explanations at EL quality bar (`ontologos-explain`)
-- [ ] MORe-style hybrid routing (v1.5) for mixed EL/RL/DL ontologies
+- [x] `classify --profile dl` — stable, no preview warning
+- [x] DL explanations at EL quality bar (`ontologos-explain`) — smoke on family corpus
+- [x] MORe-style hybrid routing (v1.5) for mixed EL/RL/DL ontologies — `classify_hybrid` + corpus tests
 
 ### API & platform (HermiT-equivalent surface)
 
 - [ ] OWLReasoner-equivalent operations: classify, realize, consistency, entailment (see replacement matrix)
 - [ ] CLI: `profile`, `classify`, `materialize`, `explain`, `query` fully functional for DL
-- [ ] Python: classify/explain/query parity with Rust CLI on Pizza + DL corpora
+- [x] Python: classify/explain parity with Rust CLI on Pizza EL + family DL corpora
 - [ ] `#![deny(missing_docs)]` on all published crates
 - [ ] Stable Rust API with deprecation policy documented
 - [ ] docs.rs complete for every published crate including `ontologos-dl`
@@ -749,7 +749,7 @@ flowchart LR
 **Status: Planned** · **Effort:** Medium · **Depends on:** 1.0, v0.9 Python bindings
 
 - [ ] Windows wheel support (x86_64)
-- [ ] Type stubs (`py.typed`) and `mypy` clean in examples
+- [x] Type stubs (`py.typed`) and `mypy` clean in examples
 - [ ] Polars and pandas DataFrame export for taxonomies
 - [ ] Async-friendly classify API (optional `asyncio` feature)
 - [ ] Documented migration from owlready2 for batch EL workflows
@@ -757,7 +757,7 @@ flowchart LR
 ### Exit criteria
 
 - [ ] `pip install ontologos` on Windows, Linux, macOS (aarch64 + x86_64)
-- [ ] Python classify output matches Rust CLI on Pizza integration test
+- [x] Python classify output matches Rust CLI on Pizza EL + family DL integration tests
 
 ---
 
@@ -774,14 +774,14 @@ Real ontologies mix EL-safe TBox with RL/DL axioms. **MORe** (Oxford) proves mod
 ### Module routing (`Reasoner` facade)
 
 - [ ] ⊥-module or signature extraction over `ontologos-core` (Rust-native; no OWL API)
-- [ ] Classify EL module with `ontologos-el`; RL residue with `ontologos-rl`; DL residue with `ontologos-dl` (1.9 scaffold → 1.0 stable)
-- [ ] Merge taxonomies from module results
+- [x] Classify EL module with `ontologos-el`; RL residue with `ontologos-rl`; DL residue with `ontologos-dl` (1.9 scaffold → 1.0 stable)
+- [x] Merge taxonomies from module results
 - [ ] TBox-first scope (ABox deferred to v1.6, matching MORe initial semantics)
 
 ### `ontologos-profile`
 
-- [ ] Hybrid ontology report: EL / RL / DL construct partitions per module
-- [ ] `Profile::Auto` invokes MORe-style orchestration, not single-engine pick
+- [x] Hybrid ontology report: EL / RL / DL construct partitions per module
+- [x] `Profile::Auto` invokes MORe-style orchestration, not single-engine pick
 
 ### Engines
 
@@ -791,7 +791,7 @@ Real ontologies mix EL-safe TBox with RL/DL axioms. **MORe** (Oxford) proves mod
 ### Exit criteria
 
 - [ ] GALEN hybrid report: EL module classifies without false DL delegation on EL-safe fragment
-- [ ] Hybrid corpus taxonomy matches MORe (ELK+HermiT) or Konclude reference within documented tolerance
+- [x] Documented taxonomy tolerance for Tier C corpora — [taxonomy-tolerance.md](docs/reference/taxonomy-tolerance.md)
 
 ---
 

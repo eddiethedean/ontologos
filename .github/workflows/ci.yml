@@ -55,6 +55,8 @@ jobs:
       - name: Tier C reference harness smoke
         run: |
           chmod +x benchmarks/scripts/compare-hermit-tier-c.sh
+          chmod +x benchmarks/scripts/compare-dl-taxonomy.sh
+          chmod +x benchmarks/scripts/compare-taxonomy.py
           ./benchmarks/scripts/compare-hermit-tier-c.sh
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh

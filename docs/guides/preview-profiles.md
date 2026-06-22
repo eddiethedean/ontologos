@@ -1,6 +1,6 @@
 # Preview profiles (DL, ALC, SWRL)
 
-OntoLogos **0.9.0** ships stable EL, RL, and RDFS profiles. **ALC**, **DL**, **dl-preview**, and **SWRL** are available for early testing on `main` — not production HermiT replacements.
+OntoLogos **1.0.0** ships stable EL, RL, RDFS, and **DL** (`--profile dl`) classification. **ALC**, **dl-preview**, and **SWRL** remain preview or gated paths — see [Taxonomy tolerance](../reference/taxonomy-tolerance.md) for Tier C corpora.
 
 !!! warning "Preview only"
     Preview engines are incomplete. Use Protégé + HermiT or Konclude for production OWL DL workflows. See [Comparison](../comparison.md) and [Release status](../project/release-status.md).
@@ -13,10 +13,10 @@ OntoLogos **0.9.0** ships stable EL, RL, and RDFS profiles. **ALC**, **DL**, **d
 | `el` | Stable | `ontologos-el` | Taxonomy |
 | `rl` | Stable | `ontologos-rl` | Materialization report |
 | `rdfs` | Stable | `ontologos-rdfs` | Materialization report |
-| `dl-preview` | Preview | `ontologos-dl` (gated) | Taxonomy + CLI warning |
-| `dl` | Preview | `ontologos-dl` | Taxonomy |
+| `dl-preview` | Preview | `ontologos-dl` (gated) | Taxonomy + explicit preview checks |
+| `dl` | **Stable (1.0)** | `ontologos-dl` | Taxonomy (no preview warning) |
 | `alc` | Preview | `ontologos-alc` | Taxonomy |
-| `swrl` | Preview | — | Errors (`NotImplemented` / `PreviewLimit`) |
+| `swrl` | Preview | `ontologos-swrl` | Rules + DL consistency |
 
 ## CLI
 
@@ -43,7 +43,7 @@ Reasoner(path="ontology.owl", profile="dl-preview").classify()  # gated preview 
 Reasoner(path="ontology.owl", profile="alc").classify()
 ```
 
-Use `profile="swrl"` only to probe error handling — rule execution is not implemented.
+Use `profile="swrl"` when the ontology contains DLSafe SWRL rules; otherwise expect DL/EL routing.
 
 ## Rust
 

@@ -23,6 +23,7 @@ dist/
 !/benchmarks/data/family.owl
 !/benchmarks/data/go-subset.owl
 !/benchmarks/data/pizza-el-golden.json
+!/benchmarks/data/dl-taxonomy-golden.json
 !/benchmarks/data/hermit/
 !/benchmarks/data/hermit/**
 

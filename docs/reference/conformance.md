@@ -61,6 +61,7 @@ The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL too
 | Large DL corpora (GALEN, SNOMED) | Optional stress tests only |
 | Wine / galen / propreo `ClassificationTest` | Active via parser preprocess (entities, `rdf:ID`) |
 | SWRL `RulesTest` (24 cases) | Active via `ontologos-swrl` forward chaining |
+| Tier C DL taxonomy | `family.owl` golden — [taxonomy tolerance](taxonomy-tolerance.md) |
 
 ## Benchmark corpora
 

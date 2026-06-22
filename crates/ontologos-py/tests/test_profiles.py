@@ -44,6 +44,16 @@ def test_classify_alc_profile_on_minimal_chain() -> None:
     )
 
 
+def test_classify_dl_profile_family() -> None:
+    from ontologos import Reasoner
+
+    assert FAMILY_OWL.is_file(), f"missing corpus: {FAMILY_OWL}"
+    reasoner = Reasoner(path=str(FAMILY_OWL), profile="dl")
+    result = reasoner.classify()
+    assert result["subsumption_count"] > 0
+    assert len(result["subsumptions"]) == result["subsumption_count"]
+
+
 def test_classify_dl_preview_profile() -> None:
     from ontologos import OntologyBuilder, Reasoner
 
