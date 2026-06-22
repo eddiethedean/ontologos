@@ -89,6 +89,7 @@ nav:
       - JSON snapshot v3 (planned): json-snapshot-v3.md
       - RL rules: reference/rl-rules.md
       - Conformance: reference/conformance.md
+      - Taxonomy tolerance: reference/taxonomy-tolerance.md
       - Rust API (docs.rs):
           - ontologos-core: https://docs.rs/ontologos-core/1.0.0
           - ontologos-bridge: https://docs.rs/ontologos-bridge/1.0.0
