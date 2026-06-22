@@ -115,6 +115,8 @@ Rdfbased-2Dsem-2Dinv-2Dinst
 Rdfbased-2Dsem-2Dkey-2Ddef
 Rdfbased-2Dsem-2Dndis-2Dalldifferent-2Dfw
 Rdfbased-2Dsem-2Dndis-2Dalldifferent-2Dfw-2Ddistinctmembers
+Rdfbased-2Dsem-2Dndis-2Dalldisjointclasses-2Dfw
+Rdfbased-2Dsem-2Dndis-2Dalldisjointproperties-2Dfw
 Rdfbased-2Dsem-2Dnpa-2Ddat-2Dfw
 Rdfbased-2Dsem-2Dnpa-2Dind-2Dfw
 Rdfbased-2Dsem-2Dprop-2Dbackwardcompatiblewith-2Dtype-2Dannot

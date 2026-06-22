@@ -740,13 +740,11 @@ fn hermit_owl_wg_tests_rdfbased_2dsem_2dndis_2dalldifferent_2dfw_2ddistinctmembe
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2dndis_2dalldisjointclasses_2dfw() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Dndis-2Dalldisjointclasses-2Dfw");
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_rdfbased_2dsem_2dndis_2dalldisjointproperties_2dfw() {
     run_wg_case("owl_wg_tests.Rdfbased-2Dsem-2Dndis-2Dalldisjointproperties-2Dfw");
 }

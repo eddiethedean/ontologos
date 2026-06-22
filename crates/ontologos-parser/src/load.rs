@@ -99,8 +99,10 @@ pub fn load_ontology_with_limits_and_base(
             crate::rdf_preprocess::materialize_anonymous_individual_descriptions(&injected);
         let normalized =
             crate::rdf_preprocess::normalize_all_different_members(&individuals);
+        let disjoint =
+            crate::rdf_preprocess::expand_all_disjoint_collections(&normalized);
         read_horned_owl_from_reader(
-            &mut std::io::Cursor::new(normalized.as_bytes().to_vec()),
+            &mut std::io::Cursor::new(disjoint.as_bytes().to_vec()),
             format,
             limits,
         )?

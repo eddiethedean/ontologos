@@ -538,6 +538,103 @@ pub fn normalize_all_different_members(input: &str) -> String {
     flatten_descriptions_in_distinct_members(&stripped)
 }
 
+/// Expand `owl:AllDisjointClasses` / `owl:AllDisjointProperties` into pairwise disjoint axioms.
+#[must_use]
+pub fn expand_all_disjoint_collections(input: &str) -> String {
+    if !input.contains("AllDisjointClasses") && !input.contains("AllDisjointProperties") {
+        return input.to_owned();
+    }
+    let mut out = input.to_owned();
+    while out.contains("<owl:AllDisjointClasses") {
+        out = expand_disjoint_block(
+            &out,
+            "owl:AllDisjointClasses",
+            "owl:disjointWith",
+            "owl:Class",
+        );
+    }
+    while out.contains("<owl:AllDisjointProperties") {
+        out = expand_disjoint_block(
+            &out,
+            "owl:AllDisjointProperties",
+            "owl:propertyDisjointWith",
+            "owl:ObjectProperty",
+        );
+    }
+    out
+}
+
+fn expand_disjoint_block(
+    input: &str,
+    container: &str,
+    disjoint_tag: &str,
+    decl_tag: &str,
+) -> String {
+    let open = format!("<{container}");
+    let Some(start) = input.find(&open) else {
+        return input.to_owned();
+    };
+    let members_marker = if input[start..].contains("<owl:members") {
+        "<owl:members"
+    } else {
+        "<owl:distinctMembers"
+    };
+    let Some(members_rel) = input[start..].find(members_marker) else {
+        return input.to_owned();
+    };
+    let abs_members = start + members_rel;
+    let Some(coll_open_end) = input[abs_members..].find('>') else {
+        return input.to_owned();
+    };
+    let coll_open_end = abs_members + coll_open_end + 1;
+    let close_tag = if members_marker == "<owl:members" {
+        "</owl:members>"
+    } else {
+        "</owl:distinctMembers>"
+    };
+    let Some(close_rel) = input[coll_open_end..].find(close_tag) else {
+        return input.to_owned();
+    };
+    let coll_close_start = coll_open_end + close_rel;
+    let inner = &input[coll_open_end..coll_close_start];
+
+    let mut iris = Vec::new();
+    let mut pos = 0usize;
+    while let Some(rel) = inner[pos..].find("rdf:about=\"") {
+        let value_start = pos + rel + "rdf:about=\"".len();
+        let rest = &inner[value_start..];
+        if let Some(end) = rest.find('"') {
+            iris.push(rest[..end].to_owned());
+        }
+        pos = value_start + 1;
+    }
+
+    let close_container = format!("</{container}>");
+    let Some(container_end_rel) = input[start..].find(&close_container) else {
+        return input.to_owned();
+    };
+    let container_end = start + container_end_rel + close_container.len();
+
+    let mut injections = String::new();
+    for iri in &iris {
+        injections.push_str(&format!("  <{decl_tag} rdf:about=\"{iri}\"/>\n"));
+    }
+    for i in 0..iris.len() {
+        for j in (i + 1)..iris.len() {
+            injections.push_str(&format!(
+                "  <rdf:Description rdf:about=\"{}\">\n    <{disjoint_tag} rdf:resource=\"{}\"/>\n  </rdf:Description>\n",
+                iris[i], iris[j]
+            ));
+        }
+    }
+
+    let mut out = String::new();
+    out.push_str(&input[..start]);
+    out.push_str(&injections);
+    out.push_str(&input[container_end..]);
+    out
+}
+
 fn flatten_descriptions_in_distinct_members(input: &str) -> String {
     let all_diff = "<owl:AllDifferent";
     let Some(all_start) = input.find(all_diff) else {
@@ -776,6 +873,21 @@ mod tests {
         assert_eq!(out.matches("rdf:ID=\"Wine\"").count(), 1);
         assert!(out.contains("first"));
         assert!(!out.contains("equivalentClass"));
+    }
+
+    #[test]
+    fn expand_disjoint_classes_injects_pairwise_axioms() {
+        let input = r#"<rdf:RDF xmlns:owl="http://www.w3.org/2002/07/owl#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <owl:AllDisjointClasses>
+    <owl:members rdf:parseType="Collection">
+      <rdf:Description rdf:about="http://ex.org#c1"/>
+      <rdf:Description rdf:about="http://ex.org#c2"/>
+    </owl:members>
+  </owl:AllDisjointClasses>
+</rdf:RDF>"#;
+        let out = expand_all_disjoint_collections(input);
+        assert!(out.contains("owl:disjointWith"));
+        assert!(!out.contains("AllDisjointClasses"));
     }
 
     #[test]
