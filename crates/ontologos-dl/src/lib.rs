@@ -65,7 +65,7 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if !datatype::is_datatype_consistent(ontology) {
         return Ok(false);
     }
-    if ontology_has_class_assertion(ontology) {
+    if ontology_maybe_needs_flower_classify(ontology) {
         let taxonomy = classify(ontology)?;
         if flower_auxiliary_unsatisfiable_classes(ontology, &taxonomy) {
             return Ok(false);
@@ -75,13 +75,27 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
-    if abox_typed_unsatisfiable_class(ontology, &dl, &seed)? {
+    if abox_atomic_class_unsatisfiable(ontology, &dl, &seed)? {
         return Ok(false);
     }
     ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)
 }
 
-fn abox_typed_unsatisfiable_class(
+/// Flower regression needs full classification to detect auxiliary `.comp` class clashes.
+fn ontology_maybe_needs_flower_classify(ontology: &Ontology) -> bool {
+    ontology_has_class_assertion(ontology)
+        && ontology.entities().iter().any(|(_, record)| {
+            record.kind == ontologos_core::EntityKind::Class
+                && ontology
+                    .resolve_iri(record.iri)
+                    .ok()
+                    .is_some_and(|iri| iri.contains(".comp"))
+        })
+}
+
+/// Fast ABox pre-check: individuals typed with unsatisfiable atomic classes only.
+/// Complex class expressions are checked by the KB tableau (`kb_consistent`).
+fn abox_atomic_class_unsatisfiable(
     ontology: &Ontology,
     dl: &ontologos_alc::DlOntology,
     seed: &TableauSeed,
@@ -91,16 +105,10 @@ fn abox_typed_unsatisfiable_class(
         let DlAxiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
-        let test_ce = match store.ce(*class) {
-            Some(ontologos_core::ClassExpr::Atomic(entity)) => {
-                if !ontologos_alc::is_named_class_satisfiable_with_seed(dl, *entity, seed)? {
-                    return Ok(true);
-                }
-                continue;
-            }
-            _ => *class,
+        let Some(ontologos_core::ClassExpr::Atomic(entity)) = store.ce(*class) else {
+            continue;
         };
-        if !ontologos_alc::is_ce_satisfiable_with_seed(dl, test_ce, seed)? {
+        if !ontologos_alc::is_named_class_satisfiable_with_seed(dl, *entity, seed)? {
             return Ok(true);
         }
     }

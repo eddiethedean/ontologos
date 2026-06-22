@@ -59,6 +59,13 @@ pub enum SwrlAtom {
     SameIndividual(SwrlIArg, SwrlIArg),
     /// `differentFrom(x, y)`.
     DifferentIndividuals(SwrlIArg, SwrlIArg),
+    /// `D(v)` data range atom constraining a data variable.
+    DataRange {
+        /// Data range expression id in the DL store.
+        range: crate::DeId,
+        /// Literal or variable argument.
+        arg: SwrlDArg,
+    },
 }
 
 /// Parsed DLSafe SWRL rule.

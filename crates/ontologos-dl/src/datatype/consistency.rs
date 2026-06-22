@@ -1364,9 +1364,9 @@ mod tests {
             .expect("class assertion");
         let restrictions = restrictions_from_ce(store, class_ce);
         assert!(
-            restrictions.iter().any(|(_, r)| {
-                matches!(r, DataRestriction::ExactCardinality(0, _))
-            }),
+            restrictions
+                .iter()
+                .any(|(_, r)| { matches!(r, DataRestriction::ExactCardinality(0, _)) }),
             "expected exact-0 restriction from Unsatisfiable equiv, got {restrictions:?}"
         );
     }

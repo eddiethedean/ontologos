@@ -26,5 +26,8 @@ fn ni_ontology_has_both_class_assertions() {
     assert_eq!(graph_class, 1, "atomic A stays on graph too");
 
     let consistent = ontologos_dl::is_consistent(&ont).expect("check");
-    assert!(!consistent, "NI ontology should be inconsistent, got {consistent}");
+    assert!(
+        !consistent,
+        "NI ontology should be inconsistent, got {consistent}"
+    );
 }

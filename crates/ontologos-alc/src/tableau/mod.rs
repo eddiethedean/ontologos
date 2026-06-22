@@ -79,7 +79,11 @@ pub fn is_consistent_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Resul
 }
 
 /// Test whether a class expression is satisfiable in the TBox (empty ABox).
-pub fn is_ce_satisfiable_with_seed(dl: &DlOntology, ce: CeId, seed: &TableauSeed) -> Result<bool, Error> {
+pub fn is_ce_satisfiable_with_seed(
+    dl: &DlOntology,
+    ce: CeId,
+    seed: &TableauSeed,
+) -> Result<bool, Error> {
     let mut branch = Branch::new(dl, seed);
     assert_top_tbox_axioms(&mut branch, 0);
     branch.assert(0, ce);
@@ -106,10 +110,16 @@ pub fn is_named_class_satisfiable_with_seed(
 }
 
 fn assert_top_tbox_axioms(branch: &mut Branch<'_>, world: usize) {
-    let Some(top) = branch.dl.core().dl().expressions().find_map(|(id, e)| match e {
-        ClassExpr::Top => Some(id),
-        _ => None,
-    }) else {
+    let Some(top) = branch
+        .dl
+        .core()
+        .dl()
+        .expressions()
+        .find_map(|(id, e)| match e {
+            ClassExpr::Top => Some(id),
+            _ => None,
+        })
+    else {
         return;
     };
     branch.assert(world, top);
@@ -138,6 +148,15 @@ fn run_tbox_saturation(branch: &mut Branch<'_>) -> Result<bool, Error> {
         }
     }
     Ok(ok && !branch.clash)
+}
+
+fn needs_nominal_unraveling(branch: &Branch<'_>) -> bool {
+    branch.tbox_subsumptions.iter().any(|&(sub, sup)| {
+        matches!(
+            branch.dl.core().dl().ce(sup),
+            Some(ClassExpr::HasValue { .. })
+        ) && matches!(branch.dl.core().dl().ce(sub), Some(ClassExpr::Atomic(_)))
+    })
 }
 
 fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
@@ -216,9 +235,12 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
             return Ok(false);
         }
     }
-    // Drive B ⊑ ∃R.B unraveling for nominal cardinality clashes (NI-rule pattern).
-    if !branch.clash && !branch.named_worlds.is_empty() {
+    // Nominal / HasValue unraveling (NI-rule pattern) — only when the TBox requires it.
+    if !branch.clash && !branch.named_worlds.is_empty() && needs_nominal_unraveling(&branch) {
         for _ in 0..256 {
+            if branch.worlds.len() >= block::MAX_WORLDS {
+                break;
+            }
             let before_edges = branch.edges.len();
             let before_labels: usize = branch.worlds.iter().map(|w| w.labels.len()).sum();
             expand::materialize_existential_successors(&mut branch);
@@ -237,8 +259,7 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
                 }
             }
             let after_labels: usize = branch.worlds.iter().map(|w| w.labels.len()).sum();
-            if branch.clash
-                || (branch.edges.len() == before_edges && after_labels == before_labels)
+            if branch.clash || (branch.edges.len() == before_edges && after_labels == before_labels)
             {
                 break;
             }
@@ -1131,6 +1152,7 @@ impl<'a> Branch<'a> {
     }
 
     fn expand(&mut self) -> Result<bool, Error> {
+        let mut stall_steps = 0u32;
         loop {
             if self.clash {
                 return Ok(false);
@@ -1145,9 +1167,14 @@ impl<'a> Branch<'a> {
                 if block::is_budget_exhausted(self) {
                     return Err(Error::ResourceLimit(block::MAX_EXPANSIONS));
                 }
+                stall_steps += 1;
+                if stall_steps > block::MAX_EXPANSIONS {
+                    return Ok(true);
+                }
                 block::mark_blocked(self, world);
                 continue;
             }
+            stall_steps = 0;
 
             if self.cache.is_unsat(&self.worlds[world].labels) {
                 return Ok(false);

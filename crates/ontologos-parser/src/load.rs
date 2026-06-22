@@ -96,19 +96,17 @@ pub fn load_ontology_with_limits_and_base(
             limits.max_expanded_bytes,
         )?;
         let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&expanded);
-        let typed_nodes =
-            crate::rdf_preprocess::materialize_typed_node_elements(&injected);
+        let typed_nodes = crate::rdf_preprocess::materialize_typed_node_elements(&injected);
         let intersections =
             crate::rdf_preprocess::normalize_class_intersection_definitions(&typed_nodes);
         let same_as = crate::rdf_preprocess::normalize_class_same_as(&intersections);
         let named_individuals =
             crate::rdf_preprocess::materialize_named_individual_descriptions(&same_as);
-        let individuals =
-            crate::rdf_preprocess::materialize_anonymous_individual_descriptions(&named_individuals);
-        let normalized =
-            crate::rdf_preprocess::normalize_all_different_members(&individuals);
-        let disjoint =
-            crate::rdf_preprocess::expand_all_disjoint_collections(&normalized);
+        let individuals = crate::rdf_preprocess::materialize_anonymous_individual_descriptions(
+            &named_individuals,
+        );
+        let normalized = crate::rdf_preprocess::normalize_all_different_members(&individuals);
+        let disjoint = crate::rdf_preprocess::expand_all_disjoint_collections(&normalized);
         read_horned_owl_from_reader(
             &mut std::io::Cursor::new(disjoint.as_bytes().to_vec()),
             format,

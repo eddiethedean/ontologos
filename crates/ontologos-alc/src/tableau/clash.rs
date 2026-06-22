@@ -47,10 +47,7 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
             };
             if let ClassExpr::Some { property, filler } = expr {
                 if super::expand::existential_already_satisfied(
-                    branch,
-                    world_idx,
-                    &property,
-                    filler,
+                    branch, world_idx, &property, filler,
                 ) {
                     branch.clash = true;
                     return;
@@ -225,7 +222,11 @@ pub fn check_conflicting_datatype_cardinality_bounds(branch: &mut Branch<'_>, wo
 }
 
 /// Whether merging two worlds would violate datatype cardinality bounds.
-pub fn would_datatype_clash_when_merged(branch: &super::Branch<'_>, left: usize, right: usize) -> bool {
+pub fn would_datatype_clash_when_merged(
+    branch: &super::Branch<'_>,
+    left: usize,
+    right: usize,
+) -> bool {
     let left_bounds = datatype_bounds_from_world(branch, left);
     let right_bounds = datatype_bounds_from_world(branch, right);
     for (prop, (lmin, lmax)) in &left_bounds {
@@ -256,11 +257,13 @@ pub fn would_complement_clash_when_merged(
     let left_neg = negated_atomic_entities(branch, left);
     let right_pos = atomic_class_entities(branch, right);
     let right_neg = negated_atomic_entities(branch, right);
-    left_pos.iter().any(|c| right_neg.contains(c))
-        || right_pos.iter().any(|c| left_neg.contains(c))
+    left_pos.iter().any(|c| right_neg.contains(c)) || right_pos.iter().any(|c| left_neg.contains(c))
 }
 
-fn atomic_class_entities(branch: &super::Branch<'_>, world: usize) -> std::collections::HashSet<EntityId> {
+fn atomic_class_entities(
+    branch: &super::Branch<'_>,
+    world: usize,
+) -> std::collections::HashSet<EntityId> {
     let mut out = std::collections::HashSet::new();
     for &label in &branch.worlds[world].labels {
         if let Some(ClassExpr::Atomic(id)) = branch.dl.core().dl().ce(label) {

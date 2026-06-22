@@ -4,8 +4,9 @@ use std::path::Path;
 
 #[test]
 fn wg_dl105_is_inconsistent() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D105/premise.rdf");
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(
+        "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D105/premise.rdf",
+    );
     let ont = load_ontology(&path).expect("load");
     let dl = ontologos_alc::DlOntology::from_ontology(&ont).expect("dl");
     let seed = ontologos_dl::TableauSeed::default();

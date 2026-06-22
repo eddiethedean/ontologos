@@ -163,8 +163,7 @@ pub fn explain_rl(ontology: &mut Ontology) -> Result<ProofGraph> {
 fn collect_trace_alc(ontology: &Ontology) -> Result<InferenceTrace> {
     use ontologos_core::{TraceConclusion, TraceStep};
 
-    let taxonomy =
-        ontologos_alc::classify(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    let taxonomy = ontologos_alc::classify(ontology).map_err(|e| Error::Profile(e.to_string()))?;
     let mut trace = InferenceTrace::default();
     for &(sub, sup) in &taxonomy.subsumptions {
         trace.push(TraceStep {
@@ -179,8 +178,7 @@ fn collect_trace_alc(ontology: &Ontology) -> Result<InferenceTrace> {
 fn collect_trace_dl(ontology: &Ontology) -> Result<InferenceTrace> {
     use ontologos_core::{TraceConclusion, TraceStep};
 
-    let taxonomy =
-        ontologos_dl::classify(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    let taxonomy = ontologos_dl::classify(ontology).map_err(|e| Error::Profile(e.to_string()))?;
     let mut trace = InferenceTrace::default();
     for &(sub, sup) in &taxonomy.subsumptions {
         trace.push(TraceStep {

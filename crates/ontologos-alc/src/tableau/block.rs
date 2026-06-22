@@ -5,6 +5,9 @@ use super::Branch;
 /// Maximum tableau expansions before returning [`Error::ResourceLimit`].
 pub(crate) const MAX_EXPANSIONS: u32 = 4096;
 
+/// Cap on tableau worlds created during pre-expansion materialization.
+pub(crate) const MAX_WORLDS: usize = 256;
+
 /// Whether the expansion budget has been exhausted.
 #[must_use]
 pub fn is_budget_exhausted(branch: &Branch<'_>) -> bool {

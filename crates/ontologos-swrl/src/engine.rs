@@ -2,7 +2,11 @@
 
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{Axiom, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology, SwrlAtom, SwrlDArg, SwrlIArg, SwrlRule};
+use ontologos_core::{
+    Axiom, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology, SwrlAtom, SwrlDArg, SwrlIArg,
+    SwrlRule,
+};
+use ontologos_dl::{LiteralIndex, LiteralValue};
 
 use crate::SwrlReport;
 
@@ -63,9 +67,12 @@ fn match_rule_body(ontology: &Ontology, body: &[SwrlAtom]) -> Vec<RuleBinding> {
 
 fn atom_match_priority(atom: &SwrlAtom) -> u8 {
     match atom {
-        SwrlAtom::Class { .. } | SwrlAtom::ObjectProperty { .. } | SwrlAtom::DataProperty { .. } => 0,
-        SwrlAtom::SameIndividual(..) => 1,
-        SwrlAtom::DifferentIndividuals(..) => 2,
+        SwrlAtom::Class { .. }
+        | SwrlAtom::ObjectProperty { .. }
+        | SwrlAtom::DataProperty { .. } => 0,
+        SwrlAtom::DataRange { .. } => 1,
+        SwrlAtom::SameIndividual(..) => 2,
+        SwrlAtom::DifferentIndividuals(..) => 3,
     }
 }
 
@@ -82,10 +89,9 @@ fn extend_binding(ontology: &Ontology, atom: &SwrlAtom, binding: &RuleBinding) -
             subject,
             value,
         } => extend_data_property(ontology, *property, subject, value, binding),
+        SwrlAtom::DataRange { range, arg } => extend_data_range(ontology, *range, arg, binding),
         SwrlAtom::SameIndividual(a, b) => unify_same(ontology, a, b, binding),
-        SwrlAtom::DifferentIndividuals(a, b) => {
-            unify_different(ontology, a, b, binding)
-        }
+        SwrlAtom::DifferentIndividuals(a, b) => unify_different(ontology, a, b, binding),
     }
 }
 
@@ -148,6 +154,49 @@ fn extend_object_property(
     out
 }
 
+fn extend_data_range(
+    ontology: &Ontology,
+    range: DeId,
+    arg: &SwrlDArg,
+    binding: &RuleBinding,
+) -> Vec<RuleBinding> {
+    match arg {
+        SwrlDArg::Literal { lexical, datatype } => {
+            let fact = DataValue {
+                lexical: lexical.clone(),
+                datatype: *datatype,
+            };
+            if data_value_satisfies_range(ontology, &fact, range) {
+                vec![binding.clone()]
+            } else {
+                vec![]
+            }
+        }
+        SwrlDArg::Variable(var) => {
+            let Some(fact) = binding.data.get(var) else {
+                return vec![];
+            };
+            if data_value_satisfies_range(ontology, fact, range) {
+                vec![binding.clone()]
+            } else {
+                vec![]
+            }
+        }
+    }
+}
+
+fn data_value_satisfies_range(ontology: &Ontology, fact: &DataValue, range: DeId) -> bool {
+    let Some(datatype) = fact.datatype else {
+        return false;
+    };
+    let idx = LiteralIndex::from_store(ontology.dl());
+    let lit = LiteralValue {
+        lexical: fact.lexical.clone(),
+        datatype,
+    };
+    idx.satisfies_with_ontology(&lit, ontology, range)
+}
+
 fn extend_data_property(
     ontology: &Ontology,
     property: EntityId,
@@ -170,9 +219,7 @@ fn extend_data_property(
 fn unify_darg(fact: &DataValue, arg: &SwrlDArg, binding: &RuleBinding) -> Vec<RuleBinding> {
     match arg {
         SwrlDArg::Literal { lexical, datatype } => {
-            if lexical == &fact.lexical
-                && datatype.map_or(true, |dt| fact.datatype == Some(dt))
-            {
+            if lexical == &fact.lexical && datatype.is_none_or(|dt| fact.datatype == Some(dt)) {
                 vec![binding.clone()]
             } else {
                 vec![]
@@ -209,11 +256,7 @@ fn unify_same(
     unify_data_same(left, right, binding)
 }
 
-fn unify_data_same(
-    left: &SwrlIArg,
-    right: &SwrlIArg,
-    binding: &RuleBinding,
-) -> Vec<RuleBinding> {
+fn unify_data_same(left: &SwrlIArg, right: &SwrlIArg, binding: &RuleBinding) -> Vec<RuleBinding> {
     let (SwrlIArg::Variable(a), SwrlIArg::Variable(b)) = (left, right) else {
         return vec![];
     };
@@ -436,9 +479,10 @@ fn apply_head_atom(
                 class: *class,
             })?;
             let ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(*class));
-            ontology
-                .dl_mut()
-                .push_axiom(DlAxiom::ClassAssertion { individual: ind, class: ce });
+            ontology.dl_mut().push_axiom(DlAxiom::ClassAssertion {
+                individual: ind,
+                class: ce,
+            });
             Ok(true)
         }
         SwrlAtom::ObjectProperty {
@@ -446,8 +490,10 @@ fn apply_head_atom(
             subject,
             object,
         } => {
-            let (Some(sub), Some(obj)) = (resolve_iarg(subject, binding), resolve_iarg(object, binding))
-            else {
+            let (Some(sub), Some(obj)) = (
+                resolve_iarg(subject, binding),
+                resolve_iarg(object, binding),
+            ) else {
                 return Ok(false);
             };
             if has_object_assertion(ontology, sub, *property, obj) {
@@ -481,13 +527,18 @@ fn apply_head_atom(
             Ok(true)
         }
         SwrlAtom::DataProperty { .. } => Ok(false),
+        SwrlAtom::DataRange { .. } => Ok(false),
     }
 }
 
 fn individuals_of_class(ontology: &Ontology, class: EntityId) -> Vec<EntityId> {
     let mut out = HashSet::new();
     for (_, axiom) in ontology.axioms().iter() {
-        if let Axiom::ClassAssertion { individual, class: c } = axiom {
+        if let Axiom::ClassAssertion {
+            individual,
+            class: c,
+        } = axiom
+        {
             if *c == class {
                 out.insert(*individual);
             }
@@ -500,7 +551,11 @@ fn individuals_of_class(ontology: &Ontology, class: EntityId) -> Vec<EntityId> {
             None
         }
     }) {
-        if ontology.classes_of(ind).iter().any(|&c| is_subsumed(ontology, c, class)) {
+        if ontology
+            .classes_of(ind)
+            .iter()
+            .any(|&c| is_subsumed(ontology, c, class))
+        {
             out.insert(ind);
         }
     }

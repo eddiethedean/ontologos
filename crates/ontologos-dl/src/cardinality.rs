@@ -168,8 +168,7 @@ pub fn derive_cardinality_subsumptions(ontology: &Ontology) -> Vec<(EntityId, En
                 continue;
             }
             let sum: u32 = entries.iter().map(|(n, _)| *n).sum();
-            if let Some(sup_e) =
-                find_named_exact_card(&equivalences, property, sum, base, ontology)
+            if let Some(sup_e) = find_named_exact_card(&equivalences, property, sum, base, ontology)
             {
                 push_sub(&mut out, *sub_e, sup_e);
             }
@@ -466,10 +465,8 @@ fn common_super_roles(
     if atomic_subs.len() < 2 {
         return Vec::new();
     }
-    let mut candidates: HashSet<EntityId> = hierarchy
-        .get(&atomic_subs[0])
-        .cloned()
-        .unwrap_or_default();
+    let mut candidates: HashSet<EntityId> =
+        hierarchy.get(&atomic_subs[0]).cloned().unwrap_or_default();
     candidates.insert(atomic_subs[0]);
     for sub in &atomic_subs[1..] {
         let mut reachable: HashSet<EntityId> = hierarchy.get(sub).cloned().unwrap_or_default();
@@ -488,7 +485,10 @@ fn fillers_disjoint(
     if left == right {
         return false;
     }
-    if let (Some(a), Some(b)) = (atomic_entity(ontology, left), atomic_entity(ontology, right)) {
+    if let (Some(a), Some(b)) = (
+        atomic_entity(ontology, left),
+        atomic_entity(ontology, right),
+    ) {
         if disjoint.contains(&(a, b)) {
             return true;
         }
@@ -544,7 +544,9 @@ fn ce_contains_exact_card(
             n: card_n,
             property: prop,
             filler: Some(f),
-        } if *card_n == n && prop == property && atomic_entity(ontology, *f) == Some(filler) => true,
+        } if *card_n == n && prop == property && atomic_entity(ontology, *f) == Some(filler) => {
+            true
+        }
         ClassExpr::And(ops) => ops.iter().any(|&id| {
             ontology
                 .dl()

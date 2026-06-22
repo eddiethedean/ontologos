@@ -2058,13 +2058,13 @@
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2DI4.5-2D002",
-    "test_type": "positive_entailment",
+    "test_type": "inconsistency",
     "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2DI4.5-2D002/premise.rdf",
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI4.5-2D002/conclusion.rdf",
-    "expected_entailment": true,
-    "expected_consistent": null,
+    "conclusion_ofn": null,
+    "expected_entailment": null,
+    "expected_consistent": false,
     "ignore_reason": null
   },
   {
@@ -2696,24 +2696,24 @@
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D001",
-    "test_type": "consistency",
+    "test_type": "inconsistency",
     "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2DRestriction-2D001/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
-    "expected_consistent": true,
+    "expected_consistent": false,
     "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D002",
-    "test_type": "consistency",
+    "test_type": "inconsistency",
     "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2DRestriction-2D002/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
-    "expected_consistent": true,
+    "expected_consistent": false,
     "ignore_reason": null
   },
   {
@@ -3125,13 +3125,13 @@
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D017",
-    "test_type": "consistency",
+    "test_type": "inconsistency",
     "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D017/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
-    "expected_consistent": true,
+    "expected_consistent": false,
     "ignore_reason": null
   },
   {
@@ -3301,13 +3301,13 @@
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D033",
-    "test_type": "consistency",
+    "test_type": "inconsistency",
     "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D033/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
-    "expected_consistent": true,
+    "expected_consistent": false,
     "ignore_reason": null
   },
   {
@@ -3851,13 +3851,13 @@
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D633",
-    "test_type": "consistency",
+    "test_type": "inconsistency",
     "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D633/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
-    "expected_consistent": true,
+    "expected_consistent": false,
     "ignore_reason": null
   },
   {
@@ -4445,13 +4445,13 @@
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2DmaxCardinality-2D001",
-    "test_type": "consistency",
+    "test_type": "inconsistency",
     "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2DmaxCardinality-2D001/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
-    "expected_consistent": true,
+    "expected_consistent": false,
     "ignore_reason": null
   },
   {

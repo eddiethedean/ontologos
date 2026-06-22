@@ -74,7 +74,11 @@ fn legacy_galen_fixture_loads_after_entity_expansion() {
 fn legacy_propreo_fixture_loads_after_entity_expansion() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/reasoner/res/propreo.xml");
-    assert!(path.exists(), "missing propreo fixture at {}", path.display());
+    assert!(
+        path.exists(),
+        "missing propreo fixture at {}",
+        path.display()
+    );
 
     let ontology = load_ontology(&path).expect("propreo.xml should load after entity expansion");
     assert!(

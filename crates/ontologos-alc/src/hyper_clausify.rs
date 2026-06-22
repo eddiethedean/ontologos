@@ -81,8 +81,10 @@ impl HyperClausifier {
                 self.process_subclass(ontology, sub, sup)?;
             }
             DlAxiom::SubObjectPropertyOf { sub, sup } => {
-                if let (ontologos_core::RoleExpr::Atomic(sub_id), ontologos_core::RoleExpr::Atomic(sup_id)) =
-                    (&sub, &sup)
+                if let (
+                    ontologos_core::RoleExpr::Atomic(sub_id),
+                    ontologos_core::RoleExpr::Atomic(sup_id),
+                ) = (&sub, &sup)
                 {
                     self.emit_role_subsumption(ontology, *sub_id, *sup_id);
                 }
@@ -316,9 +318,15 @@ impl HyperClausifier {
         let simplified = simplify_data_range(ontology, range);
         if is_complex_data_range(ontology, simplified) {
             let defdata = self.fresh_defdata_name(ontology, simplified);
-            if let DataExpr::Not(inner) = ontology.dl().de(simplified).cloned().unwrap_or(DataExpr::Top)
+            if let DataExpr::Not(inner) = ontology
+                .dl()
+                .de(simplified)
+                .cloned()
+                .unwrap_or(DataExpr::Top)
             {
-                if let DataExpr::And(ids) = ontology.dl().de(inner).cloned().unwrap_or(DataExpr::Top) {
+                if let DataExpr::And(ids) =
+                    ontology.dl().de(inner).cloned().unwrap_or(DataExpr::Top)
+                {
                     for id in ids {
                         if let Some(dr) = self.resolve_data_range(ontology, id) {
                             self.set.push_clause(HyperClause {
@@ -446,7 +454,8 @@ impl HyperClausifier {
                 self.emit_union_inclusion(ontology, range, defdata)?;
             }
             DataExpr::Not(inner) => {
-                if let Some(clause) = complement_intersection_oneof_clause(ontology, inner, defdata) {
+                if let Some(clause) = complement_intersection_oneof_clause(ontology, inner, defdata)
+                {
                     self.set.push_clause(clause);
                 } else {
                     self.emit_complement_inclusions(ontology, inner, defdata)?;
@@ -542,7 +551,8 @@ impl HyperClausifier {
             DataExpr::And(ids) => {
                 let mut head = Vec::new();
                 for id in ids {
-                    if let DataExpr::Or(_) = ontology.dl().de(id).cloned().unwrap_or(DataExpr::Top) {
+                    if let DataExpr::Or(_) = ontology.dl().de(id).cloned().unwrap_or(DataExpr::Top)
+                    {
                         if let Some(dr) = self.resolve_data_range(ontology, id) {
                             head.push(HyperAtom::DataRange {
                                 range: DataRangeFmt::Not(Box::new(dr)),
@@ -939,7 +949,9 @@ impl HyperClausifier {
 
     fn resolve_data_range(&self, ontology: &Ontology, de: DeId) -> Option<DataRangeFmt> {
         let simplified = simplify_data_range(ontology, de);
-        data_range_fmt(ontology, simplified, &|id| self.defdata_names.get(&id).cloned())
+        data_range_fmt(ontology, simplified, &|id| {
+            self.defdata_names.get(&id).cloned()
+        })
     }
 
     fn fresh_def_name(&mut self) -> String {
@@ -993,15 +1005,10 @@ fn flatten_data_and(ontology: &Ontology, ids: Vec<DeId>) -> Vec<DeId> {
 
 fn is_complex_data_range(ontology: &Ontology, de: DeId) -> bool {
     match ontology.dl().de(de) {
-        Some(DataExpr::Datatype(_)) | Some(DataExpr::Literal { .. }) | Some(DataExpr::Top) => {
-            false
-        }
-        Some(DataExpr::Or(ids)) => !ids.iter().all(|id| {
-            matches!(
-                ontology.dl().de(*id),
-                Some(DataExpr::Literal { .. })
-            )
-        }),
+        Some(DataExpr::Datatype(_)) | Some(DataExpr::Literal { .. }) | Some(DataExpr::Top) => false,
+        Some(DataExpr::Or(ids)) => !ids
+            .iter()
+            .all(|id| matches!(ontology.dl().de(*id), Some(DataExpr::Literal { .. }))),
         None => false,
         _ => true,
     }

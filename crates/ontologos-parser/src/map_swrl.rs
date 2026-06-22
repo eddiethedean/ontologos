@@ -1,7 +1,7 @@
 //! Map horned-owl SWRL rules into [`ontologos_core::SwrlRule`].
 
 use horned_owl::model::{
-    Atom, ClassExpression, DataProperty, DArgument, IArgument, Literal, ObjectProperty,
+    Atom, ClassExpression, DArgument, DataProperty, IArgument, Literal, ObjectProperty,
     ObjectPropertyExpression, RcStr, Rule, Variable,
 };
 use ontologos_core::{EntityId, EntityKind, SwrlAtom, SwrlDArg, SwrlIArg, SwrlRule};
@@ -61,15 +61,18 @@ impl Mapper<'_> {
                 self.map_iarg(a)?,
                 self.map_iarg(b)?,
             )),
-            Atom::BuiltInAtom { .. } | Atom::DataRangeAtom { .. } => None,
+            Atom::DataRangeAtom { pred, arg } => {
+                let range = self.map_data_range(pred)?;
+                let arg = self.map_darg(arg)?;
+                Some(SwrlAtom::DataRange { range, arg })
+            }
+            Atom::BuiltInAtom { .. } => None,
         }
     }
 
     fn map_iarg(&mut self, arg: &IArgument<RcStr>) -> Option<SwrlIArg> {
         match arg {
-            IArgument::Individual(ind) => self
-                .map_individual_entity(ind)
-                .map(SwrlIArg::Individual),
+            IArgument::Individual(ind) => self.map_individual_entity(ind).map(SwrlIArg::Individual),
             IArgument::Variable(var) => Some(SwrlIArg::Variable(variable_name(var))),
         }
     }
@@ -79,8 +82,8 @@ impl Mapper<'_> {
             DArgument::Variable(var) => Some(SwrlDArg::Variable(variable_name(var))),
             DArgument::Literal(lit) => {
                 let (lexical, datatype) = literal_parts(lit);
-                let datatype = datatype
-                    .and_then(|dt| self.register_or_warn_entity(dt, EntityKind::Datatype));
+                let datatype =
+                    datatype.and_then(|dt| self.register_or_warn_entity(dt, EntityKind::Datatype));
                 Some(SwrlDArg::Literal { lexical, datatype })
             }
         }
@@ -100,7 +103,10 @@ impl Mapper<'_> {
         self.register_or_warn_entity(class.as_ref(), EntityKind::Class)
     }
 
-    fn object_property_entity(&mut self, ope: &ObjectPropertyExpression<RcStr>) -> Option<EntityId> {
+    fn object_property_entity(
+        &mut self,
+        ope: &ObjectPropertyExpression<RcStr>,
+    ) -> Option<EntityId> {
         let ObjectPropertyExpression::ObjectProperty(ObjectProperty(prop)) = ope else {
             return None;
         };

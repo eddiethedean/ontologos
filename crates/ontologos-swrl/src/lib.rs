@@ -36,7 +36,8 @@ pub enum Error {
 
 /// Classify with SWRL rules materialized post-DL.
 pub fn classify_with_swrl(ontology: &Ontology) -> Result<(ontologos_core::Taxonomy, SwrlReport)> {
-    if !scan_constructs(ontology).contains(&OwlConstruct::SwrlRule) && ontology.swrl_rules().is_empty()
+    if !scan_constructs(ontology).contains(&OwlConstruct::SwrlRule)
+        && ontology.swrl_rules().is_empty()
     {
         return Err(Error::NotImplemented);
     }

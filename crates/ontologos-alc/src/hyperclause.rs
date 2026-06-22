@@ -2,7 +2,7 @@
 
 use std::cmp::Ordering;
 
-use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, EntityId, Ontology, RoleExpr};
+use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, EntityId, Ontology};
 
 const HERMIT_NS: &str = "file:/c/test.owl#";
 const OWL_THING: &str = "http://www.w3.org/2002/07/owl#Thing";
@@ -111,7 +111,7 @@ impl HyperClauseSet {
         let mut out: Vec<String> = self
             .clauses
             .iter()
-            .map(|c| format_hyper_clause(c))
+            .map(format_hyper_clause)
             .collect();
         out.extend(self.facts.iter().map(format_hyper_atom));
         out.sort();
@@ -144,12 +144,21 @@ fn format_hyper_atom(atom: &HyperAtom) -> String {
         HyperAtom::DataRange { range, term } => {
             format!("{}({})", format_data_range(range), term.fmt())
         }
-        HyperAtom::AtLeastData { n, role, range, term } => format!(
+        HyperAtom::AtLeastData {
+            n,
+            role,
+            range,
+            term,
+        } => format!(
             "atLeast({n} {role} {})({})",
             format_data_range(range),
             term.fmt()
         ),
-        HyperAtom::Role { role, subject, object } => {
+        HyperAtom::Role {
+            role,
+            subject,
+            object,
+        } => {
             format!("{role}({},{})", subject.fmt(), object.fmt())
         }
         HyperAtom::Equality { left, right } => format!("{} == {}", left.fmt(), right.fmt()),
@@ -265,12 +274,15 @@ pub(crate) fn sort_oneof_literals(lits: &mut [LiteralFmt]) {
         .iter()
         .all(|l| matches!(l.datatype.as_deref(), Some("xsd:int")));
     if all_int {
-        lits.sort_by(|a, b| format_literal(b).cmp(&format_literal(a)));
+        lits.sort_by_key(|l| std::cmp::Reverse(format_literal(l)));
         return;
     }
-    let has_double = lits
-        .iter()
-        .any(|l| matches!(l.datatype.as_deref(), Some("xsd:double") | Some("xsd:decimal")));
+    let has_double = lits.iter().any(|l| {
+        matches!(
+            l.datatype.as_deref(),
+            Some("xsd:double") | Some("xsd:decimal")
+        )
+    });
     let has_int = lits
         .iter()
         .any(|l| matches!(l.datatype.as_deref(), Some("xsd:int") | Some("xsd:integer")));
@@ -281,7 +293,6 @@ pub(crate) fn sort_oneof_literals(lits: &mut [LiteralFmt]) {
         });
     }
 }
-
 
 /// Entity abbreviation from ontology registry.
 pub fn abbrev_entity(ontology: &Ontology, id: EntityId) -> String {
@@ -376,10 +387,8 @@ fn data_range_fmt_expr(
         DataExpr::And(ids) => {
             if ids.len() == 1 {
                 data_range_fmt(ontology, ids[0], internal)
-            } else if let Some(name) = internal(de) {
-                Some(DataRangeFmt::Internal(name))
             } else {
-                None
+                internal(de).map(DataRangeFmt::Internal)
             }
         }
         DataExpr::Facet { base, .. } => data_range_fmt(ontology, *base, internal),
@@ -394,12 +403,4 @@ pub fn negate_data_range(range: &DataRangeFmt) -> DataRangeFmt {
 /// Role abbreviation.
 pub fn abbrev_role(ontology: &Ontology, property: EntityId) -> String {
     abbrev_entity(ontology, property)
-}
-
-/// Format object property role expression.
-pub fn abbrev_object_role(ontology: &Ontology, role: &RoleExpr) -> String {
-    match role {
-        RoleExpr::Atomic(id) => abbrev_entity(ontology, *id),
-        RoleExpr::Inverse(id) => format!("inv({})", abbrev_entity(ontology, *id)),
-    }
 }

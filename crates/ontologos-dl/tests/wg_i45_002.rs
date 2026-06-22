@@ -9,5 +9,8 @@ fn i45_002_premise_is_inconsistent() {
     let ont = load_ontology(&path).expect("load");
     let consistent = is_consistent(&ont).expect("check");
     eprintln!("I4.5-002 consistent={consistent}");
-    assert!(!consistent, "Kinnock/EuroMP/inverseOf case should be inconsistent");
+    assert!(
+        !consistent,
+        "Kinnock/EuroMP/inverseOf case should be inconsistent"
+    );
 }

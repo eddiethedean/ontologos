@@ -4,8 +4,9 @@ use std::path::Path;
 
 #[test]
 fn dl601_class_sat() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf");
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(
+        "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf",
+    );
     let ont = load_ontology(&path).unwrap();
     let dl = DlOntology::from_ontology(&ont).unwrap();
     let seed = TableauSeed::default();

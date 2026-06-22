@@ -116,7 +116,11 @@ fn rdfs_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
     let mut working = ontology.clone();
     let report = ontologos_rdfs::RdfsEngine::new()
         .materialize(&mut working)
-        .map_err(|e| Error::El(ontologos_el::Error::Profile(format!("rdfs materialize: {e}"))))?;
+        .map_err(|e| {
+            Error::El(ontologos_el::Error::Profile(format!(
+                "rdfs materialize: {e}"
+            )))
+        })?;
     Ok(report.clashes.is_empty())
 }
 
@@ -350,15 +354,9 @@ mod tests {
             .unwrap()
             .build()
             .unwrap();
-        let a = ontology
-            .lookup_entity("http://example.org/A")
-            .unwrap();
-        let b = ontology
-            .lookup_entity("http://example.org/B")
-            .unwrap();
-        let d = ontology
-            .lookup_entity("http://example.org/D")
-            .unwrap();
+        let a = ontology.lookup_entity("http://example.org/A").unwrap();
+        let b = ontology.lookup_entity("http://example.org/B").unwrap();
+        let d = ontology.lookup_entity("http://example.org/D").unwrap();
         ontology
             .add_axiom(Axiom::EquivalentClasses(vec![a, b]))
             .unwrap();

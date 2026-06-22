@@ -67,7 +67,7 @@ pub fn normalize_invalid_rdf_ids(input: &str) -> String {
         return input.to_owned();
     }
     let mut pairs: Vec<_> = remap.into_iter().collect();
-    pairs.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+    pairs.sort_by_key(|(old, _)| std::cmp::Reverse(old.len()));
     let mut out = input.to_owned();
     for (old, new) in pairs {
         out = out.replace(&format!("rdf:ID=\"{old}\""), &format!("rdf:ID=\"{new}\""));
@@ -282,12 +282,8 @@ pub fn inject_rdf_based_punning_declarations(input: &str) -> String {
     collect_punned_property_iris(input, &xmlns, &mut object_props, &mut datatype_props);
 
     classes.retain(|iri| !declared_classes.contains(iri));
-    object_props.retain(|iri| {
-        !declared_object.contains(iri) && !declared_datatype.contains(iri)
-    });
-    datatype_props.retain(|iri| {
-        !declared_object.contains(iri) && !declared_datatype.contains(iri)
-    });
+    object_props.retain(|iri| !declared_object.contains(iri) && !declared_datatype.contains(iri));
+    datatype_props.retain(|iri| !declared_object.contains(iri) && !declared_datatype.contains(iri));
 
     // Property axioms without usage clues default to object properties, except WG `dp`.
     for iri in object_props.clone() {
@@ -342,7 +338,9 @@ fn parse_xmlns(input: &str) -> HashMap<String, String> {
     let root_tag = &input[root_start..root_start + root_end + 1];
     let root_inner = root_tag.trim_end().strip_suffix('>').unwrap_or(root_tag);
     for token in root_inner.split_whitespace() {
-        if let Some((prefix, iri)) = token.strip_prefix("xmlns:").and_then(|rest| rest.split_once('='))
+        if let Some((prefix, iri)) = token
+            .strip_prefix("xmlns:")
+            .and_then(|rest| rest.split_once('='))
         {
             if let Some(iri) = trim_xml_attr_value(iri) {
                 map.insert(prefix.to_owned(), iri);
@@ -356,7 +354,8 @@ fn parse_xmlns(input: &str) -> HashMap<String, String> {
 
 fn trim_xml_attr_value(raw: &str) -> Option<String> {
     let raw = raw.trim();
-    if (raw.starts_with('"') && raw.ends_with('"')) || (raw.starts_with('\'') && raw.ends_with('\''))
+    if (raw.starts_with('"') && raw.ends_with('"'))
+        || (raw.starts_with('\'') && raw.ends_with('\''))
     {
         Some(raw[1..raw.len() - 1].to_owned())
     } else {
@@ -489,7 +488,11 @@ fn description_encloses_position(input: &str, desc_start: usize, pos: usize) -> 
     false
 }
 
-fn collect_punned_class_iris(input: &str, xmlns: &HashMap<String, String>, out: &mut HashSet<String>) {
+fn collect_punned_class_iris(
+    input: &str,
+    xmlns: &HashMap<String, String>,
+    out: &mut HashSet<String>,
+) {
     let mut pos = 0usize;
     while pos < input.len() {
         let Some(rel) = input[pos..].find('<') else {
@@ -545,7 +548,8 @@ fn collect_punned_property_iris(
         };
         if tag.contains("rdf:resource=\"") {
             object_props.insert(iri);
-        } else if tag.contains("rdf:datatype=\"") || has_literal_body(input, start + tag_end + 1, name)
+        } else if tag.contains("rdf:datatype=\"")
+            || has_literal_body(input, start + tag_end + 1, name)
         {
             datatype_props.insert(iri);
         }
@@ -706,9 +710,7 @@ fn rewrite_class_same_as_block(block: &str, base: &str) -> String {
         rewritten.push('\n');
     }
     rewritten.push_str("  <owl:equivalentClass>\n");
-    rewritten.push_str(&format!(
-        "    <owl:Class rdf:about=\"{partner_iri}\"/>\n"
-    ));
+    rewritten.push_str(&format!("    <owl:Class rdf:about=\"{partner_iri}\"/>\n"));
     rewritten.push_str("  </owl:equivalentClass>\n");
     rewritten.push_str(&block[close_start..]);
     rewritten
@@ -732,10 +734,7 @@ fn extract_class_same_as_partner(inner: &str, base: &str) -> Option<String> {
     resolve_class_iri_from_tag(&same_inner[class_start..=class_open_end], base)
 }
 
-fn find_top_level_element_bounds<'a>(
-    inner: &'a str,
-    tag: &str,
-) -> Option<(usize, usize, &'a str)> {
+fn find_top_level_element_bounds<'a>(inner: &'a str, tag: &str) -> Option<(usize, usize, &'a str)> {
     find_top_level_element(inner, tag)
 }
 
@@ -838,13 +837,21 @@ fn rewrite_anonymous_description_block(block: &str, iri: &str) -> String {
     let open_end = block.find('>').unwrap_or(0);
     let open = &block[..=open_end];
     if open.ends_with("/>") {
-        let inner = open.strip_prefix('<').unwrap_or(open).trim_end_matches("/>").trim();
+        let inner = open
+            .strip_prefix('<')
+            .unwrap_or(open)
+            .trim_end_matches("/>")
+            .trim();
         return format!("<{inner} rdf:about=\"{iri}\"/>");
     }
     if !block.ends_with(close_tag) {
         return block.to_owned();
     }
-    let inner = open.strip_prefix('<').unwrap_or(open).trim_end_matches('>').trim();
+    let inner = open
+        .strip_prefix('<')
+        .unwrap_or(open)
+        .trim_end_matches('>')
+        .trim();
     let mut rewritten = format!("<{inner} rdf:about=\"{iri}\">");
     rewritten.push_str(&block[open_end + 1..block.len() - close_tag.len()]);
     rewritten.push_str(close_tag);
@@ -921,7 +928,8 @@ fn is_typed_entity_declaration(block: &str) -> bool {
     ];
     ENTITY_TYPES.iter().any(|marker| {
         block.contains(marker)
-            && (block.contains("rdf:type rdf:resource=") || block.contains("rdf:type rdf:resource ="))
+            && (block.contains("rdf:type rdf:resource=")
+                || block.contains("rdf:type rdf:resource ="))
     })
 }
 
@@ -934,7 +942,10 @@ fn rewrite_description_to_named_individual(block: &str) -> String {
     let close_start = rewritten
         .rfind(close_tag)
         .expect("matching close tag after open rewrite");
-    rewritten.replace_range(close_start..close_start + close_tag.len(), "</owl:NamedIndividual>");
+    rewritten.replace_range(
+        close_start..close_start + close_tag.len(),
+        "</owl:NamedIndividual>",
+    );
     rewritten
 }
 
@@ -1292,7 +1303,9 @@ fn flatten_descriptions_in_distinct_members(input: &str) -> String {
                     "  <rdf:Description rdf:about=\"{about}\">\n    <owl:sameAs rdf:resource=\"{target}\"/>\n  </rdf:Description>\n"
                 ));
             }
-            flattened_inner.push_str(&format!("    <owl:NamedIndividual rdf:about=\"{about}\"/>\n"));
+            flattened_inner.push_str(&format!(
+                "    <owl:NamedIndividual rdf:about=\"{about}\"/>\n"
+            ));
         } else {
             flattened_inner.push_str(desc);
         }
@@ -1594,15 +1607,18 @@ mod tests {
             .unwrap_or_else(|| intersections.find("<rdf:Description").unwrap());
         let end = named_description_element_end(&intersections, start).expect("end");
         let block = &intersections[start..end];
-        assert!(block.contains("</rdf:type>"), "block missing type close: {block}");
+        assert!(
+            block.contains("</rdf:type>"),
+            "block missing type close: {block}"
+        );
         assert!(block.ends_with("</rdf:Description>"));
     }
 
     #[test]
     fn float_discrete_horned_emits_class_assertion() {
         use crate::limits::ParseLimits;
-        use crate::read::read_horned_owl_from_reader;
         use crate::map::map_to_core;
+        use crate::read::read_horned_owl_from_reader;
         use crate::Format;
         use std::io::Cursor;
 
@@ -1677,12 +1693,21 @@ mod tests {
         let injected = inject_rdf_based_punning_declarations(&expanded);
         let typed = materialize_typed_node_elements(&injected);
         let intersections = normalize_class_intersection_definitions(&typed);
-        let start = intersections.find("<rdf:Description rdf:about=\"a\">").unwrap();
+        let start = intersections
+            .find("<rdf:Description rdf:about=\"a\">")
+            .unwrap();
         let end = named_description_element_end(&intersections, start).unwrap();
         let block = &intersections[start..end];
-        assert!(block.ends_with("</rdf:Description>"), "block end: {:?}", &block[block.len().saturating_sub(40)..]);
+        assert!(
+            block.ends_with("</rdf:Description>"),
+            "block end: {:?}",
+            &block[block.len().saturating_sub(40)..]
+        );
         let rewritten = rewrite_description_to_named_individual(block);
-        assert!(!rewritten.contains("rdf:ty</owl:NamedIndividual>"), "{rewritten}");
+        assert!(
+            !rewritten.contains("rdf:ty</owl:NamedIndividual>"),
+            "{rewritten}"
+        );
     }
 
     #[test]

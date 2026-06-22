@@ -133,8 +133,8 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
             check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
         }
         if let Some(expected) = case.consistent {
-            let consistent = ontologos_dl::is_consistent(&ontology)
-                .map_err(|e| format!("{}: {e}", case.id))?;
+            let consistent =
+                ontologos_dl::is_consistent(&ontology).map_err(|e| format!("{}: {e}", case.id))?;
             if consistent != expected {
                 return Err(format!(
                     "{}: consistency expected {expected}, got {consistent}",
@@ -691,8 +691,8 @@ pub fn check_wg_case(case: &WgCase) -> Result<(), String> {
                 conclusion_path.display()
             ));
         }
-        let conclusion =
-            load_ontology(&conclusion_path).map_err(|e| format!("{}: load conclusion: {e}", case.id))?;
+        let conclusion = load_ontology(&conclusion_path)
+            .map_err(|e| format!("{}: load conclusion: {e}", case.id))?;
         let entailed = wg_entailment_holds(&ontology, &conclusion);
         if entailed != expected {
             return Err(format!(

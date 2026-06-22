@@ -233,8 +233,7 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
         clash::check_negated_cardinality(branch);
         return;
     }
-    if world_satisfies_filler(branch, world, filler)
-        && !should_unravel_existential(branch, filler)
+    if world_satisfies_filler(branch, world, filler) && !should_unravel_existential(branch, filler)
     {
         add_role_edge(branch, world, property.clone(), world);
         clash::check_negated_cardinality(branch);
@@ -264,6 +263,10 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
         return;
     }
     let new_world = branch.worlds.len();
+    if new_world >= super::block::MAX_WORLDS {
+        clash::check_negated_cardinality(branch);
+        return;
+    }
     branch.worlds.push(super::World::default());
     super::assert_thing_axioms_on_world(branch, new_world);
     branch.edges.push((world, property.clone(), new_world));
@@ -301,25 +304,30 @@ fn should_merge_forall_existential_complement_clash(
     let has_exist = branch.worlds[world].labels.iter().any(|&ce| {
         matches!(
             branch.dl.core().dl().ce(ce),
-            Some(ClassExpr::Some { property, .. }) if role_exprs_equal(&property, edge_property)
+            Some(ClassExpr::Some { property, .. }) if role_exprs_equal(property, edge_property)
         )
     });
-    let has_forall = branch.worlds[world].labels.iter().any(|&ce| {
-        matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::All { .. }))
-    });
+    let has_forall = branch.worlds[world]
+        .labels
+        .iter()
+        .any(|&ce| matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::All { .. })));
     has_exist && has_forall && !declared_functional_f(branch)
 }
 
 fn declared_functional_f(branch: &Branch<'_>) -> bool {
-    branch.dl.core().axioms().iter().any(|(_, axiom)| {
-        matches!(axiom, ontologos_core::Axiom::FunctionalObjectProperty(_))
-    })
+    branch
+        .dl
+        .core()
+        .axioms()
+        .iter()
+        .any(|(_, axiom)| matches!(axiom, ontologos_core::Axiom::FunctionalObjectProperty(_)))
 }
 
 fn world_has_forall_restriction(branch: &Branch<'_>, world: usize) -> bool {
-    branch.worlds[world].labels.iter().any(|&ce| {
-        matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::All { .. }))
-    })
+    branch.worlds[world]
+        .labels
+        .iter()
+        .any(|&ce| matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::All { .. })))
 }
 
 fn is_inv_f_property(branch: &Branch<'_>, property: &RoleExpr) -> bool {
@@ -498,20 +506,15 @@ pub(crate) fn materialize_top_object_property_loops(
     worlds: &HashMap<EntityId, usize>,
 ) {
     const TOP: &str = "http://www.w3.org/2002/07/owl#topObjectProperty";
-    let top = branch
-        .dl
-        .core()
-        .entities()
-        .iter()
-        .find_map(|(id, record)| {
-            branch
-                .dl
-                .core()
-                .resolve_iri(record.iri)
-                .ok()
-                .filter(|iri| *iri == TOP)
-                .map(|_| RoleExpr::Atomic(id))
-        });
+    let top = branch.dl.core().entities().iter().find_map(|(id, record)| {
+        branch
+            .dl
+            .core()
+            .resolve_iri(record.iri)
+            .ok()
+            .filter(|iri| *iri == TOP)
+            .map(|_| RoleExpr::Atomic(id))
+    });
     let Some(top) = top else {
         return;
     };
@@ -630,7 +633,8 @@ pub(crate) fn reapply_universal_restrictions(branch: &mut Branch<'_>) {
     for world in 0..world_count {
         let labels = branch.worlds[world].labels.clone();
         for ce in labels {
-            let Some(ClassExpr::All { property, filler }) = branch.dl.core().dl().ce(ce).cloned() else {
+            let Some(ClassExpr::All { property, filler }) = branch.dl.core().dl().ce(ce).cloned()
+            else {
                 continue;
             };
             expand_universal(branch, world, &property, filler);
@@ -700,7 +704,11 @@ fn check_role_disjoint_on_edge(
         return;
     }
     for (f, prop2, t) in branch.edges.clone() {
-        if f == from && t == to && !role_exprs_equal(property, &prop2) && roles_disjoint(branch, property, &prop2) {
+        if f == from
+            && t == to
+            && !role_exprs_equal(property, &prop2)
+            && roles_disjoint(branch, property, &prop2)
+        {
             branch.clash = true;
             return;
         }
@@ -799,14 +807,19 @@ fn world_has_max_one_successor(branch: &Branch<'_>, world: usize, property: &Rol
         let Some(expr) = store.ce(ce) else {
             return false;
         };
-        match expr {
-            ClassExpr::MaxCardinality { n: 1, property: prop, filler } | ClassExpr::ExactCardinality {
+        matches!(
+            expr,
+            ClassExpr::MaxCardinality {
                 n: 1,
                 property: prop,
                 filler,
-            } if role_subsumes(branch, property, prop) && filler.is_none() => true,
-            _ => false,
-        }
+            }
+            | ClassExpr::ExactCardinality {
+                n: 1,
+                property: prop,
+                filler,
+            } if role_subsumes(branch, property, prop) && filler.is_none()
+        )
     })
 }
 

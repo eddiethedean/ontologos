@@ -752,7 +752,9 @@ mod tests {
         let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
         let added = apply_characteristic_propagation(&mut ontology).expect("postprocess");
         assert!(added >= 1, "expected asymmetric OP to propagate to SOP1");
-        let sop1 = ontology.lookup_entity("file:/c/test.owl#SOP1").expect("SOP1");
+        let sop1 = ontology
+            .lookup_entity("file:/c/test.owl#SOP1")
+            .expect("SOP1");
         assert!(ontology.index().asymmetric_properties().contains(&sop1));
     }
 

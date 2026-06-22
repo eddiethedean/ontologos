@@ -12,7 +12,10 @@ fn analyze(case: &str) {
     if let Ok(t) = classify(&ont) {
         eprintln!("unsatisfiable classes:");
         for e in &t.unsatisfiable {
-            eprintln!("  {}", ont.resolve_iri(ont.entity(*e).unwrap().iri).unwrap());
+            eprintln!(
+                "  {}",
+                ont.resolve_iri(ont.entity(*e).unwrap().iri).unwrap()
+            );
         }
     }
     for ax in ont.dl().axioms() {
@@ -30,7 +33,8 @@ fn analyze(case: &str) {
             if let ontologos_core::DlAxiom::ClassAssertion { individual, class } = ax {
                 eprintln!(
                     "  CA {:?} -> {:?}",
-                    ont.resolve_iri(ont.entity(*individual).unwrap().iri).unwrap(),
+                    ont.resolve_iri(ont.entity(*individual).unwrap().iri)
+                        .unwrap(),
                     store.ce(*class)
                 );
             }

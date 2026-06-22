@@ -5,17 +5,6 @@ use ontologos_core::Ontology;
 use crate::engine::materialize_swrl_rules;
 use crate::Result;
 
-/// Parsed SWRL rule (head/body atom names) — legacy placeholder.
-#[derive(Debug, Clone)]
-pub struct SwrlRule {
-    /// Rule identifier.
-    pub id: String,
-    /// Body atom IRIs.
-    pub body: Vec<String>,
-    /// Head atom IRIs.
-    pub head: Vec<String>,
-}
-
 /// Report from SWRL rule application.
 #[derive(Debug, Clone, Default)]
 pub struct SwrlReport {

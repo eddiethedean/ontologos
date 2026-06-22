@@ -42,7 +42,34 @@ fn same_as_in_body1_is_inconsistent_after_rules() {
         report
     );
     let consistent = ontologos_dl::is_consistent(&ontology).expect("consistent");
-    assert!(!consistent, "expected UNSAT: complement clash on same individual");
+    assert!(
+        !consistent,
+        "expected UNSAT: complement clash on same individual"
+    );
+}
+
+#[test]
+fn parses_datarange_swrl_rules_without_skips() {
+    for name in [
+        "hermit_reasoner_rulestest_testdatarangesafety.ofn",
+        "hermit_reasoner_rulestest_testpositivebodydatarange.ofn",
+        "hermit_reasoner_rulestest_testnegativebodydatarange.ofn",
+        "hermit_reasoner_rulestest_testnegdrinhead.ofn",
+        "hermit_reasoner_rulestest_testrulewithdatatypes2.ofn",
+    ] {
+        let path = hermit_ofn(name);
+        let ontology = load_ontology(&path).unwrap_or_else(|e| panic!("{name}: {e}"));
+        let meta = ontology.parse_meta().expect("meta");
+        assert_eq!(
+            meta.skipped_axiom_count, 0,
+            "{name}: skipped {:?}",
+            meta.warnings
+        );
+        assert!(
+            !ontology.swrl_rules().is_empty(),
+            "{name}: expected SWRL rules"
+        );
+    }
 }
 
 #[test]

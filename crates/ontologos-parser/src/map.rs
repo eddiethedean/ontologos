@@ -6,7 +6,8 @@ use horned_owl::model::{
 };
 use horned_owl::ontology::set::SetOntology;
 use ontologos_core::{
-    Axiom, CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Error as CoreError, Ontology, OwlConstruct,
+    Axiom, CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Error as CoreError, Ontology,
+    OwlConstruct,
 };
 
 use crate::limits::ParseLimits;
@@ -354,7 +355,7 @@ impl Mapper<'_> {
             Component::OntologyID(_) | Component::DocIRI(_) => {}
             Component::Rule(rule) => {
                 self.report.meta.note_construct(OwlConstruct::SwrlRule);
-                if let Some(swrl) = self.map_swrl_rule(&rule) {
+                if let Some(swrl) = self.map_swrl_rule(rule) {
                     let _ = self.ontology.push_swrl_rule(swrl);
                     let _ = self.map_dl_swrl_rule();
                 } else {
@@ -860,11 +861,12 @@ impl Mapper<'_> {
             .iter()
             .filter_map(|individual| self.map_individual_entity(individual))
             .collect();
-        if ids.len() == individuals.len() && ids.len() >= 2 {
-            if ids.iter().copied().collect::<HashSet<_>>().len() < 2 {
-                self.push_dl_axiom(DlAxiom::DifferentIndividuals(ids));
-                return;
-            }
+        if ids.len() == individuals.len()
+            && ids.len() >= 2
+            && ids.iter().copied().collect::<HashSet<_>>().len() < 2
+        {
+            self.push_dl_axiom(DlAxiom::DifferentIndividuals(ids));
+            return;
         }
         let lookups: Vec<_> = individuals
             .iter()
