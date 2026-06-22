@@ -14,7 +14,7 @@ RDFS rules (`subclass_trans`, `subprop_trans`, `dom_inherit`, `rng_inherit`) run
 | `eq_prop_sub` | `EquivalentObjectProperties` expanded to mutual `SubObjectPropertyOf` |
 | `char_propagate` | Property characteristics (functional, transitive, symmetric, etc.) propagate along `subPropertyOf` |
 | `existential_sub_prop` | Existential restriction propagates along `subPropertyOf`, `equivalentProperties`, `equivalentClasses`, and downward along `subClassOf` (scm-spo1) |
-| `existential_subsumption` | Class with `∃P.D` subsumed by class with `∃Q.D` when `P ⊑ Q` (asserted existentials only) |
+| `existential_subsumption` | Class with `∃P.C` subsumed by class with `∃Q.D` when `P ⊑ Q` and `C ⊑ D` (asserted existentials; bridge post-process) |
 
 ## ABox rules
 

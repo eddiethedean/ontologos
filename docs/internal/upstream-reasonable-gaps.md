@@ -4,9 +4,10 @@ OntoLogos delegates OWL RL and RDFS materialization to the [`reasonable`](https:
 
 **Bridge fallbacks (v0.9+):** `ontologos-bridge::apply_reasonable_fallbacks` post-processes after reasonable materialization for:
 - `EqPropSub`: mutual `subPropertyOf` from `equivalentProperty`
-- `CharPropagate`: property characteristics along `subPropertyOf` (functional/asymmetric down, reflexive up)
+- `CharPropagate`: property characteristics along `subPropertyOf` (functional/asymmetric/irreflexive down, reflexive up)
 - Transitive `subPropertyOf` (RDFS 5)
 - Domain/range inheritance along `subPropertyOf` (prp-dom / prp-rng)
+- `cls-svf1/2`: existential TBox subsumption between named classes (`∃P.C` / `∃Q.D` with `P ⊑ Q` and `C ⊑ D`)
 
 Track remaining fixes upstream; un-ignore OntoLogos tests when `reasonable` releases include the behavior natively.
 
@@ -19,14 +20,14 @@ Track remaining fixes upstream; un-ignore OntoLogos tests when `reasonable` rele
 | `asymmetric_property_characteristic_propagates_to_subproperty` | CharPropagate | Asymmetric propagates to subproperties | **Yes** (active) |
 | `equivalent_properties_mutual_subproperty` | EqPropSub | Equivalent properties → mutual subPropertyOf | **Yes** (active) |
 | `existential_propagates_along_subclass_of` | scm-spo1 | `∃r.C` propagates to subclass | **Yes** (reasonable + index; active) |
-| `existential_subsumption_with_filler_subclass` | scm-spo1 | Second existential TBox materialization variant | No |
+| `existential_subsumption_with_filler_subclass` | cls-svf2 | Filler subsumption enables existential class subsumption | **Yes** (active) |
+| HermiT `subsumption2/3` | cls-svf1 | Property subsumption/equivalence + `EquivalentClasses` existentials | **Yes** (active) |
 | `same_as_different_from_clash_deduped_across_iterations` | — | Clash diagnostics differ from legacy RL dedup semantics | No |
 
 ## Remaining upstream gaps (no bridge fallback)
 
 | Gap | Tests |
 |-----|-------|
-| Existential TBox not materialized as named `SubClassOf` (variant) | `existential_subsumption_with_filler_subclass`, HermiT `subsumption2/3` |
 | Clash dedup semantics (sameAs/differentFrom) | `same_as_different_from_clash_deduped_across_iterations` |
 | Rule-level explanation traces | `with_traces()` no-op; `inferred_by_rule` empty |
 | Parallelism ignored | `parallel_smoke.rs` |

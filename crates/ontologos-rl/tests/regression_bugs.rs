@@ -315,7 +315,6 @@ fn existential_propagates_along_subclass_of() {
 
 /// cls-svf2: filler subsumption enables existential subsumption between classes.
 #[test]
-#[ignore = "reasonable does not materialize existential TBox subsumption between named classes"]
 fn existential_subsumption_with_filler_subclass() {
     let mut ontology = Ontology::builder()
         .class(&iri("A"))

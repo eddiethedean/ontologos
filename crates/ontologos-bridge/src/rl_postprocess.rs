@@ -190,7 +190,9 @@ pub fn apply_characteristic_propagation(ontology: &mut Ontology) -> Result<usize
     Ok(added)
 }
 
-/// Infer named `SubClassOf` from existential class definitions and property subsumption.
+/// Infer named `SubClassOf` from existential class definitions (cls-svf1/2).
+///
+/// `A ⊑ ∃P.C` and `B ⊑ ∃Q.D` yields `A ⊑ B` when `P ⊑ Q` and `C ⊑ D`.
 pub fn apply_existential_subclass_subsumption(ontology: &mut Ontology) -> Result<usize> {
     let defs = existential_class_definitions(ontology);
     if defs.len() < 2 {
@@ -206,10 +208,10 @@ pub fn apply_existential_subclass_subsumption(ontology: &mut Ontology) -> Result
             }
             let (sub, sub_prop, filler) = defs[i];
             let (sup, sup_prop, sup_filler) = defs[j];
-            if filler != sup_filler {
+            if !property_subsumed(sub_prop, sup_prop, &sub_to_supers) {
                 continue;
             }
-            if !property_subsumed(sub_prop, sup_prop, &sub_to_supers) {
+            if !class_subsumed(filler, sup_filler, ontology) {
                 continue;
             }
             if push_subclass_if_missing(ontology, sub, sup)? {
@@ -268,6 +270,25 @@ fn push_existential_def(
         return;
     };
     out.push((*class_id, *prop_id, *filler_id));
+}
+
+fn class_subsumed(sub: EntityId, sup: EntityId, ontology: &Ontology) -> bool {
+    if sub == sup {
+        return true;
+    }
+    let mut queue = VecDeque::from([sub]);
+    let mut seen = HashSet::from([sub]);
+    while let Some(current) = queue.pop_front() {
+        for &superclass in ontology.direct_superclasses(current) {
+            if superclass == sup {
+                return true;
+            }
+            if seen.insert(superclass) {
+                queue.push_back(superclass);
+            }
+        }
+    }
+    false
 }
 
 fn property_subsumed(
@@ -666,6 +687,73 @@ mod tests {
         let a = ontology.lookup_entity("file:/c/test.owl#A").expect("A");
         let b = ontology.lookup_entity("file:/c/test.owl#B").expect("B");
         assert!(ontology.direct_superclasses(a).contains(&b));
+    }
+
+    #[test]
+    fn existential_filler_subclass_subsumption() {
+        let mut ontology = Ontology::builder()
+            .class(&iri("A"))
+            .unwrap()
+            .class(&iri("B"))
+            .unwrap()
+            .class(&iri("D1"))
+            .unwrap()
+            .class(&iri("D2"))
+            .unwrap()
+            .object_property(&iri("R"))
+            .unwrap()
+            .subclass_of(&iri("D1"), &iri("D2"))
+            .unwrap()
+            .build()
+            .unwrap();
+
+        let a = ontology.lookup_entity(&iri("A")).unwrap();
+        let b = ontology.lookup_entity(&iri("B")).unwrap();
+        let d1 = ontology.lookup_entity(&iri("D1")).unwrap();
+        let r = ontology.lookup_entity(&iri("R")).unwrap();
+        ontology
+            .add_axiom(Axiom::SubClassOfExistential {
+                subclass: a,
+                property: r,
+                filler: d1,
+            })
+            .unwrap();
+        let d2 = ontology.lookup_entity(&iri("D2")).unwrap();
+        ontology
+            .add_axiom(Axiom::SubClassOfExistential {
+                subclass: b,
+                property: r,
+                filler: d2,
+            })
+            .unwrap();
+
+        let added = apply_existential_subclass_subsumption(&mut ontology).expect("postprocess");
+        assert!(added >= 1, "expected A ⊑ B from ∃R.D1 / ∃R.D2 with D1 ⊑ D2");
+        assert!(ontology.direct_superclasses(a).contains(&b));
+    }
+
+    #[test]
+    fn functional_characteristic_propagates_to_subproperty() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testisfunctionalobject.ofn",
+        );
+        let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
+        let added = apply_characteristic_propagation(&mut ontology).expect("postprocess");
+        assert!(added >= 1, "expected functional OP to propagate to SOP");
+        let sop = ontology.lookup_entity("file:/c/test.owl#SOP").expect("SOP");
+        assert!(ontology.index().functional_properties().contains(&sop));
+    }
+
+    #[test]
+    fn asymmetric_characteristic_propagates_to_subproperty() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testisasymmetricobject.ofn",
+        );
+        let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
+        let added = apply_characteristic_propagation(&mut ontology).expect("postprocess");
+        assert!(added >= 1, "expected asymmetric OP to propagate to SOP1");
+        let sop1 = ontology.lookup_entity("file:/c/test.owl#SOP1").expect("SOP1");
+        assert!(ontology.index().asymmetric_properties().contains(&sop1));
     }
 
     #[test]
