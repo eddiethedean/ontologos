@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<rdf:RDF
+  xml:base  = "http://example.org/"
+  xmlns     = "http://example.org/"
+  xmlns:owl = "http://www.w3.org/2002/07/owl#"
+  xmlns:rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+<owl:Ontology/>
+
+<owl:DatatypeProperty rdf:about="hasName" />
+
+<rdf:Description rdf:about="Meg">
+  <rdf:type>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="hasName" />
+      <owl:minQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">2</owl:minQualifiedCardinality>
+      <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#string" />
+    </owl:Restriction>
+  </rdf:type>
+</rdf:Description>
+
+</rdf:RDF>

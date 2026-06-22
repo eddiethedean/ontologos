@@ -10,6 +10,9 @@ BIN="$("${ROOT}/benchmarks/scripts/build-conformance-tools.sh")"
 
 echo "==> Regenerating HermiT catalog"
 python3 tests/hermit/generate_catalog.py --promote-only 2>/dev/null || python3 tests/hermit/generate_catalog.py
+python3 tests/hermit/generate_catalog.py --wg-catalog-only 2>/dev/null || true
+echo "==> Scanning WG cases for promotion (release build)"
+"${BIN}/promote_wg"
 python3 tests/hermit/generate_catalog.py --promote-wg-only 2>/dev/null || true
 
 echo "==> Updating ignore budget"

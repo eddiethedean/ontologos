@@ -1,0 +1,16 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xml:base="http://www.w3.org/2002/03owlt/unionOf/conclusions003" >
+   
+
+   <owl:Ontology/>
+   <owl:Class rdf:about="premises003#A-and-B">
+     <owl:unionOf rdf:parseType="Collection">
+       <owl:Class rdf:about="premises003#A"/>
+       <owl:Class rdf:about="premises003#B"/>
+     </owl:unionOf>
+   </owl:Class>
+
+
+</rdf:RDF>

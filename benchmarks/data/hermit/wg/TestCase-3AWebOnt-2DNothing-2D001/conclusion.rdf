@@ -1,0 +1,11 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xml:base='http://www.w3.org/2002/03owlt/Nothing/conclusions002'
+    xmlns:owl="http://www.w3.org/2002/07/owl#">
+
+   <owl:Class>
+      <owl:oneOf rdf:parseType="Collection"/>
+      <owl:equivalentClass  rdf:resource="http://www.w3.org/2002/07/owl#Nothing" />
+   </owl:Class>
+
+</rdf:RDF>

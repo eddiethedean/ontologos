@@ -142,11 +142,15 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     }
     // Drive B ⊑ ∃R.B unraveling for nominal cardinality clashes (NI-rule pattern).
     if !branch.clash && !branch.named_worlds.is_empty() {
-        for _ in 0..64 {
+        for _ in 0..256 {
             let before = branch.edges.len();
             expand::materialize_existential_successors(&mut branch);
             expand::drive_atomic_existential_subsumptions(&mut branch);
             expand::propagate_structural_existential_subsumptions(&mut branch);
+            clash::check_existential_bottom_subsumptions(&mut branch);
+            if branch.clash {
+                return Ok(false);
+            }
             for world in 0..branch.worlds.len() {
                 expand::recheck_cardinality_on_world(&mut branch, world);
                 if branch.clash {
@@ -158,7 +162,11 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
             }
         }
     }
-    Ok(ok)
+    clash::check_existential_bottom_subsumptions(&mut branch);
+    if branch.clash {
+        return Ok(false);
+    }
+    Ok(ok && !branch.clash)
 }
 
 fn assert_thing_on_named_individuals(
@@ -751,6 +759,7 @@ pub(crate) struct Branch<'a> {
     pub(crate) edges: Vec<(usize, RoleExpr, usize)>,
     pub(crate) clash: bool,
     pub(crate) disjoint: Vec<(CeId, CeId)>,
+    pub(crate) role_disjoint: Vec<(EntityId, EntityId)>,
     pub(crate) existentials: Vec<(RoleExpr, CeId, CeId)>,
     pub(crate) universals: Vec<(CeId, RoleExpr, CeId)>,
     pub(crate) tbox_subsumptions: Vec<(CeId, CeId)>,
@@ -768,6 +777,7 @@ pub(crate) struct Branch<'a> {
 impl<'a> Branch<'a> {
     fn new(dl: &'a DlOntology, seed: &TableauSeed) -> Self {
         let mut disjoint = Vec::new();
+        let mut role_disjoint = Vec::new();
         let mut existentials = seed.existentials.clone();
         let mut universals = Vec::new();
         let mut tbox_subsumptions = seed.subsumptions.clone();
@@ -808,6 +818,7 @@ impl<'a> Branch<'a> {
                     tbox_subsumptions.push((*sub, *sup));
                 }
                 Clause::Disjoint { left, right } => disjoint.push((*left, *right)),
+                Clause::RoleDisjoint { left, right } => role_disjoint.push((*left, *right)),
                 Clause::Existential {
                     property,
                     filler,
@@ -853,6 +864,7 @@ impl<'a> Branch<'a> {
             edges: Vec::new(),
             clash: false,
             disjoint,
+            role_disjoint,
             existentials,
             universals,
             tbox_subsumptions,
@@ -870,6 +882,10 @@ impl<'a> Branch<'a> {
 
     fn merge_worlds(&mut self, keep: usize, drop: usize) {
         if keep == drop || keep >= self.worlds.len() || drop >= self.worlds.len() {
+            return;
+        }
+        if expand::role_disjoint_merge_blocked(self, keep, drop) {
+            self.clash = true;
             return;
         }
         let labels = self.worlds[drop].labels.clone();
@@ -891,6 +907,7 @@ impl<'a> Branch<'a> {
         self.edges
             .retain(|(from, _, to)| *from != drop && *to != drop);
         self.worlds[drop] = World::default();
+        clash::check_existential_bottom_subsumptions(self);
     }
 
     fn assert(&mut self, world: usize, ce: CeId) {

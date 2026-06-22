@@ -13,7 +13,6 @@ fn widmann1_is_inconsistent() {
 }
 
 #[test]
-#[ignore = "NI rule blocking with unraveling — pending tableau blocking"]
 fn ni_rule_blocking_with_unraveling_is_inconsistent() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testniruleblockingwithunraveling.ofn",

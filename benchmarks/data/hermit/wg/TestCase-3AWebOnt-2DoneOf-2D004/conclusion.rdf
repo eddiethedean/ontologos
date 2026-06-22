@@ -1,0 +1,12 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:first="http://www.w3.org/2002/03owlt/oneOf/premises004#"
+    xml:base="http://www.w3.org/2002/03owlt/oneOf/conclusions004" >
+   <owl:Ontology/>
+   <owl:DatatypeProperty rdf:about="premises004#p"/>
+   <owl:Thing rdf:about="premises004#i">
+     <first:p rdf:datatype=
+"http://www.w3.org/2001/XMLSchema#integer">4</first:p>
+   </owl:Thing>
+</rdf:RDF>

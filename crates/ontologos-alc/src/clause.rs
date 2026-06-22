@@ -53,6 +53,13 @@ pub enum Clause {
         /// Super-role entity id.
         sup: EntityId,
     },
+    /// Object property disjointness `r ⊓ s ⊑ ⊥` (atomic pair).
+    RoleDisjoint {
+        /// Left disjoint role.
+        left: EntityId,
+        /// Right disjoint role.
+        right: EntityId,
+    },
     /// Complex role chain `r1 ∘ r2 ⊑ s` (super may be atomic or inverse).
     RoleChain {
         /// Chain of role expressions.

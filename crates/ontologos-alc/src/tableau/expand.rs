@@ -91,16 +91,8 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
             expand_min_cardinality(branch, world, n, property, filler);
         }
         ClassExpr::MaxCardinality { n: 0, .. } => branch.clash = true,
-        ClassExpr::MaxCardinality {
-            n,
-            property,
-            filler,
-        } => {
-            let filler = effective_cardinality_filler(branch, filler);
-            let count = count_role_successors(branch, world, &property, filler);
-            if count > n as usize {
-                branch.clash = true;
-            }
+        ClassExpr::MaxCardinality { .. } => {
+            recheck_cardinality_on_world(branch, world);
         }
         ClassExpr::ExactCardinality {
             n,
@@ -108,13 +100,18 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
             filler,
         } => {
             let filler = effective_cardinality_filler(branch, filler);
-            let count = count_role_successors(branch, world, &property, filler);
-            if count > n as usize {
-                branch.clash = true;
-            } else if count < n as usize {
+            let mut successors = role_successor_worlds(branch, world, &property, filler);
+            if successors.len() > n as usize {
+                if n == 1 && try_merge_role_successors(branch, &successors) {
+                    successors = role_successor_worlds(branch, world, &property, filler);
+                }
+                if successors.len() > n as usize {
+                    branch.clash = true;
+                }
+            } else if successors.len() < n as usize {
                 let filler = filler.or_else(|| top_ce(branch));
                 if let Some(f) = filler {
-                    for _ in 0..(n as usize - count) {
+                    for _ in 0..(n as usize - successors.len()) {
                         expand_existential(branch, world, property.clone(), f);
                     }
                 }
@@ -210,7 +207,7 @@ fn expand_has_value(
     property: RoleExpr,
     individual: ontologos_core::EntityId,
 ) {
-    let filler = branch
+    if let Some(filler) = branch
         .dl
         .core()
         .dl()
@@ -218,10 +215,13 @@ fn expand_has_value(
         .find_map(|(id, e)| match e {
             ClassExpr::OneOf(v) if v == &[individual] => Some(id),
             _ => None,
-        });
-    if let Some(filler) = filler {
+        })
+    {
         expand_existential(branch, world, property, filler);
+        return;
     }
+    let target = ensure_named_world(branch, individual);
+    add_role_edge(branch, world, property, target);
 }
 
 fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr, filler: CeId) {
@@ -229,7 +229,13 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
     if branch.clash {
         return;
     }
-    if world_satisfies_filler(branch, world, filler) {
+    if existential_already_satisfied(branch, world, &property, filler) {
+        clash::check_negated_cardinality(branch);
+        return;
+    }
+    if world_satisfies_filler(branch, world, filler)
+        && !should_unravel_existential(branch, filler)
+    {
         add_role_edge(branch, world, property.clone(), world);
         clash::check_negated_cardinality(branch);
         return;
@@ -276,6 +282,33 @@ fn existing_role_successor(
         .iter()
         .find(|(from, role, _)| *from == world && role_subsumes(branch, property, role))
         .map(|(_, _, to)| *to)
+}
+
+fn existential_already_satisfied(
+    branch: &Branch<'_>,
+    world: usize,
+    property: &RoleExpr,
+    filler: CeId,
+) -> bool {
+    branch.edges.iter().any(|(from, role, to)| {
+        *from == world
+            && role_subsumes(branch, property, role)
+            && world_satisfies_filler(branch, *to, filler)
+    })
+}
+
+/// Unravel `C ⊑ ∃R.C` into fresh successors when `C` also has nominal HasValue constraints.
+fn should_unravel_existential(branch: &Branch<'_>, filler: CeId) -> bool {
+    let Some(ClassExpr::Atomic(_)) = branch.dl.core().dl().ce(filler) else {
+        return false;
+    };
+    branch.tbox_subsumptions.iter().any(|&(sub, sup)| {
+        sub == filler
+            && matches!(
+                branch.dl.core().dl().ce(sup),
+                Some(ClassExpr::HasValue { .. })
+            )
+    })
 }
 
 fn has_universal_has_self_for_role(branch: &Branch<'_>, world: usize, role: &RoleExpr) -> bool {
@@ -416,7 +449,7 @@ pub(crate) fn propagate_structural_existential_subsumptions(branch: &mut Branch<
     }
 }
 
-fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce: CeId) -> bool {
+pub(crate) fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce: CeId) -> bool {
     if branch.worlds[world].labels.contains(&ce) {
         return true;
     }
@@ -481,6 +514,72 @@ pub(crate) fn add_role_edge(branch: &mut Branch<'_>, from: usize, property: Role
         recheck_cardinality_on_world(branch, to);
     }
     propagate_structural_existential_subsumptions(branch);
+    check_role_disjoint_on_edge(branch, from, &property, to);
+    clash::check_existential_bottom_subsumptions(branch);
+}
+
+fn check_role_disjoint_on_edge(
+    branch: &mut Branch<'_>,
+    from: usize,
+    property: &RoleExpr,
+    to: usize,
+) {
+    if branch.clash {
+        return;
+    }
+    for (f, prop2, t) in branch.edges.clone() {
+        if f == from && t == to && !role_exprs_equal(property, &prop2) && roles_disjoint(branch, property, &prop2) {
+            branch.clash = true;
+            return;
+        }
+    }
+}
+
+pub(crate) fn role_disjoint_merge_blocked(branch: &Branch<'_>, keep: usize, drop: usize) -> bool {
+    if keep == drop {
+        return false;
+    }
+    for &(left, right) in &branch.role_disjoint {
+        let p = RoleExpr::Atomic(left);
+        let q = RoleExpr::Atomic(right);
+        for from in 0..branch.worlds.len() {
+            let mut p_targets = HashSet::new();
+            let mut q_targets = HashSet::new();
+            for (f, role, t) in &branch.edges {
+                if *f != from {
+                    continue;
+                }
+                if role_subsumes(branch, &p, role) {
+                    p_targets.insert(*t);
+                }
+                if role_subsumes(branch, &q, role) {
+                    q_targets.insert(*t);
+                }
+            }
+            if (p_targets.contains(&keep) && q_targets.contains(&drop))
+                || (p_targets.contains(&drop) && q_targets.contains(&keep))
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+pub(crate) fn roles_disjoint(branch: &Branch<'_>, r1: &RoleExpr, r2: &RoleExpr) -> bool {
+    if role_exprs_equal(r1, r2) {
+        return false;
+    }
+    for &(left, right) in &branch.role_disjoint {
+        let p = RoleExpr::Atomic(left);
+        let q = RoleExpr::Atomic(right);
+        if (role_subsumes(branch, &p, r1) && role_subsumes(branch, &q, r2))
+            || (role_subsumes(branch, &p, r2) && role_subsumes(branch, &q, r1))
+        {
+            return true;
+        }
+    }
+    false
 }
 
 fn merge_inverse_functional_successor(
@@ -538,10 +637,15 @@ pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize
                 filler,
             } => {
                 let filler = effective_cardinality_filler(branch, filler);
-                let count = count_role_successors(branch, world, &property, filler);
-                if count > n as usize {
-                    branch.clash = true;
-                    return;
+                let mut successors = role_successor_worlds(branch, world, &property, filler);
+                if successors.len() > n as usize {
+                    if n == 1 && try_merge_role_successors(branch, &successors) {
+                        successors = role_successor_worlds(branch, world, &property, filler);
+                    }
+                    if successors.len() > n as usize {
+                        branch.clash = true;
+                        return;
+                    }
                 }
             }
             ClassExpr::ExactCardinality {
@@ -550,10 +654,15 @@ pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize
                 filler,
             } => {
                 let filler = effective_cardinality_filler(branch, filler);
-                let count = count_role_successors(branch, world, &property, filler);
-                if count > n as usize {
-                    branch.clash = true;
-                    return;
+                let mut successors = role_successor_worlds(branch, world, &property, filler);
+                if successors.len() > n as usize {
+                    if n == 1 && try_merge_role_successors(branch, &successors) {
+                        successors = role_successor_worlds(branch, world, &property, filler);
+                    }
+                    if successors.len() > n as usize {
+                        branch.clash = true;
+                        return;
+                    }
                 }
             }
             _ => {}
@@ -872,16 +981,42 @@ pub(crate) fn count_role_successors(
     property: &RoleExpr,
     filler: Option<CeId>,
 ) -> usize {
+    role_successor_worlds(branch, world, property, filler).len()
+}
+
+fn role_successor_worlds(
+    branch: &Branch<'_>,
+    world: usize,
+    property: &RoleExpr,
+    filler: Option<CeId>,
+) -> Vec<usize> {
     let filler = effective_cardinality_filler(branch, filler);
-    branch
-        .edges
-        .iter()
-        .filter(|(from, role, to)| {
-            *from == world
-                && role_subsumes(branch, property, role)
-                && filler.is_none_or(|f| branch.worlds[*to].labels.contains(&f))
-        })
-        .count()
+    let mut seen = HashSet::new();
+    let mut out = Vec::new();
+    for (from, role, to) in &branch.edges {
+        if *from == world
+            && role_subsumes(branch, property, role)
+            && filler.is_none_or(|f| branch.worlds[*to].labels.contains(&f))
+            && seen.insert(*to)
+        {
+            out.push(*to);
+        }
+    }
+    out
+}
+
+fn try_merge_role_successors(branch: &mut Branch<'_>, successors: &[usize]) -> bool {
+    if successors.len() < 2 {
+        return false;
+    }
+    let keep = successors[0];
+    for &drop in &successors[1..] {
+        branch.merge_worlds(keep, drop);
+        if branch.clash {
+            return false;
+        }
+    }
+    true
 }
 
 /// Whether `sub_role` ⊑ `super_role` in the saturated role hierarchy.

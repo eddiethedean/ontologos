@@ -1,0 +1,31 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xml:base="http://www.w3.org/2002/03owlt/equivalentClass/conclusions006" >
+   <owl:Ontology/>
+   <owl:Class>
+      <owl:intersectionOf rdf:parseType="Collection">
+          <owl:Class>
+             <owl:complementOf rdf:resource="premises006#A"/>
+          </owl:Class>
+          <owl:Class>
+             <owl:complementOf rdf:resource="premises006#B"/>
+          </owl:Class>
+      </owl:intersectionOf>
+      <owl:equivalentClass>
+        <owl:Class>
+          <owl:complementOf>
+             <owl:Class>
+               <owl:unionOf rdf:parseType="Collection">
+                 <rdf:Description rdf:about="premises006#A"/>
+                 <rdf:Description rdf:about="premises006#B"/>
+               </owl:unionOf>
+             </owl:Class>
+          </owl:complementOf>
+        </owl:Class>
+      </owl:equivalentClass>
+   </owl:Class>   
+   <owl:Class rdf:about="premises006#A"/>
+   <owl:Class rdf:about="premises006#B"/>
+</rdf:RDF>

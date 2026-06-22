@@ -764,6 +764,8 @@ impl Mapper<'_> {
                 individual: individual_id,
                 class: class_id,
             });
+            // Also record in the DL store so tableau ABox materialization sees atomic typings.
+            let _ = self.map_dl_class_assertion(ce, individual);
         } else if self.map_dl_class_assertion(ce, individual) {
         } else {
             self.skip_if_unmapped(

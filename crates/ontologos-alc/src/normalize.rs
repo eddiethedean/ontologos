@@ -139,6 +139,14 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                 let ce = nnf(ontology, class);
                 out.push(Clause::Subsumption { sub: nom, sup: ce });
             }
+            DlAxiom::DisjointObjectProperties(ids) if ids.len() >= 2 => {
+                for w in ids.windows(2) {
+                    out.push(Clause::RoleDisjoint {
+                        left: w[0],
+                        right: w[1],
+                    });
+                }
+            }
             DlAxiom::SubObjectPropertyOf { sub, sup } => match (&sub, &sup) {
                 (RoleExpr::Atomic(sub_id), RoleExpr::Atomic(sup_id)) => {
                     out.push(Clause::RoleSubsumption {

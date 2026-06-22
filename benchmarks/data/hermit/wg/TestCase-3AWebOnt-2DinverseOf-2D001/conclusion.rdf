@@ -1,0 +1,9 @@
+<rdf:RDF 
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xml:base='http://www.w3.org/2002/03owlt/inverseOf/conclusions001'
+    xmlns:your="http://example.net/yourVocab#">
+
+    <rdf:Description rdf:about="http://example.net/vocab#bob">
+        <your:isBrotherOf rdf:resource="http://example.net/vocab#joe"/>
+    </rdf:Description>
+</rdf:RDF>

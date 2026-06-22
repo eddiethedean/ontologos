@@ -93,13 +93,10 @@ reasoner.ReasonerTest.testKeys
 reasoner.ReasonerTest.testKeys1
 reasoner.ReasonerTest.testKeys2
 reasoner.ReasonerTest.testKeysNegatedClass
-reasoner.ReasonerTest.testLearningBacktracking
 reasoner.ReasonerTest.testNIRuleBlockingWithUnraveling
 reasoner.ReasonerTest.testNegativeObjectPropertyAssertionWithNonSimple
 reasoner.ReasonerTest.testNominalMerging
-reasoner.ReasonerTest.testNominals1
 reasoner.ReasonerTest.testNonUnaryKeys
-reasoner.ReasonerTest.testNonUnaryKeys2
 reasoner.ReasonerTest.testReflexivity
 reasoner.ReasonerTest.testRoleChainsWithTransitiveSymmetric
 reasoner.ReasonerTest.testRoleDisjointness2

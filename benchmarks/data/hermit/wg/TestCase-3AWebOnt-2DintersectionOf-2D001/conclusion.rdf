@@ -1,0 +1,8 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:first="http://www.w3.org/2002/03owlt/intersectionOf/premises001#"
+    xml:base="http://www.w3.org/2002/03owlt/intersectionOf/conclusions001" >
+
+    <first:C rdf:about="premises001#John"/>
+
+</rdf:RDF>

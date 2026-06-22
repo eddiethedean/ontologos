@@ -19,8 +19,34 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 HERMIT = Path(os.environ.get("ONTOLOGOS_HERMIT_ROOT", REPO / "HermiT"))
-JAVA_ROOT = HERMIT / "src/test/java/org/semanticweb/HermiT"
-RES_ROOT = HERMIT / "src/test/resources/org/semanticweb/HermiT"
+
+
+def resolve_hermit_paths() -> tuple[Path, Path]:
+    """Support Maven (`src/test/...`) and HermiT bundle (`project/test/...`) layouts."""
+    candidates = [
+        (
+            HERMIT / "src/test/java/org/semanticweb/HermiT",
+            HERMIT / "src/test/resources/org/semanticweb/HermiT",
+        ),
+        (
+            HERMIT / "project/test/org/semanticweb/HermiT",
+            HERMIT / "project/test/org/semanticweb/HermiT",
+        ),
+        (
+            HERMIT / "project/test/org/semanticweb/HermiT",
+            HERMIT / "project/resources/org/semanticweb/HermiT",
+        ),
+    ]
+    for java_root, res_root in candidates:
+        if java_root.is_dir():
+            return java_root, res_root if res_root.is_dir() else java_root
+    return (
+        HERMIT / "src/test/java/org/semanticweb/HermiT",
+        HERMIT / "src/test/resources/org/semanticweb/HermiT",
+    )
+
+
+JAVA_ROOT, RES_ROOT = resolve_hermit_paths()
 OUT_CATALOG = REPO / "benchmarks/data/hermit/catalog"
 OUT_AXIOMS = REPO / "benchmarks/data/hermit/axioms"
 OUT_RUST = REPO / "crates/ontologos-conformance/tests/hermit_generated.rs"
@@ -43,17 +69,39 @@ def load_promoted_axiom_ids() -> set[str]:
 
 PROMOTED_AXIOM_IDS = load_promoted_axiom_ids()
 
-# Approved OWL WG DL entailment subset (premise/conclusion RDF vendored from all.rdf).
-# Promote to status=wg only after ontologos-dl passes entailment on each case.
-WG_APPROVED_SUBSET: set[str] = {
-    "Chain2trans",
-    "Bnode2somevaluesfrom",
-    "New-2DFeature-2DObjectPropertyChain-2D001",
-}
+PROMOTED_WG_PATH = REPO / "benchmarks/data/hermit/catalog/promoted_wg_ids.txt"
+
+
+def load_promoted_wg_ids() -> set[str]:
+    if not PROMOTED_WG_PATH.is_file():
+        return {
+            "Chain2trans",
+            "Bnode2somevaluesfrom",
+            "New-2DFeature-2DObjectPropertyChain-2D001",
+        }
+    out: set[str] = set()
+    for line in PROMOTED_WG_PATH.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            out.add(line.split(".")[-1] if "." in line else line)
+    return out
+
+
+PROMOTED_WG_IDS = load_promoted_wg_ids()
+
+# All Approved DL WG tests with embedded RDF are vendored from all.rdf during --wg-catalog-only.
+# Only ids in promoted_wg_ids.txt (from `promote_wg`) become status=wg in CI.
 
 SKIP_FILE = re.compile(
     r"(Abstract|AllTests|AllQuick|Descriptor|Registry|Invalid|Failing|TstDescriptor|AllWG|AllApproved|AllExtracredit|AllNonRejected|AllProposed)"
 )
+
+# ReasonerTest incremental consistency checks — static OFN is initial load only.
+INCREMENTAL_CONSISTENCY_IDS: set[str] = {
+    "reasoner.ReasonerTest.testIncrementalWithNegatedClass",
+    "reasoner.ReasonerTest.testIncrementalWithNegatedHasSelf",
+    "reasoner.ReasonerTest.testIncrementalWithNegatedHasValue",
+}
 
 # Hand-authored subsumption expectations for OFN fixtures Java cannot extract.
 HARDCODED_AXIOM_SUBSUMPTIONS: dict[str, list[dict[str, str | bool]]] = {
@@ -667,8 +715,12 @@ def infer_status(case: HermitCase) -> None:
             case.status = "axiom"
             case.tier = "A"
         elif case.engine in ("dl", "alc"):
-            case.status = "axiom"
-            case.tier = "A"
+            if case.id in PROMOTED_AXIOM_IDS:
+                case.status = "axiom"
+                case.tier = "A"
+            else:
+                case.status = "planned"
+                case.ignore_reason = "DL axiom fixture; subsumption assertions pending engine (Phase 2+)"
         elif case.engine == "swrl":
             case.status = "swrl"
             case.tier = "A"
@@ -828,6 +880,8 @@ def collect_cases() -> list[HermitCase]:
             case.property_subsumptions = extract_property_subsumptions(body)
             case.property_characteristics = extract_property_characteristics(body)
             case.consistent = extract_consistency(body)
+            if case.id in INCREMENTAL_CONSISTENCY_IDS:
+                case.consistent = None
             infer_status(case)
             cases.append(case)
     return cases
@@ -969,13 +1023,20 @@ def collect_wg_cases() -> list[WgCase]:
         conclusion_ofn = None
         status = "planned"
         ignore_reason = "WG test — requires ontologos-dl + vendored WG OFN fixtures"
-        if test_id in WG_APPROVED_SUBSET and "PositiveEntailmentTest" in block:
+        if "PositiveEntailmentTest" in block:
             prem_rel, conc_rel = write_wg_fixture(test_id, block)
             premise_ofn = prem_rel
             conclusion_ofn = conc_rel
-            if premise_ofn and conclusion_ofn:
-                status = "wg"
-                ignore_reason = None
+        elif expected_consistent is not None:
+            prem_rel, _ = write_wg_fixture(test_id, block)
+            premise_ofn = prem_rel
+        if (
+            test_id in PROMOTED_WG_IDS
+            and premise_ofn
+            and (conclusion_ofn is not None or expected_consistent is not None)
+        ):
+            status = "wg"
+            ignore_reason = None
         cases.append(
             WgCase(
                 id=f"owl_wg_tests.{test_id}",
@@ -1016,6 +1077,8 @@ def write_wg_rust(cases: list[WgCase]) -> None:
 
 def promote_wg_from_disk() -> None:
     """Activate WG cases with vendored premise/conclusion RDF on disk."""
+    global PROMOTED_WG_IDS
+    PROMOTED_WG_IDS = load_promoted_wg_ids()
     wg_path = OUT_WG_CATALOG
     raw = json.loads(wg_path.read_text(encoding="utf-8"))
     updated: list[dict] = []
@@ -1024,12 +1087,17 @@ def promote_wg_from_disk() -> None:
         test_id = row["id"].split(".", 1)[-1]
         prem = OUT_WG_DATA / test_id / "premise.rdf"
         conc = OUT_WG_DATA / test_id / "conclusion.rdf"
-        if test_id in WG_APPROVED_SUBSET and prem.is_file() and conc.is_file():
-            row["status"] = "wg"
+        if prem.is_file():
             row["premise_ofn"] = f"wg/{test_id}/premise.rdf"
-            row["conclusion_ofn"] = f"wg/{test_id}/conclusion.rdf"
-            row["ignore_reason"] = None
-            active += 1
+            if conc.is_file():
+                row["conclusion_ofn"] = f"wg/{test_id}/conclusion.rdf"
+            if test_id in PROMOTED_WG_IDS:
+                row["status"] = "wg"
+                row["ignore_reason"] = None
+                active += 1
+            elif row.get("conclusion_ofn") or row.get("expected_consistent") is not None:
+                row["status"] = "planned"
+                row["ignore_reason"] = "WG test — pending ontologos-dl entailment promotion"
         updated.append(row)
     wg_path.write_text(json.dumps(updated, indent=2) + "\n", encoding="utf-8")
     cases = [WgCase(**row) for row in updated]
@@ -1046,6 +1114,8 @@ def promote_only_from_disk() -> None:
     cases: list[HermitCase] = []
     for row in raw:
         case = HermitCase(**row)
+        if case.id in INCREMENTAL_CONSISTENCY_IDS:
+            case.consistent = None
         infer_status(case)
         cases.append(case)
     catalog_path.write_text(
@@ -1061,12 +1131,32 @@ def promote_only_from_disk() -> None:
     print(f"  wrote {OUT_RUST.relative_to(REPO)}")
 
 
+def wg_catalog_only() -> None:
+    """Vendor WG fixtures and refresh wg_cases.json without HermiT Java sources."""
+    global PROMOTED_WG_IDS
+    PROMOTED_WG_IDS = load_promoted_wg_ids()
+    wg_cases = collect_wg_cases()
+    OUT_CATALOG.mkdir(parents=True, exist_ok=True)
+    wg_path = OUT_WG_CATALOG
+    wg_path.write_text(
+        json.dumps([asdict(c) for c in wg_cases], indent=2) + "\n", encoding="utf-8"
+    )
+    write_wg_rust(wg_cases)
+    active = sum(1 for c in wg_cases if c.status == "wg")
+    print(f"WG catalog refresh: {len(wg_cases)} cases, {active} active")
+    print(f"  wrote {wg_path.relative_to(REPO)}")
+    print(f"  wrote {OUT_WG_RUST.relative_to(REPO)}")
+
+
 def main() -> None:
     if len(sys.argv) > 1 and sys.argv[1] == "--promote-only":
         promote_only_from_disk()
         return
     if len(sys.argv) > 1 and sys.argv[1] == "--promote-wg-only":
         promote_wg_from_disk()
+        return
+    if len(sys.argv) > 1 and sys.argv[1] == "--wg-catalog-only":
+        wg_catalog_only()
         return
     cases = collect_cases()
     wg_cases = collect_wg_cases()

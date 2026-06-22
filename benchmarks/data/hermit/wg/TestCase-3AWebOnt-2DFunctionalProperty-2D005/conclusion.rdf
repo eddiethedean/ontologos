@@ -1,0 +1,18 @@
+<rdf:RDF
+    xml:base="http://www.w3.org/2002/03owlt/FunctionalProperty/conclusions005"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:owl ="http://www.w3.org/2002/07/owl#"
+  xmlns:eg ="http://www.example.org/">
+    <owl:Thing rdf:about="http://www.example.org/foo#object">
+      <rdf:type>
+        <owl:Restriction>
+   <owl:onProperty>
+     <owl:FunctionalProperty rdf:about="http://www.example.org/foo#prop" />
+   </owl:onProperty>
+   <owl:maxCardinality 
+      rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+      >1</owl:maxCardinality>
+        </owl:Restriction>
+      </rdf:type>
+    </owl:Thing>
+</rdf:RDF>

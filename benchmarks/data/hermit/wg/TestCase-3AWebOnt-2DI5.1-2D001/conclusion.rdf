@@ -1,0 +1,11 @@
+<rdf:RDF
+  xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+  xmlns:NS0='http://example.org/vocab#'
+         xml:base=
+           'http://www.w3.org/2002/03owlt/I5.1/conclusions001'
+ >
+  <rdf:Description rdf:nodeID='A0'>
+    <NS0:population>2688418</NS0:population>
+    <NS0:stateBird rdf:resource='http://example.org/vocab#WesternMeadowlark'/>
+  </rdf:Description>
+</rdf:RDF>

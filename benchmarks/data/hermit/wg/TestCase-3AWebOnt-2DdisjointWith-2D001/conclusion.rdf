@@ -1,0 +1,12 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:first="http://www.w3.org/2002/03owlt/disjointWith/premises001#"
+    xml:base="http://www.w3.org/2002/03owlt/disjointWith/conclusions001" >
+   <owl:Ontology/>
+    <owl:Thing rdf:about="premises001#a">
+       <owl:differentFrom>
+          <owl:Thing rdf:about="premises001#b"/>
+       </owl:differentFrom>
+    </owl:Thing>
+</rdf:RDF>

@@ -131,6 +131,27 @@ pub fn assert_negation(branch: &mut Branch<'_>, world: usize, ce: CeId) {
     detect_clash(branch);
 }
 
+/// Clash when a world satisfies `∃R.C` and `∃R.C ⊑ ⊥` is in the TBox.
+pub fn check_existential_bottom_subsumptions(branch: &mut Branch<'_>) {
+    if branch.clash {
+        return;
+    }
+    let subs: Vec<(CeId, CeId)> = branch
+        .tbox_subsumptions
+        .iter()
+        .copied()
+        .filter(|&(_, sup)| matches!(branch.dl.core().dl().ce(sup), Some(ClassExpr::Bottom)))
+        .collect();
+    for world in 0..branch.worlds.len() {
+        for &(sub, _) in &subs {
+            if super::expand::world_structurally_satisfies(branch, world, sub) {
+                branch.clash = true;
+                return;
+            }
+        }
+    }
+}
+
 /// Clash when negated cardinality bounds are violated by the current successor set.
 pub fn check_negated_cardinality(branch: &mut Branch<'_>) {
     if branch.clash {

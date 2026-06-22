@@ -34,6 +34,10 @@ name = "promote_catalog"
 path = "src/bin/promote_catalog.rs"
 
 [[bin]]
+name = "promote_wg"
+path = "src/bin/promote_wg.rs"
+
+[[bin]]
 name = "dl_failures"
 path = "src/bin/dl_failures.rs"
 

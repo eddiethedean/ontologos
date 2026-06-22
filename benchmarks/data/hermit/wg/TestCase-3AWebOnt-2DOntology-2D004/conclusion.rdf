@@ -1,0 +1,15 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:first="http://www.w3.org/2002/03owlt/Ontology/premises004#"
+    xml:base="http://www.w3.org/2002/03owlt/Ontology/conclusions004" >
+  <first:Car rdf:about="premises004#auto">
+     <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing" />
+  </first:Car>
+  <first:Automobile rdf:about="premises004#car">
+     <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Thing" />
+  </first:Automobile>
+   <owl:Class rdf:about="premises004#Car"/>
+   <owl:Class rdf:about="premises004#Automobile"/>
+</rdf:RDF>
