@@ -1737,7 +1737,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d601() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d602() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D602");
 }
@@ -1822,7 +1821,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d617() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d623() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D623");
 }
@@ -1904,7 +1902,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d643() {
 }
 
 #[test]
-#[ignore = "WG test — pending ontologos-dl entailment promotion"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d644() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D644");
 }

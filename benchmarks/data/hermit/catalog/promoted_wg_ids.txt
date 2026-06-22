@@ -258,11 +258,13 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D106
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D107
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D110
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D207
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D602
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D604
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D605
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D609
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D615
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D616
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D623
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D624
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D625
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D627
@@ -271,6 +273,7 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D630
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D631
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D633
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D634
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D644
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D667
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D905
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D907

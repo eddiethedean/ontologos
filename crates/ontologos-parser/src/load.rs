@@ -95,8 +95,10 @@ pub fn load_ontology_with_limits_and_base(
             limits.max_expanded_bytes,
         )?;
         let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&expanded);
+        let typed_nodes =
+            crate::rdf_preprocess::materialize_typed_node_elements(&injected);
         let individuals =
-            crate::rdf_preprocess::materialize_anonymous_individual_descriptions(&injected);
+            crate::rdf_preprocess::materialize_anonymous_individual_descriptions(&typed_nodes);
         let normalized =
             crate::rdf_preprocess::normalize_all_different_members(&individuals);
         let disjoint =

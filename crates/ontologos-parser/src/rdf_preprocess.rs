@@ -457,6 +457,7 @@ fn collect_punned_property_iris(
 
 fn element_qname(open_tag: &str) -> Option<&str> {
     let inner = open_tag.strip_prefix('<')?.trim_end_matches('>').trim();
+    let inner = inner.strip_suffix('/').unwrap_or(inner).trim();
     if inner.starts_with('/') {
         return None;
     }
@@ -479,6 +480,76 @@ fn has_literal_body(input: &str, body_start: usize, qname: &str) -> bool {
 
 fn datatype_property_fallback(iri: &str) -> bool {
     iri.rsplit('#').next().is_some_and(|local| local == "dp")
+}
+
+/// Rewrite RDF/XML typed-node elements (`<prefix:Class/>`) into explicit individual typings.
+///
+/// Horned-OWL ignores this RDF/XML production; OWL WG inconsistency fixtures use it for ABox
+/// assertions such as `<oiled:Unsatisfiable/>`.
+#[must_use]
+pub fn materialize_typed_node_elements(input: &str) -> String {
+    if !input.contains("/>") {
+        return input.to_owned();
+    }
+    let xmlns = parse_xmlns(input);
+    let base = parse_xml_base(input);
+    let mut counter = 0usize;
+    let mut out = String::with_capacity(input.len() + 512);
+    let mut pos = 0usize;
+    while pos < input.len() {
+        let Some(rel) = input[pos..].find('<') else {
+            out.push_str(&input[pos..]);
+            break;
+        };
+        let start = pos + rel;
+        out.push_str(&input[pos..start]);
+        let Some(tag_end) = input[start..].find('>') else {
+            out.push_str(&input[start..]);
+            break;
+        };
+        let tag = &input[start..start + tag_end + 1];
+        if let Some(type_iri) = typed_node_class_iri(tag, &xmlns) {
+            counter += 1;
+            let iri = format!("{base}#_:tn{counter}");
+            out.push_str(&format!(
+                "<rdf:Description rdf:about=\"{iri}\">\n  <rdf:type rdf:resource=\"{type_iri}\"/>\n</rdf:Description>"
+            ));
+        } else {
+            out.push_str(tag);
+        }
+        pos = start + tag_end + 1;
+    }
+    out
+}
+
+fn typed_node_class_iri(tag: &str, xmlns: &HashMap<String, String>) -> Option<String> {
+    if !is_typed_node_element(tag) {
+        return None;
+    }
+    let qname = element_qname(tag)?;
+    expand_qname(qname, xmlns)
+}
+
+fn is_typed_node_element(tag: &str) -> bool {
+    if !tag.ends_with("/>") || tag.starts_with("</") {
+        return false;
+    }
+    if tag.starts_with("<!--") || tag.starts_with("<!") || tag.starts_with("<?") {
+        return false;
+    }
+    !(tag.contains("rdf:about=\"")
+        || tag.contains("rdf:about='")
+        || tag.contains("rdf:nodeID=\"")
+        || tag.contains("rdf:nodeID='")
+        || tag.contains("rdf:ID=\"")
+        || tag.contains("rdf:ID='")
+        || tag.contains("rdf:resource=\"")
+        || tag.contains("rdf:resource='")
+        || tag.contains("rdf:datatype=\"")
+        || tag.contains("rdf:datatype='")
+        || tag.contains("rdf:parseType=\"")
+        || tag.contains("rdf:parseType='"))
+        && element_qname(tag).is_some()
 }
 
 /// Assign stable `rdf:about` IRIs to blank `rdf:Description` nodes carrying `rdf:type`.
@@ -888,6 +959,19 @@ mod tests {
         let out = expand_all_disjoint_collections(input);
         assert!(out.contains("owl:disjointWith"));
         assert!(!out.contains("AllDisjointClasses"));
+    }
+
+    #[test]
+    fn materialize_typed_node_element_adds_class_assertion() {
+        let input = r#"<rdf:RDF xmlns:oiled="http://oiled.man.example.net/test#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xml:base="http://ex.org/">
+ <oiled:Unsatisfiable/>
+</rdf:RDF>"#;
+        let out = materialize_typed_node_elements(input);
+        assert!(out.contains("rdf:about=\"http://ex.org#_:tn1\""));
+        assert!(out.contains("rdf:resource=\"http://oiled.man.example.net/test#Unsatisfiable\""));
+        assert!(!out.contains("<oiled:Unsatisfiable/>"));
     }
 
     #[test]
