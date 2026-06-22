@@ -2062,7 +2062,7 @@
     "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2DI4.5-2D002/premise.rdf",
-    "conclusion_ofn": null,
+    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI4.5-2D002/conclusion.rdf",
     "expected_entailment": null,
     "expected_consistent": false,
     "ignore_reason": null

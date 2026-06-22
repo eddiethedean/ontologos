@@ -7,11 +7,12 @@
 mod catalog;
 
 pub use catalog::{
-    check_axiom_case, check_wg_case, load_catalog, load_wg_catalog, promoted_axiom_ids_path,
-    promoted_wg_ids_path, run_hermit_case, run_wg_case, scan_all_passing_axiom_cases,
-    scan_all_passing_wg_cases, scan_planned_dl_failures, scan_planned_wg_failures,
-    scan_promotable_axiom_cases, write_promoted_axiom_ids, write_promoted_wg_ids, HermitCase,
-    WgCase,
+    audit_planned_backlog, check_axiom_case, check_wg_case, load_catalog, load_wg_catalog,
+    promoted_axiom_ids_path, promoted_wg_ids_path, run_hermit_case, run_wg_case,
+    scan_all_passing_axiom_cases, scan_all_passing_wg_cases, scan_planned_dl_failures,
+    scan_planned_wg_failures, scan_promotable_axiom_cases, write_promoted_axiom_ids,
+    write_promoted_wg_ids, HermitCase, PlannedBacklogAudit, PlannedJavaAudit,
+    PlannedJavaCategory, PlannedWgAudit, PlannedWgCategory, WgCase,
 };
 
 use std::path::{Path, PathBuf};

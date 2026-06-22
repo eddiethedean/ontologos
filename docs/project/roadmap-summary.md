@@ -2,7 +2,22 @@
 
 OntoLogos follows [semantic versioning](https://semver.org/). **Workspace version:** **1.0.0** · **Latest tagged release:** **v0.9.0** · See [Release status](release-status.md) for crates.io, PyPI, and preview status.
 
-## Shipped in v1.0.0 (workspace on `main`)
+## HermiT parity progress (~58%)
+
+The **v1.0.0 git tag** is blocked until [HermiT parity phases](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#hermit-parity-phases-path-to-v100-tag) reach **Phase 9** (`parity_pct = 100%` — zero `planned` Java + WG catalog cases).
+
+| Phase | Status | Milestone |
+|-------|--------|-----------|
+| 0–1 | Complete | Metrics + harness integrity |
+| 2 | In progress | Assertion harvest (~87 cases) |
+| 3–5 | Planned | Engine gaps, WG fixtures, manual ports |
+| 6–7 | Planned | Tier B/C corpora + HermiT JAR proof |
+| 8 | In progress | Expressivity v1.5–v1.9 |
+| 9 | Planned | Tag v1.0.0 |
+
+Verify: `bash benchmarks/scripts/check-hermit-parity-phases.sh` (informational in CI until Phase 9)
+
+## Shipped on `main` (pre-1.0.0 tag)
 
 | Area | Status |
 |------|--------|
@@ -12,10 +27,11 @@ OntoLogos follows [semantic versioning](https://semver.org/). **Workspace versio
 | Optional pandas/polars taxonomy export | Complete |
 | Pizza EL golden pytest (CLI parity) | Complete |
 | macOS + Linux Python CI | Complete |
+| 593 active conformance tests; automated release gates pass | Complete |
 
 ## Path to 1.0 — Full HermiT parity
 
-**1.0** is the JVM-free replacement for **HermiT** (OWL 2 DL), not merely a “stable EL/RL/RDFS” cut. Expressivity tracks **v1.5–v1.9** block the 1.0 gate:
+**1.0** is the JVM-free replacement for **HermiT** (OWL 2 DL). Expressivity tracks **v1.5–v1.9** are **Phase 8** of the parity plan:
 
 | Track | Theme |
 |-------|-------|
@@ -25,7 +41,7 @@ OntoLogos follows [semantic versioning](https://semver.org/). **Workspace versio
 | **v1.8** | OWL QL & structured queries |
 | **v1.9** | `ontologos-dl` engine (preview → stable in 1.0) |
 
-**1.0 exit criteria:** HermiT conformance Tiers A–C, stable `ontologos-dl`, `classify --profile dl`, OWLReasoner-equivalent API.
+**1.0 exit criteria:** Phase 9 — 100% in-scope catalog parity, HermiT Tiers A–C blocking in CI, stable `ontologos-dl`, OWLReasoner-equivalent API.
 
 ## After 1.0
 

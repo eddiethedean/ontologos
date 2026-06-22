@@ -48,6 +48,10 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/check-1.0-release-gates.sh
           ./benchmarks/scripts/check-1.0-release-gates.sh || true
+      - name: HermiT parity phases (informational until Phase 9)
+        run: |
+          chmod +x benchmarks/scripts/check-hermit-parity-phases.sh
+          ./benchmarks/scripts/check-hermit-parity-phases.sh || true
       - name: HermiT catalog drift check
         run: |
           chmod +x benchmarks/scripts/check-hermit-catalog.sh

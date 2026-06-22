@@ -1,13 +1,16 @@
 # HermiT parity gap report
 
-**Updated:** 2026-06-13 (live tooling — do not trust stale counts in older sections below without re-running scripts)  
-**Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) §1.0)
+**Updated:** 2026-06-22 (live tooling — re-run scripts before trusting counts)  
+**Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))
 
 **Triage commands (source of truth):**
 
 ```bash
+bash benchmarks/scripts/report-ci-gate-status.sh
 bash benchmarks/scripts/report-conformance-coverage.sh
 bash benchmarks/scripts/check-1.0-release-gates.sh
+bash benchmarks/scripts/check-hermit-parity-phases.sh
+bash benchmarks/scripts/audit-planned-backlog.sh
 bash benchmarks/scripts/parity-scan.sh
 cargo run --release -p ontologos-conformance --bin dl_failures
 cargo run --release -p ontologos-conformance --bin dl_ofn_pass_rate
@@ -17,25 +20,26 @@ bash benchmarks/scripts/promote-hermit-catalog.sh
 
 ---
 
-## Executive summary (2026-06-13)
+## Executive summary (2026-06-22)
 
 | Signal | Value |
 |--------|------:|
-| Active CI conformance tests | ~211 |
-| 1.0 gate target | ≥400 |
-| Catalog `axiom` cases | 133 |
-| Promoted axiom IDs | 133 (`promoted_axiom_ids.txt`) |
-| DL OFN pass rate | ~98% (119/121 with assertions) |
-| Planned DL semantic failures | 4 (`dl_failures` bin) |
+| **parity_pct** (in-scope catalog) | **~58%** (397 planned / 958 in-scope) |
+| Current ROADMAP phase | **2** (assertion harvest) |
+| Active CI conformance tests | **593** |
+| 1.0 gate target | ≥400 (**pass**) — necessary not sufficient |
+| `check-1.0-release-gates.sh` | **PASS** (Tier A + Tier C on `main`) |
+| `check-hermit-parity-phases.sh` | **FAIL** until Phase 9 |
+| Catalog `axiom` cases | **136** |
+| Promoted axiom IDs | **136** (`promoted_axiom_ids.txt`) |
+| DL OFN pass rate | **100%** (115/115 with assertions) |
+| Planned DL semantic failures (`dl_failures`) | **0** |
+| Planned Java backlog | **330** — see [planned-backlog-triage.md](planned-backlog-triage.md) |
+| Planned WG backlog | **67** |
 
-Recent correctness fixes: Widmann/NI-rule blocking (UNSAT), flower-ontology cardinality (`c2 ⊑ c4`), RL `is_consistent` via saturation, existential equivalence subsumption bridge (`testSubsumption2/3`), parser DL mapping for complex intersections, WG entailment merge check.
+**Verdict:** Not full HermiT parity. Strong on EL, promoted OFN DL axioms, and Tier C gates (`family.owl`; optional `pizza.owl` / `go-subset.owl`). Production OWL DL still requires HermiT/Konclude per [FAQ.md](../../FAQ.md).
 
-**Remaining planned DL failures (incremental / nominals):**
-
-- `testIncrementalWithNegatedClass`
-- `testIncrementalWithNegatedHasSelf`
-- `testIncrementalWithNegatedHasValue`
-- `testNominals2`
+**Recent fixes (2026-06-22):** ROADMAP parity phases (P0–P9); Widmann + WG dl-026/601/626 enabled; WG catalog override fix; optional DL corpus goldens + HermiT JAR cross-check harness.
 
 ---
 
@@ -45,27 +49,50 @@ Recent correctness fixes: Widmann/NI-rule blocking (UNSAT), flower-ontology card
 
 | Status | Count | Meaning |
 |--------|------:|---------|
-| `planned` | ~356 | OFN/fixture present; engine not yet passing or missing assertions |
-| `axiom` | 133 | Active semantic checks (`run_hermit_case`) |
+| `axiom` | 136 | Active semantic checks |
+| `planned` | 330 | Roadmap — triaged in `audit-planned-backlog.sh` |
 | `clausify` | 33 | Structural DL clausification regression |
-| `ported` | 10 | Hand-written in `hermit_rl` / `hermit_rdfs` / `hermit_el` |
-| `internal` | 55 | Parser/normalization smoke |
-| `excluded` | 2 | Documented out-of-scope |
-| `fixture` | 2 | Resource XML goldens |
-| `migrated` | 3 | Moved to another suite |
-| **Total** | **594** | |
+| `swrl` | 24 | SWRL forward chaining |
+| `internal` | 55 | Engine-internal (ignored) |
+| `ported` | 10 | Hand-written redirects |
+| **Total** | **591** | |
 
 ### CI execution
 
 | Metric | Value |
 |--------|------:|
-| Tests defined (HermiT + WG) | 1066+ |
-| **Active (default `cargo test`)** | **~211** |
-| Ignored | ~855 |
+| Tests defined (conformance crate) | **1063** |
+| **Active (default `cargo test`)** | **593** |
+| Ignored | **470** |
 
 ### OWL WG
 
-428 WG cases cataloged; 3 approved subset with vendored RDF. `wg_entailment_holds` uses premise∪conclusion taxonomy diff (not separate classify-and-compare).
+| Status | Count |
+|--------|------:|
+| `wg` (active) | 361 |
+| `planned` | 67 |
+
+---
+
+## Tier C corpora
+
+| Corpus | CI default | HermiT cross-check |
+|--------|------------|-------------------|
+| `family.owl` | Yes | When `HERMIT_JAR` set |
+| `pizza.owl` | Optional (`RUN_SLOW_DL_GATES=1`) | When `HERMIT_JAR` set |
+| `go-subset.owl` | Optional (`RUN_SLOW_DL_GATES=1`) | When `HERMIT_JAR` set |
+
+See [taxonomy-tolerance.md](../reference/taxonomy-tolerance.md) and `benchmarks/scripts/compare-dl-hermit-crosscheck.sh`.
+
+---
+
+## Parity phases
+
+See [ROADMAP.md § HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag). Progress formula:
+
+```text
+parity_pct = 100 × (1 − (java_planned + wg_planned) / 958)
+```
 
 ---
 
@@ -75,17 +102,10 @@ Recent correctness fixes: Widmann/NI-rule blocking (UNSAT), flower-ontology card
 bash benchmarks/scripts/promote-hermit-catalog.sh
 ```
 
-Hand-authored catalog assertions: `HARDCODED_AXIOM_SUBSUMPTIONS` in `tests/hermit/generate_catalog.py` for OFN cases Java cannot extract (e.g. `testSubsumption2/3`). ~86 planned DL cases still lack extracted subsumptions — grow via Java `assertSubsumedBy` extraction and manual OFN assertions.
-
----
-
-## CI / release gates
-
-- `check-1.0-release-gates.sh` wired in `.github/workflows/ci.yml` and `release.yml` (informational until ≥400 active tests).
-- `dl_ofn_pass_rate` delegates to `check_axiom_case` for honest pass-rate parity with promotion scan.
+Planned backlog categories: `bash benchmarks/scripts/audit-planned-backlog.sh`
 
 ---
 
 ## Historical note
 
-Older revisions of this document cited 67 DL failures, 26 axiom cases, and 177 active tests. Always prefer script output over this file for triage.
+Older revisions cited 67 DL failures, 100–211 active tests, or 119/121 OFN pass rate. Always prefer script output over this file.

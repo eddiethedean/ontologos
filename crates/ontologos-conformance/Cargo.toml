@@ -45,6 +45,10 @@ path = "src/bin/dl_failures.rs"
 name = "wg_failures"
 path = "src/bin/wg_failures.rs"
 
+[[bin]]
+name = "audit_planned_backlog"
+path = "src/bin/audit_planned_backlog.rs"
+
 [dev-dependencies]
 ontologos-conformance = { path = "." }
 ontologos-el = { workspace = true }

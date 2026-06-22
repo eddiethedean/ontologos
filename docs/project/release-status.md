@@ -9,7 +9,7 @@ Single source of truth for version and distribution channels. Update this page w
 | **crates.io** (library crates) | **0.9.0** (published) · **1.0.0** (workspace) | `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, `ontologos-facade` |
 | **PyPI** | **0.9.0** (published) · **1.0.0** (workspace) | `pip install ontologos` |
 | **Latest git tag** | **v0.9.0** | Annotated semver tags on `main` |
-| **`main` branch** | **1.0.0** workspace | Tag **v1.0.0** blocked until `check-1.0-release-gates.sh` exits 0 (≥400 active conformance tests) |
+| **`main` branch** | **1.0.0** workspace | Tag **v1.0.0** pending [ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) (~**58%** in-scope catalog parity); `check-1.0-release-gates.sh` passes at **593** active tests but is **not sufficient** alone |
 
 CLI (`ontologos-cli`) and conformance crates are **source-build only** — not on crates.io.
 
@@ -17,16 +17,25 @@ CLI (`ontologos-cli`) and conformance crates are **source-build only** — not o
 
 | Area | Status |
 |------|--------|
-| OWL EL, RL, RDFS classification | **Stable** (1.0.0) |
-| OWL DL (`--profile dl`) | **Stable** (1.0.0) — Tier C taxonomy gate on `family.owl` |
+| OWL EL, RL, RDFS classification | **Stable** for shipped profiles |
+| OWL DL (`--profile dl`) | **Stable for gated corpora** (`family.owl` in CI; `pizza.owl` / `go-subset.owl` optional slow gates) — **not** production HermiT replacement |
 | Python bindings, explain (EL + DL smoke) | **Stable** (1.0.0) |
 | Incremental EL/RL/RDFS | **Stable** (0.8+) |
 | ALC / `dl-preview` | **Preview** — explicit gating and subset checks |
-| Full HermiT OWL DL parity | **In progress** — Tier A/B/C harness; see [taxonomy tolerance](../reference/taxonomy-tolerance.md) |
+| Full HermiT OWL DL parity | **In progress** — [ROADMAP parity phases](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#hermit-parity-phases-path-to-v100-tag) Phase 2; [gap report](../internal/hermit-parity-gap-report.md) |
+
+**Production OWL DL:** use Protégé + HermiT or Konclude ([FAQ](../../FAQ.md)).
 
 ## Conformance snapshot (live)
 
-Run `bash benchmarks/scripts/report-conformance-coverage.sh` and `bash benchmarks/scripts/check-1.0-release-gates.sh` for current counts. CI runs both (gates step is informational until the 400-test target is met).
+```bash
+bash benchmarks/scripts/report-ci-gate-status.sh
+bash benchmarks/scripts/report-conformance-coverage.sh
+bash benchmarks/scripts/check-1.0-release-gates.sh
+bash benchmarks/scripts/check-hermit-parity-phases.sh   # fails until Phase 9 (100% catalog parity)
+```
+
+Current inventory: **593** active / **1063** total conformance tests; **~58%** in-scope catalog parity (`parity_pct`). CI runs release gates on every PR (informational); **v1.0.0 tag** requires Phase 9 + blocking CI.
 
 ## Install pins
 

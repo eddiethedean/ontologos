@@ -29,6 +29,11 @@ for corpus in ${CORPORA}; do
     exit 1
   fi
   PROFILE="$(python3 -c "import json; print(json.load(open('${GOLDEN}'))['corpora']['${corpus}'].get('profile','dl'))")"
+  OPTIONAL="$(python3 -c "import json; print(json.load(open('${GOLDEN}'))['corpora']['${corpus}'].get('optional', False))")"
+  if [[ "${OPTIONAL}" == "True" ]] && [[ "${RUN_SLOW_DL_GATES:-0}" != "1" ]]; then
+    echo "DL taxonomy gate: skip optional ${corpus} (set RUN_SLOW_DL_GATES=1)"
+    continue
+  fi
   echo "DL taxonomy gate: ${corpus} (profile=${PROFILE})"
   "${CLI}" --profile "${PROFILE}" --format json classify "${OWL}" >"${TMP_JSON}"
 
@@ -39,12 +44,17 @@ from pathlib import Path
 golden_path = Path("${GOLDEN}")
 actual = json.loads(Path("${TMP_JSON}").read_text())
 doc = json.loads(golden_path.read_text())
-doc["corpora"]["${corpus}"] = {
+prev = doc["corpora"].get("${corpus}", {})
+entry = {
+    **{k: v for k, v in prev.items() if k not in ("status", "subsumption_count", "subsumptions")},
     "profile": "${PROFILE}",
     "status": actual.get("status", "classified"),
     "subsumption_count": actual.get("subsumption_count", len(actual.get("subsumptions", []))),
     "subsumptions": actual["subsumptions"],
 }
+if "hermit_crosscheck" not in entry:
+    entry["hermit_crosscheck"] = True
+doc["corpora"]["${corpus}"] = entry
 golden_path.write_text(json.dumps(doc, indent=2) + "\\n")
 print("updated ${corpus} in", golden_path)
 PY

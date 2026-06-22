@@ -737,6 +737,249 @@ pub fn scan_planned_wg_failures() -> Vec<(String, String)> {
     failures
 }
 
+/// Triage bucket for a planned HermiT catalog case.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PlannedJavaCategory {
+    /// OFN fixture path missing from disk.
+    MissingOfn,
+    /// OFN present but no extractable assertions in catalog.
+    MissingAssertions,
+    /// Classification XML golden missing (fixture engine).
+    MissingFixture,
+    /// Assertions present and engine check fails.
+    EngineGap,
+    /// Assertions present and engine check passes — promote via `promote_catalog`.
+    PromotionCandidate,
+    /// Not semantically runnable (internal, manual port, deferred).
+    ManualPort,
+}
+
+/// Triage bucket for a planned OWL WG catalog case.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PlannedWgCategory {
+    MissingPremise,
+    MissingConclusion,
+    MissingExpectations,
+    EngineGap,
+    PromotionCandidate,
+}
+
+/// One planned Java case with triage metadata.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct PlannedJavaAudit {
+    pub id: String,
+    pub engine: String,
+    pub category: PlannedJavaCategory,
+    pub detail: Option<String>,
+}
+
+/// One planned WG case with triage metadata.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct PlannedWgAudit {
+    pub id: String,
+    pub category: PlannedWgCategory,
+    pub detail: Option<String>,
+}
+
+/// Summary counts for planned-backlog triage.
+#[derive(Debug, Clone, Default, serde::Serialize)]
+pub struct PlannedBacklogSummary {
+    pub java_total: usize,
+    pub java_by_category: std::collections::BTreeMap<String, usize>,
+    pub wg_total: usize,
+    pub wg_by_category: std::collections::BTreeMap<String, usize>,
+}
+
+/// Full planned-backlog audit (Java + WG catalogs).
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct PlannedBacklogAudit {
+    pub summary: PlannedBacklogSummary,
+    pub java: Vec<PlannedJavaAudit>,
+    pub wg: Vec<PlannedWgAudit>,
+}
+
+fn axiom_ofn_on_disk(case: &HermitCase) -> bool {
+    case.axiom_ofn
+        .as_ref()
+        .is_some_and(|rel| hermit_data_path(rel).is_file())
+}
+
+fn classify_planned_java(case: &HermitCase) -> PlannedJavaAudit {
+    let id = case.id.clone();
+    let engine = case.engine.clone();
+    if matches!(
+        case.engine.as_str(),
+        "internal" | "parser" | "normalization"
+    ) || case.ignore_reason.as_deref().is_some_and(|r| {
+        r.contains("engine-internal") || r.contains("manual port")
+    }) {
+        return PlannedJavaAudit {
+            id,
+            engine,
+            category: PlannedJavaCategory::ManualPort,
+            detail: case.ignore_reason.clone(),
+        };
+    }
+    if case.fixture.is_some() {
+        let missing = case.fixture.as_ref().is_none_or(|f| {
+            classification_fixture_path(f)
+                .map(|p| !p.is_file())
+                .unwrap_or(true)
+        });
+        if missing {
+            return PlannedJavaAudit {
+                id,
+                engine,
+                category: PlannedJavaCategory::MissingFixture,
+                detail: case.fixture.clone(),
+            };
+        }
+    }
+    if case.axiom_ofn.is_none() {
+        return PlannedJavaAudit {
+            id,
+            engine,
+            category: PlannedJavaCategory::MissingOfn,
+            detail: None,
+        };
+    }
+    if !axiom_ofn_on_disk(case) {
+        return PlannedJavaAudit {
+            id,
+            engine,
+            category: PlannedJavaCategory::MissingOfn,
+            detail: case.axiom_ofn.clone(),
+        };
+    }
+    if !case_has_axiom_assertions(case) {
+        return PlannedJavaAudit {
+            id,
+            engine,
+            category: PlannedJavaCategory::MissingAssertions,
+            detail: case.axiom_ofn.clone(),
+        };
+    }
+    match check_axiom_case(case) {
+        Ok(()) => PlannedJavaAudit {
+            id,
+            engine,
+            category: PlannedJavaCategory::PromotionCandidate,
+            detail: None,
+        },
+        Err(err) => PlannedJavaAudit {
+            id,
+            engine,
+            category: PlannedJavaCategory::EngineGap,
+            detail: Some(err),
+        },
+    }
+}
+
+fn classify_planned_wg(case: &WgCase) -> PlannedWgAudit {
+    let id = case.id.clone();
+    let premise = case.premise_ofn.as_ref();
+    if premise.is_none() {
+        return PlannedWgAudit {
+            id,
+            category: PlannedWgCategory::MissingPremise,
+            detail: None,
+        };
+    }
+    let premise_path = hermit_data_path(premise.unwrap());
+    if !premise_path.is_file() {
+        return PlannedWgAudit {
+            id,
+            category: PlannedWgCategory::MissingPremise,
+            detail: Some(premise_path.display().to_string()),
+        };
+    }
+    if case.expected_consistent.is_none()
+        && (case.conclusion_ofn.is_none() || case.expected_entailment.is_none())
+    {
+        return PlannedWgAudit {
+            id,
+            category: PlannedWgCategory::MissingExpectations,
+            detail: None,
+        };
+    }
+    if let Some(conclusion_rel) = &case.conclusion_ofn {
+        let conclusion_path = hermit_data_path(conclusion_rel);
+        if !conclusion_path.is_file() {
+            return PlannedWgAudit {
+                id,
+                category: PlannedWgCategory::MissingConclusion,
+                detail: Some(conclusion_path.display().to_string()),
+            };
+        }
+    }
+    match check_wg_case(case) {
+        Ok(()) => PlannedWgAudit {
+            id,
+            category: PlannedWgCategory::PromotionCandidate,
+            detail: None,
+        },
+        Err(err) => PlannedWgAudit {
+            id,
+            category: PlannedWgCategory::EngineGap,
+            detail: Some(err),
+        },
+    }
+}
+
+/// Audit all `status=planned` HermiT Java and WG catalog cases.
+pub fn audit_planned_backlog() -> PlannedBacklogAudit {
+    use std::collections::BTreeMap;
+
+    let java: Vec<PlannedJavaAudit> = read_catalog_file()
+        .iter()
+        .filter(|case| case.status == "planned")
+        .map(classify_planned_java)
+        .collect();
+
+    let wg: Vec<PlannedWgAudit> = read_wg_catalog_file()
+        .iter()
+        .filter(|case| case.status == "planned")
+        .map(classify_planned_wg)
+        .collect();
+
+    let mut java_by_category: BTreeMap<String, usize> = BTreeMap::new();
+    for entry in &java {
+        let key = match entry.category {
+            PlannedJavaCategory::MissingOfn => "missing_ofn",
+            PlannedJavaCategory::MissingAssertions => "missing_assertions",
+            PlannedJavaCategory::MissingFixture => "missing_fixture",
+            PlannedJavaCategory::EngineGap => "engine_gap",
+            PlannedJavaCategory::PromotionCandidate => "promotion_candidate",
+            PlannedJavaCategory::ManualPort => "manual_port",
+        };
+        *java_by_category.entry(key.to_string()).or_default() += 1;
+    }
+    let mut wg_by_category: BTreeMap<String, usize> = BTreeMap::new();
+    for entry in &wg {
+        let key = match entry.category {
+            PlannedWgCategory::MissingPremise => "missing_premise",
+            PlannedWgCategory::MissingConclusion => "missing_conclusion",
+            PlannedWgCategory::MissingExpectations => "missing_expectations",
+            PlannedWgCategory::EngineGap => "engine_gap",
+            PlannedWgCategory::PromotionCandidate => "promotion_candidate",
+        };
+        *wg_by_category.entry(key.to_string()).or_default() += 1;
+    }
+
+    PlannedBacklogAudit {
+        summary: PlannedBacklogSummary {
+            java_total: java.len(),
+            java_by_category,
+            wg_total: wg.len(),
+            wg_by_category,
+        },
+        java,
+        wg,
+    }
+}
+
 pub fn promoted_wg_ids_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/catalog/promoted_wg_ids.txt")

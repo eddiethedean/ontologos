@@ -5,6 +5,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
 BIN="$("${ROOT}/benchmarks/scripts/build-conformance-tools.sh")"
 
+echo "==> Planned backlog triage"
+"${BIN}/audit_planned_backlog" 2>/dev/null | head -20 || true
+echo
 echo "==> Planned DL failures"
 "${BIN}/dl_failures"
 echo

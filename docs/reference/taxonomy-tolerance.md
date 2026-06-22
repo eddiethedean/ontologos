@@ -7,9 +7,13 @@ OntoLogos **Tier C** gates compare classification taxonomies against vendored go
 | Corpus | Profile | Golden file | CI gate |
 |--------|---------|-------------|---------|
 | `pizza.owl` | `el` | `benchmarks/data/pizza-el-golden.json` | Tier B (`compare-pizza-el-golden.sh`) |
-| `family.owl` | `dl` | `benchmarks/data/dl-taxonomy-golden.json` | Tier C (`compare-dl-taxonomy.sh`) |
+| `family.owl` | `dl` | `benchmarks/data/dl-taxonomy-golden.json` | Tier C (`compare-dl-taxonomy.sh`) — default CI |
+| `pizza.owl` | `dl` | `benchmarks/data/dl-taxonomy-golden.json` | Tier C **optional** (`RUN_SLOW_DL_GATES=1`) |
+| `go-subset.owl` | `dl` | `benchmarks/data/dl-taxonomy-golden.json` | Tier C **optional** — OBO biomedical subset |
 | `galen-ians-full-undoctored.xml` | `el` | HermiT fixture golden | Tier B (conformance `fixture`) |
-| `go-subset.owl` | `el` / hybrid | Load + hybrid smoke only | Tier C smoke (no full DL classify in PR CI) |
+| `go-subset.owl` | `el` / hybrid | Load + hybrid smoke only | Tier C smoke (profile detect) |
+
+**HermiT JAR cross-check:** set `HERMIT_JAR` and run `benchmarks/scripts/compare-dl-hermit-crosscheck.sh` (also invoked from `compare-hermit-tier-c.sh` when the JAR is present). Uses external tolerance (≤5 extra edges or 1%).
 
 **Provenance:** committed goldens are generated with `UPDATE_GOLDEN=1` on the named script after a reviewed OntoLogos release build. External baselines (Konclude/HermiT) are optional cross-checks when `KONCLUDE_BIN` or `HERMIT_JAR` are set locally or in nightly jobs.
 
@@ -41,7 +45,8 @@ Use `--max-missing` and `--max-extra` on `compare-taxonomy.py` for external runs
 |--------|-------|-------|
 | Pizza EL | Yes | ~84 subsumptions |
 | Family DL | Yes | ~59 subsumptions, ~20s release classify |
-| Pizza DL | No (timeout) | Use EL golden + `profile auto` hybrid smoke |
+| Pizza DL | Optional (`RUN_SLOW_DL_GATES=1`) | ~4000 subsumptions, ~5min release classify |
+| go-subset DL | Optional (`RUN_SLOW_DL_GATES=1`) | OBO biomedical subset, ~2min release classify |
 | Full GALEN / SNOMED | Optional `#[ignore]` | Parser stress tests; manual download |
 
 ## Regenerating goldens

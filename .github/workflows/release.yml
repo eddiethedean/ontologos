@@ -61,8 +61,10 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/report-conformance-coverage.sh
           chmod +x benchmarks/scripts/check-1.0-release-gates.sh
+          chmod +x benchmarks/scripts/check-hermit-parity-phases.sh
           ./benchmarks/scripts/report-conformance-coverage.sh
           ./benchmarks/scripts/check-1.0-release-gates.sh || true
+          ./benchmarks/scripts/check-hermit-parity-phases.sh || true
 
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh

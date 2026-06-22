@@ -35,19 +35,16 @@ fn wg_dl035() {
 }
 
 #[test]
-#[ignore = "tableau completeness: dl-026 inverse/transitive/global Thing"]
 fn wg_dl026() {
     check("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D026");
 }
 
 #[test]
-#[ignore = "tableau completeness: dl-601 intersection grounding"]
 fn wg_dl601() {
     check("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601");
 }
 
 #[test]
-#[ignore = "tableau completeness: dl-626 similar to dl-026"]
 fn wg_dl626() {
     check("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D626");
 }

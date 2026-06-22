@@ -48,7 +48,6 @@ reasoner.DatatypesTest.testNegZero2Integer
 reasoner.DatatypesTest.testNegativeDPAssertions
 reasoner.DatatypesTest.testNominalsAndDatatypesFromAlan
 reasoner.DatatypesTest.testNotXsdString
-reasoner.DatatypesTest.testRationalConversion
 reasoner.DatatypesTest.testRationals1
 reasoner.DatatypesTest.testRationals2
 reasoner.DatatypesTest.testRationals3
@@ -57,7 +56,6 @@ reasoner.DatatypesTest.testStringAbbreviation
 reasoner.DatatypesTest.testdateTimeTimezones
 reasoner.FloatDoubleTest.testINF
 reasoner.OWLReasonerTest.testGetDataPropertyValues
-reasoner.RIATest.testInverseAndChain
 reasoner.ReasonerCoreBlockingTest.testExpansion
 reasoner.ReasonerCoreBlockingTest.testWidmann2
 reasoner.ReasonerTest.testAnonymousIndiviuals1
@@ -133,3 +131,8 @@ reasoner.ReasonerTest.testUniversalRoleSubsumption
 reasoner.ReasonerTest.testUnknownDatatypes
 reasoner.ReasonerTest.testWidmann1
 reasoner.ReasonerTest.testWidmann3
+reasoner.RulesTest.testDataPropertiesInBody
+reasoner.RulesTest.testIndividualsInRules
+reasoner.RulesTest.testSameAsInBody1
+reasoner.RulesTest.testSameAsInBody2
+reasoner.RulesTest.testSameAsInBodyWithDataProperties

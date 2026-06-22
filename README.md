@@ -11,7 +11,7 @@ Native Rust ontology reasoning orchestration: load OWL files, detect profiles, a
 
 **Try in 5 minutes:** `pip install ontologos` or add `ontologos-parser = "1.0.0"` to Cargo.toml — no clone required.
 
-**Status:** **v1.0.0** workspace on `main` — HermiT parity in progress (100 active conformance tests). See [Release status](docs/project/release-status.md).
+**Status:** **v1.0.0** workspace on `main` — HermiT parity in progress (**593** active conformance tests). See [Release status](docs/project/release-status.md) and [HermiT parity gap report](docs/internal/hermit-parity-gap-report.md).
 
 | You need… | Use today |
 |-----------|-----------|

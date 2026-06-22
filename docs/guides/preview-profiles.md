@@ -67,7 +67,7 @@ See [Facade API](facade-api.md) and [Choosing an API](choosing-an-api.md).
 |------------|-------------------|---------|
 | Incomplete tableau rules | `dl`, `alc` | HasValue, HasKey, some cardinalities ignored |
 | Expansion budget | `dl`, `alc` | `ResourceLimit` after 4096 expansions |
-| Entailment cap | `dl`, `alc` | Pairwise subsumption skipped when >32 named classes |
+| Entailment cap | `dl`, `alc` | Pairwise subsumption skipped when >128 named classes |
 | Preview construct gate | `dl-preview` | `PreviewLimit` when EL-forbidden constructs present |
 | SWRL not implemented | `swrl` | `NotImplemented` or `PreviewLimit` |
 | Partial OWL mapping | All | Skipped axioms in `parse_meta.warnings` |

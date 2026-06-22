@@ -36,7 +36,9 @@ if [[ -n "${KONCLUDE_BIN:-}" ]] && command -v "${KONCLUDE_BIN}" >/dev/null; then
 fi
 
 if [[ -n "${HERMIT_JAR:-}" ]] && [[ -f "${HERMIT_JAR}" ]]; then
-  echo "HermiT JAR found at ${HERMIT_JAR} (manual cross-check — not run in default CI)"
+  echo "HermiT JAR found at ${HERMIT_JAR} — running optional cross-check"
+  chmod +x "${ROOT}/benchmarks/scripts/compare-dl-hermit-crosscheck.sh"
+  "${ROOT}/benchmarks/scripts/compare-dl-hermit-crosscheck.sh" || true
 fi
 
 echo "Tier C harness: all gated checks passed"

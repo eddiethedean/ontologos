@@ -1045,9 +1045,10 @@ def collect_wg_cases() -> list[WgCase]:
         elif "InconsistencyTest" in block:
             test_type = "inconsistency"
             expected_consistent = False
-        elif "InconsistencyTest" in block:
-            test_type = "inconsistency"
-            expected_consistent = False
+        if test_id in WG_CONSISTENCY_OVERRIDES:
+            test_type, expected_consistent = WG_CONSISTENCY_OVERRIDES[test_id]
+            expected_entailment = None
+            conclusion_ofn = None
         premise_ofn = None
         conclusion_ofn = None
         status = "planned"

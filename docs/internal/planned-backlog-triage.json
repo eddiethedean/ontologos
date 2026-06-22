@@ -1,0 +1,2334 @@
+{
+  "summary": {
+    "java_total": 330,
+    "java_by_category": {
+      "engine_gap": 8,
+      "manual_port": 235,
+      "missing_assertions": 87
+    },
+    "wg_total": 67,
+    "wg_by_category": {
+      "missing_expectations": 15,
+      "missing_premise": 52
+    }
+  },
+  "java": [
+    {
+      "id": "reasoner.AnyURITest.testInvalidAnyURILiterals",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testLength_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testLength_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testLength_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testLength_4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testLength_5",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testSize_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testSize_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testSize_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testIntersection",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPattern1_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPattern1_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPattern2_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPattern2_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPattern3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPatternAndLength1_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPatternAndLength1_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPatternAndLength1_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPatternAndLength2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPatternAndLength3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPatternComplement1_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPatternComplement1_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testPatternComplement1_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testComplement2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testComplement3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.AnyURITest.testComplement4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testParsing_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testParsing_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testLength_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testLength_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testLength_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testLength_4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testLength_5",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testSize_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testSize_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testSize_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testIntersection_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testIntersection_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testExplicitSize",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testEnumerate1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testEnumerate2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.BinaryDataTest.testBase64Parsing",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ComplexConceptTest.testConceptWithDatatypes",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ComplexConceptTest.testConceptWithDatatypes2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ComplexConceptTest.testConceptWithNominals",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ComplexConceptTest.testConceptWithNominals2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ComplexConceptTest.testConceptWithNominals3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ComplexConceptTest.testConceptWithNominals4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ComplexConceptTest.testConceptWithNominals5",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ComplexConceptTest.testJustifications",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DatalogEngineTest.testBasic",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_datalogenginetest_testbasic.ofn"
+    },
+    {
+      "id": "reasoner.DatalogEngineTest.testEquality",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_datalogenginetest_testequality.ofn"
+    },
+    {
+      "id": "reasoner.DatalogEngineTest.testQueryWithIndividualsAndEquality",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_datalogenginetest_testquerywithindividualsandequality.ofn"
+    },
+    {
+      "id": "reasoner.DatalogEngineTest.testQueryWithIndividuals",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_datalogenginetest_testquerywithindividuals.ofn"
+    },
+    {
+      "id": "reasoner.DatatypesTest.testLiteralCustomDatatype",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_datatypestest_testliteralcustomdatatype.ofn"
+    },
+    {
+      "id": "reasoner.DatatypesTest.testFreshEntitiesQuery",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_datatypestest_testfreshentitiesquery.ofn"
+    },
+    {
+      "id": "reasoner.DatatypesTest.testParsingError",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_datatypestest_testparsingerror.ofn"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testParsing",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testExactIntervalsWithoutTZ1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testExactIntervalsWithoutTZ2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testExactIntervalsWithTZ1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testExactIntervalsWithTZ2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testExactIntervalsWithTZ3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testFinite1_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testFinite1_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testFinite2_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testFinite2_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testInfinite_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testInfinite_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testMizedTZs_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testMizedTZs_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testMizedTZs_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.DateTimeTest.testMember",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testHasKey",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testhaskey.ofn"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testBlankNodes1",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testblanknodes1.ofn"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testInvalidBlankNodes",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testinvalidblanknodes.ofn"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testValidBlankNodesWithNominals",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodeswithnominals.ofn"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testValidBlankNodesInPremise",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodesinpremise.ofn"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testValidBlankNodes",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodes.ofn"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testBlankWithDTs",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testblankwithdts.ofn"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testBlankWithDTs2",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testblankwithdts2.ofn"
+    },
+    {
+      "id": "reasoner.EntailmentTest.testBlankWithDTs3",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_entailmenttest_testblankwithdts3.ofn"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatRange",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatZeroRange_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatZeroRange_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatZeroRange_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatRangeEnum",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatNaN_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatNaN_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatNaN_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testNumberOfFloats_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testNumberOfFloats_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testNumberOfFloats_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testFloatAndDouble",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testDoubleRange",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testDoubleZeroRange_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testDoubleZeroRange_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testDoubleZeroRange_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testDoubleRangeEnum",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testDoubleNaN_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testDoubleNaN_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testDoubleNaN_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testNumberOfDoubles_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testNumberOfDoubles_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.FloatDoubleTest.testNumberOfDoubles_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testIntegerRange1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testIntegerRange2_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testIntegerRange2_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testIntegerRange2_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testIntegerRange2_4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalNotInteger_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalNotInteger_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalNotInteger_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testRealNotDecimal",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testRealNotDecimal_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMinInclusiveInt",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMinInclusiveInt_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMinExclusiveDec",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMaxInclusiveInt",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMaxInclusiveInt_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMaxExclusiveDec",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumInt_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumInt_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumInt_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumInt_4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumInt_5",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumIntNEQ_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumIntNEQ_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumIntNEQ_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumIntNEQ_4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testEnumIntNEQ_5",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMinMaxEqual_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMinMaxEqual_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMinMaxEqual_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testMinMaxEqual_4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testInvalidMinMax",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalMinusInt_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalMinusInt_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalMinusInt_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalMinusInt_4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalMinusIntNEQ_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalMinusIntNEQ_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testDecimalMinusIntNEQ_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testLargeRange1_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testLargeRange1_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testLargeRange1_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testLargeRange2_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testLargeRange2_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testLargeRange2_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.NumericsTest.testClique",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.OWLLinkTest.testBobTestAandB",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.OWLLinkTest.testInverses",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.OWLLinkTest.testObjectProperties",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.OWLLinkTest.testSuccessiveCalls",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.OWLLinkTest.testBobTestC",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.OWLLinkTest.testDisjointProperties",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.OWLLinkTest.testDisjointClasses",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.OWLLinkTest.testBobTests",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.OWLReasonerTest.testBottomObjectPropertySubs",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.OWLReasonerTest.testTopObjectPropertySupers",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.OWLReasonerTest.testIncrementalAddition",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.OWLReasonerTest.testIncrementalAddition2",
+      "engine": "rl",
+      "category": "engine_gap",
+      "detail": "reasoner.OWLReasonerTest.testIncrementalAddition2: consistency expected false, got true"
+    },
+    {
+      "id": "reasoner.OWLReasonerTest.testEquivalenceClasses",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.OWLReasonerTest.testNonEquivalenceClasses",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testInvalidStringLiterals",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testLength_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testLength_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testLength_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testLength_4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testLength_5",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testSize_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testSize_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testSize_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testIntersection_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testIntersection_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testExplicitSize",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testEnumerate",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPattern1_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPattern1_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPattern2_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPattern2_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPattern3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength1_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength1_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength1_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPatternComplement1_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPatternComplement1_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testPatternComplement1_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testComplement2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testComplement3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testComplement4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testLangRange1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RDFPlainLiteralTest.testLangRange2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity0",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity1",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity2",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity3",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity4",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity5",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity6",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity7",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity8",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.RIARegularityTest.testRIARegularity9",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerCoreBlockingTest.testIanT6",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerCoreBlockingTest.testIanT9",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testEmptyChain",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testOnyDeclaredEntitiesInHierarchy",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIsEntailed",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testisentailed.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIncrementalWithSameAs",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testClassificationWithValidatedBlockingError",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIncrementalWithNegatedHasValue",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedhasvalue.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIncrementalWithHasValue",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithhasvalue.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIncrementalWithNegatedClass",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedclass.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIncrementalWithClass",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithclass.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIncrementalWithNegatedHasSelf",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedhasself.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIncrementalWithHasSelf",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithhasself.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIncrementalWithFreshNames",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testInstanteManagerError",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testTopOPEquivalence",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testtopopequivalence.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testFreshEntityEntailment",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testPrecomputeDisjointClasses",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testprecomputedisjointclasses.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testKeys3",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testkeys3.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testObjectPropertySubsumptionsNoNominals",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testobjectpropertysubsumptionsnonominals.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testObjectPropertySubsumptionsNominals",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testDataPropertyEntailment",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testdatapropertyentailment.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testPropertyInstanceRetrieval",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testpropertyinstanceretrieval.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testPropertyEnailmentFromAlan",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testUnknownClassHierarcyPosition",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testRoleChains",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testrolechains.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testRoleSubsumptionWithChainsTransitiveSymmetric",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testrolesubsumptionwithchainstransitivesymmetric.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testRoleSubsumption",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIsFunctionalData",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testobjectpropertydomainstimothybug.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testDatatypeLiterals",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIndividualRetrieval",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testindividualretrieval.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints2",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints3",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints4",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHasKeyEntailment",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testhaskeyentailment.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHasKeyNonEntailment",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testhaskeynonentailment.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testDatatypeDefEntailment",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testdatatypedefentailment.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testChains1",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testChains2",
+      "engine": "rdfs",
+      "category": "engine_gap",
+      "detail": "reasoner.ReasonerTest.testChains2: consistency expected false, got true"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testChains3",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testChains",
+      "engine": "rdfs",
+      "category": "engine_gap",
+      "detail": "reasoner.ReasonerTest.testChains: consistency expected false, got true"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testNegativeDataPropertyAssertion",
+      "engine": "rl",
+      "category": "engine_gap",
+      "detail": "reasoner.ReasonerTest.testNegativeDataPropertyAssertion: consistency expected false, got true"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHierarchyPrinting1",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHierarchyPrinting2",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHierarchyPrinting3",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testSemanticObjectPropertyClassification",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testsemanticobjectpropertyclassification.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testDataPropertyHierarchy",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testSemanticDataPropertyClassification",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testsemanticdatapropertyclassification.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testComplexConceptInstanceRetrieval",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testcomplexconceptinstanceretrieval.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testWidmann2",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testwidmann2.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testNegProperties",
+      "engine": "rl",
+      "category": "engine_gap",
+      "detail": "reasoner.ReasonerTest.testNegProperties: consistency expected false, got true"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testRoleDisjointness_1",
+      "engine": "rl",
+      "category": "engine_gap",
+      "detail": "reasoner.ReasonerTest.testRoleDisjointness_1: consistency expected false, got true"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testRoleDisjointness_2",
+      "engine": "rl",
+      "category": "engine_gap",
+      "detail": "reasoner.ReasonerTest.testRoleDisjointness_2: consistency expected false, got true"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHeinsohnTBox1",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox1.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHeinsohnTBox2",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox2.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHeinsohnTBox3c",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox3c.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHeinsohnTBox3cIrh",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox3cirh.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHeinsohnTBox3Modified",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox3modified.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHeinsohnTBox4a",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHeinsohnTBox4b",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox4b.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testHeinsohnTBox7",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT1a",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant1a.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT1b",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant1b.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT1c",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant1c.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT2",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant2.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT3",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant3.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT4",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant4.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT5",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant5.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT6",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant6.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT7a",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant7a.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT7b",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant7b.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT7c",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant7c.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT8a",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant8a.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT8",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant8.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT9",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant9.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT10",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant10.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT11",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant11.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT12",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant12.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanT13",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testiant13.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanFact1",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianfact1.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanFact3",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianfact3.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanFact4",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianfact4.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBug1b",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbug1b.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBug3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBug4",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbug4.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBug5",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbug5.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBug6",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbug6.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBug7",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbug7.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBug8",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbug8.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanMergeTest1",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianmergetest1.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanMergeTest2",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianmergetest2.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest1",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianrecursivedefinitiontest1.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest2",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianrecursivedefinitiontest2.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest3",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianrecursivedefinitiontest3.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBackjumping1",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbackjumping1.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBackjumping2",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbackjumping2.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testIanBackjumping3",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testianbackjumping3.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testNominals3",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testnominals3.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testNominals4",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testnominals4.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testNominals5",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testnominals5.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testNominals6",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testnominals6.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testDependencyDisjunctionMergingBug",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testNovelNominals",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testnovelnominals.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testPunning",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testPunning2",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testPunning3",
+      "engine": "rdfs",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testInverses2",
+      "engine": "rl",
+      "category": "engine_gap",
+      "detail": "reasoner.ReasonerTest.testInverses2: consistency expected false, got true"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testMissingCBug",
+      "engine": "dl",
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testmissingcbug.ofn"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testInverses",
+      "engine": "rl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rl)"
+    },
+    {
+      "id": "reasoner.SimpleRolesTest.testSimpleRoles1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.SimpleRolesTest.testSimpleRoles2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.SimpleRolesTest.testSimpleRoles3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.SimpleRolesTest.testSimpleRoles4",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.XMLLiteralTest.testCanonicalization_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.XMLLiteralTest.testCanonicalization_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.XMLLiteralTest.testRange_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.XMLLiteralTest.testRange_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.XMLLiteralTest.testRange_3",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.XMLLiteralTest.testMembership_1",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.XMLLiteralTest.testMembership_2",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    }
+  ],
+  "wg": [
+    {
+      "id": "owl_wg_tests.Datatype-2Drestrictions-2Ddifferent-2Dtypes",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Owlreal-2Dplus-2DoneOf",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Consistent-2Dbut-2Dall-2Dunsat",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Consistent-2Ddataproperty-2Ddisjointness",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Consistent-2DdateTime",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Consistent-2Dinteger-2Dfiller",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Datatype-2Drestriction-2Dmin-2Dmax-2Dinconsistency",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Different-2Dtypes-2Dplus-2Dcomplement",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Functionality-2Dclash",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent-2Dbyte-2Dfiller",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Datacomplement-2Dplus-2Drestrictions",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent-2Ddisjoint-2Ddataproperties",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent-2Dpattern-2Ddisjointness",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent-2Dinteger-2Dfiller",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent_datatypes",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Individual-2DClass_Punning_vs._ObjectOneOf",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D004",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D005",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D006",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D007",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.One_equals_two",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Owl2-2Drl-2Dinvalid-2Drightside-2Dsomevaluesfrom",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Owl2-2Drl-2Dvalid-2Drightside-2Dallvaluesfrom",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Plus-2Dand-2Dminus-2D0-2Dintegers",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Plus-2Dminus-2D0-2Dplus-2Ddisjointness",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Qualified-2Dcardinality-2Dboolean",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI4.6-2D004",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.1-2D010",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D005",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D010",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D011",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.21-2D002",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.26-2D005",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.3-2D009",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D003",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D004",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DThing-2D003",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DallValuesFrom-2D002",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D019",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D021",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D022",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D023",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D040",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D108",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D111",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D201",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D205",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D208",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D209",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D503",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D504",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D606",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D661",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D665",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D902",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D904",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DdisjointWith-2D008",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D001",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D002",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D203",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D204",
+      "category": "missing_premise",
+      "detail": null
+    }
+  ]
+}

@@ -1,6 +1,11 @@
-# Supported OWL Constructs (v0.9.0)
+# Supported OWL Constructs (v1.0.0)
 
-The parser **maps** a subset of OWL TBox axioms into `ontologos-core`. Other constructs are **scanned** for profile detection (`ParseMeta.constructs`) but **skipped** with warnings.
+The parser maps OWL into two layers:
+
+1. **`ontologos-core` flat axioms** — EL/RL-friendly TBox and ABox (see table below).
+2. **`DlStore` via `map_dl.rs`** — full OWL 2 DL class expressions (unions, complements, nominals, cardinalities, data ranges, etc.) for `--profile dl` / `ontologos-dl`.
+
+Profile detection uses both mapped core axioms and `ParseMeta` scans. `axiom_count()` counts **mapped core axioms**, not Protégé's full logical axiom total nor every `DlAxiom`.
 
 ## Mapped to core axioms
 
@@ -27,17 +32,21 @@ The parser **maps** a subset of OWL TBox axioms into `ontologos-core`. Other con
 
 Entity declarations (classes, properties, individuals) are registered even when surrounding axioms are skipped.
 
-## Scanned but not mapped
+## Scanned but not mapped to core (DL path may still apply)
 
-Examples (non-exhaustive):
+Complex class expressions and data axioms are often stored in **`DlStore`** when using `ontologos-parser` + `--profile dl`, even when they do not appear as flat `ontologos-core` axioms:
 
-- Complex class expressions: `ObjectUnionOf`, `ObjectIntersectionOf`, `ObjectComplementOf`, `ObjectAllValuesFrom`, cardinalities, nominals
-- `DisjointUnion`, irreflexive/inverse-functional properties
-- Negative property assertions, data property assertions
-- Data properties and datatypes (declarations may register entities; axioms skipped)
-- SWRL rules, annotations (neutral for profile diagnostics)
+- `ObjectUnionOf`, `ObjectIntersectionOf`, `ObjectComplementOf`, `ObjectOneOf`, cardinalities, `HasValue`, `HasSelf`
+- Data properties, datatypes, and data restrictions (datatype consistency via `ontologos-dl`)
+- `DisjointUnion`, irreflexive/inverse-functional properties (partial support)
 
-Skipped axioms increment `parse_meta.skipped_axiom_count` and append to `parse_meta.warnings`.
+Still skipped or partial for **core-only** workflows (EL/RL without DL):
+
+- Negative property assertions
+- SWRL rules (separate `map_swrl.rs` path)
+- Annotations (neutral for profile diagnostics)
+
+Skipped flat axioms increment `parse_meta.skipped_axiom_count` and append to `parse_meta.warnings`.
 
 `owl:imports` declarations are scanned but **not resolved** — imported ontologies are not loaded.
 
@@ -74,4 +83,4 @@ See [Profile detection](../guides/profile-detection.md).
 - [Load an OWL file](../getting-started/load-owl-file.md)
 - [Reasonable adapter limits](reasonable-limits.md)
 - [Troubleshooting](../guides/troubleshooting.md)
-- Mapper implementation: `crates/ontologos-parser/src/map.rs`
+- Mapper implementation: `crates/ontologos-parser/src/map.rs` (core), `crates/ontologos-parser/src/map_dl.rs` (DL)
