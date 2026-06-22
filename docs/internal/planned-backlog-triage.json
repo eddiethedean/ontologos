@@ -2,10 +2,10 @@
   "summary": {
     "java_total": 322,
     "java_by_category": {
-      "engine_gap": 111,
+      "engine_gap": 72,
       "manual_port": 207,
-      "missing_assertions": 0,
-      "missing_ofn": 4
+      "missing_ofn": 4,
+      "promotion_candidate": 39
     },
     "wg_total": 67,
     "wg_by_category": {
@@ -18,1831 +18,1831 @@
       "id": "reasoner.AnyURITest.testInvalidAnyURILiterals",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testLength_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testLength_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testLength_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testLength_4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testLength_5",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testSize_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testSize_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testSize_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testIntersection",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPattern1_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPattern1_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPattern2_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPattern2_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPattern3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPatternAndLength1_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPatternAndLength1_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPatternAndLength1_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPatternAndLength2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPatternAndLength3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPatternComplement1_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPatternComplement1_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testPatternComplement1_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testComplement2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testComplement3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.AnyURITest.testComplement4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testParsing_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testParsing_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testLength_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testLength_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testLength_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testLength_4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testLength_5",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testSize_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testSize_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testSize_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testIntersection_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testIntersection_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testExplicitSize",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testEnumerate1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testEnumerate2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.BinaryDataTest.testBase64Parsing",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithDatatypes",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_complexconcepttest_testconceptwithdatatypes.ofn"
+      "detail": "reasoner.ComplexConceptTest.testConceptWithDatatypes: missing class file:/c/test.owl#desc"
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithDatatypes2",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_complexconcepttest_testconceptwithdatatypes2.ofn"
+      "detail": "reasoner.ComplexConceptTest.testConceptWithDatatypes2: missing class file:/c/test.owl#desc"
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithNominals",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_complexconcepttest_testconceptwithnominals.ofn"
+      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals: missing class file:/c/test.owl#desc"
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithNominals2",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_complexconcepttest_testconceptwithnominals2.ofn"
+      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals2: missing class file:/c/test.owl#desc"
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithNominals3",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_complexconcepttest_testconceptwithnominals3.ofn"
+      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals3: consistency expected false, got true"
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithNominals4",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_complexconcepttest_testconceptwithnominals4.ofn"
+      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals4: consistency expected false, got true"
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithNominals5",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_complexconcepttest_testconceptwithnominals5.ofn"
+      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals5: missing file:/c/test.owl#A"
     },
     {
       "id": "reasoner.ComplexConceptTest.testJustifications",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_complexconcepttest_testjustifications.ofn"
+      "detail": "reasoner.ComplexConceptTest.testJustifications: class file:/c/test.owl#Matt satisfiability expected false, got true"
     },
     {
       "id": "reasoner.DatalogEngineTest.testBasic",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_datalogenginetest_testbasic.ofn"
+      "detail": "reasoner.DatalogEngineTest.testBasic: datalog class query :A expected [], got {\":a\"}"
     },
     {
       "id": "reasoner.DatalogEngineTest.testEquality",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_datalogenginetest_testequality.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.DatalogEngineTest.testQueryWithIndividualsAndEquality",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_datalogenginetest_testquerywithindividualsandequality.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.DatalogEngineTest.testQueryWithIndividuals",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_datalogenginetest_testquerywithindividuals.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.DatatypesTest.testLiteralCustomDatatype",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_datatypestest_testliteralcustomdatatype.ofn"
+      "detail": "reasoner.DatatypesTest.testLiteralCustomDatatype: expected ontology load to fail"
     },
     {
       "id": "reasoner.DatatypesTest.testFreshEntitiesQuery",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_datatypestest_testfreshentitiesquery.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.DatatypesTest.testParsingError",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_datatypestest_testparsingerror.ofn"
+      "detail": "reasoner.DatatypesTest.testParsingError: expected ontology load to fail"
     },
     {
       "id": "reasoner.DateTimeTest.testParsing",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testExactIntervalsWithoutTZ1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testExactIntervalsWithoutTZ2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testExactIntervalsWithTZ1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testExactIntervalsWithTZ2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testExactIntervalsWithTZ3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testFinite1_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testFinite1_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testFinite2_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testFinite2_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testInfinite_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testInfinite_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testMizedTZs_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testMizedTZs_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testMizedTZs_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.DateTimeTest.testMember",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.EntailmentTest.testHasKey",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testhaskey.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.EntailmentTest.testBlankNodes1",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testblanknodes1.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.EntailmentTest.testInvalidBlankNodes",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testinvalidblanknodes.ofn"
+      "detail": "reasoner.EntailmentTest.testInvalidBlankNodes: entailment expected false, got true"
     },
     {
       "id": "reasoner.EntailmentTest.testValidBlankNodesWithNominals",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodeswithnominals.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.EntailmentTest.testValidBlankNodesInPremise",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodesinpremise.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.EntailmentTest.testValidBlankNodes",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testvalidblanknodes.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.EntailmentTest.testBlankWithDTs",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testblankwithdts.ofn"
+      "detail": "reasoner.EntailmentTest.testBlankWithDTs: entailment expected false, got true"
     },
     {
       "id": "reasoner.EntailmentTest.testBlankWithDTs2",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testblankwithdts2.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.EntailmentTest.testBlankWithDTs3",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_entailmenttest_testblankwithdts3.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatRange",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatZeroRange_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatZeroRange_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatZeroRange_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatRangeEnum",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatNaN_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatNaN_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatNaN_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testNumberOfFloats_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testNumberOfFloats_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testNumberOfFloats_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testFloatAndDouble",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testDoubleRange",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testDoubleZeroRange_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testDoubleZeroRange_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testDoubleZeroRange_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testDoubleRangeEnum",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testDoubleNaN_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testDoubleNaN_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testDoubleNaN_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testNumberOfDoubles_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testNumberOfDoubles_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.FloatDoubleTest.testNumberOfDoubles_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testIntegerRange1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testIntegerRange2_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testIntegerRange2_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testIntegerRange2_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testIntegerRange2_4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalNotInteger_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalNotInteger_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalNotInteger_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testRealNotDecimal",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testRealNotDecimal_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMinInclusiveInt",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMinInclusiveInt_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMinExclusiveDec",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMaxInclusiveInt",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMaxInclusiveInt_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMaxExclusiveDec",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumInt_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumInt_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumInt_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumInt_4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumInt_5",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumIntNEQ_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumIntNEQ_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumIntNEQ_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumIntNEQ_4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testEnumIntNEQ_5",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMinMaxEqual_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMinMaxEqual_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMinMaxEqual_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testMinMaxEqual_4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testInvalidMinMax",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalMinusInt_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalMinusInt_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalMinusInt_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalMinusInt_4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalMinusIntNEQ_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalMinusIntNEQ_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testDecimalMinusIntNEQ_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testLargeRange1_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testLargeRange1_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testLargeRange1_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testLargeRange2_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testLargeRange2_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testLargeRange2_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.NumericsTest.testClique",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.OWLLinkTest.testBobTestAandB",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.OWLLinkTest.testInverses",
       "engine": "rl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.OWLLinkTest.testObjectProperties",
       "engine": "rl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.OWLLinkTest.testSuccessiveCalls",
       "engine": "rl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.OWLLinkTest.testBobTestC",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.OWLLinkTest.testDisjointProperties",
       "engine": "rl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.OWLLinkTest.testDisjointClasses",
       "engine": "rl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.OWLLinkTest.testBobTests",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.OWLReasonerTest.testBottomObjectPropertySubs",
       "engine": "rdfs",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_owlreasonertest_testbottomobjectpropertysubs.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.OWLReasonerTest.testTopObjectPropertySupers",
       "engine": "rdfs",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_owlreasonertest_testtopobjectpropertysupers.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.OWLReasonerTest.testIncrementalAddition2",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_owlreasonertest_testincrementaladdition2.ofn"
+      "detail": "reasoner.OWLReasonerTest.testIncrementalAddition2: consistency expected false, got true"
     },
     {
       "id": "reasoner.OWLReasonerTest.testEquivalenceClasses",
       "engine": "rl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.OWLReasonerTest.testNonEquivalenceClasses",
       "engine": "rl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testInvalidStringLiterals",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testLength_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testLength_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testLength_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testLength_4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testLength_5",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testSize_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testSize_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testSize_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testIntersection_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testIntersection_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testExplicitSize",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testEnumerate",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPattern1_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPattern1_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPattern2_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPattern2_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPattern3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength1_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength1_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength1_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPatternAndLength3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPatternComplement1_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPatternComplement1_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testPatternComplement1_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testComplement2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testComplement3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testComplement4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testLangRange1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RDFPlainLiteralTest.testLangRange2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity0",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity1",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity2",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity3",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity4",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity5",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity6",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity7",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity8",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.RIARegularityTest.testRIARegularity9",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerCoreBlockingTest.testIanT6",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonercoreblockingtest_testiant6.ofn"
+      "detail": "reasoner.ReasonerCoreBlockingTest.testIanT6: class file:/c/test.owl#c satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerCoreBlockingTest.testIanT9",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonercoreblockingtest_testiant9.ofn"
+      "detail": "reasoner.ReasonerCoreBlockingTest.testIanT9: class file:/c/test.owl#Infinite-Tree-Root satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testEmptyChain",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerTest.testOnyDeclaredEntitiesInHierarchy",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerTest.testIsEntailed",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testisentailed.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIncrementalWithSameAs",
       "engine": "rl",
       "category": "manual_port",
-      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithsameas.ofn"
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.ReasonerTest.testClassificationWithValidatedBlockingError",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.ReasonerTest.testIncrementalWithNegatedHasValue",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedhasvalue.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIncrementalWithHasValue",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithhasvalue.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIncrementalWithNegatedClass",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedclass.ofn"
+      "detail": "reasoner.ReasonerTest.testIncrementalWithNegatedClass: missing incremental fixture /Volumes/T7/coding/ontologos/crates/ontologos-conformance/../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedclass_incremental.ofn"
     },
     {
       "id": "reasoner.ReasonerTest.testIncrementalWithClass",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithclass.ofn"
+      "detail": "reasoner.ReasonerTest.testIncrementalWithClass: missing incremental fixture /Volumes/T7/coding/ontologos/crates/ontologos-conformance/../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testincrementalwithclass_incremental.ofn"
     },
     {
       "id": "reasoner.ReasonerTest.testIncrementalWithNegatedHasSelf",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedhasself.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIncrementalWithHasSelf",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithhasself.ofn"
+      "detail": "reasoner.ReasonerTest.testIncrementalWithHasSelf: missing incremental fixture /Volumes/T7/coding/ontologos/crates/ontologos-conformance/../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testincrementalwithhasself_incremental.ofn"
     },
     {
       "id": "reasoner.ReasonerTest.testIncrementalWithFreshNames",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": "axioms/hermit_reasoner_reasonertest_testincrementalwithfreshnames.ofn"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.ReasonerTest.testInstanteManagerError",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerTest.testTopOPEquivalence",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testtopopequivalence.ofn"
+      "detail": "reasoner.ReasonerTest.testTopOPEquivalence: missing file:/c/test.owl#owl:topObjectProperty"
     },
     {
       "id": "reasoner.ReasonerTest.testFreshEntityEntailment",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": "axioms/hermit_reasoner_reasonertest_testfreshentityentailment.ofn"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.ReasonerTest.testPrecomputeDisjointClasses",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testprecomputedisjointclasses.ofn"
+      "detail": "reasoner.ReasonerTest.testPrecomputeDisjointClasses: class file:/c/test.owl#A satisfiability expected true, got false"
     },
     {
       "id": "reasoner.ReasonerTest.testKeys3",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testkeys3.ofn"
+      "detail": "reasoner.ReasonerTest.testKeys3: missing class file:/c/test.owl#A"
     },
     {
       "id": "reasoner.ReasonerTest.testObjectPropertySubsumptionsNoNominals",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testobjectpropertysubsumptionsnonominals.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testDataPropertyEntailment",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testdatapropertyentailment.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testPropertyInstanceRetrieval",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testpropertyinstanceretrieval.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testRoleChains",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testrolechains.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testRoleSubsumptionWithChainsTransitiveSymmetric",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testrolesubsumptionwithchainstransitivesymmetric.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testobjectpropertydomainstimothybug.ofn"
+      "detail": "reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug: missing file:/c/test.owl#owl:Thing"
     },
     {
       "id": "reasoner.ReasonerTest.testDatatypeLiterals",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerTest.testIndividualRetrieval",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testindividualretrieval.ofn"
+      "detail": "reasoner.ReasonerTest.testIndividualRetrieval: missing class file:/c/test.owl#A"
     },
     {
       "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testanonymousindividualconstraints.ofn"
+      "detail": "reasoner.ReasonerTest.testAnonymousIndividualConstraints: expected ontology load to fail"
     },
     {
       "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints2",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testanonymousindividualconstraints2.ofn"
+      "detail": "reasoner.ReasonerTest.testAnonymousIndividualConstraints2: expected ontology load to fail"
     },
     {
       "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints3",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testanonymousindividualconstraints3.ofn"
+      "detail": "reasoner.ReasonerTest.testAnonymousIndividualConstraints3: expected ontology load to fail"
     },
     {
       "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints4",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testanonymousindividualconstraints4.ofn"
+      "detail": "reasoner.ReasonerTest.testAnonymousIndividualConstraints4: expected ontology load to fail"
     },
     {
       "id": "reasoner.ReasonerTest.testHasKeyEntailment",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testhaskeyentailment.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testHasKeyNonEntailment",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testhaskeynonentailment.ofn"
+      "detail": "reasoner.ReasonerTest.testHasKeyNonEntailment: entailment expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testDatatypeDefEntailment",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testdatatypedefentailment.ofn"
+      "detail": "reasoner.ReasonerTest.testDatatypeDefEntailment: missing conclusion /Volumes/T7/coding/ontologos/crates/ontologos-conformance/../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testdatatypedefentailment_conclusion.ofn"
     },
     {
       "id": "reasoner.ReasonerTest.testChains1",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": "axioms/hermit_reasoner_reasonertest_testchains1.ofn"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.ReasonerTest.testChains2",
       "engine": "rdfs",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testchains2.ofn"
+      "detail": "reasoner.ReasonerTest.testChains2: consistency expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testChains3",
       "engine": "rl",
       "category": "manual_port",
-      "detail": "axioms/hermit_reasoner_reasonertest_testchains3.ofn"
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.ReasonerTest.testChains",
       "engine": "rdfs",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testchains.ofn"
+      "detail": "reasoner.ReasonerTest.testChains: consistency expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testNegativeDataPropertyAssertion",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testnegativedatapropertyassertion.ofn"
+      "detail": "reasoner.ReasonerTest.testNegativeDataPropertyAssertion: consistency expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testHierarchyPrinting1",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.ReasonerTest.testHierarchyPrinting2",
       "engine": "rdfs",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.ReasonerTest.testSemanticObjectPropertyClassification",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testsemanticobjectpropertyclassification.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testDataPropertyHierarchy",
       "engine": "rl",
       "category": "manual_port",
-      "detail": "axioms/hermit_reasoner_reasonertest_testdatapropertyhierarchy.ofn"
+      "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
       "id": "reasoner.ReasonerTest.testSemanticDataPropertyClassification",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testsemanticdatapropertyclassification.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testComplexConceptInstanceRetrieval",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testcomplexconceptinstanceretrieval.ofn"
+      "detail": "reasoner.ReasonerTest.testComplexConceptInstanceRetrieval: missing class file:/c/test.owl#some_r_b"
     },
     {
       "id": "reasoner.ReasonerTest.testWidmann2",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testwidmann2.ofn"
+      "detail": "reasoner.ReasonerTest.testWidmann2: class file:/c/test.owl#p satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testNegProperties",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testnegproperties.ofn"
+      "detail": "reasoner.ReasonerTest.testNegProperties: consistency expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testRoleDisjointness_1",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testroledisjointness_1.ofn"
+      "detail": "reasoner.ReasonerTest.testRoleDisjointness_1: consistency expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testRoleDisjointness_2",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testroledisjointness_2.ofn"
+      "detail": "reasoner.ReasonerTest.testRoleDisjointness_2: consistency expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox1",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox1.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox2",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox2.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox3c",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox3c.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox3cIrh",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox3cirh.ofn"
+      "detail": "reasoner.ReasonerTest.testHeinsohnTBox3cIrh: class file:/c/test.owl#complex1 satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox3Modified",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox3modified.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox4a",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox4b",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testheinsohntbox4b.ofn"
+      "detail": "reasoner.ReasonerTest.testHeinsohnTBox4b: missing file:/c/test.owl#E"
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox7",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT1a",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant1a.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT1a: class file:/c/test.owl#p1 satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT1b",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant1b.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanT1c",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant1c.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT1c: class file:/c/test.owl#p1 satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT2",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant2.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanT3",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant3.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT3: missing class file:/c/test.owl#p"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT4",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant4.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT4: class file:/c/test.owl#a satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT5",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant5.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT5: missing class file:/c/test.owl#a"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT6",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant6.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT6: class file:/c/test.owl#c satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT7a",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant7a.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT7a: missing class file:/c/test.owl#p1"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT7b",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant7b.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT7b: missing class file:/c/test.owl#p1"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT7c",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant7c.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT7c: missing class file:/c/test.owl#p1"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT8a",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant8a.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT8a: missing class file:/c/test.owl#p"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT8",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant8.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT8: missing class file:/c/test.owl#p"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT9",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant9.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT9: class file:/c/test.owl#Infinite-Tree-Root satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT10",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant10.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT10: missing class file:/c/test.owl#p"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT11",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant11.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT11: missing class file:/c/test.owl#p"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT12",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant12.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT12: missing class file:/c/test.owl#p"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT13",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testiant13.ofn"
+      "detail": "reasoner.ReasonerTest.testIanT13: missing class file:/c/test.owl#a"
     },
     {
       "id": "reasoner.ReasonerTest.testIanFact1",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianfact1.ofn"
+      "detail": "reasoner.ReasonerTest.testIanFact1: class file:/c/test.owl#a satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testIanFact3",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianfact3.ofn"
+      "detail": "reasoner.ReasonerTest.testIanFact3: missing class file:/c/test.owl#p1"
     },
     {
       "id": "reasoner.ReasonerTest.testIanFact4",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianfact4.ofn"
+      "detail": "reasoner.ReasonerTest.testIanFact4: missing file:/c/test.owl#A"
     },
     {
       "id": "reasoner.ReasonerTest.testIanBug1b",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbug1b.ofn"
+      "detail": "reasoner.ReasonerTest.testIanBug1b: class file:/c/test.owl#a satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testIanBug3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerTest.testIanBug4",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbug4.ofn"
+      "detail": "reasoner.ReasonerTest.testIanBug4: missing class file:/c/test.owl#c"
     },
     {
       "id": "reasoner.ReasonerTest.testIanBug5",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbug5.ofn"
+      "detail": "reasoner.ReasonerTest.testIanBug5: missing class file:/c/test.owl#p"
     },
     {
       "id": "reasoner.ReasonerTest.testIanBug6",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbug6.ofn"
+      "detail": "reasoner.ReasonerTest.testIanBug6: missing class file:/c/test.owl#C"
     },
     {
       "id": "reasoner.ReasonerTest.testIanBug7",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbug7.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanBug8",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbug8.ofn"
+      "detail": "reasoner.ReasonerTest.testIanBug8: class file:/c/test.owl#A satisfiability expected true, got false"
     },
     {
       "id": "reasoner.ReasonerTest.testIanMergeTest1",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianmergetest1.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanMergeTest2",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianmergetest2.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest1",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianrecursivedefinitiontest1.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest2",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianrecursivedefinitiontest2.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest3",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianrecursivedefinitiontest3.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanBackjumping1",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbackjumping1.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanBackjumping2",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbackjumping2.ofn"
+      "detail": "reasoner.ReasonerTest.testIanBackjumping2: missing class file:/c/test.owl#test"
     },
     {
       "id": "reasoner.ReasonerTest.testIanBackjumping3",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testianbackjumping3.ofn"
+      "detail": "reasoner.ReasonerTest.testIanBackjumping3: missing class file:/c/test.owl#test"
     },
     {
       "id": "reasoner.ReasonerTest.testNominals3",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testnominals3.ofn"
+      "detail": "reasoner.ReasonerTest.testNominals3: hasType file:/c/test.owl#n file:/c/test.owl#A (direct=false) expected true, got false"
     },
     {
       "id": "reasoner.ReasonerTest.testNominals4",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testnominals4.ofn"
+      "detail": "reasoner.ReasonerTest.testNominals4: missing class file:/c/test.owl#desc"
     },
     {
       "id": "reasoner.ReasonerTest.testNominals5",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testnominals5.ofn"
+      "detail": "reasoner.ReasonerTest.testNominals5: missing class file:/c/test.owl#desc"
     },
     {
       "id": "reasoner.ReasonerTest.testNominals6",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testnominals6.ofn"
+      "detail": "reasoner.ReasonerTest.testNominals6: missing class file:/c/test.owl#desc"
     },
     {
       "id": "reasoner.ReasonerTest.testDependencyDisjunctionMergingBug",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerTest.testNovelNominals",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testnovelnominals.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testPunning",
@@ -1866,13 +1866,13 @@
       "id": "reasoner.ReasonerTest.testInverses2",
       "engine": "rl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testinverses2.ofn"
+      "detail": "reasoner.ReasonerTest.testInverses2: consistency expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testMissingCBug",
       "engine": "dl",
       "category": "engine_gap",
-      "detail": "axioms/hermit_reasoner_reasonertest_testmissingcbug.ofn"
+      "detail": "reasoner.ReasonerTest.testMissingCBug: missing class file:/c/test.owl#A"
     },
     {
       "id": "reasoner.ReasonerTest.testInverses",
@@ -1884,68 +1884,404 @@
       "id": "reasoner.SimpleRolesTest.testSimpleRoles1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.SimpleRolesTest.testSimpleRoles2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.SimpleRolesTest.testSimpleRoles3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.SimpleRolesTest.testSimpleRoles4",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.XMLLiteralTest.testCanonicalization_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.XMLLiteralTest.testCanonicalization_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.XMLLiteralTest.testRange_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.XMLLiteralTest.testRange_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.XMLLiteralTest.testRange_3",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.XMLLiteralTest.testMembership_1",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.XMLLiteralTest.testMembership_2",
       "engine": "dl",
       "category": "manual_port",
-      "detail": null
+      "detail": "auto-cataloged; requires manual port (dl)"
     }
   ],
-  "wg": []
+  "wg": [
+    {
+      "id": "owl_wg_tests.Datatype-2Drestrictions-2Ddifferent-2Dtypes",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Owlreal-2Dplus-2DoneOf",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Consistent-2Dbut-2Dall-2Dunsat",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Consistent-2Ddataproperty-2Ddisjointness",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Consistent-2DdateTime",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Consistent-2Dinteger-2Dfiller",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Datatype-2Drestriction-2Dmin-2Dmax-2Dinconsistency",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Different-2Dtypes-2Dplus-2Dcomplement",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Functionality-2Dclash",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent-2Dbyte-2Dfiller",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Datacomplement-2Dplus-2Drestrictions",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent-2Ddisjoint-2Ddataproperties",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent-2Dpattern-2Ddisjointness",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent-2Dinteger-2Dfiller",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Inconsistent_datatypes",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Individual-2DClass_Punning_vs._ObjectOneOf",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D004",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D005",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D006",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D007",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.One_equals_two",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Owl2-2Drl-2Dinvalid-2Drightside-2Dsomevaluesfrom",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Owl2-2Drl-2Dvalid-2Drightside-2Dallvaluesfrom",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Plus-2Dand-2Dminus-2D0-2Dintegers",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Plus-2Dminus-2D0-2Dplus-2Ddisjointness",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.Qualified-2Dcardinality-2Dboolean",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI4.6-2D004",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.1-2D010",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D005",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D010",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D011",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.21-2D002",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.26-2D005",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.3-2D009",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D003",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D004",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DThing-2D003",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DallValuesFrom-2D002",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D019",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D021",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D022",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D023",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D040",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D108",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D111",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D201",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D205",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D208",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D209",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D503",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D504",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D606",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D661",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D665",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D902",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D904",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2DdisjointWith-2D008",
+      "category": "missing_expectations",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D001",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D002",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D203",
+      "category": "missing_premise",
+      "detail": null
+    },
+    {
+      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D204",
+      "category": "missing_premise",
+      "detail": null
+    }
+  ]
 }
