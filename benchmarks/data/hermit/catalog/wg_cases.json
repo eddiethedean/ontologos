@@ -3225,13 +3225,13 @@
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D026",
     "test_type": "inconsistency",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D026/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
     "expected_consistent": false,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D027",
@@ -3566,13 +3566,13 @@
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601",
     "test_type": "inconsistency",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
     "expected_consistent": false,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D602",
@@ -3775,13 +3775,13 @@
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D626",
     "test_type": "inconsistency",
-    "status": "planned",
+    "status": "wg",
     "engine": "dl",
     "premise_ofn": "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D626/premise.rdf",
     "conclusion_ofn": null,
     "expected_entailment": null,
     "expected_consistent": false,
-    "ignore_reason": "WG test \u2014 pending ontologos-dl entailment promotion"
+    "ignore_reason": null
   },
   {
     "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D627",
