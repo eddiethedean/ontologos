@@ -694,6 +694,10 @@ pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize
     if branch.clash {
         return;
     }
+    clash::check_conflicting_datatype_cardinality_bounds(branch, world);
+    if branch.clash {
+        return;
+    }
     let labels = branch.worlds[world].labels.clone();
     for ce in labels {
         let Some(expr) = branch.dl.core().dl().ce(ce).cloned() else {

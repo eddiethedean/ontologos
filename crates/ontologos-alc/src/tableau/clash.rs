@@ -1,6 +1,6 @@
 //! Clash detection for ALC tableau branches.
 
-use ontologos_core::{CeId, ClassExpr, RoleExpr};
+use ontologos_core::{CeId, ClassExpr, EntityId, RoleExpr};
 
 use super::expand::{count_role_successors, effective_cardinality_filler};
 use super::Branch;
@@ -16,6 +16,10 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
     }
     for world_idx in 0..branch.worlds.len() {
         check_conflicting_cardinality_bounds(branch, world_idx);
+        if branch.clash {
+            return;
+        }
+        check_conflicting_datatype_cardinality_bounds(branch, world_idx);
         if branch.clash {
             return;
         }
@@ -176,6 +180,43 @@ pub fn check_existential_bottom_subsumptions(branch: &mut Branch<'_>) {
     for world in 0..branch.worlds.len() {
         for &(sub, _) in &subs {
             if super::expand::world_structurally_satisfies(branch, world, sub) {
+                branch.clash = true;
+                return;
+            }
+        }
+    }
+}
+
+/// Clash when positive min/max datatype cardinality bounds on the same property disagree.
+pub fn check_conflicting_datatype_cardinality_bounds(branch: &mut Branch<'_>, world: usize) {
+    if branch.clash {
+        return;
+    }
+    let labels = branch.worlds[world].labels.clone();
+    let store = branch.dl.core().dl();
+    let mut mins: Vec<(u32, EntityId)> = Vec::new();
+    let mut maxs: Vec<(u32, EntityId)> = Vec::new();
+    for ce in labels {
+        let Some(expr) = store.ce(ce).cloned() else {
+            continue;
+        };
+        match expr {
+            ClassExpr::DataMinCardinality { n, property, .. } if n > 0 => {
+                mins.push((n, property));
+            }
+            ClassExpr::DataMaxCardinality { n, property, .. } => {
+                maxs.push((n, property));
+            }
+            ClassExpr::DataExactCardinality { n, property, .. } => {
+                mins.push((n, property));
+                maxs.push((n, property));
+            }
+            _ => {}
+        }
+    }
+    for (min_n, min_p) in mins {
+        for (max_n, max_p) in &maxs {
+            if min_p == *max_p && min_n > *max_n {
                 branch.clash = true;
                 return;
             }

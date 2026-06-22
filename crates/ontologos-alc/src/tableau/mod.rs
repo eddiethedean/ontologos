@@ -242,14 +242,27 @@ fn assert_thing_on_named_individuals(
     worlds: &HashMap<EntityId, usize>,
     dl: &DlOntology,
 ) {
-    let Some(top) = dl.core().dl().expressions().find_map(|(id, e)| match e {
+    let store = dl.core().dl();
+    let Some(top) = store.expressions().find_map(|(id, e)| match e {
         ClassExpr::Top => Some(id),
         _ => None,
     }) else {
         return;
     };
+    let thing_restrictions: Vec<CeId> = store
+        .axioms()
+        .filter_map(|axiom| {
+            let DlAxiom::SubClassOf { sub, sup } = axiom else {
+                return None;
+            };
+            clash::is_thing_ce(branch, *sub).then_some(*sup)
+        })
+        .collect();
     for &world in worlds.values() {
         branch.assert(world, top);
+        for &sup in &thing_restrictions {
+            branch.assert(world, sup);
+        }
     }
 }
 

@@ -650,14 +650,73 @@ fn atomic_class_id(store: &ontologos_core::DlStore, ce: CeId) -> Option<EntityId
     }
 }
 
+fn equivalent_definition_ce(store: &ontologos_core::DlStore, class: EntityId) -> Option<CeId> {
+    let mut best: Option<CeId> = None;
+    let mut best_score = 0u8;
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        if ids.len() < 2 {
+            continue;
+        }
+        for &id in ids {
+            if !matches!(store.ce(id), Some(ClassExpr::Atomic(c)) if *c == class) {
+                continue;
+            }
+            for &other in ids {
+                if other == id {
+                    continue;
+                }
+                let score = equivalent_partner_preference(store, other);
+                if score > best_score {
+                    best_score = score;
+                    best = Some(other);
+                }
+            }
+        }
+    }
+    best
+}
+
+fn equivalent_partner_preference(store: &ontologos_core::DlStore, ce: CeId) -> u8 {
+    match store.ce(ce) {
+        Some(ClassExpr::Atomic(_)) => 1,
+        Some(
+            ClassExpr::Some { .. }
+            | ClassExpr::All { .. }
+            | ClassExpr::MinCardinality { .. }
+            | ClassExpr::MaxCardinality { .. }
+            | ClassExpr::ExactCardinality { .. }
+            | ClassExpr::DataMinCardinality { .. }
+            | ClassExpr::DataMaxCardinality { .. }
+            | ClassExpr::DataExactCardinality { .. },
+        ) => 4,
+        Some(ClassExpr::And(_) | ClassExpr::Or(_)) => 5,
+        Some(ClassExpr::Not(_)) => 3,
+        _ => 2,
+    }
+}
+
+fn effective_ce_for_restrictions(store: &ontologos_core::DlStore, ce: CeId) -> CeId {
+    match store.ce(ce) {
+        Some(ClassExpr::Atomic(entity)) => equivalent_definition_ce(store, *entity).unwrap_or(ce),
+        _ => ce,
+    }
+}
+
 fn restrictions_from_ce(
     store: &ontologos_core::DlStore,
     ce: CeId,
 ) -> Vec<(EntityId, DataRestriction)> {
+    let ce = effective_ce_for_restrictions(store, ce);
     let Some(expr) = store.ce(ce) else {
         return Vec::new();
     };
     match expr {
+        ClassExpr::Atomic(entity) => equivalent_definition_ce(store, *entity)
+            .map(|def| restrictions_from_ce(store, def))
+            .unwrap_or_default(),
         ClassExpr::DataAll { property, range } => {
             vec![(*property, DataRestriction::All(*range))]
         }
@@ -1288,6 +1347,29 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
+
+    #[test]
+    fn dl601_class_assertion_extracts_exact_cardinality() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf",
+        );
+        let ont = load_ontology(&path).expect("load");
+        let store = ont.dl();
+        let class_ce = store
+            .axioms()
+            .find_map(|ax| match ax {
+                DlAxiom::ClassAssertion { class, .. } => Some(*class),
+                _ => None,
+            })
+            .expect("class assertion");
+        let restrictions = restrictions_from_ce(store, class_ce);
+        assert!(
+            restrictions.iter().any(|(_, r)| {
+                matches!(r, DataRestriction::ExactCardinality(0, _))
+            }),
+            "expected exact-0 restriction from Unsatisfiable equiv, got {restrictions:?}"
+        );
+    }
 
     #[test]
     fn signed_zero_distinct_keys() {
