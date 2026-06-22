@@ -95,8 +95,12 @@ pub fn load_ontology_with_limits_and_base(
             limits.max_expanded_bytes,
         )?;
         let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&expanded);
+        let individuals =
+            crate::rdf_preprocess::materialize_anonymous_individual_descriptions(&injected);
+        let normalized =
+            crate::rdf_preprocess::normalize_all_different_members(&individuals);
         read_horned_owl_from_reader(
-            &mut std::io::Cursor::new(injected.as_bytes().to_vec()),
+            &mut std::io::Cursor::new(normalized.as_bytes().to_vec()),
             format,
             limits,
         )?

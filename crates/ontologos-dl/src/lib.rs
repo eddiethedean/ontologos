@@ -9,7 +9,7 @@ mod ria;
 mod route;
 mod saturation;
 
-use ontologos_core::{Ontology, Profile, Taxonomy};
+use ontologos_core::{DlAxiom, Ontology, Profile, Taxonomy};
 use thiserror::Error;
 
 pub use classify::DlClassifier;
@@ -65,11 +65,39 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if !datatype::is_datatype_consistent(ontology) {
         return Ok(false);
     }
+    if abox_typed_unsatisfiable_class(ontology)? {
+        return Ok(false);
+    }
     let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
     ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)
+}
+
+fn abox_typed_unsatisfiable_class(ontology: &Ontology) -> Result<bool> {
+    let taxonomy = classify(ontology)?;
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        let Some(ontologos_core::ClassExpr::Atomic(entity)) = store.ce(*class) else {
+            continue;
+        };
+        if taxonomy.unsatisfiable.contains(entity) {
+            return Ok(true);
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let ontologos_core::Axiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if taxonomy.unsatisfiable.contains(class) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 /// Check named class subsumption after DL classification.

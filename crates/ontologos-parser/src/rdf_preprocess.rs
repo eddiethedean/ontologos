@@ -481,6 +481,224 @@ fn datatype_property_fallback(iri: &str) -> bool {
     iri.rsplit('#').next().is_some_and(|local| local == "dp")
 }
 
+/// Assign stable `rdf:about` IRIs to blank `rdf:Description` nodes carrying `rdf:type`.
+///
+/// Horned-OWL drops anonymous individual typings; OWL WG description-logic fixtures rely on them.
+#[must_use]
+pub fn materialize_anonymous_individual_descriptions(input: &str) -> String {
+    if !input.contains("<rdf:Description") || !input.contains("rdf:type") {
+        return input.to_owned();
+    }
+    let base = parse_xml_base(input);
+    let mut counter = 0usize;
+    let mut out = String::with_capacity(input.len() + 256);
+    let mut pos = 0usize;
+    while pos < input.len() {
+        let Some(rel) = input[pos..].find('<') else {
+            out.push_str(&input[pos..]);
+            break;
+        };
+        let start = pos + rel;
+        out.push_str(&input[pos..start]);
+        let Some(tag_end) = input[start..].find('>') else {
+            out.push_str(&input[start..]);
+            break;
+        };
+        let tag = &input[start..start + tag_end + 1];
+        if is_anonymous_description_open(tag) {
+            counter += 1;
+            let iri = format!("{base}#_:{counter}");
+            if tag.ends_with("/>") {
+                let inner = tag.strip_prefix('<').unwrap_or(tag).trim_end_matches("/>").trim();
+                out.push_str(&format!("<{inner} rdf:about=\"{iri}\"/>"));
+            } else {
+                let inner = tag.strip_prefix('<').unwrap_or(tag).trim_end_matches('>').trim();
+                out.push_str(&format!("<{inner} rdf:about=\"{iri}\">"));
+            }
+        } else {
+            out.push_str(tag);
+        }
+        pos = start + tag_end + 1;
+    }
+    out
+}
+
+/// Rewrite `owl:members` collections to `owl:distinctMembers` and flatten member nodes.
+#[must_use]
+pub fn normalize_all_different_members(input: &str) -> String {
+    if !input.contains("<owl:AllDifferent") {
+        return input.to_owned();
+    }
+    let with_distinct = if input.contains("owl:members") {
+        input.replace("owl:members", "owl:distinctMembers")
+    } else {
+        input.to_owned()
+    };
+    let stripped = strip_all_different_about(&with_distinct);
+    flatten_descriptions_in_distinct_members(&stripped)
+}
+
+fn flatten_descriptions_in_distinct_members(input: &str) -> String {
+    let all_diff = "<owl:AllDifferent";
+    let Some(all_start) = input.find(all_diff) else {
+        return input.to_owned();
+    };
+    let marker = "<owl:distinctMembers";
+    let Some(start) = input.find(marker) else {
+        return input.to_owned();
+    };
+    let Some(open_end) = input[start..].find('>') else {
+        return input.to_owned();
+    };
+    let open_end = start + open_end + 1;
+    let Some(close_start) = input[open_end..].find("</owl:distinctMembers>") else {
+        return input.to_owned();
+    };
+    let close_start = open_end + close_start;
+    let inner = &input[open_end..close_start];
+
+    let mut extracted_same_as = String::new();
+    let mut flattened_inner = String::new();
+    let mut pos = 0usize;
+    while pos < inner.len() {
+        let Some(rel) = inner[pos..].find("<rdf:Description") else {
+            flattened_inner.push_str(&inner[pos..]);
+            break;
+        };
+        let desc_start = pos + rel;
+        flattened_inner.push_str(&inner[pos..desc_start]);
+        let Some(desc_end) = description_element_end(inner, desc_start) else {
+            flattened_inner.push_str(&inner[desc_start..]);
+            break;
+        };
+        let desc = &inner[desc_start..desc_end];
+        if let Some(about) = extract_attribute(desc, "rdf:about") {
+            for target in extract_same_as_targets(desc) {
+                extracted_same_as.push_str(&format!(
+                    "  <rdf:Description rdf:about=\"{about}\">\n    <owl:sameAs rdf:resource=\"{target}\"/>\n  </rdf:Description>\n"
+                ));
+            }
+            flattened_inner.push_str(&format!("    <owl:NamedIndividual rdf:about=\"{about}\"/>\n"));
+        } else {
+            flattened_inner.push_str(desc);
+        }
+        pos = desc_end;
+    }
+
+    let mut out = String::new();
+    out.push_str(&input[..all_start]);
+    out.push_str(&extracted_same_as);
+    out.push_str(&input[all_start..start]);
+    out.push_str(&input[start..open_end]);
+    out.push_str(&flattened_inner);
+    out.push_str(&input[close_start..]);
+    out
+}
+
+fn description_element_end(input: &str, desc_start: usize) -> Option<usize> {
+    let slice = &input[desc_start..];
+    if let Some(rel) = slice.find("/>") {
+        let candidate = &slice[..rel + 2];
+        if candidate.starts_with("<rdf:Description") && !candidate[1..rel].contains('<') {
+            return Some(desc_start + rel + 2);
+        }
+    }
+    let close = "</rdf:Description>";
+    let rel = slice.find(close)?;
+    Some(desc_start + rel + close.len())
+}
+
+fn extract_same_as_targets(description: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while let Some(rel) = description[pos..].find("<owl:sameAs") {
+        let start = pos + rel;
+        let Some(tag_end) = description[start..].find('>') else {
+            break;
+        };
+        let tag = &description[start..start + tag_end + 1];
+        if let Some(target) = extract_attribute(tag, "rdf:resource") {
+            out.push(target);
+        }
+        pos = start + tag_end + 1;
+    }
+    out
+}
+
+fn strip_all_different_about(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    let mut pos = 0usize;
+    while pos < input.len() {
+        let Some(rel) = input[pos..].find("<owl:AllDifferent") else {
+            out.push_str(&input[pos..]);
+            break;
+        };
+        let start = pos + rel;
+        out.push_str(&input[pos..start]);
+        let Some(tag_end) = input[start..].find('>') else {
+            out.push_str(&input[start..]);
+            break;
+        };
+        let end = start + tag_end + 1;
+        let tag = &input[start..end];
+        if tag.contains("rdf:about=\"") {
+            out.push_str(&remove_attribute(tag, "rdf:about"));
+        } else {
+            out.push_str(tag);
+        }
+        pos = end;
+    }
+    out
+}
+
+fn remove_attribute(tag: &str, attr: &str) -> String {
+    let marker = format!("{attr}=\"");
+    let Some(attr_idx) = tag.find(&marker) else {
+        return tag.to_owned();
+    };
+    let value_start = attr_idx + marker.len();
+    let Some(value_end) = tag[value_start..].find('"') else {
+        return tag.to_owned();
+    };
+    let mut out = String::new();
+    out.push_str(&tag[..attr_idx]);
+    out.push_str(tag[value_start + value_end + 1..].trim_start());
+    out
+}
+
+fn parse_xml_base(input: &str) -> String {
+    let Some(root_start) = input.find("<rdf:RDF") else {
+        return "urn:ontologos:anon:".to_owned();
+    };
+    let Some(root_end) = input[root_start..].find('>') else {
+        return "urn:ontologos:anon:".to_owned();
+    };
+    let root_tag = &input[root_start..root_start + root_end + 1];
+    const MARKER: &str = "xml:base=\"";
+    if let Some(idx) = root_tag.find(MARKER) {
+        let rest = &root_tag[idx + MARKER.len()..];
+        if let Some(end) = rest.find('"') {
+            return rest[..end]
+                .trim_end_matches('#')
+                .trim_end_matches('/')
+                .to_owned();
+        }
+    }
+    "urn:ontologos:anon:".to_owned()
+}
+
+fn is_anonymous_description_open(tag: &str) -> bool {
+    if !tag.starts_with("<rdf:Description") || tag.starts_with("</") {
+        return false;
+    }
+    !tag.contains("rdf:about=\"")
+        && !tag.contains("rdf:about='")
+        && !tag.contains("rdf:nodeID=\"")
+        && !tag.contains("rdf:nodeID='")
+        && !tag.contains("rdf:ID=\"")
+        && !tag.contains("rdf:ID='")
+}
+
 fn parse_entity_decl(rest: &str) -> Option<(String, String)> {
     let rest = rest.strip_prefix("<!ENTITY")?.trim();
     let (name, rest) = rest.split_once(|c: char| c.is_whitespace())?;
@@ -558,6 +776,52 @@ mod tests {
         assert_eq!(out.matches("rdf:ID=\"Wine\"").count(), 1);
         assert!(out.contains("first"));
         assert!(!out.contains("equivalentClass"));
+    }
+
+    #[test]
+    fn materialize_anonymous_description_adds_about() {
+        let input = r#"<rdf:RDF xml:base="http://ex.org/">
+  <rdf:Description>
+    <rdf:type rdf:resource="http://ex.org#C"/>
+  </rdf:Description>
+</rdf:RDF>"#;
+        let out = materialize_anonymous_individual_descriptions(input);
+        assert!(out.contains("rdf:about=\"http://ex.org#_:1\""));
+    }
+
+    #[test]
+    fn description_element_end_parses_member_descriptions() {
+        let inner = r#"
+      <rdf:Description rdf:about="http://ex.org#w1">
+        <owl:sameAs rdf:resource="http://ex.org#w2"/>
+      </rdf:Description>
+      <rdf:Description rdf:about="http://ex.org#w2"/>
+    "#;
+        let start = inner.find("<rdf:Description").unwrap();
+        let end = super::description_element_end(inner, start).expect("first desc end");
+        assert!(inner[start..end].contains("sameAs"));
+        let start2 = inner[end..].find("<rdf:Description").unwrap() + end;
+        let end2 = super::description_element_end(inner, start2).expect("second desc end");
+        assert!(inner[start2..end2].contains("w2"));
+    }
+
+    #[test]
+    fn normalize_all_different_members_tag() {
+        let input = r#"<rdf:RDF xmlns:owl="http://www.w3.org/2002/07/owl#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <owl:AllDifferent rdf:about="http://ex.org#z">
+    <owl:members rdf:parseType="Collection">
+      <rdf:Description rdf:about="http://ex.org#w1">
+        <owl:sameAs rdf:resource="http://ex.org#w2"/>
+      </rdf:Description>
+      <rdf:Description rdf:about="http://ex.org#w2"/>
+    </owl:members>
+  </owl:AllDifferent>
+</rdf:RDF>"#;
+        let out = normalize_all_different_members(input);
+        assert!(out.contains("owl:distinctMembers"));
+        assert!(out.contains("<owl:NamedIndividual rdf:about=\"http://ex.org#w1\"/>"));
+        assert!(!out.contains("AllDifferent rdf:about"));
+        assert!(out.contains("owl:sameAs"));
     }
 
     #[test]

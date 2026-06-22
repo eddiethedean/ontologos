@@ -1,11 +1,13 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use horned_owl::model::{
     AnnotatedComponent, Class, ClassExpression, Component, Individual, ObjectProperty,
     ObjectPropertyExpression, RcStr, SubObjectPropertyExpression,
 };
 use horned_owl::ontology::set::SetOntology;
-use ontologos_core::{Axiom, EntityId, EntityKind, Error as CoreError, Ontology, OwlConstruct};
+use ontologos_core::{
+    Axiom, CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Error as CoreError, Ontology, OwlConstruct,
+};
 
 use crate::limits::ParseLimits;
 use crate::report::ParseReport;
@@ -489,9 +491,30 @@ impl Mapper<'_> {
         for ce in classes {
             self.scan_class_expression(ce);
         }
+        let ids: Vec<CeId> = classes
+            .iter()
+            .filter_map(|ce| self.map_class_expression(ce))
+            .collect();
+        if ids.len() == classes.len() && ids.len() >= 2 {
+            if ids.iter().copied().collect::<HashSet<_>>().len() < 2 {
+                let bottom = self.ontology.dl_mut().intern_ce(ClassExpr::Bottom);
+                for sub in ids {
+                    self.push_dl_axiom(DlAxiom::SubClassOf { sub, sup: bottom });
+                }
+                return;
+            }
+            self.push_dl_axiom(DlAxiom::DisjointClasses(ids.clone()));
+            let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
+            if let Some(entity_ids) = collect_resolved(&lookups) {
+                if entity_ids.iter().copied().collect::<HashSet<_>>().len() >= 2 {
+                    self.push_axiom(Axiom::DisjointClasses(entity_ids));
+                }
+            }
+            return;
+        }
         let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
-        if let Some(ids) = collect_resolved(&lookups) {
-            self.push_axiom(Axiom::DisjointClasses(ids));
+        if let Some(entity_ids) = collect_resolved(&lookups) {
+            self.push_axiom(Axiom::DisjointClasses(entity_ids));
         } else if self.map_dl_disjoint_classes(classes) {
         } else {
             self.skip_if_unmapped(
@@ -830,12 +853,22 @@ impl Mapper<'_> {
         self.report
             .meta
             .note_construct(OwlConstruct::IndividualEquality);
+        let ids: Vec<EntityId> = individuals
+            .iter()
+            .filter_map(|individual| self.map_individual_entity(individual))
+            .collect();
+        if ids.len() == individuals.len() && ids.len() >= 2 {
+            if ids.iter().copied().collect::<HashSet<_>>().len() < 2 {
+                self.push_dl_axiom(DlAxiom::DifferentIndividuals(ids));
+                return;
+            }
+        }
         let lookups: Vec<_> = individuals
             .iter()
             .map(|individual| self.named_individual(individual))
             .collect();
-        if let Some(ids) = collect_resolved(&lookups) {
-            self.push_axiom(Axiom::DifferentIndividuals(ids));
+        if let Some(resolved) = collect_resolved(&lookups) {
+            self.push_axiom(Axiom::DifferentIndividuals(resolved));
         } else if self.map_dl_different_individuals(individuals) {
         } else {
             self.skip_if_unmapped(
