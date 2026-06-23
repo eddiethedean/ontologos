@@ -22,8 +22,6 @@ static WG_CATALOG: OnceLock<Vec<WgCase>> = OnceLock::new();
 
 /// Wall-clock budget for a single DL classify / consistency call during catalog scans.
 const DL_SCAN_CLASSIFY_BUDGET: Duration = Duration::from_secs(30);
-/// Wall-clock budget for promoted axiom conformance tests (slow but must not hang CI).
-const DL_AXIOM_CLASSIFY_BUDGET: Duration = Duration::from_secs(120);
 
 fn dl_classify_with_budget(
     ontology: &Ontology,
@@ -323,13 +321,12 @@ fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(),
     }
 
     if case.engine == "dl" || case.engine == "swrl" || case.engine == "alc" {
-        let classify_budget = if bounded_dl {
-            DL_SCAN_CLASSIFY_BUDGET
+        let taxonomy = if bounded_dl {
+            dl_classify_with_budget(&ontology, DL_SCAN_CLASSIFY_BUDGET)
+                .map_err(|e| format!("{}: dl: {e}", case.id))?
         } else {
-            DL_AXIOM_CLASSIFY_BUDGET
+            ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
         };
-        let taxonomy = dl_classify_with_budget(&ontology, classify_budget)
-            .map_err(|e| format!("{}: dl: {e}", case.id))?;
 
         if !case.subsumptions.is_empty() {
             check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
@@ -356,8 +353,11 @@ fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(),
             check_property_characteristics_result(&ontology, case)?;
         }
         if let Some(expected) = case.consistent {
-            let consistent = dl_is_consistent_with_budget(&ontology, classify_budget)
-                .map_err(|e| format!("{}: {e}", case.id))?;
+            let consistent = if bounded_dl {
+                dl_is_consistent_bounded(&ontology).map_err(|e| format!("{}: {e}", case.id))?
+            } else {
+                ontologos_dl::is_consistent(&ontology).map_err(|e| format!("{}: {e}", case.id))?
+            };
             if consistent != expected {
                 return Err(format!(
                     "{}: consistency expected {expected}, got {consistent}",
@@ -1662,11 +1662,11 @@ pub fn write_promoted_wg_ids(ids: &[String]) -> std::io::Result<()> {
 }
 
 fn entailment_holds(premise: &Ontology, conclusion: &Ontology) -> bool {
-    let Ok(prem_tax) = dl_classify_with_budget(premise, DL_AXIOM_CLASSIFY_BUDGET) else {
+    let Ok(prem_tax) = ontologos_dl::classify(premise) else {
         return false;
     };
     let merged = merge_ontologies_for_entailment(premise, conclusion);
-    let Ok(merged_tax) = dl_classify_with_budget(&merged, DL_AXIOM_CLASSIFY_BUDGET) else {
+    let Ok(merged_tax) = ontologos_dl::classify(&merged) else {
         return false;
     };
 
