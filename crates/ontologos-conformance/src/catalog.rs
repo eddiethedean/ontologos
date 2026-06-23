@@ -21,21 +21,25 @@ static CATALOG: OnceLock<Vec<HermitCase>> = OnceLock::new();
 static WG_CATALOG: OnceLock<Vec<WgCase>> = OnceLock::new();
 
 /// Wall-clock budget for a single DL classify / consistency call during catalog scans.
-const DL_CLASSIFY_BUDGET: Duration = Duration::from_secs(30);
+const DL_SCAN_CLASSIFY_BUDGET: Duration = Duration::from_secs(30);
+/// Wall-clock budget for promoted axiom conformance tests (slow but must not hang CI).
+const DL_AXIOM_CLASSIFY_BUDGET: Duration = Duration::from_secs(120);
 
-fn dl_classify_bounded(ontology: &Ontology) -> Result<ontologos_core::Taxonomy, String> {
+fn dl_classify_with_budget(
+    ontology: &Ontology,
+    budget: Duration,
+) -> Result<ontologos_core::Taxonomy, String> {
     let ontology = ontology.clone();
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
     std::thread::spawn(move || {
         let _ = tx.send(ontologos_dl::classify(&ontology));
     });
-    match rx.recv_timeout(DL_CLASSIFY_BUDGET) {
+    match rx.recv_timeout(budget) {
         Ok(Ok(tax)) => Ok(tax),
         Ok(Err(e)) => Err(e.to_string()),
-        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err(format!(
-            "dl classify exceeded {}s budget",
-            DL_CLASSIFY_BUDGET.as_secs()
-        )),
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+            Err(format!("dl classify exceeded {}s budget", budget.as_secs()))
+        }
         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
             Err("dl classify worker disconnected".to_string())
         }
@@ -43,17 +47,21 @@ fn dl_classify_bounded(ontology: &Ontology) -> Result<ontologos_core::Taxonomy, 
 }
 
 fn dl_is_consistent_bounded(ontology: &Ontology) -> Result<bool, String> {
+    dl_is_consistent_with_budget(ontology, DL_SCAN_CLASSIFY_BUDGET)
+}
+
+fn dl_is_consistent_with_budget(ontology: &Ontology, budget: Duration) -> Result<bool, String> {
     let ontology = ontology.clone();
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
     std::thread::spawn(move || {
         let _ = tx.send(ontologos_dl::is_consistent(&ontology));
     });
-    match rx.recv_timeout(DL_CLASSIFY_BUDGET) {
+    match rx.recv_timeout(budget) {
         Ok(Ok(consistent)) => Ok(consistent),
         Ok(Err(e)) => Err(e.to_string()),
         Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err(format!(
             "dl consistency check exceeded {}s budget",
-            DL_CLASSIFY_BUDGET.as_secs()
+            budget.as_secs()
         )),
         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
             Err("dl consistency worker disconnected".to_string())
@@ -245,7 +253,7 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
     check_axiom_case_with_opts(case, false)
 }
 
-/// Like [`check_axiom_case`] but caps DL classify/consistency at [`DL_CLASSIFY_BUDGET`].
+/// Like [`check_axiom_case`] but caps DL classify/consistency at [`DL_SCAN_CLASSIFY_BUDGET`].
 pub fn check_axiom_case_bounded(case: &HermitCase) -> Result<(), String> {
     check_axiom_case_with_opts(case, true)
 }
@@ -315,11 +323,13 @@ fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(),
     }
 
     if case.engine == "dl" || case.engine == "swrl" || case.engine == "alc" {
-        let taxonomy = if bounded_dl {
-            dl_classify_bounded(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+        let classify_budget = if bounded_dl {
+            DL_SCAN_CLASSIFY_BUDGET
         } else {
-            ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+            DL_AXIOM_CLASSIFY_BUDGET
         };
+        let taxonomy = dl_classify_with_budget(&ontology, classify_budget)
+            .map_err(|e| format!("{}: dl: {e}", case.id))?;
 
         if !case.subsumptions.is_empty() {
             check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
@@ -346,11 +356,8 @@ fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(),
             check_property_characteristics_result(&ontology, case)?;
         }
         if let Some(expected) = case.consistent {
-            let consistent = if bounded_dl {
-                dl_is_consistent_bounded(&ontology).map_err(|e| format!("{}: {e}", case.id))?
-            } else {
-                ontologos_dl::is_consistent(&ontology).map_err(|e| format!("{}: {e}", case.id))?
-            };
+            let consistent = dl_is_consistent_with_budget(&ontology, classify_budget)
+                .map_err(|e| format!("{}: {e}", case.id))?;
             if consistent != expected {
                 return Err(format!(
                     "{}: consistency expected {expected}, got {consistent}",
@@ -1655,11 +1662,11 @@ pub fn write_promoted_wg_ids(ids: &[String]) -> std::io::Result<()> {
 }
 
 fn entailment_holds(premise: &Ontology, conclusion: &Ontology) -> bool {
-    let Ok(prem_tax) = ontologos_dl::classify(premise) else {
+    let Ok(prem_tax) = dl_classify_with_budget(premise, DL_AXIOM_CLASSIFY_BUDGET) else {
         return false;
     };
     let merged = merge_ontologies_for_entailment(premise, conclusion);
-    let Ok(merged_tax) = ontologos_dl::classify(&merged) else {
+    let Ok(merged_tax) = dl_classify_with_budget(&merged, DL_AXIOM_CLASSIFY_BUDGET) else {
         return false;
     };
 
