@@ -26,12 +26,13 @@ mod map_swrl;
 mod rdf_preprocess;
 mod read;
 mod report;
+mod validate;
 
 pub use error::{Error, Result};
 pub use limits::ParseLimits;
 pub use load::{
-    load_ontology, load_ontology_in, load_ontology_with_limits, load_ontology_with_limits_and_base,
-    validate_load_path,
+    load_ofn_with_incremental, load_ontology, load_ontology_in, load_ontology_with_limits,
+    load_ontology_with_limits_and_base, validate_load_path,
 };
 pub use rdf_preprocess::expand_xml_entities;
 pub use read::{

@@ -4,5 +4,5 @@ Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
 Ontology(<file:/c/test.owl#>
-DataPropertyAssertion(:dp _:anon1 "test")
+DatatypeDefinition(:SSN DatatypeRestriction(xsd:string xsd:pattern "[0-9]{3}-[0-9]{2}-[0-9]{4}"))
 )

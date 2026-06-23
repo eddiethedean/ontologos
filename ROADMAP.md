@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds profi
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-22 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag) — **~63%** in-scope catalog parity (Phase 3)
+**Last updated:** 2026-06-23 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag) — **~64%** in-scope catalog parity (**Phase 3** in progress)
 
 ---
 
@@ -127,6 +127,8 @@ parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 
 **Current (post–Phase 2):** 284 Java `planned` + 67 WG `planned` = 351 backlog → **~63% parity** (`parity_pct` ≈ 63.4). **640** active conformance tests (60% of 1063 defined); **183** catalog `axiom` cases; **176** in [promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt). `missing_assertions: 0` in [planned-backlog-triage.md](docs/internal/planned-backlog-triage.md).
 
+**Current (Phase 3, 2026-06-23):** 281 Java `planned` + 67 WG `planned` = **348** backlog → **~64% parity** (`parity_pct` ≈ 63.7). **645** active conformance tests; **186** catalog `axiom` cases; **186** promoted axiom IDs. `audit_planned_backlog`: **`engine_gap: 29`** (down from **72** at Phase 3 start), **`promotion_candidate: 42`**. `engine_failures` bin: **33** runnable planned failures. Catalog scans complete in **&lt;2 s** (30 s DL classify budget per case).
+
 Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 
 ### Phase dashboard
@@ -136,7 +138,7 @@ Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 | **0** | Baseline & metrics | **Complete** | Honest accounting | `report-conformance-coverage.sh` |
 | **1** | Harness integrity | **Complete** | WG catalog generator stable | `cargo test -p ontologos-conformance --test hermit_wg_generated` |
 | **2** | Assertion harvest | **Complete** | `missing_assertions → 0`; 176 promoted axiom IDs | `audit-planned-backlog.sh` |
-| **3** | DL engine gaps | **In progress** | Fix `engine_gap` failures (~111 harvested cases) | `parity-scan.sh` · `promote_catalog` |
+| **3** | DL engine gaps | **In progress** | `engine_gap` **72 → 29**; 42 promotion candidates | `engine_failures` · `parity-scan.sh` · `promote_catalog` |
 | **4** | WG fixtures | Planned | `wg_planned → 0` (~67 cases) | `cargo test --test hermit_wg_generated` |
 | **5** | Manual ports | Planned | `java_planned → 0` (~235 cases) | `generate_catalog.py` + full conformance |
 | **6** | Tier B corpora | Planned | `ClassificationTest` in CI | `compare-pizza-el-golden.sh` |
@@ -189,17 +191,91 @@ Clear `missing_assertions` in planned-backlog triage.
 
 **Exit (met):** `audit_planned_backlog` reports `missing_assertions: 0`; promoted axiom set grew **136 → 176**; catalog `axiom` status **138 → 183**; active conformance tests **593 → 640**.
 
-### Phase 3 — DL engine correctness (~111 engine gaps)
+### Phase 3 — DL engine correctness (`engine_gap` 72 → 29)
 
-Fix [ontologos-dl](crates/ontologos-dl) / [ontologos-alc](crates/ontologos-alc) for planned cases that have harvested assertions but fail semantic checks (`engine_gap` in triage). Priority known failures from pre–Phase 2 triage:
+Fix [ontologos-dl](crates/ontologos-dl) / [ontologos-alc](crates/ontologos-alc) and the conformance harness for planned cases that have harvested assertions but fail semantic checks (`engine_gap` in triage). Organized as workstreams **WS0–WS5**; exit when `engine_gap → 0`, promotion candidates absorbed, and `cargo test -p ontologos-conformance` green.
 
-- [ ] Role chains (`testChains`, `testChains2`)
-- [ ] Role disjointness (`testRoleDisjointness_1/2`)
-- [ ] Negative data properties (`testNegProperties`, `testNegativeDataPropertyAssertion`)
-- [ ] Inverses (`testInverses2`)
-- [ ] Incremental addition (`testIncrementalAddition2`) — implement or `status=excluded` with ADR
+**Verify:** `cargo run --release -p ontologos-conformance --bin engine_failures` · `cargo run --release -p ontologos-conformance --bin audit_planned_backlog` · `cargo test -p ontologos-dl --test phase3_priority` · `cargo test -p ontologos-conformance --test classify_timeout`
 
-**Exit:** `dl_failures` bin → 0 failures among runnable planned cases; new promotion candidates after fixes.
+#### WS0 — Harness & promotion loop (complete)
+
+- [x] `engine_failures` bin — lists all planned cases failing `check_axiom_case`
+- [x] `scan_planned_engine_failures()` in [catalog.rs](crates/ontologos-conformance/src/catalog.rs); wired in [parity-scan.sh](benchmarks/scripts/parity-scan.sh)
+- [x] [phase3_priority.rs](crates/ontologos-dl/tests/phase3_priority.rs) — regression gate for ROADMAP priority cases
+- [x] Initial `promote_catalog` pass; promoted axiom set **176 → 186**
+
+#### WS1 — ALC tableau & consistency (complete)
+
+- [x] Tableau: normalize pairwise disjointness; functional / inverse-functional constraints; role-chain handling
+- [x] `abox_functional_different_individuals_clash()` in [ontologos-dl](crates/ontologos-dl/src/lib.rs)
+- [x] `abox_property_characteristic_clash()` (asymmetric, irreflexive, bottom chain via [ontologos-bridge](crates/ontologos-bridge))
+- [x] `load_ofn_with_incremental()` in [ontologos-parser](crates/ontologos-parser/src/load.rs)
+- [x] `FORCE_DL_CONSISTENCY_IDS` + incremental/conclusion OFN fixtures in [generate_catalog.py](tests/hermit/generate_catalog.py)
+- [x] `check_ontology_consistency()` with DL fallback for RL/RDFS consistency-only cases
+- [x] Priority pre–Phase 3 cases recataloged to `dl` where tableau fixes apply (`testChains*`, role disjointness, neg data props, `testInverses2`, `testBottomObjectPropertyAssertion`, `testIncrementalAddition2`)
+
+#### WS2 — Classification, CE checks & catalog (in progress)
+
+- [x] `ce_satisfiability` / `ce_instance_checks` routing in [catalog.rs](crates/ontologos-conformance/src/catalog.rs)
+- [x] `entailment_holds()` — merged-ontology subsumption + unsat diff; invalid blank-node cycle detection
+- [x] `resolve_local_iri()` for `owl:` / `rdfs:` / `xsd:` builtins
+- [x] CE subsumption via entailment probe when sub/sup contain `(`
+- [x] `check_class_satisfiability` fallback to CE probe when named class absent from ontology
+- [x] `individual_instances` CE pattern (`:some_r_b` → `ObjectSomeValuesFrom(:r :b)`)
+- [x] `datalog_class_members()` — backward ∃R.C ⊑ C propagation + intersection
+- [x] Large `HARDCODED_CASE_ASSERTIONS` block in [generate_catalog.py](tests/hermit/generate_catalog.py) — Ian* (T1–T13, Fact*, Bug*, Backjumping), nominals 4–6, HeinsohnTBox4b, incremental cases, `testTopOPEquivalence`, etc.
+- [x] Property subsumption checks on DL path; universal-role detection for `owl:topObjectProperty`
+- [ ] Tableau blocking / nominals — `ComplexConceptTest.testConceptWithNominals3/4`, `ReasonerCoreBlockingTest.testIanT6/T9`
+- [ ] Remaining satisfiability gaps — `testHeinsohnTBox3cIrh`, `testIanBug8`, `testIanBackjumping2`, `testIanT6/T9/T13`, …
+- [ ] `testComplexConceptInstanceRetrieval` — CE instance retrieval via entailment
+
+#### WS3 — Entailment, datalog & parser (partial)
+
+- [x] Fresh-entity non-entailment — ABox-only `conclusion_has_fresh_entities()` (`testFreshEntityEntailment`)
+- [x] `HasKey` non-entailment guard (`testHasKeyNonEntailment`)
+- [x] Invalid blank-node cycle rejection in conclusions (`EntailmentTest.testInvalidBlankNodes`)
+- [x] [validate.rs](crates/ontologos-parser/src/validate.rs) — mixed literal types, invalid integers, blank-node assertion rules
+- [x] `HARDCODED_DATALOG_QUERIES` for `DatalogEngineTest.testBasic`
+- [x] Conclusion / incremental OFN fixtures harvested (`testDatatypeDefEntailment`, `testChains3`, incremental-with-* family)
+- [ ] `ComplexConceptTest.testConceptWithDatatypes2` — CE instance over data ranges
+- [ ] Missing OFN fixtures: `testPunning` 1–3, `testInverses`
+
+#### WS4 — RL bridge for property cases (partial)
+
+- [x] `materialize_ontology` calls `apply_reasonable_fallbacks()` (functional/asymmetric propagation, domain/range, existential subclass)
+- [ ] `testPropertyEnailmentFromAlan` — equivalent properties from domain/range/singleton
+- [ ] `testRoleSubsumption`, `testDataPropertyHierarchy`, `testObjectPropertySubsumptionsNominals`
+- [ ] `testIsFunctionalData` — functional subproperty entailment
+- [ ] `testUnknownClassHierarcyPosition`, `testPrecomputeDisjointClasses`
+
+#### WS5 — Harness hardening & closure (partial)
+
+- [x] **Hang fix:** pathological `testIanBackjumping3` OFN reverted; CE satisfiability probes; **30 s** `dl_classify_bounded` / `dl_is_consistent_bounded` budget; sequential catalog scans
+- [x] [classify_timeout.rs](crates/ontologos-conformance/tests/classify_timeout.rs) — regression that full planned scan completes within budget
+- [ ] Run `promote_catalog` to absorb **42** promotion candidates → regenerate catalog
+- [ ] `engine_gap → 0`; update [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-report.md)
+- [ ] Full `cargo test -p ontologos-conformance` green
+
+#### Remaining `engine_failures` (33 cases, 2026-06-23)
+
+| Cluster | Cases | Primary fix area |
+|---------|-------|------------------|
+| Nominals / cardinality | `testConceptWithNominals3/4`, `testNominals3/6`, `testObjectPropertySubsumptionsNominals` | ALC tableau + CE instance |
+| Core blocking | `ReasonerCoreBlockingTest.testIanT6/T9` | Tableau blocking |
+| Ian satisfiability | `testIanT6/T9/T13`, `testIanT1c`, `testIanT5`, `testIanBug8`, `testIanBackjumping2`, `testHeinsohnTBox3cIrh`, `testIanFact4` | Tableau / CE entailment |
+| RL property | `testPropertyEnailmentFromAlan`, `testRoleSubsumption`, `testDataPropertyHierarchy`, `testIsFunctionalData`, `testUnknownClassHierarcyPosition` | RL bridge / property inference |
+| Incremental / ABox | `testIncrementalWithHasSelf`, `testIndividualRetrieval`, `testKeys3`, `testComplexConceptInstanceRetrieval` | Incremental load + instance retrieval |
+| Other | `testConceptWithDatatypes2`, `testPrecomputeDisjointClasses`, `testIanT7b/T8a/T12`, `testPunning*`, `testInverses` | Mixed (parser fixture / DL / RL) |
+
+**Exit (target):** `audit_planned_backlog` reports `engine_gap: 0`; `engine_failures` bin empty; promotion candidates absorbed; **~186+** promoted axiom cases; parity climbs as `planned → axiom`.
+
+#### Pre–Phase 3 priority checklist (original triage)
+
+- [x] Role chains (`testChains`, `testChains2`)
+- [x] Role disjointness (`testRoleDisjointness_1/2`)
+- [x] Negative data properties (`testNegProperties`, `testNegativeDataPropertyAssertion`)
+- [x] Inverses consistency (`testInverses2`)
+- [x] Incremental addition (`testIncrementalAddition2`) — `FORCE_DL_CONSISTENCY_IDS` + incremental OFN
 
 ### Phase 4 — OWL WG fixture completion (~67 WG cases)
 
@@ -257,7 +333,7 @@ Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressiv
 
 | Tension | Resolution |
 |---------|------------|
-| `check-1.0-release-gates.sh` passes at ~63% parity | Phase 9 makes parity script blocking; current gate is necessary not sufficient |
+| `check-1.0-release-gates.sh` passes at ~64% parity | Phase 9 makes parity script blocking; current gate is necessary not sufficient |
 | SWRL `RulesTest` deferred vs 19 active `swrl` tests | Phase 5d: semantic SWRL only; full JVM rules deferred |
 | v1.5–v1.9 block 1.0 | Phase 8 required alongside Phases 5–7 |
 | Workspace `1.0.0` vs git tag `v0.9.0` | Phase 9 is when workspace version matches published tag |
@@ -749,7 +825,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 **1.0** is the release where OntoLogos **replaces HermiT** as the default OWL 2 DL reasoner for batch classification, materialization, and explanation in Rust/Python/CLI workflows. Not a line-by-line hypertableau port — a **profile-modular** stack (EL, RL/RDFS, hybrid routing, `ontologos-dl`) that passes the HermiT conformance harness and matches classification results on standard corpora within documented tolerance.
 
-**Do not tag v1.0.0** until **Phase 9** exit criteria are met (`parity_pct = 100%`, expressivity complete). Passing `check-1.0-release-gates.sh` alone is insufficient (~63% catalog parity today).
+**Do not tag v1.0.0** until **Phase 9** exit criteria are met (`parity_pct = 100%`, expressivity complete). Passing `check-1.0-release-gates.sh` alone is insufficient (~64% catalog parity today; Phase 3 `engine_gap` 29 remaining).
 
 See [hermit-replacement.md](docs/internal/research/hermit-replacement.md) and [hermit.md](docs/internal/research/hermit.md).
 

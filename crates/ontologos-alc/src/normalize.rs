@@ -51,11 +51,13 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                 }
             }
             Axiom::DisjointClasses(ids) if ids.len() >= 2 => {
-                for w in ids.windows(2) {
-                    out.push(Clause::Disjoint {
-                        left: atomic_ce(ontology, w[0]),
-                        right: atomic_ce(ontology, w[1]),
-                    });
+                for i in 0..ids.len() {
+                    for j in (i + 1)..ids.len() {
+                        out.push(Clause::Disjoint {
+                            left: atomic_ce(ontology, ids[i]),
+                            right: atomic_ce(ontology, ids[j]),
+                        });
+                    }
                 }
             }
             Axiom::SubObjectPropertyOf {
@@ -112,11 +114,13 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                 }
             }
             DlAxiom::DisjointClasses(ids) if ids.len() >= 2 => {
-                for w in ids.windows(2) {
-                    out.push(Clause::Disjoint {
-                        left: nnf(ontology, w[0]),
-                        right: nnf(ontology, w[1]),
-                    });
+                for i in 0..ids.len() {
+                    for j in (i + 1)..ids.len() {
+                        out.push(Clause::Disjoint {
+                            left: nnf(ontology, ids[i]),
+                            right: nnf(ontology, ids[j]),
+                        });
+                    }
                 }
             }
             DlAxiom::SubObjectPropertyChain {
@@ -140,11 +144,13 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                 out.push(Clause::Subsumption { sub: nom, sup: ce });
             }
             DlAxiom::DisjointObjectProperties(ids) if ids.len() >= 2 => {
-                for w in ids.windows(2) {
-                    out.push(Clause::RoleDisjoint {
-                        left: w[0],
-                        right: w[1],
-                    });
+                for i in 0..ids.len() {
+                    for j in (i + 1)..ids.len() {
+                        out.push(Clause::RoleDisjoint {
+                            left: ids[i],
+                            right: ids[j],
+                        });
+                    }
                 }
             }
             DlAxiom::SubObjectPropertyOf { sub, sup } => match (&sub, &sup) {

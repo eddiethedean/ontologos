@@ -1030,6 +1030,7 @@ version = "1.0.0"
 dependencies = [
  "horned-owl",
  "ontologos-alc",
+ "ontologos-bridge",
  "ontologos-core",
  "ontologos-el",
  "ontologos-parser",

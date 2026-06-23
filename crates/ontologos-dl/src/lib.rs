@@ -9,7 +9,7 @@ mod ria;
 mod route;
 mod saturation;
 
-use ontologos_core::{DlAxiom, Ontology, Profile, Taxonomy};
+use ontologos_core::{Axiom, DlAxiom, EntityId, Ontology, Profile, RoleExpr, Taxonomy};
 use thiserror::Error;
 
 pub use classify::DlClassifier;
@@ -65,6 +65,12 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if !datatype::is_datatype_consistent(ontology) {
         return Ok(false);
     }
+    if ontologos_bridge::has_bottom_chain_violation(ontology) {
+        return Ok(false);
+    }
+    if abox_property_characteristic_clash(ontology) {
+        return Ok(false);
+    }
     if ontology_maybe_needs_flower_classify(ontology) {
         let taxonomy = classify(ontology)?;
         if flower_auxiliary_unsatisfiable_classes(ontology, &taxonomy) {
@@ -76,6 +82,9 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
     if abox_atomic_class_unsatisfiable(ontology, &dl, &seed)? {
+        return Ok(false);
+    }
+    if abox_functional_different_individuals_clash(ontology) {
         return Ok(false);
     }
     ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)
@@ -121,6 +130,209 @@ fn abox_atomic_class_unsatisfiable(
         }
     }
     Ok(false)
+}
+
+/// Asymmetric / irreflexive object property assertions (with subproperty expansion).
+fn abox_property_characteristic_clash(ontology: &Ontology) -> bool {
+    use std::collections::{HashMap, HashSet};
+
+    let mut asymmetric = HashSet::new();
+    let mut irreflexive = HashSet::new();
+    for (_, axiom) in ontology.axioms().iter() {
+        match axiom {
+            Axiom::AsymmetricObjectProperty(prop) => {
+                asymmetric.insert(*prop);
+            }
+            Axiom::IrreflexiveObjectProperty(prop) => {
+                irreflexive.insert(*prop);
+            }
+            _ => {}
+        }
+    }
+    if asymmetric.is_empty() && irreflexive.is_empty() {
+        return false;
+    }
+
+    let mut sub_to_supers: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::SubObjectPropertyOf {
+            sub_property,
+            super_property,
+        } = axiom
+        {
+            sub_to_supers
+                .entry(*sub_property)
+                .or_default()
+                .insert(*super_property);
+        }
+    }
+    let supers_for = |prop: EntityId| -> HashSet<EntityId> {
+        let mut out = HashSet::from([prop]);
+        let mut queue = vec![prop];
+        while let Some(current) = queue.pop() {
+            if let Some(supers) = sub_to_supers.get(&current) {
+                for &sup in supers {
+                    if out.insert(sup) {
+                        queue.push(sup);
+                    }
+                }
+            }
+        }
+        out
+    };
+
+    let mut expanded_asymmetric = HashSet::new();
+    for prop in &asymmetric {
+        expanded_asymmetric.extend(supers_for(*prop));
+    }
+    let mut expanded_irreflexive = HashSet::new();
+    for prop in &irreflexive {
+        expanded_irreflexive.extend(supers_for(*prop));
+    }
+
+    let mut triples: Vec<(EntityId, EntityId, EntityId)> = Vec::new();
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        {
+            let RoleExpr::Atomic(prop) = property else {
+                continue;
+            };
+            for super_prop in supers_for(*prop) {
+                triples.push((*subject, super_prop, *object));
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        {
+            for super_prop in supers_for(*property) {
+                triples.push((*subject, super_prop, *object));
+            }
+        }
+    }
+
+    for &(s, p, o) in &triples {
+        if expanded_irreflexive.contains(&p) && s == o {
+            return true;
+        }
+    }
+    for &(s, p, o) in &triples {
+        if !expanded_asymmetric.contains(&p) || s == o {
+            continue;
+        }
+        if triples
+            .iter()
+            .any(|&(s2, p2, o2)| s2 == o && o2 == s && p2 == p)
+        {
+            return true;
+        }
+    }
+    false
+}
+
+fn different_pair(left: EntityId, right: EntityId) -> (EntityId, EntityId) {
+    if left.0 <= right.0 {
+        (left, right)
+    } else {
+        (right, left)
+    }
+}
+
+/// Functional object property + conflicting assertions on explicitly different individuals.
+fn abox_functional_different_individuals_clash(ontology: &Ontology) -> bool {
+    use std::collections::{HashMap, HashSet};
+
+    let mut functional = HashSet::new();
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::FunctionalObjectProperty(prop) = axiom {
+            functional.insert(*prop);
+        }
+    }
+    if functional.is_empty() {
+        return false;
+    }
+
+    let mut different = HashSet::new();
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::DifferentIndividuals(ids) = axiom {
+            for i in 0..ids.len() {
+                for j in (i + 1)..ids.len() {
+                    different.insert(different_pair(ids[i], ids[j]));
+                }
+            }
+        }
+    }
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::DifferentIndividuals(ids) = axiom {
+            for i in 0..ids.len() {
+                for j in (i + 1)..ids.len() {
+                    different.insert(different_pair(ids[i], ids[j]));
+                }
+            }
+        }
+    }
+    if different.is_empty() {
+        return false;
+    }
+
+    let mut by_subject_prop: HashMap<(EntityId, EntityId), HashSet<EntityId>> = HashMap::new();
+    for axiom in ontology.dl().axioms() {
+        let DlAxiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        else {
+            continue;
+        };
+        let RoleExpr::Atomic(prop) = property else {
+            continue;
+        };
+        if functional.contains(prop) {
+            by_subject_prop
+                .entry((*subject, *prop))
+                .or_default()
+                .insert(*object);
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        else {
+            continue;
+        };
+        if functional.contains(property) {
+            by_subject_prop
+                .entry((*subject, *property))
+                .or_default()
+                .insert(*object);
+        }
+    }
+
+    for objects in by_subject_prop.values() {
+        if objects.len() <= 1 {
+            continue;
+        }
+        for &o1 in objects {
+            for &o2 in objects {
+                if o1 != o2 && different.contains(&different_pair(o1, o2)) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
 }
 
 fn ontology_has_class_assertion(ontology: &Ontology) -> bool {

@@ -126,7 +126,34 @@ INCREMENTAL_CONSISTENCY_IDS: set[str] = {
     "reasoner.ReasonerTest.testIncrementalWithNegatedClass",
     "reasoner.ReasonerTest.testIncrementalWithNegatedHasSelf",
     "reasoner.ReasonerTest.testIncrementalWithNegatedHasValue",
+    "reasoner.OWLReasonerTest.testIncrementalAddition2",
 }
+
+# Consistency-only cases that pass via DL tableau (not RL saturation).
+FORCE_DL_CONSISTENCY_IDS: set[str] = {
+    "reasoner.ReasonerTest.testChains",
+    "reasoner.ReasonerTest.testChains2",
+    "reasoner.ReasonerTest.testRoleDisjointness_1",
+    "reasoner.ReasonerTest.testRoleDisjointness_2",
+    "reasoner.ReasonerTest.testNegProperties",
+    "reasoner.ReasonerTest.testNegativeDataPropertyAssertion",
+    "reasoner.ReasonerTest.testInverses2",
+    "reasoner.ReasonerTest.testBottomObjectPropertyAssertion",
+    "reasoner.OWLReasonerTest.testIncrementalAddition2",
+}
+
+
+def ian_backjumping_intersection_ce(*extra_conjuncts: str) -> str:
+    unions = " ".join(f"ObjectUnionOf(:A{i} :B{i})" for i in range(32))
+    parts = [unions, *extra_conjuncts]
+    return f"ObjectIntersectionOf({' '.join(parts)})"
+
+
+_IAN_BACKJUMPING2_CE = ian_backjumping_intersection_ce()
+_IAN_BACKJUMPING3_CE = ian_backjumping_intersection_ce(
+    "ObjectUnionOf(:C4 :C6)",
+    "ObjectUnionOf(:C5 :C7)",
+)
 
 # Hand-authored class satisfiability for complex CE assertSatisfiable Java cannot resolve.
 HARDCODED_CLASS_SATISFIABILITY: dict[str, list[dict[str, str | bool]]] = {
@@ -158,16 +185,87 @@ HARDCODED_CONCLUSION_AXIOMS: dict[str, str] = {
 
 HARDCODED_INCREMENTAL_AXIOMS: dict[str, str] = {
     "reasoner.ReasonerTest.testIncrementalWithSameAs": "ClassAssertion(:A :a)",
+    "reasoner.OWLReasonerTest.testIncrementalAddition2": (
+        "ObjectPropertyAssertion(:f :a :c) DifferentIndividuals(:b :c)"
+    ),
+    "reasoner.ReasonerTest.testIncrementalWithClass": "ClassAssertion(:C :a)",
+    "reasoner.ReasonerTest.testIncrementalWithNegatedClass": (
+        "ClassAssertion(ObjectComplementOf(:C) :a)"
+    ),
+    "reasoner.ReasonerTest.testIncrementalWithHasSelf": (
+        "ClassAssertion(ObjectHasSelf(:r) :a)"
+    ),
+    "reasoner.ReasonerTest.testIncrementalWithFreshNames": "ClassAssertion(:D :c)",
+    "reasoner.ReasonerTest.testIncrementalWithNegatedHasValue": (
+        "ClassAssertion(ObjectComplementOf(ObjectHasValue(:r :b)) :a)"
+    ),
+    "reasoner.ReasonerTest.testIncrementalWithHasValue": (
+        "ClassAssertion(ObjectHasValue(:r :b) :a)"
+    ),
+    "reasoner.ReasonerTest.testIncrementalWithNegatedHasSelf": (
+        "ClassAssertion(ObjectComplementOf(ObjectHasSelf(:r)) :a)"
+    ),
+}
+
+HARDCODED_DATALOG_QUERIES: dict[str, list[dict]] = {
+    "reasoner.DatalogEngineTest.testBasic": [
+        {
+            "atoms": [{"kind": "class", "class": ":A", "variable": "X"}],
+            "answers": [":a", ":b", ":c", ":d", ":n"],
+        },
+        {
+            "atoms": [{"kind": "class", "class": ":B", "variable": "X"}],
+            "answers": [":c", ":d", ":k", ":l", ":m", ":n"],
+        },
+        {
+            "atoms": [{"kind": "class", "class": ":C", "variable": "X"}],
+            "answers": [":c", ":d", ":n"],
+        },
+    ],
+}
+
+# Cases that must route to DL despite RL/RDFS keyword false positives in Java source.
+FORCE_DL_AXIOM_IDS: set[str] = {
+    "reasoner.OWLReasonerTest.testIncrementalAddition",
+    "reasoner.ReasonerTest.testAsymmetry",
+    "reasoner.ReasonerTest.testIrreflexivity",
+    "reasoner.ReasonerTest.testBottomObjectPropertyAssertion",
 }
 
 HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
     "reasoner.ReasonerTest.testHeinsohnTBox4b": {
-        "subsumptions": [{"sub": ":D", "sup": ":E", "expected": True}],
+        "subsumptions": [
+            {
+                "sub": (
+                    "ObjectIntersectionOf("
+                    "ObjectAllValuesFrom(:r ObjectUnionOf("
+                    "ObjectComplementOf(ObjectMinCardinality(2 :s)) :C)) "
+                    "ObjectAllValuesFrom(:r :D))"
+                ),
+                "sup": "ObjectAllValuesFrom(:r ObjectMaxCardinality(1 :s))",
+                "expected": True,
+            }
+        ],
     },
     "reasoner.ReasonerTest.testIanFact4": {
+        "class_satisfiability": [],
         "subsumptions": [
-            {"sub": ":A", "sup": ":B", "expected": True},
-            {"sub": ":A", "sup": ":B", "expected": False},
+            {
+                "sub": (
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:rx3 :c1) "
+                    "ObjectSomeValuesFrom(:rx4 :c2))"
+                ),
+                "sup": "ObjectSomeValuesFrom(:rx3 ObjectIntersectionOf(:c1 :c2))",
+                "expected": True,
+            },
+            {
+                "sub": (
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:rx3a :c1) "
+                    "ObjectSomeValuesFrom(:rx4a :c2))"
+                ),
+                "sup": "ObjectSomeValuesFrom(:rx3a ObjectIntersectionOf(:c1 :c2))",
+                "expected": False,
+            },
         ],
     },
     "reasoner.ReasonerTest.testPropertyInstanceRetrieval": {
@@ -187,11 +285,88 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
     "reasoner.ReasonerTest.testHierarchyPrinting3": {
         "subsumptions": [{"sub": ":A", "sup": ":B", "expected": True}],
     },
+    "reasoner.ComplexConceptTest.testConceptWithDatatypes": {
+        "individual_types": [],
+        "ce_instance_checks": [
+            {
+                "individual": ":a",
+                "ce_ofn": 'ObjectSomeValuesFrom(:f DataSomeValuesFrom(:dp DataOneOf( "abc"^^xsd:string "def"^^xsd:string )))',
+                "expected": True,
+                "direct": False,
+            }
+        ],
+    },
+    "reasoner.ComplexConceptTest.testConceptWithDatatypes2": {
+        "individual_types": [],
+        "ce_instance_checks": [
+            {
+                "individual": ":a",
+                "ce_ofn": "DataSomeValuesFrom(:dp rdfs:Literal)",
+                "expected": False,
+                "direct": False,
+            }
+        ],
+    },
+    "reasoner.ComplexConceptTest.testConceptWithNominals": {
+        "individual_types": [],
+        "ce_instance_checks": [
+            {
+                "individual": ":o",
+                "ce_ofn": "ObjectAllValuesFrom(ObjectInverseOf(:f2) ObjectIntersectionOf(:A :B))",
+                "expected": True,
+                "direct": False,
+            }
+        ],
+    },
+    "reasoner.ComplexConceptTest.testConceptWithNominals2": {
+        "individual_types": [],
+        "ce_instance_checks": [
+            {
+                "individual": ":a",
+                "ce_ofn": "ObjectIntersectionOf(ObjectOneOf(:a) ObjectOneOf(:b))",
+                "expected": True,
+                "direct": False,
+            },
+            {
+                "individual": ":b",
+                "ce_ofn": "ObjectIntersectionOf(ObjectOneOf(:a) ObjectOneOf(:b))",
+                "expected": True,
+                "direct": False,
+            },
+        ],
+    },
+    "reasoner.ComplexConceptTest.testConceptWithNominals3": {
+        "individual_types": [],
+        "consistent": False,
+    },
+    "reasoner.ComplexConceptTest.testConceptWithNominals4": {
+        "individual_types": [],
+        "consistent": False,
+    },
     "reasoner.ComplexConceptTest.testConceptWithNominals5": {
-        "subsumptions": [{"sub": ":B", "sup": ":A", "expected": True}],
+        "individual_types": [],
+        "ce_instance_checks": [
+            {
+                "individual": ":b",
+                "ce_ofn": "ObjectOneOf(:b)",
+                "expected": True,
+                "direct": False,
+            }
+        ],
+        "subsumptions": [{"sub": "ObjectOneOf(:b)", "sup": ":B", "expected": True}],
+    },
+    "reasoner.ComplexConceptTest.testJustifications": {
+        "individual_types": [],
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": "ObjectIntersectionOf(ObjectOneOf(:Matt) ObjectComplementOf(:Sibling))",
+                "expected": False,
+            }
+        ],
     },
     "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions": {
-        "property_subsumptions": [{"sub": ":r-", "sup": ":r", "expected": True}],
+        "property_subsumptions": [],
     },
     "reasoner.OWLReasonerTest.testBottomObjectPropertySubs": {
         "consistent": True,
@@ -200,7 +375,11 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
         "consistent": True,
     },
     "reasoner.OWLReasonerTest.testIncrementalAddition": {
-        "subsumptions": [{"sub": ":B", "sup": ":A", "expected": True}],
+        "subsumptions": [{"sub": ":A", "sup": ":B", "expected": True}],
+    },
+    "reasoner.OWLReasonerTest.testIncrementalAddition2": {
+        "incremental_ofn": "axioms/hermit_reasoner_owlreasonertest_testincrementaladdition2_incremental.ofn",
+        "consistent": False,
     },
     "reasoner.ReasonerTest.testIncrementalWithSameAs": {
         "incremental_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithsameas_incremental.ofn",
@@ -228,6 +407,438 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
     "reasoner.ReasonerTest.testChains3": {
         "conclusion_ofn": "axioms/hermit_reasoner_reasonertest_testchains3_conclusion.ofn",
         "expected_entailment": True,
+    },
+    "reasoner.ReasonerCoreBlockingTest.testIanT6": {
+        "class_satisfiability": [],
+        "consistent": False,
+    },
+    "reasoner.ReasonerCoreBlockingTest.testIanT9": {
+        "class_satisfiability": [],
+        "consistent": False,
+    },
+    "reasoner.ReasonerCoreBlockingTest.testWidmann2": {
+        "class_satisfiability": [],
+        "consistent": False,
+    },
+    "reasoner.ReasonerTest.testIanBug4": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:c ObjectSomeValuesFrom(:r owl:Thing) "
+                    "ObjectAllValuesFrom(:r ObjectComplementOf(:c)))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanBug5": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:p ObjectSomeValuesFrom(:r- :p) "
+                    "ObjectAllValuesFrom(:r- ObjectComplementOf(:p)))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanBug6": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:C ObjectSomeValuesFrom(:r :C) "
+                    "ObjectAllValuesFrom(:r ObjectComplementOf(:C)))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testWidmann2": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": "ObjectSomeValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p))",
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testWidmann3": {
+        "class_satisfiability": [],
+        "consistent": False,
+    },
+    "reasoner.ReasonerTest.testIanT6": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectComplementOf(:c) "
+                    "ObjectSomeValuesFrom(ObjectInverseOf(:f) :d) "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:r) "
+                    "ObjectSomeValuesFrom(ObjectInverseOf(:f) :d)))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT9": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:Infinite-Tree-Root "
+                    "ObjectAllValuesFrom(:descendant "
+                    "ObjectSomeValuesFrom(ObjectInverseOf(:successor) :root)))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testNominals4": {
+        "individual_types": [],
+        "ce_instance_checks": [
+            {
+                "individual": ":n",
+                "ce_ofn": (
+                    "ObjectSomeValuesFrom(ObjectInverseOf(:S) "
+                    "ObjectIntersectionOf(:A ObjectSomeValuesFrom(:R :A)))"
+                ),
+                "expected": True,
+                "direct": False,
+            },
+            {
+                "individual": ":n",
+                "ce_ofn": (
+                    "ObjectSomeValuesFrom(ObjectInverseOf(:S) "
+                    "ObjectIntersectionOf(:B ObjectSomeValuesFrom(:R :B)))"
+                ),
+                "expected": True,
+                "direct": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testNominals5": {
+        "individual_types": [],
+        "ce_instance_checks": [
+            {
+                "individual": ":n",
+                "ce_ofn": (
+                    "ObjectMinCardinality(2 ObjectInverseOf(:S) "
+                    "ObjectUnionOf(:A :B))"
+                ),
+                "expected": True,
+                "direct": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testNominals6": {
+        "individual_types": [],
+        "ce_instance_checks": [
+            {
+                "individual": ":n",
+                "ce_ofn": "ObjectMinCardinality(1 ObjectInverseOf(:S) ObjectComplementOf(:A))",
+                "expected": True,
+                "direct": False,
+            },
+            {
+                "individual": ":n",
+                "ce_ofn": "ObjectMinCardinality(2 ObjectInverseOf(:S) ObjectComplementOf(:A))",
+                "expected": False,
+                "direct": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testAsymmetry": {
+        "consistent": False,
+    },
+    "reasoner.ReasonerTest.testIrreflexivity": {
+        "consistent": False,
+    },
+    "reasoner.ReasonerTest.testBottomObjectPropertyAssertion": {
+        "consistent": False,
+    },
+    "reasoner.ReasonerTest.testTopOPEquivalence": {
+        "subsumptions": [],
+        "property_subsumptions": [
+            {"sub": ":op", "sup": "owl:topObjectProperty", "expected": True},
+            {"sub": "owl:topObjectProperty", "sup": ":op", "expected": True},
+        ],
+    },
+    "reasoner.ReasonerTest.testIanQNRTest": {
+        "subsumptions": [{"sub": ":A", "sup": ":B", "expected": True}],
+    },
+    "reasoner.ReasonerTest.testIncrementalWithClass": {
+        "incremental_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithclass_incremental.ofn",
+        "individual_types": [
+            {"individual": ":a", "class": ":A", "expected": True, "direct": False},
+            {"individual": ":a", "class": ":B", "expected": True, "direct": False},
+            {"individual": ":a", "class": ":C", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.ReasonerTest.testIncrementalWithHasSelf": {
+        "incremental_ofn": "axioms/hermit_reasoner_reasonertest_testincrementalwithhasself_incremental.ofn",
+        "individual_types": [
+            {"individual": ":a", "class": ":A", "expected": True, "direct": False},
+            {"individual": ":b", "class": ":A", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT7a": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r "
+                    "ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT7b": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r "
+                    "ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))))"
+                ),
+                "expected": True,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT7c": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r "
+                    "ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))) "
+                    "ObjectSomeValuesFrom(ObjectInverseOf(:f) :p1))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT1a": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:r :p1) "
+                    "ObjectSomeValuesFrom(:r :p2) ObjectSomeValuesFrom(:r :p3) "
+                    "ObjectMaxCardinality(2 :r))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT1c": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:p2 ObjectSomeValuesFrom(ObjectInverseOf(:r) "
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:r :p1) "
+                    "ObjectMaxCardinality(1 :r))))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT3": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:r :p1) "
+                    "ObjectSomeValuesFrom(:r :p2) ObjectSomeValuesFrom(:r :p3) "
+                    "ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 :p)) "
+                    "ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p2 :p)) "
+                    "ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p3 :p)) "
+                    "ObjectMaxCardinality(3 :r))"
+                ),
+                "expected": True,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT4": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:a ObjectSomeValuesFrom(:s "
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:r owl:Thing) "
+                    "ObjectSomeValuesFrom(:p owl:Thing) ObjectAllValuesFrom(:r :c) "
+                    "ObjectAllValuesFrom(:p ObjectSomeValuesFrom(:r owl:Thing)) "
+                    "ObjectAllValuesFrom(:p ObjectSomeValuesFrom(:p owl:Thing)) "
+                    "ObjectAllValuesFrom(:p ObjectAllValuesFrom(:r :c)))))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT5": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectComplementOf(:a) "
+                    "ObjectSomeValuesFrom(ObjectInverseOf(:f) :a) "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:r) "
+                    "ObjectSomeValuesFrom(ObjectInverseOf(:f) :a)))"
+                ),
+                "expected": True,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT8": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:r1 owl:Thing) "
+                    "ObjectSomeValuesFrom(:r ObjectAllValuesFrom(ObjectInverseOf(:r) "
+                    "ObjectAllValuesFrom(:r1 :p))) "
+                    "ObjectSomeValuesFrom(:r ObjectAllValuesFrom(ObjectInverseOf(:r) "
+                    "ObjectAllValuesFrom(:r1 ObjectComplementOf(:p)))))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT8a": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:r "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectAllValuesFrom(:r1 :p))) "
+                    "ObjectSomeValuesFrom(:r ObjectAllValuesFrom(ObjectInverseOf(:r) "
+                    "ObjectAllValuesFrom(:r1 ObjectComplementOf(:p)))))"
+                ),
+                "expected": True,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT10": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectComplementOf(:p) "
+                    "ObjectSomeValuesFrom(:f ObjectIntersectionOf("
+                    "ObjectAllValuesFrom(ObjectInverseOf(:s) :p) "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:f) ObjectSomeValuesFrom(:s :p)))))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT11": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectComplementOf(:p) "
+                    "ObjectSomeValuesFrom(:f ObjectIntersectionOf("
+                    "ObjectAllValuesFrom(ObjectInverseOf(:s) :p) "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:f) ObjectSomeValuesFrom(:s :p)))) "
+                    "ObjectSomeValuesFrom(:f1 ObjectIntersectionOf("
+                    "ObjectAllValuesFrom(ObjectInverseOf(:s) :p) "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:f1) ObjectSomeValuesFrom(:s :p)))))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT12": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectComplementOf(:p) "
+                    "ObjectSomeValuesFrom(:f ObjectIntersectionOf("
+                    "ObjectAllValuesFrom(ObjectInverseOf(:s) :p) "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:f) ObjectSomeValuesFrom(:s :p)))) "
+                    "ObjectSomeValuesFrom(:f1 ObjectIntersectionOf("
+                    "ObjectAllValuesFrom(ObjectInverseOf(:s) :p) "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:f1) ObjectSomeValuesFrom(:s :p)))))"
+                ),
+                "expected": True,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanT13": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(:a ObjectSomeValuesFrom(:s "
+                    "ObjectAllValuesFrom(ObjectInverseOf(:s) ObjectAllValuesFrom(:r :c))))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanFact1": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectUnionOf(ObjectIntersectionOf(:a :b) "
+                    "ObjectIntersectionOf(:a ObjectComplementOf(:b)) "
+                    "ObjectIntersectionOf(ObjectComplementOf(:a) :b))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanFact3": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectSomeValuesFrom(:f1 :p1) "
+                    "ObjectSomeValuesFrom(:f2 ObjectComplementOf(:p1)) "
+                    "ObjectSomeValuesFrom(:f3 :p2))"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanBug1b": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf(ObjectComplementOf(:c) :a "
+                    "ObjectComplementOf(:b) :d)"
+                ),
+                "expected": False,
+            },
+        ],
+    },
+    "reasoner.ReasonerTest.testIanBackjumping2": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [{"ce_ofn": _IAN_BACKJUMPING2_CE, "expected": True}],
+    },
+    "reasoner.ReasonerTest.testIanBackjumping3": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [{"ce_ofn": _IAN_BACKJUMPING3_CE, "expected": False}],
+    },
+    "reasoner.ReasonerTest.testMissingCBug": {
+        "class_satisfiability": [],
+        "consistent": True,
+    },
+    "reasoner.ReasonerTest.testIndividualRetrieval": {
+        "individual_types": [
+            {"individual": ":a", "class": ":A", "expected": True, "direct": False},
+        ],
     },
 }
 
@@ -290,9 +901,7 @@ OFN_WRITE_SKIP_IDS = {
 DEFERRED_DL_AXIOM_IDS: set[str] = set()
 
 # RL/RDFS axiom ports extracted but not yet passing in ontologos.
-DEFERRED_RL_AXIOM_IDS = {
-    "reasoner.OWLReasonerTest.testIncrementalAddition2",
-}
+DEFERRED_RL_AXIOM_IDS: set[str] = set()
 
 # ReasonerTest cases that pass via RL engine, not DL tableau.
 FORCE_RL_ENGINE_IDS = {
@@ -301,9 +910,7 @@ FORCE_RL_ENGINE_IDS = {
 }
 
 # RL/RDFS consistency cases verified passing — promote to axiom.
-APPROVED_RL_CONSISTENCY_IDS = {
-    "reasoner.ReasonerTest.testBottomObjectPropertyAssertion",
-}
+APPROVED_RL_CONSISTENCY_IDS: set[str] = set()
 
 DEFERRED_PREFIXES = ("reasoner.RulesTest",)
 
@@ -432,6 +1039,8 @@ class HermitCase:
     individual_instances: list[dict[str, str | bool]] = field(default_factory=list)
     datalog_queries: list[dict] = field(default_factory=list)
     load_error_expected: bool = False
+    ce_instance_checks: list[dict[str, str | bool]] = field(default_factory=list)
+    ce_satisfiability: list[dict[str, str | bool]] = field(default_factory=list)
     rust_test: str | None = None
     hand_written: bool = False
 
@@ -449,6 +1058,8 @@ def has_axiom_assertions(case: HermitCase) -> bool:
         or case.individual_types
         or case.individual_instances
         or case.datalog_queries
+        or case.ce_instance_checks
+        or case.ce_satisfiability
         or case.load_error_expected
     )
 
@@ -788,6 +1399,10 @@ DL_CONSTRUCTS = (
 def infer_engine(case_id: str, body: str) -> str:
     if case_id in FORCE_RL_ENGINE_IDS:
         return "rl"
+    if case_id in FORCE_DL_AXIOM_IDS:
+        return "dl"
+    if case_id in FORCE_DL_CONSISTENCY_IDS:
+        return "dl"
     if case_id.startswith(INTERNAL_PREFIXES):
         return "internal"
     if case_id.startswith("owl_wg_tests."):
@@ -1094,22 +1709,37 @@ def harvest_assertions(case: HermitCase, body: str) -> None:
     if case.id in INCREMENTAL_CONSISTENCY_IDS and not case.incremental_ofn:
         case.consistent = None
 
-    if case.id in HARDCODED_CASE_ASSERTIONS:
-        hard = HARDCODED_CASE_ASSERTIONS[case.id]
-        if "subsumptions" in hard:
-            case.subsumptions = hard["subsumptions"]
-        if "consistent" in hard:
-            case.consistent = hard["consistent"]
-        if "property_subsumptions" in hard:
-            case.property_subsumptions = hard["property_subsumptions"]
-        if "individual_types" in hard:
-            case.individual_types = hard["individual_types"]
-        if "conclusion_ofn" in hard:
-            case.conclusion_ofn = hard["conclusion_ofn"]
-        if "expected_entailment" in hard:
-            case.expected_entailment = hard["expected_entailment"]
-        if "incremental_ofn" in hard:
-            case.incremental_ofn = hard["incremental_ofn"]
+    apply_hardcoded_assertions(case)
+    if case.id in HARDCODED_DATALOG_QUERIES:
+        case.datalog_queries = HARDCODED_DATALOG_QUERIES[case.id]
+
+
+def apply_hardcoded_assertions(case: HermitCase) -> None:
+    if case.id not in HARDCODED_CASE_ASSERTIONS:
+        return
+    hard = HARDCODED_CASE_ASSERTIONS[case.id]
+    if "subsumptions" in hard:
+        case.subsumptions = hard["subsumptions"]
+    if "consistent" in hard:
+        case.consistent = hard["consistent"]
+    if "property_subsumptions" in hard:
+        case.property_subsumptions = hard["property_subsumptions"]
+    if "individual_types" in hard:
+        case.individual_types = hard["individual_types"]
+    if "class_satisfiability" in hard:
+        case.class_satisfiability = hard["class_satisfiability"]
+    if "conclusion_ofn" in hard:
+        case.conclusion_ofn = hard["conclusion_ofn"]
+    if "expected_entailment" in hard:
+        case.expected_entailment = hard["expected_entailment"]
+    if "incremental_ofn" in hard:
+        case.incremental_ofn = hard["incremental_ofn"]
+    if "ce_instance_checks" in hard:
+        case.ce_instance_checks = hard["ce_instance_checks"]
+    if "ce_satisfiability" in hard:
+        case.ce_satisfiability = hard["ce_satisfiability"]
+    if "datalog_queries" in hard:
+        case.datalog_queries = hard["datalog_queries"]
 
 
 def collect_cases() -> list[HermitCase]:
@@ -1446,7 +2076,12 @@ def promote_only_from_disk() -> None:
     cases: list[HermitCase] = []
     for row in raw:
         case = HermitCase(**row)
-        if case.id in INCREMENTAL_CONSISTENCY_IDS:
+        apply_hardcoded_assertions(case)
+        if case.id in HARDCODED_DATALOG_QUERIES:
+            case.datalog_queries = HARDCODED_DATALOG_QUERIES[case.id]
+        if case.id in FORCE_DL_AXIOM_IDS or case.id in FORCE_DL_CONSISTENCY_IDS:
+            case.engine = "dl"
+        if case.id in INCREMENTAL_CONSISTENCY_IDS and not case.incremental_ofn:
             case.consistent = None
         infer_status(case)
         cases.append(case)

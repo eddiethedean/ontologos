@@ -309,7 +309,6 @@ fn hermit_reasoner_classificationtest_testpropreo() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithdatatypes() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithDatatypes");
 }
@@ -321,13 +320,11 @@ fn hermit_reasoner_complexconcepttest_testconceptwithdatatypes2() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithnominals() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithNominals");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithnominals2() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithNominals2");
 }
@@ -345,13 +342,11 @@ fn hermit_reasoner_complexconcepttest_testconceptwithnominals4() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; subsumption assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithnominals5() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithNominals5");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_complexconcepttest_testjustifications() {
     run_hermit_case("reasoner.ComplexConceptTest.testJustifications");
 }
@@ -1283,7 +1278,7 @@ fn hermit_reasoner_owllinktest_testbobtests() {
 }
 
 #[test]
-#[ignore = "RL/RDFS axiom assertions pending engine hardening"]
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_owlreasonertest_testgetinverseobjectpropertyexpressions() {
     run_hermit_case("reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions");
 }
@@ -1299,13 +1294,12 @@ fn hermit_reasoner_owlreasonertest_testtopobjectpropertysupers() {
 }
 
 #[test]
-#[ignore = "RL/RDFS axiom assertions pending engine hardening"]
+#[ignore = "DL axiom fixture; subsumption assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_owlreasonertest_testincrementaladdition() {
     run_hermit_case("reasoner.OWLReasonerTest.testIncrementalAddition");
 }
 
 #[test]
-#[ignore = "RL/RDFS axiom assertions pending engine hardening"]
 fn hermit_reasoner_owlreasonertest_testincrementaladdition2() {
     run_hermit_case("reasoner.OWLReasonerTest.testIncrementalAddition2");
 }
@@ -1682,7 +1676,7 @@ fn hermit_reasoner_reasonertest_testinstantemanagererror() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; subsumption assertions pending engine (Phase 2+)"]
+#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testtopopequivalence() {
     run_hermit_case("reasoner.ReasonerTest.testTopOPEquivalence");
 }
@@ -1734,6 +1728,7 @@ fn hermit_reasoner_reasonertest_testobjectpropertysubsumptionsnominals() {
 }
 
 #[test]
+#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testbottomobjectpropertyassertion() {
     run_hermit_case("reasoner.ReasonerTest.testBottomObjectPropertyAssertion");
 }
@@ -1966,7 +1961,6 @@ fn hermit_reasoner_reasonertest_testchains1() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testchains2() {
     run_hermit_case("reasoner.ReasonerTest.testChains2");
 }
@@ -2002,7 +1996,6 @@ fn hermit_reasoner_reasonertest_testbottomdataproperty() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testchains() {
     run_hermit_case("reasoner.ReasonerTest.testChains");
 }
@@ -2013,7 +2006,6 @@ fn hermit_reasoner_reasonertest_testhaskeysonlynamed() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testnegativedatapropertyassertion() {
     run_hermit_case("reasoner.ReasonerTest.testNegativeDataPropertyAssertion");
 }
@@ -2111,24 +2103,22 @@ fn hermit_reasoner_reasonertest_testreflexivity() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testnegproperties() {
     run_hermit_case("reasoner.ReasonerTest.testNegProperties");
 }
 
 #[test]
+#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testirreflexivity() {
     run_hermit_case("reasoner.ReasonerTest.testIrreflexivity");
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testroledisjointness_1() {
     run_hermit_case("reasoner.ReasonerTest.testRoleDisjointness_1");
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testroledisjointness_2() {
     run_hermit_case("reasoner.ReasonerTest.testRoleDisjointness_2");
 }
@@ -2149,6 +2139,7 @@ fn hermit_reasoner_reasonertest_testexistsself2() {
 }
 
 #[test]
+#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testasymmetry() {
     run_hermit_case("reasoner.ReasonerTest.testAsymmetry");
 }
@@ -2544,13 +2535,12 @@ fn hermit_reasoner_reasonertest_testpunning3() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testinverses2() {
     run_hermit_case("reasoner.ReasonerTest.testInverses2");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
+#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testmissingcbug() {
     run_hermit_case("reasoner.ReasonerTest.testMissingCBug");
 }

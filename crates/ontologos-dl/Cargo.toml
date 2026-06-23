@@ -17,6 +17,7 @@ ontologos-parser = { workspace = true }
 ontologos-profile = { workspace = true }
 ontologos-el = { workspace = true }
 ontologos-alc = { workspace = true }
+ontologos-bridge = { workspace = true }
 horned-owl = { workspace = true }
 thiserror = { workspace = true }
 

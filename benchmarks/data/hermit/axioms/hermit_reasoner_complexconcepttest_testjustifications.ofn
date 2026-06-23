@@ -1,8 +1,9 @@
 Prefix(:=<file:/c/test.owl#>)
 Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
 Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
 Ontology(<file:/c/test.owl#>
-Declaration(NamedIndividual(:Matt))Declaration(NamedIndividual(:Gemma))Declaration(Class(:Person))Declaration(Class(:Sibling))Declaration(ObjectProperty(:hasSibling))Declaration(ObjectProperty(:f2))Declaration(DataProperty(:dp))ClassAssertion(:Person :Matt)ClassAssertion(:Person :Gemma)ObjectPropertyAssertion(:hasSibling :Matt :Gemma)SubClassOf(ObjectIntersectionOf(:Person ObjectSomeValuesFrom(:hasSibling :Person)) :Sibling)SubClassOf(:Sibling ObjectIntersectionOf(:Person ObjectSomeValuesFrom(:hasSibling :Person)))
+Declaration(NamedIndividual(:Matt)) Declaration(NamedIndividual(:Gemma)) Declaration(Class(:Person)) Declaration(Class(:Sibling)) Declaration(ObjectProperty(:hasSibling)) Declaration(ObjectProperty(:f2)) Declaration(DataProperty(:dp)) ClassAssertion(:Person :Matt) ClassAssertion(:Person :Gemma) ObjectPropertyAssertion(:hasSibling :Matt :Gemma) SubClassOf(ObjectIntersectionOf(:Person ObjectSomeValuesFrom(:hasSibling :Person)) :Sibling) SubClassOf(:Sibling ObjectIntersectionOf(:Person ObjectSomeValuesFrom(:hasSibling :Person)))
 )

@@ -524,6 +524,7 @@ fn mark_different_individuals(
             branch.clash = true;
         }
     }
+    expand::recheck_functional_constraints(branch);
 }
 
 fn atomic_ce_id(dl: &DlOntology, entity: EntityId) -> Option<CeId> {
@@ -961,6 +962,7 @@ pub(crate) struct Branch<'a> {
     pub(crate) role_chains: Vec<(Vec<RoleExpr>, RoleExpr)>,
     pub(crate) has_keys: Vec<(CeId, Vec<EntityId>, Vec<EntityId>)>,
     pub(crate) inverse_functional: HashSet<EntityId>,
+    pub(crate) functional_roles: HashSet<EntityId>,
     pub(crate) top_ce: Option<CeId>,
     pub(crate) thing_restrictions: Vec<CeId>,
     pub(crate) named_worlds: HashMap<EntityId, usize>,
@@ -983,6 +985,7 @@ impl<'a> Branch<'a> {
         let mut role_inverses: HashMap<EntityId, EntityId> = HashMap::new();
         let mut symmetric_roles: Vec<RoleExpr> = Vec::new();
         let mut inverse_functional: HashSet<EntityId> = HashSet::new();
+        let mut functional_roles: HashSet<EntityId> = HashSet::new();
         for (_, axiom) in dl.core().axioms().iter() {
             if let Axiom::InverseObjectProperties { left, right } = axiom {
                 role_inverses.insert(*left, *right);
@@ -994,16 +997,16 @@ impl<'a> Branch<'a> {
             if let Axiom::InverseFunctionalObjectProperty(prop) = axiom {
                 inverse_functional.insert(*prop);
             }
+            if let Axiom::FunctionalObjectProperty(prop) = axiom {
+                functional_roles.insert(*prop);
+            }
         }
         for axiom in dl.core().dl().axioms() {
-            match axiom {
-                DlAxiom::SymmetricObjectProperty(role) => {
-                    symmetric_roles.push(role.clone());
-                }
-                DlAxiom::InverseFunctionalObjectProperty(prop) => {
-                    inverse_functional.insert(*prop);
-                }
-                _ => {}
+            if let DlAxiom::SymmetricObjectProperty(role) = axiom {
+                symmetric_roles.push(role.clone());
+            }
+            if let DlAxiom::InverseFunctionalObjectProperty(prop) = axiom {
+                inverse_functional.insert(*prop);
             }
         }
 
@@ -1099,6 +1102,7 @@ impl<'a> Branch<'a> {
             role_chains,
             has_keys,
             inverse_functional,
+            functional_roles,
             top_ce,
             thing_restrictions,
             named_worlds: HashMap::new(),

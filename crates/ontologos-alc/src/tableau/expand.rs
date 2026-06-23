@@ -691,7 +691,68 @@ pub(crate) fn add_role_edge(branch: &mut Branch<'_>, from: usize, property: Role
     }
     propagate_structural_existential_subsumptions(branch);
     check_role_disjoint_on_edge(branch, from, &property, to);
+    recheck_functional_constraints(branch);
     clash::check_existential_bottom_subsumptions(branch);
+}
+
+fn worlds_marked_different(branch: &Branch<'_>, w1: usize, w2: usize) -> bool {
+    if w1 == w2 {
+        return false;
+    }
+    let inds1: Vec<EntityId> = branch
+        .named_worlds
+        .iter()
+        .filter_map(|(id, w)| (*w == w1).then_some(*id))
+        .collect();
+    let inds2: Vec<EntityId> = branch
+        .named_worlds
+        .iter()
+        .filter_map(|(id, w)| (*w == w2).then_some(*id))
+        .collect();
+    for left in &inds1 {
+        for right in &inds2 {
+            let pair = if left.0 <= right.0 {
+                (*left, *right)
+            } else {
+                (*right, *left)
+            };
+            if branch.different_pairs.contains(&pair) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+pub(crate) fn recheck_functional_constraints(branch: &mut Branch<'_>) {
+    if branch.clash || branch.functional_roles.is_empty() {
+        return;
+    }
+    for f in branch.functional_roles.clone() {
+        let fp = RoleExpr::Atomic(f);
+        let mut by_source: HashMap<usize, HashSet<usize>> = HashMap::new();
+        for (from, prop, to) in &branch.edges {
+            if role_subsumes(branch, &fp, prop) {
+                by_source.entry(*from).or_default().insert(*to);
+            }
+        }
+        for targets in by_source.values() {
+            if targets.len() <= 1 {
+                continue;
+            }
+            for &w1 in targets {
+                for &w2 in targets {
+                    if w1 >= w2 {
+                        continue;
+                    }
+                    if worlds_marked_different(branch, w1, w2) {
+                        branch.clash = true;
+                        return;
+                    }
+                }
+            }
+        }
+    }
 }
 
 fn check_role_disjoint_on_edge(

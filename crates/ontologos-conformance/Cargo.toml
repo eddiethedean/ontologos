@@ -42,6 +42,10 @@ name = "dl_failures"
 path = "src/bin/dl_failures.rs"
 
 [[bin]]
+name = "engine_failures"
+path = "src/bin/engine_failures.rs"
+
+[[bin]]
 name = "wg_failures"
 path = "src/bin/wg_failures.rs"
 

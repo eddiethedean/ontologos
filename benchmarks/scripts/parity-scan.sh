@@ -11,6 +11,9 @@ echo
 echo "==> Planned DL failures"
 "${BIN}/dl_failures"
 echo
+echo "==> Planned engine failures (all engines)"
+"${BIN}/engine_failures"
+echo
 echo "==> Promotable axiom cases"
 "${BIN}/promote_catalog"
 echo

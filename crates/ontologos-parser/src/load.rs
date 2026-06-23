@@ -124,6 +124,7 @@ pub fn load_ontology_with_limits_and_base(
             report.meta.skipped_axiom_count
         )));
     }
+    crate::validate::validate_loaded_ontology(&ontology)?;
     ontology.set_parse_meta(report.into_meta());
     Ok(ontology)
 }
@@ -297,6 +298,47 @@ fn path_is_under_base(path: &Path, base: &Path) -> bool {
         }
     }
     true
+}
+
+/// Load an OFN ontology and append axioms from a second OFN fragment (same prefixes/IRIs).
+pub fn load_ofn_with_incremental(base: &Path, incremental: &Path) -> Result<Ontology> {
+    let base_text = std::fs::read_to_string(base).map_err(|e| Error::Parse(e.to_string()))?;
+    let inc_text = std::fs::read_to_string(incremental).map_err(|e| Error::Parse(e.to_string()))?;
+    let merged = merge_ofn_documents(&base_text, &inc_text)?;
+    let temp = std::env::temp_dir().join(format!(
+        "ontologos-merge-{}-{}.ofn",
+        std::process::id(),
+        base.file_name().and_then(|n| n.to_str()).unwrap_or("base")
+    ));
+    std::fs::write(&temp, merged).map_err(|e| Error::Parse(e.to_string()))?;
+    let result = load_ontology(&temp);
+    let _ = std::fs::remove_file(&temp);
+    result
+}
+
+fn merge_ofn_documents(base: &str, incremental: &str) -> Result<String> {
+    let inc_axioms = extract_ofn_axiom_body(incremental)
+        .ok_or_else(|| Error::Parse("incremental OFN missing Ontology(...) body".into()))?;
+    let close = base
+        .rfind(')')
+        .ok_or_else(|| Error::Parse("base OFN missing closing ')'".into()))?;
+    Ok(format!("{}{})", &base[..close], inc_axioms))
+}
+
+fn extract_ofn_axiom_body(text: &str) -> Option<String> {
+    let marker = "Ontology(";
+    let start = text.find(marker)? + marker.len();
+    let rest = text.get(start..)?;
+    let end = rest.rfind(')')?;
+    let mut body = rest[..end].trim();
+    if body.starts_with('<') {
+        if let Some((_, axioms)) = body.split_once('\n') {
+            body = axioms.trim();
+        } else if let Some((_, axioms)) = body.split_once(' ') {
+            body = axioms.trim();
+        }
+    }
+    Some(format!(" {body}"))
 }
 
 #[cfg(test)]
