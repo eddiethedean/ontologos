@@ -250,16 +250,6 @@ pub fn check_axiom_case_bounded(case: &HermitCase) -> Result<(), String> {
     check_axiom_case_with_opts(case, true)
 }
 
-fn case_needs_dl_taxonomy(case: &HermitCase) -> bool {
-    !case.subsumptions.is_empty()
-        || !case.class_satisfiability.is_empty()
-        || !case.individual_types.is_empty()
-        || !case.individual_instances.is_empty()
-        || !case.datalog_queries.is_empty()
-        || !case.ce_instance_checks.is_empty()
-        || !case.ce_satisfiability.is_empty()
-}
-
 fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(), String> {
     let rel = case
         .axiom_ofn
@@ -325,34 +315,32 @@ fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(),
     }
 
     if case.engine == "dl" || case.engine == "swrl" || case.engine == "alc" {
-        if case_needs_dl_taxonomy(case) {
-            let taxonomy = if bounded_dl {
-                dl_classify_bounded(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
-            } else {
-                ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
-            };
+        let taxonomy = if bounded_dl {
+            dl_classify_bounded(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+        } else {
+            ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+        };
 
-            if !case.subsumptions.is_empty() {
-                check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
-            }
-            if !case.class_satisfiability.is_empty() {
-                check_class_satisfiability_result(&taxonomy, &ontology, case)?;
-            }
-            if !case.individual_types.is_empty() {
-                check_individual_types_result(&ontology, &taxonomy, case)?;
-            }
-            if !case.individual_instances.is_empty() {
-                check_individual_instances_result(&ontology, &taxonomy, case)?;
-            }
-            if !case.datalog_queries.is_empty() {
-                check_datalog_queries_result(&ontology, &taxonomy, case)?;
-            }
-            if !case.ce_instance_checks.is_empty() {
-                check_ce_instance_checks_result(&ontology, case)?;
-            }
-            if !case.ce_satisfiability.is_empty() {
-                check_ce_satisfiability_result(&ontology, case)?;
-            }
+        if !case.subsumptions.is_empty() {
+            check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
+        }
+        if !case.class_satisfiability.is_empty() {
+            check_class_satisfiability_result(&taxonomy, &ontology, case)?;
+        }
+        if !case.individual_types.is_empty() {
+            check_individual_types_result(&ontology, &taxonomy, case)?;
+        }
+        if !case.individual_instances.is_empty() {
+            check_individual_instances_result(&ontology, &taxonomy, case)?;
+        }
+        if !case.datalog_queries.is_empty() {
+            check_datalog_queries_result(&ontology, &taxonomy, case)?;
+        }
+        if !case.ce_instance_checks.is_empty() {
+            check_ce_instance_checks_result(&ontology, case)?;
+        }
+        if !case.ce_satisfiability.is_empty() {
+            check_ce_satisfiability_result(&ontology, case)?;
         }
         if !case.property_characteristics.is_empty() {
             check_property_characteristics_result(&ontology, case)?;
