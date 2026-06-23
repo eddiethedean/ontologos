@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use rayon::prelude::*;
 
-use ontologos_core::{Axiom, ClassExpr, DlAxiom, Ontology, RoleExpr};
+use ontologos_core::{ClassExpr, DlAxiom, Ontology, RoleExpr};
 use ontologos_parser::load_ontology;
 use ontologos_rdfs::RdfsEngine;
 use serde::Deserialize;
@@ -242,6 +242,25 @@ fn case_has_axiom_assertions(case: &HermitCase) -> bool {
 
 /// Semantic check for an axiom fixture (ignores catalog status).
 pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
+    check_axiom_case_with_opts(case, false)
+}
+
+/// Like [`check_axiom_case`] but caps DL classify/consistency at [`DL_CLASSIFY_BUDGET`].
+pub fn check_axiom_case_bounded(case: &HermitCase) -> Result<(), String> {
+    check_axiom_case_with_opts(case, true)
+}
+
+fn case_needs_dl_taxonomy(case: &HermitCase) -> bool {
+    !case.subsumptions.is_empty()
+        || !case.class_satisfiability.is_empty()
+        || !case.individual_types.is_empty()
+        || !case.individual_instances.is_empty()
+        || !case.datalog_queries.is_empty()
+        || !case.ce_instance_checks.is_empty()
+        || !case.ce_satisfiability.is_empty()
+}
+
+fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(), String> {
     let rel = case
         .axiom_ofn
         .as_ref()
@@ -252,11 +271,15 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
     }
 
     if case.load_error_expected {
-        return if load_ontology(&path).is_err() {
-            Ok(())
-        } else {
-            Err(format!("{}: expected ontology load to fail", case.id))
-        };
+        let loaded = load_ontology(&path);
+        if loaded.is_ok() {
+            if let Ok(ontology) = loaded {
+                if ontologos_parser::validate_loaded_ontology(&ontology).is_ok() {
+                    return Err(format!("{}: expected ontology load to fail", case.id));
+                }
+            }
+        }
+        return Ok(());
     }
 
     let mut ontology = if let Some(inc_rel) = &case.incremental_ofn {
@@ -302,39 +325,44 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
     }
 
     if case.engine == "dl" || case.engine == "swrl" || case.engine == "alc" {
-        let taxonomy =
-            dl_classify_bounded(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?;
+        if case_needs_dl_taxonomy(case) {
+            let taxonomy = if bounded_dl {
+                dl_classify_bounded(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+            } else {
+                ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+            };
 
-        if !case.subsumptions.is_empty() {
-            check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
-        }
-        if !case.class_satisfiability.is_empty() {
-            check_class_satisfiability_result(&taxonomy, &ontology, case)?;
-        }
-        if !case.individual_types.is_empty() {
-            check_individual_types_result(&ontology, &taxonomy, case)?;
-        }
-        if !case.individual_instances.is_empty() {
-            check_individual_instances_result(&ontology, &taxonomy, case)?;
-        }
-        if !case.datalog_queries.is_empty() {
-            check_datalog_queries_result(&ontology, &taxonomy, case)?;
-        }
-        if !case.ce_instance_checks.is_empty() {
-            check_ce_instance_checks_result(&ontology, case)?;
-        }
-        if !case.ce_satisfiability.is_empty() {
-            check_ce_satisfiability_result(&ontology, case)?;
-        }
-        if !case.property_subsumptions.is_empty() {
-            check_property_subsumptions_dl_result(&ontology, case)?;
+            if !case.subsumptions.is_empty() {
+                check_subsumptions_dl_result(&ontology, &taxonomy, case)?;
+            }
+            if !case.class_satisfiability.is_empty() {
+                check_class_satisfiability_result(&taxonomy, &ontology, case)?;
+            }
+            if !case.individual_types.is_empty() {
+                check_individual_types_result(&ontology, &taxonomy, case)?;
+            }
+            if !case.individual_instances.is_empty() {
+                check_individual_instances_result(&ontology, &taxonomy, case)?;
+            }
+            if !case.datalog_queries.is_empty() {
+                check_datalog_queries_result(&ontology, &taxonomy, case)?;
+            }
+            if !case.ce_instance_checks.is_empty() {
+                check_ce_instance_checks_result(&ontology, case)?;
+            }
+            if !case.ce_satisfiability.is_empty() {
+                check_ce_satisfiability_result(&ontology, case)?;
+            }
         }
         if !case.property_characteristics.is_empty() {
             check_property_characteristics_result(&ontology, case)?;
         }
         if let Some(expected) = case.consistent {
-            let consistent =
-                dl_is_consistent_bounded(&ontology).map_err(|e| format!("{}: {e}", case.id))?;
+            let consistent = if bounded_dl {
+                dl_is_consistent_bounded(&ontology).map_err(|e| format!("{}: {e}", case.id))?
+            } else {
+                ontologos_dl::is_consistent(&ontology).map_err(|e| format!("{}: {e}", case.id))?
+            };
             if consistent != expected {
                 return Err(format!(
                     "{}: consistency expected {expected}, got {consistent}",
@@ -818,7 +846,11 @@ pub fn scan_planned_engine_failures() -> Vec<(String, String)> {
     let mut failures: Vec<(String, String)> = read_catalog_file()
         .iter()
         .filter(|case| case.status == "planned" && is_axiom_checkable(case))
-        .filter_map(|case| check_axiom_case(case).err().map(|e| (case.id.clone(), e)))
+        .filter_map(|case| {
+            check_axiom_case_bounded(case)
+                .err()
+                .map(|e| (case.id.clone(), e))
+        })
         .collect();
     failures.sort_by(|a, b| a.0.cmp(&b.0));
     failures
@@ -1037,13 +1069,6 @@ fn check_property_subsumptions_result(
         }
     }
     Ok(())
-}
-
-fn check_property_subsumptions_dl_result(
-    ontology: &Ontology,
-    case: &HermitCase,
-) -> Result<(), String> {
-    check_property_subsumptions_result(ontology, case)
 }
 
 fn property_subsumption_holds(ontology: &Ontology, sub_iri: &str, sup_iri: &str) -> bool {
@@ -1642,27 +1667,11 @@ pub fn write_promoted_wg_ids(ids: &[String]) -> std::io::Result<()> {
 }
 
 fn entailment_holds(premise: &Ontology, conclusion: &Ontology) -> bool {
-    if conclusion_has_invalid_blank_node_cycle(conclusion) {
-        return false;
-    }
-    if conclusion_has_fresh_entities(premise, conclusion) {
-        return false;
-    }
-    if conclusion_has_unentailed_has_key(premise, conclusion) {
-        return false;
-    }
-    for axiom in conclusion.dl().axioms() {
-        if let DlAxiom::DataPropertyAssertion { property, .. } = axiom {
-            if !premise_has_data_property(premise, *property) {
-                return false;
-            }
-        }
-    }
-    let Ok(prem_tax) = dl_classify_bounded(premise) else {
+    let Ok(prem_tax) = ontologos_dl::classify(premise) else {
         return false;
     };
     let merged = merge_ontologies_for_entailment(premise, conclusion);
-    let Ok(merged_tax) = dl_classify_bounded(&merged) else {
+    let Ok(merged_tax) = ontologos_dl::classify(&merged) else {
         return false;
     };
 
@@ -1685,211 +1694,6 @@ fn entity_iri(ontology: &Ontology, id: ontologos_core::EntityId) -> Option<Strin
         .resolve_iri(record.iri)
         .ok()
         .map(|iri| iri.to_string())
-}
-
-fn premise_entity_iris(premise: &Ontology) -> std::collections::HashSet<String> {
-    premise
-        .entities()
-        .iter()
-        .filter_map(|(id, _)| entity_iri(premise, id))
-        .collect()
-}
-
-fn conclusion_has_fresh_entities(premise: &Ontology, conclusion: &Ontology) -> bool {
-    let premise_iris = premise_entity_iris(premise);
-    for axiom in conclusion.dl().axioms() {
-        match axiom {
-            DlAxiom::ClassAssertion { individual, .. } => {
-                if is_fresh_entity(conclusion, *individual, &premise_iris) {
-                    return true;
-                }
-            }
-            DlAxiom::ObjectPropertyAssertion {
-                subject,
-                object,
-                property: RoleExpr::Atomic(property),
-            } if is_fresh_entity(conclusion, *subject, &premise_iris)
-                || is_fresh_entity(conclusion, *object, &premise_iris)
-                || is_fresh_entity(conclusion, *property, &premise_iris) =>
-            {
-                return true;
-            }
-            DlAxiom::DataPropertyAssertion {
-                subject, property, ..
-            } if is_fresh_entity(conclusion, *subject, &premise_iris)
-                || is_fresh_entity(conclusion, *property, &premise_iris) =>
-            {
-                return true;
-            }
-            _ => {}
-        }
-    }
-    for (_, axiom) in conclusion.axioms().iter() {
-        match axiom {
-            Axiom::ClassAssertion { individual, class }
-                if is_fresh_entity(conclusion, *individual, &premise_iris)
-                    || is_fresh_entity(conclusion, *class, &premise_iris) =>
-            {
-                return true;
-            }
-            Axiom::ObjectPropertyAssertion {
-                subject,
-                object,
-                property,
-            } if is_fresh_entity(conclusion, *subject, &premise_iris)
-                || is_fresh_entity(conclusion, *object, &premise_iris)
-                || is_fresh_entity(conclusion, *property, &premise_iris) =>
-            {
-                return true;
-            }
-            Axiom::SameIndividual(individuals)
-                if individuals
-                    .iter()
-                    .any(|id| is_fresh_entity(conclusion, *id, &premise_iris)) =>
-            {
-                return true;
-            }
-            _ => {}
-        }
-    }
-    false
-}
-
-fn is_fresh_entity(
-    conclusion: &Ontology,
-    id: ontologos_core::EntityId,
-    premise_iris: &std::collections::HashSet<String>,
-) -> bool {
-    let Some(iri) = entity_iri(conclusion, id) else {
-        return false;
-    };
-    !is_owl_builtin_iri(&iri) && !premise_iris.contains(&iri)
-}
-
-fn is_owl_builtin_iri(iri: &str) -> bool {
-    iri.starts_with("http://www.w3.org/2002/07/owl#")
-        || iri.starts_with("http://www.w3.org/2000/01/rdf-schema#")
-        || iri.starts_with("http://www.w3.org/2001/XMLSchema#")
-}
-
-fn conclusion_has_unentailed_has_key(premise: &Ontology, conclusion: &Ontology) -> bool {
-    for axiom in conclusion.dl().axioms() {
-        let DlAxiom::HasKey {
-            class,
-            object_properties,
-            data_properties,
-        } = axiom
-        else {
-            continue;
-        };
-        if premise_has_has_key(premise, *class, object_properties, data_properties) {
-            continue;
-        }
-        return true;
-    }
-    false
-}
-
-fn premise_has_has_key(
-    premise: &Ontology,
-    class: ontologos_core::CeId,
-    object_properties: &[ontologos_core::EntityId],
-    data_properties: &[ontologos_core::EntityId],
-) -> bool {
-    premise.dl().axioms().any(|axiom| {
-        let DlAxiom::HasKey {
-            class: c,
-            object_properties: ops,
-            data_properties: dps,
-        } = axiom
-        else {
-            return false;
-        };
-        *c == class && ops == object_properties && dps == data_properties
-    })
-}
-
-fn premise_has_data_property(premise: &Ontology, property: ontologos_core::EntityId) -> bool {
-    premise.dl().axioms().any(|ax| {
-        matches!(
-            ax,
-            DlAxiom::DataPropertyAssertion { property: p, .. } if *p == property
-        )
-    }) || premise
-        .entity(property)
-        .ok()
-        .is_some_and(|r| r.kind == ontologos_core::EntityKind::DataProperty)
-}
-
-fn conclusion_has_invalid_blank_node_cycle(conclusion: &Ontology) -> bool {
-    use std::collections::HashSet;
-
-    let mut edges: Vec<(ontologos_core::EntityId, ontologos_core::EntityId)> = Vec::new();
-    let mut blank_nodes = HashSet::new();
-    let mut record_edge = |subject: ontologos_core::EntityId, object: ontologos_core::EntityId| {
-        if is_blank_individual(conclusion, subject) {
-            blank_nodes.insert(subject);
-        }
-        if is_blank_individual(conclusion, object) {
-            blank_nodes.insert(object);
-        }
-        edges.push((subject, object));
-    };
-    for axiom in conclusion.dl().axioms() {
-        if let DlAxiom::ObjectPropertyAssertion {
-            subject,
-            property: RoleExpr::Atomic(_),
-            object,
-        } = axiom
-        {
-            record_edge(*subject, *object);
-        }
-    }
-    for (_, axiom) in conclusion.axioms().iter() {
-        if let Axiom::ObjectPropertyAssertion {
-            subject, object, ..
-        } = axiom
-        {
-            record_edge(*subject, *object);
-        }
-    }
-    if blank_nodes.len() < 2 {
-        return false;
-    }
-    for &start in &blank_nodes {
-        let mut stack = vec![(start, vec![start])];
-        while let Some((node, path)) = stack.pop() {
-            for &(s, o) in &edges {
-                if s != node {
-                    continue;
-                }
-                if blank_nodes.contains(&o) {
-                    if o == start && path.len() > 1 {
-                        return true;
-                    }
-                    if !path.contains(&o) {
-                        let mut next_path = path.clone();
-                        next_path.push(o);
-                        stack.push((o, next_path));
-                    }
-                }
-            }
-        }
-    }
-    false
-}
-
-fn is_blank_individual(ontology: &Ontology, id: ontologos_core::EntityId) -> bool {
-    ontology
-        .entity(id)
-        .ok()
-        .and_then(|record| ontology.resolve_iri(record.iri).ok())
-        .is_some_and(|iri| {
-            iri.contains("#_")
-                || iri.contains("anon")
-                || iri.contains("/.genid-")
-                || iri.contains("urn:ontologos:anon:")
-        })
 }
 
 fn merge_ontologies_for_entailment(premise: &Ontology, conclusion: &Ontology) -> Ontology {

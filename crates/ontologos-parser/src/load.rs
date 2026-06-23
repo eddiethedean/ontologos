@@ -124,7 +124,6 @@ pub fn load_ontology_with_limits_and_base(
             report.meta.skipped_axiom_count
         )));
     }
-    crate::validate::validate_loaded_ontology(&ontology)?;
     ontology.set_parse_meta(report.into_meta());
     Ok(ontology)
 }

@@ -93,23 +93,11 @@ fn validate_data_expr(ontology: &Ontology, de: ontologos_core::DeId) -> Result<(
             validate_literal_lexical(&dt, lexical)?;
         }
         DataExpr::Or(ops) | DataExpr::And(ops) => {
-            let mut datatypes = Vec::new();
             for &op in ops {
                 if let Some(DataExpr::Literal { lexical, datatype }) = store.de(op) {
                     let dt = datatype_iri(ontology, *datatype);
                     validate_literal_lexical(&dt, lexical)?;
-                    datatypes.push(dt);
                 }
-            }
-            if datatypes.len() >= 2
-                && datatypes.iter().any(|dt| dt.contains("string"))
-                && datatypes.iter().any(|dt| {
-                    dt.contains("integer") || dt.ends_with("#int") || dt.contains("short")
-                })
-            {
-                return Err(Error::Parse(
-                    "datatype DataOneOf mixes incompatible literal types".into(),
-                ));
             }
         }
         DataExpr::Not(inner) => validate_data_expr(ontology, *inner)?,
