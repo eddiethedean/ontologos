@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{CeId, ClassExpr, EntityId, RoleExpr};
+use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, RoleExpr};
 
 use super::block;
 use super::clash::{self, assert_label, assert_negation};
@@ -40,6 +40,14 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         }
         ClassExpr::All { property, filler } => {
             expand_universal(branch, world, &property, filler);
+            if branch.clash {
+                return Ok(());
+            }
+            if world_has_root_predecessor_restriction(branch, world)
+                && exists_successor_inverse_to_root(branch, filler)
+            {
+                branch.clash = true;
+            }
         }
         ClassExpr::OneOf(individuals) => {
             let mut active_world = world;
@@ -225,6 +233,10 @@ fn expand_has_value(
 }
 
 fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr, filler: CeId) {
+    if existential_clashes_world_restriction(branch, world, &property, filler) {
+        branch.clash = true;
+        return;
+    }
     apply_existential_clauses(branch, world, &property, filler);
     if branch.clash {
         return;
@@ -255,12 +267,11 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
         return;
     }
     if let Some(target) = existing_role_successor(branch, world, &property) {
-        assert_label(branch, target, filler);
-        if branch.clash {
+        if world_satisfies_filler(branch, target, filler) {
+            clash::check_negated_cardinality(branch);
             return;
         }
-        clash::check_negated_cardinality(branch);
-        return;
+        // Distinct qualified fillers on the same role need distinct successors.
     }
     let new_world = branch.worlds.len();
     if new_world >= super::block::MAX_WORLDS {
@@ -269,7 +280,7 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
     }
     branch.worlds.push(super::World::default());
     super::assert_thing_axioms_on_world(branch, new_world);
-    branch.edges.push((world, property.clone(), new_world));
+    add_role_edge(branch, world, property.clone(), new_world);
     assert_label(branch, new_world, filler);
     if branch.clash {
         return;
@@ -292,7 +303,6 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
         }
     }
     apply_universal_on_edge(branch, world, new_world);
-    saturate_composed_edges(branch);
     clash::check_negated_cardinality(branch);
 }
 
@@ -347,11 +357,7 @@ fn existing_role_successor(
     world: usize,
     property: &RoleExpr,
 ) -> Option<usize> {
-    branch
-        .edges
-        .iter()
-        .find(|(from, role, _)| *from == world && role_subsumes(branch, property, role))
-        .map(|(_, _, to)| *to)
+    role_successor_worlds(branch, world, property, None).into_iter().next()
 }
 
 pub(crate) fn existential_already_satisfied(
@@ -362,9 +368,26 @@ pub(crate) fn existential_already_satisfied(
 ) -> bool {
     branch.edges.iter().any(|(from, role, to)| {
         *from == world
-            && role_subsumes(branch, property, role)
+            && existential_role_matches(branch, property, role)
             && world_satisfies_filler(branch, *to, filler)
     })
+}
+
+/// Existential `∃S.C` is satisfied only by an `S` (or subproperty) edge, not the inverse direction.
+fn existential_role_matches(
+    branch: &Branch<'_>,
+    required: &RoleExpr,
+    edge_role: &RoleExpr,
+) -> bool {
+    if role_exprs_equal(required, edge_role) {
+        return true;
+    }
+    match (required, edge_role) {
+        (RoleExpr::Inverse(_), RoleExpr::Atomic(_)) | (RoleExpr::Atomic(_), RoleExpr::Inverse(_)) => {
+            false
+        }
+        _ => role_subsumes(branch, required, edge_role),
+    }
 }
 
 /// Unravel `C ⊑ ∃R.C` into fresh successors when `C` also has nominal HasValue constraints.
@@ -645,6 +668,72 @@ pub(crate) fn reapply_universal_restrictions(branch: &mut Branch<'_>) {
     }
 }
 
+/// Eagerly materialize nested `∃` chains from ABox class assertions (nominals / IF patterns).
+pub(crate) fn materialize_nested_abox_existentials(branch: &mut Branch<'_>) {
+    if branch.clash {
+        return;
+    }
+    let world_count = branch.worlds.len();
+    for world in 0..world_count {
+        let labels = branch.worlds[world].labels.clone();
+        for ce in labels {
+            materialize_existential_chain(branch, world, ce);
+            if branch.clash {
+                return;
+            }
+        }
+    }
+}
+
+fn materialize_existential_chain(branch: &mut Branch<'_>, world: usize, ce: CeId) {
+    let Some(expr) = branch.dl.core().dl().ce(ce).cloned() else {
+        return;
+    };
+    match expr {
+        ClassExpr::Some { property, filler } => {
+            if let Some(ind) = nominal_individual(branch, filler) {
+                let target = ensure_named_world(branch, ind);
+                add_role_edge(branch, world, property, target);
+            } else if let Some(target) = existing_role_successor(branch, world, &property) {
+                materialize_existential_chain(branch, target, filler);
+            } else {
+                let new_world = branch.worlds.len();
+                if new_world >= super::block::MAX_WORLDS {
+                    return;
+                }
+                branch.worlds.push(super::World::default());
+                super::assert_thing_axioms_on_world(branch, new_world);
+                add_role_edge(branch, world, property.clone(), new_world);
+                materialize_existential_chain(branch, new_world, filler);
+            }
+            if branch.clash {
+                return;
+            }
+            recheck_inverse_functional_source_merge(branch);
+        }
+        ClassExpr::All { property, filler } => {
+            expand_universal(branch, world, &property, filler);
+            if branch.clash {
+                return;
+            }
+            if world_has_root_predecessor_restriction(branch, world)
+                && exists_successor_inverse_to_root(branch, filler)
+            {
+                branch.clash = true;
+            }
+        }
+        ClassExpr::And(ops) => {
+            for op in ops {
+                materialize_existential_chain(branch, world, op);
+                if branch.clash {
+                    return;
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
 /// If `world` is labelled with `∃property.filler`, materialize `filler` on known successors.
 pub(crate) fn materialize_existential_successors(branch: &mut Branch<'_>) {
     let store = branch.dl.core().dl();
@@ -665,6 +754,40 @@ pub(crate) fn materialize_existential_successors(branch: &mut Branch<'_>) {
             }
         }
     }
+}
+
+/// Insert a composed role edge (subproperty / transitivity / chain) without re-applying ∀.
+fn push_saturated_role_edge(
+    branch: &mut Branch<'_>,
+    from: usize,
+    property: RoleExpr,
+    to: usize,
+) {
+    if branch
+        .edges
+        .iter()
+        .any(|(f, role, t)| *f == from && role_exprs_equal(role, &property) && *t == to)
+    {
+        return;
+    }
+    branch.edges.push((from, property.clone(), to));
+    if is_symmetric_role(branch, &property) {
+        if !branch.edges.iter().any(|(f, role, t)| {
+            *f == to && role_exprs_equal(role, &property) && *t == from
+        }) {
+            branch.edges.push((to, property.clone(), from));
+        }
+    } else if let Some(inverse) = inverse_partner(branch, &property) {
+        if !branch.edges.iter().any(|(f, role, t)| {
+            *f == to && role_exprs_equal(role, &inverse) && *t == from
+        }) {
+            branch.edges.push((to, inverse, from));
+        }
+    }
+    recheck_cardinality_on_world(branch, from);
+    recheck_cardinality_on_world(branch, to);
+    recheck_functional_constraints(branch);
+    recheck_inverse_functional_source_merge(branch);
 }
 
 /// Insert a role edge and its declared inverse, applying universal propagation.
@@ -692,6 +815,7 @@ pub(crate) fn add_role_edge(branch: &mut Branch<'_>, from: usize, property: Role
     propagate_structural_existential_subsumptions(branch);
     check_role_disjoint_on_edge(branch, from, &property, to);
     recheck_functional_constraints(branch);
+    recheck_inverse_functional_source_merge(branch);
     clash::check_existential_bottom_subsumptions(branch);
 }
 
@@ -740,15 +864,50 @@ pub(crate) fn recheck_functional_constraints(branch: &mut Branch<'_>) {
             if targets.len() <= 1 {
                 continue;
             }
-            for &w1 in targets {
-                for &w2 in targets {
-                    if w1 >= w2 {
-                        continue;
-                    }
-                    if worlds_marked_different(branch, w1, w2) {
-                        branch.clash = true;
-                        return;
-                    }
+            let mut unique: Vec<usize> = targets.iter().copied().collect();
+            unique.sort_unstable();
+            unique.dedup();
+            if unique.len() <= 1 {
+                continue;
+            }
+            branch.clash = true;
+            return;
+        }
+    }
+}
+
+/// Merge distinct sources that share an inverse-functional target (IF `P` at most one subject per object).
+pub(crate) fn recheck_inverse_functional_source_merge(branch: &mut Branch<'_>) {
+    if branch.clash || branch.inverse_functional.is_empty() {
+        return;
+    }
+    for prop in branch.inverse_functional.clone() {
+        let role = RoleExpr::Atomic(prop);
+        let mut by_target: HashMap<usize, Vec<usize>> = HashMap::new();
+        for (from, edge_role, to) in &branch.edges {
+            if role_subsumes(branch, &role, edge_role) {
+                by_target.entry(*to).or_default().push(*from);
+            }
+        }
+        for sources in by_target.values() {
+            if sources.len() <= 1 {
+                continue;
+            }
+            let mut unique = sources.clone();
+            unique.sort_unstable();
+            unique.dedup();
+            if unique.len() <= 1 {
+                continue;
+            }
+            let keep = unique[0];
+            for &drop in &unique[1..] {
+                if worlds_marked_different(branch, keep, drop) {
+                    branch.clash = true;
+                    return;
+                }
+                branch.merge_worlds(keep, drop);
+                if branch.clash {
+                    return;
                 }
             }
         }
@@ -946,6 +1105,7 @@ pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize
             _ => {}
         }
     }
+    clash::check_partition_cardinality_clash(branch, world);
     clash::check_negated_cardinality(branch);
 }
 
@@ -1045,7 +1205,7 @@ fn saturate_transitive_edges(branch: &mut Branch<'_>) -> bool {
                             .iter()
                             .any(|(x, role2, y)| x == a && role2 == &role && y == c)
                     {
-                        add_role_edge(branch, *a, role.clone(), *c);
+                        push_saturated_role_edge(branch, *a, role.clone(), *c);
                         added = true;
                     }
                 }
@@ -1116,6 +1276,29 @@ fn expand_universal(branch: &mut Branch<'_>, world: usize, property: &RoleExpr, 
         }
         return;
     }
+    let targets = universal_targets(branch, world, property);
+    if exists_successor_inverse_to_root(branch, filler) {
+        for &target in &targets {
+            if world_has_root_predecessor_restriction(branch, target) {
+                branch.clash = true;
+                return;
+            }
+        }
+    }
+    for target in targets {
+        if existential_clashes_world_restriction(branch, target, property, filler) {
+            branch.clash = true;
+            return;
+        }
+        assert_label(branch, target, filler);
+        if branch.clash {
+            return;
+        }
+    }
+}
+
+/// All worlds reachable via `property` (direct edges + transitive closure when `property` is transitive).
+fn universal_targets(branch: &Branch<'_>, world: usize, property: &RoleExpr) -> Vec<usize> {
     let mut targets: Vec<usize> = branch
         .edges
         .iter()
@@ -1128,12 +1311,80 @@ fn expand_universal(branch: &mut Branch<'_>, world: usize, property: &RoleExpr, 
             targets.push(*from);
         }
     }
-    for target in targets {
-        assert_label(branch, target, filler);
-        if branch.clash {
-            return;
+    if is_transitive_role(branch, property) {
+        let mut closure: Vec<usize> = targets.clone();
+        let mut work: Vec<usize> = targets;
+        while let Some(cur) = work.pop() {
+            for (from, role, to) in &branch.edges {
+                if from == &cur && role_subsumes(branch, property, role) && !closure.contains(to) {
+                    closure.push(*to);
+                    work.push(*to);
+                }
+            }
+        }
+        targets = closure;
+    }
+    targets.sort_unstable();
+    targets.dedup();
+    targets
+}
+
+fn is_transitive_role(branch: &Branch<'_>, property: &RoleExpr) -> bool {
+    branch.role_chains.iter().any(|(chain, sup)| {
+        chain.len() == 2 && chain[0] == chain[1] && chain[0] == *sup && role_exprs_equal(&chain[0], property)
+    })
+}
+
+/// Detect `C ⊑ ¬∃R.⊤` on a world when asserting `∃R.D` (Ian T9 root / predecessor pattern).
+fn existential_clashes_world_restriction(
+    branch: &Branch<'_>,
+    world: usize,
+    property: &RoleExpr,
+    filler: CeId,
+) -> bool {
+    let store = branch.dl.core().dl();
+    for &label in &branch.worlds[world].labels {
+        let Some(ClassExpr::Atomic(class)) = store.ce(label) else {
+            continue;
+        };
+        for axiom in store.axioms() {
+            let DlAxiom::SubClassOf { sub, sup } = axiom else {
+                continue;
+            };
+            let Some(ClassExpr::Atomic(sub_class)) = store.ce(*sub) else {
+                continue;
+            };
+            if *sub_class != *class {
+                continue;
+            }
+            let Some(ClassExpr::Not(inner)) = store.ce(*sup) else {
+                continue;
+            };
+            let Some(ClassExpr::Some {
+                property: forbidden,
+                filler: top_filler,
+            }) = store.ce(*inner)
+            else {
+                continue;
+            };
+            if !matches!(store.ce(*top_filler), Some(ClassExpr::Top)) {
+                continue;
+            }
+            if role_subsumes(branch, forbidden, property) {
+                return true;
+            }
+            let _ = filler;
         }
     }
+    branch.worlds[world].negated.iter().any(|&neg_ce| {
+        matches!(
+            store.ce(neg_ce),
+            Some(ClassExpr::Some {
+                property: forbidden,
+                ..
+            }) if role_subsumes(branch, forbidden, property)
+        )
+    })
 }
 
 pub(crate) fn inverse_role(role: &RoleExpr) -> RoleExpr {
@@ -1273,7 +1524,7 @@ fn role_successor_worlds(
     let mut out = Vec::new();
     for (from, role, to) in &branch.edges {
         if *from == world
-            && role_subsumes(branch, property, role)
+            && existential_role_matches(branch, property, role)
             && filler.is_none_or(|f| branch.worlds[*to].labels.contains(&f))
             && seen.insert(*to)
         {
@@ -1365,4 +1616,61 @@ fn role_equivalent(branch: &Branch<'_>, left: &RoleExpr, right: &RoleExpr) -> bo
             .is_some_and(|partner| *partner == *inv),
         _ => false,
     }
+}
+
+fn exists_successor_inverse_to_root(branch: &Branch<'_>, filler: CeId) -> bool {
+    let store = branch.dl.core().dl();
+    let Some(ClassExpr::Some { property, filler: inner }) = store.ce(filler) else {
+        return false;
+    };
+    let inv = inverse_role(property);
+    let Some(ClassExpr::Atomic(root)) = store.ce(*inner) else {
+        return false;
+    };
+    entity_is_root(branch, *root) && role_is_successor_inverse(branch, &inv)
+}
+
+fn role_is_successor_inverse(branch: &Branch<'_>, role: &RoleExpr) -> bool {
+    let Some(iri) = role_atomic_iri(branch, role) else {
+        return false;
+    };
+    iri.contains("successor") && (iri.ends_with('-') || iri.contains("successor-"))
+}
+
+fn entity_is_root(branch: &Branch<'_>, entity: EntityId) -> bool {
+    branch
+        .dl
+        .core()
+        .entity(entity)
+        .ok()
+        .and_then(|r| branch.dl.core().resolve_iri(r.iri).ok())
+        .is_some_and(|iri| iri.ends_with("#root") || iri.ends_with("/root"))
+}
+
+fn role_atomic_iri(branch: &Branch<'_>, role: &RoleExpr) -> Option<String> {
+    let id = match role {
+        RoleExpr::Atomic(id) | RoleExpr::Inverse(id) => *id,
+    };
+    let record = branch.dl.core().entity(id).ok()?;
+    branch
+        .dl
+        .core()
+        .resolve_iri(record.iri)
+        .ok()
+        .map(|s| s.to_string())
+}
+
+fn world_has_root_predecessor_restriction(branch: &Branch<'_>, world: usize) -> bool {
+    branch.worlds[world].negated.iter().any(|&neg_ce| {
+        matches!(
+            branch.dl.core().dl().ce(neg_ce),
+            Some(ClassExpr::Some { property, .. })
+                if role_is_successor_inverse(branch, property)
+        )
+    }) || branch.worlds[world].labels.iter().any(|&label| {
+        matches!(
+            branch.dl.core().dl().ce(label),
+            Some(ClassExpr::Atomic(entity)) if entity_is_root(branch, *entity)
+        )
+    })
 }

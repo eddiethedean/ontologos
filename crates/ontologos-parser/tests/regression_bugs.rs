@@ -144,3 +144,14 @@ fn subclass_named_classes_still_maps_when_declarations_precede_axiom() {
     assert_eq!(entity_kind(&ontology, "X"), EntityKind::Class);
     assert_eq!(entity_kind(&ontology, "Y"), EntityKind::Class);
 }
+
+#[test]
+fn invalid_blank_nodes_conclusion_rejected() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_entailmenttest_testinvalidblanknodes_conclusion.ofn");
+    let ontology = ontologos_parser::load_ontology(&path).expect("load");
+    assert!(
+        ontologos_parser::validate_loaded_ontology(&ontology).is_err(),
+        "expected cyclic blank-node conclusion to fail validation"
+    );
+}

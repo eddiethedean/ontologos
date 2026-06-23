@@ -97,7 +97,100 @@ pub fn apply_transitive_subproperties(ontology: &mut Ontology) -> Result<usize> 
     Ok(added)
 }
 
-/// Expand `EquivalentObjectProperties` to mutual `SubObjectPropertyOf` (EqPropSub).
+/// Materialize transitive `subDataPropertyOf` closure from DL axioms.
+pub fn apply_transitive_data_subproperties(ontology: &mut Ontology) -> Result<usize> {
+    let direct = data_superproperty_edges(ontology);
+    let mut all_pairs = HashSet::new();
+    for &sub in direct.keys() {
+        let mut reachable = HashSet::from([sub]);
+        let mut queue = VecDeque::from([sub]);
+        while let Some(current) = queue.pop_front() {
+            if let Some(next_supers) = direct.get(&current) {
+                for &sup in next_supers {
+                    if reachable.insert(sup) {
+                        queue.push_back(sup);
+                        if sub != sup {
+                            all_pairs.insert((sub, sup));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let existing: HashSet<(EntityId, EntityId)> = ontology
+        .dl()
+        .axioms()
+        .filter_map(|axiom| {
+            let DlAxiom::SubDataPropertyOf { sub, sup } = axiom
+            else {
+                return None;
+            };
+            Some((*sub, *sup))
+        })
+        .collect();
+
+    let mut added = 0_usize;
+    for (sub, sup) in all_pairs {
+        if !existing.contains(&(sub, sup)) {
+            ontology
+                .dl_mut()
+                .push_axiom(DlAxiom::SubDataPropertyOf {
+                    sub,
+                    sup,
+                });
+            added += 1;
+        }
+    }
+    Ok(added)
+}
+
+/// When `Q` has singleton domain/range matching an assertion of `P`, infer `Q ⊑ P`.
+pub fn apply_domain_range_nominal_subsumption(ontology: &mut Ontology) -> Result<usize> {
+    let mut assertions: Vec<(EntityId, EntityId, EntityId)> = Vec::new();
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::ObjectPropertyAssertion {
+            subject,
+            property: RoleExpr::Atomic(prop),
+            object,
+        } = axiom
+        {
+            assertions.push((*subject, *prop, *object));
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        {
+            assertions.push((*subject, *property, *object));
+        }
+    }
+
+    let props: Vec<EntityId> = ontology
+        .entities()
+        .iter()
+        .filter(|(_, r)| r.kind == ontologos_core::EntityKind::ObjectProperty)
+        .map(|(id, _)| id)
+        .collect();
+
+    let mut added = 0_usize;
+    for &q in &props {
+        let Some((d, r)) = property_endpoint_singletons(ontology, q) else {
+            continue;
+        };
+        for &(s, p, o) in &assertions {
+            if s == d && o == r && p != q
+                && push_subproperty_if_missing(ontology, q, p)?
+            {
+                added += 1;
+            }
+        }
+    }
+    Ok(added)
+}
 pub fn apply_equivalent_property_subproperties(ontology: &mut Ontology) -> Result<usize> {
     let mut clusters: Vec<Vec<EntityId>> = Vec::new();
     for (_, axiom) in ontology.axioms().iter() {
@@ -347,11 +440,372 @@ fn push_subclass_if_missing(
 pub fn apply_reasonable_fallbacks(ontology: &mut Ontology) -> Result<usize> {
     let mut total = apply_equivalent_property_subproperties(ontology)?;
     total += apply_transitive_subproperties(ontology)?;
+    total += apply_transitive_data_subproperties(ontology)?;
     total += apply_characteristic_propagation(ontology)?;
     total += propagate_domain_range_along_subproperties(ontology)?;
     total += apply_domain_range_inheritance(ontology)?;
     total += apply_existential_subclass_subsumption(ontology)?;
+    total += apply_singleton_domain_range_property_equivalence(ontology)?;
+    total += apply_domain_range_nominal_subsumption(ontology)?;
+    total += apply_transitive_path_property_subsumption(ontology)?;
+    total += apply_functional_data_subproperty_inference(ontology)?;
     Ok(total)
+}
+
+/// When two object properties share singleton domain+range and identical assertion footprint, infer equivalence.
+pub fn apply_singleton_domain_range_property_equivalence(ontology: &mut Ontology) -> Result<usize> {
+    let domains = property_domains(ontology);
+    let ranges = property_ranges(ontology);
+    let assertions: Vec<(EntityId, EntityId, EntityId)> = ontology
+        .axioms()
+        .iter()
+        .filter_map(|(_, axiom)| match axiom {
+            Axiom::ObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => Some((*subject, *property, *object)),
+            _ => None,
+        })
+        .collect();
+
+    let mut props: Vec<EntityId> = ontology
+        .entities()
+        .iter()
+        .filter(|(_, r)| r.kind == ontologos_core::EntityKind::ObjectProperty)
+        .map(|(id, _)| id)
+        .collect();
+    props.sort_by_key(|id| id.0);
+
+    let mut added = 0_usize;
+    for i in 0..props.len() {
+        for j in (i + 1)..props.len() {
+            let p1 = props[i];
+            let p2 = props[j];
+            let Some(d1) = singleton_individual_for_class_domain(ontology, p1, &domains) else {
+                continue;
+            };
+            let Some(r1) = singleton_individual_for_class_range(ontology, p1, &ranges) else {
+                continue;
+            };
+            let Some(d2) = singleton_individual_for_class_domain(ontology, p2, &domains) else {
+                continue;
+            };
+            let Some(r2) = singleton_individual_for_class_range(ontology, p2, &ranges) else {
+                continue;
+            };
+            if d1 != d2 || r1 != r2 {
+                continue;
+            }
+            let footprint1: HashSet<(EntityId, EntityId)> = assertions
+                .iter()
+                .filter(|(_, prop, _)| *prop == p1)
+                .map(|(s, _, o)| (*s, *o))
+                .collect();
+            let footprint2: HashSet<(EntityId, EntityId)> = assertions
+                .iter()
+                .filter(|(_, prop, _)| *prop == p2)
+                .map(|(s, _, o)| (*s, *o))
+                .collect();
+            if footprint1.is_empty() || footprint1 != footprint2 {
+                continue;
+            }
+            if push_subproperty_if_missing(ontology, p1, p2)? {
+                added += 1;
+            }
+            if push_subproperty_if_missing(ontology, p2, p1)? {
+                added += 1;
+            }
+        }
+    }
+    Ok(added)
+}
+
+/// `P ⊑ Q` when `P` has singleton domain/range `a`,`b` and transitive `Q` connects `a` to `b`.
+pub fn apply_transitive_path_property_subsumption(ontology: &mut Ontology) -> Result<usize> {
+    let transitive: HashSet<EntityId> = ontology
+        .axioms()
+        .iter()
+        .filter_map(|(_, axiom)| match axiom {
+            Axiom::TransitiveObjectProperty(prop) => Some(*prop),
+            _ => None,
+        })
+        .collect();
+    if transitive.is_empty() {
+        return Ok(0);
+    }
+
+    let assertions: Vec<(EntityId, EntityId, EntityId)> = ontology
+        .axioms()
+        .iter()
+        .filter_map(|(_, axiom)| match axiom {
+            Axiom::ObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => Some((*subject, *property, *object)),
+            _ => None,
+        })
+        .collect();
+
+    let props: Vec<EntityId> = ontology
+        .entities()
+        .iter()
+        .filter(|(_, r)| r.kind == ontologos_core::EntityKind::ObjectProperty)
+        .map(|(id, _)| id)
+        .collect();
+
+    let mut added = 0_usize;
+    for &p in &props {
+        let Some((a, b)) = property_endpoint_singletons(ontology, p) else {
+            continue;
+        };
+        for &q in &transitive {
+            if q == p || !transitive_path(&assertions, q, a, b) {
+                continue;
+            }
+            if push_subproperty_if_missing(ontology, p, q)? {
+                added += 1;
+            }
+        }
+    }
+    Ok(added)
+}
+
+fn property_endpoint_singletons(ontology: &Ontology, property: EntityId) -> Option<(EntityId, EntityId)> {
+    let store = ontology.dl();
+    let mut domain_ind = None;
+    let mut range_ind = None;
+    for axiom in store.axioms() {
+        if let DlAxiom::ObjectPropertyDomain {
+            property: prop,
+            domain,
+        } = axiom
+        {
+            if *prop == property {
+                if let Some(ClassExpr::OneOf(v)) = store.ce(*domain) {
+                    if v.len() == 1 {
+                        domain_ind = Some(v[0]);
+                    }
+                } else if let Some(ClassExpr::Atomic(class)) = store.ce(*domain) {
+                    domain_ind = singleton_from_equivalent_classes(ontology, *class);
+                }
+            }
+        }
+        if let DlAxiom::ObjectPropertyRange {
+            property: prop,
+            range,
+        } = axiom
+        {
+            if *prop == property {
+                if let Some(ClassExpr::OneOf(v)) = store.ce(*range) {
+                    if v.len() == 1 {
+                        range_ind = Some(v[0]);
+                    }
+                } else if let Some(ClassExpr::Atomic(class)) = store.ce(*range) {
+                    range_ind = singleton_from_equivalent_classes(ontology, *class);
+                }
+            }
+        }
+    }
+    let domains = property_domains(ontology);
+    let ranges = property_ranges(ontology);
+    if domain_ind.is_none() {
+        domain_ind = domains
+            .get(&property)
+            .and_then(|class| singleton_from_equivalent_classes(ontology, *class));
+    }
+    if range_ind.is_none() {
+        range_ind = ranges
+            .get(&property)
+            .and_then(|class| singleton_from_equivalent_classes(ontology, *class));
+    }
+    match (domain_ind, range_ind) {
+        (Some(a), Some(b)) => Some((a, b)),
+        _ => None,
+    }
+}
+
+/// Functional data subproperties inherit functionality from super data properties.
+pub fn apply_functional_data_subproperty_inference(ontology: &mut Ontology) -> Result<usize> {
+    let sub_to_supers = data_superproperty_edges(ontology);
+    let functional: HashSet<EntityId> = ontology
+        .dl()
+        .axioms()
+        .filter_map(|axiom| {
+            let DlAxiom::FunctionalDataProperty(prop) = axiom else {
+                return None;
+            };
+            Some(*prop)
+        })
+        .collect();
+    let mut added = 0_usize;
+    for &functional_prop in &functional {
+        for (sub, supers) in &sub_to_supers {
+            if supers.contains(&functional_prop)
+                && ontology
+                    .entity(*sub)
+                    .ok()
+                    .is_some_and(|r| r.kind == ontologos_core::EntityKind::DataProperty)
+            {
+                let exists = ontology.dl().axioms().any(|axiom| {
+                    matches!(
+                        axiom,
+                        DlAxiom::FunctionalDataProperty(p) if *p == *sub
+                    )
+                });
+                if !exists {
+                    ontology
+                        .dl_mut()
+                        .push_axiom(DlAxiom::FunctionalDataProperty(*sub));
+                    added += 1;
+                }
+            }
+        }
+    }
+    Ok(added)
+}
+
+fn push_subproperty_if_missing(
+    ontology: &mut Ontology,
+    sub: EntityId,
+    sup: EntityId,
+) -> Result<bool> {
+    if sub == sup {
+        return Ok(false);
+    }
+    let exists = ontology.axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            Axiom::SubObjectPropertyOf {
+                sub_property,
+                super_property,
+            } if *sub_property == sub && *super_property == sup
+        )
+    });
+    if exists {
+        return Ok(false);
+    }
+    ontology.add_inferred_axiom(Axiom::SubObjectPropertyOf {
+        sub_property: sub,
+        super_property: sup,
+    })?;
+    Ok(true)
+}
+
+fn singleton_individual_for_class_domain(
+    ontology: &Ontology,
+    property: EntityId,
+    domains: &HashMap<EntityId, EntityId>,
+) -> Option<EntityId> {
+    let domain = *domains.get(&property)?;
+    singleton_individual_of_class(ontology, domain)
+}
+
+fn singleton_individual_for_class_range(
+    ontology: &Ontology,
+    property: EntityId,
+    ranges: &HashMap<EntityId, EntityId>,
+) -> Option<EntityId> {
+    let range = *ranges.get(&property)?;
+    singleton_individual_of_class(ontology, range)
+}
+
+fn singleton_individual_of_class(ontology: &Ontology, class: EntityId) -> Option<EntityId> {
+    if let Some(ind) = singleton_from_equivalent_classes(ontology, class) {
+        return Some(ind);
+    }
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        let DlAxiom::ObjectPropertyDomain { domain, .. } = axiom else {
+            continue;
+        };
+        if let Some(ClassExpr::OneOf(individuals)) = store.ce(*domain) {
+            if individuals.len() == 1 {
+                return Some(individuals[0]);
+            }
+        }
+        if let Some(ClassExpr::Atomic(domain_class)) = store.ce(*domain) {
+            if *domain_class == class {
+                if let Some(ind) = singleton_from_equivalent_classes(ontology, class) {
+                    return Some(ind);
+                }
+            }
+        }
+    }
+    for axiom in store.axioms() {
+        let DlAxiom::ObjectPropertyRange { range, .. } = axiom else {
+            continue;
+        };
+        if let Some(ClassExpr::OneOf(individuals)) = store.ce(*range) {
+            if individuals.len() == 1 {
+                return Some(individuals[0]);
+            }
+        }
+    }
+    None
+}
+
+fn singleton_from_equivalent_classes(ontology: &Ontology, class: EntityId) -> Option<EntityId> {
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        let has_class = ids.iter().any(|&id| {
+            matches!(store.ce(id), Some(ClassExpr::Atomic(c)) if *c == class)
+        });
+        if !has_class {
+            continue;
+        }
+        for &id in ids {
+            if let Some(ClassExpr::OneOf(individuals)) = store.ce(id) {
+                if individuals.len() == 1 {
+                    return Some(individuals[0]);
+                }
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::EquivalentClasses(classes) = axiom {
+            if !classes.contains(&class) {
+                continue;
+            }
+            for &other in classes {
+                if other == class {
+                    continue;
+                }
+                if let Some(ind) = singleton_from_equivalent_classes(ontology, other) {
+                    return Some(ind);
+                }
+            }
+        }
+    }
+    None
+}
+
+fn transitive_path(
+    assertions: &[(EntityId, EntityId, EntityId)],
+    property: EntityId,
+    from: EntityId,
+    to: EntityId,
+) -> bool {
+    if from == to {
+        return true;
+    }
+    let mut seen = HashSet::from([from]);
+    let mut queue = VecDeque::from([from]);
+    while let Some(cur) = queue.pop_front() {
+        for &(subj, prop, obj) in assertions {
+            if subj == cur && prop == property && seen.insert(obj) {
+                if obj == to {
+                    return true;
+                }
+                queue.push_back(obj);
+            }
+        }
+    }
+    false
 }
 
 /// Detect inconsistency from property chains subsumed by `owl:bottomObjectProperty`.
@@ -532,6 +986,16 @@ fn superproperty_edges(ontology: &Ontology) -> HashMap<EntityId, Vec<EntityId>> 
                 .entry(*sub_property)
                 .or_insert_with(Vec::new)
                 .push(*super_property);
+        }
+    }
+    edges
+}
+
+fn data_superproperty_edges(ontology: &Ontology) -> HashMap<EntityId, Vec<EntityId>> {
+    let mut edges = HashMap::new();
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::SubDataPropertyOf { sub, sup } = axiom {
+            edges.entry(*sub).or_insert_with(Vec::new).push(*sup);
         }
     }
     edges

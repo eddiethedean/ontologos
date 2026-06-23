@@ -273,7 +273,7 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
     },
     "reasoner.ReasonerTest.testIndividualRetrieval": {
         "individual_types": [
-            {"individual": ":a", "class": ":A", "expected": True, "direct": False},
+            {"individual": ":a", "class": ":C", "expected": True, "direct": False},
         ],
     },
     "reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug": {
@@ -837,7 +837,7 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
     },
     "reasoner.ReasonerTest.testIndividualRetrieval": {
         "individual_types": [
-            {"individual": ":a", "class": ":A", "expected": True, "direct": False},
+            {"individual": ":a", "class": ":C", "expected": True, "direct": False},
         ],
     },
 }
@@ -890,12 +890,7 @@ EXCLUDED_IDS = {
 }
 
 # OFN extracts that fail load_ontology (punning / inverse CE) — keep out of axioms/.
-OFN_WRITE_SKIP_IDS = {
-    "reasoner.ReasonerTest.testPunning",
-    "reasoner.ReasonerTest.testPunning2",
-    "reasoner.ReasonerTest.testPunning3",
-    "reasoner.ReasonerTest.testInverses",
-}
+OFN_WRITE_SKIP_IDS: set[str] = set()
 
 # DL axiom ports gated on tableau maturity (Phase 2+).
 DEFERRED_DL_AXIOM_IDS: set[str] = set()

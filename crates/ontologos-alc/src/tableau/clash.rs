@@ -1,6 +1,6 @@
 //! Clash detection for ALC tableau branches.
 
-use ontologos_core::{CeId, ClassExpr, EntityId, RoleExpr};
+use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, RoleExpr};
 
 use super::expand::{count_role_successors, effective_cardinality_filler};
 use super::{effective_class_expression, Branch};
@@ -101,13 +101,32 @@ fn propagate_subsumptions(branch: &mut Branch<'_>, world: usize, _trigger: CeId)
                 && !branch.worlds[world].labels.contains(&sup)
             {
                 let w = &mut branch.worlds[world];
-                if w.negated.contains(&sup) {
-                    branch.clash = true;
-                    return;
+                if let Some(ClassExpr::And(ops)) = branch.dl.core().dl().ce(sup).cloned() {
+                    if ops.iter().all(|op| w.labels.contains(op)) {
+                        w.labels.insert(sup);
+                        continue;
+                    }
+                    for op in ops {
+                        if w.negated.contains(&op) {
+                            branch.clash = true;
+                            return;
+                        }
+                        if w.labels.insert(op) {
+                            w.queue.push_back(op);
+                            progressed = true;
+                        }
+                    }
+                    w.labels.insert(sup);
+                } else {
+                    if w.negated.contains(&sup) {
+                        branch.clash = true;
+                        return;
+                    }
+                    if w.labels.insert(sup) {
+                        w.queue.push_back(sup);
+                        progressed = true;
+                    }
                 }
-                w.labels.insert(sup);
-                w.queue.push_back(sup);
-                progressed = true;
             }
         }
         if !progressed {
@@ -409,5 +428,101 @@ pub fn check_negated_cardinality(branch: &mut Branch<'_>) {
                 _ => {}
             }
         }
+    }
+}
+
+/// Clash when an unqualified min exceeds the sum of qualified max bounds over an `All` partition.
+pub fn check_partition_cardinality_clash(branch: &mut Branch<'_>, world: usize) {
+    if branch.clash {
+        return;
+    }
+    use std::collections::HashMap;
+    let store = branch.dl.core().dl();
+    let labels = branch.worlds[world].labels.clone();
+    let mut min_unqualified: HashMap<RoleExpr, u32> = HashMap::new();
+    let mut max_qualified: HashMap<RoleExpr, Vec<(CeId, u32)>> = HashMap::new();
+    let mut all_fillers: HashMap<RoleExpr, CeId> = HashMap::new();
+
+    for ce in labels {
+        let Some(expr) = store.ce(ce).cloned() else {
+            continue;
+        };
+        match expr {
+            ClassExpr::MinCardinality {
+                n,
+                property,
+                filler: None,
+            } if n > 0 => {
+                min_unqualified
+                    .entry(property)
+                    .and_modify(|m| *m = (*m).max(n))
+                    .or_insert(n);
+            }
+            ClassExpr::MaxCardinality {
+                n,
+                property,
+                filler: Some(filler),
+            } => {
+                max_qualified
+                    .entry(property)
+                    .or_default()
+                    .push((filler, n));
+            }
+            ClassExpr::All { property, filler } => {
+                all_fillers.insert(property, filler);
+            }
+            _ => {}
+        }
+    }
+
+    for (role, min_n) in min_unqualified {
+        let Some(&all_filler) = all_fillers.get(&role) else {
+            continue;
+        };
+        let Some(parts) = union_partition_fillers(branch, all_filler) else {
+            continue;
+        };
+        let caps = max_qualified.get(&role);
+        let mut total_cap = 0_u32;
+        for part in parts {
+            let part_cap = caps
+                .and_then(|entries| entries.iter().find(|(f, _)| *f == part).map(|(_, n)| *n))
+                .unwrap_or(u32::MAX);
+            total_cap = total_cap.saturating_add(part_cap);
+            if total_cap >= u32::MAX {
+                break;
+            }
+        }
+        if min_n > total_cap {
+            branch.clash = true;
+            return;
+        }
+    }
+}
+
+fn union_partition_fillers(branch: &Branch<'_>, ce: CeId) -> Option<Vec<CeId>> {
+    let store = branch.dl.core().dl();
+    match store.ce(ce).cloned()? {
+        ClassExpr::Or(ops) => Some(ops),
+        ClassExpr::Atomic(_class) => {
+            for axiom in store.axioms() {
+                let DlAxiom::EquivalentClasses(ids) = axiom else {
+                    continue;
+                };
+                if !ids.contains(&ce) {
+                    continue;
+                }
+                for &other in ids {
+                    if other == ce {
+                        continue;
+                    }
+                    if let Some(ClassExpr::Or(ops)) = store.ce(other) {
+                        return Some(ops.clone());
+                    }
+                }
+            }
+            None
+        }
+        _ => None,
     }
 }

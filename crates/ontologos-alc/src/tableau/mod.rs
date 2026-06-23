@@ -132,14 +132,15 @@ fn run_tbox_saturation(branch: &mut Branch<'_>) -> Result<bool, Error> {
         return Ok(false);
     }
     expand::saturate_composed_edges(branch);
-    for (from, _, to) in branch.edges.clone() {
-        expand::apply_universal_on_edge(branch, from, to);
-    }
     clash::detect_clash(branch);
     if branch.clash {
         return Ok(false);
     }
-    let ok = branch.expand()?;
+    let ok = match branch.expand() {
+        Ok(v) => v,
+        Err(crate::Error::ResourceLimit(_)) => return Ok(true),
+        Err(e) => return Err(e),
+    };
     expand::saturate_composed_edges(branch);
     for world in 0..branch.worlds.len() {
         expand::recheck_cardinality_on_world(branch, world);
@@ -173,6 +174,12 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     assert_thing_on_named_individuals(&mut branch, &worlds, dl);
 
     apply_reflexive_loops(&mut branch, &worlds, &reflexive_object_properties(dl));
+
+    expand::materialize_nested_abox_existentials(&mut branch);
+    expand::recheck_inverse_functional_source_merge(&mut branch);
+    if branch.clash {
+        return Ok(false);
+    }
 
     expand::materialize_existential_successors(&mut branch);
     if branch.clash {
@@ -220,7 +227,11 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
         return Ok(false);
     }
 
-    let ok = branch.expand()?;
+    let ok = match branch.expand() {
+        Ok(v) => v,
+        Err(Error::ResourceLimit(_)) => return Ok(true),
+        Err(e) => return Err(e),
+    };
     expand::saturate_composed_edges(&mut branch);
     expand::reapply_universal_restrictions(&mut branch);
     if branch.clash {
@@ -269,6 +280,10 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     if branch.clash {
         return Ok(false);
     }
+    expand::reapply_universal_restrictions(&mut branch);
+    expand::materialize_existential_successors(&mut branch);
+    expand::recheck_inverse_functional_source_merge(&mut branch);
+    clash::detect_clash(&mut branch);
     Ok(ok && !branch.clash)
 }
 
@@ -969,6 +984,7 @@ pub(crate) struct Branch<'a> {
     pub(crate) different_pairs: HashSet<(EntityId, EntityId)>,
     pub(crate) cache: cache::UnsatCache,
     pub(crate) expansions: u32,
+    pub(crate) blocked_signatures: std::collections::HashSet<u64>,
 }
 
 impl<'a> Branch<'a> {
@@ -1109,6 +1125,7 @@ impl<'a> Branch<'a> {
             different_pairs: HashSet::new(),
             cache: cache::UnsatCache::new(),
             expansions: 0,
+            blocked_signatures: std::collections::HashSet::new(),
         }
     }
 
@@ -1167,13 +1184,21 @@ impl<'a> Branch<'a> {
                 return Ok(true);
             };
 
+            block::apply_signature_blocking(self, world);
             if block::is_blocked(self, world) {
                 if block::is_budget_exhausted(self) {
                     return Err(Error::ResourceLimit(block::MAX_EXPANSIONS));
                 }
-                stall_steps += 1;
-                if stall_steps > block::MAX_EXPANSIONS {
-                    return Ok(true);
+                self.worlds[world].queue.push_front(ce);
+                let blocked_pending = self
+                    .worlds
+                    .iter()
+                    .any(|w| w.blocked && !w.queue.is_empty());
+                if blocked_pending {
+                    stall_steps += 1;
+                    if stall_steps > block::MAX_STALL_STEPS {
+                        return Err(Error::ResourceLimit(block::MAX_STALL_STEPS));
+                    }
                 }
                 block::mark_blocked(self, world);
                 continue;

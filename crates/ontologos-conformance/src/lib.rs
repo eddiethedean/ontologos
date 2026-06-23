@@ -205,14 +205,20 @@ pub fn has_property_characteristic(
     property: &str,
     kind: PropertyCharacteristic,
 ) -> bool {
-    let Some(property_id) = ontology.lookup_entity(property) else {
+    let Some(property_id) = lookup_entity_flexible(ontology, property) else {
         return false;
     };
     match kind {
         PropertyCharacteristic::Functional => ontology
             .index()
             .functional_properties()
-            .contains(&property_id),
+            .contains(&property_id)
+            || ontology.dl().axioms().any(|axiom| {
+                matches!(
+                    axiom,
+                    ontologos_core::DlAxiom::FunctionalDataProperty(p) if *p == property_id
+                )
+            }),
         PropertyCharacteristic::InverseFunctional => ontology
             .index()
             .inverse_functional_properties()
@@ -300,4 +306,19 @@ fn transitive_superproperties(
         stack.extend_from_slice(ontology.direct_superproperties(current));
     }
     false
+}
+
+fn lookup_entity_flexible(ontology: &ontologos_core::Ontology, iri: &str) -> Option<ontologos_core::EntityId> {
+    if let Some(id) = ontology.lookup_entity(iri) {
+        return Some(id);
+    }
+    let local = iri.rsplit('#').next().unwrap_or(iri);
+    ontology.entities().iter().find_map(|(id, record)| {
+        ontology
+            .resolve_iri(record.iri)
+            .ok()
+            .and_then(|entity_iri| entity_iri.rsplit('#').next())
+            .filter(|name| name.eq_ignore_ascii_case(local))
+            .map(|_| id)
+    })
 }

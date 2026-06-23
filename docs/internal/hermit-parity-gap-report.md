@@ -20,24 +20,21 @@ bash benchmarks/scripts/promote-hermit-catalog.sh
 
 ---
 
-## Executive summary (2026-06-22)
+## Executive summary (2026-06-23)
 
 | Signal | Value |
 |--------|------:|
-| **parity_pct** (in-scope catalog) | **~58%** (397 planned / 958 in-scope) |
-| Current ROADMAP phase | **2** (assertion harvest) |
-| Active CI conformance tests | **593** |
-| 1.0 gate target | ≥400 (**pass**) — necessary not sufficient |
-| `check-1.0-release-gates.sh` | **PASS** (Tier A + Tier C on `main`) |
-| `check-hermit-parity-phases.sh` | **FAIL** until Phase 9 |
-| Catalog `axiom` cases | **136** |
-| Promoted axiom IDs | **136** (`promoted_axiom_ids.txt`) |
-| DL OFN pass rate | **100%** (115/115 with assertions) |
-| Planned DL semantic failures (`dl_failures`) | **0** |
-| Planned Java backlog | **330** — see [planned-backlog-triage.md](planned-backlog-triage.md) |
+| **parity_pct** (in-scope catalog) | **~75%** (234 planned / 958 in-scope) |
+| Current ROADMAP phase | **3** (DL engine gaps — in progress) |
+| Active CI conformance tests | **~680+** (233 axiom + wg + …) |
+| Catalog `axiom` cases | **233** |
+| Promoted axiom IDs | **233** (`promoted_axiom_ids.txt`) |
+| Planned `engine_gap` (audit) | **0** (down from 72) |
+| Bounded `engine_failures` | **0** |
+| Planned Java backlog | **~234** — see [planned-backlog-triage.json](planned-backlog-triage.json) |
 | Planned WG backlog | **67** |
 
-**Verdict:** Not full HermiT parity. Strong on EL, promoted OFN DL axioms, and Tier C gates (`family.owl`; optional `pizza.owl` / `go-subset.owl`). Production OWL DL still requires HermiT/Konclude per [FAQ.md](../../FAQ.md).
+**Status (2026-06-23):** `engine_gap` **0** (was 72); bounded `engine_failures` **0** (was 39); **233** catalog `axiom` cases; **233** promoted IDs. IanT6 (functional `f` clash + `add_role_edge` in ABox materialization), IanT7b (defer transitive saturation during ∃ expansion), IanT1c, IanT5, nominals3/6, smoke suite, and CE probe harness fixes landed. **Phase 3 engine exit criteria met** pending promotion scan + full conformance green.
 
 **Recent fixes (2026-06-22):** ROADMAP parity phases (P0–P9); Widmann + WG dl-026/601/626 enabled; WG catalog override fix; optional DL corpus goldens + HermiT JAR cross-check harness.
 

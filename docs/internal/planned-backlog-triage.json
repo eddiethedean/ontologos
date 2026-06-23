@@ -1,11 +1,10 @@
 {
   "summary": {
-    "java_total": 322,
+    "java_total": 243,
     "java_by_category": {
-      "engine_gap": 72,
-      "manual_port": 207,
-      "missing_ofn": 4,
-      "promotion_candidate": 39
+      "manual_port": 202,
+      "missing_assertions": 1,
+      "promotion_candidate": 40
     },
     "wg_total": 67,
     "wg_by_category": {
@@ -267,79 +266,31 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored",
-      "engine": "dl",
-      "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
-    },
-    {
-      "id": "reasoner.ComplexConceptTest.testConceptWithDatatypes",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ComplexConceptTest.testConceptWithDatatypes: missing class file:/c/test.owl#desc"
-    },
-    {
       "id": "reasoner.ComplexConceptTest.testConceptWithDatatypes2",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ComplexConceptTest.testConceptWithDatatypes2: missing class file:/c/test.owl#desc"
-    },
-    {
-      "id": "reasoner.ComplexConceptTest.testConceptWithNominals",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals: missing class file:/c/test.owl#desc"
-    },
-    {
-      "id": "reasoner.ComplexConceptTest.testConceptWithNominals2",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals2: missing class file:/c/test.owl#desc"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithNominals3",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals3: consistency expected false, got true"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ComplexConceptTest.testConceptWithNominals4",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals4: consistency expected false, got true"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
-      "id": "reasoner.ComplexConceptTest.testConceptWithNominals5",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ComplexConceptTest.testConceptWithNominals5: missing file:/c/test.owl#A"
-    },
-    {
-      "id": "reasoner.ComplexConceptTest.testJustifications",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ComplexConceptTest.testJustifications: class file:/c/test.owl#Matt satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.DatalogEngineTest.testBasic",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.DatalogEngineTest.testBasic: datalog class query :A expected [], got {\":a\"}"
-    },
-    {
-      "id": "reasoner.DatalogEngineTest.testEquality",
+      "id": "reasoner.DatatypesTest.testEnumWithIntPlusFloatRestriction",
       "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
     },
     {
-      "id": "reasoner.DatalogEngineTest.testQueryWithIndividualsAndEquality",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.DatalogEngineTest.testQueryWithIndividuals",
+      "id": "reasoner.DatatypesTest.testRationalConversion",
       "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
@@ -347,20 +298,8 @@
     {
       "id": "reasoner.DatatypesTest.testLiteralCustomDatatype",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.DatatypesTest.testLiteralCustomDatatype: expected ontology load to fail"
-    },
-    {
-      "id": "reasoner.DatatypesTest.testFreshEntitiesQuery",
-      "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
-    },
-    {
-      "id": "reasoner.DatatypesTest.testParsingError",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.DatatypesTest.testParsingError: expected ontology load to fail"
     },
     {
       "id": "reasoner.DateTimeTest.testParsing",
@@ -459,13 +398,7 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.EntailmentTest.testHasKey",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.EntailmentTest.testBlankNodes1",
+      "id": "reasoner.EntailmentTest.testIntegerEntailment",
       "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
@@ -473,41 +406,11 @@
     {
       "id": "reasoner.EntailmentTest.testInvalidBlankNodes",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.EntailmentTest.testInvalidBlankNodes: entailment expected false, got true"
-    },
-    {
-      "id": "reasoner.EntailmentTest.testValidBlankNodesWithNominals",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.EntailmentTest.testValidBlankNodesInPremise",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.EntailmentTest.testValidBlankNodes",
-      "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
     },
     {
       "id": "reasoner.EntailmentTest.testBlankWithDTs",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.EntailmentTest.testBlankWithDTs: entailment expected false, got true"
-    },
-    {
-      "id": "reasoner.EntailmentTest.testBlankWithDTs2",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.EntailmentTest.testBlankWithDTs3",
       "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
@@ -969,22 +872,10 @@
       "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.OWLReasonerTest.testBottomObjectPropertySubs",
+      "id": "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions",
       "engine": "rdfs",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.OWLReasonerTest.testTopObjectPropertySupers",
-      "engine": "rdfs",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.OWLReasonerTest.testIncrementalAddition2",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.OWLReasonerTest.testIncrementalAddition2: consistency expected false, got true"
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.OWLReasonerTest.testEquivalenceClasses",
@@ -1185,64 +1076,70 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity0",
-      "engine": "rdfs",
-      "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "id": "reasoner.RIATest.testInverseAndChain",
+      "engine": "dl",
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity1",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity0",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity2",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity1",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity3",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity2",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity4",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity3",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity5",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity4",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity6",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity5",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity7",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity6",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity8",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity7",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIARegularityTest.testRIARegularity9",
-      "engine": "rdfs",
+      "id": "reasoner.RIATest.testRIARegularity8",
+      "engine": "dl",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.RIATest.testRIARegularity9",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
       "id": "reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug",
@@ -1253,20 +1150,14 @@
     {
       "id": "reasoner.ReasonerCoreBlockingTest.testIanT6",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerCoreBlockingTest.testIanT6: class file:/c/test.owl#c satisfiability expected false, got true"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerCoreBlockingTest.testIanT9",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerCoreBlockingTest.testIanT9: class file:/c/test.owl#Infinite-Tree-Root satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testEmptyChain",
-      "engine": "dl",
-      "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testOnyDeclaredEntitiesInHierarchy",
@@ -1275,76 +1166,22 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.ReasonerTest.testIsEntailed",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIncrementalWithSameAs",
-      "engine": "rl",
-      "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rl)"
-    },
-    {
       "id": "reasoner.ReasonerTest.testClassificationWithValidatedBlockingError",
       "engine": "rdfs",
       "category": "manual_port",
       "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.ReasonerTest.testIncrementalWithNegatedHasValue",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIncrementalWithHasValue",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIncrementalWithNegatedClass",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIncrementalWithNegatedClass: missing incremental fixture /Volumes/T7/coding/ontologos/crates/ontologos-conformance/../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testincrementalwithnegatedclass_incremental.ofn"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIncrementalWithClass",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIncrementalWithClass: missing incremental fixture /Volumes/T7/coding/ontologos/crates/ontologos-conformance/../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testincrementalwithclass_incremental.ofn"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIncrementalWithNegatedHasSelf",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
       "id": "reasoner.ReasonerTest.testIncrementalWithHasSelf",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIncrementalWithHasSelf: missing incremental fixture /Volumes/T7/coding/ontologos/crates/ontologos-conformance/../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testincrementalwithhasself_incremental.ofn"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIncrementalWithFreshNames",
-      "engine": "rdfs",
-      "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testInstanteManagerError",
       "engine": "dl",
       "category": "manual_port",
       "detail": "auto-cataloged; requires manual port (dl)"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testTopOPEquivalence",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testTopOPEquivalence: missing file:/c/test.owl#owl:topObjectProperty"
     },
     {
       "id": "reasoner.ReasonerTest.testFreshEntityEntailment",
@@ -1355,50 +1192,44 @@
     {
       "id": "reasoner.ReasonerTest.testPrecomputeDisjointClasses",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testPrecomputeDisjointClasses: class file:/c/test.owl#A satisfiability expected true, got false"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testKeys3",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testKeys3: missing class file:/c/test.owl#A"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testObjectPropertySubsumptionsNoNominals",
-      "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
     },
     {
-      "id": "reasoner.ReasonerTest.testDataPropertyEntailment",
-      "engine": "dl",
+      "id": "reasoner.ReasonerTest.testObjectPropertySubsumptionsNominals",
+      "engine": "rl",
       "category": "promotion_candidate",
       "detail": null
     },
     {
-      "id": "reasoner.ReasonerTest.testPropertyInstanceRetrieval",
-      "engine": "dl",
+      "id": "reasoner.ReasonerTest.testPropertyEnailmentFromAlan",
+      "engine": "rl",
       "category": "promotion_candidate",
       "detail": null
     },
     {
-      "id": "reasoner.ReasonerTest.testRoleChains",
-      "engine": "dl",
+      "id": "reasoner.ReasonerTest.testUnknownClassHierarcyPosition",
+      "engine": "rdfs",
       "category": "promotion_candidate",
       "detail": null
     },
     {
-      "id": "reasoner.ReasonerTest.testRoleSubsumptionWithChainsTransitiveSymmetric",
-      "engine": "dl",
+      "id": "reasoner.ReasonerTest.testRoleSubsumption",
+      "engine": "rl",
       "category": "promotion_candidate",
       "detail": null
     },
     {
-      "id": "reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug: missing file:/c/test.owl#owl:Thing"
+      "id": "reasoner.ReasonerTest.testIsFunctionalData",
+      "engine": "rl",
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testDatatypeLiterals",
@@ -1407,37 +1238,13 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.ReasonerTest.testIndividualRetrieval",
+      "id": "reasoner.ReasonerTest.testDirect",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIndividualRetrieval: missing class file:/c/test.owl#A"
+      "category": "missing_assertions",
+      "detail": "axioms/hermit_reasoner_reasonertest_testdirect.ofn"
     },
     {
-      "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testAnonymousIndividualConstraints: expected ontology load to fail"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints2",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testAnonymousIndividualConstraints2: expected ontology load to fail"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints3",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testAnonymousIndividualConstraints3: expected ontology load to fail"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testAnonymousIndividualConstraints4",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testAnonymousIndividualConstraints4: expected ontology load to fail"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testHasKeyEntailment",
+      "id": "reasoner.ReasonerTest.testIndividualRetrieval",
       "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
@@ -1445,44 +1252,8 @@
     {
       "id": "reasoner.ReasonerTest.testHasKeyNonEntailment",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testHasKeyNonEntailment: entailment expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testDatatypeDefEntailment",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testDatatypeDefEntailment: missing conclusion /Volumes/T7/coding/ontologos/crates/ontologos-conformance/../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testdatatypedefentailment_conclusion.ofn"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testChains1",
-      "engine": "rdfs",
-      "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rdfs)"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testChains2",
-      "engine": "rdfs",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testChains2: consistency expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testChains3",
-      "engine": "rl",
-      "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (rl)"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testChains",
-      "engine": "rdfs",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testChains: consistency expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testNegativeDataPropertyAssertion",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testNegativeDataPropertyAssertion: consistency expected false, got true"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testHierarchyPrinting1",
@@ -1497,79 +1268,19 @@
       "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.ReasonerTest.testSemanticObjectPropertyClassification",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
       "id": "reasoner.ReasonerTest.testDataPropertyHierarchy",
       "engine": "rl",
       "category": "manual_port",
       "detail": "auto-cataloged; requires manual port (rl)"
     },
     {
-      "id": "reasoner.ReasonerTest.testSemanticDataPropertyClassification",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
       "id": "reasoner.ReasonerTest.testComplexConceptInstanceRetrieval",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testComplexConceptInstanceRetrieval: missing class file:/c/test.owl#some_r_b"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testWidmann2",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testWidmann2: class file:/c/test.owl#p satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testNegProperties",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testNegProperties: consistency expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testRoleDisjointness_1",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testRoleDisjointness_1: consistency expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testRoleDisjointness_2",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testRoleDisjointness_2: consistency expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testHeinsohnTBox1",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testHeinsohnTBox2",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testHeinsohnTBox3c",
       "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox3cIrh",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testHeinsohnTBox3cIrh: class file:/c/test.owl#complex1 satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testHeinsohnTBox3Modified",
       "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
@@ -1581,148 +1292,58 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.ReasonerTest.testHeinsohnTBox4b",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testHeinsohnTBox4b: missing file:/c/test.owl#E"
-    },
-    {
       "id": "reasoner.ReasonerTest.testHeinsohnTBox7",
       "engine": "dl",
       "category": "manual_port",
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.ReasonerTest.testIanT1a",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT1a: class file:/c/test.owl#p1 satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT1b",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
       "id": "reasoner.ReasonerTest.testIanT1c",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT1c: class file:/c/test.owl#p1 satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT2",
-      "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT3",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT3: missing class file:/c/test.owl#p"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT4",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT4: class file:/c/test.owl#a satisfiability expected false, got true"
     },
     {
       "id": "reasoner.ReasonerTest.testIanT5",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT5: missing class file:/c/test.owl#a"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanT6",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT6: class file:/c/test.owl#c satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT7a",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT7a: missing class file:/c/test.owl#p1"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanT7b",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT7b: missing class file:/c/test.owl#p1"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT7c",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT7c: missing class file:/c/test.owl#p1"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanT8a",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT8a: missing class file:/c/test.owl#p"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT8",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT8: missing class file:/c/test.owl#p"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanT9",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT9: class file:/c/test.owl#Infinite-Tree-Root satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT10",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT10: missing class file:/c/test.owl#p"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT11",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT11: missing class file:/c/test.owl#p"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanT12",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT12: missing class file:/c/test.owl#p"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanT13",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanT13: missing class file:/c/test.owl#a"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanFact1",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanFact1: class file:/c/test.owl#a satisfiability expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanFact3",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanFact3: missing class file:/c/test.owl#p1"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanFact4",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanFact4: missing file:/c/test.owl#A"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanBug1b",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanBug1b: class file:/c/test.owl#a satisfiability expected false, got true"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testIanBug3",
@@ -1731,67 +1352,7 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.ReasonerTest.testIanBug4",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanBug4: missing class file:/c/test.owl#c"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanBug5",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanBug5: missing class file:/c/test.owl#p"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanBug6",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanBug6: missing class file:/c/test.owl#C"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanBug7",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
       "id": "reasoner.ReasonerTest.testIanBug8",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanBug8: class file:/c/test.owl#A satisfiability expected true, got false"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanMergeTest1",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanMergeTest2",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest1",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest2",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanRecursiveDefinitionTest3",
-      "engine": "dl",
-      "category": "promotion_candidate",
-      "detail": null
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanBackjumping1",
       "engine": "dl",
       "category": "promotion_candidate",
       "detail": null
@@ -1799,38 +1360,20 @@
     {
       "id": "reasoner.ReasonerTest.testIanBackjumping2",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanBackjumping2: missing class file:/c/test.owl#test"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testIanBackjumping3",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testIanBackjumping3: missing class file:/c/test.owl#test"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testNominals3",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testNominals3: hasType file:/c/test.owl#n file:/c/test.owl#A (direct=false) expected true, got false"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testNominals4",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testNominals4: missing class file:/c/test.owl#desc"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testNominals5",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testNominals5: missing class file:/c/test.owl#desc"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testNominals6",
       "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testNominals6: missing class file:/c/test.owl#desc"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testDependencyDisjunctionMergingBug",
@@ -1839,46 +1382,28 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.ReasonerTest.testNovelNominals",
-      "engine": "dl",
+      "id": "reasoner.ReasonerTest.testPunning",
+      "engine": "rl",
       "category": "promotion_candidate",
       "detail": null
     },
     {
-      "id": "reasoner.ReasonerTest.testPunning",
-      "engine": "rl",
-      "category": "missing_ofn",
-      "detail": "axioms/hermit_reasoner_reasonertest_testpunning.ofn"
-    },
-    {
       "id": "reasoner.ReasonerTest.testPunning2",
       "engine": "rl",
-      "category": "missing_ofn",
-      "detail": "axioms/hermit_reasoner_reasonertest_testpunning2.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testPunning3",
       "engine": "rdfs",
-      "category": "missing_ofn",
-      "detail": "axioms/hermit_reasoner_reasonertest_testpunning3.ofn"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testInverses2",
-      "engine": "rl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testInverses2: consistency expected false, got true"
-    },
-    {
-      "id": "reasoner.ReasonerTest.testMissingCBug",
-      "engine": "dl",
-      "category": "engine_gap",
-      "detail": "reasoner.ReasonerTest.testMissingCBug: missing class file:/c/test.owl#A"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.ReasonerTest.testInverses",
       "engine": "rl",
-      "category": "missing_ofn",
-      "detail": "axioms/hermit_reasoner_reasonertest_testinverses.ofn"
+      "category": "promotion_candidate",
+      "detail": null
     },
     {
       "id": "reasoner.SimpleRolesTest.testSimpleRoles1",

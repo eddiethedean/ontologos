@@ -643,6 +643,33 @@ fn expand_data_subproperties(store: &ontologos_core::DlStore, props: &mut HashSe
     }
 }
 
+/// Returns false when a named class's data restrictions (including property ranges) are unsatisfiable.
+#[must_use]
+pub fn named_class_datatype_satisfiable(ontology: &Ontology, class: EntityId) -> bool {
+    let store = ontology.dl();
+    let idx = LiteralIndex::from_store(store);
+    let functional = functional_data_properties(store);
+    let mut restrictions = Vec::new();
+    for axiom in store.axioms() {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            continue;
+        };
+        if atomic_class_id(store, *sub) != Some(class) {
+            continue;
+        }
+        restrictions.extend(restrictions_from_ce(store, *sup));
+    }
+    for axiom in store.axioms() {
+        let DlAxiom::DataPropertyRange { property, range } = axiom else {
+            continue;
+        };
+        if restrictions.iter().any(|(prop, _)| prop == property) {
+            restrictions.push((*property, DataRestriction::All(*range)));
+        }
+    }
+    restrictions.is_empty() || restrictions_satisfiable(ontology, &idx, &restrictions, &functional)
+}
+
 fn atomic_class_id(store: &ontologos_core::DlStore, ce: CeId) -> Option<EntityId> {
     match store.ce(ce)? {
         ClassExpr::Atomic(class) => Some(*class),

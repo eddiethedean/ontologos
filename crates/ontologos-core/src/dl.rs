@@ -1,5 +1,7 @@
 //! OWL 2 DL class expressions and axioms (complex CE storage).
 
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::entity::EntityId;
@@ -424,5 +426,590 @@ impl DlStore {
             .iter()
             .enumerate()
             .map(|(i, e)| (CeId(i as u32), e))
+    }
+
+    /// Import DL axioms from `source`, remapping entity and expression ids into this store.
+    pub fn import_axioms_from(
+        &mut self,
+        source: &DlStore,
+        remap_entity: impl Fn(EntityId) -> EntityId,
+    ) {
+        let mut ce_map = HashMap::new();
+        let mut de_map = HashMap::new();
+        let mut imported = Vec::new();
+        for axiom in source.axioms() {
+            imported.push(remap_dl_axiom(
+                axiom,
+                source,
+                &mut self.expressions,
+                &mut self.data_exprs,
+                &mut ce_map,
+                &mut de_map,
+                &remap_entity,
+            ));
+        }
+        self.axioms.extend(imported);
+    }
+}
+
+fn intern_ce_in(expressions: &mut Vec<ClassExpr>, expr: ClassExpr) -> CeId {
+    if let Some((i, _)) = expressions.iter().enumerate().find(|(_, e)| *e == &expr) {
+        return CeId(i as u32);
+    }
+    let id = expressions.len() as u32;
+    expressions.push(expr);
+    CeId(id)
+}
+
+fn intern_de_in(data_exprs: &mut Vec<DataExpr>, expr: DataExpr) -> DeId {
+    if let Some((i, _)) = data_exprs.iter().enumerate().find(|(_, e)| *e == &expr) {
+        return DeId(i as u32);
+    }
+    let id = data_exprs.len() as u32;
+    data_exprs.push(expr);
+    DeId(id)
+}
+
+fn remap_ce(
+    source: &DlStore,
+    expressions: &mut Vec<ClassExpr>,
+    data_exprs: &mut Vec<DataExpr>,
+    id: CeId,
+    ce_map: &mut HashMap<CeId, CeId>,
+    de_map: &mut HashMap<DeId, DeId>,
+    remap_entity: &impl Fn(EntityId) -> EntityId,
+) -> CeId {
+    if let Some(&mapped) = ce_map.get(&id) {
+        return mapped;
+    }
+    let expr = source.ce(id).expect("source ce").clone();
+    let mapped_expr = remap_class_expr(
+        &expr,
+        source,
+        expressions,
+        data_exprs,
+        ce_map,
+        de_map,
+        remap_entity,
+    );
+    let new_id = intern_ce_in(expressions, mapped_expr);
+    ce_map.insert(id, new_id);
+    new_id
+}
+
+fn remap_de(
+    source: &DlStore,
+    expressions: &mut Vec<ClassExpr>,
+    data_exprs: &mut Vec<DataExpr>,
+    id: DeId,
+    ce_map: &mut HashMap<CeId, CeId>,
+    de_map: &mut HashMap<DeId, DeId>,
+    remap_entity: &impl Fn(EntityId) -> EntityId,
+) -> DeId {
+    if let Some(&mapped) = de_map.get(&id) {
+        return mapped;
+    }
+    let expr = source.de(id).expect("source de").clone();
+    let mapped_expr = remap_data_expr(
+        &expr,
+        source,
+        expressions,
+        data_exprs,
+        ce_map,
+        de_map,
+        remap_entity,
+    );
+    let new_id = intern_de_in(data_exprs, mapped_expr);
+    de_map.insert(id, new_id);
+    new_id
+}
+
+fn remap_role(role: &RoleExpr, remap_entity: &impl Fn(EntityId) -> EntityId) -> RoleExpr {
+    match role {
+        RoleExpr::Atomic(id) => RoleExpr::Atomic(remap_entity(*id)),
+        RoleExpr::Inverse(id) => RoleExpr::Inverse(remap_entity(*id)),
+    }
+}
+
+fn remap_class_expr(
+    expr: &ClassExpr,
+    source: &DlStore,
+    expressions: &mut Vec<ClassExpr>,
+    data_exprs: &mut Vec<DataExpr>,
+    ce_map: &mut HashMap<CeId, CeId>,
+    de_map: &mut HashMap<DeId, DeId>,
+    remap_entity: &impl Fn(EntityId) -> EntityId,
+) -> ClassExpr {
+    match expr {
+        ClassExpr::Top | ClassExpr::Bottom => expr.clone(),
+        ClassExpr::Atomic(id) => ClassExpr::Atomic(remap_entity(*id)),
+        ClassExpr::Not(inner) => ClassExpr::Not(remap_ce(
+            source,
+            expressions,
+            data_exprs,
+            *inner,
+            ce_map,
+            de_map,
+            remap_entity,
+        )),
+        ClassExpr::And(ops) => ClassExpr::And(
+            ops.iter()
+                .map(|&id| {
+                    remap_ce(
+                        source,
+                        expressions,
+                        data_exprs,
+                        id,
+                        ce_map,
+                        de_map,
+                        remap_entity,
+                    )
+                })
+                .collect(),
+        ),
+        ClassExpr::Or(ops) => ClassExpr::Or(
+            ops.iter()
+                .map(|&id| {
+                    remap_ce(
+                        source,
+                        expressions,
+                        data_exprs,
+                        id,
+                        ce_map,
+                        de_map,
+                        remap_entity,
+                    )
+                })
+                .collect(),
+        ),
+        ClassExpr::Some { property, filler } => ClassExpr::Some {
+            property: remap_role(property, remap_entity),
+            filler: remap_ce(
+                source,
+                expressions,
+                data_exprs,
+                *filler,
+                ce_map,
+                de_map,
+                remap_entity,
+            ),
+        },
+        ClassExpr::All { property, filler } => ClassExpr::All {
+            property: remap_role(property, remap_entity),
+            filler: remap_ce(
+                source,
+                expressions,
+                data_exprs,
+                *filler,
+                ce_map,
+                de_map,
+                remap_entity,
+            ),
+        },
+        ClassExpr::OneOf(ids) => ClassExpr::OneOf(ids.iter().map(|id| remap_entity(*id)).collect()),
+        ClassExpr::HasValue { property, individual } => ClassExpr::HasValue {
+            property: remap_role(property, remap_entity),
+            individual: remap_entity(*individual),
+        },
+        ClassExpr::HasSelf(id) => ClassExpr::HasSelf(remap_entity(*id)),
+        ClassExpr::MinCardinality {
+            n,
+            property,
+            filler,
+        } => ClassExpr::MinCardinality {
+            n: *n,
+            property: remap_role(property, remap_entity),
+            filler: filler.map(|id| {
+                remap_ce(
+                    source,
+                    expressions,
+                    data_exprs,
+                    id,
+                    ce_map,
+                    de_map,
+                    remap_entity,
+                )
+            }),
+        },
+        ClassExpr::MaxCardinality {
+            n,
+            property,
+            filler,
+        } => ClassExpr::MaxCardinality {
+            n: *n,
+            property: remap_role(property, remap_entity),
+            filler: filler.map(|id| {
+                remap_ce(
+                    source,
+                    expressions,
+                    data_exprs,
+                    id,
+                    ce_map,
+                    de_map,
+                    remap_entity,
+                )
+            }),
+        },
+        ClassExpr::ExactCardinality {
+            n,
+            property,
+            filler,
+        } => ClassExpr::ExactCardinality {
+            n: *n,
+            property: remap_role(property, remap_entity),
+            filler: filler.map(|id| {
+                remap_ce(
+                    source,
+                    expressions,
+                    data_exprs,
+                    id,
+                    ce_map,
+                    de_map,
+                    remap_entity,
+                )
+            }),
+        },
+        ClassExpr::DataAll { property, range } => ClassExpr::DataAll {
+            property: remap_entity(*property),
+            range: remap_de(
+                source,
+                expressions,
+                data_exprs,
+                *range,
+                ce_map,
+                de_map,
+                remap_entity,
+            ),
+        },
+        ClassExpr::DataSome { property, range } => ClassExpr::DataSome {
+            property: remap_entity(*property),
+            range: remap_de(
+                source,
+                expressions,
+                data_exprs,
+                *range,
+                ce_map,
+                de_map,
+                remap_entity,
+            ),
+        },
+        ClassExpr::DataHasValue { property, value } => ClassExpr::DataHasValue {
+            property: remap_entity(*property),
+            value: remap_de(
+                source,
+                expressions,
+                data_exprs,
+                *value,
+                ce_map,
+                de_map,
+                remap_entity,
+            ),
+        },
+        ClassExpr::DataMinCardinality {
+            n,
+            property,
+            range,
+        } => ClassExpr::DataMinCardinality {
+            n: *n,
+            property: remap_entity(*property),
+            range: range.map(|id| {
+                remap_de(
+                    source,
+                    expressions,
+                    data_exprs,
+                    id,
+                    ce_map,
+                    de_map,
+                    remap_entity,
+                )
+            }),
+        },
+        ClassExpr::DataMaxCardinality {
+            n,
+            property,
+            range,
+        } => ClassExpr::DataMaxCardinality {
+            n: *n,
+            property: remap_entity(*property),
+            range: range.map(|id| {
+                remap_de(
+                    source,
+                    expressions,
+                    data_exprs,
+                    id,
+                    ce_map,
+                    de_map,
+                    remap_entity,
+                )
+            }),
+        },
+        ClassExpr::DataExactCardinality {
+            n,
+            property,
+            range,
+        } => ClassExpr::DataExactCardinality {
+            n: *n,
+            property: remap_entity(*property),
+            range: range.map(|id| {
+                remap_de(
+                    source,
+                    expressions,
+                    data_exprs,
+                    id,
+                    ce_map,
+                    de_map,
+                    remap_entity,
+                )
+            }),
+        },
+    }
+}
+
+fn remap_data_expr(
+    expr: &DataExpr,
+    source: &DlStore,
+    expressions: &mut Vec<ClassExpr>,
+    data_exprs: &mut Vec<DataExpr>,
+    ce_map: &mut HashMap<CeId, CeId>,
+    de_map: &mut HashMap<DeId, DeId>,
+    remap_entity: &impl Fn(EntityId) -> EntityId,
+) -> DataExpr {
+    match expr {
+        DataExpr::Top => DataExpr::Top,
+        DataExpr::Datatype(id) => DataExpr::Datatype(remap_entity(*id)),
+        DataExpr::Facet {
+            base,
+            facet_iri,
+            value,
+        } => DataExpr::Facet {
+            base: remap_de(
+                source,
+                expressions,
+                data_exprs,
+                *base,
+                ce_map,
+                de_map,
+                remap_entity,
+            ),
+            facet_iri: facet_iri.clone(),
+            value: value.clone(),
+        },
+        DataExpr::And(ops) => DataExpr::And(
+            ops.iter()
+                .map(|&id| {
+                    remap_de(
+                        source,
+                        expressions,
+                        data_exprs,
+                        id,
+                        ce_map,
+                        de_map,
+                        remap_entity,
+                    )
+                })
+                .collect(),
+        ),
+        DataExpr::Or(ops) => DataExpr::Or(
+            ops.iter()
+                .map(|&id| {
+                    remap_de(
+                        source,
+                        expressions,
+                        data_exprs,
+                        id,
+                        ce_map,
+                        de_map,
+                        remap_entity,
+                    )
+                })
+                .collect(),
+        ),
+        DataExpr::Literal { lexical, datatype } => DataExpr::Literal {
+            lexical: lexical.clone(),
+            datatype: remap_entity(*datatype),
+        },
+        DataExpr::Not(inner) => DataExpr::Not(remap_de(
+            source,
+            expressions,
+            data_exprs,
+            *inner,
+            ce_map,
+            de_map,
+            remap_entity,
+        )),
+    }
+}
+
+fn remap_dl_axiom(
+    axiom: &DlAxiom,
+    source: &DlStore,
+    expressions: &mut Vec<ClassExpr>,
+    data_exprs: &mut Vec<DataExpr>,
+    ce_map: &mut HashMap<CeId, CeId>,
+    de_map: &mut HashMap<DeId, DeId>,
+    remap_entity: &impl Fn(EntityId) -> EntityId,
+) -> DlAxiom {
+    match axiom {
+        DlAxiom::SubClassOf { sub, sup } => DlAxiom::SubClassOf {
+            sub: remap_ce(
+                source, expressions, data_exprs, *sub, ce_map, de_map, remap_entity,
+            ),
+            sup: remap_ce(
+                source, expressions, data_exprs, *sup, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::EquivalentClasses(ids) => DlAxiom::EquivalentClasses(
+            ids
+                .iter()
+                .map(|&id| {
+                    remap_ce(
+                        source, expressions, data_exprs, id, ce_map, de_map, remap_entity,
+                    )
+                })
+                .collect(),
+        ),
+        DlAxiom::DisjointClasses(ids) => DlAxiom::DisjointClasses(
+            ids
+                .iter()
+                .map(|&id| {
+                    remap_ce(
+                        source, expressions, data_exprs, id, ce_map, de_map, remap_entity,
+                    )
+                })
+                .collect(),
+        ),
+        DlAxiom::ObjectPropertyDomain { property, domain } => DlAxiom::ObjectPropertyDomain {
+            property: remap_entity(*property),
+            domain: remap_ce(
+                source, expressions, data_exprs, *domain, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::ObjectPropertyRange { property, range } => DlAxiom::ObjectPropertyRange {
+            property: remap_entity(*property),
+            range: remap_ce(
+                source, expressions, data_exprs, *range, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::SubObjectPropertyChain {
+            chain,
+            super_property,
+        } => DlAxiom::SubObjectPropertyChain {
+            chain: chain.iter().map(|r| remap_role(r, remap_entity)).collect(),
+            super_property: remap_role(super_property, remap_entity),
+        },
+        DlAxiom::SubObjectPropertyOf { sub, sup } => DlAxiom::SubObjectPropertyOf {
+            sub: remap_role(sub, remap_entity),
+            sup: remap_role(sup, remap_entity),
+        },
+        DlAxiom::HasKey {
+            class,
+            object_properties,
+            data_properties,
+        } => DlAxiom::HasKey {
+            class: remap_ce(
+                source, expressions, data_exprs, *class, ce_map, de_map, remap_entity,
+            ),
+            object_properties: object_properties.iter().map(|id| remap_entity(*id)).collect(),
+            data_properties: data_properties.iter().map(|id| remap_entity(*id)).collect(),
+        },
+        DlAxiom::ClassAssertion { individual, class } => DlAxiom::ClassAssertion {
+            individual: remap_entity(*individual),
+            class: remap_ce(
+                source, expressions, data_exprs, *class, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::DataPropertyDomain { property, domain } => DlAxiom::DataPropertyDomain {
+            property: remap_entity(*property),
+            domain: remap_ce(
+                source, expressions, data_exprs, *domain, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::DataPropertyRange { property, range } => DlAxiom::DataPropertyRange {
+            property: remap_entity(*property),
+            range: remap_de(
+                source, expressions, data_exprs, *range, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::SubDataPropertyOf { sub, sup } => DlAxiom::SubDataPropertyOf {
+            sub: remap_entity(*sub),
+            sup: remap_entity(*sup),
+        },
+        DlAxiom::DataPropertyAssertion {
+            subject,
+            property,
+            value,
+        } => DlAxiom::DataPropertyAssertion {
+            subject: remap_entity(*subject),
+            property: remap_entity(*property),
+            value: remap_de(
+                source, expressions, data_exprs, *value, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => DlAxiom::ObjectPropertyAssertion {
+            subject: remap_entity(*subject),
+            property: remap_role(property, remap_entity),
+            object: remap_entity(*object),
+        },
+        DlAxiom::NegativeObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => DlAxiom::NegativeObjectPropertyAssertion {
+            subject: remap_entity(*subject),
+            property: remap_entity(*property),
+            object: remap_entity(*object),
+        },
+        DlAxiom::NegativeDataPropertyAssertion {
+            subject,
+            property,
+            value,
+        } => DlAxiom::NegativeDataPropertyAssertion {
+            subject: remap_entity(*subject),
+            property: remap_entity(*property),
+            value: remap_de(
+                source, expressions, data_exprs, *value, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::DatatypeDefinition { datatype, range } => DlAxiom::DatatypeDefinition {
+            datatype: remap_entity(*datatype),
+            range: remap_de(
+                source, expressions, data_exprs, *range, ce_map, de_map, remap_entity,
+            ),
+        },
+        DlAxiom::FunctionalDataProperty(id) => {
+            DlAxiom::FunctionalDataProperty(remap_entity(*id))
+        }
+        DlAxiom::EquivalentDataProperties(ids) => DlAxiom::EquivalentDataProperties(
+            ids.iter().map(|id| remap_entity(*id)).collect(),
+        ),
+        DlAxiom::DisjointDataProperties(ids) => DlAxiom::DisjointDataProperties(
+            ids.iter().map(|id| remap_entity(*id)).collect(),
+        ),
+        DlAxiom::DisjointObjectProperties(ids) => DlAxiom::DisjointObjectProperties(
+            ids.iter().map(|id| remap_entity(*id)).collect(),
+        ),
+        DlAxiom::SameIndividual(ids) => {
+            DlAxiom::SameIndividual(ids.iter().map(|id| remap_entity(*id)).collect())
+        }
+        DlAxiom::DifferentIndividuals(ids) => {
+            DlAxiom::DifferentIndividuals(ids.iter().map(|id| remap_entity(*id)).collect())
+        }
+        DlAxiom::TransitiveObjectProperty(role) => {
+            DlAxiom::TransitiveObjectProperty(remap_role(role, remap_entity))
+        }
+        DlAxiom::SymmetricObjectProperty(role) => {
+            DlAxiom::SymmetricObjectProperty(remap_role(role, remap_entity))
+        }
+        DlAxiom::SwrlRule => DlAxiom::SwrlRule,
+        DlAxiom::InverseFunctionalObjectProperty(id) => {
+            DlAxiom::InverseFunctionalObjectProperty(remap_entity(*id))
+        }
+        DlAxiom::IrreflexiveObjectProperty(id) => {
+            DlAxiom::IrreflexiveObjectProperty(remap_entity(*id))
+        }
     }
 }

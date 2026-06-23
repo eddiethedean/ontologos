@@ -80,6 +80,37 @@ fn testnegative_data_property_assertion_is_inconsistent() {
     );
 }
 
+fn ofn_blocking(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+        "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonercoreblockingtest_{name}.ofn"
+    ))
+}
+
+#[test]
+fn testiant6_core_blocking_is_inconsistent() {
+    check(
+        &ofn_blocking("testiant6"),
+        false,
+        "ReasonerCoreBlockingTest.testIanT6",
+    );
+}
+
+#[test]
+fn testiant9_core_blocking_is_inconsistent() {
+    check(
+        &ofn_blocking("testiant9"),
+        false,
+        "ReasonerCoreBlockingTest.testIanT9",
+    );
+}
+
+#[test]
+fn testconceptwithnominals3_is_inconsistent() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../benchmarks/data/hermit/axioms/hermit_reasoner_complexconcepttest_testconceptwithnominals3.ofn",
+    );
+    check(&path, false, "testConceptWithNominals3");
+}
 #[test]
 fn testincremental_addition2_is_inconsistent() {
     use ontologos_parser::load_ofn_with_incremental;

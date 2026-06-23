@@ -1,9 +1,8 @@
 Prefix(:=<file:/c/test.owl#>)
 Prefix(a:=<file:/c/test.owl#>)
-Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
 Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
 Ontology(<file:/c/test.owl#>
-Declaration(NamedIndividual(:a)) Declaration(Class(:A)) Declaration(Class(:B)) Declaration(Class(:C)) Declaration(ObjectProperty(:f)) Declaration(DataProperty(:dp)) SubClassOf(:A ObjectSomeValuesFrom(:f :B)) SubClassOf(:A ObjectSomeValuesFrom(:f :C)) SubClassOf(:B DataSomeValuesFrom(:dp DataOneOf( "abc"^^xsd:string "def"^^xsd:string ))) SubClassOf(:C DataHasValue(:dp "abc@"^^rdf:PlainLiteral)) FunctionalObjectProperty(:f) ClassAssertion(:A :a)
+Declaration(NamedIndividual(:a))Declaration(Class(:A))Declaration(Class(:B))Declaration(Class(:C))Declaration(ObjectProperty(:f))Declaration(DataProperty(:dp))SubClassOf(:A ObjectSomeValuesFrom(:f :B))SubClassOf(:A ObjectSomeValuesFrom(:f :C))FunctionalObjectProperty(:f)ClassAssertion(:A :a)
 )

@@ -40,9 +40,23 @@ pub fn validate_loaded_ontology(ontology: &Ontology) -> Result<(), Error> {
                     "negative data property assertions cannot use blank nodes".into(),
                 ));
             }
+            DlAxiom::DataPropertyAssertion { subject, .. }
+                if is_blank_individual(ontology, *subject) =>
+            {
+                return Err(Error::Parse(
+                    "data property assertions cannot use blank nodes".into(),
+                ));
+            }
+            DlAxiom::ObjectPropertyAssertion { subject, object, .. }
+                if is_blank_individual(ontology, *subject)
+                    || is_blank_individual(ontology, *object) =>
+            {
+                validate_blank_object_property_graph(ontology)?;
+            }
             _ => {}
         }
     }
+    validate_blank_object_property_graph(ontology)?;
     for (_, axiom) in ontology.axioms().iter() {
         match axiom {
             Axiom::SameIndividual(ids) | Axiom::DifferentIndividuals(ids)
@@ -93,11 +107,18 @@ fn validate_data_expr(ontology: &Ontology, de: ontologos_core::DeId) -> Result<(
             validate_literal_lexical(&dt, lexical)?;
         }
         DataExpr::Or(ops) | DataExpr::And(ops) => {
+            let mut literal_dtypes = std::collections::HashSet::new();
             for &op in ops {
                 if let Some(DataExpr::Literal { lexical, datatype }) = store.de(op) {
                     let dt = datatype_iri(ontology, *datatype);
                     validate_literal_lexical(&dt, lexical)?;
+                    literal_dtypes.insert(dt);
                 }
+            }
+            if matches!(expr, DataExpr::Or(_)) && literal_dtypes.len() > 1 {
+                return Err(Error::Parse(
+                    "data oneOf cannot mix literal datatypes".into(),
+                ));
             }
         }
         DataExpr::Not(inner) => validate_data_expr(ontology, *inner)?,
@@ -156,4 +177,51 @@ fn is_blank_individual(ontology: &Ontology, id: EntityId) -> bool {
                 || iri.contains("/.genid-")
                 || iri.contains("urn:ontologos:anon:")
         })
+}
+
+/// Reject cyclic blank-node chains in object property assertions.
+fn validate_blank_object_property_graph(ontology: &Ontology) -> Result<(), Error> {
+    use std::collections::{HashMap, HashSet};
+
+    let mut graph: HashMap<EntityId, Vec<EntityId>> = HashMap::new();
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::ObjectPropertyAssertion { subject, object, .. } = axiom {
+            if is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
+                graph.entry(*subject).or_default().push(*object);
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::ObjectPropertyAssertion {
+            subject,
+            object,
+            ..
+        } = axiom
+        {
+            if is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
+                graph.entry(*subject).or_default().push(*object);
+            }
+        }
+    }
+    for &start in graph.keys() {
+        let mut stack = vec![(start, HashSet::from([start]))];
+        while let Some((node, path)) = stack.pop() {
+            for &next in graph.get(&node).into_iter().flatten() {
+                if next == start && path.len() > 1 {
+                    return Err(Error::Parse(
+                        "cyclic blank-node object property chain".into(),
+                    ));
+                }
+                if path.contains(&next) {
+                    return Err(Error::Parse(
+                        "cyclic blank-node object property chain".into(),
+                    ));
+                }
+                let mut next_path = path.clone();
+                next_path.insert(next);
+                stack.push((next, next_path));
+            }
+        }
+    }
+    Ok(())
 }

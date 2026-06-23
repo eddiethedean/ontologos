@@ -6,7 +6,7 @@ use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{DataExpr, DeId, DlAxiom, DlStore, EntityId, Ontology};
 
-pub use consistency::is_datatype_consistent;
+pub use consistency::{is_datatype_consistent, named_class_datatype_satisfiable};
 
 /// Literal with lexical form and datatype.
 #[derive(Debug, Clone, PartialEq, Eq)]
