@@ -1179,7 +1179,7 @@ impl<'a> Branch<'a> {
         let mut stall_steps = 0u32;
         loop {
             if block::is_budget_exhausted(self) {
-                return Err(Error::ResourceLimit(block::MAX_EXPANSIONS));
+                return Err(Error::ResourceLimit(block::max_expansions()));
             }
             if self.clash {
                 return Ok(false);
@@ -1193,7 +1193,7 @@ impl<'a> Branch<'a> {
             block::apply_signature_blocking(self, world);
             if block::is_blocked(self, world) {
                 if block::is_budget_exhausted(self) {
-                    return Err(Error::ResourceLimit(block::MAX_EXPANSIONS));
+                    return Err(Error::ResourceLimit(block::max_expansions()));
                 }
                 // Blocked worlds are expansion-complete; drop pending concepts instead of
                 // re-queuing (re-queueing caused infinite stall loops on nominal cases).
@@ -1201,8 +1201,8 @@ impl<'a> Branch<'a> {
                 let blocked_pending = self.worlds.iter().any(|w| w.blocked && !w.queue.is_empty());
                 if blocked_pending {
                     stall_steps += 1;
-                    if stall_steps > block::MAX_STALL_STEPS {
-                        return Err(Error::ResourceLimit(block::MAX_STALL_STEPS));
+                    if stall_steps > block::max_stall_steps() {
+                        return Err(Error::ResourceLimit(block::max_stall_steps()));
                     }
                 } else {
                     stall_steps = 0;

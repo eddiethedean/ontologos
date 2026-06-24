@@ -6,11 +6,11 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
 
 if [[ ! -d HermiT/src/test/java/org/semanticweb/HermiT ]]; then
-  echo "HermiT checkout missing — skipping catalog drift check (clone owlcs/hermit-reasoner to HermiT/)"
-  exit 0
+  echo "HermiT checkout missing — refreshing from vendored catalog (--activate-all-from-disk)"
+  python3 tests/hermit/generate_catalog.py --activate-all-from-disk
+else
+  python3 tests/hermit/generate_catalog.py --activate-all-from-disk
 fi
-
-python3 tests/hermit/generate_catalog.py
 
 if ! git diff --quiet -- benchmarks/data/hermit/catalog/cases.json \
   benchmarks/data/hermit/catalog/wg_cases.json \

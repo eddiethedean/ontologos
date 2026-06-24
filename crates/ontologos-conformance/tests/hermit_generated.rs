@@ -1679,7 +1679,6 @@ fn hermit_reasoner_reasonertest_testreflexiveandsameas() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_reasonertest_testfreshentityentailment() {
     run_hermit_case("reasoner.ReasonerTest.testFreshEntityEntailment");
 }
@@ -1771,6 +1770,7 @@ fn hermit_reasoner_reasonertest_testrolechainswithtransitivesymmetric() {
 }
 
 #[test]
+#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testrolesubsumptionwithchainstransitivesymmetric() {
     run_hermit_case("reasoner.ReasonerTest.testRoleSubsumptionWithChainsTransitiveSymmetric");
 }
@@ -2039,7 +2039,6 @@ fn hermit_reasoner_reasonertest_testsemanticobjectpropertyclassification() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rl)"]
 fn hermit_reasoner_reasonertest_testdatapropertyhierarchy() {
     run_hermit_case("reasoner.ReasonerTest.testDataPropertyHierarchy");
 }

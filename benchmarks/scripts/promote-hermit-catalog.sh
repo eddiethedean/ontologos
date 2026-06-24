@@ -1,19 +1,32 @@
 #!/usr/bin/env bash
 # Scan planned HermiT cases, promote passing ones, regenerate catalog artifacts.
+#
+# Speed (local triage / promotion loops):
+#   ONTOLOGOS_DL_BUDGET_SECS=30     — fast scan; use 120 for final promotion
+#   ONTOLOGOS_DL_MAX_WORKERS=8      — concurrent DL ops (default 8)
+#   ONTOLOGOS_SCAN_THREADS=8        — rayon case parallelism (default: all cores)
+#   ONTOLOGOS_TABLEAU_MAX_STALL_STEPS=4096 — large nominal WG fixtures
+#
+# Incremental mode skips re-checking catalog cases already at status=axiom|wg.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
-echo "==> Scanning planned axiom cases for promotion (release build)"
 BIN="$("${ROOT}/benchmarks/scripts/build-conformance-tools.sh")"
-"${BIN}/promote_catalog"
+export ONTOLOGOS_DL_BUDGET_SECS="${ONTOLOGOS_DL_BUDGET_SECS:-120}"
+export ONTOLOGOS_DL_MAX_WORKERS="${ONTOLOGOS_DL_MAX_WORKERS:-8}"
 
-echo "==> Regenerating HermiT catalog"
-python3 tests/hermit/generate_catalog.py --promote-only 2>/dev/null || python3 tests/hermit/generate_catalog.py
-python3 tests/hermit/generate_catalog.py --wg-catalog-only 2>/dev/null || true
-echo "==> Scanning WG cases for promotion (release build)"
-"${BIN}/promote_wg"
-python3 tests/hermit/generate_catalog.py --promote-wg-only 2>/dev/null || true
+echo "==> Scanning planned axiom cases for promotion (release, incremental)"
+"${BIN}/promote_catalog" --incremental
+
+echo "==> Applying axiom promotion to catalog"
+python3 tests/hermit/generate_catalog.py --promote-only
+
+echo "==> Scanning WG cases for promotion (release, incremental)"
+"${BIN}/promote_wg" --incremental
+
+echo "==> Applying WG promotion to catalog"
+python3 tests/hermit/generate_catalog.py --promote-wg-only
 
 echo "==> Updating ignore budget"
 HERMIT_IGNORED=$(grep -c '#\[ignore' crates/ontologos-conformance/tests/hermit_generated.rs || echo 0)

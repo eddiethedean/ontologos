@@ -350,6 +350,9 @@ fn disjoint_assertions_consistent(
         if !required.contains(&a) || !required.contains(&b) {
             continue;
         }
+        if multiple_literal_assertions_disjoint_exists_clash(store, individual, a, restrictions, b) {
+            return false;
+        }
         if shared_required_subproperty(store, &required, a, b) {
             return false;
         }
@@ -361,6 +364,34 @@ fn disjoint_assertions_consistent(
         }
     }
     true
+}
+
+fn multiple_literal_assertions_disjoint_exists_clash(
+    store: &ontologos_core::DlStore,
+    individual: EntityId,
+    left: EntityId,
+    restrictions: &[(EntityId, DataRestriction)],
+    right: EntityId,
+) -> bool {
+    let mut left_literals = 0usize;
+    for axiom in store.axioms() {
+        if let DlAxiom::DataPropertyAssertion {
+            subject,
+            property,
+            ..
+        } = axiom
+        {
+            if *subject == individual && *property == left {
+                left_literals += 1;
+            }
+        }
+    }
+    if left_literals < 2 {
+        return false;
+    }
+    restrictions.iter().any(|(prop, restriction)| {
+        *prop == right && matches!(restriction, DataRestriction::Some(_))
+    })
 }
 
 fn shared_required_subproperty(

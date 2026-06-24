@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Triage planned HermiT Java + OWL WG catalog cases (engine gap vs missing assertions vs promotion).
+#
+# Parallelism: ONTOLOGOS_DL_MAX_WORKERS, ONTOLOGOS_SCAN_THREADS (see promote-hermit-catalog.sh).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

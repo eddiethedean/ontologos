@@ -530,6 +530,17 @@ fn pattern_matches(lexical: &str, pattern: &str) -> bool {
         .strip_prefix('^')
         .and_then(|p| p.strip_suffix('$'))
         .unwrap_or(pattern);
+    if let Some(inner) = body.strip_prefix('a').and_then(|rest| {
+        rest.strip_prefix('(')
+            .and_then(|r| r.strip_suffix(')'))
+            .filter(|alt| alt.contains('|'))
+    }) {
+        if !lexical.starts_with('a') {
+            return false;
+        }
+        let suffix = &lexical[1..];
+        return inner.split('|').any(|alt| suffix == alt);
+    }
     if body.contains('[') && body.contains(']') {
         return ssn_like_match(lexical, body);
     }

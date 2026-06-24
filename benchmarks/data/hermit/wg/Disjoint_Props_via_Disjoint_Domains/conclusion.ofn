@@ -1,0 +1,8 @@
+Prefix( : = <http://example.org/> )
+
+Ontology(
+  Declaration(ObjectProperty(:sonOf))
+  Declaration(ObjectProperty(:daughterOf))
+
+  DisjointObjectProperties( :sonOf :daughterOf )
+)

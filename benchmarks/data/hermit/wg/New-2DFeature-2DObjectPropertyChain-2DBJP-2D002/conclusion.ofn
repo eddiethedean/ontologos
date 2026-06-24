@@ -1,0 +1,6 @@
+Prefix( : = <http://example.org/> )
+
+Ontology(
+  Declaration( ObjectProperty( :p ) )
+  SubObjectPropertyOf( ObjectPropertyChain( :p :p ) :p )
+)

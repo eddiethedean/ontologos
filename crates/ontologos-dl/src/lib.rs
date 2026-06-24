@@ -64,6 +64,9 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
 
 /// Check ontology consistency under DL.
 pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
+    if thing_equivalent_nothing(ontology) {
+        return Ok(false);
+    }
     if !datatype::is_datatype_consistent(ontology) {
         return Ok(false);
     }
@@ -354,6 +357,48 @@ fn ontology_has_class_assertion(ontology: &Ontology) -> bool {
         .dl()
         .axioms()
         .any(|ax| matches!(ax, DlAxiom::ClassAssertion { .. }))
+}
+
+fn thing_equivalent_nothing(ontology: &Ontology) -> bool {
+    let thing = ontology
+        .lookup_entity("owl:Thing")
+        .or_else(|| ontology.lookup_entity("http://www.w3.org/2002/07/owl#Thing"));
+    let nothing = ontology
+        .lookup_entity("owl:Nothing")
+        .or_else(|| ontology.lookup_entity("http://www.w3.org/2002/07/owl#Nothing"));
+    let (Some(thing), Some(nothing)) = (thing, nothing) else {
+        return false;
+    };
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        if let DlAxiom::EquivalentClasses(classes) = axiom {
+            let ents: Vec<EntityId> = classes
+                .iter()
+                .filter_map(|ce| atomic_entity_from_ce(store, *ce))
+                .collect();
+            if ents.contains(&thing) && ents.contains(&nothing) {
+                return true;
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::EquivalentClasses(classes) = axiom {
+            if classes.contains(&thing) && classes.contains(&nothing) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn atomic_entity_from_ce(
+    store: &ontologos_core::DlStore,
+    ce: ontologos_core::CeId,
+) -> Option<EntityId> {
+    match store.ce(ce)? {
+        ontologos_core::ClassExpr::Atomic(id) => Some(*id),
+        _ => None,
+    }
 }
 
 fn flower_auxiliary_unsatisfiable_classes(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {

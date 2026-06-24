@@ -7,6 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  ONTOLOGOS_DL_BUDGET_SECS: "120"
 
 jobs:
   ignored-conformance:
@@ -23,3 +24,21 @@ jobs:
           ./benchmarks/scripts/report-conformance-coverage.sh
       - name: Run ignored conformance tier
         run: cargo test -p ontologos-conformance -- --ignored --test-threads=4
+      - name: Catalog scan regression (full DL budget)
+        run: >-
+          cargo test -p ontologos-conformance --release --test classify_timeout --
+          --test-threads=1
+
+  full-hermit-suite:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Download benchmark corpora
+        run: ./benchmarks/scripts/download.sh
+      - name: Full HermiT + OWL WG suite (failure-first, non-blocking)
+        run: |
+          chmod +x benchmarks/scripts/run-hermit-full-suite.sh
+          ./benchmarks/scripts/run-hermit-full-suite.sh

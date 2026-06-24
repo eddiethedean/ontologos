@@ -13,37 +13,31 @@ fn hermit_owl_wg_tests_chain2trans() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_datatype_2drestrictions_2ddifferent_2dtypes() {
     run_wg_case("owl_wg_tests.Datatype-2Drestrictions-2Ddifferent-2Dtypes");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_owlreal_2dplus_2doneof() {
     run_wg_case("owl_wg_tests.Owlreal-2Dplus-2DoneOf");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_consistent_2dbut_2dall_2dunsat() {
     run_wg_case("owl_wg_tests.Consistent-2Dbut-2Dall-2Dunsat");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_consistent_2ddataproperty_2ddisjointness() {
     run_wg_case("owl_wg_tests.Consistent-2Ddataproperty-2Ddisjointness");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_consistent_2ddatetime() {
     run_wg_case("owl_wg_tests.Consistent-2DdateTime");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_consistent_2dinteger_2dfiller() {
     run_wg_case("owl_wg_tests.Consistent-2Dinteger-2Dfiller");
 }
@@ -69,13 +63,11 @@ fn hermit_owl_wg_tests_datatype_2dfloat_2ddiscrete_2d001() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_datatype_2drestriction_2dmin_2dmax_2dinconsistency() {
     run_wg_case("owl_wg_tests.Datatype-2Drestriction-2Dmin-2Dmax-2Dinconsistency");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_different_2dtypes_2dplus_2dcomplement() {
     run_wg_case("owl_wg_tests.Different-2Dtypes-2Dplus-2Dcomplement");
 }
@@ -156,49 +148,41 @@ fn hermit_owl_wg_tests_footnote_2dnot_2dabout_2dself() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_functionality_2dclash() {
     run_wg_case("owl_wg_tests.Functionality-2Dclash");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_inconsistent_2dbyte_2dfiller() {
     run_wg_case("owl_wg_tests.Inconsistent-2Dbyte-2Dfiller");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_datacomplement_2dplus_2drestrictions() {
     run_wg_case("owl_wg_tests.Datacomplement-2Dplus-2Drestrictions");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_inconsistent_2ddisjoint_2ddataproperties() {
     run_wg_case("owl_wg_tests.Inconsistent-2Ddisjoint-2Ddataproperties");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_inconsistent_2dpattern_2ddisjointness() {
     run_wg_case("owl_wg_tests.Inconsistent-2Dpattern-2Ddisjointness");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_inconsistent_2dinteger_2dfiller() {
     run_wg_case("owl_wg_tests.Inconsistent-2Dinteger-2Dfiller");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_inconsistent_datatypes() {
     run_wg_case("owl_wg_tests.Inconsistent_datatypes");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_individual_2dclass_punning_vs_objectoneof() {
     run_wg_case("owl_wg_tests.Individual-2DClass_Punning_vs._ObjectOneOf");
 }
@@ -284,25 +268,21 @@ fn hermit_owl_wg_tests_new_2dfeature_2dkeys_2d003() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_new_2dfeature_2dkeys_2d004() {
     run_wg_case("owl_wg_tests.New-2DFeature-2DKeys-2D004");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_new_2dfeature_2dkeys_2d005() {
     run_wg_case("owl_wg_tests.New-2DFeature-2DKeys-2D005");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_new_2dfeature_2dkeys_2d006() {
     run_wg_case("owl_wg_tests.New-2DFeature-2DKeys-2D006");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_new_2dfeature_2dkeys_2d007() {
     run_wg_case("owl_wg_tests.New-2DFeature-2DKeys-2D007");
 }
@@ -383,7 +363,6 @@ fn hermit_owl_wg_tests_new_2dfeature_2dtopobjectproperty_2d001() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_one_equals_two() {
     run_wg_case("owl_wg_tests.One_equals_two");
 }
@@ -414,7 +393,6 @@ fn hermit_owl_wg_tests_owl2_2drl_2dinvalid_2dowlreal() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_owl2_2drl_2dinvalid_2drightside_2dsomevaluesfrom() {
     run_wg_case("owl_wg_tests.Owl2-2Drl-2Dinvalid-2Drightside-2Dsomevaluesfrom");
 }
@@ -455,25 +433,21 @@ fn hermit_owl_wg_tests_owl2_2drl_2dvalid_2doneof() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_owl2_2drl_2dvalid_2drightside_2dallvaluesfrom() {
     run_wg_case("owl_wg_tests.Owl2-2Drl-2Dvalid-2Drightside-2Dallvaluesfrom");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_plus_2dand_2dminus_2d0_2dintegers() {
     run_wg_case("owl_wg_tests.Plus-2Dand-2Dminus-2D0-2Dintegers");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_plus_2dminus_2d0_2dplus_2ddisjointness() {
     run_wg_case("owl_wg_tests.Plus-2Dminus-2D0-2Dplus-2Ddisjointness");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_qualified_2dcardinality_2dboolean() {
     run_wg_case("owl_wg_tests.Qualified-2Dcardinality-2Dboolean");
 }
@@ -974,7 +948,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2di4_6_2d003() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2di4_6_2d004() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DI4.6-2D004");
 }
@@ -995,7 +968,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2di5_1_2d001() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2di5_1_2d010() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DI5.1-2D010");
 }
@@ -1021,7 +993,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2di5_2_2d004() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2di5_2_2d005() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D005");
 }
@@ -1032,19 +1003,16 @@ fn hermit_owl_wg_tests_testcase_3awebont_2di5_2_2d006() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2di5_2_2d010() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D010");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2di5_2_2d011() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D011");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2di5_21_2d002() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DI5.21-2D002");
 }
@@ -1090,7 +1058,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2di5_26_2d004() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2di5_26_2d005() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DI5.26-2D005");
 }
@@ -1136,7 +1103,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2di5_3_2d008() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2di5_3_2d009() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DI5.3-2D009");
 }
@@ -1272,13 +1238,11 @@ fn hermit_owl_wg_tests_testcase_3awebont_2drestriction_2d002() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2drestriction_2d003() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D003");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2drestriction_2d004() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D004");
 }
@@ -1304,7 +1268,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2dsymmetricproperty_2d003() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2dthing_2d003() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DThing-2D003");
 }
@@ -1335,7 +1298,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2dallvaluesfrom_2d001() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2dallvaluesfrom_2d002() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DallValuesFrom-2D002");
 }
@@ -1466,37 +1428,31 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d017() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d018() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d019() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D019");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d020() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d021() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D021");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d022() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D022");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d023() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D023");
 }
@@ -1562,7 +1518,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d035() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d040() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D040");
 }
@@ -1603,7 +1558,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d107() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d108() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D108");
 }
@@ -1619,19 +1573,16 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d110() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d111() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D111");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d201() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D201");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d205() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D205");
 }
@@ -1642,37 +1593,31 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d207() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d208() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D208");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d209() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D209");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d501() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d502() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d503() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D503");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d504() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D504");
 }
@@ -1703,13 +1648,11 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d605() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d606() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D606");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d608() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608");
 }
@@ -1845,19 +1788,16 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d646() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d650() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d661() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D661");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d665() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D665");
 }
@@ -1873,13 +1813,11 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d901() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d902() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D902");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddescription_2dlogic_2d904() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D904");
 }
@@ -1950,7 +1888,6 @@ fn hermit_owl_wg_tests_testcase_3awebont_2ddisjointwith_2d007() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2ddisjointwith_2d008() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2DdisjointWith-2D008");
 }
@@ -2091,13 +2028,11 @@ fn hermit_owl_wg_tests_testcase_3awebont_2dmaxcardinality_2d001() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2dmiscellaneous_2d001() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D001");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2dmiscellaneous_2d002() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D002");
 }
@@ -2118,13 +2053,11 @@ fn hermit_owl_wg_tests_testcase_3awebont_2dmiscellaneous_2d202() {
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2dmiscellaneous_2d203() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D203");
 }
 
 #[test]
-#[ignore = "WG test — requires ontologos-dl + vendored WG OFN fixtures"]
 fn hermit_owl_wg_tests_testcase_3awebont_2dmiscellaneous_2d204() {
     run_wg_case("owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D204");
 }

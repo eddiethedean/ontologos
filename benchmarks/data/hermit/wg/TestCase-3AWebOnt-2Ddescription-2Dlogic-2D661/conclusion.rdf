@@ -1,0 +1,46 @@
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:owl="http://www.w3.org/2002/07/owl#"
+      xml:base="http://www.w3.org/2002/03owlt/description-logic/conclusions661"
+>
+<owl:Ontology/>
+<owl:Thing rdf:about="http://oiled.man.example.net/test#V822576">
+  <rdf:type>
+<owl:Class rdf:about="http://oiled.man.example.net/test#C110"/>
+</rdf:type>
+</owl:Thing>
+<owl:Thing rdf:about="http://oiled.man.example.net/test#V822576">
+  <rdf:type>
+<owl:Class rdf:about="http://oiled.man.example.net/test#C94"/>
+</rdf:type>
+</owl:Thing>
+<owl:Thing rdf:about="http://oiled.man.example.net/test#V822576">
+  <rdf:type>
+<owl:Class rdf:about="http://oiled.man.example.net/test#C136"/>
+</rdf:type>
+</owl:Thing>
+<owl:Thing rdf:about="http://oiled.man.example.net/test#V822576">
+  <rdf:type>
+<owl:Class rdf:about="http://oiled.man.example.net/test#C58"/>
+</rdf:type>
+</owl:Thing>
+<owl:Thing rdf:about="http://oiled.man.example.net/test#V822576">
+  <rdf:type>
+<owl:Class rdf:about="http://oiled.man.example.net/test#C80"/>
+</rdf:type>
+</owl:Thing>
+<owl:Thing rdf:about="http://oiled.man.example.net/test#V822576">
+  <rdf:type>
+<owl:Class rdf:about="http://oiled.man.example.net/test#C56"/>
+</rdf:type>
+</owl:Thing>
+<owl:Thing rdf:about="http://oiled.man.example.net/test#V822576">
+  <rdf:type>
+<owl:Class rdf:about="http://oiled.man.example.net/test#C116"/>
+</rdf:type>
+</owl:Thing>
+<owl:Thing rdf:about="http://oiled.man.example.net/test#V822576">
+  <rdf:type>
+<owl:Class rdf:about="http://oiled.man.example.net/test#C114"/>
+</rdf:type>
+</owl:Thing>
+</rdf:RDF>

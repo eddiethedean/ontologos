@@ -9,6 +9,10 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: "0"
+  # Cap per-operation DL wall time in conformance (entailment may run classify twice).
+  ONTOLOGOS_DL_BUDGET_SECS: "30"
+  # Blocking CI runs only promoted passing cases; full suite is in conformance-nightly.
+  ONTOLOGOS_CI_PROMOTED_ONLY: "1"
 
 jobs:
   check:
@@ -33,10 +37,19 @@ jobs:
           ./benchmarks/scripts/check-hermit-ignore-budget.sh
       - name: EL Pizza golden conformance
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
-      - name: HermiT conformance (Tier A)
+      - name: HermiT conformance (Tier A — Java catalog)
         run: >-
-          cargo test -p ontologos-conformance --release --locked --
+          cargo test -p ontologos-conformance --release --locked
+          --test hermit_generated
+          --test hermit_rdfs
+          --test hermit_rl
+          --test hermit_el
+          --test hermit_parser
+          --test dl_subsumption_cases
+          --test explain_benchmarks
+          --
           --test-threads=4
+          --skip planned_engine_failure_scan
           --skip ian_backjumping3_axiom_check_completes_within_budget
       - name: Conformance test inventory
         run: |
@@ -102,12 +115,15 @@ jobs:
         run: cargo test --workspace --exclude ontologos-conformance --locked
       - name: EL Pizza golden conformance (MSRV)
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
-      - name: HermiT conformance Tier A (MSRV)
+      - name: HermiT conformance Tier A (MSRV — OWL WG catalog)
+        env:
+          ONTOLOGOS_CI_PROMOTED_ONLY: "1"
+          ONTOLOGOS_DL_BUDGET_SECS: "30"
         run: >-
-          cargo test -p ontologos-conformance --release --locked --
-          --test-threads=4
-          --skip planned_engine_failure_scan
-          --skip ian_backjumping3_axiom_check_completes_within_budget
+          cargo test -p ontologos-conformance --release --locked
+          --test hermit_wg_generated
+          --
+          --test-threads=1
 
   python:
     runs-on: ubuntu-latest

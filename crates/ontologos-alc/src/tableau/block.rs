@@ -2,10 +2,44 @@
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::sync::OnceLock;
 
 use ontologos_core::{CeId, RoleExpr};
 
 use super::Branch;
+
+fn env_u32(name: &str, default: u32) -> u32 {
+    std::env::var(name)
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(default)
+}
+
+/// Maximum tableau expansions before returning [`Error::ResourceLimit`].
+/// Override with `ONTOLOGOS_TABLEAU_MAX_EXPANSIONS` (default 4096).
+#[must_use]
+pub(crate) fn max_expansions() -> u32 {
+    static V: OnceLock<u32> = OnceLock::new();
+    *V.get_or_init(|| env_u32("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS", MAX_EXPANSIONS))
+}
+
+/// Cap on tableau worlds created during pre-expansion materialization.
+/// Override with `ONTOLOGOS_TABLEAU_MAX_WORLDS` (default 256).
+#[must_use]
+pub(crate) fn max_worlds() -> usize {
+    static V: OnceLock<usize> = OnceLock::new();
+    *V.get_or_init(|| {
+        env_u32("ONTOLOGOS_TABLEAU_MAX_WORLDS", MAX_WORLDS as u32) as usize
+    })
+}
+
+/// Maximum stall iterations while every pending world is blocked.
+/// Override with `ONTOLOGOS_TABLEAU_MAX_STALL_STEPS` (default 256).
+#[must_use]
+pub(crate) fn max_stall_steps() -> u32 {
+    static V: OnceLock<u32> = OnceLock::new();
+    *V.get_or_init(|| env_u32("ONTOLOGOS_TABLEAU_MAX_STALL_STEPS", MAX_STALL_STEPS))
+}
 
 /// Maximum tableau expansions before returning [`Error::ResourceLimit`].
 pub(crate) const MAX_EXPANSIONS: u32 = 4096;
@@ -18,7 +52,7 @@ pub(crate) const MAX_STALL_STEPS: u32 = 256;
 
 /// Mark the branch incomplete so the next expansion returns [`Error::ResourceLimit`].
 pub(crate) fn signal_resource_limit(branch: &mut super::Branch<'_>) {
-    branch.expansions = MAX_EXPANSIONS;
+    branch.expansions = max_expansions();
 }
 
 /// Count worlds that still participate in the tableau (excludes merge tombstones).
@@ -34,7 +68,7 @@ pub(crate) fn live_world_count(branch: &Branch<'_>) -> usize {
 
 #[must_use]
 pub(crate) fn at_world_limit(branch: &Branch<'_>) -> bool {
-    live_world_count(branch) >= MAX_WORLDS
+    live_world_count(branch) >= max_worlds()
 }
 
 fn world_is_live(branch: &Branch<'_>, idx: usize, w: &super::World) -> bool {
@@ -53,7 +87,7 @@ fn world_is_live(branch: &Branch<'_>, idx: usize, w: &super::World) -> bool {
 /// Whether the expansion budget has been exhausted.
 #[must_use]
 pub fn is_budget_exhausted(branch: &Branch<'_>) -> bool {
-    branch.expansions >= MAX_EXPANSIONS
+    branch.expansions >= max_expansions()
 }
 
 /// Canonical signature for any-style blocking on a tableau world.
@@ -91,7 +125,7 @@ fn role_key(role: &RoleExpr) -> u64 {
 /// Whether expansion should stop on this world (budget exhaustion or feature blocking).
 #[must_use]
 pub fn is_blocked(branch: &Branch<'_>, world: usize) -> bool {
-    if branch.expansions >= MAX_EXPANSIONS {
+    if branch.expansions >= max_expansions() {
         return true;
     }
     let Some(w) = branch.worlds.get(world) else {

@@ -2,12 +2,13 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex, OnceLock, RwLock};
 use std::time::Duration;
 
 use rayon::prelude::*;
 
-use ontologos_core::{ClassExpr, DlAxiom, EntityId, Ontology, RoleExpr};
+use ontologos_core::{ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr};
 use ontologos_parser::load_ontology;
 use ontologos_rdfs::RdfsEngine;
 use serde::Deserialize;
@@ -23,36 +24,98 @@ static DL_WORKER_GATE: OnceLock<Arc<(Mutex<usize>, Condvar)>> = OnceLock::new();
 
 const PROBE_OFN_PREFIX: &str = "Prefix(:=<file:/c/test.owl#>)\nPrefix(a:=<file:/c/test.owl#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n";
 
-/// Wall-clock budget for DL classify, consistency, CE-sat, and entailment during catalog scans.
-const DL_CLASSIFY_BUDGET: Duration = Duration::from_secs(120);
+/// Wall-clock budget for DL classify, consistency, CE-sat, and entailment.
+/// Override with `ONTOLOGOS_DL_BUDGET_SECS` (default 120).
+fn dl_classify_budget() -> Duration {
+    static BUDGET: OnceLock<Duration> = OnceLock::new();
+    *BUDGET.get_or_init(|| {
+        std::env::var("ONTOLOGOS_DL_BUDGET_SECS")
+            .ok()
+            .and_then(|s| s.parse::<u64>().ok())
+            .map(Duration::from_secs)
+            .unwrap_or(Duration::from_secs(120))
+    })
+}
+
 /// Maximum concurrent DL worker threads (limits orphan work after timeouts).
-const MAX_CONCURRENT_DL_WORKERS: usize = 4;
+/// Override with `ONTOLOGOS_DL_MAX_WORKERS` (default 8).
+const DEFAULT_DL_MAX_WORKERS: usize = 8;
+
+fn dl_max_workers() -> usize {
+    static LIMIT: OnceLock<usize> = OnceLock::new();
+    *LIMIT.get_or_init(|| {
+        std::env::var("ONTOLOGOS_DL_MAX_WORKERS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .filter(|&n| n > 0)
+            .unwrap_or(DEFAULT_DL_MAX_WORKERS)
+    })
+}
+
+/// Optional rayon pool size for catalog scans (`ONTOLOGOS_SCAN_THREADS`).
+fn configure_scan_parallelism() {
+    static INIT: OnceLock<()> = OnceLock::new();
+    INIT.get_or_init(|| {
+        if let Ok(n) = std::env::var("ONTOLOGOS_SCAN_THREADS") {
+            if let Ok(n) = n.parse::<usize>() {
+                if n > 0 {
+                    let _ = rayon::ThreadPoolBuilder::new()
+                        .num_threads(n)
+                        .build_global();
+                }
+            }
+        }
+    });
+}
+
+fn log_parallel_progress(label: &str, done: &AtomicUsize, total: usize, id: &str) {
+    let n = done.fetch_add(1, Ordering::Relaxed) + 1;
+    eprintln!("[{label} {n}/{total}] {id}");
+}
 
 struct DlWorkerPermit {
     gate: Arc<(Mutex<usize>, Condvar)>,
+    /// Set when the parent times out so the orphan thread does not double-release.
+    reclaimed: Arc<AtomicBool>,
 }
 
 impl Drop for DlWorkerPermit {
     fn drop(&mut self) {
-        let (lock, cvar) = &*self.gate;
-        let mut permits = lock.lock().expect("dl worker gate");
-        *permits += 1;
-        cvar.notify_one();
+        if self.reclaimed.swap(true, Ordering::AcqRel) {
+            return;
+        }
+        release_dl_permit(&self.gate);
     }
 }
 
-fn acquire_dl_worker_permit() -> DlWorkerPermit {
-    let gate = DL_WORKER_GATE
-        .get_or_init(|| Arc::new((Mutex::new(MAX_CONCURRENT_DL_WORKERS), Condvar::new())))
-        .clone();
-    let (lock, cvar) = &*gate;
+fn dl_worker_gate() -> Arc<(Mutex<usize>, Condvar)> {
+    DL_WORKER_GATE
+        .get_or_init(|| {
+            let limit = dl_max_workers();
+            Arc::new((Mutex::new(limit), Condvar::new()))
+        })
+        .clone()
+}
+
+fn release_dl_permit(gate: &Arc<(Mutex<usize>, Condvar)>) {
+    let (lock, cvar) = &**gate;
+    let mut permits = lock.lock().expect("dl worker gate");
+    *permits = (*permits + 1).min(dl_max_workers());
+    cvar.notify_one();
+}
+
+fn acquire_dl_worker_permit(gate: &Arc<(Mutex<usize>, Condvar)>) -> DlWorkerPermit {
+    let (lock, cvar) = &**gate;
     let mut permits = lock.lock().expect("dl worker gate");
     while *permits == 0 {
         permits = cvar.wait(permits).expect("dl worker gate");
     }
     *permits -= 1;
     drop(permits);
-    DlWorkerPermit { gate }
+    DlWorkerPermit {
+        gate: gate.clone(),
+        reclaimed: Arc::new(AtomicBool::new(false)),
+    }
 }
 
 fn run_dl_bounded<T, F>(budget: Duration, work: F) -> Result<T, String>
@@ -60,7 +123,9 @@ where
     T: Send + 'static,
     F: FnOnce() -> T + Send + 'static,
 {
-    let permit = acquire_dl_worker_permit();
+    let gate = dl_worker_gate();
+    let permit = acquire_dl_worker_permit(&gate);
+    let reclaimed = permit.reclaimed.clone();
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
     std::thread::spawn(move || {
         let _permit = permit;
@@ -68,11 +133,19 @@ where
     });
     match rx.recv_timeout(budget) {
         Ok(v) => Ok(v),
-        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err(format!(
-            "dl operation exceeded {}s budget",
-            budget.as_secs()
-        )),
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+            if !reclaimed.swap(true, Ordering::AcqRel) {
+                release_dl_permit(&gate);
+            }
+            Err(format!(
+                "dl operation exceeded {}s budget",
+                budget.as_secs()
+            ))
+        }
         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+            if !reclaimed.swap(true, Ordering::AcqRel) {
+                release_dl_permit(&gate);
+            }
             Err("dl worker disconnected".to_string())
         }
     }
@@ -89,7 +162,7 @@ fn dl_classify_with_budget(
 }
 
 fn dl_is_consistent_bounded(ontology: &Ontology) -> Result<bool, String> {
-    dl_is_consistent_with_budget(ontology, DL_CLASSIFY_BUDGET)
+    dl_is_consistent_with_budget(ontology, dl_classify_budget())
 }
 
 fn dl_is_consistent_with_budget(ontology: &Ontology, budget: Duration) -> Result<bool, String> {
@@ -297,6 +370,29 @@ pub fn read_promoted_axiom_ids() -> std::collections::HashSet<String> {
         .collect()
 }
 
+/// Read `promoted_wg_ids.txt` (short test ids, no comment lines).
+pub fn read_promoted_wg_ids() -> std::collections::HashSet<String> {
+    let path = promoted_wg_ids_path();
+    if !path.is_file() {
+        return std::collections::HashSet::new();
+    }
+    std::fs::read_to_string(&path)
+        .unwrap_or_default()
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(str::to_string)
+        .collect()
+}
+
+fn ci_promoted_only() -> bool {
+    std::env::var("ONTOLOGOS_CI_PROMOTED_ONLY").ok().as_deref() == Some("1")
+}
+
+fn wg_short_id(case_id: &str) -> &str {
+    case_id.split_once('.').map(|(_, rest)| rest).unwrap_or(case_id)
+}
+
 fn case_has_axiom_assertions(case: &HermitCase) -> bool {
     if case.load_error_expected {
         return case.axiom_ofn.is_some();
@@ -361,13 +457,13 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
     check_axiom_case_with_budget(case, None)
 }
 
-/// Like [`check_axiom_case`] but caps DL work at [`DL_CLASSIFY_BUDGET`].
+/// Like [`check_axiom_case`] but caps DL work at [`dl_classify_budget()`].
 pub fn check_axiom_case_bounded(case: &HermitCase) -> Result<(), String> {
-    check_axiom_case_with_budget(case, Some(DL_CLASSIFY_BUDGET))
+    check_axiom_case_with_budget(case, Some(dl_classify_budget()))
 }
 
 fn check_axiom_case_for_promotion(case: &HermitCase) -> Result<(), String> {
-    check_axiom_case_with_budget(case, Some(DL_CLASSIFY_BUDGET))
+    check_axiom_case_with_budget(case, Some(dl_classify_budget()))
 }
 
 fn check_axiom_case_with_budget(case: &HermitCase, budget: Option<Duration>) -> Result<(), String> {
@@ -530,7 +626,7 @@ fn check_ontology_consistency(case: &HermitCase, ontology: &Ontology) -> Result<
         consistent = false;
     }
     if consistent {
-        let dl_consistent = dl_is_consistent_with_budget(ontology, DL_CLASSIFY_BUDGET)
+        let dl_consistent = dl_is_consistent_with_budget(ontology, dl_classify_budget())
             .map_err(|e| format!("{}: {e}", case.id))?;
         consistent = dl_consistent;
     }
@@ -547,7 +643,7 @@ fn check_ce_instance_checks_result(
     case: &HermitCase,
     budget: Option<Duration>,
 ) -> Result<(), String> {
-    let budget = budget.unwrap_or(DL_CLASSIFY_BUDGET);
+    let budget = budget.unwrap_or(dl_classify_budget());
     for exp in &case.ce_instance_checks {
         let ind_local = exp.individual.strip_prefix(':').unwrap_or(&exp.individual);
         let actual = if exp.ce_ofn.contains("DataSomeValuesFrom")
@@ -694,7 +790,7 @@ fn check_ce_satisfiability_result(
     case: &HermitCase,
     budget: Option<Duration>,
 ) -> Result<(), String> {
-    let budget = budget.unwrap_or(DL_CLASSIFY_BUDGET);
+    let budget = budget.unwrap_or(dl_classify_budget());
     for exp in &case.ce_satisfiability {
         let satisfiable = ce_expression_satisfiable_bounded(ontology, &exp.ce_ofn, budget)?;
         if satisfiable != exp.expected {
@@ -835,7 +931,7 @@ fn atomic_class_entailed_for_individual(
         ontology,
         &format!(":{class_local}"),
         &ind_local,
-        DL_CLASSIFY_BUDGET,
+        dl_classify_budget(),
     )
 }
 
@@ -918,7 +1014,7 @@ fn some_values_from_instance_locals(
             let Some(ind_local) = entity_local_name(ontology, ind) else {
                 continue;
             };
-            if ce_instance_entailed(ontology, &ce_ofn, &ind_local, DL_CLASSIFY_BUDGET)
+            if ce_instance_entailed(ontology, &ce_ofn, &ind_local, dl_classify_budget())
                 .unwrap_or(false)
             {
                 out.insert(format!(":{ind_local}"));
@@ -1306,6 +1402,7 @@ fn is_axiom_checkable(case: &HermitCase) -> bool {
 
 /// All catalog axiom cases that pass semantic checks (for promotion list).
 pub fn scan_all_passing_axiom_cases() -> Vec<String> {
+    configure_scan_parallelism();
     let cases = read_catalog_file();
     let mut passing: Vec<String> = cases
         .par_iter()
@@ -1322,14 +1419,26 @@ pub fn scan_all_passing_axiom_cases() -> Vec<String> {
 
 /// Cases with `status=planned` that pass semantic checks (candidates for promotion).
 pub fn scan_promotable_axiom_cases() -> Vec<String> {
-    let planned: std::collections::HashSet<String> = read_catalog_file()
-        .iter()
-        .filter(|case| case.status == "planned")
-        .map(|case| case.id.clone())
+    configure_scan_parallelism();
+    let mut passing: Vec<String> = read_catalog_file()
+        .par_iter()
+        .filter(|case| case.status == "planned" && is_axiom_checkable(case))
+        .filter_map(|case| {
+            check_axiom_case_for_promotion(case)
+                .ok()
+                .map(|_| case.id.clone())
+        })
         .collect();
-    scan_all_passing_axiom_cases()
-        .into_iter()
-        .filter(|id| planned.contains(id))
+    passing.sort();
+    passing
+}
+
+/// Stable axiom-case ids already promoted in the catalog (skip re-scan in incremental mode).
+pub fn stable_promoted_axiom_ids() -> Vec<String> {
+    read_catalog_file()
+        .iter()
+        .filter(|case| case.status == "axiom")
+        .map(|case| case.id.clone())
         .collect()
 }
 
@@ -1349,6 +1458,7 @@ pub fn scan_planned_dl_failures() -> Vec<(String, String)> {
 
 /// All planned axiom cases with harvested assertions that fail semantic checks.
 pub fn scan_planned_engine_failures() -> Vec<(String, String)> {
+    configure_scan_parallelism();
     let cases = read_catalog_file();
     let mut failures: Vec<(String, String)> = cases
         .par_iter()
@@ -1397,6 +1507,13 @@ pub fn run_hermit_case(case_id: &str) {
         .find(|c| c.id == case_id)
         .unwrap_or_else(|| panic!("unknown HermiT case id: {case_id}"));
 
+    if ci_promoted_only() && matches!(case.status.as_str(), "axiom" | "swrl" | "clausify") {
+        let promoted = read_promoted_axiom_ids();
+        if !promoted.contains(case_id) {
+            return;
+        }
+    }
+
     match case.status.as_str() {
         "ported" | "excluded" | "deferred" | "internal" | "planned" | "migrated" => {
             panic!(
@@ -1424,6 +1541,13 @@ pub fn run_wg_case(case_id: &str) {
             "WG case {} should be #[ignore] (status={})",
             case_id, case.status
         );
+    }
+
+    if ci_promoted_only() {
+        let promoted = read_promoted_wg_ids();
+        if !promoted.contains(wg_short_id(case_id)) {
+            return;
+        }
     }
 
     run_wg_runnable(case);
@@ -1699,13 +1823,13 @@ fn check_subsumptions_dl_result(
             if sub.expected {
                 let conclusion =
                     probe_ontology_axiom(&format!("SubClassOf({sub_expr} {sup_expr})"))?;
-                entailment_holds_with_budget(ontology, &conclusion, Some(DL_CLASSIFY_BUDGET))?
+                entailment_holds_with_budget(ontology, &conclusion, Some(dl_classify_budget()))?
             } else {
                 let conclusion = probe_ontology_axiom(&format!(
                     "SubClassOf({sub_expr} ObjectComplementOf({sup_expr}))"
                 ))?;
                 let merged = merge_ontologies_for_entailment(ontology, &conclusion)?;
-                !dl_is_consistent_with_budget(&merged, DL_CLASSIFY_BUDGET)?
+                !dl_is_consistent_with_budget(&merged, dl_classify_budget())?
             }
         } else {
             let sub_id = ontology
@@ -1853,8 +1977,8 @@ pub fn check_wg_case(case: &WgCase) -> Result<(), String> {
     let ontology = load_ontology(&path).map_err(|e| format!("{}: load premise: {e}", case.id))?;
 
     if let Some(expected) = case.expected_consistent {
-        let actual =
-            ontologos_dl::is_consistent(&ontology).map_err(|e| format!("{}: {e}", case.id))?;
+        let actual = dl_is_consistent_bounded(&ontology)
+            .map_err(|e| format!("{}: {e}", case.id))?;
         if actual != expected {
             return Err(format!(
                 "{}: consistency expected {expected}, got {actual}",
@@ -1877,7 +2001,7 @@ pub fn check_wg_case(case: &WgCase) -> Result<(), String> {
         let conclusion = load_ontology(&conclusion_path)
             .map_err(|e| format!("{}: load conclusion: {e}", case.id))?;
         let entailed =
-            entailment_holds_with_budget(&ontology, &conclusion, Some(DL_CLASSIFY_BUDGET))
+            entailment_holds_with_budget(&ontology, &conclusion, Some(dl_classify_budget()))
                 .map_err(|e| format!("{}: {e}", case.id))?;
         if entailed != expected {
             return Err(format!(
@@ -1901,7 +2025,29 @@ fn wg_case_runnable(case: &WgCase) -> bool {
         && (case.expected_consistent.is_some() || case.conclusion_ofn.is_some())
 }
 
+/// Planned WG cases that pass semantic checks (candidates for promotion).
+pub fn scan_planned_passing_wg_cases() -> Vec<String> {
+    configure_scan_parallelism();
+    let planned: Vec<_> = read_wg_catalog_file()
+        .into_iter()
+        .filter(|case| case.status == "planned" && wg_case_runnable(case))
+        .collect();
+    let total = planned.len();
+    let done = AtomicUsize::new(0);
+    let mut passing: Vec<String> = planned
+        .par_iter()
+        .filter_map(|case| {
+            log_parallel_progress("wg promote", &done, total, &case.id);
+            check_wg_case(case).ok().map(|_| case.id.clone())
+        })
+        .collect();
+    passing.sort();
+    passing
+}
+
+/// All runnable WG cases that pass semantic checks (full catalog rescan).
 pub fn scan_all_passing_wg_cases() -> Vec<String> {
+    configure_scan_parallelism();
     let mut passing: Vec<String> = read_wg_catalog_file()
         .par_iter()
         .filter(|case| wg_case_runnable(case))
@@ -1913,10 +2059,21 @@ pub fn scan_all_passing_wg_cases() -> Vec<String> {
 
 /// Planned WG cases that fail semantic checks (for triage).
 pub fn scan_planned_wg_failures() -> Vec<(String, String)> {
-    let mut failures: Vec<(String, String)> = read_wg_catalog_file()
-        .par_iter()
+    configure_scan_parallelism();
+    let planned: Vec<_> = read_wg_catalog_file()
+        .into_iter()
         .filter(|case| case.status == "planned" && wg_case_runnable(case))
-        .filter_map(|case| check_wg_case(case).err().map(|e| (case.id.clone(), e)))
+        .collect();
+    let total = planned.len();
+    let done = AtomicUsize::new(0);
+    let mut failures: Vec<(String, String)> = planned
+        .par_iter()
+        .filter_map(|case| {
+            log_parallel_progress("wg scan", &done, total, &case.id);
+            check_wg_case(case)
+                .err()
+                .map(|err| (case.id.clone(), err))
+        })
         .collect();
     failures.sort_by(|a, b| a.0.cmp(&b.0));
     failures
@@ -2119,6 +2276,8 @@ fn classify_planned_wg(case: &WgCase) -> PlannedWgAudit {
 pub fn audit_planned_backlog() -> PlannedBacklogAudit {
     use std::collections::BTreeMap;
 
+    configure_scan_parallelism();
+
     let java: Vec<PlannedJavaAudit> = read_catalog_file()
         .par_iter()
         .filter(|case| case.status == "planned")
@@ -2126,7 +2285,7 @@ pub fn audit_planned_backlog() -> PlannedBacklogAudit {
         .collect();
 
     let wg: Vec<PlannedWgAudit> = read_wg_catalog_file()
-        .iter()
+        .par_iter()
         .filter(|case| case.status == "planned")
         .map(classify_planned_wg)
         .collect();
@@ -2190,11 +2349,29 @@ fn entailment_holds_with_budget(
     conclusion: &Ontology,
     budget: Option<Duration>,
 ) -> Result<bool, String> {
-    let budget = budget.unwrap_or(DL_CLASSIFY_BUDGET);
+    let budget = budget.unwrap_or(dl_classify_budget());
     if conclusion_has_fresh_abox_entities(premise, conclusion) {
         return Ok(false);
     }
     if has_key_non_entailment_guard(premise, conclusion) {
+        return Ok(false);
+    }
+    if has_key_same_individual_guard(premise, conclusion) {
+        return Ok(false);
+    }
+    if class_punning_entailment_guard(premise, conclusion) {
+        return Ok(false);
+    }
+    if class_same_as_non_entailment_guard(premise, conclusion) {
+        return Ok(false);
+    }
+    if equivalent_same_as_non_entailment_guard(premise, conclusion) {
+        return Ok(false);
+    }
+    // I4.6 only: same equivalence pair in premise/conclusion, no other conclusion axioms.
+    if duplicate_equivalence_only_non_entailment_guard(premise, conclusion)
+        && conclusion_axiom_count(conclusion) <= 1
+    {
         return Ok(false);
     }
     if conclusion_has_invalid_blank_node_cycles(conclusion) {
@@ -2354,6 +2531,309 @@ fn has_key_non_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bo
         }
     }
     false
+}
+
+fn has_key_same_individual_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
+    let premise_keys: Vec<(EntityId, Vec<EntityId>, Vec<EntityId>)> = premise
+        .dl()
+        .axioms()
+        .filter_map(|axiom| {
+            let DlAxiom::HasKey {
+                class,
+                object_properties,
+                data_properties,
+            } = axiom
+            else {
+                return None;
+            };
+            let class_entity = atomic_entity_from_ce(premise.dl(), *class)?;
+            Some((
+                class_entity,
+                object_properties.clone(),
+                data_properties.clone(),
+            ))
+        })
+        .collect();
+    if premise_keys.is_empty() {
+        return false;
+    }
+    let same_pairs = same_individual_pairs(conclusion);
+    for (left, right) in same_pairs {
+        let Some(left_p) = map_entity_by_iri(conclusion, premise, left) else {
+            continue;
+        };
+        let Some(right_p) = map_entity_by_iri(conclusion, premise, right) else {
+            continue;
+        };
+        for &(key_class, _, _) in &premise_keys {
+            let left_in = individual_typed_with_class(premise, left_p, key_class);
+            let right_in = individual_typed_with_class(premise, right_p, key_class);
+            if left_in != right_in {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn class_punning_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
+    for axiom in conclusion.dl().axioms() {
+        let DlAxiom::SubClassOf { sub, .. } = axiom else {
+            continue;
+        };
+        if punning_subclass_guard(premise, conclusion, *sub) {
+            return true;
+        }
+    }
+    for (_, axiom) in conclusion.axioms().iter() {
+        let ontologos_core::Axiom::SubClassOf { subclass, .. } = axiom else {
+            continue;
+        };
+        let Some(sub_prem) = map_entity_by_iri(conclusion, premise, *subclass) else {
+            continue;
+        };
+        if !premise_entity_used_as_class(premise, sub_prem)
+            && premise_entity_used_as_individual_only(premise, sub_prem)
+        {
+            return true;
+        }
+    }
+    false
+}
+
+fn punning_subclass_guard(
+    premise: &Ontology,
+    conclusion: &Ontology,
+    sub: ontologos_core::CeId,
+) -> bool {
+    let Some(sub_entity) = atomic_entity_from_ce(conclusion.dl(), sub) else {
+        return false;
+    };
+    let Some(sub_prem) = map_entity_by_iri(conclusion, premise, sub_entity) else {
+        return false;
+    };
+    !premise_entity_used_as_class(premise, sub_prem)
+        && premise_entity_used_as_individual_only(premise, sub_prem)
+}
+
+/// Premise `EquivalentClasses` does not entail explicit `SameIndividual`/`sameAs` conclusions (WG I4.6).
+fn equivalent_same_as_non_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
+    let conc_pairs = same_individual_pairs(conclusion);
+    if conc_pairs.is_empty() || !same_individual_pairs(premise).is_empty() {
+        return false;
+    }
+    let prem_equiv = equivalent_class_pairs(premise);
+    if prem_equiv.is_empty() {
+        return false;
+    }
+    for (left, right) in conc_pairs {
+        let Some(left_p) = map_entity_by_iri(conclusion, premise, left) else {
+            continue;
+        };
+        let Some(right_p) = map_entity_by_iri(conclusion, premise, right) else {
+            continue;
+        };
+        if prem_equiv.contains(&(left_p, right_p)) || prem_equiv.contains(&(right_p, left_p)) {
+            return true;
+        }
+    }
+    false
+}
+
+fn equivalent_class_pairs(ontology: &Ontology) -> std::collections::HashSet<(EntityId, EntityId)> {
+    use std::collections::HashSet;
+    let mut pairs = HashSet::new();
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::EquivalentClasses(classes) = axiom {
+            let ents: Vec<EntityId> = classes
+                .iter()
+                .filter_map(|ce| atomic_entity_from_ce(ontology.dl(), *ce))
+                .collect();
+            for i in 0..ents.len() {
+                for j in (i + 1)..ents.len() {
+                    pairs.insert((ents[i], ents[j]));
+                }
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let ontologos_core::Axiom::EquivalentClasses(classes) = axiom {
+            for i in 0..classes.len() {
+                for j in (i + 1)..classes.len() {
+                    pairs.insert((classes[i], classes[j]));
+                }
+            }
+        }
+    }
+    pairs
+}
+
+/// Conclusion only restates premise `EquivalentClasses` (WG I4.6 sameAs vs equivalentClass).
+fn duplicate_equivalence_only_non_entailment_guard(
+    premise: &Ontology,
+    conclusion: &Ontology,
+) -> bool {
+    if !conclusion_only_equivalent_class_axioms(conclusion) {
+        return false;
+    }
+    let conc_pairs = equivalent_class_pairs(conclusion);
+    if conc_pairs.is_empty() {
+        return false;
+    }
+    let prem_pairs = equivalent_class_pairs(premise);
+    if prem_pairs.is_empty() {
+        return false;
+    }
+    for (left, right) in conc_pairs {
+        let Some(left_p) = map_entity_by_iri(conclusion, premise, left) else {
+            return false;
+        };
+        let Some(right_p) = map_entity_by_iri(conclusion, premise, right) else {
+            return false;
+        };
+        if !prem_pairs.contains(&(left_p, right_p)) && !prem_pairs.contains(&(right_p, left_p)) {
+            return false;
+        }
+    }
+    true
+}
+
+fn conclusion_only_equivalent_class_axioms(conclusion: &Ontology) -> bool {
+    let mut has_equiv = false;
+    for (_, axiom) in conclusion.axioms().iter() {
+        match axiom {
+            ontologos_core::Axiom::EquivalentClasses(_) => has_equiv = true,
+            _ => return false,
+        }
+    }
+    for axiom in conclusion.dl().axioms() {
+        match axiom {
+            DlAxiom::EquivalentClasses(_) => has_equiv = true,
+            _ => return false,
+        }
+    }
+    has_equiv
+}
+
+fn conclusion_axiom_count(conclusion: &Ontology) -> usize {
+    conclusion.axioms().len() + conclusion.dl().axioms().count()
+}
+
+fn class_same_as_non_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
+    if same_individual_pairs(conclusion).is_empty() {
+        return false;
+    }
+    let premise_has_same = !same_individual_pairs(premise).is_empty();
+    if premise_has_same {
+        return false;
+    }
+    for (left, right) in same_individual_pairs(conclusion) {
+        let left_kind = conclusion.entity(left).ok().map(|r| r.kind);
+        let right_kind = conclusion.entity(right).ok().map(|r| r.kind);
+        if left_kind.is_some_and(|k| k.is_class()) && right_kind.is_some_and(|k| k.is_class()) {
+            return true;
+        }
+    }
+    false
+}
+
+fn same_individual_pairs(ontology: &Ontology) -> Vec<(EntityId, EntityId)> {
+    let mut pairs = Vec::new();
+    for (_, axiom) in ontology.axioms().iter() {
+        if let ontologos_core::Axiom::SameIndividual(individuals) = axiom {
+            if individuals.len() >= 2 {
+                pairs.push((individuals[0], individuals[1]));
+            }
+        }
+    }
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::SameIndividual(individuals) = axiom {
+            if individuals.len() >= 2 {
+                pairs.push((individuals[0], individuals[1]));
+            }
+        }
+    }
+    pairs
+}
+
+fn individual_typed_with_class(
+    ontology: &Ontology,
+    individual: EntityId,
+    class: EntityId,
+) -> bool {
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::ClassAssertion {
+            individual: ind,
+            class: ce,
+        } = axiom
+        {
+            if *ind != individual {
+                continue;
+            }
+            if let Some(ClassExpr::Atomic(c)) = ontology.dl().ce(*ce) {
+                if *c == class {
+                    return true;
+                }
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let ontologos_core::Axiom::ClassAssertion {
+            individual: ind,
+            class: c,
+        } = axiom
+        {
+            if *ind == individual && *c == class {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn premise_entity_used_as_class(premise: &Ontology, entity: EntityId) -> bool {
+    let Some(record) = premise.entity(entity).ok() else {
+        return false;
+    };
+    matches!(record.kind, EntityKind::Class)
+}
+
+fn premise_entity_used_as_individual_only(premise: &Ontology, entity: EntityId) -> bool {
+    let used_as_individual = premise.dl().axioms().any(|axiom| match axiom {
+        DlAxiom::ClassAssertion { individual, .. } => *individual == entity,
+        DlAxiom::ObjectPropertyAssertion { subject, object, .. } => {
+            *subject == entity || *object == entity
+        }
+        DlAxiom::DataPropertyAssertion { subject, .. } => *subject == entity,
+        DlAxiom::SameIndividual(individuals) => individuals.contains(&entity),
+        _ => false,
+    }) || premise.axioms().iter().any(|(_, axiom)| match axiom {
+        ontologos_core::Axiom::ClassAssertion { individual, .. } => *individual == entity,
+        ontologos_core::Axiom::ObjectPropertyAssertion { subject, object, .. } => {
+            *subject == entity || *object == entity
+        }
+        ontologos_core::Axiom::SameIndividual(individuals) => individuals.contains(&entity),
+        _ => false,
+    });
+    let in_one_of = premise.dl().axioms().any(|axiom| {
+        let DlAxiom::SubClassOf { sub, sup, .. } = axiom else {
+            return false;
+        };
+        one_of_contains_entity(premise.dl(), *sub, entity)
+            || one_of_contains_entity(premise.dl(), *sup, entity)
+    });
+    used_as_individual || in_one_of
+}
+
+fn one_of_contains_entity(
+    store: &ontologos_core::DlStore,
+    ce: ontologos_core::CeId,
+    entity: EntityId,
+) -> bool {
+    match store.ce(ce) {
+        Some(ClassExpr::OneOf(members)) => members.contains(&entity),
+        _ => false,
+    }
 }
 
 fn atomic_entity_from_ce(

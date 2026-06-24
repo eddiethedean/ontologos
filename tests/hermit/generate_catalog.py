@@ -3,8 +3,12 @@
 
 Run from repo root:
   python3 tests/hermit/generate_catalog.py
+  python3 tests/hermit/generate_catalog.py --activate-all-from-disk
 
-Requires HermiT/ (owlcs/hermit-reasoner) or ONTOLOGOS_HERMIT_ROOT.
+By default all runnable cases are active (failure-first). Use --promoted-only to
+gate on promoted_axiom_ids.txt / promoted_wg_ids.txt (legacy promotion workflow).
+
+Requires HermiT/ (owlcs/hermit-reasoner) or ONTOLOGOS_HERMIT_ROOT for full regen.
 """
 
 from __future__ import annotations
@@ -95,6 +99,7 @@ def load_promoted_axiom_ids() -> set[str]:
 PROMOTED_AXIOM_IDS = load_promoted_axiom_ids()
 
 PROMOTED_WG_PATH = REPO / "benchmarks/data/hermit/catalog/promoted_wg_ids.txt"
+WG_IN_SCOPE_PATH = REPO / "benchmarks/data/hermit/catalog/wg_in_scope_ids.txt"
 
 
 def load_promoted_wg_ids() -> set[str]:
@@ -114,8 +119,104 @@ def load_promoted_wg_ids() -> set[str]:
 
 PROMOTED_WG_IDS = load_promoted_wg_ids()
 
-# All Approved DL WG tests with embedded RDF are vendored from all.rdf during --wg-catalog-only.
-# Only ids in promoted_wg_ids.txt (from `promote_wg`) become status=wg in CI.
+
+def load_wg_in_scope_ids() -> set[str]:
+    if not WG_IN_SCOPE_PATH.is_file():
+        return set()
+    out: set[str] = set()
+    for line in WG_IN_SCOPE_PATH.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#"):
+            out.add(line)
+    return out
+
+
+WG_IN_SCOPE_IDS = load_wg_in_scope_ids()
+
+# Failure-first default: all runnable catalog cases are active in generated tests.
+# Pass --promoted-only to gate on promoted_*_ids.txt (legacy promotion workflow).
+ALL_WG_ACTIVE = True
+ALL_JAVA_ACTIVE = True
+
+# All in-scope WG tests are vendored from all.rdf during --wg-catalog-only.
+# By default every runnable WG case is status=wg; use --promoted-only for the
+# legacy promote_wg / promoted_wg_ids.txt gate.
+
+def configure_activation_flags(argv: list[str]) -> None:
+    """Apply CLI overrides for failure-first vs promotion-gated catalog generation."""
+    global ALL_WG_ACTIVE, ALL_JAVA_ACTIVE
+    if "--promoted-only" in argv:
+        ALL_WG_ACTIVE = False
+        ALL_JAVA_ACTIVE = False
+    if "--all-wg-active" in argv:
+        ALL_WG_ACTIVE = True
+    if "--all-java-active" in argv:
+        ALL_JAVA_ACTIVE = True
+    if "--activate-all-from-disk" in argv:
+        ALL_WG_ACTIVE = True
+        ALL_JAVA_ACTIVE = True
+
+
+def wg_is_runnable(
+    premise_ofn: str | None,
+    conclusion_ofn: str | None,
+    expected_consistent: bool | None,
+) -> bool:
+    return bool(
+        premise_ofn
+        and (conclusion_ofn is not None or expected_consistent is not None)
+    )
+
+
+def wg_should_be_active(
+    test_id: str,
+    premise_ofn: str | None,
+    conclusion_ofn: str | None,
+    expected_consistent: bool | None,
+) -> bool:
+    if not wg_is_runnable(premise_ofn, conclusion_ofn, expected_consistent):
+        return False
+    if ALL_WG_ACTIVE:
+        return True
+    return test_id in PROMOTED_WG_IDS
+
+
+def java_permanently_inactive(case: HermitCase) -> bool:
+    if case.id in EXCLUDED_IDS or case.id in MIGRATED_INTERNAL_IDS:
+        return True
+    if case.engine == "internal":
+        return True
+    if case.hand_written:
+        return True
+    if case.fixture in MISSING_FIXTURES:
+        return True
+    if case.id.startswith(DEFERRED_PREFIXES) and not case.axiom_ofn:
+        return True
+    return False
+
+
+def apply_all_active_java(case: HermitCase) -> None:
+    if not ALL_JAVA_ACTIVE or java_permanently_inactive(case):
+        return
+    if case.status != "planned":
+        return
+    if case.axiom_ofn and "Clausification" in case.java_class:
+        if "ClausificationDatatypes" in case.java_class:
+            return
+        case.status = "clausify"
+        case.tier = "A"
+        case.ignore_reason = None
+        return
+    if case.axiom_ofn and has_axiom_assertions(case):
+        case.status = "swrl" if case.engine == "swrl" else "axiom"
+        case.tier = "A"
+        case.ignore_reason = None
+        return
+    if case.golden and case.fixture and case.engine == "el":
+        case.status = "fixture"
+        case.tier = "B"
+        case.ignore_reason = None
+
 
 SKIP_FILE = re.compile(
     r"(Abstract|AllTests|AllQuick|Descriptor|Registry|Invalid|Failing|TstDescriptor|AllWG|AllApproved|AllExtracredit|AllNonRejected|AllProposed)"
@@ -1431,6 +1532,11 @@ def infer_engine(case_id: str, body: str) -> str:
 
 
 def infer_status(case: HermitCase) -> None:
+    _assign_catalog_status(case)
+    apply_all_active_java(case)
+
+
+def _assign_catalog_status(case: HermitCase) -> None:
     if case.id in MIGRATED_INTERNAL_IDS:
         case.status = "migrated"
         case.ignore_reason = "ported to ontologos-alc/dl unit tests"
@@ -1889,7 +1995,18 @@ def write_rust(cases: list[HermitCase]) -> None:
     OUT_RUST.write_text("\n".join(lines), encoding="utf-8")
 
 
-def extract_wg_embedded_rdf(block: str, tag: str) -> str | None:
+WG_TEST_ABOUT_PREFIX = 'rdf:about="http://owl.semanticweb.org/id/'
+
+
+def wg_test_block(text: str, block_start: int) -> str:
+    """Return the full WG test-case RDF block (until the next test individual)."""
+    nxt = text.find(WG_TEST_ABOUT_PREFIX, block_start + len(WG_TEST_ABOUT_PREFIX))
+    if nxt < 0:
+        return text[block_start:]
+    return text[block_start:nxt]
+
+
+def extract_wg_embedded_content(block: str, tag: str) -> str | None:
     m = re.search(
         rf"<test:{tag}[^>]*>(.*?)</test:{tag}>",
         block,
@@ -1898,26 +2015,88 @@ def extract_wg_embedded_rdf(block: str, tag: str) -> str | None:
     if not m:
         return None
     raw = html.unescape(m.group(1).strip())
-    return raw if raw.startswith("<") else None
+    if not raw:
+        return None
+    if raw.startswith("<"):
+        return raw
+    if raw.startswith("Prefix") or raw.startswith("Ontology"):
+        return raw
+    return None
 
 
-def write_wg_fixture(test_id: str, block: str) -> tuple[str | None, str | None]:
-    premise = extract_wg_embedded_rdf(block, "rdfXmlPremiseOntology")
-    conclusion = extract_wg_embedded_rdf(block, "rdfXmlConclusionOntology")
+def write_wg_fixture(
+    test_id: str,
+    block: str,
+    *,
+    negative_entailment: bool = False,
+) -> tuple[str | None, str | None]:
+    premise = extract_wg_embedded_content(block, "rdfXmlPremiseOntology")
+    prem_ext = ".rdf"
+    if not premise:
+        premise = extract_wg_embedded_content(block, "fsPremiseOntology")
+        if premise:
+            prem_ext = ".ofn"
+    if not premise:
+        premise = extract_wg_embedded_content(block, "rdfXmlInputOntology")
     if not premise:
         return None, None
+
+    conclusion = None
+    conc_ext = ".rdf"
+    if negative_entailment:
+        conclusion = extract_wg_embedded_content(block, "rdfXmlNonConclusionOntology")
+        if not conclusion:
+            conclusion = extract_wg_embedded_content(block, "fsNonConclusionOntology")
+            if conclusion:
+                conc_ext = ".ofn"
+    else:
+        conclusion = extract_wg_embedded_content(block, "rdfXmlConclusionOntology")
+        if not conclusion:
+            conclusion = extract_wg_embedded_content(block, "fsConclusionOntology")
+            if conclusion:
+                conc_ext = ".ofn"
+
     safe = re.sub(r"[^a-zA-Z0-9._-]+", "_", test_id)
     out_dir = OUT_WG_DATA / safe
     out_dir.mkdir(parents=True, exist_ok=True)
-    prem_path = out_dir / "premise.rdf"
+    prem_path = out_dir / f"premise{prem_ext}"
     prem_path.write_text(premise, encoding="utf-8")
-    prem_rel = f"wg/{safe}/premise.rdf"
+    prem_rel = f"wg/{safe}/premise{prem_ext}"
     conc_rel = None
     if conclusion:
-        conc_path = out_dir / "conclusion.rdf"
+        conc_path = out_dir / f"conclusion{conc_ext}"
         conc_path.write_text(conclusion, encoding="utf-8")
-        conc_rel = f"wg/{safe}/conclusion.rdf"
+        conc_rel = f"wg/{safe}/conclusion{conc_ext}"
     return prem_rel, conc_rel
+
+
+def wg_disk_fixture_refs(test_id: str) -> tuple[str | None, str | None]:
+    """Return catalog-relative paths when fixtures were vendored on a prior run."""
+    out_dir = OUT_WG_DATA / test_id
+    prem = None
+    conc = None
+    for name in ("premise.rdf", "premise.ofn"):
+        if (out_dir / name).is_file():
+            prem = f"wg/{test_id}/{name}"
+            break
+    for name in ("conclusion.rdf", "conclusion.ofn"):
+        if (out_dir / name).is_file():
+            conc = f"wg/{test_id}/{name}"
+            break
+    return prem, conc
+
+
+def detect_wg_test_type(block: str) -> tuple[str, bool | None, bool | None]:
+    """Return (test_type, expected_entailment, expected_consistent) from an isolated block."""
+    if "PositiveEntailmentTest" in block:
+        return "positive_entailment", True, None
+    if "NegativeEntailmentTest" in block:
+        return "negative_entailment", False, None
+    if "InconsistencyTest" in block:
+        return "inconsistency", None, False
+    if "ConsistencyTest" in block:
+        return "consistency", None, True
+    return "entailment", None, None
 
 
 # Manifest extraction sometimes tags inconsistency fixtures as ConsistencyTest or
@@ -1934,10 +2113,11 @@ WG_CONSISTENCY_OVERRIDES: dict[str, tuple[str, bool]] = {
 
 
 def collect_wg_cases() -> list[WgCase]:
-    """Catalog OWL WG approved DL tests from all.rdf (stub entries until OFN extraction)."""
+    """Catalog in-scope OWL WG DL tests from all.rdf (see wg_in_scope_ids.txt)."""
     all_rdf = RES_ROOT / "owl_wg_tests/ontologies/all.rdf"
     if not all_rdf.is_file():
         return []
+    in_scope = load_wg_in_scope_ids()
     text = all_rdf.read_text(errors="replace")
     cases: list[WgCase] = []
     # Each TestCase individual id in the WG export.
@@ -1946,44 +2126,46 @@ def collect_wg_cases() -> list[WgCase]:
         text,
     ):
         test_id = m.group(1).rsplit("/", 1)[-1]
-        block_start = m.start()
-        block = text[block_start : block_start + 8000]
-        if "Approved" not in block or "DL" not in block:
+        if in_scope and test_id not in in_scope:
             continue
-        test_type = "entailment"
-        expected_entailment = None
-        expected_consistent = None
-        if "PositiveEntailmentTest" in block:
-            test_type = "positive_entailment"
-            expected_entailment = True
-        elif "NegativeEntailmentTest" in block:
-            test_type = "negative_entailment"
-            expected_entailment = False
-        elif "ConsistencyTest" in block:
-            test_type = "consistency"
-            expected_consistent = True
-        elif "InconsistencyTest" in block:
-            test_type = "inconsistency"
-            expected_consistent = False
+        block_start = m.start()
+        block = wg_test_block(text, block_start)
+        if not in_scope and ("Approved" not in block or "DL" not in block):
+            continue
+        test_type, expected_entailment, expected_consistent = detect_wg_test_type(block)
         if test_id in WG_CONSISTENCY_OVERRIDES:
             test_type, expected_consistent = WG_CONSISTENCY_OVERRIDES[test_id]
             expected_entailment = None
-            conclusion_ofn = None
         premise_ofn = None
         conclusion_ofn = None
         status = "planned"
         ignore_reason = "WG test — requires ontologos-dl + vendored WG OFN fixtures"
-        if "PositiveEntailmentTest" in block:
-            prem_rel, conc_rel = write_wg_fixture(test_id, block)
+        if expected_entailment is not None:
+            prem_rel, conc_rel = write_wg_fixture(
+                test_id,
+                block,
+                negative_entailment=expected_entailment is False,
+            )
             premise_ofn = prem_rel
             conclusion_ofn = conc_rel
         elif expected_consistent is not None:
             prem_rel, _ = write_wg_fixture(test_id, block)
             premise_ofn = prem_rel
+        prem_disk, conc_disk = wg_disk_fixture_refs(test_id)
+        if premise_ofn is None:
+            premise_ofn = prem_disk
+        if conclusion_ofn is None:
+            conclusion_ofn = conc_disk
         if (
-            test_id in PROMOTED_WG_IDS
+            expected_entailment is None
+            and expected_consistent is None
             and premise_ofn
-            and (conclusion_ofn is not None or expected_consistent is not None)
+            and conclusion_ofn
+        ):
+            test_type = "positive_entailment"
+            expected_entailment = True
+        if wg_should_be_active(
+            test_id, premise_ofn, conclusion_ofn, expected_consistent
         ):
             status = "wg"
             ignore_reason = None
@@ -2035,10 +2217,14 @@ def promote_wg_from_disk() -> None:
     active = 0
     for row in raw:
         test_id = row["id"].split(".", 1)[-1]
-        prem = OUT_WG_DATA / test_id / "premise.rdf"
-        conc = OUT_WG_DATA / test_id / "conclusion.rdf"
-        if prem.is_file():
-            row["premise_ofn"] = f"wg/{test_id}/premise.rdf"
+        prem_rdf = OUT_WG_DATA / test_id / "premise.rdf"
+        prem_ofn = OUT_WG_DATA / test_id / "premise.ofn"
+        conc_rdf = OUT_WG_DATA / test_id / "conclusion.rdf"
+        conc_ofn = OUT_WG_DATA / test_id / "conclusion.ofn"
+        prem = prem_rdf if prem_rdf.is_file() else prem_ofn if prem_ofn.is_file() else None
+        conc = conc_rdf if conc_rdf.is_file() else conc_ofn if conc_ofn.is_file() else None
+        if prem is not None:
+            row["premise_ofn"] = f"wg/{test_id}/{prem.name}"
             override = WG_CONSISTENCY_OVERRIDES.get(test_id)
             if override is not None:
                 test_type, expected = override
@@ -2046,9 +2232,14 @@ def promote_wg_from_disk() -> None:
                 row["expected_consistent"] = expected
                 row["expected_entailment"] = None
                 row["conclusion_ofn"] = None
-            elif conc.is_file():
-                row["conclusion_ofn"] = f"wg/{test_id}/conclusion.rdf"
-            if test_id in PROMOTED_WG_IDS:
+            elif conc is not None:
+                row["conclusion_ofn"] = f"wg/{test_id}/{conc.name}"
+            if wg_should_be_active(
+                test_id,
+                row.get("premise_ofn"),
+                row.get("conclusion_ofn"),
+                row.get("expected_consistent"),
+            ):
                 row["status"] = "wg"
                 row["ignore_reason"] = None
                 active += 1
@@ -2056,10 +2247,33 @@ def promote_wg_from_disk() -> None:
                 row["status"] = "planned"
                 row["ignore_reason"] = "WG test — pending ontologos-dl entailment promotion"
         updated.append(row)
-    wg_path.write_text(json.dumps(updated, indent=2) + "\n", encoding="utf-8")
+    wg_path.write_text(json.dumps(updated, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     cases = [WgCase(**row) for row in updated]
     write_wg_rust(cases)
     print(f"WG promote-only: {active} active of {len(updated)}")
+
+
+def activate_all_from_disk() -> None:
+    """Activate all runnable catalog cases from disk (no HermiT checkout required)."""
+    global ALL_WG_ACTIVE, ALL_JAVA_ACTIVE, PROMOTED_AXIOM_IDS, PROMOTED_WG_IDS
+    ALL_WG_ACTIVE = True
+    ALL_JAVA_ACTIVE = True
+    PROMOTED_AXIOM_IDS = load_promoted_axiom_ids()
+    PROMOTED_WG_IDS = load_promoted_wg_ids()
+    promote_only_from_disk()
+    promote_wg_from_disk()
+    wg_cases = [WgCase(**row) for row in json.loads(OUT_WG_CATALOG.read_text(encoding="utf-8"))]
+    java_cases = [HermitCase(**row) for row in json.loads((OUT_CATALOG / "cases.json").read_text(encoding="utf-8"))]
+    wg_active = sum(1 for c in wg_cases if c.status == "wg")
+    java_active = sum(
+        1
+        for c in java_cases
+        if c.status in ("axiom", "clausify", "swrl", "fixture")
+    )
+    print(
+        f"activate-all-from-disk: {wg_active}/{len(wg_cases)} WG active, "
+        f"{java_active}/{len(java_cases)} Java runnable active"
+    )
 
 
 def promote_only_from_disk() -> None:
@@ -2081,7 +2295,7 @@ def promote_only_from_disk() -> None:
         infer_status(case)
         cases.append(case)
     catalog_path.write_text(
-        json.dumps([asdict(c) for c in cases], indent=2) + "\n", encoding="utf-8"
+        json.dumps([asdict(c) for c in cases], indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     write_rust(cases)
     by_status: dict[str, int] = {}
@@ -2095,13 +2309,14 @@ def promote_only_from_disk() -> None:
 
 def wg_catalog_only() -> None:
     """Vendor WG fixtures and refresh wg_cases.json without HermiT Java sources."""
-    global PROMOTED_WG_IDS
+    global PROMOTED_WG_IDS, WG_IN_SCOPE_IDS
     PROMOTED_WG_IDS = load_promoted_wg_ids()
+    WG_IN_SCOPE_IDS = load_wg_in_scope_ids()
     wg_cases = collect_wg_cases()
     OUT_CATALOG.mkdir(parents=True, exist_ok=True)
     wg_path = OUT_WG_CATALOG
     wg_path.write_text(
-        json.dumps([asdict(c) for c in wg_cases], indent=2) + "\n", encoding="utf-8"
+        json.dumps([asdict(c) for c in wg_cases], indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     write_wg_rust(wg_cases)
     active = sum(1 for c in wg_cases if c.status == "wg")
@@ -2111,13 +2326,18 @@ def wg_catalog_only() -> None:
 
 
 def main() -> None:
-    if len(sys.argv) > 1 and sys.argv[1] == "--promote-only":
+    argv = sys.argv[1:]
+    configure_activation_flags(argv)
+    if argv and argv[0] == "--promote-only":
         promote_only_from_disk()
         return
-    if len(sys.argv) > 1 and sys.argv[1] == "--promote-wg-only":
+    if argv and argv[0] == "--promote-wg-only":
         promote_wg_from_disk()
         return
-    if len(sys.argv) > 1 and sys.argv[1] == "--wg-catalog-only":
+    if argv and argv[0] == "--activate-all-from-disk":
+        activate_all_from_disk()
+        return
+    if argv and argv[0] == "--wg-catalog-only":
         wg_catalog_only()
         return
     cases = collect_cases()
@@ -2126,11 +2346,11 @@ def main() -> None:
     n_axiom = write_axioms(cases)
     catalog_path = OUT_CATALOG / "cases.json"
     catalog_path.write_text(
-        json.dumps([asdict(c) for c in cases], indent=2) + "\n", encoding="utf-8"
+        json.dumps([asdict(c) for c in cases], indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     wg_path = OUT_WG_CATALOG
     wg_path.write_text(
-        json.dumps([asdict(c) for c in wg_cases], indent=2) + "\n", encoding="utf-8"
+        json.dumps([asdict(c) for c in wg_cases], indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     write_rust(cases)
     write_wg_rust(wg_cases)

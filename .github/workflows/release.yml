@@ -55,6 +55,9 @@ jobs:
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
 
       - name: HermiT conformance (Tier A)
+        env:
+          ONTOLOGOS_CI_PROMOTED_ONLY: "1"
+          ONTOLOGOS_DL_BUDGET_SECS: "30"
         run: cargo test -p ontologos-conformance --locked
 
       - name: Conformance coverage and 1.0 gates (informational)
