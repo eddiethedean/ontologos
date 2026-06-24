@@ -27,6 +27,10 @@ pub fn core_to_horned(ontology: &Ontology) -> Result<SetOntology<RcStr>> {
             EntityKind::Individual => {
                 set.insert(DeclareNamedIndividual(b.named_individual(iri)));
             }
+            EntityKind::ClassIndividual => {
+                set.insert(DeclareClass(b.class(iri)));
+                set.insert(DeclareNamedIndividual(b.named_individual(iri)));
+            }
             EntityKind::ObjectProperty => {
                 set.insert(DeclareObjectProperty(b.object_property(iri)));
             }

@@ -34,6 +34,29 @@ pub enum EntityKind {
     AnnotationProperty,
     /// OWL datatype IRI.
     Datatype,
+    /// OWL class/individual punning (same IRI used as both).
+    ClassIndividual,
+}
+
+impl EntityKind {
+    /// Whether this kind can appear as a class reference.
+    #[must_use]
+    pub fn is_class(self) -> bool {
+        matches!(self, Self::Class | Self::ClassIndividual)
+    }
+
+    /// Whether this kind can appear as a named individual reference.
+    #[must_use]
+    pub fn is_individual(self) -> bool {
+        matches!(self, Self::Individual | Self::ClassIndividual)
+    }
+
+    /// Whether `stored` satisfies a reference that expects `expected`.
+    #[must_use]
+    pub fn satisfies(self, expected: Self) -> bool {
+        self == expected
+            || (self == Self::ClassIndividual && matches!(expected, Self::Class | Self::Individual))
+    }
 }
 
 /// A registered ontology entity with its interned IRI and kind.
@@ -93,7 +116,7 @@ impl EntityRegistry {
     ) -> Result<EntityId> {
         if let Some(&existing) = self.by_iri.get(&iri) {
             let record = &self.entities[existing.0 as usize];
-            if record.kind != kind {
+            if !record.kind.satisfies(kind) {
                 return Err(Error::EntityKindMismatch {
                     iri: iri_str.to_owned(),
                     expected: kind,

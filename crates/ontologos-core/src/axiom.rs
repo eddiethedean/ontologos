@@ -284,7 +284,7 @@ fn require_kind(
     role: &str,
 ) -> Result<()> {
     let record = registry.entity(id)?;
-    if record.kind != expected {
+    if !record.kind.satisfies(expected) {
         return Err(Error::InvalidAxiom(format!(
             "{role} entity {:?} must be {expected:?}, found {:?}",
             id, record.kind

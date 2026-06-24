@@ -23,12 +23,18 @@ pub fn map_to_core(
 
     // Pass 1: explicit declarations only, so axiom mapping cannot pin entity kinds
     // before declared types are known (issue #3). Conflicting declarations for the same
-    // IRI use last-wins with a warning.
+    // IRI use last-wins with a warning unless both Class and Individual are declared
+    // (OWL class/individual punning).
     let mut declaration_kinds: BTreeMap<String, EntityKind> = BTreeMap::new();
+    let mut declaration_kind_sets: BTreeMap<String, HashSet<EntityKind>> = BTreeMap::new();
     let mut declaration_warnings: Vec<String> = Vec::new();
     for annotated in source.iter() {
         if is_declaration(&annotated.component) {
             if let Some((iri, kind)) = declaration_component(&annotated.component) {
+                declaration_kind_sets
+                    .entry(iri.clone())
+                    .or_default()
+                    .insert(kind);
                 if let Some(prev) = declaration_kinds.insert(iri.clone(), kind) {
                     if prev != kind {
                         declaration_warnings.push(format!(
@@ -39,6 +45,13 @@ pub fn map_to_core(
             }
         }
     }
+    let punned_class_individuals: HashSet<String> = declaration_kind_sets
+        .iter()
+        .filter(|(_, kinds)| {
+            kinds.contains(&EntityKind::Class) && kinds.contains(&EntityKind::Individual)
+        })
+        .map(|(iri, _)| iri.clone())
+        .collect();
     for warning in declaration_warnings {
         report.meta.warn(warning);
     }
@@ -47,8 +60,14 @@ pub fn map_to_core(
         ontology: &mut ontology,
         report: &mut report,
         limits,
+        punned_class_individuals: &punned_class_individuals,
     };
     for (iri, kind) in declaration_kinds {
+        let kind = if punned_class_individuals.contains(&iri) {
+            EntityKind::ClassIndividual
+        } else {
+            kind
+        };
         let _ = mapper.register_or_warn_entity(&iri, kind);
     }
     // Pass 2a: datatype definitions before property ranges that reference them.
@@ -116,6 +135,7 @@ pub(crate) struct Mapper<'a> {
     pub(crate) ontology: &'a mut Ontology,
     pub(crate) report: &'a mut ParseReport,
     limits: ParseLimits,
+    punned_class_individuals: &'a HashSet<String>,
 }
 
 #[derive(Copy, Clone)]
@@ -1017,6 +1037,17 @@ impl Mapper<'_> {
                 self.limits.max_entities
             )));
         }
+        if self.punned_class_individuals.contains(iri)
+            && matches!(kind, EntityKind::Class | EntityKind::Individual)
+        {
+            if let Some(id) = self.ontology.lookup_entity(iri) {
+                return Ok(id);
+            }
+            return self
+                .ontology
+                .entity_id(iri, EntityKind::ClassIndividual)
+                .map_err(|e: CoreError| Error::Parse(e.to_string()));
+        }
         self.ontology
             .entity_id(iri, kind)
             .map_err(|e: CoreError| Error::Parse(e.to_string()))
@@ -1148,6 +1179,7 @@ fn iri_of<T: horned_owl::model::ForIRI>(entity: &horned_owl::model::IRI<T>) -> &
 mod tests {
     use super::*;
     use ontologos_core::{EntityKind, Ontology};
+    use std::collections::HashSet;
 
     #[test]
     fn push_axiom_allows_axioms_at_entity_limit() {
@@ -1157,11 +1189,13 @@ mod tests {
             max_entities: 2,
             ..ParseLimits::default()
         };
+        let punned = HashSet::new();
         {
             let mut mapper = Mapper {
                 ontology: &mut ontology,
                 report: &mut report,
                 limits,
+                punned_class_individuals: &punned,
             };
             let a = mapper
                 .register_entity("http://ex.org/A", EntityKind::Class)
