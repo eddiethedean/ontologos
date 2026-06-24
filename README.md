@@ -6,51 +6,105 @@
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
 ![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)
 
-Native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to
-**reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
+**OntoLogos** is native Rust ontology reasoning orchestration: load OWL files, detect profiles, and delegate to **reasonable** (RL/RDFS) and **horned-owl** (parsing) through stable facades. **OWL EL** uses the in-house completion engine in `ontologos-el`.
 
-**Try in 5 minutes:** `pip install ontologos` or add `ontologos-parser = "1.0.0"` to Cargo.toml — no clone required.
+OntoLogos solves: *"We want OWL reasoning embedded in Rust or Python services—not a Java stack or ad-hoc script glue."*
 
-**Status:** **v1.0.0** workspace on `main` — HermiT parity in progress (**593** active conformance tests). See [Release status](docs/project/release-status.md) and [HermiT parity gap report](docs/internal/hermit-parity-gap-report.md).
+Library-first orchestration: **load → detect profile → classify/materialize**, not a Protégé replacement.
 
-| You need… | Use today |
-|-----------|-----------|
-| Embed ontology graph in Rust | `ontologos-core` |
-| Load `.owl` / `.ttl` files | `ontologos-parser` (horned-owl) |
-| RDFS TBox inferences | `ontologos-rdfs` → reasonable |
-| OWL RL saturation | `ontologos-rl` → reasonable |
-| OWL EL taxonomy | `ontologos-el` (in-house completion) |
-| Multi-profile routing | `ontologos-facade` (CLI, Python, DL preview) |
-| Engine adapters / conversions | `ontologos-bridge` |
+**In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "1.0.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
 
-> **New to the workspace?** Start with `pip install ontologos` or `ontologos-parser` + `ontologos-rdfs`. See [Choosing an API](docs/guides/choosing-an-api.md).
+> **Using OntoLogos in your app?** You do not need to clone this repo. Use crates.io / PyPI and follow the [5-minute guide](https://ontologos.readthedocs.io/en/latest/getting-started/). Clone only to contribute, run benchmarks, or build the CLI.
 
-**5-minute try:** [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/) · **API:** [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.0.0)
+| | |
+|---|---|
+| **Latest workspace** | **1.0.0** on `main` · [CHANGELOG](CHANGELOG.md) |
+| **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
+| **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
+| **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
+| **Rust** | [Prerequisites decision table](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html) |
 
-> **Partial OWL mapping:** `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](docs/reference/supported-constructs.md).
+---
 
-## Install
+## Choose your path
 
-Requires **Rust 1.88+**.
+| Path | Start here |
+|------|------------|
+| **Not sure?** | [Start here](https://ontologos.readthedocs.io/en/latest/guides/start-here.html) on Read the Docs |
+| **Rust (no clone)** | [5-minute crates.io guide](https://ontologos.readthedocs.io/en/latest/getting-started/#cratesio-only-no-clone) |
+| **Python** | `pip install ontologos` → [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html) |
+| **CLI** | Clone → `cargo build -p ontologos-cli --release` → [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli.html) |
+| **Evaluate vs HermiT/ELK** | [Evaluator playbook](https://ontologos.readthedocs.io/en/latest/guides/evaluator-playbook.html) · [Comparison](https://ontologos.readthedocs.io/en/latest/comparison.html) |
+| **Contribute** | Clone → [CONTRIBUTING](CONTRIBUTING.md) |
 
-```toml
-[dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
-ontologos-profile = "1.0.0"
-ontologos-bridge = "1.0.0"
-ontologos-rdfs = "1.0.0"
-ontologos-rl = "1.0.0"
-ontologos-el = "1.0.0"
-ontologos-query = "1.0.0"
-ontologos-explain = "1.0.0"
-```
+---
 
-**Python:** `pip install ontologos` — `Ontology`, `Reasoner`, `explain()`, incremental mutations ([Python guide](docs/guides/python.md)).
+## Table of contents
 
-## Quick start (crates.io)
+- [Choose your path](#choose-your-path)
+- [Why OntoLogos](#why-ontologos)
+- [Which crates do I need?](#which-crates-do-i-need)
+- [Features](#features)
+- [Quick start](#quick-start)
+- [How it works](#how-it-works)
+- [Example](#example)
+- [Packages](#packages)
+- [Documentation](#documentation)
+- [Development](#development)
+- [License](#license)
 
-No repository clone required — download a sample ontology:
+---
+
+## Why OntoLogos
+
+| Audience | What you get |
+|----------|--------------|
+| **Rust application developers** | Composable crates, `Ontology` / `OntologyBuilder`, JSON snapshots, incremental sessions |
+| **Python data pipelines** | `Reasoner`, `OntologyBuilder`, `explain()`, optional pandas/polars export |
+| **OWL RL / RDFS workflows** | Forward-chaining via **reasonable** through `ontologos-rl` / `ontologos-rdfs` |
+| **OWL EL taxonomies** | In-house completion in `ontologos-el` (no Java) |
+| **Early DL adopters** | In-progress tableau (`ontologos-dl`); HermiT parity ~58% in-scope — not production HermiT yet |
+
+---
+
+## Which crates do I need?
+
+| Goal | Install |
+|------|---------|
+| Core ontology graph | `ontologos-core` |
+| Load `.owl` / `.ttl` | `ontologos-parser` |
+| Profile detection | `ontologos-profile` |
+| RDFS materialization | `ontologos-rdfs` |
+| OWL RL saturation | `ontologos-rl` |
+| OWL EL taxonomy | `ontologos-el` |
+| Multi-profile routing | `ontologos-facade` |
+| Explanations | `ontologos-explain` |
+| Taxonomy queries | `ontologos-query` |
+| CLI binary | Build `ontologos-cli` from this repo (not on crates.io) |
+| Python | `pip install ontologos` |
+
+See [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api.html) for entry points. There is no umbrella `ontologos` meta-crate on crates.io.
+
+---
+
+## Features
+
+| Area | Examples |
+|------|----------|
+| **Loading** | OWL Functional, RDF/XML, Turtle via horned-owl |
+| **Profiles** | EL, RL, RDFS, QL detection; `auto` routing |
+| **Reasoning** | RDFS materialize, RL saturate, EL classify, DL preview |
+| **Incremental** | Session state for EL/RL/RDFS mutations |
+| **Explain** | Proof graphs (EL full; RL/RDFS asserted-only) |
+| **Interop** | JSON snapshot v2, bridge adapters, Python wheels |
+
+Full construct matrix: [Supported constructs](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs.html).
+
+---
+
+## Quick start
+
+### Rust (crates.io, no clone)
 
 ```bash
 curl -L -o family.owl \
@@ -61,11 +115,6 @@ cargo new ontologos-demo && cd ontologos-demo
 `Cargo.toml`:
 
 ```toml
-[package]
-name = "ontologos-demo"
-version = "0.1.0"
-edition = "2021"
-
 [dependencies]
 ontologos-core = "1.0.0"
 ontologos-parser = "1.0.0"
@@ -79,9 +128,7 @@ use ontologos_parser::load_ontology;
 use ontologos_rdfs::RdfsEngine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = std::path::Path::new("family.owl");
-    let mut ontology = load_ontology(path)?;
-
+    let mut ontology = load_ontology(std::path::Path::new("family.owl"))?;
     let report = RdfsEngine::new().materialize(&mut ontology)?;
     println!(
         "mapped {} → {} axioms (inferred {})",
@@ -97,52 +144,149 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 cargo run
 ```
 
-OWL RL saturation, profile detection, and CLI examples: [documentation site](https://ontologos.readthedocs.io/en/latest/getting-started/).
+OWL RL, profile detection, and more: [Getting started](https://ontologos.readthedocs.io/en/latest/getting-started/).
 
-## Quick start (repository clone)
+### Python
 
-For CLI, benchmarks, and full test suite:
+```bash
+pip install ontologos
+```
+
+```python
+from ontologos import Reasoner
+
+report = Reasoner(path="ontology.owl").classify()
+print(report.profile, report.axiom_count)
+```
+
+See [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html).
+
+### Repository clone (CLI, benchmarks, tests)
 
 ```bash
 git clone https://github.com/eddiethedean/ontologos.git
 cd ontologos
-./benchmarks/scripts/download.sh   # Pizza corpus; Family is vendored
-cargo run -p ontologos-core --example pizza_builder
+./benchmarks/scripts/download.sh
 cargo build -p ontologos-cli --release
-./target/release/ontologos materialize benchmarks/data/family.owl
+./target/release/ontologos classify --profile auto benchmarks/data/family.owl
 ```
 
-> **CLI:** `classify --profile auto` routes to EL or RL; use `materialize` for explicit RDFS. See [CLI reference](docs/reference/cli.md).
+---
 
-## Workspace
+## How it works
 
-| Crate | Description | Published |
-|-------|-------------|-----------|
-| `ontologos-core` | Data model, builder, JSON v2 | crates.io |
-| `ontologos-bridge` | core ↔ horned-owl/oxrdf adapters | crates.io |
-| `ontologos-parser` | OWL/RDF loading (horned-owl) | crates.io |
-| `ontologos-profile` | Profile detection | crates.io |
-| `ontologos-rdfs` | RDFS facade → reasonable | crates.io |
-| `ontologos-rl` | OWL RL facade → reasonable | crates.io |
-| `ontologos-el` | OWL EL completion engine | crates.io |
-| `ontologos-explain` | Proof graphs and explanations | crates.io |
-| `ontologos-query` | Taxonomy queries | crates.io |
-| `ontologos-cli` | CLI binary | Source-build only |
-| `ontologos-watch` | File-watch reload (Ontocode hook) | Workspace only |
-| `ontologos-py` | Python bindings | PyPI (alpha) |
+```
+  Load (parser)          Profile detect          Reason
+  ─────────────          ──────────────          ──────
+  OWL / RDF file    →    EL / RL / RDFS / DL  →  Engine crate
+  OntologyBuilder        ontologos-profile       (rdfs / rl / el / dl)
+  JSON snapshot v2                             →  Taxonomy + reports
+```
 
-Full feature matrix and roadmap: [documentation index](docs/index.md) · [ROADMAP](ROADMAP.md)
+```
+  Author (Rust / Python / CLI)
+           │
+           ▼
+    load_ontology / Reasoner
+           │
+           ▼
+    detect_profile (optional)
+           │
+           ▼
+    classify / materialize / explain
+           │
+           ▼
+    Taxonomy, proofs, JSON output
+
+```
+
+At runtime, **`ontologos-facade`** routes `classify` by profile. Use **`materialize`** for explicit RDFS (same engine as `classify --profile rdfs`).
+
+---
+
+## Example
+
+```rust
+use ontologos_parser::load_ontology;
+use ontologos_el::ElClassifier;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let ontology = load_ontology("pizza.owl".as_ref())?;
+    let taxonomy = ElClassifier::new().classify(&ontology)?;
+    for (sub, sup) in &taxonomy.subsumptions {
+        println!("{sub:?} ⊑ {sup:?}");
+    }
+    Ok(())
+}
+```
+
+Do **not** call `ontologos_core::Reasoner::classify()` — use profile crates or the facade. See [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api.html).
+
+---
+
+## Upgrading from an older version
+
+See [Migration hub](https://ontologos.readthedocs.io/en/latest/migration/) for guides by version (including [v0.8 → v1.0](https://ontologos.readthedocs.io/en/latest/migration/v0.8.x-to-v1.0.0.html)).
+
+---
+
+## Packages
+
+| Crate | crates.io | Description |
+|-------|-----------|-------------|
+| `ontologos-core` | [yes](https://crates.io/crates/ontologos-core) | Data model, builder, JSON v2 |
+| `ontologos-parser` | [yes](https://crates.io/crates/ontologos-parser) | OWL/RDF loading |
+| `ontologos-profile` | [yes](https://crates.io/crates/ontologos-profile) | Profile detection |
+| `ontologos-rdfs` | [yes](https://crates.io/crates/ontologos-rdfs) | RDFS → reasonable |
+| `ontologos-rl` | [yes](https://crates.io/crates/ontologos-rl) | OWL RL → reasonable |
+| `ontologos-el` | [yes](https://crates.io/crates/ontologos-el) | OWL EL completion |
+| `ontologos-explain` | [yes](https://crates.io/crates/ontologos-explain) | Proof graphs |
+| `ontologos-query` | [yes](https://crates.io/crates/ontologos-query) | Taxonomy queries |
+| `ontologos-facade` | [yes](https://crates.io/crates/ontologos-facade) | Unified classify routing |
+| `ontologos-bridge` | [yes](https://crates.io/crates/ontologos-bridge) | horned-owl / reasonable adapters |
+| `ontologos-cli` | source only | CLI binary |
+| `ontologos-py` | [PyPI](https://pypi.org/project/ontologos/) | Python bindings |
+
+---
 
 ## Documentation
 
-| Section | Link |
-|---------|------|
-| **Documentation site** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/) |
-| **Getting started** | [docs/getting-started/](docs/getting-started/index.md) |
-| **Guides** | [RDFS](docs/getting-started/rdfs-materialization.md) · [OWL RL](docs/getting-started/owl-rl-saturation.md) · [Python](docs/guides/python.md) · [Comparison](docs/comparison.md) |
-| **Reference** | [CLI](docs/reference/cli.md) · [Errors](docs/reference/errors.md) · [Supported constructs](docs/reference/supported-constructs.md) |
-| **Project** | [FAQ](FAQ.md) · [CONTRIBUTING](CONTRIBUTING.md) · [CHANGELOG](CHANGELOG.md) |
-| **v1.0.0 release** | [Release notes](.github/release/v1.0.0.md) · [Migration guide](docs/migration/v0.8.x-to-v1.0.0.md) |
+Full site: **[ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/)**
+
+| Topic | Link |
+|-------|------|
+| Start here | [Persona paths](https://ontologos.readthedocs.io/en/latest/guides/start-here.html) |
+| Prerequisites | [Rust / Python / clone](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html) |
+| Choosing an API | [Crate picker](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api.html) |
+| CLI | [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli.html) |
+| Python | [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html) |
+| Errors | [Error reference](https://ontologos.readthedocs.io/en/latest/reference/errors.html) |
+| Conformance | [HermiT-ported tests](https://ontologos.readthedocs.io/en/latest/reference/conformance.html) |
+| Migration | [Upgrade hub](https://ontologos.readthedocs.io/en/latest/migration/) |
+
+Source markdown: `docs/` · Changelog: [CHANGELOG.md](CHANGELOG.md) · Security: [docs/project/security-policy.md](docs/project/security-policy.md)
+
+---
+
+## Development
+
+```bash
+git clone https://github.com/eddiethedean/ontologos.git
+cd ontologos
+./benchmarks/scripts/download.sh
+cargo test --workspace --exclude ontologos-conformance
+cargo clippy --workspace --all-targets -- -D warnings
+```
+
+| Change type | Usually enough |
+|-------------|----------------|
+| `docs/` only | `./docs/build-site.sh` |
+| Single crate | `cargo test -p ontologos-el` |
+| Full CI parity | `cargo test --workspace` + conformance release build |
+
+Contributors: [CONTRIBUTING.md](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [ROADMAP.md](ROADMAP.md)
+
+---
 
 ## License
 

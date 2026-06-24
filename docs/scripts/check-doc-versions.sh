@@ -29,7 +29,7 @@ while IFS= read -r file; do
     fi
   done < "$file"
 done < <(
-  find docs/getting-started docs/guides docs/reference docs/comparison.md docs/security.md docs/architecture.md FAQ.md \
+  find docs/getting-started docs/guides docs/reference docs/comparison.md docs/security.md docs/architecture.md docs/index.md README.md FAQ.md \
     -type f -name '*.md' 2>/dev/null | sort
 )
 

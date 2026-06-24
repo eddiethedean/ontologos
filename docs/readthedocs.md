@@ -31,12 +31,14 @@ pip install -r docs/requirements.txt
 
 Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) for live reload.
 
-Static output:
+Static output (matches CI — strict MkDocs, no warnings, version pins):
 
 ```bash
 chmod +x docs/build-site.sh
 ./docs/build-site.sh
 ```
+
+`build-site.sh` runs `mkdocs build --strict`, fails on any `WARNING` line, and runs `docs/scripts/check-doc-versions.sh`.
 
 Output directory: `site/` (gitignored).
 

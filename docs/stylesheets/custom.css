@@ -1,0 +1,151 @@
+/* OntoLogos docs — modern layer on MkDocs Material */
+
+/* ── Landing hero ───────────────────────────────────────────── */
+.ol-hero {
+  margin: 0 0 2.5rem;
+  padding: 2.75rem 2rem 2.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  background:
+    radial-gradient(ellipse 120% 80% at 100% -20%, rgba(63, 81, 181, 0.14), transparent 55%),
+    radial-gradient(ellipse 80% 60% at 0% 100%, rgba(92, 107, 192, 0.1), transparent 50%),
+    var(--md-code-bg-color);
+  position: relative;
+  isolation: isolate;
+}
+
+.ol-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, transparent 40%, rgba(63, 81, 181, 0.04) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ol-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.md-typeset h1:first-of-type:has(+ .ol-hero) {
+  display: none;
+}
+
+.ol-hero-title {
+  font-size: clamp(1.85rem, 4vw, 2.65rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  margin: 0 0 0.75rem;
+  color: var(--md-default-fg-color);
+  text-wrap: balance;
+}
+
+.ol-hero .ol-lead {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--md-default-fg-color--light);
+  max-width: 42rem;
+  margin: 0 0 1.5rem;
+  text-wrap: pretty;
+}
+
+.ol-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ol-hero-kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--md-default-fg-color--light);
+}
+
+.ol-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color--light);
+}
+
+.ol-badge--accent {
+  border-color: rgba(63, 81, 181, 0.35);
+  background: rgba(63, 81, 181, 0.08);
+  color: var(--md-primary-fg-color);
+}
+
+.ol-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  text-decoration: none !important;
+  color: var(--md-primary-bg-color) !important;
+  background: var(--md-primary-fg-color);
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.ol-hero-cta:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.ol-hero-cta--secondary {
+  color: var(--md-primary-fg-color) !important;
+  background: transparent;
+  border: 1px solid var(--md-primary-fg-color);
+}
+
+.ol-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* ── Path cards (Material grid enhancement) ───────────────── */
+.md-typeset .grid.cards > ul > li {
+  border-radius: 1rem;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px -12px rgba(15, 23, 42, 0.12);
+}
+
+[data-md-color-scheme="slate"] .md-typeset .grid.cards > ul > li:hover {
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Inline callout ─────────────────────────────────────────── */
+.ol-callout {
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 0.75rem;
+  border-left: 4px solid var(--md-primary-fg-color);
+  background: rgba(63, 81, 181, 0.06);
+  font-size: 0.95rem;
+}
+
+[data-md-color-scheme="slate"] .ol-callout {
+  background: rgba(63, 81, 181, 0.12);
+}

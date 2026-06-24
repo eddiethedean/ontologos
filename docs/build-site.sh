@@ -10,4 +10,18 @@ export NO_MKDOCS_2_WARNING=1
 SITE_DIR="${1:-site}"
 shift || true
 
-exec mkdocs build --strict --site-dir "$SITE_DIR" "$@"
+OUTPUT="$(
+  mkdocs build --strict --site-dir "$SITE_DIR" "$@" 2>&1
+)" || {
+  echo "$OUTPUT"
+  exit 1
+}
+echo "$OUTPUT"
+
+if echo "$OUTPUT" | grep -qiE '(^|[[:space:]])WARNING[[:space:]-]'; then
+  echo "error: mkdocs build emitted warnings (see output above)" >&2
+  exit 1
+fi
+
+chmod +x docs/scripts/check-doc-versions.sh
+./docs/scripts/check-doc-versions.sh

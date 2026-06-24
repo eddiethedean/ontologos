@@ -164,7 +164,3 @@ jobs:
         run: |
           chmod +x docs/build-site.sh
           ./docs/build-site.sh
-      - name: Documentation version consistency
-        run: |
-          chmod +x docs/scripts/check-doc-versions.sh
-          ./docs/scripts/check-doc-versions.sh

@@ -53,9 +53,14 @@ theme:
   icon:
     repo: fontawesome/brands/github
 
+extra_css:
+  - stylesheets/custom.css
+
 nav:
   - Home: index.md
   - Getting started:
+      - Start here: guides/start-here.md
+      - Prerequisites: guides/prerequisites.md
       - getting-started/index.md
       - First ontology: getting-started/first-ontology.md
       - Load an OWL file: getting-started/load-owl-file.md
@@ -140,6 +145,9 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.snippets
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - tables
   - toc:
       permalink: true
@@ -166,4 +174,6 @@ validation:
     not_found: warn
   links:
     not_found: warn
-    absolute_links: info
+    anchors: warn
+    absolute_links: ignore
+    unrecognized_links: ignore
