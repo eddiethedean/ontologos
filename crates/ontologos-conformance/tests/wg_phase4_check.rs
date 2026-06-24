@@ -5,14 +5,21 @@ use ontologos_parser::load_ontology;
 use std::path::PathBuf;
 
 fn wg_fixture(rel: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/hermit").join(rel)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit")
+        .join(rel)
 }
 
 fn assert_consistent(rel: &str, expected: bool) {
     let path = wg_fixture(rel);
     let ont = load_ontology(&path).expect("load");
     let actual = is_consistent(&ont).expect("check");
-    assert_eq!(actual, expected, "{}: expected {expected}, got {actual}", path.display());
+    assert_eq!(
+        actual,
+        expected,
+        "{}: expected {expected}, got {actual}",
+        path.display()
+    );
 }
 
 fn case_by_suffix(suffix: &str) -> ontologos_conformance::WgCase {
@@ -29,7 +36,10 @@ fn wg_thing_003_inconsistent() {
 
 #[test]
 fn wg_pattern_disjointness_inconsistent() {
-    assert_consistent("wg/Inconsistent-2Dpattern-2Ddisjointness/premise.ofn", false);
+    assert_consistent(
+        "wg/Inconsistent-2Dpattern-2Ddisjointness/premise.ofn",
+        false,
+    );
 }
 
 #[test]

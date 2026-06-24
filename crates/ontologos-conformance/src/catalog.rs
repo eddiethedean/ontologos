@@ -390,7 +390,10 @@ fn ci_promoted_only() -> bool {
 }
 
 fn wg_short_id(case_id: &str) -> &str {
-    case_id.split_once('.').map(|(_, rest)| rest).unwrap_or(case_id)
+    case_id
+        .split_once('.')
+        .map(|(_, rest)| rest)
+        .unwrap_or(case_id)
 }
 
 fn case_has_axiom_assertions(case: &HermitCase) -> bool {
@@ -867,14 +870,10 @@ fn check_individual_types_result(
     Ok(())
 }
 
-fn individual_has_type(
+fn individual_asserted_class_types(
     ontology: &Ontology,
-    taxonomy: &ontologos_core::Taxonomy,
     individual: ontologos_core::EntityId,
-    class: ontologos_core::EntityId,
-    direct: bool,
-    allow_entailment_probe: bool,
-) -> bool {
+) -> std::collections::HashSet<ontologos_core::EntityId> {
     let mut asserted: std::collections::HashSet<ontologos_core::EntityId> =
         ontology.classes_of(individual).iter().copied().collect();
     for axiom in ontology.dl().axioms() {
@@ -895,9 +894,46 @@ fn individual_has_type(
             }
         }
     }
+    asserted
+}
+
+fn individual_has_type(
+    ontology: &Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+    individual: ontologos_core::EntityId,
+    class: ontologos_core::EntityId,
+    direct: bool,
+    allow_entailment_probe: bool,
+) -> bool {
+    let asserted = individual_asserted_class_types(ontology, individual);
     if direct {
-        return asserted.contains(&class);
+        return individual_has_direct_named_type(
+            ontology,
+            taxonomy,
+            individual,
+            class,
+            allow_entailment_probe,
+            &asserted,
+        );
     }
+    individual_has_inferred_named_type(
+        ontology,
+        taxonomy,
+        individual,
+        class,
+        allow_entailment_probe,
+        &asserted,
+    )
+}
+
+fn individual_has_inferred_named_type(
+    ontology: &Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+    individual: ontologos_core::EntityId,
+    class: ontologos_core::EntityId,
+    allow_entailment_probe: bool,
+    asserted: &std::collections::HashSet<ontologos_core::EntityId>,
+) -> bool {
     if asserted
         .iter()
         .any(|t| *t == class || taxonomy.is_subsumed(*t, class))
@@ -914,6 +950,51 @@ fn individual_has_type(
         return datalog_class_members(ontology, taxonomy, class).contains(&format!(":{local}"));
     }
     false
+}
+
+fn individual_has_direct_named_type(
+    ontology: &Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+    individual: ontologos_core::EntityId,
+    class: ontologos_core::EntityId,
+    allow_entailment_probe: bool,
+    asserted: &std::collections::HashSet<ontologos_core::EntityId>,
+) -> bool {
+    if !individual_has_inferred_named_type(
+        ontology,
+        taxonomy,
+        individual,
+        class,
+        allow_entailment_probe,
+        asserted,
+    ) {
+        return false;
+    }
+    let equivalents: std::collections::HashSet<ontologos_core::EntityId> = taxonomy
+        .equivalent_classes(class)
+        .map(|cluster| cluster.iter().copied().collect())
+        .unwrap_or_default();
+    for (id, record) in ontology.entities().iter() {
+        if record.kind != ontologos_core::EntityKind::Class
+            || id == class
+            || equivalents.contains(&id)
+        {
+            continue;
+        }
+        if taxonomy.is_subsumed(id, class)
+            && individual_has_inferred_named_type(
+                ontology,
+                taxonomy,
+                individual,
+                id,
+                allow_entailment_probe,
+                asserted,
+            )
+        {
+            return false;
+        }
+    }
+    true
 }
 
 fn atomic_class_entailed_for_individual(
@@ -1977,8 +2058,8 @@ pub fn check_wg_case(case: &WgCase) -> Result<(), String> {
     let ontology = load_ontology(&path).map_err(|e| format!("{}: load premise: {e}", case.id))?;
 
     if let Some(expected) = case.expected_consistent {
-        let actual = dl_is_consistent_bounded(&ontology)
-            .map_err(|e| format!("{}: {e}", case.id))?;
+        let actual =
+            dl_is_consistent_bounded(&ontology).map_err(|e| format!("{}: {e}", case.id))?;
         if actual != expected {
             return Err(format!(
                 "{}: consistency expected {expected}, got {actual}",
@@ -2070,9 +2151,7 @@ pub fn scan_planned_wg_failures() -> Vec<(String, String)> {
         .par_iter()
         .filter_map(|case| {
             log_parallel_progress("wg scan", &done, total, &case.id);
-            check_wg_case(case)
-                .err()
-                .map(|err| (case.id.clone(), err))
+            check_wg_case(case).err().map(|err| (case.id.clone(), err))
         })
         .collect();
     failures.sort_by(|a, b| a.0.cmp(&b.0));
@@ -2756,11 +2835,7 @@ fn same_individual_pairs(ontology: &Ontology) -> Vec<(EntityId, EntityId)> {
     pairs
 }
 
-fn individual_typed_with_class(
-    ontology: &Ontology,
-    individual: EntityId,
-    class: EntityId,
-) -> bool {
+fn individual_typed_with_class(ontology: &Ontology, individual: EntityId, class: EntityId) -> bool {
     for axiom in ontology.dl().axioms() {
         if let DlAxiom::ClassAssertion {
             individual: ind,
@@ -2801,17 +2876,17 @@ fn premise_entity_used_as_class(premise: &Ontology, entity: EntityId) -> bool {
 fn premise_entity_used_as_individual_only(premise: &Ontology, entity: EntityId) -> bool {
     let used_as_individual = premise.dl().axioms().any(|axiom| match axiom {
         DlAxiom::ClassAssertion { individual, .. } => *individual == entity,
-        DlAxiom::ObjectPropertyAssertion { subject, object, .. } => {
-            *subject == entity || *object == entity
-        }
+        DlAxiom::ObjectPropertyAssertion {
+            subject, object, ..
+        } => *subject == entity || *object == entity,
         DlAxiom::DataPropertyAssertion { subject, .. } => *subject == entity,
         DlAxiom::SameIndividual(individuals) => individuals.contains(&entity),
         _ => false,
     }) || premise.axioms().iter().any(|(_, axiom)| match axiom {
         ontologos_core::Axiom::ClassAssertion { individual, .. } => *individual == entity,
-        ontologos_core::Axiom::ObjectPropertyAssertion { subject, object, .. } => {
-            *subject == entity || *object == entity
-        }
+        ontologos_core::Axiom::ObjectPropertyAssertion {
+            subject, object, ..
+        } => *subject == entity || *object == entity,
         ontologos_core::Axiom::SameIndividual(individuals) => individuals.contains(&entity),
         _ => false,
     });

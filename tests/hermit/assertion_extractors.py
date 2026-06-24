@@ -246,6 +246,24 @@ def extract_individual_types(body: str) -> list[dict[str, Any]]:
         body,
     ):
         add(f":{m.group(2)}", f":{m.group(3)}", m.group(1) == "True", m.group(4) == "true")
+    get_types = re.search(r"getTypes\s*\(\s*(\w+)\s*,\s*true\s*\)", body)
+    if get_types:
+        ind_var = get_types.group(1)
+        ind_m = re.search(
+            rf"{re.escape(ind_var)}\s*=\s*NS_NI\s*\(\s*\"([^\"]+)\"\s*\)",
+            body,
+        )
+        for m in re.finditer(
+            r"assertTrue\s*\(\s*contains\s*\(\s*result\.entities\s*\(\s*\)\s*,\s*(\w+)\s*\)\s*\)",
+            body,
+        ):
+            cls_var = m.group(1)
+            cls_m = re.search(
+                rf"{re.escape(cls_var)}\s*=\s*NS_C\s*\(\s*\"([^\"]+)\"\s*\)",
+                body,
+            )
+            if ind_m and cls_m:
+                add(f":{ind_m.group(1)}", f":{cls_m.group(1)}", True, True)
     for m in re.finditer(
         r"assertInstanceOf\s*\(\s*([A-Za-z_][\w]*)\s*,\s*([A-Za-z_][\w]*)\s*,\s*(true|false)\s*\)",
         body,

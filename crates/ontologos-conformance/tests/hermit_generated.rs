@@ -1851,7 +1851,6 @@ fn hermit_reasoner_reasonertest_testindividualretrievalbug() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testdirect() {
     run_hermit_case("reasoner.ReasonerTest.testDirect");
 }

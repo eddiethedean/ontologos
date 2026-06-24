@@ -1,6 +1,6 @@
 # HermiT parity gap report
 
-**Updated:** 2026-06-22 (live tooling — re-run scripts before trusting counts)  
+**Updated:** 2026-06-23 (Phase 3 complete)  
 **Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))
 
 **Triage commands (source of truth):**
@@ -16,6 +16,7 @@ cargo run --release -p ontologos-conformance --bin dl_failures
 cargo run --release -p ontologos-conformance --bin dl_ofn_pass_rate
 cargo run --release -p ontologos-conformance --bin promote_catalog
 bash benchmarks/scripts/promote-hermit-catalog.sh
+cargo test -p ontologos-conformance --test phase3_closure
 ```
 
 ---
@@ -24,43 +25,41 @@ bash benchmarks/scripts/promote-hermit-catalog.sh
 
 | Signal | Value |
 |--------|------:|
-| **parity_pct** (in-scope catalog) | **~75%** (234 planned / 958 in-scope) |
-| Current ROADMAP phase | **3** (DL engine gaps — in progress) |
-| Active CI conformance tests | **~680+** (233 axiom + wg + …) |
-| Catalog `axiom` cases | **233** |
-| Promoted axiom IDs | **233** (`promoted_axiom_ids.txt`) |
-| Planned `engine_gap` (audit) | **0** (down from 72) |
+| **parity_pct** (in-scope catalog) | **~72%** (267 planned / 958 in-scope) |
+| Current ROADMAP phase | **4** (WG fixtures) — **Phase 3 complete** |
+| Catalog `axiom` cases | **270** |
+| Promoted axiom IDs | **270** (`promoted_axiom_ids.txt`) |
+| Planned `engine_gap` (audit) | **0** |
+| Planned `promotion_candidate` (audit) | **0** |
+| Planned `missing_assertions` (audit) | **0** |
 | Bounded `engine_failures` | **0** |
-| Planned Java backlog | **~234** — see [planned-backlog-triage.json](planned-backlog-triage.json) |
+| Planned Java backlog | **200** (`manual_port` only) |
 | Planned WG backlog | **67** |
 
-**Status (2026-06-23):** `engine_gap` **0** (was 72); bounded `engine_failures` **0** (was 39); **233** catalog `axiom` cases; **233** promoted IDs. IanT6 (functional `f` clash + `add_role_edge` in ABox materialization), IanT7b (defer transitive saturation during ∃ expansion), IanT1c, IanT5, nominals3/6, smoke suite, and CE probe harness fixes landed. **Phase 3 engine exit criteria met** pending promotion scan + full conformance green.
+**Phase 3 exit (met):** `engine_gap` **0**; `promotion_candidate` **0**; `missing_assertions` **0**; **270** promoted axiom cases (+43); direct-type retrieval for `testDirect`; `phase3_closure` gate **4/4** green.
 
-**Recent fixes (2026-06-22):** ROADMAP parity phases (P0–P9); Widmann + WG dl-026/601/626 enabled; WG catalog override fix; optional DL corpus goldens + HermiT JAR cross-check harness.
+**Next (Phase 4):** vendor WG premise RDF (~52), fill WG expectations (~15), `wg_planned → 0`.
 
 ---
 
 ## Conformance harness snapshot
 
+Regenerate live counts:
+
+```bash
+bash benchmarks/scripts/report-conformance-coverage.sh
+```
+
 ### Catalog (`benchmarks/data/hermit/catalog/cases.json`)
 
 | Status | Count | Meaning |
 |--------|------:|---------|
-| `axiom` | 136 | Active semantic checks |
-| `planned` | 330 | Roadmap — triaged in `audit-planned-backlog.sh` |
+| `axiom` | 270 | Active semantic checks |
+| `planned` | 200 | Manual port backlog (Phase 5) |
 | `clausify` | 33 | Structural DL clausification regression |
-| `swrl` | 24 | SWRL forward chaining |
+| `swrl` | 19 | SWRL forward chaining |
 | `internal` | 55 | Engine-internal (ignored) |
-| `ported` | 10 | Hand-written redirects |
 | **Total** | **591** | |
-
-### CI execution
-
-| Metric | Value |
-|--------|------:|
-| Tests defined (conformance crate) | **1063** |
-| **Active (default `cargo test`)** | **593** |
-| Ignored | **470** |
 
 ### OWL WG
 
@@ -78,31 +77,3 @@ bash benchmarks/scripts/promote-hermit-catalog.sh
 | `family.owl` | Yes | When `HERMIT_JAR` set |
 | `pizza.owl` | Optional (`RUN_SLOW_DL_GATES=1`) | When `HERMIT_JAR` set |
 | `go-subset.owl` | Optional (`RUN_SLOW_DL_GATES=1`) | When `HERMIT_JAR` set |
-
-See [taxonomy-tolerance.md](../reference/taxonomy-tolerance.md) and `benchmarks/scripts/compare-dl-hermit-crosscheck.sh`.
-
----
-
-## Parity phases
-
-See [ROADMAP.md § HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag). Progress formula:
-
-```text
-parity_pct = 100 × (1 − (java_planned + wg_planned) / 958)
-```
-
----
-
-## Promotion loop
-
-```bash
-bash benchmarks/scripts/promote-hermit-catalog.sh
-```
-
-Planned backlog categories: `bash benchmarks/scripts/audit-planned-backlog.sh`
-
----
-
-## Historical note
-
-Older revisions cited 67 DL failures, 100–211 active tests, or 119/121 OFN pass rate. Always prefer script output over this file.

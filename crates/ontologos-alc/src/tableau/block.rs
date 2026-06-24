@@ -28,9 +28,7 @@ pub(crate) fn max_expansions() -> u32 {
 #[must_use]
 pub(crate) fn max_worlds() -> usize {
     static V: OnceLock<usize> = OnceLock::new();
-    *V.get_or_init(|| {
-        env_u32("ONTOLOGOS_TABLEAU_MAX_WORLDS", MAX_WORLDS as u32) as usize
-    })
+    *V.get_or_init(|| env_u32("ONTOLOGOS_TABLEAU_MAX_WORLDS", MAX_WORLDS as u32) as usize)
 }
 
 /// Maximum stall iterations while every pending world is blocked.

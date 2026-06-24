@@ -76,7 +76,6 @@ reasoner.EntailmentTest.testIntegerEntailment
 reasoner.EntailmentTest.testInvalidBlankNodes
 reasoner.EntailmentTest.testValidBlankNodes
 reasoner.EntailmentTest.testValidBlankNodesInPremise
-reasoner.EntailmentTest.testValidBlankNodesWithNominals
 reasoner.FloatDoubleTest.testINF
 reasoner.OWLReasonerTest.testBottomObjectPropertySubs
 reasoner.OWLReasonerTest.testGetDataPropertyValues
@@ -152,11 +151,9 @@ reasoner.ReasonerTest.testIanT1c
 reasoner.ReasonerTest.testIanT2
 reasoner.ReasonerTest.testIanT4
 reasoner.ReasonerTest.testIanT5
-reasoner.ReasonerTest.testIanT6
 reasoner.ReasonerTest.testIanT7b
 reasoner.ReasonerTest.testIanT8
 reasoner.ReasonerTest.testIanT8a
-reasoner.ReasonerTest.testIanT9
 reasoner.ReasonerTest.testIncrementalWithClass
 reasoner.ReasonerTest.testIncrementalWithFreshNames
 reasoner.ReasonerTest.testIncrementalWithHasSelf

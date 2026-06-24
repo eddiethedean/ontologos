@@ -10498,10 +10498,17 @@
     "golden": null,
     "hand_written": false,
     "id": "reasoner.ReasonerTest.testDirect",
-    "ignore_reason": "DL axiom fixture; assertions pending engine (Phase 2+)",
+    "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":C",
+        "direct": true,
+        "expected": true,
+        "individual": ":a"
+      }
+    ],
     "java_class": "reasoner.ReasonerTest",
     "java_file": "reasoner/ReasonerTest.java",
     "java_method": "testDirect",
@@ -10509,7 +10516,7 @@
     "property_characteristics": [],
     "property_subsumptions": [],
     "rust_test": null,
-    "status": "planned",
+    "status": "axiom",
     "subsumptions": [],
     "tier": "A"
   },

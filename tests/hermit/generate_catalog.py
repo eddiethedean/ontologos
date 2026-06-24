@@ -377,6 +377,11 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
             {"individual": ":a", "class": ":C", "expected": True, "direct": False},
         ],
     },
+    "reasoner.ReasonerTest.testDirect": {
+        "individual_types": [
+            {"individual": ":a", "class": ":C", "expected": True, "direct": True},
+        ],
+    },
     "reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug": {
         "subsumptions": [
             {"sub": ":A", "sup": "owl:Thing", "expected": True},

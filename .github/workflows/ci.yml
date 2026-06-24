@@ -79,6 +79,10 @@ jobs:
           ./benchmarks/scripts/compare-hermit-tier-c.sh
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh
+      - name: EL incremental correctness
+        run: cargo test -p ontologos-el --test incremental_correctness --locked
+      - name: Phase 3 closure gate
+        run: cargo test -p ontologos-conformance --test phase3_closure --locked
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
 

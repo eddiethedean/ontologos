@@ -350,7 +350,8 @@ fn disjoint_assertions_consistent(
         if !required.contains(&a) || !required.contains(&b) {
             continue;
         }
-        if multiple_literal_assertions_disjoint_exists_clash(store, individual, a, restrictions, b) {
+        if multiple_literal_assertions_disjoint_exists_clash(store, individual, a, restrictions, b)
+        {
             return false;
         }
         if shared_required_subproperty(store, &required, a, b) {
@@ -376,9 +377,7 @@ fn multiple_literal_assertions_disjoint_exists_clash(
     let mut left_literals = 0usize;
     for axiom in store.axioms() {
         if let DlAxiom::DataPropertyAssertion {
-            subject,
-            property,
-            ..
+            subject, property, ..
         } = axiom
         {
             if *subject == individual && *property == left {
