@@ -299,6 +299,29 @@ fn path_is_under_base(path: &Path, base: &Path) -> bool {
     true
 }
 
+/// Parse OWL Functional Syntax from an in-memory document (no temp file).
+pub fn load_ofn_from_str(text: &str) -> Result<Ontology> {
+    load_ofn_from_str_with_limits(text, ParseLimits::default())
+}
+
+/// Parse OWL Functional Syntax from an in-memory document with custom limits.
+pub fn load_ofn_from_str_with_limits(text: &str, limits: ParseLimits) -> Result<Ontology> {
+    let set_ontology = read_horned_owl_from_reader(
+        &mut std::io::Cursor::new(text.as_bytes()),
+        Format::Functional,
+        limits,
+    )?;
+    let (mut ontology, report) = map_to_core(&set_ontology, limits)?;
+    if limits.strict && report.meta.skipped_axiom_count > 0 {
+        return Err(Error::Parse(format!(
+            "strict parse: skipped {} axioms due to limits or mapping failures",
+            report.meta.skipped_axiom_count
+        )));
+    }
+    ontology.set_parse_meta(report.into_meta());
+    Ok(ontology)
+}
+
 /// Load an OFN ontology and append axioms from a second OFN fragment (same prefixes/IRIs).
 pub fn load_ofn_with_incremental(base: &Path, incremental: &Path) -> Result<Ontology> {
     let base_text = std::fs::read_to_string(base).map_err(|e| Error::Parse(e.to_string()))?;
@@ -344,6 +367,18 @@ fn extract_ofn_axiom_body(text: &str) -> Option<String> {
 mod tests {
     use super::*;
     use std::path::Path;
+
+    #[test]
+    fn load_ofn_from_str_parses_class_assertion() {
+        let ofn = concat!(
+            "Prefix(:=<file:/c/test.owl#>)\n",
+            "Ontology(<file:/c/test.owl#>\n",
+            "ClassAssertion(:A :a)\n",
+            ")"
+        );
+        let ontology = load_ofn_from_str(ofn).expect("parse");
+        assert!(ontology.axiom_count() > 0);
+    }
 
     #[test]
     fn rejects_path_traversal_outside_base() {

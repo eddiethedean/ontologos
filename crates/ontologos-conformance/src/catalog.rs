@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::{OnceLock, RwLock};
 use std::time::Duration;
 
 use rayon::prelude::*;
@@ -19,9 +19,14 @@ use crate::{
 
 static CATALOG: OnceLock<Vec<HermitCase>> = OnceLock::new();
 static WG_CATALOG: OnceLock<Vec<WgCase>> = OnceLock::new();
+static DISK_CATALOG: RwLock<Option<Vec<HermitCase>>> = RwLock::new(None);
+
+const PROBE_OFN_PREFIX: &str = "Prefix(:=<file:/c/test.owl#>)\nPrefix(a:=<file:/c/test.owl#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n";
 
 /// Wall-clock budget for a single DL classify / consistency call during catalog scans.
 const DL_SCAN_CLASSIFY_BUDGET: Duration = Duration::from_secs(30);
+/// Generous budget when verifying cases for promotion (still capped; avoids false negatives on slow DL cases).
+const DL_PROMOTION_CLASSIFY_BUDGET: Duration = Duration::from_secs(120);
 
 fn dl_classify_with_budget(
     ontology: &Ontology,
@@ -218,12 +223,47 @@ pub fn promoted_axiom_ids_path() -> PathBuf {
         .join("../../benchmarks/data/hermit/catalog/promoted_axiom_ids.txt")
 }
 
-/// Load catalog from disk (not cached) for promotion tooling.
+/// Load catalog from disk (cached for the process; call [`refresh_catalog_file_cache`] after regenerating `cases.json`).
 pub fn read_catalog_file() -> Vec<HermitCase> {
+    if let Ok(guard) = DISK_CATALOG.read() {
+        if let Some(cached) = guard.as_ref() {
+            return cached.clone();
+        }
+    }
+    let loaded = load_catalog_file_from_disk();
+    if let Ok(mut guard) = DISK_CATALOG.write() {
+        *guard = Some(loaded.clone());
+    }
+    loaded
+}
+
+/// Drop the on-disk catalog cache so the next [`read_catalog_file`] reloads `cases.json`.
+pub fn refresh_catalog_file_cache() {
+    if let Ok(mut guard) = DISK_CATALOG.write() {
+        *guard = None;
+    }
+}
+
+fn load_catalog_file_from_disk() -> Vec<HermitCase> {
     let path = catalog_path();
     let text = std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("missing HermiT catalog at {}: {e}", path.display()));
     serde_json::from_str(&text).expect("parse cases.json")
+}
+
+/// Read `promoted_axiom_ids.txt` (IDs only, no comment lines).
+pub fn read_promoted_axiom_ids() -> std::collections::HashSet<String> {
+    let path = promoted_axiom_ids_path();
+    if !path.is_file() {
+        return std::collections::HashSet::new();
+    }
+    std::fs::read_to_string(&path)
+        .unwrap_or_default()
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(str::to_string)
+        .collect()
 }
 
 fn case_has_axiom_assertions(case: &HermitCase) -> bool {
@@ -246,17 +286,65 @@ fn case_has_axiom_assertions(case: &HermitCase) -> bool {
             || !case.ce_satisfiability.is_empty())
 }
 
+/// DL/SWRL case that only asserts KB consistency (no taxonomy-dependent checks).
+fn case_is_dl_consistency_only(case: &HermitCase) -> bool {
+    case.consistent.is_some()
+        && case.subsumptions.is_empty()
+        && case.class_satisfiability.is_empty()
+        && case.individual_types.is_empty()
+        && case.individual_instances.is_empty()
+        && case.datalog_queries.is_empty()
+        && case.ce_instance_checks.is_empty()
+        && case.ce_satisfiability.is_empty()
+        && case.property_characteristics.is_empty()
+        && case.property_subsumptions.is_empty()
+        && case.data_property_subsumptions.is_empty()
+        && case.conclusion_ofn.is_none()
+        && matches!(case.engine.as_str(), "dl" | "swrl" | "alc")
+}
+
+fn check_dl_consistency(
+    case: &HermitCase,
+    ontology: &Ontology,
+    budget: Option<Duration>,
+) -> Result<(), String> {
+    let Some(expected) = case.consistent else {
+        return Ok(());
+    };
+    let consistent = match budget {
+        Some(limit) => {
+            dl_is_consistent_with_budget(ontology, limit).map_err(|e| format!("{}: {e}", case.id))?
+        }
+        None => ontologos_dl::is_consistent(ontology).map_err(|e| format!("{}: {e}", case.id))?,
+    };
+    if consistent != expected {
+        return Err(format!(
+            "{}: consistency expected {expected}, got {consistent}",
+            case.id
+        ));
+    }
+    Ok(())
+}
+
 /// Semantic check for an axiom fixture (ignores catalog status).
 pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
-    check_axiom_case_with_opts(case, false)
+    check_axiom_case_with_budget(case, None)
 }
 
 /// Like [`check_axiom_case`] but caps DL classify/consistency at [`DL_SCAN_CLASSIFY_BUDGET`].
 pub fn check_axiom_case_bounded(case: &HermitCase) -> Result<(), String> {
-    check_axiom_case_with_opts(case, true)
+    check_axiom_case_with_budget(case, Some(DL_SCAN_CLASSIFY_BUDGET))
 }
 
-fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(), String> {
+fn check_axiom_case_for_promotion(case: &HermitCase) -> Result<(), String> {
+    check_axiom_case_with_budget(case, Some(DL_PROMOTION_CLASSIFY_BUDGET))
+}
+
+fn check_axiom_case_with_budget(case: &HermitCase, budget: Option<Duration>) -> Result<(), String> {
+    check_axiom_case_with_opts(case, budget)
+}
+
+fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Result<(), String> {
     let rel = case
         .axiom_ofn
         .as_ref()
@@ -320,12 +408,17 @@ fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(),
         return Ok(());
     }
 
+    if (case.engine == "dl" || case.engine == "swrl" || case.engine == "alc")
+        && case_is_dl_consistency_only(case)
+    {
+        return check_dl_consistency(case, &ontology, budget);
+    }
+
     if case.engine == "dl" || case.engine == "swrl" || case.engine == "alc" {
-        let taxonomy = if bounded_dl {
-            dl_classify_with_budget(&ontology, DL_SCAN_CLASSIFY_BUDGET)
-                .map_err(|e| format!("{}: dl: {e}", case.id))?
-        } else {
-            ontologos_dl::classify(&ontology).map_err(|e| format!("{}: dl: {e}", case.id))?
+        let taxonomy = match budget {
+            Some(limit) => dl_classify_with_budget(&ontology, limit)
+                .map_err(|e| format!("{}: dl: {e}", case.id))?,
+            None => ontologos_dl::classify(&ontology).map_err(|e| format!("{}: {e}", case.id))?,
         };
 
         if !case.subsumptions.is_empty() {
@@ -353,10 +446,11 @@ fn check_axiom_case_with_opts(case: &HermitCase, bounded_dl: bool) -> Result<(),
             check_property_characteristics_result(&ontology, case)?;
         }
         if let Some(expected) = case.consistent {
-            let consistent = if bounded_dl {
-                dl_is_consistent_bounded(&ontology).map_err(|e| format!("{}: {e}", case.id))?
-            } else {
-                ontologos_dl::is_consistent(&ontology).map_err(|e| format!("{}: {e}", case.id))?
+            let consistent = match budget {
+                Some(limit) => dl_is_consistent_with_budget(&ontology, limit)
+                    .map_err(|e| format!("{}: {e}", case.id))?,
+                None => ontologos_dl::is_consistent(&ontology)
+                    .map_err(|e| format!("{}: {e}", case.id))?,
             };
             if consistent != expected {
                 return Err(format!(
@@ -414,20 +508,9 @@ fn check_ontology_consistency(case: &HermitCase, ontology: &Ontology) -> Result<
 
 fn probe_ontology_axiom(axiom: &str) -> Result<Ontology, String> {
     let body = format!(
-        "Prefix(:=<file:/c/test.owl#>)\nPrefix(a:=<file:/c/test.owl#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nOntology(<file:/c/test.owl#>\n{axiom}\n)"
+        "{PROBE_OFN_PREFIX}Ontology(<file:/c/test.owl#>\n{axiom}\n)"
     );
-    let temp = std::env::temp_dir().join(format!(
-        "ontologos-ce-probe-{}-{}.ofn",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_nanos())
-            .unwrap_or(0)
-    ));
-    std::fs::write(&temp, body).map_err(|e| format!("write probe: {e}"))?;
-    let result = ontologos_parser::load_ontology(&temp);
-    let _ = std::fs::remove_file(&temp);
-    result.map_err(|e| format!("load probe: {e}"))
+    ontologos_parser::load_ofn_from_str(&body).map_err(|e| format!("load probe: {e}"))
 }
 
 fn check_ce_instance_checks_result(ontology: &Ontology, case: &HermitCase) -> Result<(), String> {
@@ -1161,10 +1244,15 @@ fn is_axiom_checkable(case: &HermitCase) -> bool {
 
 /// All catalog axiom cases that pass semantic checks (for promotion list).
 pub fn scan_all_passing_axiom_cases() -> Vec<String> {
-    let mut passing: Vec<String> = read_catalog_file()
-        .iter()
+    let cases = read_catalog_file();
+    let mut passing: Vec<String> = cases
+        .par_iter()
         .filter(|case| is_axiom_checkable(case))
-        .filter_map(|case| check_axiom_case(case).ok().map(|_| case.id.clone()))
+        .filter_map(|case| {
+            check_axiom_case_for_promotion(case)
+                .ok()
+                .map(|_| case.id.clone())
+        })
         .collect();
     passing.sort();
     passing
@@ -1172,32 +1260,36 @@ pub fn scan_all_passing_axiom_cases() -> Vec<String> {
 
 /// Cases with `status=planned` that pass semantic checks (candidates for promotion).
 pub fn scan_promotable_axiom_cases() -> Vec<String> {
-    let mut passing: Vec<String> = read_catalog_file()
+    let planned: std::collections::HashSet<String> = read_catalog_file()
         .iter()
-        .filter(|case| case.status == "planned" && is_axiom_checkable(case))
-        .filter_map(|case| check_axiom_case(case).ok().map(|_| case.id.clone()))
+        .filter(|case| case.status == "planned")
+        .map(|case| case.id.clone())
         .collect();
-    passing.sort();
-    passing
+    scan_all_passing_axiom_cases()
+        .into_iter()
+        .filter(|id| planned.contains(id))
+        .collect()
 }
 
 /// Planned DL axiom cases that fail semantic checks (for triage).
 pub fn scan_planned_dl_failures() -> Vec<(String, String)> {
-    scan_planned_engine_failures()
+    let planned_failures = scan_planned_engine_failures();
+    let dl_ids: std::collections::HashSet<String> = read_catalog_file()
+        .iter()
+        .filter(|c| c.engine == "dl")
+        .map(|c| c.id.clone())
+        .collect();
+    planned_failures
         .into_iter()
-        .filter(|(id, _)| {
-            read_catalog_file()
-                .iter()
-                .find(|c| c.id == *id)
-                .is_some_and(|c| c.engine == "dl")
-        })
+        .filter(|(id, _)| dl_ids.contains(id))
         .collect()
 }
 
 /// All planned axiom cases with harvested assertions that fail semantic checks.
 pub fn scan_planned_engine_failures() -> Vec<(String, String)> {
-    let mut failures: Vec<(String, String)> = read_catalog_file()
-        .iter()
+    let cases = read_catalog_file();
+    let mut failures: Vec<(String, String)> = cases
+        .par_iter()
         .filter(|case| case.status == "planned" && is_axiom_checkable(case))
         .filter_map(|case| {
             check_axiom_case_bounded(case)
@@ -1891,7 +1983,7 @@ fn classify_planned_java(case: &HermitCase) -> PlannedJavaAudit {
             detail: case.axiom_ofn.clone(),
         };
     }
-    match check_axiom_case(case) {
+    match check_axiom_case_bounded(case) {
         Ok(()) => PlannedJavaAudit {
             id,
             engine,
@@ -1963,7 +2055,7 @@ pub fn audit_planned_backlog() -> PlannedBacklogAudit {
     use std::collections::BTreeMap;
 
     let java: Vec<PlannedJavaAudit> = read_catalog_file()
-        .iter()
+        .par_iter()
         .filter(|case| case.status == "planned")
         .map(classify_planned_java)
         .collect();

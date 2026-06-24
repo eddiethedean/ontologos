@@ -308,7 +308,6 @@ fn hermit_reasoner_complexconcepttest_testconceptwithdatatypes() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithdatatypes2() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithDatatypes2");
 }
@@ -324,13 +323,11 @@ fn hermit_reasoner_complexconcepttest_testconceptwithnominals2() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithnominals3() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithNominals3");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithnominals4() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithNominals4");
 }
@@ -366,13 +363,11 @@ fn hermit_reasoner_datalogenginetest_testquerywithindividuals() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_datatypestest_testenumwithintplusfloatrestriction() {
     run_hermit_case("reasoner.DatatypesTest.testEnumWithIntPlusFloatRestriction");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_datatypestest_testrationalconversion() {
     run_hermit_case("reasoner.DatatypesTest.testRationalConversion");
 }
@@ -403,7 +398,6 @@ fn hermit_reasoner_datatypestest_testdifferentlexicalforms() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_datatypestest_testliteralcustomdatatype() {
     run_hermit_case("reasoner.DatatypesTest.testLiteralCustomDatatype");
 }
@@ -760,7 +754,6 @@ fn hermit_reasoner_datetimetest_testmember() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_entailmenttest_testintegerentailment() {
     run_hermit_case("reasoner.EntailmentTest.testIntegerEntailment");
 }
@@ -776,7 +769,6 @@ fn hermit_reasoner_entailmenttest_testblanknodes1() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_entailmenttest_testinvalidblanknodes() {
     run_hermit_case("reasoner.EntailmentTest.testInvalidBlankNodes");
 }
@@ -797,7 +789,6 @@ fn hermit_reasoner_entailmenttest_testvalidblanknodes() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_entailmenttest_testblankwithdts() {
     run_hermit_case("reasoner.EntailmentTest.testBlankWithDTs");
 }
@@ -1517,7 +1508,6 @@ fn hermit_reasoner_rdfplainliteraltest_testlangrange2() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_riatest_testinverseandchain() {
     run_hermit_case("reasoner.RIATest.testInverseAndChain");
 }
@@ -1599,13 +1589,11 @@ fn hermit_reasoner_reasonercoreblockingtest_testdependencydisjunctionmergingbug(
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonercoreblockingtest_testiant6() {
     run_hermit_case("reasoner.ReasonerCoreBlockingTest.testIanT6");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonercoreblockingtest_testiant9() {
     run_hermit_case("reasoner.ReasonerCoreBlockingTest.testIanT9");
 }
@@ -1663,7 +1651,6 @@ fn hermit_reasoner_reasonertest_testincrementalwithnegatedhasself() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testincrementalwithhasself() {
     run_hermit_case("reasoner.ReasonerTest.testIncrementalWithHasSelf");
 }
@@ -1703,13 +1690,11 @@ fn hermit_reasoner_reasonertest_testuniversalrolesubsumption() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testprecomputedisjointclasses() {
     run_hermit_case("reasoner.ReasonerTest.testPrecomputeDisjointClasses");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testkeys3() {
     run_hermit_case("reasoner.ReasonerTest.testKeys3");
 }
@@ -1725,7 +1710,6 @@ fn hermit_reasoner_reasonertest_testobjectpropertysubsumptionsnonominals() {
 }
 
 #[test]
-#[ignore = "RL/RDFS axiom assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testobjectpropertysubsumptionsnominals() {
     run_hermit_case("reasoner.ReasonerTest.testObjectPropertySubsumptionsNominals");
 }
@@ -1756,7 +1740,6 @@ fn hermit_reasoner_reasonertest_testnegativeobjectpropertyassertionwithnonsimple
 }
 
 #[test]
-#[ignore = "RL/RDFS axiom assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testpropertyenailmentfromalan() {
     run_hermit_case("reasoner.ReasonerTest.testPropertyEnailmentFromAlan");
 }
@@ -1768,7 +1751,6 @@ fn hermit_reasoner_reasonertest_testsubproperties() {
 }
 
 #[test]
-#[ignore = "RL/RDFS axiom assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testunknownclasshierarcyposition() {
     run_hermit_case("reasoner.ReasonerTest.testUnknownClassHierarcyPosition");
 }
@@ -1794,13 +1776,11 @@ fn hermit_reasoner_reasonertest_testrolesubsumptionwithchainstransitivesymmetric
 }
 
 #[test]
-#[ignore = "RL/RDFS axiom assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testrolesubsumption() {
     run_hermit_case("reasoner.ReasonerTest.testRoleSubsumption");
 }
 
 #[test]
-#[ignore = "RL/RDFS axiom assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testisfunctionaldata() {
     run_hermit_case("reasoner.ReasonerTest.testIsFunctionalData");
 }
@@ -1877,7 +1857,6 @@ fn hermit_reasoner_reasonertest_testdirect() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testindividualretrieval() {
     run_hermit_case("reasoner.ReasonerTest.testIndividualRetrieval");
 }
@@ -1937,7 +1916,6 @@ fn hermit_reasoner_reasonertest_testhaskeyentailment() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testhaskeynonentailment() {
     run_hermit_case("reasoner.ReasonerTest.testHasKeyNonEntailment");
 }
@@ -2077,7 +2055,6 @@ fn hermit_reasoner_reasonertest_testsemanticdatapropertyclassification() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testcomplexconceptinstanceretrieval() {
     run_hermit_case("reasoner.ReasonerTest.testComplexConceptInstanceRetrieval");
 }
@@ -2198,7 +2175,6 @@ fn hermit_reasoner_reasonertest_testheinsohntbox3c() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testheinsohntbox3cirh() {
     run_hermit_case("reasoner.ReasonerTest.testHeinsohnTBox3cIrh");
 }
@@ -2241,7 +2217,6 @@ fn hermit_reasoner_reasonertest_testiant1b() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testiant1c() {
     run_hermit_case("reasoner.ReasonerTest.testIanT1c");
 }
@@ -2262,13 +2237,11 @@ fn hermit_reasoner_reasonertest_testiant4() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testiant5() {
     run_hermit_case("reasoner.ReasonerTest.testIanT5");
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testiant6() {
     run_hermit_case("reasoner.ReasonerTest.testIanT6");
 }
@@ -2279,7 +2252,6 @@ fn hermit_reasoner_reasonertest_testiant7a() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testiant7b() {
     run_hermit_case("reasoner.ReasonerTest.testIanT7b");
 }
@@ -2290,7 +2262,6 @@ fn hermit_reasoner_reasonertest_testiant7c() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testiant8a() {
     run_hermit_case("reasoner.ReasonerTest.testIanT8a");
 }
@@ -2301,7 +2272,6 @@ fn hermit_reasoner_reasonertest_testiant8() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testiant9() {
     run_hermit_case("reasoner.ReasonerTest.testIanT9");
 }
@@ -2317,7 +2287,6 @@ fn hermit_reasoner_reasonertest_testiant11() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testiant12() {
     run_hermit_case("reasoner.ReasonerTest.testIanT12");
 }
@@ -2343,7 +2312,6 @@ fn hermit_reasoner_reasonertest_testianfact3() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; subsumption assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testianfact4() {
     run_hermit_case("reasoner.ReasonerTest.testIanFact4");
 }
@@ -2380,7 +2348,6 @@ fn hermit_reasoner_reasonertest_testianbug7() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testianbug8() {
     run_hermit_case("reasoner.ReasonerTest.testIanBug8");
 }
@@ -2421,7 +2388,6 @@ fn hermit_reasoner_reasonertest_testianbackjumping1() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testianbackjumping2() {
     run_hermit_case("reasoner.ReasonerTest.testIanBackjumping2");
 }
@@ -2442,7 +2408,6 @@ fn hermit_reasoner_reasonertest_testnominals2() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals3() {
     run_hermit_case("reasoner.ReasonerTest.testNominals3");
 }
@@ -2458,7 +2423,6 @@ fn hermit_reasoner_reasonertest_testnominals5() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testnominals6() {
     run_hermit_case("reasoner.ReasonerTest.testNominals6");
 }
@@ -2495,19 +2459,16 @@ fn hermit_reasoner_reasonertest_testniruleblockingwithunraveling() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testpunning() {
     run_hermit_case("reasoner.ReasonerTest.testPunning");
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testpunning2() {
     run_hermit_case("reasoner.ReasonerTest.testPunning2");
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testpunning3() {
     run_hermit_case("reasoner.ReasonerTest.testPunning3");
 }
@@ -2523,7 +2484,6 @@ fn hermit_reasoner_reasonertest_testmissingcbug() {
 }
 
 #[test]
-#[ignore = "RL/RDFS consistency assertions pending engine hardening"]
 fn hermit_reasoner_reasonertest_testinverses() {
     run_hermit_case("reasoner.ReasonerTest.testInverses");
 }

@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use ontologos_conformance::{check_axiom_case, load_catalog, HermitCase};
+use ontologos_conformance::{check_axiom_case_bounded, load_catalog, HermitCase};
 use rayon::prelude::*;
 
 fn family(java_class: &str) -> String {
@@ -44,7 +44,7 @@ fn evaluate_case(case: &HermitCase) -> Option<CaseOutcome> {
 
     Some(CaseOutcome {
         family: family(&case.java_class),
-        passed: check_axiom_case(case).is_ok(),
+        passed: check_axiom_case_bounded(case).is_ok(),
         skipped: false,
     })
 }

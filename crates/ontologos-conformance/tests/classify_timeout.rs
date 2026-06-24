@@ -1,7 +1,7 @@
 //! Regression: catalog scans must not hang on pathological DL inputs.
 use std::time::{Duration, Instant};
 
-use ontologos_conformance::{check_axiom_case, load_catalog, scan_planned_engine_failures};
+use ontologos_conformance::{check_axiom_case_bounded, load_catalog, scan_planned_engine_failures};
 
 #[test]
 fn planned_engine_failure_scan_completes_within_budget() {
@@ -25,7 +25,7 @@ fn ian_backjumping3_axiom_check_completes_within_budget() {
         .find(|c| c.id == "reasoner.ReasonerTest.testIanBackjumping3")
         .expect("catalog case");
     let start = Instant::now();
-    let _ = check_axiom_case(case);
+    let _ = check_axiom_case_bounded(case);
     let elapsed = start.elapsed();
     println!("testIanBackjumping3 check_axiom_case in {elapsed:?}");
     assert!(

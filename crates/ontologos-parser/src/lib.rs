@@ -31,8 +31,9 @@ mod validate;
 pub use error::{Error, Result};
 pub use limits::ParseLimits;
 pub use load::{
-    load_ofn_with_incremental, load_ontology, load_ontology_in, load_ontology_with_limits,
-    load_ontology_with_limits_and_base, validate_load_path,
+    load_ofn_from_str, load_ofn_from_str_with_limits, load_ofn_with_incremental, load_ontology,
+    load_ontology_in, load_ontology_with_limits, load_ontology_with_limits_and_base,
+    validate_load_path,
 };
 pub use rdf_preprocess::expand_xml_entities;
 pub use read::{

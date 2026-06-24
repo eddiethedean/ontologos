@@ -1,12 +1,25 @@
 //! Scan HermiT catalog axiom cases and write the full passing set for promotion.
+use std::collections::HashSet;
+
 use ontologos_conformance::{
-    promoted_axiom_ids_path, scan_all_passing_axiom_cases, scan_promotable_axiom_cases,
-    write_promoted_axiom_ids,
+    promoted_axiom_ids_path, read_catalog_file, read_promoted_axiom_ids,
+    scan_all_passing_axiom_cases, write_promoted_axiom_ids,
 };
 
 fn main() {
-    let newly_planned = scan_promotable_axiom_cases();
+    let previous = read_promoted_axiom_ids();
     let passing = scan_all_passing_axiom_cases();
+    let planned: HashSet<String> = read_catalog_file()
+        .iter()
+        .filter(|case| case.status == "planned")
+        .map(|case| case.id.clone())
+        .collect();
+    let newly_planned: Vec<String> = passing
+        .iter()
+        .filter(|id| planned.contains(*id) && !previous.contains(*id))
+        .cloned()
+        .collect();
+
     println!(
         "newly promotable planned axiom cases: {}",
         newly_planned.len()
