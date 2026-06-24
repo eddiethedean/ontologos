@@ -274,7 +274,7 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
         // Distinct qualified fillers on the same role need distinct successors.
     }
     let new_world = branch.worlds.len();
-    if new_world >= super::block::MAX_WORLDS {
+    if super::block::at_world_limit(branch) {
         super::block::signal_resource_limit(branch);
         clash::check_negated_cardinality(branch);
         return;
@@ -700,7 +700,7 @@ fn materialize_existential_chain(branch: &mut Branch<'_>, world: usize, ce: CeId
                 materialize_existential_chain(branch, target, filler);
             } else {
                 let new_world = branch.worlds.len();
-                if new_world >= super::block::MAX_WORLDS {
+                if super::block::at_world_limit(branch) {
                     super::block::signal_resource_limit(branch);
                     return;
                 }

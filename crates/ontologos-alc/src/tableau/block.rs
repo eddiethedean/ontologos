@@ -21,6 +21,35 @@ pub(crate) fn signal_resource_limit(branch: &mut super::Branch<'_>) {
     branch.expansions = MAX_EXPANSIONS;
 }
 
+/// Count worlds that still participate in the tableau (excludes merge tombstones).
+#[must_use]
+pub(crate) fn live_world_count(branch: &Branch<'_>) -> usize {
+    branch
+        .worlds
+        .iter()
+        .enumerate()
+        .filter(|(idx, w)| world_is_live(branch, *idx, w))
+        .count()
+}
+
+#[must_use]
+pub(crate) fn at_world_limit(branch: &Branch<'_>) -> bool {
+    live_world_count(branch) >= MAX_WORLDS
+}
+
+fn world_is_live(branch: &Branch<'_>, idx: usize, w: &super::World) -> bool {
+    if w.blocked || !w.labels.is_empty() || !w.negated.is_empty() || !w.queue.is_empty() {
+        return true;
+    }
+    if branch.named_worlds.values().any(|&world| world == idx) {
+        return true;
+    }
+    branch
+        .edges
+        .iter()
+        .any(|(from, _, to)| *from == idx || *to == idx)
+}
+
 /// Whether the expansion budget has been exhausted.
 #[must_use]
 pub fn is_budget_exhausted(branch: &Branch<'_>) -> bool {

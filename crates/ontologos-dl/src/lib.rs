@@ -119,7 +119,7 @@ fn abox_atomic_class_unsatisfiable(
         let Some(ontologos_core::ClassExpr::Atomic(entity)) = store.ce(*class) else {
             continue;
         };
-        if !ontologos_alc::is_named_class_satisfiable_with_seed(dl, *entity, seed)? {
+        if atomic_class_proven_unsatisfiable(dl, *entity, seed)? {
             return Ok(true);
         }
     }
@@ -127,11 +127,23 @@ fn abox_atomic_class_unsatisfiable(
         let ontologos_core::Axiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
-        if !ontologos_alc::is_named_class_satisfiable_with_seed(dl, *class, seed)? {
+        if atomic_class_proven_unsatisfiable(dl, *class, seed)? {
             return Ok(true);
         }
     }
     Ok(false)
+}
+
+fn atomic_class_proven_unsatisfiable(
+    dl: &ontologos_alc::DlOntology,
+    class: EntityId,
+    seed: &TableauSeed,
+) -> Result<bool> {
+    match ontologos_alc::is_named_class_satisfiable_with_seed(dl, class, seed) {
+        Ok(satisfiable) => Ok(!satisfiable),
+        Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(false),
+        Err(e) => Err(Error::Alc(e)),
+    }
 }
 
 /// Asymmetric / irreflexive object property assertions (with subproperty expansion).

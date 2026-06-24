@@ -249,7 +249,7 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     // Nominal / HasValue unraveling (NI-rule pattern) — only when the TBox requires it.
     if !branch.clash && !branch.named_worlds.is_empty() && needs_nominal_unraveling(&branch) {
         for _ in 0..256 {
-            if branch.worlds.len() >= block::MAX_WORLDS {
+            if block::at_world_limit(&branch) {
                 block::signal_resource_limit(&mut branch);
                 break;
             }
@@ -1195,15 +1195,19 @@ impl<'a> Branch<'a> {
                 if block::is_budget_exhausted(self) {
                     return Err(Error::ResourceLimit(block::MAX_EXPANSIONS));
                 }
-                self.worlds[world].queue.push_front(ce);
+                // Blocked worlds are expansion-complete; drop pending concepts instead of
+                // re-queuing (re-queueing caused infinite stall loops on nominal cases).
+                block::mark_blocked(self, world);
                 let blocked_pending = self.worlds.iter().any(|w| w.blocked && !w.queue.is_empty());
                 if blocked_pending {
                     stall_steps += 1;
                     if stall_steps > block::MAX_STALL_STEPS {
                         return Err(Error::ResourceLimit(block::MAX_STALL_STEPS));
                     }
+                } else {
+                    stall_steps = 0;
                 }
-                block::mark_blocked(self, world);
+                let _ = ce;
                 continue;
             }
             stall_steps = 0;
