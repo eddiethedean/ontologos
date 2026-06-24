@@ -16,9 +16,9 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
-ontologos-rdfs = "1.0.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
+ontologos-rdfs = "0.9.0"
 ```
 
 `src/main.rs`:
@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 Then `cargo run`.
 
-For OWL RL saturation, add `ontologos-rl = "1.0.0"` and see [OWL RL saturation](owl-rl-saturation.md).
+For OWL RL saturation, add `ontologos-rl = "0.9.0"` and see [OWL RL saturation](owl-rl-saturation.md).
 
 ## I want to try it from a clone
 
@@ -109,13 +109,15 @@ See [Comparison with existing tools](../comparison.md) and [Conformance coverage
 
 ```bash
 pip install ontologos
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
 ```
 
 ```python
 from ontologos import Reasoner, OntologyBuilder
 
 # profile defaults to "auto" (EL taxonomy or RL saturation)
-r = Reasoner(path="ontology.owl")
+r = Reasoner(path="family.owl")
 report = r.classify()
 
 # In-memory ontology + incremental edits
@@ -134,3 +136,7 @@ See [Python guide](../guides/python.md) and [v0.8→v0.9 migration](../migration
 ## Full learning path
 
 See the [documentation index](../index.md#learning-path).
+
+## Classify from Rust (no clone)
+
+[Classify quick start](classify-quickstart.md) — `ontologos-facade::classify` in five minutes.

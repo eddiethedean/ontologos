@@ -1,6 +1,6 @@
 # Preview profiles (DL, ALC, SWRL)
 
-OntoLogos **1.0.0** ships stable EL, RL, RDFS, and **DL** (`--profile dl`) classification. **ALC**, **dl-preview**, and **SWRL** remain preview or gated paths — see [Taxonomy tolerance](../reference/taxonomy-tolerance.md) for Tier C corpora.
+OntoLogos ships **stable** EL, RL, and RDFS classification on published **v0.9.0**. **DL**, **ALC**, **dl-preview**, and **SWRL** are pre-release or preview — see the canonical [Profile stability matrix](profile-stability.md).
 
 !!! warning "Preview only"
     Preview engines are incomplete. Use Protégé + HermiT or Konclude for production OWL DL workflows. See [Comparison](../comparison.md) and [Release status](../project/release-status.md).
@@ -13,10 +13,12 @@ OntoLogos **1.0.0** ships stable EL, RL, RDFS, and **DL** (`--profile dl`) class
 | `el` | Stable | `ontologos-el` | Taxonomy |
 | `rl` | Stable | `ontologos-rl` | Materialization report |
 | `rdfs` | Stable | `ontologos-rdfs` | Materialization report |
+| `dl` | Pre-release | `ontologos-dl` | Taxonomy (~58% in-scope HermiT parity on `main`) |
 | `dl-preview` | Preview | `ontologos-dl` (gated) | Taxonomy + explicit preview checks |
-| `dl` | **Stable (1.0)** | `ontologos-dl` | Taxonomy (no preview warning) |
 | `alc` | Preview | `ontologos-alc` | Taxonomy |
 | `swrl` | Preview | `ontologos-swrl` | Rules + DL consistency |
+
+Full matrix with production recommendations: [Profile stability matrix](profile-stability.md).
 
 ## CLI
 
@@ -59,7 +61,7 @@ let mut reasoner = Reasoner::builder()
 let outcome = ontologos_facade::classify(&mut reasoner)?;
 ```
 
-See [Facade API](facade-api.md) and [Choosing an API](choosing-an-api.md).
+See [Facade API](facade-api.md), [Classify quick start](../getting-started/classify-quickstart.md), and [Choosing an API](choosing-an-api.md).
 
 ## Known limitations
 
@@ -78,7 +80,7 @@ Full construct list: [Supported constructs](../reference/supported-constructs.md
 
 | Error | Meaning | Action |
 |-------|---------|--------|
-| `PreviewLimit` | Construct or feature not in preview scope | Use stable profile or wait for 1.0 |
+| `PreviewLimit` | Construct or feature not in preview scope | Use stable profile or wait for 1.0 tag |
 | `ResourceLimit` | Tableau expansion budget exhausted | Simplify ontology or retry later |
 | `NotImplemented` (SWRL) | No executable SWRL rules mapped | Use EL/RL/DL profiles instead |
 | `Profile` / `WrongProfile` | Profile mismatch | Check `ontologos profile` output |
@@ -87,6 +89,7 @@ See [Error reference](../reference/errors.md) and [Troubleshooting](troubleshoot
 
 ## Related
 
+- [Profile stability matrix](profile-stability.md)
 - [Facade API](facade-api.md)
 - [Architecture](../architecture.md)
 - [Evaluator playbook](evaluator-playbook.md)

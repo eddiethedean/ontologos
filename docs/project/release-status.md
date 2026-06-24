@@ -6,23 +6,26 @@ Single source of truth for version and distribution channels. Update this page w
 
 | Channel | Version | Notes |
 |---------|---------|-------|
-| **crates.io** (library crates) | **0.9.0** (published) · **1.0.0** (workspace) | `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, `ontologos-facade` |
-| **PyPI** | **0.9.0** (published) · **1.0.0** (workspace) | `pip install ontologos` |
+| **crates.io** (library crates) | **0.9.0** (published) | Latest installable release |
+| **PyPI** | **0.9.0** (published) | `pip install ontologos` |
 | **Latest git tag** | **v0.9.0** | Annotated semver tags on `main` |
-| **`main` branch** | **1.0.0** workspace | Tag **v1.0.0** pending [ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) (~**58%** in-scope catalog parity); `check-1.0-release-gates.sh` passes at **593** active tests but is **not sufficient** alone |
+| **`main` branch** | **1.0.0** workspace (pre-release) | Tag **v1.0.0** pending [ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) (~**58%** in-scope catalog parity) |
+
+Published crates: `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, `ontologos-facade`.
 
 CLI (`ontologos-cli`) and conformance crates are **source-build only** — not on crates.io.
 
-## What is stable vs preview
+## Profile stability
+
+See the canonical [Profile stability matrix](../guides/profile-stability.md). Summary:
 
 | Area | Status |
 |------|--------|
-| OWL EL, RL, RDFS classification | **Stable** for shipped profiles |
-| OWL DL (`--profile dl`) | **Stable for gated corpora** (`family.owl` in CI; `pizza.owl` / `go-subset.owl` optional slow gates) — **not** production HermiT replacement |
-| Python bindings, explain (EL + DL smoke) | **Stable** (1.0.0) |
+| OWL EL, RL, RDFS | **Stable** for shipped profiles |
+| OWL DL (`--profile dl`) | **Pre-release** — not production HermiT replacement |
+| ALC / `dl-preview` / SWRL | **Preview** |
+| Python bindings, explain (EL) | **Stable** on v0.9.0 |
 | Incremental EL/RL/RDFS | **Stable** (0.8+) |
-| ALC / `dl-preview` | **Preview** — explicit gating and subset checks |
-| Full HermiT OWL DL parity | **In progress** — [ROADMAP parity phases](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#hermit-parity-phases-path-to-v100-tag) Phase 3; [gap report](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/hermit-parity-gap-report.md) |
 
 **Production OWL DL:** use Protégé + HermiT or Konclude ([FAQ](../../FAQ.md)).
 
@@ -39,19 +42,25 @@ Current inventory: **593** active / **1063** total conformance tests; **~58%** i
 
 ## Install pins
 
+### Published (production today)
+
 **Rust:**
 
 ```toml
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
 # … bump all ontologos-* crates together
 ```
 
 **Python:**
 
 ```bash
-pip install ontologos==1.0.0
+pip install ontologos==0.9.0
 ```
+
+### `main` branch (1.0.0 workspace)
+
+Build from git and pin `"1.0.0"` on all workspace crates, or use `cargo install --git ...`. PyPI **1.0.0** ships only when the v1.0.0 tag is published.
 
 **CLI (from git):**
 

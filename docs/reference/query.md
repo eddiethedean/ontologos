@@ -1,6 +1,6 @@
 # Query API Reference
 
-Taxonomy queries over classified ontologies via [`ontologos-query`](https://docs.rs/ontologos-query/1.0.0).
+Taxonomy queries over classified ontologies via [`ontologos-query`](https://docs.rs/ontologos-query/0.9.0).
 
 ## Overview
 
@@ -70,4 +70,4 @@ Requires `pip install 'ontologos[pandas]'`.
 
 - [OWL EL classification](../getting-started/owl-el-classification.md)
 - [Python guide](../guides/python.md)
-- [docs.rs/ontologos-query](https://docs.rs/ontologos-query/1.0.0)
+- [docs.rs/ontologos-query](https://docs.rs/ontologos-query/0.9.0)

@@ -18,19 +18,20 @@ See [Load an OWL file](https://ontologos.readthedocs.io/en/latest/getting-starte
 
 ## Which crate should I depend on?
 
-For **v0.9.0**, typical workflows use:
+For **published v0.9.0** use `0.9.0` pins. For **`main` branch (1.0.0 workspace)** use `1.0.0` when building from git — see [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).
 
 ```toml
 [dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"   # OWL/RDF file loading
-ontologos-profile = "1.0.0"  # EL / RL / QL / DL detection
-ontologos-rdfs = "1.0.0"     # RDFS materialization
-ontologos-rl = "1.0.0"       # OWL RL saturation
-ontologos-el = "1.0.0"       # OWL EL classification
-ontologos-explain = "1.0.0"  # Proof graphs
-ontologos-query = "1.0.0"    # Taxonomy queries
-ontologos-bridge = "1.0.0"   # Engine adapters (usually transitive)
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"   # OWL/RDF file loading
+ontologos-profile = "0.9.0"  # EL / RL / QL / DL detection
+ontologos-rdfs = "0.9.0"     # RDFS materialization
+ontologos-rl = "0.9.0"       # OWL RL saturation
+ontologos-el = "0.9.0"       # OWL EL classification
+ontologos-explain = "0.9.0"  # Proof graphs
+ontologos-query = "0.9.0"    # Taxonomy queries
+ontologos-facade = "0.9.0"   # Unified classify routing
+ontologos-bridge = "0.9.0"   # Engine adapters (usually transitive)
 ```
 
 Depend on **`ontologos-core` only** if you build ontologies programmatically or from JSON snapshots.
@@ -39,7 +40,7 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Not for production OWL DL classification.** v0.9.0 loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. CLI and Python support `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` (preview profiles are incomplete). Use Protégé with HermiT or Konclude for production OWL DL workflows. See [Preview profiles](https://ontologos.readthedocs.io/en/latest/guides/preview-profiles/).
+**Not for production OWL DL classification.** Published **v0.9.0** loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. CLI and Python support `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl`. DL and preview profiles are **not** HermiT parity — see [Profile stability matrix](https://ontologos.readthedocs.io/en/latest/guides/profile-stability/). Use Protégé with HermiT or Konclude for production OWL DL workflows.
 
 OntoLogos is for early adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
 
@@ -95,7 +96,7 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.0.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/1.0.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/1.0.0), [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/1.0.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/1.0.0), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/1.0.0), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/1.0.0), [docs.rs/ontologos-query](https://docs.rs/ontologos-query/1.0.0)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.9.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.9.0), [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.9.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.9.0), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/0.9.0), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/0.9.0), [docs.rs/ontologos-query](https://docs.rs/ontologos-query/0.9.0)
 - Site reference: [Explain API](https://ontologos.readthedocs.io/en/latest/reference/explain/) · [Query API](https://ontologos.readthedocs.io/en/latest/reference/query/) · [CLI](https://ontologos.readthedocs.io/en/latest/reference/cli/)
 - Guides: [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api/) · [Architecture](https://ontologos.readthedocs.io/en/latest/architecture/)
 - Local: `cargo doc -p ontologos-core --open`
@@ -147,6 +148,21 @@ No. Each `Reasoner` instance should be used from one thread at a time. Create se
 ## Why does `Reasoner::classify()` on core return `NotImplemented`?
 
 `ontologos_core::Reasoner::classify()` is a facade stub: it returns delegate hints for RDFS/RL and `NotImplemented` for EL. Use **CLI** (`ontologos classify`), **Python** (`Reasoner.classify()`), **`ontologos_facade::classify`**, or profile crates directly (`ElClassifier`, `RlEngine`, `RdfsEngine`).
+
+## Why are axioms missing after I load an OWL file?
+
+**`owl:imports` are not resolved.** OntoLogos loads a single file only. Axioms from imported ontologies are absent unless you merge files first.
+
+**Workaround:** Bundle imports with [ROBOT](http://robot.obolibrary.org/) (`robot merge --input ontology.owl --output merged.owl`) or OWL API, then load the merged file. See [Load an OWL file](https://ontologos.readthedocs.io/en/latest/getting-started/load-owl-file/).
+
+## Which version should I `cargo add` or `pip install`?
+
+| Channel | Version | When |
+|---------|---------|------|
+| crates.io / PyPI (production) | **0.9.0** | Default for `cargo add` and `pip install ontologos` |
+| `main` git workspace | **1.0.0** | Building from clone before v1.0.0 tag |
+
+See [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).
 
 ## Where do I ask questions?
 

@@ -13,7 +13,7 @@ Annotated release summaries live in the repository under [`.github/release/`](ht
 
 Full history: [CHANGELOG](changelog.md) on GitHub.
 
-## Since v0.9.0 on `main` (facade / DL preview)
+## Since v0.9.0 tag (development on `main`)
 
 Documented in [Preview profiles](../guides/preview-profiles.md). Highlights:
 

@@ -2,9 +2,9 @@
 
 <div class="ol-hero" markdown="0">
   <div class="ol-hero-badges">
-    <span class="ol-badge ol-badge--accent">v1.0.0 workspace</span>
+    <span class="ol-badge ol-badge--accent">v0.9.0 published</span>
+    <span class="ol-badge">main = 1.0.0 pre-release</span>
     <span class="ol-badge">Rust 1.88+</span>
-    <span class="ol-badge">OWL EL · RL · RDFS · DL preview</span>
   </div>
   <p class="ol-hero-kicker">OntoLogos documentation</p>
   <p class="ol-hero-title">Native Rust ontology reasoning</p>
@@ -15,6 +15,10 @@
   </div>
   <p style="margin-top:1rem;margin-bottom:0"><a href="guides/start-here/">Not sure? Start here</a></p>
 </div>
+
+> **Release channels:** Latest tagged release is **v0.9.0** on crates.io and PyPI.
+> The `main` branch is **1.0.0** (pre-release): HermiT parity in progress (~58%).
+> Use `ontologos-* = "0.9.0"` for production today unless you build from git. See [Release status](project/release-status.md).
 
 Pick the path that matches how you work:
 
@@ -70,7 +74,7 @@ Pick the path that matches how you work:
     **DON'T** call `ontologos_core::Reasoner::classify()` directly — it is a stub. See [Choosing an API](guides/choosing-an-api.md).
 
 !!! note "OWL DL / HermiT parity"
-    `--profile dl` and preview modes are available for early testing. Full HermiT replacement is **in progress** (~58% in-scope catalog parity). Not suitable for production DL workflows yet. See [Preview profiles](guides/preview-profiles.md) and [Release status](project/release-status.md).
+    `--profile dl` is **pre-release** (~58% in-scope catalog parity on `main`). Not suitable for production DL workflows yet. See [Profile stability matrix](guides/profile-stability.md) and [Release status](project/release-status.md).
 
 ## What you need
 
@@ -79,76 +83,35 @@ Pick the path that matches how you work:
 | **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 | **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
 | **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
-| **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.0.0) |
+| **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0) |
 | **Changelog** | [project/changelog](project/changelog.md) · [GitHub](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) |
 
 ## Documentation map {#documentation-map}
 
-### Getting started
+Use the sidebar for the full tree. Highlights:
 
-| Document | Description |
-|----------|-------------|
-| [Start here](guides/start-here.md) | Pick your path (single next step) |
-| [Prerequisites](guides/prerequisites.md) | Rust, Python, clone vs crates.io |
-| [Getting started overview](getting-started/index.md) | Success paths by persona |
-| [First ontology](getting-started/first-ontology.md) | `OntologyBuilder` walkthrough |
-| [Load an OWL file](getting-started/load-owl-file.md) | Parser, formats, `ParseMeta` |
-| [RDFS materialization](getting-started/rdfs-materialization.md) | TBox closure |
-| [OWL RL saturation](getting-started/owl-rl-saturation.md) | Forward-chaining |
-| [OWL EL classification](getting-started/owl-el-classification.md) | Completion taxonomy |
-
-### Guides
-
-| Document | Description |
-|----------|-------------|
-| [Choosing an API](guides/choosing-an-api.md) | Crate and entry-point picker |
-| [Facade API](guides/facade-api.md) | Unified `classify` routing |
-| [Python](guides/python.md) | PyPI bindings |
-| [Preview profiles](guides/preview-profiles.md) | DL / ALC preview status |
-| [Evaluator playbook](guides/evaluator-playbook.md) | 30-minute evaluation |
-| [Profile detection](guides/profile-detection.md) | EL / RL / QL / DL |
-| [Glossary](guides/glossary.md) | Terminology |
-| [Incremental reasoning](guides/incremental-reasoning.md) | Session API |
-| [Production integration](guides/production-integration.md) | Services, untrusted input |
-| [Troubleshooting](guides/troubleshooting.md) | Common fixes |
-| [Comparison](comparison.md) | vs ELK, Konclude, reasonable |
-| [Security](security.md) | Untrusted JSON and OWL |
-
-### Reference
-
-| Document | Description |
-|----------|-------------|
-| [Architecture](architecture.md) | Crate graph |
-| [CLI](reference/cli.md) | Command-line tool |
-| [Errors](reference/errors.md) | Error enums |
-| [Supported constructs](reference/supported-constructs.md) | Mapped vs skipped OWL |
-| [Explain](reference/explain.md) | Proof graphs |
-| [Query](reference/query.md) | Taxonomy queries |
-| [Conformance](reference/conformance.md) | HermiT-ported tests |
-| [Rust API (docs.rs)](https://docs.rs/ontologos-core/1.0.0) | Generated API reference |
-
-### Migration & project
-
-| Document | Description |
-|----------|-------------|
-| [Upgrade to latest](migration/index.md) | v1.0.0 migration hub |
-| [FAQ](project/faq.md) | Common questions |
-| [Release status](project/release-status.md) | Channels and stability |
-| [Contributing](project/contributing.md) | Contributor workflow |
-| [Roadmap summary](project/roadmap-summary.md) | What ships next |
+| Area | Start here |
+|------|------------|
+| New users | [Start here](guides/start-here.md) · [Prerequisites](guides/prerequisites.md) |
+| Examples | [Examples gallery](examples/index.md) |
+| API choice | [Choosing an API](guides/choosing-an-api.md) · [Profile stability](guides/profile-stability.md) |
+| Evaluate | [Evaluator playbook](guides/evaluator-playbook.md) · [Comparison](comparison.md) |
+| Upgrade | [Migration hub](migration/index.md) · [Release status](project/release-status.md) |
 
 ## Learning path
 
-1. [First ontology](getting-started/first-ontology.md)
-2. [Load an OWL file](getting-started/load-owl-file.md)
-3. [RDFS materialization](getting-started/rdfs-materialization.md)
-4. [OWL RL saturation](getting-started/owl-rl-saturation.md)
-5. [OWL EL classification](getting-started/owl-el-classification.md)
-6. [Profile detection](guides/profile-detection.md)
-7. [JSON snapshots](json-snapshot-v2.md)
-8. [Error reference](reference/errors.md)
+1. [Getting started — crates.io quick start](getting-started/index.md#cratesio-only-no-clone)
+2. [Classify in five minutes](getting-started/classify-quickstart.md)
+3. [Load an OWL file](getting-started/load-owl-file.md)
+4. [RDFS materialization](getting-started/rdfs-materialization.md)
+5. [OWL RL saturation](getting-started/owl-rl-saturation.md)
+6. [OWL EL classification](getting-started/owl-el-classification.md)
+7. [First ontology](getting-started/first-ontology.md) *(clone optional)*
+8. [Profile detection](guides/profile-detection.md)
+9. [JSON snapshots](json-snapshot-v2.md)
+10. [Error reference](reference/errors.md)
 
-## Capability matrix (v1.0.0)
+## Capability matrix (published v0.9.0)
 
 | Capability | Library | CLI | Python |
 |------------|---------|-----|--------|
@@ -157,7 +120,7 @@ Pick the path that matches how you work:
 | RDFS materialization | Yes | `materialize` | `profile="rdfs"` |
 | OWL RL saturation | Yes | `classify --profile rl` | `profile="rl"` |
 | OWL EL taxonomy | Yes | `classify --profile el` | `profile="el"` |
-| OWL DL (preview) | Yes | `classify --profile dl` | `profile="dl"` |
+| OWL DL (pre-release) | Yes | `classify --profile dl` | `profile="dl"` |
 | Incremental reasoning | Yes | `--incremental` | `incremental=True` |
 | Explanations | Yes | `explain` | `explain()` |
 | Taxonomy DataFrame export | No | No | Yes (pandas/polars) |

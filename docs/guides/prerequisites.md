@@ -7,11 +7,11 @@ OntoLogos is a **Rust workspace** with optional **Python bindings**. Pick the ro
 | Task | Rust | Python | Clone repo? |
 |------|------|--------|-------------|
 | Embed reasoning in a Rust app (crates.io) | **1.88+** | — | No |
-| `pip install ontologos` | — | **3.9+** (wheels on Linux/macOS) | No |
+| `pip install ontologos` | — | **3.10+** (wheels on Linux/macOS/Windows) | No |
 | Build `ontologos-cli` from source | **1.88+** | — | Yes |
-| Run full conformance / benchmarks | **1.88+** | 3.9+ optional | Yes + `./benchmarks/scripts/download.sh` |
+| Run full conformance / benchmarks | **1.88+** | 3.10+ optional | Yes + `./benchmarks/scripts/download.sh` |
 | MSRV CI gate | **1.88** exactly | — | Yes |
-| Contribute (fmt, clippy, tests) | **stable** (1.88+) | 3.9+ for `ontologos-py` | Yes |
+| Contribute (fmt, clippy, tests) | **stable** (1.88+) | 3.10+ for `ontologos-py` | Yes |
 
 **MSRV:** Rust **1.88** (see root `Cargo.toml`). CI enforces MSRV on every push.
 

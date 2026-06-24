@@ -1,16 +1,16 @@
 # Upgrade to the latest release
 
-Quick paths for upgrading to **v0.9.0**. For step-by-step history, follow the migration chain in the nav.
+**Published today (crates.io / PyPI):** v0.9.0  
+**In development on `main`:** 1.0.0 (HermiT parity in progress)
 
-## Jump here
+| Your situation | Guide |
+|----------------|-------|
+| Using v0.9.0 in production | Stay on `0.9.0` pins; read [Release status](../project/release-status.md) |
+| Upgrading from v0.8.x | [v0.8.x → v0.9.0](v0.8.x-to-v0.9.0.md) then optionally [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md) when tagged |
+| Tracking `main` / 1.0.0 workspace | [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md) |
+| Jump from v0.8.x directly | [v0.8.x → v1.0.0](v0.8.x-to-v1.0.0.md) |
 
-| From | Guide |
-|------|-------|
-| **v0.8.x (most users)** | [v0.8.x → v0.9.0](v0.8.x-to-v0.9.0.md) — Python ecosystem; Rust version bump only |
-| **v0.7.x** | [v0.7.x → v0.8.0](v0.7.x-to-v0.8.0.md) then [v0.8.x → v0.9.0](v0.8.x-to-v0.9.0.md) |
-| **v0.5.x or older** | Chain guides from your version through the list below |
-
-## v0.9.0 at a glance
+## v0.9.0 at a glance (published)
 
 **Rust:** Bump all `ontologos-*` crate pins to `"0.9.0"` in `Cargo.toml`. No API changes from v0.8.0.
 
@@ -18,20 +18,16 @@ Quick paths for upgrading to **v0.9.0**. For step-by-step history, follow the mi
 
 **CLI:** Unchanged commands; `classify --profile auto|el|rl|rdfs`, `materialize`, `explain`.
 
-## Full migration chain
+## v1.0.0 (when tagged)
 
-1. [v0.1 → v0.2](v0.1-to-v0.2.md)
-2. [v0.2 → v0.3](v0.2-to-v0.3.md)
-3. [v0.3.0 → v0.3.1](v0.3.0-to-v0.3.1.md)
-4. [v0.3.x → v0.4.0](v0.3.x-to-v0.4.0.md)
-5. [v0.4.x → v0.5.0](v0.4.x-to-v0.5.0.md) — **breaking:** CLI `classify` semantics
-6. [v0.5.x → v0.6.0](v0.5.x-to-v0.6.0.md)
-7. [v0.6.x → v0.7.0](v0.6.x-to-v0.7.0.md)
-8. [v0.7.x → v0.8.0](v0.7.x-to-v0.8.0.md) — incremental reasoning
-9. [v0.8.x → v0.9.0](v0.8.x-to-v0.9.0.md) — Python maturity
+The **v1.0.0** tag ships when [ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) completes (100% in-scope HermiT catalog parity). Until then, `main` uses workspace **1.0.0** semver without a matching crates.io/PyPI release.
+
+## Historical migrations
+
+Older step-by-step guides: [Historical migrations](historical.md).
 
 ## Related
 
 - [CHANGELOG](../project/changelog.md)
 - [Release notes](../project/release-notes.md)
-- [Roadmap summary](../project/roadmap-summary.md)
+- [Profile stability matrix](../guides/profile-stability.md)

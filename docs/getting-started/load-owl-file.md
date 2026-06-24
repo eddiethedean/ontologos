@@ -1,13 +1,18 @@
 # Load an OWL File
 
-Load OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser/1.0.0).
+Load OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser/0.9.0).
 
 > **Important:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](../reference/supported-constructs.md) before comparing results.
+
+!!! warning "`owl:imports` are not resolved"
+    Loading reads **one file** only. Imported ontologies are **not** fetched or merged automatically — axioms from imports will be missing.
+
+    **Workaround:** Merge with [ROBOT](http://robot.obolibrary.org/) (`robot merge --input ontology.owl --output merged.owl`) or OWL API, then load the merged file.
 
 ## Prerequisites
 
 - Rust 1.88+
-- Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos) (for benchmark examples)
+- A sample file (download below) or a clone for benchmark corpora
 
 ## Supported formats
 
@@ -44,8 +49,8 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
 ```
 
 Load and inspect:

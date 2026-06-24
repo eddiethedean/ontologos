@@ -12,9 +12,10 @@ Pick the path that matches how you work. Each link is a single next step—not t
 
 ## I want to load an OWL file and classify it
 
-1. [Load an OWL file](../getting-started/load-owl-file.md) — formats, `ParseMeta`, axiom counts
-2. [Choosing an API](choosing-an-api.md) — which crate and entry point
-3. [Profile detection](profile-detection.md) — EL / RL / RDFS / DL routing
+1. [Classify quick start](../getting-started/classify-quickstart.md) — `ontologos-facade::classify` in five minutes (no clone)
+2. [Load an OWL file](../getting-started/load-owl-file.md) — formats, `ParseMeta`, imports limitation
+3. [Choosing an API](choosing-an-api.md) — which crate and entry point
+4. [Profile stability matrix](profile-stability.md) — production vs pre-release profiles
 
 CLI shortcut (from a clone): `ontologos classify --profile auto ontology.owl`
 
@@ -39,7 +40,7 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 
 [Evaluator playbook](evaluator-playbook.md) · [Comparison](../comparison.md) · [Conformance coverage](../reference/conformance.md)
 
-**Production OWL DL today:** use Protégé + HermiT or Konclude. OntoLogos DL is improving but not a drop-in HermiT replacement yet — see [Preview profiles](preview-profiles.md).
+**Production OWL DL today:** use Protégé + HermiT or Konclude. OntoLogos DL is improving but not a drop-in HermiT replacement — see [Profile stability matrix](profile-stability.md).
 
 ## I am integrating in a service
 
@@ -54,7 +55,7 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 
 ## I am upgrading an existing integration
 
-[Upgrade to latest](../migration/index.md) — jump to v1.0.0 from any prior release.
+[Upgrade to latest](../migration/index.md) — published **v0.9.0** and upcoming **v1.0.0** paths.
 
 ## Common questions
 

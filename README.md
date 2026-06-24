@@ -12,13 +12,18 @@ OntoLogos solves: *"We want OWL reasoning embedded in Rust or Python services—
 
 Library-first orchestration: **load → detect profile → classify/materialize**, not a Protégé replacement.
 
-**In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "1.0.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
+> **Release channels:** Latest tagged release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
+> The `main` branch is **1.0.0** (pre-release): HermiT parity in progress (~58%).
+> Use `ontologos-* = "0.9.0"` for production today unless you build from git. See [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status.html).
+
+**In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "0.9.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
 
 > **Using OntoLogos in your app?** You do not need to clone this repo. Use crates.io / PyPI and follow the [5-minute guide](https://ontologos.readthedocs.io/en/latest/getting-started/). Clone only to contribute, run benchmarks, or build the CLI.
 
 | | |
 |---|---|
-| **Latest workspace** | **1.0.0** on `main` · [CHANGELOG](CHANGELOG.md) |
+| **Published** | **v0.9.0** on crates.io / PyPI |
+| **`main` workspace** | **1.0.0** pre-release · [CHANGELOG](CHANGELOG.md) |
 | **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
 | **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
 | **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
@@ -116,9 +121,9 @@ cargo new ontologos-demo && cd ontologos-demo
 
 ```toml
 [dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
-ontologos-rdfs = "1.0.0"
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
+ontologos-rdfs = "0.9.0"
 ```
 
 `src/main.rs`:
@@ -207,18 +212,21 @@ At runtime, **`ontologos-facade`** routes `classify` by profile. Use **`material
 ## Example
 
 ```rust
+use ontologos_core::{Profile, Reasoner};
 use ontologos_parser::load_ontology;
-use ontologos_el::ElClassifier;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let ontology = load_ontology("pizza.owl".as_ref())?;
-    let taxonomy = ElClassifier::new().classify(&ontology)?;
-    for (sub, sup) in &taxonomy.subsumptions {
-        println!("{sub:?} ⊑ {sup:?}");
-    }
+    let ontology = load_ontology("family.owl".as_ref())?;
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::Auto)
+        .build(ontology)?;
+    let outcome = ontologos_facade::classify(&mut reasoner)?;
+    println!("profile: {:?}, status: {:?}", outcome.profile, outcome.status);
     Ok(())
 }
 ```
+
+Add `ontologos-facade = "0.9.0"` to `Cargo.toml`. For OWL EL on Pizza, clone the repo and run `./benchmarks/scripts/download.sh` — see [Classify quick start](https://ontologos.readthedocs.io/en/latest/getting-started/classify-quickstart.html).
 
 Do **not** call `ontologos_core::Reasoner::classify()` — use profile crates or the facade. See [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api.html).
 
@@ -256,6 +264,7 @@ Full site: **[ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/late
 | Topic | Link |
 |-------|------|
 | Start here | [Persona paths](https://ontologos.readthedocs.io/en/latest/guides/start-here.html) |
+| Examples | [Examples gallery](https://ontologos.readthedocs.io/en/latest/examples/) |
 | Prerequisites | [Rust / Python / clone](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html) |
 | Choosing an API | [Crate picker](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api.html) |
 | CLI | [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli.html) |

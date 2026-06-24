@@ -2,7 +2,7 @@
 
 Binary: `ontologos` (from `ontologos-cli` crate).
 
-> **v0.9.0:** `classify` routes by `--profile` (default `auto`) to OWL EL taxonomy, OWL RL saturation, RDFS materialization, or preview DL/ALC. Use `materialize` for explicit RDFS. `explain` emits proof graphs (JSON or text). Preview profiles: [Preview profiles](../guides/preview-profiles.md).
+> **v0.9.0 published / 1.0.0 on `main`:** `classify` routes by `--profile` (default `auto`) to OWL EL taxonomy, OWL RL saturation, RDFS materialization, or pre-release DL/ALC. Use `materialize` for explicit RDFS. `explain` emits proof graphs (JSON or text). Profile status: [Profile stability matrix](../guides/profile-stability.md).
 
 ## Install
 
@@ -52,7 +52,7 @@ ontologos --help
 | `rdfs` | `ontologos-rdfs` | Materialization report |
 | `auto` | detect → EL, RL, or DL | Taxonomy or materialization report |
 | `dl-preview` | `ontologos-dl` (gated) | Taxonomy + preview warning |
-| `dl` | `ontologos-dl` | Taxonomy (preview) |
+| `dl` | `ontologos-dl` | Taxonomy (pre-release) |
 | `alc` | `ontologos-alc` | Taxonomy (preview) |
 | `swrl` | `ontologos-swrl` | Preview — often errors |
 

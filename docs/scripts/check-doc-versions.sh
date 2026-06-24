@@ -1,37 +1,102 @@
 #!/usr/bin/env bash
-# Fail CI when user-facing docs pin a crate version that differs from the workspace,
-# or when profile/version strings drift across surfaces.
+# Fail CI when user-facing docs drift from published vs workspace version channels,
+# or when profile/version strings contradict release status.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 WORKSPACE_VERSION="$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')"
+PUBLISHED_VERSION="0.9.0"
 echo "Workspace version: ${WORKSPACE_VERSION}"
+echo "Published version: ${PUBLISHED_VERSION}"
 
 FAIL=0
 
-while IFS= read -r file; do
+# Files where Cargo.toml pins must match the published crates.io channel.
+PUBLISHED_PIN_FILES=(
+  README.md
+  docs/getting-started/index.md
+  docs/getting-started/classify-quickstart.md
+  docs/getting-started/load-owl-file.md
+  docs/getting-started/rdfs-materialization.md
+  docs/getting-started/owl-rl-saturation.md
+  docs/getting-started/owl-el-classification.md
+  docs/guides/facade-api.md
+  FAQ.md
+)
+
+for file in "${PUBLISHED_PIN_FILES[@]}"; do
+  if [[ ! -f "$file" ]]; then
+    echo "ERROR: missing published-pin file: ${file}"
+    FAIL=1
+    continue
+  fi
   while IFS= read -r line; do
     if [[ "$line" =~ ontologos-[a-z]+[[:space:]]*=[[:space:]]*\"([0-9]+\.[0-9]+\.[0-9]+)\" ]]; then
       pinned="${BASH_REMATCH[1]}"
-      if [[ "$pinned" != "$WORKSPACE_VERSION" ]]; then
-        echo "ERROR: ${file} pins ${pinned} (expected ${WORKSPACE_VERSION})"
+      if [[ "$pinned" != "$PUBLISHED_VERSION" ]]; then
+        echo "ERROR: ${file} pins ${pinned} in published install block (expected ${PUBLISHED_VERSION})"
         FAIL=1
       fi
     fi
+  done < "$file"
+done
+
+# User-facing docs.rs links should point at the published crate docs.
+DOCSRS_SCAN_FILES=(
+  docs/getting-started
+  docs/guides
+  docs/reference
+  docs/examples
+  docs/comparison.md
+  docs/security.md
+  docs/architecture.md
+  docs/index.md
+  README.md
+  FAQ.md
+  mkdocs.yml
+)
+
+while IFS= read -r file; do
+  while IFS= read -r line; do
     if [[ "$line" =~ docs\.rs/[^/]+/([0-9]+\.[0-9]+\.[0-9]+) ]]; then
       docsrs="${BASH_REMATCH[1]}"
-      if [[ "$docsrs" != "$WORKSPACE_VERSION" ]]; then
-        echo "ERROR: ${file} links docs.rs/${docsrs} (expected ${WORKSPACE_VERSION})"
+      if [[ "$docsrs" != "$PUBLISHED_VERSION" ]]; then
+        echo "ERROR: ${file} links docs.rs/${docsrs} (expected ${PUBLISHED_VERSION} for published API)"
         FAIL=1
       fi
     fi
   done < "$file"
 done < <(
-  find docs/getting-started docs/guides docs/reference docs/comparison.md docs/security.md docs/architecture.md docs/index.md README.md FAQ.md \
-    -type f -name '*.md' 2>/dev/null | sort
+  find "${DOCSRS_SCAN_FILES[@]}" -type f \( -name '*.md' -o -name '*.yml' \) 2>/dev/null | sort
 )
+
+# Release-channel banner must appear on README and docs home.
+BANNER_MARKERS=(
+  "Latest tagged release is **v0.9.0**"
+  "main.*1.0.0"
+)
+for file in README.md docs/index.md; do
+  if ! grep -q "Latest tagged release is \*\*v0.9.0\*\*" "$file"; then
+    echo "ERROR: ${file} missing release-channel banner (v0.9.0 published)"
+    FAIL=1
+  fi
+  if ! grep -Eq 'main.*1\.0\.0' "$file"; then
+    echo "ERROR: ${file} missing main-branch 1.0.0 pre-release note"
+    FAIL=1
+  fi
+done
+
+# Profile stability matrix is the canonical stability surface.
+if ! grep -q "profile-stability" docs/guides/preview-profiles.md 2>/dev/null; then
+  echo "ERROR: preview-profiles.md must link to profile-stability.md"
+  FAIL=1
+fi
+if grep -q "Stable (1.0)" docs/guides/preview-profiles.md docs/reference/cli.md 2>/dev/null; then
+  echo "ERROR: contradictory DL 'Stable (1.0)' label still present"
+  FAIL=1
+fi
 
 FORBIDDEN=(
   "not available in the CLI until v0.5"
@@ -40,11 +105,12 @@ FORBIDDEN=(
   "tag pending"
   "Latest tagged release:** **v0.7.0"
   "Latest tagged release:** **v0.8.0"
-  "v0.8.0: profile"
+  "Quick paths for upgrading to **v0.9.0**"
+  "v0.9.0 on \`main\`"
 )
 for phrase in "${FORBIDDEN[@]}"; do
   if grep -Rql --fixed-strings --exclude=check-doc-versions.sh \
-    "$phrase" docs FAQ.md README.md crates/ontologos-cli/src/main.rs 2>/dev/null; then
+    "$phrase" docs FAQ.md README.md CONTRIBUTING.md crates/ontologos-cli/src/main.rs 2>/dev/null; then
     echo "ERROR: forbidden stale phrase still present: ${phrase}"
     FAIL=1
   fi
@@ -61,9 +127,15 @@ for marker in "${PROFILE_MARKERS[@]}"; do
   done
 done
 
-# CLI after_help must match workspace version
+# CLI after_help must match workspace version (built from main).
 if ! grep -q "v${WORKSPACE_VERSION}:" crates/ontologos-cli/src/main.rs; then
   echo "ERROR: CLI after_help does not advertise v${WORKSPACE_VERSION}"
+  FAIL=1
+fi
+
+# Migration hub must reference v1.0.0 upgrade path.
+if ! grep -q "v0.9.x → v1.0.0" docs/migration/index.md; then
+  echo "ERROR: migration hub missing v0.9.x → v1.0.0 path"
   FAIL=1
 fi
 

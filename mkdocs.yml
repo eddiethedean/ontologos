@@ -61,14 +61,19 @@ nav:
   - Getting started:
       - Start here: guides/start-here.md
       - Prerequisites: guides/prerequisites.md
+      - Release status: project/release-status.md
       - getting-started/index.md
-      - First ontology: getting-started/first-ontology.md
+      - Classify quick start: getting-started/classify-quickstart.md
       - Load an OWL file: getting-started/load-owl-file.md
       - RDFS materialization: getting-started/rdfs-materialization.md
       - OWL RL saturation: getting-started/owl-rl-saturation.md
       - OWL EL classification: getting-started/owl-el-classification.md
+      - First ontology: getting-started/first-ontology.md
+  - Examples:
+      - Gallery: examples/index.md
   - Guides:
       - Choosing an API: guides/choosing-an-api.md
+      - Profile stability: guides/profile-stability.md
       - Facade API: guides/facade-api.md
       - Preview profiles: guides/preview-profiles.md
       - Evaluator playbook: guides/evaluator-playbook.md
@@ -97,26 +102,19 @@ nav:
       - Conformance: reference/conformance.md
       - Taxonomy tolerance: reference/taxonomy-tolerance.md
       - Rust API (docs.rs):
-          - ontologos-core: https://docs.rs/ontologos-core/1.0.0
-          - ontologos-bridge: https://docs.rs/ontologos-bridge/1.0.0
-          - ontologos-parser: https://docs.rs/ontologos-parser/1.0.0
-          - ontologos-profile: https://docs.rs/ontologos-profile/1.0.0
-          - ontologos-rdfs: https://docs.rs/ontologos-rdfs/1.0.0
-          - ontologos-rl: https://docs.rs/ontologos-rl/1.0.0
-          - ontologos-el: https://docs.rs/ontologos-el/1.0.0
-          - ontologos-query: https://docs.rs/ontologos-query/1.0.0
-          - ontologos-explain: https://docs.rs/ontologos-explain/1.0.0
-          - ontologos-facade: https://docs.rs/ontologos-facade/1.0.0
+          - ontologos-core: https://docs.rs/ontologos-core/0.9.0
+          - ontologos-bridge: https://docs.rs/ontologos-bridge/0.9.0
+          - ontologos-parser: https://docs.rs/ontologos-parser/0.9.0
+          - ontologos-profile: https://docs.rs/ontologos-profile/0.9.0
+          - ontologos-rdfs: https://docs.rs/ontologos-rdfs/0.9.0
+          - ontologos-rl: https://docs.rs/ontologos-rl/0.9.0
+          - ontologos-el: https://docs.rs/ontologos-el/0.9.0
+          - ontologos-query: https://docs.rs/ontologos-query/0.9.0
+          - ontologos-explain: https://docs.rs/ontologos-explain/0.9.0
+          - ontologos-facade: https://docs.rs/ontologos-facade/0.9.0
   - Migration:
       - Upgrade to latest: migration/index.md
-      - v0.1 to v0.2: migration/v0.1-to-v0.2.md
-      - v0.2 to v0.3: migration/v0.2-to-v0.3.md
-      - v0.3.0 to v0.3.1: migration/v0.3.0-to-v0.3.1.md
-      - v0.3.x to v0.4.0: migration/v0.3.x-to-v0.4.0.md
-      - v0.4.x to v0.5.0: migration/v0.4.x-to-v0.5.0.md
-      - v0.5.x to v0.6.0: migration/v0.5.x-to-v0.6.0.md
-      - v0.6.x to v0.7.0: migration/v0.6.x-to-v0.7.0.md
-      - v0.7.x to v0.8.0: migration/v0.7.x-to-v0.8.0.md
+      - Historical migrations: migration/historical.md
       - v0.8.x to v0.9.0: migration/v0.8.x-to-v0.9.0.md
       - v0.8.x to v1.0.0: migration/v0.8.x-to-v1.0.0.md
       - v0.9.x to v1.0.0: migration/v0.9.x-to-v1.0.0.md
@@ -164,13 +162,13 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/eddiethedean/ontologos
     - icon: fontawesome/brands/rust
-      link: https://docs.rs/ontologos-core/1.0.0
+      link: https://docs.rs/ontologos-core/0.9.0
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/ontologos/
 
 validation:
   nav:
-    omitted_files: warn
+    omitted_files: ignore
     not_found: warn
   links:
     not_found: warn

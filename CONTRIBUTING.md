@@ -1,6 +1,6 @@
 # Contributing to OntoLogos
 
-Thank you for your interest in contributing. OntoLogos is in active development (v0.9.0 on `main`); high-impact contributions include conformance, Python bindings, documentation, and incremental reasoning polish.
+Thank you for your interest in contributing. OntoLogos is in active development: **v0.9.0** is the latest published release on crates.io/PyPI; the **`main`** branch tracks workspace **1.0.0** (pre-release). High-impact contributions include conformance, Python bindings, documentation, and incremental reasoning polish.
 
 ## Prerequisites
 
