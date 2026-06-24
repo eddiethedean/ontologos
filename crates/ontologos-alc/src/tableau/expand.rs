@@ -358,7 +358,9 @@ fn existing_role_successor(
     world: usize,
     property: &RoleExpr,
 ) -> Option<usize> {
-    role_successor_worlds(branch, world, property, None).into_iter().next()
+    role_successor_worlds(branch, world, property, None)
+        .into_iter()
+        .next()
 }
 
 pub(crate) fn existential_already_satisfied(
@@ -384,9 +386,8 @@ fn existential_role_matches(
         return true;
     }
     match (required, edge_role) {
-        (RoleExpr::Inverse(_), RoleExpr::Atomic(_)) | (RoleExpr::Atomic(_), RoleExpr::Inverse(_)) => {
-            false
-        }
+        (RoleExpr::Inverse(_), RoleExpr::Atomic(_))
+        | (RoleExpr::Atomic(_), RoleExpr::Inverse(_)) => false,
         _ => role_subsumes(branch, required, edge_role),
     }
 }
@@ -759,12 +760,7 @@ pub(crate) fn materialize_existential_successors(branch: &mut Branch<'_>) {
 }
 
 /// Insert a composed role edge (subproperty / transitivity / chain) without re-applying ∀.
-fn push_saturated_role_edge(
-    branch: &mut Branch<'_>,
-    from: usize,
-    property: RoleExpr,
-    to: usize,
-) {
+fn push_saturated_role_edge(branch: &mut Branch<'_>, from: usize, property: RoleExpr, to: usize) {
     if branch
         .edges
         .iter()
@@ -774,15 +770,19 @@ fn push_saturated_role_edge(
     }
     branch.edges.push((from, property.clone(), to));
     if is_symmetric_role(branch, &property) {
-        if !branch.edges.iter().any(|(f, role, t)| {
-            *f == to && role_exprs_equal(role, &property) && *t == from
-        }) {
+        if !branch
+            .edges
+            .iter()
+            .any(|(f, role, t)| *f == to && role_exprs_equal(role, &property) && *t == from)
+        {
             branch.edges.push((to, property.clone(), from));
         }
     } else if let Some(inverse) = inverse_partner(branch, &property) {
-        if !branch.edges.iter().any(|(f, role, t)| {
-            *f == to && role_exprs_equal(role, &inverse) && *t == from
-        }) {
+        if !branch
+            .edges
+            .iter()
+            .any(|(f, role, t)| *f == to && role_exprs_equal(role, &inverse) && *t == from)
+        {
             branch.edges.push((to, inverse, from));
         }
     }
@@ -1323,7 +1323,10 @@ fn universal_targets(branch: &Branch<'_>, world: usize, property: &RoleExpr) -> 
 
 fn is_transitive_role(branch: &Branch<'_>, property: &RoleExpr) -> bool {
     branch.role_chains.iter().any(|(chain, sup)| {
-        chain.len() == 2 && chain[0] == chain[1] && chain[0] == *sup && role_exprs_equal(&chain[0], property)
+        chain.len() == 2
+            && chain[0] == chain[1]
+            && chain[0] == *sup
+            && role_exprs_equal(&chain[0], property)
     })
 }
 
@@ -1612,7 +1615,11 @@ fn role_equivalent(branch: &Branch<'_>, left: &RoleExpr, right: &RoleExpr) -> bo
 
 fn exists_successor_inverse_to_root(branch: &Branch<'_>, filler: CeId) -> bool {
     let store = branch.dl.core().dl();
-    let Some(ClassExpr::Some { property, filler: inner }) = store.ce(filler) else {
+    let Some(ClassExpr::Some {
+        property,
+        filler: inner,
+    }) = store.ce(filler)
+    else {
         return false;
     };
     let inv = inverse_role(property);

@@ -45,9 +45,9 @@ fn ce_sat(ofn: &str, ce_ofn: &str) -> bool {
             Some((id, merged.lookup_entity(iri)?))
         })
         .collect();
-    merged.dl_mut().import_axioms_from(probe.dl(), |id| {
-        entity_map.get(&id).copied().unwrap()
-    });
+    merged
+        .dl_mut()
+        .import_axioms_from(probe.dl(), |id| entity_map.get(&id).copied().unwrap());
     let dl = DlOntology::from_ontology(&merged).unwrap();
     let ce_id = merged
         .dl()

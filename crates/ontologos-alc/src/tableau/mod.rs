@@ -1196,10 +1196,7 @@ impl<'a> Branch<'a> {
                     return Err(Error::ResourceLimit(block::MAX_EXPANSIONS));
                 }
                 self.worlds[world].queue.push_front(ce);
-                let blocked_pending = self
-                    .worlds
-                    .iter()
-                    .any(|w| w.blocked && !w.queue.is_empty());
+                let blocked_pending = self.worlds.iter().any(|w| w.blocked && !w.queue.is_empty());
                 if blocked_pending {
                     stall_steps += 1;
                     if stall_steps > block::MAX_STALL_STEPS {

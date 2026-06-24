@@ -12,8 +12,14 @@ fn ax(name: &str) -> PathBuf {
 #[test]
 fn smoke_kb_consistency() {
     for (name, ofn) in [
-        ("nominals3", "hermit_reasoner_reasonertest_testnominals3.ofn"),
-        ("exists_self2", "hermit_reasoner_reasonertest_testexistsself2.ofn"),
+        (
+            "nominals3",
+            "hermit_reasoner_reasonertest_testnominals3.ofn",
+        ),
+        (
+            "exists_self2",
+            "hermit_reasoner_reasonertest_testexistsself2.ofn",
+        ),
     ] {
         let ont = load_ontology(&ax(ofn)).unwrap();
         let alc = alc_consistent(&ont);

@@ -68,9 +68,10 @@ where
     });
     match rx.recv_timeout(budget) {
         Ok(v) => Ok(v),
-        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
-            Err(format!("dl operation exceeded {}s budget", budget.as_secs()))
-        }
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err(format!(
+            "dl operation exceeded {}s budget",
+            budget.as_secs()
+        )),
         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
             Err("dl worker disconnected".to_string())
         }
@@ -342,9 +343,8 @@ fn check_dl_consistency(
         return Ok(());
     };
     let consistent = match budget {
-        Some(limit) => {
-            dl_is_consistent_with_budget(ontology, limit).map_err(|e| format!("{}: {e}", case.id))?
-        }
+        Some(limit) => dl_is_consistent_with_budget(ontology, limit)
+            .map_err(|e| format!("{}: {e}", case.id))?,
         None => ontologos_dl::is_consistent(ontology).map_err(|e| format!("{}: {e}", case.id))?,
     };
     if consistent != expected {
@@ -538,9 +538,7 @@ fn check_ontology_consistency(case: &HermitCase, ontology: &Ontology) -> Result<
 }
 
 fn probe_ontology_axiom(axiom: &str) -> Result<Ontology, String> {
-    let body = format!(
-        "{PROBE_OFN_PREFIX}Ontology(<file:/c/test.owl#>\n{axiom}\n)"
-    );
+    let body = format!("{PROBE_OFN_PREFIX}Ontology(<file:/c/test.owl#>\n{axiom}\n)");
     ontologos_parser::load_ofn_from_str(&body).map_err(|e| format!("load probe: {e}"))
 }
 
@@ -552,7 +550,8 @@ fn check_ce_instance_checks_result(
     let budget = budget.unwrap_or(DL_CLASSIFY_BUDGET);
     for exp in &case.ce_instance_checks {
         let ind_local = exp.individual.strip_prefix(':').unwrap_or(&exp.individual);
-        let actual = if exp.ce_ofn.contains("DataSomeValuesFrom") || exp.ce_ofn.contains("DataAllValuesFrom")
+        let actual = if exp.ce_ofn.contains("DataSomeValuesFrom")
+            || exp.ce_ofn.contains("DataAllValuesFrom")
         {
             let conclusion =
                 probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
@@ -584,7 +583,10 @@ fn check_ce_instance_checks_result(
     Ok(())
 }
 
-fn equivalent_class_instance_locals(ontology: &Ontology, ce_ofn: &str) -> std::collections::HashSet<String> {
+fn equivalent_class_instance_locals(
+    ontology: &Ontology,
+    ce_ofn: &str,
+) -> std::collections::HashSet<String> {
     use std::collections::HashSet;
     let (role_local, filler_local) = match parse_some_values_from_ofn(ce_ofn) {
         Some(v) => v,
@@ -643,10 +645,7 @@ fn parse_some_values_from_ofn(ce_ofn: &str) -> Option<(String, String)> {
 }
 
 fn ce_expression_satisfiable(ontology: &Ontology, ce_ofn: &str) -> Result<bool, String> {
-    let probe = probe_ontology_axiom(&format!(
-        "ClassAssertion({} :__probe__)",
-        ce_ofn
-    ))?;
+    let probe = probe_ontology_axiom(&format!("ClassAssertion({} :__probe__)", ce_ofn))?;
     let merged = merge_ontologies_for_entailment(ontology, &probe)?;
     let dl = ontologos_alc::DlOntology::from_ontology(&merged)
         .map_err(|e| format!("CE satisfiability dl: {e}"))?;
@@ -677,7 +676,9 @@ fn ce_expression_satisfiable_bounded(
 ) -> Result<bool, String> {
     let ontology = ontology.clone();
     let ce_ofn = ce_ofn.to_string();
-    run_dl_bounded(budget, move || ce_expression_satisfiable(&ontology, &ce_ofn))?
+    run_dl_bounded(budget, move || {
+        ce_expression_satisfiable(&ontology, &ce_ofn)
+    })?
 }
 
 fn ce_instance_entailed(
@@ -922,7 +923,9 @@ fn some_values_from_instance_locals(
             let Some(ind_local) = entity_local_name(ontology, ind) else {
                 continue;
             };
-            if ce_instance_entailed(ontology, &ce_ofn, &ind_local, DL_CLASSIFY_BUDGET).unwrap_or(false) {
+            if ce_instance_entailed(ontology, &ce_ofn, &ind_local, DL_CLASSIFY_BUDGET)
+                .unwrap_or(false)
+            {
                 out.insert(format!(":{ind_local}"));
             }
         }
@@ -1059,7 +1062,11 @@ fn seed_cyclic_ce_members(
 ) {
     let store = ontology.dl();
     for axiom in store.axioms() {
-        let DlAxiom::ClassAssertion { individual, class: ce } = axiom else {
+        let DlAxiom::ClassAssertion {
+            individual,
+            class: ce,
+        } = axiom
+        else {
             continue;
         };
         let Some(ontologos_core::ClassExpr::Some {
@@ -1874,8 +1881,9 @@ pub fn check_wg_case(case: &WgCase) -> Result<(), String> {
         }
         let conclusion = load_ontology(&conclusion_path)
             .map_err(|e| format!("{}: load conclusion: {e}", case.id))?;
-        let entailed = entailment_holds_with_budget(&ontology, &conclusion, Some(DL_CLASSIFY_BUDGET))
-            .map_err(|e| format!("{}: {e}", case.id))?;
+        let entailed =
+            entailment_holds_with_budget(&ontology, &conclusion, Some(DL_CLASSIFY_BUDGET))
+                .map_err(|e| format!("{}: {e}", case.id))?;
         if entailed != expected {
             return Err(format!(
                 "{}: entailment expected {expected}, got {entailed}",
@@ -2253,7 +2261,10 @@ fn merge_ontologies_for_entailment(
         })
         .collect();
     merged.dl_mut().import_axioms_from(conclusion.dl(), |id| {
-        entity_map.get(&id).copied().expect("merged entity missing after registration")
+        entity_map
+            .get(&id)
+            .copied()
+            .expect("merged entity missing after registration")
     });
     Ok(merged)
 }
@@ -2330,9 +2341,7 @@ fn has_key_non_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bo
         let Some(conc_class) = atomic_entity_from_ce(conc_store, *class) else {
             continue;
         };
-        let Some(conc_class_in_premise) =
-            map_entity_by_iri(conclusion, premise, conc_class)
-        else {
+        let Some(conc_class_in_premise) = map_entity_by_iri(conclusion, premise, conc_class) else {
             continue;
         };
         for (prem_class, prem_obj, prem_data) in &premise_keys {

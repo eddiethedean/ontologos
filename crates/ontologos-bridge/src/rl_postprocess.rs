@@ -122,8 +122,7 @@ pub fn apply_transitive_data_subproperties(ontology: &mut Ontology) -> Result<us
         .dl()
         .axioms()
         .filter_map(|axiom| {
-            let DlAxiom::SubDataPropertyOf { sub, sup } = axiom
-            else {
+            let DlAxiom::SubDataPropertyOf { sub, sup } = axiom else {
                 return None;
             };
             Some((*sub, *sup))
@@ -135,10 +134,7 @@ pub fn apply_transitive_data_subproperties(ontology: &mut Ontology) -> Result<us
         if !existing.contains(&(sub, sup)) {
             ontology
                 .dl_mut()
-                .push_axiom(DlAxiom::SubDataPropertyOf {
-                    sub,
-                    sup,
-                });
+                .push_axiom(DlAxiom::SubDataPropertyOf { sub, sup });
             added += 1;
         }
     }
@@ -182,9 +178,7 @@ pub fn apply_domain_range_nominal_subsumption(ontology: &mut Ontology) -> Result
             continue;
         };
         for &(s, p, o) in &assertions {
-            if s == d && o == r && p != q
-                && push_subproperty_if_missing(ontology, q, p)?
-            {
+            if s == d && o == r && p != q && push_subproperty_if_missing(ontology, q, p)? {
                 added += 1;
             }
         }
@@ -572,7 +566,10 @@ pub fn apply_transitive_path_property_subsumption(ontology: &mut Ontology) -> Re
     Ok(added)
 }
 
-fn property_endpoint_singletons(ontology: &Ontology, property: EntityId) -> Option<(EntityId, EntityId)> {
+fn property_endpoint_singletons(
+    ontology: &Ontology,
+    property: EntityId,
+) -> Option<(EntityId, EntityId)> {
     let store = ontology.dl();
     let mut domain_ind = None;
     let mut range_ind = None;
@@ -752,9 +749,9 @@ fn singleton_from_equivalent_classes(ontology: &Ontology, class: EntityId) -> Op
         let DlAxiom::EquivalentClasses(ids) = axiom else {
             continue;
         };
-        let has_class = ids.iter().any(|&id| {
-            matches!(store.ce(id), Some(ClassExpr::Atomic(c)) if *c == class)
-        });
+        let has_class = ids
+            .iter()
+            .any(|&id| matches!(store.ce(id), Some(ClassExpr::Atomic(c)) if *c == class));
         if !has_class {
             continue;
         }

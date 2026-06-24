@@ -7,10 +7,10 @@
 mod catalog;
 
 pub use catalog::{
-    audit_planned_backlog, check_axiom_case, check_axiom_case_bounded, check_wg_case,
-    load_catalog, load_wg_catalog, promoted_axiom_ids_path, promoted_wg_ids_path,
-    read_catalog_file, read_promoted_axiom_ids, refresh_catalog_file_cache, run_hermit_case,
-    run_wg_case, scan_all_passing_axiom_cases, scan_all_passing_wg_cases, scan_planned_dl_failures,
+    audit_planned_backlog, check_axiom_case, check_axiom_case_bounded, check_wg_case, load_catalog,
+    load_wg_catalog, promoted_axiom_ids_path, promoted_wg_ids_path, read_catalog_file,
+    read_promoted_axiom_ids, refresh_catalog_file_cache, run_hermit_case, run_wg_case,
+    scan_all_passing_axiom_cases, scan_all_passing_wg_cases, scan_planned_dl_failures,
     scan_planned_engine_failures, scan_planned_wg_failures, scan_promotable_axiom_cases,
     write_promoted_axiom_ids, write_promoted_wg_ids, HermitCase, PlannedBacklogAudit,
     PlannedJavaAudit, PlannedJavaCategory, PlannedWgAudit, PlannedWgCategory, WgCase,
@@ -210,16 +210,18 @@ pub fn has_property_characteristic(
         return false;
     };
     match kind {
-        PropertyCharacteristic::Functional => ontology
-            .index()
-            .functional_properties()
-            .contains(&property_id)
-            || ontology.dl().axioms().any(|axiom| {
-                matches!(
-                    axiom,
-                    ontologos_core::DlAxiom::FunctionalDataProperty(p) if *p == property_id
-                )
-            }),
+        PropertyCharacteristic::Functional => {
+            ontology
+                .index()
+                .functional_properties()
+                .contains(&property_id)
+                || ontology.dl().axioms().any(|axiom| {
+                    matches!(
+                        axiom,
+                        ontologos_core::DlAxiom::FunctionalDataProperty(p) if *p == property_id
+                    )
+                })
+        }
         PropertyCharacteristic::InverseFunctional => ontology
             .index()
             .inverse_functional_properties()
@@ -309,7 +311,10 @@ fn transitive_superproperties(
     false
 }
 
-fn lookup_entity_flexible(ontology: &ontologos_core::Ontology, iri: &str) -> Option<ontologos_core::EntityId> {
+fn lookup_entity_flexible(
+    ontology: &ontologos_core::Ontology,
+    iri: &str,
+) -> Option<ontologos_core::EntityId> {
     if let Some(id) = ontology.lookup_entity(iri) {
         return Some(id);
     }

@@ -463,10 +463,7 @@ pub fn check_partition_cardinality_clash(branch: &mut Branch<'_>, world: usize) 
                 property,
                 filler: Some(filler),
             } => {
-                max_qualified
-                    .entry(property)
-                    .or_default()
-                    .push((filler, n));
+                max_qualified.entry(property).or_default().push((filler, n));
             }
             ClassExpr::All { property, filler } => {
                 all_fillers.insert(property, filler);

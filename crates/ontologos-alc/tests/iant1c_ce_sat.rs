@@ -36,9 +36,9 @@ fn merge_assert(base: &ontologos_core::Ontology, assertion: &str) -> ontologos_c
             Some((id, merged.lookup_entity(iri)?))
         })
         .collect();
-    merged.dl_mut().import_axioms_from(probe.dl(), |id| {
-        entity_map.get(&id).copied().unwrap()
-    });
+    merged
+        .dl_mut()
+        .import_axioms_from(probe.dl(), |id| entity_map.get(&id).copied().unwrap());
     merged
 }
 
@@ -46,10 +46,7 @@ fn merge_assert(base: &ontologos_core::Ontology, assertion: &str) -> ontologos_c
 fn iant1c_ce_is_unsatisfiable() {
     let ce = "ObjectIntersectionOf(:p2 ObjectSomeValuesFrom(ObjectInverseOf(:r) ObjectIntersectionOf(ObjectSomeValuesFrom(:r :p1) ObjectMaxCardinality(1 :r))))";
     let base = load_ontology(&ax("hermit_reasoner_reasonertest_testiant1c.ofn")).unwrap();
-    let merged = merge_assert(
-        &base,
-        &format!("ClassAssertion({ce} :a)"),
-    );
+    let merged = merge_assert(&base, &format!("ClassAssertion({ce} :a)"));
     let dl = DlOntology::from_ontology(&merged).unwrap();
     let ce_id = merged
         .dl()

@@ -607,7 +607,10 @@ fn remap_class_expr(
             ),
         },
         ClassExpr::OneOf(ids) => ClassExpr::OneOf(ids.iter().map(|id| remap_entity(*id)).collect()),
-        ClassExpr::HasValue { property, individual } => ClassExpr::HasValue {
+        ClassExpr::HasValue {
+            property,
+            individual,
+        } => ClassExpr::HasValue {
             property: remap_role(property, remap_entity),
             individual: remap_entity(*individual),
         },
@@ -705,11 +708,7 @@ fn remap_class_expr(
                 remap_entity,
             ),
         },
-        ClassExpr::DataMinCardinality {
-            n,
-            property,
-            range,
-        } => ClassExpr::DataMinCardinality {
+        ClassExpr::DataMinCardinality { n, property, range } => ClassExpr::DataMinCardinality {
             n: *n,
             property: remap_entity(*property),
             range: range.map(|id| {
@@ -724,11 +723,7 @@ fn remap_class_expr(
                 )
             }),
         },
-        ClassExpr::DataMaxCardinality {
-            n,
-            property,
-            range,
-        } => ClassExpr::DataMaxCardinality {
+        ClassExpr::DataMaxCardinality { n, property, range } => ClassExpr::DataMaxCardinality {
             n: *n,
             property: remap_entity(*property),
             range: range.map(|id| {
@@ -743,11 +738,7 @@ fn remap_class_expr(
                 )
             }),
         },
-        ClassExpr::DataExactCardinality {
-            n,
-            property,
-            range,
-        } => ClassExpr::DataExactCardinality {
+        ClassExpr::DataExactCardinality { n, property, range } => ClassExpr::DataExactCardinality {
             n: *n,
             property: remap_entity(*property),
             range: range.map(|id| {
@@ -852,28 +843,50 @@ fn remap_dl_axiom(
     match axiom {
         DlAxiom::SubClassOf { sub, sup } => DlAxiom::SubClassOf {
             sub: remap_ce(
-                source, expressions, data_exprs, *sub, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *sub,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
             sup: remap_ce(
-                source, expressions, data_exprs, *sup, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *sup,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
         DlAxiom::EquivalentClasses(ids) => DlAxiom::EquivalentClasses(
-            ids
-                .iter()
+            ids.iter()
                 .map(|&id| {
                     remap_ce(
-                        source, expressions, data_exprs, id, ce_map, de_map, remap_entity,
+                        source,
+                        expressions,
+                        data_exprs,
+                        id,
+                        ce_map,
+                        de_map,
+                        remap_entity,
                     )
                 })
                 .collect(),
         ),
         DlAxiom::DisjointClasses(ids) => DlAxiom::DisjointClasses(
-            ids
-                .iter()
+            ids.iter()
                 .map(|&id| {
                     remap_ce(
-                        source, expressions, data_exprs, id, ce_map, de_map, remap_entity,
+                        source,
+                        expressions,
+                        data_exprs,
+                        id,
+                        ce_map,
+                        de_map,
+                        remap_entity,
                     )
                 })
                 .collect(),
@@ -881,13 +894,25 @@ fn remap_dl_axiom(
         DlAxiom::ObjectPropertyDomain { property, domain } => DlAxiom::ObjectPropertyDomain {
             property: remap_entity(*property),
             domain: remap_ce(
-                source, expressions, data_exprs, *domain, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *domain,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
         DlAxiom::ObjectPropertyRange { property, range } => DlAxiom::ObjectPropertyRange {
             property: remap_entity(*property),
             range: remap_ce(
-                source, expressions, data_exprs, *range, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *range,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
         DlAxiom::SubObjectPropertyChain {
@@ -907,27 +932,54 @@ fn remap_dl_axiom(
             data_properties,
         } => DlAxiom::HasKey {
             class: remap_ce(
-                source, expressions, data_exprs, *class, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *class,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
-            object_properties: object_properties.iter().map(|id| remap_entity(*id)).collect(),
+            object_properties: object_properties
+                .iter()
+                .map(|id| remap_entity(*id))
+                .collect(),
             data_properties: data_properties.iter().map(|id| remap_entity(*id)).collect(),
         },
         DlAxiom::ClassAssertion { individual, class } => DlAxiom::ClassAssertion {
             individual: remap_entity(*individual),
             class: remap_ce(
-                source, expressions, data_exprs, *class, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *class,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
         DlAxiom::DataPropertyDomain { property, domain } => DlAxiom::DataPropertyDomain {
             property: remap_entity(*property),
             domain: remap_ce(
-                source, expressions, data_exprs, *domain, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *domain,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
         DlAxiom::DataPropertyRange { property, range } => DlAxiom::DataPropertyRange {
             property: remap_entity(*property),
             range: remap_de(
-                source, expressions, data_exprs, *range, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *range,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
         DlAxiom::SubDataPropertyOf { sub, sup } => DlAxiom::SubDataPropertyOf {
@@ -942,7 +994,13 @@ fn remap_dl_axiom(
             subject: remap_entity(*subject),
             property: remap_entity(*property),
             value: remap_de(
-                source, expressions, data_exprs, *value, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *value,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
         DlAxiom::ObjectPropertyAssertion {
@@ -971,27 +1029,37 @@ fn remap_dl_axiom(
             subject: remap_entity(*subject),
             property: remap_entity(*property),
             value: remap_de(
-                source, expressions, data_exprs, *value, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *value,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
         DlAxiom::DatatypeDefinition { datatype, range } => DlAxiom::DatatypeDefinition {
             datatype: remap_entity(*datatype),
             range: remap_de(
-                source, expressions, data_exprs, *range, ce_map, de_map, remap_entity,
+                source,
+                expressions,
+                data_exprs,
+                *range,
+                ce_map,
+                de_map,
+                remap_entity,
             ),
         },
-        DlAxiom::FunctionalDataProperty(id) => {
-            DlAxiom::FunctionalDataProperty(remap_entity(*id))
+        DlAxiom::FunctionalDataProperty(id) => DlAxiom::FunctionalDataProperty(remap_entity(*id)),
+        DlAxiom::EquivalentDataProperties(ids) => {
+            DlAxiom::EquivalentDataProperties(ids.iter().map(|id| remap_entity(*id)).collect())
         }
-        DlAxiom::EquivalentDataProperties(ids) => DlAxiom::EquivalentDataProperties(
-            ids.iter().map(|id| remap_entity(*id)).collect(),
-        ),
-        DlAxiom::DisjointDataProperties(ids) => DlAxiom::DisjointDataProperties(
-            ids.iter().map(|id| remap_entity(*id)).collect(),
-        ),
-        DlAxiom::DisjointObjectProperties(ids) => DlAxiom::DisjointObjectProperties(
-            ids.iter().map(|id| remap_entity(*id)).collect(),
-        ),
+        DlAxiom::DisjointDataProperties(ids) => {
+            DlAxiom::DisjointDataProperties(ids.iter().map(|id| remap_entity(*id)).collect())
+        }
+        DlAxiom::DisjointObjectProperties(ids) => {
+            DlAxiom::DisjointObjectProperties(ids.iter().map(|id| remap_entity(*id)).collect())
+        }
         DlAxiom::SameIndividual(ids) => {
             DlAxiom::SameIndividual(ids.iter().map(|id| remap_entity(*id)).collect())
         }

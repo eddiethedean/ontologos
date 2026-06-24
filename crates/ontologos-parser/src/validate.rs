@@ -47,9 +47,10 @@ pub fn validate_loaded_ontology(ontology: &Ontology) -> Result<(), Error> {
                     "data property assertions cannot use blank nodes".into(),
                 ));
             }
-            DlAxiom::ObjectPropertyAssertion { subject, object, .. }
-                if is_blank_individual(ontology, *subject)
-                    || is_blank_individual(ontology, *object) =>
+            DlAxiom::ObjectPropertyAssertion {
+                subject, object, ..
+            } if is_blank_individual(ontology, *subject)
+                || is_blank_individual(ontology, *object) =>
             {
                 validate_blank_object_property_graph(ontology)?;
             }
@@ -185,7 +186,10 @@ fn validate_blank_object_property_graph(ontology: &Ontology) -> Result<(), Error
 
     let mut graph: HashMap<EntityId, Vec<EntityId>> = HashMap::new();
     for axiom in ontology.dl().axioms() {
-        if let DlAxiom::ObjectPropertyAssertion { subject, object, .. } = axiom {
+        if let DlAxiom::ObjectPropertyAssertion {
+            subject, object, ..
+        } = axiom
+        {
             if is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
                 graph.entry(*subject).or_default().push(*object);
             }
@@ -193,9 +197,7 @@ fn validate_blank_object_property_graph(ontology: &Ontology) -> Result<(), Error
     }
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::ObjectPropertyAssertion {
-            subject,
-            object,
-            ..
+            subject, object, ..
         } = axiom
         {
             if is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
