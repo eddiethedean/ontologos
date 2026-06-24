@@ -140,7 +140,6 @@ Rdfbased-2Dsem-2Drestrict-2Dmaxcard-2Dinst-2Dobj-2Done
 Rdfbased-2Dsem-2Drestrict-2Dmaxqcr-2Dinst-2Dobj-2Done
 Rdfbased-2Dsem-2Drestrict-2Dsomevalues-2Dcmp-2Dclass
 Rdfbased-2Dsem-2Drestrict-2Dsomevalues-2Dcmp-2Dprop
-Rdfbased-2Dsem-2Drestrict-2Dsomevalues-2Dinst-2Dsubj
 Somevaluesfrom2bnode
 TestCase-3AWebOnt-2DAllDifferent-2D001
 TestCase-3AWebOnt-2DAnnotationProperty-2D002
@@ -193,7 +192,6 @@ TestCase-3AWebOnt-2DI6.1-2D001
 TestCase-3AWebOnt-2DInverseFunctionalProperty-2D001
 TestCase-3AWebOnt-2DInverseFunctionalProperty-2D003
 TestCase-3AWebOnt-2DInverseFunctionalProperty-2D004
-TestCase-3AWebOnt-2DOntology-2D001
 TestCase-3AWebOnt-2DRestriction-2D001
 TestCase-3AWebOnt-2DRestriction-2D002
 TestCase-3AWebOnt-2DRestriction-2D003

@@ -286,6 +286,7 @@ fn hermit_reasoner_classificationtest_testwine() {
 }
 
 #[test]
+#[ignore = "requires HermiT fixture vendored or ONTOLOGOS_HERMIT_ROOT"]
 fn hermit_reasoner_classificationtest_testgaleniansfullundoctored() {
     run_hermit_case("reasoner.ClassificationTest.testGalenIansFullUndoctored");
 }
@@ -298,6 +299,7 @@ fn hermit_reasoner_classificationtest_testpizza() {
 }
 
 #[test]
+#[ignore = "requires HermiT fixture vendored or ONTOLOGOS_HERMIT_ROOT"]
 fn hermit_reasoner_classificationtest_testpropreo() {
     run_hermit_case("reasoner.ClassificationTest.testPropreo");
 }
