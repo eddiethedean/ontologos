@@ -20,7 +20,8 @@ fn planned_engine_failure_scan_completes_within_budget() {
 
 #[test]
 fn ian_backjumping3_axiom_check_completes_within_budget() {
-    let case = load_catalog()
+    let catalog = load_catalog();
+    let case = catalog
         .iter()
         .find(|c| c.id == "reasoner.ReasonerTest.testIanBackjumping3")
         .expect("catalog case");
@@ -29,7 +30,7 @@ fn ian_backjumping3_axiom_check_completes_within_budget() {
     let elapsed = start.elapsed();
     println!("testIanBackjumping3 check_axiom_case in {elapsed:?}");
     assert!(
-        elapsed < Duration::from_secs(35),
-        "testIanBackjumping3 took {elapsed:?} — classify budget should cap this"
+        elapsed < Duration::from_secs(125),
+        "testIanBackjumping3 took {elapsed:?} — DL budget should cap this"
     );
 }

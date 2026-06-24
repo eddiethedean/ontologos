@@ -138,7 +138,7 @@ fn run_tbox_saturation(branch: &mut Branch<'_>) -> Result<bool, Error> {
     }
     let ok = match branch.expand() {
         Ok(v) => v,
-        Err(crate::Error::ResourceLimit(_)) => return Ok(true),
+        Err(e @ Error::ResourceLimit(_)) => return Err(e),
         Err(e) => return Err(e),
     };
     expand::saturate_composed_edges(branch);
@@ -229,7 +229,7 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
 
     let ok = match branch.expand() {
         Ok(v) => v,
-        Err(Error::ResourceLimit(_)) => return Ok(true),
+        Err(e @ Error::ResourceLimit(_)) => return Err(e),
         Err(e) => return Err(e),
     };
     expand::saturate_composed_edges(&mut branch);
@@ -250,6 +250,7 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     if !branch.clash && !branch.named_worlds.is_empty() && needs_nominal_unraveling(&branch) {
         for _ in 0..256 {
             if branch.worlds.len() >= block::MAX_WORLDS {
+                block::signal_resource_limit(&mut branch);
                 break;
             }
             let before_edges = branch.edges.len();
@@ -1155,6 +1156,8 @@ impl<'a> Branch<'a> {
         }
         self.edges
             .retain(|(from, _, to)| *from != drop && *to != drop);
+        let drop_queue = std::mem::take(&mut self.worlds[drop].queue);
+        self.worlds[keep].queue.extend(drop_queue);
         self.worlds[drop] = World::default();
         for world_idx in self.named_worlds.values_mut() {
             if *world_idx == drop {
@@ -1175,6 +1178,9 @@ impl<'a> Branch<'a> {
     fn expand(&mut self) -> Result<bool, Error> {
         let mut stall_steps = 0u32;
         loop {
+            if block::is_budget_exhausted(self) {
+                return Err(Error::ResourceLimit(block::MAX_EXPANSIONS));
+            }
             if self.clash {
                 return Ok(false);
             }

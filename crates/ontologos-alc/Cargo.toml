@@ -16,3 +16,6 @@ ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }
 ontologos-profile = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+ontologos-dl = { workspace = true }

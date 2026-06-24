@@ -9,7 +9,7 @@ use crate::map::map_to_core;
 use crate::read::{read_horned_owl_from_reader, sniff_and_rewind};
 use crate::{
     detect_format, detect_format_from_bytes, detect_functional_from_bytes,
-    detect_turtle_from_bytes, Error, Format, Result,
+    detect_turtle_from_bytes, validate_loaded_ontology, Error, Format, Result,
 };
 
 #[cfg(target_os = "linux")]
@@ -125,6 +125,9 @@ pub fn load_ontology_with_limits_and_base(
         )));
     }
     ontology.set_parse_meta(report.into_meta());
+    if limits.strict {
+        validate_loaded_ontology(&ontology)?;
+    }
     Ok(ontology)
 }
 
@@ -306,6 +309,13 @@ pub fn load_ofn_from_str(text: &str) -> Result<Ontology> {
 
 /// Parse OWL Functional Syntax from an in-memory document with custom limits.
 pub fn load_ofn_from_str_with_limits(text: &str, limits: ParseLimits) -> Result<Ontology> {
+    if text.len() > limits.max_file_bytes {
+        return Err(Error::Parse(format!(
+            "in-memory OFN size {} exceeds limit of {} bytes",
+            text.len(),
+            limits.max_file_bytes
+        )));
+    }
     let set_ontology = read_horned_owl_from_reader(
         &mut std::io::Cursor::new(text.as_bytes()),
         Format::Functional,
@@ -319,6 +329,9 @@ pub fn load_ofn_from_str_with_limits(text: &str, limits: ParseLimits) -> Result<
         )));
     }
     ontology.set_parse_meta(report.into_meta());
+    if limits.strict {
+        validate_loaded_ontology(&ontology)?;
+    }
     Ok(ontology)
 }
 
@@ -327,31 +340,59 @@ pub fn load_ofn_with_incremental(base: &Path, incremental: &Path) -> Result<Onto
     let base_text = std::fs::read_to_string(base).map_err(|e| Error::Parse(e.to_string()))?;
     let inc_text = std::fs::read_to_string(incremental).map_err(|e| Error::Parse(e.to_string()))?;
     let merged = merge_ofn_documents(&base_text, &inc_text)?;
-    let temp = std::env::temp_dir().join(format!(
-        "ontologos-merge-{}-{}.ofn",
-        std::process::id(),
-        base.file_name().and_then(|n| n.to_str()).unwrap_or("base")
-    ));
-    std::fs::write(&temp, merged).map_err(|e| Error::Parse(e.to_string()))?;
-    let result = load_ontology(&temp);
-    let _ = std::fs::remove_file(&temp);
-    result
+    load_ofn_from_str(&merged)
 }
 
 fn merge_ofn_documents(base: &str, incremental: &str) -> Result<String> {
     let inc_axioms = extract_ofn_axiom_body(incremental)
         .ok_or_else(|| Error::Parse("incremental OFN missing Ontology(...) body".into()))?;
-    let close = base
-        .rfind(')')
+    let close = find_ofn_ontology_close(base)
         .ok_or_else(|| Error::Parse("base OFN missing closing ')'".into()))?;
     Ok(format!("{}{})", &base[..close], inc_axioms))
+}
+
+/// Index of the closing `)` for the outer `Ontology(...)` form, respecting quoted strings.
+fn find_ofn_ontology_close(text: &str) -> Option<usize> {
+    let marker = "Ontology(";
+    let start = text.find(marker)? + marker.len();
+    let mut depth = 1usize;
+    let mut in_str = false;
+    let mut escape = false;
+    for (i, ch) in text[start..].char_indices() {
+        if in_str {
+            if escape {
+                escape = false;
+                continue;
+            }
+            if ch == '\\' {
+                escape = true;
+                continue;
+            }
+            if ch == '"' {
+                in_str = false;
+            }
+            continue;
+        }
+        match ch {
+            '"' => in_str = true,
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(start + i);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 fn extract_ofn_axiom_body(text: &str) -> Option<String> {
     let marker = "Ontology(";
     let start = text.find(marker)? + marker.len();
     let rest = text.get(start..)?;
-    let end = rest.rfind(')')?;
+    let end = find_ofn_ontology_close(text)? - start;
     let mut body = rest[..end].trim();
     if body.starts_with('<') {
         if let Some((_, axioms)) = body.split_once('\n') {
@@ -367,6 +408,34 @@ fn extract_ofn_axiom_body(text: &str) -> Option<String> {
 mod tests {
     use super::*;
     use std::path::Path;
+
+    #[test]
+    fn merge_ofn_preserves_literal_with_closing_paren() {
+        let base = concat!(
+            "Prefix(:=<file:/c/test.owl#>)\n",
+            "Ontology(<file:/c/test.owl#>\n",
+            "Class(:A)\n",
+            "AnnotationAssertion(rdfs:comment :A \"note with ) inside\")\n",
+            ")"
+        );
+        let incremental = concat!(
+            "Prefix(:=<file:/c/test.owl#>)\n",
+            "Ontology(<file:/c/test.owl#>\n",
+            "ClassAssertion(:A :a)\n",
+            ")"
+        );
+        let merged = merge_ofn_documents(base, incremental).expect("merge");
+        assert!(merged.contains("note with ) inside"));
+        assert!(merged.contains("ClassAssertion(:A :a)"));
+        assert!(merged.ends_with("ClassAssertion(:A :a))"));
+    }
+
+    #[test]
+    fn load_ofn_from_str_rejects_oversized_input() {
+        let limits = ParseLimits::with_file_bytes(16);
+        let err = load_ofn_from_str_with_limits("Ontology(<x>)", limits).expect_err("size");
+        assert!(matches!(err, Error::Parse(_)));
+    }
 
     #[test]
     fn load_ofn_from_str_parses_class_assertion() {

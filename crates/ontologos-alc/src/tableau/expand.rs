@@ -275,6 +275,7 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
     }
     let new_world = branch.worlds.len();
     if new_world >= super::block::MAX_WORLDS {
+        super::block::signal_resource_limit(branch);
         clash::check_negated_cardinality(branch);
         return;
     }
@@ -699,6 +700,7 @@ fn materialize_existential_chain(branch: &mut Branch<'_>, world: usize, ce: CeId
             } else {
                 let new_world = branch.worlds.len();
                 if new_world >= super::block::MAX_WORLDS {
+                    super::block::signal_resource_limit(branch);
                     return;
                 }
                 branch.worlds.push(super::World::default());
@@ -1015,9 +1017,6 @@ fn merge_inverse_functional_successor(
 }
 
 fn should_merge_role_successors(branch: &Branch<'_>, world: usize, property: &RoleExpr) -> bool {
-    if is_inverse_functional_role(branch, property) {
-        return true;
-    }
     world_has_max_one_successor(branch, world, property)
 }
 
@@ -1041,13 +1040,6 @@ fn world_has_max_one_successor(branch: &Branch<'_>, world: usize, property: &Rol
             } if role_subsumes(branch, property, prop) && filler.is_none()
         )
     })
-}
-
-fn is_inverse_functional_role(branch: &Branch<'_>, role: &RoleExpr) -> bool {
-    match role {
-        RoleExpr::Atomic(id) => branch.inverse_functional.contains(id),
-        RoleExpr::Inverse(id) => branch.inverse_functional.contains(id),
-    }
 }
 
 pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize) {

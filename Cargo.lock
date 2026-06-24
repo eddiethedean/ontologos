@@ -952,6 +952,7 @@ name = "ontologos-alc"
 version = "1.0.0"
 dependencies = [
  "ontologos-core",
+ "ontologos-dl",
  "ontologos-parser",
  "ontologos-profile",
  "thiserror 2.0.18",

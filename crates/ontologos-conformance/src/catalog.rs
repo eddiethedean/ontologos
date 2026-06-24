@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{OnceLock, RwLock};
+use std::sync::{Arc, Condvar, Mutex, OnceLock, RwLock};
 use std::time::Duration;
 
 use rayon::prelude::*;
@@ -17,59 +17,85 @@ use crate::{
     PropertyCharacteristic, HERMIT_DEFAULT_NS,
 };
 
-static CATALOG: OnceLock<Vec<HermitCase>> = OnceLock::new();
+static CATALOG: RwLock<Option<Vec<HermitCase>>> = RwLock::new(None);
 static WG_CATALOG: OnceLock<Vec<WgCase>> = OnceLock::new();
-static DISK_CATALOG: RwLock<Option<Vec<HermitCase>>> = RwLock::new(None);
+static DL_WORKER_GATE: OnceLock<Arc<(Mutex<usize>, Condvar)>> = OnceLock::new();
 
 const PROBE_OFN_PREFIX: &str = "Prefix(:=<file:/c/test.owl#>)\nPrefix(a:=<file:/c/test.owl#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n";
 
-/// Wall-clock budget for a single DL classify / consistency call during catalog scans.
-const DL_SCAN_CLASSIFY_BUDGET: Duration = Duration::from_secs(30);
-/// Generous budget when verifying cases for promotion (still capped; avoids false negatives on slow DL cases).
-const DL_PROMOTION_CLASSIFY_BUDGET: Duration = Duration::from_secs(120);
+/// Wall-clock budget for DL classify, consistency, CE-sat, and entailment during catalog scans.
+const DL_CLASSIFY_BUDGET: Duration = Duration::from_secs(120);
+/// Maximum concurrent DL worker threads (limits orphan work after timeouts).
+const MAX_CONCURRENT_DL_WORKERS: usize = 4;
+
+struct DlWorkerPermit {
+    gate: Arc<(Mutex<usize>, Condvar)>,
+}
+
+impl Drop for DlWorkerPermit {
+    fn drop(&mut self) {
+        let (lock, cvar) = &*self.gate;
+        let mut permits = lock.lock().expect("dl worker gate");
+        *permits += 1;
+        cvar.notify_one();
+    }
+}
+
+fn acquire_dl_worker_permit() -> DlWorkerPermit {
+    let gate = DL_WORKER_GATE
+        .get_or_init(|| Arc::new((Mutex::new(MAX_CONCURRENT_DL_WORKERS), Condvar::new())))
+        .clone();
+    let (lock, cvar) = &*gate;
+    let mut permits = lock.lock().expect("dl worker gate");
+    while *permits == 0 {
+        permits = cvar.wait(permits).expect("dl worker gate");
+    }
+    *permits -= 1;
+    drop(permits);
+    DlWorkerPermit { gate }
+}
+
+fn run_dl_bounded<T, F>(budget: Duration, work: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+{
+    let permit = acquire_dl_worker_permit();
+    let (tx, rx) = std::sync::mpsc::sync_channel(1);
+    std::thread::spawn(move || {
+        let _permit = permit;
+        let _ = tx.send(work());
+    });
+    match rx.recv_timeout(budget) {
+        Ok(v) => Ok(v),
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+            Err(format!("dl operation exceeded {}s budget", budget.as_secs()))
+        }
+        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+            Err("dl worker disconnected".to_string())
+        }
+    }
+}
 
 fn dl_classify_with_budget(
     ontology: &Ontology,
     budget: Duration,
 ) -> Result<ontologos_core::Taxonomy, String> {
     let ontology = ontology.clone();
-    let (tx, rx) = std::sync::mpsc::sync_channel(1);
-    std::thread::spawn(move || {
-        let _ = tx.send(ontologos_dl::classify(&ontology));
-    });
-    match rx.recv_timeout(budget) {
-        Ok(Ok(tax)) => Ok(tax),
-        Ok(Err(e)) => Err(e.to_string()),
-        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
-            Err(format!("dl classify exceeded {}s budget", budget.as_secs()))
-        }
-        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
-            Err("dl classify worker disconnected".to_string())
-        }
-    }
+    run_dl_bounded(budget, move || {
+        ontologos_dl::classify(&ontology).map_err(|e| e.to_string())
+    })?
 }
 
 fn dl_is_consistent_bounded(ontology: &Ontology) -> Result<bool, String> {
-    dl_is_consistent_with_budget(ontology, DL_SCAN_CLASSIFY_BUDGET)
+    dl_is_consistent_with_budget(ontology, DL_CLASSIFY_BUDGET)
 }
 
 fn dl_is_consistent_with_budget(ontology: &Ontology, budget: Duration) -> Result<bool, String> {
     let ontology = ontology.clone();
-    let (tx, rx) = std::sync::mpsc::sync_channel(1);
-    std::thread::spawn(move || {
-        let _ = tx.send(ontologos_dl::is_consistent(&ontology));
-    });
-    match rx.recv_timeout(budget) {
-        Ok(Ok(consistent)) => Ok(consistent),
-        Ok(Err(e)) => Err(e.to_string()),
-        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err(format!(
-            "dl consistency check exceeded {}s budget",
-            budget.as_secs()
-        )),
-        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
-            Err("dl consistency worker disconnected".to_string())
-        }
-    }
+    run_dl_bounded(budget, move || {
+        ontologos_dl::is_consistent(&ontology).map_err(|e| e.to_string())
+    })?
 }
 
 /// HermiT test case from `benchmarks/data/hermit/catalog/cases.json`.
@@ -223,23 +249,27 @@ pub fn promoted_axiom_ids_path() -> PathBuf {
         .join("../../benchmarks/data/hermit/catalog/promoted_axiom_ids.txt")
 }
 
-/// Load catalog from disk (cached for the process; call [`refresh_catalog_file_cache`] after regenerating `cases.json`).
-pub fn read_catalog_file() -> Vec<HermitCase> {
-    if let Ok(guard) = DISK_CATALOG.read() {
+fn load_catalog_cached() -> Vec<HermitCase> {
+    if let Ok(guard) = CATALOG.read() {
         if let Some(cached) = guard.as_ref() {
             return cached.clone();
         }
     }
     let loaded = load_catalog_file_from_disk();
-    if let Ok(mut guard) = DISK_CATALOG.write() {
+    if let Ok(mut guard) = CATALOG.write() {
         *guard = Some(loaded.clone());
     }
     loaded
 }
 
-/// Drop the on-disk catalog cache so the next [`read_catalog_file`] reloads `cases.json`.
+/// Load catalog from disk (cached for the process; call [`refresh_catalog_file_cache`] after regenerating `cases.json`).
+pub fn read_catalog_file() -> Vec<HermitCase> {
+    load_catalog_cached()
+}
+
+/// Drop the on-disk catalog cache so the next load reloads `cases.json`.
 pub fn refresh_catalog_file_cache() {
-    if let Ok(mut guard) = DISK_CATALOG.write() {
+    if let Ok(mut guard) = CATALOG.write() {
         *guard = None;
     }
 }
@@ -331,13 +361,13 @@ pub fn check_axiom_case(case: &HermitCase) -> Result<(), String> {
     check_axiom_case_with_budget(case, None)
 }
 
-/// Like [`check_axiom_case`] but caps DL classify/consistency at [`DL_SCAN_CLASSIFY_BUDGET`].
+/// Like [`check_axiom_case`] but caps DL work at [`DL_CLASSIFY_BUDGET`].
 pub fn check_axiom_case_bounded(case: &HermitCase) -> Result<(), String> {
-    check_axiom_case_with_budget(case, Some(DL_SCAN_CLASSIFY_BUDGET))
+    check_axiom_case_with_budget(case, Some(DL_CLASSIFY_BUDGET))
 }
 
 fn check_axiom_case_for_promotion(case: &HermitCase) -> Result<(), String> {
-    check_axiom_case_with_budget(case, Some(DL_PROMOTION_CLASSIFY_BUDGET))
+    check_axiom_case_with_budget(case, Some(DL_CLASSIFY_BUDGET))
 }
 
 fn check_axiom_case_with_budget(case: &HermitCase, budget: Option<Duration>) -> Result<(), String> {
@@ -398,7 +428,8 @@ fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Re
         }
         let conclusion = load_ontology(&conclusion_path)
             .map_err(|e| format!("{}: load conclusion: {e}", case.id))?;
-        let entailed = entailment_holds(&ontology, &conclusion);
+        let entailed = entailment_holds_with_budget(&ontology, &conclusion, budget)
+            .map_err(|e| format!("{}: {e}", case.id))?;
         if entailed != expected {
             return Err(format!(
                 "{}: entailment expected {expected}, got {entailed}",
@@ -437,10 +468,10 @@ fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Re
             check_datalog_queries_result(&ontology, &taxonomy, case)?;
         }
         if !case.ce_instance_checks.is_empty() {
-            check_ce_instance_checks_result(&ontology, case)?;
+            check_ce_instance_checks_result(&ontology, case, budget)?;
         }
         if !case.ce_satisfiability.is_empty() {
-            check_ce_satisfiability_result(&ontology, case)?;
+            check_ce_satisfiability_result(&ontology, case, budget)?;
         }
         if !case.property_characteristics.is_empty() {
             check_property_characteristics_result(&ontology, case)?;
@@ -499,9 +530,9 @@ fn check_ontology_consistency(case: &HermitCase, ontology: &Ontology) -> Result<
         consistent = false;
     }
     if consistent {
-        if let Ok(dl_consistent) = dl_is_consistent_bounded(ontology) {
-            consistent = dl_consistent;
-        }
+        let dl_consistent = dl_is_consistent_with_budget(ontology, DL_CLASSIFY_BUDGET)
+            .map_err(|e| format!("{}: {e}", case.id))?;
+        consistent = dl_consistent;
     }
     Ok(consistent)
 }
@@ -513,30 +544,35 @@ fn probe_ontology_axiom(axiom: &str) -> Result<Ontology, String> {
     ontologos_parser::load_ofn_from_str(&body).map_err(|e| format!("load probe: {e}"))
 }
 
-fn check_ce_instance_checks_result(ontology: &Ontology, case: &HermitCase) -> Result<(), String> {
+fn check_ce_instance_checks_result(
+    ontology: &Ontology,
+    case: &HermitCase,
+    budget: Option<Duration>,
+) -> Result<(), String> {
+    let budget = budget.unwrap_or(DL_CLASSIFY_BUDGET);
     for exp in &case.ce_instance_checks {
         let ind_local = exp.individual.strip_prefix(':').unwrap_or(&exp.individual);
         let actual = if exp.ce_ofn.contains("DataSomeValuesFrom") || exp.ce_ofn.contains("DataAllValuesFrom")
         {
             let conclusion =
                 probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
-            entailment_holds(ontology, &conclusion)
+            entailment_holds_with_budget(ontology, &conclusion, Some(budget))?
         } else if exp.ce_ofn.contains("ObjectInverseOf") {
             let conclusion =
                 probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
             if exp.expected {
-                let merged = merge_ontologies_for_entailment(ontology, &conclusion);
-                ontologos_dl::is_consistent(&merged).unwrap_or(false)
+                let merged = merge_ontologies_for_entailment(ontology, &conclusion)?;
+                dl_is_consistent_with_budget(&merged, budget)?
             } else {
-                ce_instance_entailed(ontology, &exp.ce_ofn, ind_local)?
+                ce_instance_entailed(ontology, &exp.ce_ofn, ind_local, budget)?
             }
         } else if exp.ce_ofn.contains("ObjectMinCardinality")
             || exp.ce_ofn.contains("ObjectMaxCardinality")
         {
-            let entailed = ce_instance_entailed(ontology, &exp.ce_ofn, ind_local)?;
+            let entailed = ce_instance_entailed(ontology, &exp.ce_ofn, ind_local, budget)?;
             entailed
         } else {
-            ce_instance_entailed(ontology, &exp.ce_ofn, ind_local)?
+            ce_instance_entailed(ontology, &exp.ce_ofn, ind_local, budget)?
         };
         if actual != exp.expected {
             return Err(format!(
@@ -611,41 +647,60 @@ fn ce_expression_satisfiable(ontology: &Ontology, ce_ofn: &str) -> Result<bool, 
         "ClassAssertion({} :__probe__)",
         ce_ofn
     ))?;
-    let merged = merge_ontologies_for_entailment(ontology, &probe);
+    let merged = merge_ontologies_for_entailment(ontology, &probe)?;
     let dl = ontologos_alc::DlOntology::from_ontology(&merged)
         .map_err(|e| format!("CE satisfiability dl: {e}"))?;
     let ce = merged
         .dl()
         .axioms()
         .filter_map(|axiom| {
-            let DlAxiom::ClassAssertion { class, .. } = axiom else {
+            let DlAxiom::ClassAssertion { individual, class } = axiom else {
                 return None;
             };
-            Some(*class)
+            let iri = entity_iri(&merged, *individual)?;
+            if iri.ends_with("__probe__") {
+                Some(*class)
+            } else {
+                None
+            }
         })
-        .last()
-        .ok_or_else(|| "CE satisfiability: missing ClassAssertion in probe".to_string())?;
+        .next()
+        .ok_or_else(|| "CE satisfiability: missing __probe__ ClassAssertion".to_string())?;
     ontologos_alc::is_ce_satisfiable_with_seed(&dl, ce, &ontologos_alc::TableauSeed::default())
         .map_err(|e| format!("CE satisfiability: {e}"))
 }
 
-fn ce_instance_entailed(ontology: &Ontology, ce_ofn: &str, ind_local: &str) -> Result<bool, String> {
+fn ce_expression_satisfiable_bounded(
+    ontology: &Ontology,
+    ce_ofn: &str,
+    budget: Duration,
+) -> Result<bool, String> {
+    let ontology = ontology.clone();
+    let ce_ofn = ce_ofn.to_string();
+    run_dl_bounded(budget, move || ce_expression_satisfiable(&ontology, &ce_ofn))?
+}
+
+fn ce_instance_entailed(
+    ontology: &Ontology,
+    ce_ofn: &str,
+    ind_local: &str,
+    budget: Duration,
+) -> Result<bool, String> {
     let probe = probe_ontology_axiom(&format!(
         "ClassAssertion(ObjectComplementOf({ce_ofn}) :{ind_local})"
     ))?;
-    let merged = merge_ontologies_for_entailment(ontology, &probe);
-    Ok(!ontologos_dl::is_consistent(&merged).unwrap_or(true))
+    let merged = merge_ontologies_for_entailment(ontology, &probe)?;
+    Ok(!dl_is_consistent_with_budget(&merged, budget)?)
 }
 
-fn check_ce_satisfiability_result(ontology: &Ontology, case: &HermitCase) -> Result<(), String> {
+fn check_ce_satisfiability_result(
+    ontology: &Ontology,
+    case: &HermitCase,
+    budget: Option<Duration>,
+) -> Result<(), String> {
+    let budget = budget.unwrap_or(DL_CLASSIFY_BUDGET);
     for exp in &case.ce_satisfiability {
-        let satisfiable = if case.axiom_ofn.as_ref().is_some_and(|p| {
-            p.contains("testiant6") || p.contains("testiant9")
-        }) {
-            ontologos_dl::is_consistent(ontology).map_err(|e| format!("{}: {e}", case.id))?
-        } else {
-            ce_expression_satisfiable(ontology, &exp.ce_ofn)?
-        };
+        let satisfiable = ce_expression_satisfiable_bounded(ontology, &exp.ce_ofn, budget)?;
         if satisfiable != exp.expected {
             return Err(format!(
                 "{}: CE satisfiability {} expected {}, got {}",
@@ -780,7 +835,12 @@ fn atomic_class_entailed_for_individual(
     let Some(class_local) = entity_local_name(ontology, class) else {
         return Ok(false);
     };
-    ce_instance_entailed(ontology, &format!(":{class_local}"), &ind_local)
+    ce_instance_entailed(
+        ontology,
+        &format!(":{class_local}"),
+        &ind_local,
+        DL_CLASSIFY_BUDGET,
+    )
 }
 
 fn entity_local_name(ontology: &Ontology, id: ontologos_core::EntityId) -> Option<String> {
@@ -862,7 +922,7 @@ fn some_values_from_instance_locals(
             let Some(ind_local) = entity_local_name(ontology, ind) else {
                 continue;
             };
-            if ce_instance_entailed(ontology, &ce_ofn, &ind_local).unwrap_or(false) {
+            if ce_instance_entailed(ontology, &ce_ofn, &ind_local, DL_CLASSIFY_BUDGET).unwrap_or(false) {
                 out.insert(format!(":{ind_local}"));
             }
         }
@@ -1312,13 +1372,8 @@ pub fn write_promoted_axiom_ids(ids: &[String]) -> std::io::Result<()> {
     std::fs::write(path, lines.join("\n") + "\n")
 }
 
-pub fn load_catalog() -> &'static [HermitCase] {
-    CATALOG.get_or_init(|| {
-        let path = catalog_path();
-        let text = std::fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("missing HermiT catalog at {}: {e}", path.display()));
-        serde_json::from_str(&text).expect("parse cases.json")
-    })
+pub fn load_catalog() -> Vec<HermitCase> {
+    load_catalog_cached()
 }
 
 pub fn load_wg_catalog() -> &'static [WgCase] {
@@ -1334,7 +1389,8 @@ pub fn load_wg_catalog() -> &'static [WgCase] {
 
 /// Run a cataloged HermiT case by Java `Class.method` id.
 pub fn run_hermit_case(case_id: &str) {
-    let case = load_catalog()
+    let catalog = load_catalog();
+    let case = catalog
         .iter()
         .find(|c| c.id == case_id)
         .unwrap_or_else(|| panic!("unknown HermiT case id: {case_id}"));
@@ -1371,10 +1427,15 @@ pub fn run_wg_case(case_id: &str) {
     run_wg_runnable(case);
 }
 
+fn hermit_data_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/hermit")
+}
+
 fn hermit_data_path(rel: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/hermit")
-        .join(rel)
+    let root = hermit_data_root();
+    let joined = root.join(rel);
+    ontologos_parser::validate_load_path(&joined, Some(&root))
+        .unwrap_or_else(|e| panic!("invalid HermiT data path {rel}: {e}"))
 }
 
 fn materialize_ontology(case: &HermitCase, ontology: &mut Ontology) {
@@ -1636,13 +1697,13 @@ fn check_subsumptions_dl_result(
             if sub.expected {
                 let conclusion =
                     probe_ontology_axiom(&format!("SubClassOf({sub_expr} {sup_expr})"))?;
-                entailment_holds(ontology, &conclusion)
+                entailment_holds_with_budget(ontology, &conclusion, Some(DL_CLASSIFY_BUDGET))?
             } else {
                 let conclusion = probe_ontology_axiom(&format!(
                     "SubClassOf({sub_expr} ObjectComplementOf({sup_expr}))"
                 ))?;
-                let merged = merge_ontologies_for_entailment(ontology, &conclusion);
-                !ontologos_dl::is_consistent(&merged).unwrap_or(true)
+                let merged = merge_ontologies_for_entailment(ontology, &conclusion)?;
+                !dl_is_consistent_with_budget(&merged, DL_CLASSIFY_BUDGET)?
             }
         } else {
             let sub_id = ontology
@@ -1813,7 +1874,8 @@ pub fn check_wg_case(case: &WgCase) -> Result<(), String> {
         }
         let conclusion = load_ontology(&conclusion_path)
             .map_err(|e| format!("{}: load conclusion: {e}", case.id))?;
-        let entailed = entailment_holds(&ontology, &conclusion);
+        let entailed = entailment_holds_with_budget(&ontology, &conclusion, Some(DL_CLASSIFY_BUDGET))
+            .map_err(|e| format!("{}: {e}", case.id))?;
         if entailed != expected {
             return Err(format!(
                 "{}: entailment expected {expected}, got {entailed}",
@@ -2120,37 +2182,45 @@ pub fn write_promoted_wg_ids(ids: &[String]) -> std::io::Result<()> {
     std::fs::write(path, lines.join("\n") + "\n")
 }
 
-fn entailment_holds(premise: &Ontology, conclusion: &Ontology) -> bool {
+fn entailment_holds_with_budget(
+    premise: &Ontology,
+    conclusion: &Ontology,
+    budget: Option<Duration>,
+) -> Result<bool, String> {
+    let budget = budget.unwrap_or(DL_CLASSIFY_BUDGET);
     if conclusion_has_fresh_abox_entities(premise, conclusion) {
-        return false;
+        return Ok(false);
     }
     if has_key_non_entailment_guard(premise, conclusion) {
-        return false;
+        return Ok(false);
     }
     if conclusion_has_invalid_blank_node_cycles(conclusion) {
-        return false;
+        return Ok(false);
     }
-    let Ok(prem_tax) = ontologos_dl::classify(premise) else {
-        return false;
-    };
-    let merged = merge_ontologies_for_entailment(premise, conclusion);
-    let Ok(merged_tax) = ontologos_dl::classify(&merged) else {
-        return false;
-    };
+    let premise = premise.clone();
+    let conclusion = conclusion.clone();
+    run_dl_bounded(budget, move || {
+        let Ok(prem_tax) = ontologos_dl::classify(&premise) else {
+            return Ok(false);
+        };
+        let merged = merge_ontologies_for_entailment(&premise, &conclusion)?;
+        let Ok(merged_tax) = ontologos_dl::classify(&merged) else {
+            return Ok(false);
+        };
 
-    for &(sub, sup) in &merged_tax.subsumptions {
-        if !prem_tax.is_subsumed(sub, sup) {
-            return false;
+        for &(sub, sup) in &merged_tax.subsumptions {
+            if !prem_tax.is_subsumed(sub, sup) {
+                return Ok(false);
+            }
         }
-    }
-    for &class in &merged_tax.unsatisfiable {
-        if !prem_tax.unsatisfiable.contains(&class) {
-            return false;
+        for &class in &merged_tax.unsatisfiable {
+            if !prem_tax.unsatisfiable.contains(&class) {
+                return Ok(false);
+            }
         }
-    }
-    true
+        Ok(true)
+    })?
 }
-
 fn entity_iri(ontology: &Ontology, id: ontologos_core::EntityId) -> Option<String> {
     let record = ontology.entity(id).ok()?;
     ontology
@@ -2159,17 +2229,19 @@ fn entity_iri(ontology: &Ontology, id: ontologos_core::EntityId) -> Option<Strin
         .map(|iri| iri.to_string())
 }
 
-fn merge_ontologies_for_entailment(premise: &Ontology, conclusion: &Ontology) -> Ontology {
+fn merge_ontologies_for_entailment(
+    premise: &Ontology,
+    conclusion: &Ontology,
+) -> Result<Ontology, String> {
     let mut merged = premise.clone();
-    for (_, axiom) in conclusion.axioms().iter() {
-        let _ = merged.add_axiom(axiom.clone());
-    }
     for (_, record) in conclusion.entities().iter() {
         let Ok(iri) = conclusion.resolve_iri(record.iri) else {
             continue;
         };
         if merged.lookup_entity(iri).is_none() {
-            let _ = merged.entity_id(iri, record.kind);
+            merged
+                .entity_id(iri, record.kind)
+                .map_err(|e| format!("merge entity {iri}: {e}"))?;
         }
     }
     let entity_map: std::collections::HashMap<_, _> = conclusion
@@ -2181,12 +2253,9 @@ fn merge_ontologies_for_entailment(premise: &Ontology, conclusion: &Ontology) ->
         })
         .collect();
     merged.dl_mut().import_axioms_from(conclusion.dl(), |id| {
-        entity_map
-            .get(&id)
-            .copied()
-            .expect("merged entity missing after graph axiom import")
+        entity_map.get(&id).copied().expect("merged entity missing after registration")
     });
-    merged
+    Ok(merged)
 }
 
 fn conclusion_has_fresh_abox_entities(premise: &Ontology, conclusion: &Ontology) -> bool {

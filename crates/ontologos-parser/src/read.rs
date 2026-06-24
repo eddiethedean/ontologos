@@ -50,7 +50,15 @@ pub fn read_horned_owl_from_reader<R: Read>(
             let mut reader = BufReader::new(reader);
             let (concrete, incomplete) =
                 rdf_reader::read(&mut reader, config).map_err(map_horned_error)?;
-            let _ = incomplete.is_complete();
+            if !incomplete.is_complete() {
+                let mut tail = Vec::new();
+                reader
+                    .read_to_end(&mut tail)
+                    .map_err(|e| Error::Parse(e.to_string()))?;
+                if !tail.iter().all(|b| b.is_ascii_whitespace()) {
+                    return Err(Error::Parse("incomplete RDF document".into()));
+                }
+            }
             Ok((concrete.into(), PrefixMapping::default()))
         })?,
         Format::Functional => guard_horned_parse(|| {

@@ -16,6 +16,11 @@ pub(crate) const MAX_WORLDS: usize = 256;
 /// Maximum stall iterations while every pending world is blocked.
 pub(crate) const MAX_STALL_STEPS: u32 = 256;
 
+/// Mark the branch incomplete so the next expansion returns [`Error::ResourceLimit`].
+pub(crate) fn signal_resource_limit(branch: &mut super::Branch<'_>) {
+    branch.expansions = MAX_EXPANSIONS;
+}
+
 /// Whether the expansion budget has been exhausted.
 #[must_use]
 pub fn is_budget_exhausted(branch: &Branch<'_>) -> bool {
