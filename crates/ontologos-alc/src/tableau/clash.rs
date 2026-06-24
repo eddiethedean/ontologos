@@ -486,7 +486,7 @@ pub fn check_partition_cardinality_clash(branch: &mut Branch<'_>, world: usize) 
                 .and_then(|entries| entries.iter().find(|(f, _)| *f == part).map(|(_, n)| *n))
                 .unwrap_or(u32::MAX);
             total_cap = total_cap.saturating_add(part_cap);
-            if total_cap >= u32::MAX {
+            if total_cap == u32::MAX {
                 break;
             }
         }

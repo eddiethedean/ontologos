@@ -565,11 +565,6 @@ fn check_ce_instance_checks_result(
             } else {
                 ce_instance_entailed(ontology, &exp.ce_ofn, ind_local, budget)?
             }
-        } else if exp.ce_ofn.contains("ObjectMinCardinality")
-            || exp.ce_ofn.contains("ObjectMaxCardinality")
-        {
-            let entailed = ce_instance_entailed(ontology, &exp.ce_ofn, ind_local, budget)?;
-            entailed
         } else {
             ce_instance_entailed(ontology, &exp.ce_ofn, ind_local, budget)?
         };
@@ -1268,7 +1263,7 @@ fn data_property_subsumed(ontology: &Ontology, sub: EntityId, sup: EntityId) -> 
     let mut edges: HashMap<EntityId, Vec<EntityId>> = HashMap::new();
     for axiom in ontology.dl().axioms() {
         if let DlAxiom::SubDataPropertyOf { sub, sup } = axiom {
-            edges.entry(*sub).or_insert_with(Vec::new).push(*sup);
+            edges.entry(*sub).or_default().push(*sup);
         }
     }
     let mut queue = std::collections::VecDeque::from([sub]);
