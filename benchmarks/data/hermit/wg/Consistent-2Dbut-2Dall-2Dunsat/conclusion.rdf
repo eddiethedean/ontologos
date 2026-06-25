@@ -1,17 +1,6 @@
 <?xml version="1.0"?>
 
 
-<!DOCTYPE rdf:RDF [
-    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
-    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
-    <!ENTITY owl2xml "http://www.w3.org/2006/12/owl2-xml#" >
-    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
-    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
-    <!ENTITY Ontology1242664364013 "http://www.semanticweb.org/ontologies/2009/4/Ontology1242664364013.owl#" >
-    <!ENTITY Ontology12426643640132 "http://www.semanticweb.org/ontologies/2009/4/Ontology1242664364013.owl#2" >
-]>
-
-
 <rdf:RDF xmlns="http://example.com/"
      xml:base="http://example.com/"
      xmlns:owl2xml="http://www.w3.org/2006/12/owl2-xml#"
@@ -39,7 +28,7 @@
     <!-- http://www.semanticweb.org/ontologies/2009/4/Ontology1242664364013.owl/2a -->
 
     <owl:Class rdf:about="2a">
-        <rdfs:subClassOf rdf:resource="&owl;Nothing"/>
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
     </owl:Class>
     
 
@@ -47,8 +36,8 @@
     <!-- http://www.semanticweb.org/ontologies/2009/4/Ontology1242664364013.owl/a -->
 
     <owl:Class rdf:about="a">
-        <rdfs:subClassOf rdf:resource="&owl;Nothing"/>
-        <rdfs:subClassOf rdf:resource="&owl;Thing"/>
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
     </owl:Class>
     
 
@@ -56,7 +45,7 @@
     <!-- http://www.semanticweb.org/ontologies/2009/4/Ontology1242664364013.owl/b -->
 
     <owl:Class rdf:about="b">
-        <rdfs:subClassOf rdf:resource="&owl;Nothing"/>
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
     </owl:Class>
     
 
@@ -64,20 +53,20 @@
     <!-- http://www.semanticweb.org/ontologies/2009/4/Ontology1242664364013.owl/c -->
 
     <owl:Class rdf:about="c">
-        <rdfs:subClassOf rdf:resource="&owl;Nothing"/>
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Nothing"/>
     </owl:Class>
     
 
 
     <!-- http://www.w3.org/2002/07/owl#Nothing -->
 
-    <owl:Class rdf:about="&owl;Nothing"/>
+    <owl:Class rdf:about="http://www.w3.org/2002/07/owl#Nothing"/>
     
 
 
     <!-- http://www.w3.org/2002/07/owl#Thing -->
 
-    <owl:Class rdf:about="&owl;Thing"/>
+    <owl:Class rdf:about="http://www.w3.org/2002/07/owl#Thing"/>
 </rdf:RDF>
 
 

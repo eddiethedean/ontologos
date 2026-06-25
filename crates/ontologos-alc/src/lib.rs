@@ -21,10 +21,13 @@ pub use normalize::clausify;
 pub use tableau::AlcClassifier;
 pub use tableau::{
     classify as tableau_classify, classify_with_seed as tableau_classify_with_seed,
+    classify_with_seed_options as tableau_classify_with_seed_options,
     is_ce_satisfiable_with_seed, is_consistent as tableau_is_consistent,
     is_consistent_with_seed as tableau_is_consistent_with_seed,
-    is_named_class_satisfiable_with_seed, TableauSeed,
+    is_named_class_satisfiable_with_cache, is_named_class_satisfiable_with_seed,
+    structural_unsat_classes, TableauSeed,
 };
+pub use tableau::cache::UnsatCache;
 
 /// Result type for ALC operations.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -70,7 +73,15 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
 
 /// Classify with saturation-derived seed facts.
 pub fn classify_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Result<Taxonomy> {
-    tableau::classify_with_seed(ontology, seed)
+    tableau::classify_with_seed_options(ontology, seed, true)
+}
+
+/// Classify with saturation seed, skipping expensive pairwise subsumption inference.
+pub fn classify_with_seed_for_entailment(
+    ontology: &Ontology,
+    seed: &TableauSeed,
+) -> Result<Taxonomy> {
+    tableau::classify_with_seed_options(ontology, seed, false)
 }
 
 /// Tableau consistency check.

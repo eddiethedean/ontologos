@@ -4,5 +4,5 @@ Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
 Ontology(<file:/c/test.owl#>
-Declaration(Class(:Topping))Declaration(NamedIndividual(:Topping))ClassAssertion(:Topping :Topping)
+Declaration( Class( :Person ) ) Declaration( Class( :Company ) )SubClassOf( :PersonCompany :Association )ObjectPropertyDomain( :PersonCompany :Person ) ObjectPropertyRange( :PersonCompany :Company )
 )

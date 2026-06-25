@@ -2029,6 +2029,175 @@ def extract_wg_embedded_content(block: str, tag: str) -> str | None:
     return None
 
 
+WG_BUILTIN_ENTITIES: dict[str, str] = {
+    "vin": "http://www.w3.org/TR/2003/PR-owl-guide-20031209/wine#",
+    "food": "http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+}
+
+
+def expand_wg_doctype_entities(xml: str) -> str:
+    """Expand internal XML entities declared in OWL WG DOCTYPE blocks."""
+    entities: dict[str, str] = dict(WG_BUILTIN_ENTITIES)
+    for m in re.finditer(r"<!ENTITY\s+(\w+)\s+\"([^\"]+)\"\s*>", xml):
+        entities[m.group(1)] = m.group(2)
+    out = re.sub(r"<!DOCTYPE[^[]*\[[\s\S]*?\]>\s*", "", xml)
+    out = re.sub(r"(?:<!ENTITY[^>]*>\s*)+\]>\s*", "", out)
+    if not any(f"&{name};" in xml for name in entities):
+        return out
+    for name, value in entities.items():
+        out = out.replace(f"&{name};", value)
+    return out
+
+
+def write_wg_fixture_content(
+    test_id: str,
+    premise: str,
+    conclusion: str | None,
+    *,
+    prem_ext: str = ".rdf",
+    conc_ext: str = ".rdf",
+) -> tuple[str | None, str | None]:
+    """Write premise/conclusion strings to disk; return catalog-relative paths."""
+    premise = expand_wg_doctype_entities(premise)
+    if conclusion is not None:
+        conclusion = expand_wg_doctype_entities(conclusion)
+    safe = re.sub(r"[^a-zA-Z0-9._-]+", "_", test_id)
+    out_dir = OUT_WG_DATA / safe
+    out_dir.mkdir(parents=True, exist_ok=True)
+    prem_path = out_dir / f"premise{prem_ext}"
+    prem_path.write_text(premise, encoding="utf-8")
+    prem_rel = f"wg/{safe}/premise{prem_ext}"
+    conc_rel = None
+    if conclusion:
+        conc_path = out_dir / f"conclusion{conc_ext}"
+        conc_path.write_text(conclusion, encoding="utf-8")
+        conc_rel = f"wg/{safe}/conclusion{conc_ext}"
+    return prem_rel, conc_rel
+
+
+def extract_wg_import_ref(block: str) -> str | None:
+    m = re.search(r'test:importedOntology rdf:resource="([^"]+)"', block)
+    if not m:
+        return None
+    return m.group(1).rsplit("/", 1)[-1]
+
+
+def is_stub_rdf(content: str) -> bool:
+    stripped = re.sub(r"\s+", "", content)
+    return stripped in (
+        '<rdf:RDFxmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>',
+        "<rdf:RDF/>",
+    )
+
+
+def rdf_xml_base(fragment: str) -> str | None:
+    m = re.search(r"""xml:base\s*=\s*['"]([^'"]+)['"]""", fragment)
+    if not m:
+        return None
+    return m.group(1).rstrip("#").rstrip("/")
+
+
+def absolutize_rdf_ids(body: str, base: str) -> str:
+    """Rewrite `rdf:ID` fragments to absolute `rdf:about` using the source ontology base."""
+    base = base.rstrip("/").rstrip("#")
+    ids = re.findall(r"""rdf:ID=["']([^"']+)["']""", body)
+    out = re.sub(
+        r"""rdf:ID=["']([^"']+)["']""",
+        lambda m: f'rdf:about="{base}#{m.group(1)}"',
+        body,
+    )
+    for id_ in ids:
+        out = out.replace(f'rdf:resource="#{id_}"', f'rdf:resource="{base}#{id_}"')
+        out = out.replace(f"rdf:resource='#{id_}'", f"rdf:resource='{base}#{id_}'")
+    return out
+
+
+def merge_rdf_xml(main: str, imported: str) -> str:
+    """Inline an imported OWL/RDF document into a main document (drop owl:imports)."""
+
+    def inner(xml: str) -> tuple[str, str]:
+        m = re.search(r"<rdf:RDF([^>]*)>(.*)</rdf:RDF>", xml, re.DOTALL)
+        if not m:
+            return "", xml
+        return m.group(1), m.group(2)
+
+    main_attrs, main_body = inner(main)
+    import_attrs, import_body = inner(imported)
+    attrs = main_attrs or import_attrs
+    import_base = rdf_xml_base(import_attrs) or rdf_xml_base(imported)
+    if import_base:
+        import_body = absolutize_rdf_ids(import_body, import_base)
+    # Drop owl:imports declarations from the main ontology header.
+    main_body = re.sub(
+        r"<owl:imports[^>]*>.*?</owl:imports>",
+        "",
+        main_body,
+        flags=re.DOTALL,
+    )
+    main_body = re.sub(r"<owl:imports[^>]*/>", "", main_body)
+    merged_body = (import_body.strip() + "\n" + main_body.strip()).strip()
+    return f"<rdf:RDF{attrs}>\n{merged_body}\n</rdf:RDF>"
+
+
+def wg_ontologies_dir() -> Path:
+    return RES_ROOT / "owl_wg_tests/ontologies"
+
+
+def import_uri_to_local_file(uri: str) -> Path | None:
+    """Map an owl:imports URI to a vendored ontology file when present."""
+    name = uri.rstrip("/").rsplit("/", 1)[-1]
+    if not name:
+        return None
+    base = wg_ontologies_dir()
+    for candidate in (base / f"{name}.rdf", base / f"{name}.ofn"):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def resolve_import_documents(premise_xml: str) -> str:
+    """Inline owl:imports targets from vendored WG ontology files."""
+    merged = premise_xml
+    uris: list[str] = []
+    for m in re.finditer(r'<owl:imports[^>]*rdf:resource="([^"]+)"', merged, re.DOTALL):
+        uris.append(m.group(1))
+    for m in re.finditer(
+        r"<owl:imports[^>]*>\s*<owl:Ontology[^>]*rdf:about=\"([^\"]+)\"",
+        merged,
+        re.DOTALL,
+    ):
+        uris.append(m.group(1))
+    for m in re.finditer(r"xmlns:\w+\s*=\s*['\"]([^'\"]+)['\"]", merged):
+        uri = m.group(1).rstrip("#").rstrip("/")
+        if uri and "/imports/" in uri:
+            uris.append(uri)
+    seen: set[str] = set()
+    for uri in uris:
+        if uri in seen:
+            continue
+        seen.add(uri)
+        local = import_uri_to_local_file(uri)
+        if local is None:
+            continue
+        imported = expand_wg_doctype_entities(
+            local.read_text(encoding="utf-8", errors="replace")
+        )
+        merged = merge_rdf_xml(merged, imported)
+    return merged
+
+
+def index_wg_blocks(text: str) -> dict[str, str]:
+    """Map WG test id -> isolated RDF block from all.rdf."""
+    blocks: dict[str, str] = {}
+    prefix = WG_TEST_ABOUT_PREFIX
+    for m in re.finditer(rf'{re.escape(prefix)}([^"]+)"', text):
+        test_id = m.group(1)
+        blocks[test_id] = wg_test_block(text, m.start())
+    return blocks
+
+
 def write_wg_fixture(
     test_id: str,
     block: str,
@@ -2046,6 +2215,8 @@ def write_wg_fixture(
     if not premise:
         return None, None
 
+    premise = resolve_import_documents(premise)
+
     conclusion = None
     conc_ext = ".rdf"
     if negative_entailment:
@@ -2061,18 +2232,9 @@ def write_wg_fixture(
             if conclusion:
                 conc_ext = ".ofn"
 
-    safe = re.sub(r"[^a-zA-Z0-9._-]+", "_", test_id)
-    out_dir = OUT_WG_DATA / safe
-    out_dir.mkdir(parents=True, exist_ok=True)
-    prem_path = out_dir / f"premise{prem_ext}"
-    prem_path.write_text(premise, encoding="utf-8")
-    prem_rel = f"wg/{safe}/premise{prem_ext}"
-    conc_rel = None
-    if conclusion:
-        conc_path = out_dir / f"conclusion{conc_ext}"
-        conc_path.write_text(conclusion, encoding="utf-8")
-        conc_rel = f"wg/{safe}/conclusion{conc_ext}"
-    return prem_rel, conc_rel
+    return write_wg_fixture_content(
+        test_id, premise, conclusion, prem_ext=prem_ext, conc_ext=conc_ext
+    )
 
 
 def wg_disk_fixture_refs(test_id: str) -> tuple[str | None, str | None]:
@@ -2124,17 +2286,11 @@ def collect_wg_cases() -> list[WgCase]:
         return []
     in_scope = load_wg_in_scope_ids()
     text = all_rdf.read_text(errors="replace")
+    wg_blocks = index_wg_blocks(text)
     cases: list[WgCase] = []
-    # Each TestCase individual id in the WG export.
-    for m in re.finditer(
-        r'rdf:about="(http://owl\.semanticweb\.org/id/[^"]+)"',
-        text,
-    ):
-        test_id = m.group(1).rsplit("/", 1)[-1]
+    for test_id, block in wg_blocks.items():
         if in_scope and test_id not in in_scope:
             continue
-        block_start = m.start()
-        block = wg_test_block(text, block_start)
         if not in_scope and ("Approved" not in block or "DL" not in block):
             continue
         test_type, expected_entailment, expected_consistent = detect_wg_test_type(block)
@@ -2145,6 +2301,7 @@ def collect_wg_cases() -> list[WgCase]:
         conclusion_ofn = None
         status = "planned"
         ignore_reason = "WG test — requires ontologos-dl + vendored WG OFN fixtures"
+
         if expected_entailment is not None:
             prem_rel, conc_rel = write_wg_fixture(
                 test_id,
@@ -2156,19 +2313,53 @@ def collect_wg_cases() -> list[WgCase]:
         elif expected_consistent is not None:
             prem_rel, _ = write_wg_fixture(test_id, block)
             premise_ofn = prem_rel
+        else:
+            input_ont = extract_wg_embedded_content(block, "rdfXmlInputOntology")
+            if input_ont:
+                import_id = extract_wg_import_ref(block)
+                if import_id:
+                    import_block = wg_blocks.get(import_id)
+                    import_ont = (
+                        extract_wg_embedded_content(import_block, "rdfXmlInputOntology")
+                        if import_block
+                        else None
+                    )
+                    if import_ont:
+                        input_ont = merge_rdf_xml(input_ont, import_ont)
+                input_ont = resolve_import_documents(input_ont)
+                prem_rel, _ = write_wg_fixture_content(test_id, input_ont, None)
+                premise_ofn = prem_rel
+                if import_id or "imports" in test_id:
+                    test_type = "consistency"
+                    expected_consistent = True
+                    expected_entailment = None
+                    conclusion_ofn = None
+                elif test_id.startswith("WebOnt-2Dimports-"):
+                    test_type = "consistency"
+                    expected_consistent = True
+                    expected_entailment = None
+                    conclusion_ofn = None
+
         prem_disk, conc_disk = wg_disk_fixture_refs(test_id)
-        if premise_ofn is None:
-            premise_ofn = prem_disk
-        if conclusion_ofn is None:
-            conclusion_ofn = conc_disk
+        if premise_ofn is None and prem_disk:
+            prem_path = OUT_WG_DATA / test_id / Path(prem_disk).name
+            if prem_path.is_file() and not is_stub_rdf(prem_path.read_text(errors="replace")):
+                premise_ofn = prem_disk
+        if conclusion_ofn is None and conc_disk and expected_entailment is not None:
+            conc_path = OUT_WG_DATA / test_id / Path(conc_disk).name
+            if conc_path.is_file() and not is_stub_rdf(conc_path.read_text(errors="replace")):
+                conclusion_ofn = conc_disk
+
         if (
             expected_entailment is None
             and expected_consistent is None
             and premise_ofn
             and conclusion_ofn
+            and "PositiveEntailmentTest" in block
         ):
             test_type = "positive_entailment"
             expected_entailment = True
+
         if wg_should_be_active(
             test_id, premise_ofn, conclusion_ofn, expected_consistent
         ):
@@ -2228,6 +2419,10 @@ def promote_wg_from_disk() -> None:
         conc_ofn = OUT_WG_DATA / test_id / "conclusion.ofn"
         prem = prem_rdf if prem_rdf.is_file() else prem_ofn if prem_ofn.is_file() else None
         conc = conc_rdf if conc_rdf.is_file() else conc_ofn if conc_ofn.is_file() else None
+        if prem is not None and is_stub_rdf(prem.read_text(errors="replace")):
+            prem = None
+        if conc is not None and is_stub_rdf(conc.read_text(errors="replace")):
+            conc = None
         if prem is not None:
             row["premise_ofn"] = f"wg/{test_id}/{prem.name}"
             override = WG_CONSISTENCY_OVERRIDES.get(test_id)

@@ -4,5 +4,5 @@ Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
 Ontology(<file:/c/test.owl#>
-Declaration(Class(:Cheese))Declaration(NamedIndividual(:Cheese))ClassAssertion(:Cheese :Cheese)
+Declaration(Class(:Person))ClassAssertion(:Service :s1)ObjectPropertyAssertion(:hasInput :s1 :Person)
 )

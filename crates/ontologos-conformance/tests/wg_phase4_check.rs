@@ -63,6 +63,16 @@ fn wg_keys_004_negative_entailment() {
 }
 
 #[test]
+fn wg_imports_010_entailment() {
+    check_wg_case(&case_by_suffix("imports-2D010")).expect("should entail");
+}
+
+#[test]
+fn wg_imports_011_entailment() {
+    check_wg_case(&case_by_suffix("imports-2D011")).expect("should entail");
+}
+
+#[test]
 fn wg_i46_negative_entailment() {
     check_wg_case(&case_by_suffix("I4.6-2D004")).expect("should not entail");
 }

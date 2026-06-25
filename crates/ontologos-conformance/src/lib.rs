@@ -11,11 +11,11 @@ pub use catalog::{
     load_wg_catalog, promoted_axiom_ids_path, promoted_wg_ids_path, read_catalog_file,
     read_promoted_axiom_ids, read_promoted_wg_ids, read_wg_catalog_file,
     refresh_catalog_file_cache, run_hermit_case, run_wg_case, scan_all_passing_axiom_cases,
-    scan_all_passing_wg_cases, scan_planned_dl_failures, scan_planned_engine_failures,
-    scan_planned_passing_wg_cases, scan_planned_wg_failures, scan_promotable_axiom_cases,
-    stable_promoted_axiom_ids, write_promoted_axiom_ids, write_promoted_wg_ids, HermitCase,
-    PlannedBacklogAudit, PlannedJavaAudit, PlannedJavaCategory, PlannedWgAudit, PlannedWgCategory,
-    WgCase,
+    scan_all_passing_wg_cases, scan_all_wg_failures, scan_planned_dl_failures,
+    scan_planned_engine_failures, scan_planned_passing_wg_cases, scan_planned_wg_failures,
+    scan_promotable_axiom_cases, stable_promoted_axiom_ids, write_promoted_axiom_ids,
+    write_promoted_wg_ids, wg_case_short_id, HermitCase, PlannedBacklogAudit, PlannedJavaAudit,
+    PlannedJavaCategory, PlannedWgAudit, PlannedWgCategory, WgCase, WgFailure, WgFailureBucket,
 };
 
 use std::path::{Path, PathBuf};

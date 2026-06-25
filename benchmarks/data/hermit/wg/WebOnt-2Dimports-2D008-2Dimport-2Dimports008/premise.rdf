@@ -1,1 +1,11 @@
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" />
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:first="http://www.w3.org/2002/03owlt/imports/imports008#"
+    xmlns:second="http://www.w3.org/2002/03owlt/imports/main008#"
+    xml:base="http://www.w3.org/2002/03owlt/imports/imports008" >
+   <rdfs:Class rdf:ID="sub">
+     <rdfs:subClassOf rdf:resource="#super"/>
+   </rdfs:Class>
+</rdf:RDF>

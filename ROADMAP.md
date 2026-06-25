@@ -129,7 +129,7 @@ parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 
 **Current (Phase 3, 2026-06-23):** 243 Java `planned` + 67 WG `planned` = **310** backlog → **~68% parity** (`parity_pct` ≈ 67.6). **692+** active conformance tests; **233** catalog `axiom` cases; **233** promoted axiom IDs. `audit_planned_backlog`: **`engine_gap: 0`** (down from **72** at Phase 3 start), **`promotion_candidate: 40`**. `engine_failures` bin: **0** runnable planned failures.
 
-**Current (Phase 4, 2026-06-24):** **Failure-first workflow** — all runnable cases active in generated tests (`hermit_wg_generated`: **0** `#[ignore]`; `hermit_generated`: **272** `#[ignore]`). **428/428** WG (`status=wg`, `wg_planned = 0`); **324/428** pass at 30s DL budget ([promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt)). Java: **268** `axiom` + **33** `clausify` + **19** `swrl` + **2** `fixture` = **322** runnable; **202** `planned` (no harvested assertions). **202** backlog → **~79% parity** (`parity_pct` ≈ 78.9). Blocking CI: `ONTOLOGOS_CI_PROMOTED_ONLY=1`; full suite: [run-hermit-full-suite.sh](benchmarks/scripts/run-hermit-full-suite.sh) (nightly, non-blocking). **252** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)).
+**Current (Phase 4, 2026-06-24):** **Failure-first workflow** — all runnable cases active in generated tests (`hermit_wg_generated`: **0** `#[ignore]`; `hermit_generated`: **272** `#[ignore]`). **428/428** WG (`status=wg`, `wg_planned = 0`); **363/428** pass at 30s DL budget (**65** semantic failures; [promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt) has **331** IDs). Triage: `cargo run --release -p ontologos-conformance --bin wg_failures`. Java: **268** `axiom` + **33** `clausify` + **19** `swrl` + **2** `fixture` = **322** runnable; **202** `planned` (no harvested assertions). **202** backlog → **~79% parity** (`parity_pct` ≈ 78.9). Blocking CI: `ONTOLOGOS_CI_PROMOTED_ONLY=1`; full suite: [run-hermit-full-suite.sh](benchmarks/scripts/run-hermit-full-suite.sh) (nightly, non-blocking). **252** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)).
 
 Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 
@@ -141,7 +141,7 @@ Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 | **1** | Harness integrity | **Complete** | WG catalog generator stable | `cargo test -p ontologos-conformance --test hermit_wg_generated` |
 | **2** | Assertion harvest | **Complete** | `missing_assertions → 0`; 176 promoted axiom IDs | `audit-planned-backlog.sh` |
 | **3** | DL engine gaps | **Complete** | `engine_gap` **72 → 0**; **40** promotion candidates | `engine_failures` · `parity-scan.sh` · `promote_catalog` |
-| **4** | WG fixtures | **In progress** | `wg_planned = 0`; **324/428** pass (30s); burn down **104** failures | `run-hermit-full-suite.sh` |
+| **4** | WG fixtures | **In progress** | `wg_planned = 0`; **363/428** pass (30s); **65** failures remain | `wg_failures` · `run-hermit-full-suite.sh` |
 | **5** | Manual ports | Planned | `java_planned → 0` (**202** cases) | `run-hermit-full-suite.sh` · `generate_catalog.py` |
 | **6** | Tier B corpora | Planned | `ClassificationTest` in CI | `compare-pizza-el-golden.sh` |
 | **7** | Tier C proof | Planned | HermiT JAR cross-check nightly | `compare-hermit-tier-c.sh` |
@@ -281,7 +281,9 @@ All bounded engine failures cleared (IanT6 ×2, IanT7b).
 
 All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-first workflow). Fix engine gaps by running the full suite and burning down failures — no `promote_wg` / `wg_failures` scan loop required for day-to-day work.
 
-**Status (2026-06-24):** Catalog **`wg_planned = 0`** — all **428** WG cases active. **104** semantic failures remain at 30s DL budget (**324** in `promoted_wg_ids.txt` for blocking CI). Java side: **322** runnable generated tests (**268** `axiom`); **202** `planned` without assertions (Phase 5). Day-to-day: `cargo test --test hermit_wg_generated --release` or `run-hermit-full-suite.sh` — not `wg_failures` / `promote_wg` scan loops.
+**Status (2026-06-24):** Catalog **`wg_planned = 0`** — all **428** WG cases active. **65** semantic failures remain at 30s DL budget (`wg_failures`; **363/428** pass; **331** promoted IDs). Java side: **322** runnable generated tests (**268** `axiom`); **202** `planned` without assertions (Phase 5). Day-to-day: `cargo test --test hermit_wg_generated --release` or `run-hermit-full-suite.sh`.
+
+**Recent fixes (2026-06-24):** RDF supplement merge now imports **core** axioms (`ObjectPropertyDomain`/`Range` from `rdfs:domain`/`range`); quote-aware `parse_xml_base`; `conflicting_instance_typing_non_entailment_guard` allows intersection/union member typings; import fixture merge in `generate_catalog.py`; `wg_phase4_check` **9/9**.
 
 **Workflow**
 
@@ -312,8 +314,9 @@ All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-fi
 #### WS3 — DL engine fixes (in progress)
 
 - [x] Entailment guards, `thing_equivalent_nothing`, pattern datatype disjointness, tableau limits
-- [x] [wg_phase4_check.rs](crates/ontologos-conformance/tests/wg_phase4_check.rs) — **7/7** regression tests
-- [ ] **~104** WG failures — fix via `run-hermit-full-suite.sh` (timeouts, QCR, nominals, imports, …)
+- [x] [wg_phase4_check.rs](crates/ontologos-conformance/tests/wg_phase4_check.rs) — **9/9** regression tests
+- [x] RDF supplement core merge, `rdfs:domain`/`range`, import fixture vendoring, entailment guard tranches
+- [ ] **~65** WG failures — equivalentClass/intersectionOf, description-logic consistency, QCR, timeouts
 - [ ] **~202** Java `planned` — assertion harvest (Phase 2) or manual ports (Phase 5)
 
 #### WS4 — Conformance harness (complete)
@@ -325,7 +328,7 @@ All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-fi
 - [x] [run-hermit-full-suite.sh](benchmarks/scripts/run-hermit-full-suite.sh) — local + nightly non-blocking full suite
 - [x] `conformance-nightly.yml` — `full-hermit-suite` job (`continue-on-error: true`)
 - [x] `check-hermit-parity-phases.sh` — **`wg_planned = 0`** (catalog status)
-- [ ] Full suite green at 30s DL budget (**104** WG failures → expand `promoted_wg_ids.txt` to **428**)
+- [ ] Full suite green at 30s DL budget (**65** WG failures → expand `promoted_wg_ids.txt` to **428**)
 - [ ] `java_planned → 0` (Phase 5; **202** cases)
 
 **Exit (target):** `run-hermit-full-suite.sh` green at 30s DL budget; `promoted_wg_ids.txt` = all **428** WG ids; `java_planned = 0`.
@@ -870,7 +873,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 **1.0** is the release where OntoLogos **replaces HermiT** as the default OWL 2 DL reasoner for batch classification, materialization, and explanation in Rust/Python/CLI workflows. Not a line-by-line hypertableau port — a **profile-modular** stack (EL, RL/RDFS, hybrid routing, `ontologos-dl`) that passes the HermiT conformance harness and matches classification results on standard corpora within documented tolerance.
 
-**Do not tag v1.0.0** until **Phase 9** exit criteria are met (`parity_pct = 100%`, expressivity complete). Passing `check-1.0-release-gates.sh` alone is insufficient (~79% catalog parity today; **202** Java `planned` + **104** WG semantic failures at 30s budget).
+**Do not tag v1.0.0** until **Phase 9** exit criteria are met (`parity_pct = 100%`, expressivity complete). Passing `check-1.0-release-gates.sh` alone is insufficient (~79% catalog parity today; **202** Java `planned` + **65** WG semantic failures at 30s budget).
 
 See [hermit-replacement.md](docs/internal/research/hermit-replacement.md) and [hermit.md](docs/internal/research/hermit.md).
 

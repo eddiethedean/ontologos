@@ -26,6 +26,11 @@ impl UnsatCache {
     pub fn is_unsat(&self, labels: &HashSet<CeId>) -> bool {
         self.seen.contains(&hash_labels(labels))
     }
+
+    /// Absorb entries from another cache.
+    pub fn merge(&mut self, other: &Self) {
+        self.seen.extend(other.seen.iter().copied());
+    }
 }
 
 fn hash_labels(labels: &HashSet<CeId>) -> u64 {

@@ -1,7 +1,7 @@
 //! ALC tableau: expansion, clash detection, blocking, taxonomy extraction.
 
 mod block;
-mod cache;
+pub mod cache;
 mod clash;
 mod expand;
 
@@ -63,8 +63,17 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
 
 /// Classify with optional saturation seed.
 pub fn classify_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Result<Taxonomy, Error> {
+    classify_with_seed_options(ontology, seed, true)
+}
+
+/// Classify with optional saturation seed and control over pairwise subsumption inference.
+pub fn classify_with_seed_options(
+    ontology: &Ontology,
+    seed: &TableauSeed,
+    infer_pairwise_subsumptions: bool,
+) -> Result<Taxonomy, Error> {
     let dl = DlOntology::from_ontology(ontology)?;
-    run_tableau(&dl, seed)
+    run_tableau(&dl, seed, infer_pairwise_subsumptions)
 }
 
 /// Tableau consistency test (ABox + TBox when individuals are present).
@@ -84,10 +93,22 @@ pub fn is_ce_satisfiable_with_seed(
     ce: CeId,
     seed: &TableauSeed,
 ) -> Result<bool, Error> {
+    is_ce_satisfiable_with_cache(dl, ce, seed, &mut cache::UnsatCache::new())
+}
+
+fn is_ce_satisfiable_with_cache(
+    dl: &DlOntology,
+    ce: CeId,
+    seed: &TableauSeed,
+    shared_cache: &mut cache::UnsatCache,
+) -> Result<bool, Error> {
     let mut branch = Branch::new(dl, seed);
+    branch.cache = shared_cache.clone();
     assert_top_tbox_axioms(&mut branch, 0);
     branch.assert(0, ce);
-    run_tbox_saturation(&mut branch)
+    let ok = run_tbox_saturation(&mut branch)?;
+    shared_cache.merge(&branch.cache);
+    Ok(ok)
 }
 
 /// Test whether a named class is satisfiable, expanding `EquivalentClasses` definitions.
@@ -95,6 +116,16 @@ pub fn is_named_class_satisfiable_with_seed(
     dl: &DlOntology,
     class: EntityId,
     seed: &TableauSeed,
+) -> Result<bool, Error> {
+    is_named_class_satisfiable_with_cache(dl, class, seed, &mut cache::UnsatCache::new())
+}
+
+/// Like [`is_named_class_satisfiable_with_seed`] but reuses an unsat label cache across calls.
+pub fn is_named_class_satisfiable_with_cache(
+    dl: &DlOntology,
+    class: EntityId,
+    seed: &TableauSeed,
+    shared_cache: &mut cache::UnsatCache,
 ) -> Result<bool, Error> {
     let ce = dl
         .core()
@@ -106,7 +137,7 @@ pub fn is_named_class_satisfiable_with_seed(
         })
         .ok_or_else(|| Error::Message(format!("missing CE for class {:?}", class.0)))?;
     let test_ce = equivalent_definition_ce(dl, class).unwrap_or(ce);
-    is_ce_satisfiable_with_seed(dl, test_ce, seed)
+    is_ce_satisfiable_with_cache(dl, test_ce, seed, shared_cache)
 }
 
 fn assert_top_tbox_axioms(branch: &mut Branch<'_>, world: usize) {
@@ -392,6 +423,9 @@ fn apply_kb_axiom(
         } if !equalities_only => {
             add_property_edge(branch, worlds, *subject, property.clone(), *object);
         }
+        DlAxiom::DataPropertyAssertion { subject, .. } if !equalities_only => {
+            ensure_individual_world(branch, worlds, *subject);
+        }
         DlAxiom::SameIndividual(ids) if equalities_only && ids.len() >= 2 => {
             merge_individuals(branch, worlds, ids);
         }
@@ -659,6 +693,17 @@ fn individual_in_key_class(
     if labels.contains(&key_class) {
         return true;
     }
+    if let Some(ClassExpr::Atomic(entity)) = dl.core().dl().ce(key_class) {
+        if dl
+            .core()
+            .entity(*entity)
+            .ok()
+            .and_then(|r| dl.core().resolve_iri(r.iri).ok())
+            .is_some_and(|iri| iri == "http://www.w3.org/2002/07/owl#Thing")
+        {
+            return true;
+        }
+    }
     for &label in labels {
         if label_subsumes_key(branch, dl, label, key_class) {
             return true;
@@ -759,7 +804,11 @@ fn ensure_individual_world(
     w
 }
 
-fn run_tableau(dl: &DlOntology, seed: &TableauSeed) -> Result<Taxonomy, Error> {
+fn run_tableau(
+    dl: &DlOntology,
+    seed: &TableauSeed,
+    infer_pairwise_subsumptions: bool,
+) -> Result<Taxonomy, Error> {
     let mut subsumptions = Vec::new();
     for clause in dl.clauses().clauses() {
         if let Clause::Subsumption { sub, sup } = clause {
@@ -782,15 +831,26 @@ fn run_tableau(dl: &DlOntology, seed: &TableauSeed) -> Result<Taxonomy, Error> {
         .map(|(id, _)| id)
         .collect();
 
-    let mut unsatisfiable = Vec::new();
+    let mut known_unsat = structural_unsat_classes(dl, seed, &subsumptions);
+    let mut unsatisfiable: Vec<EntityId> = known_unsat.iter().copied().collect();
+    let mut shared_cache = cache::UnsatCache::new();
     let class_count = classes.len();
     for class in classes {
-        if !is_satisfiable(dl, class, seed)? {
-            unsatisfiable.push(class);
+        if known_unsat.contains(&class) {
+            continue;
+        }
+        match is_named_class_satisfiable_with_cache(dl, class, seed, &mut shared_cache) {
+            Ok(false) => {
+                known_unsat.insert(class);
+                unsatisfiable.push(class);
+            }
+            Ok(true) => {}
+            Err(e @ Error::ResourceLimit(_)) => return Err(e),
+            Err(e) => return Err(e),
         }
     }
 
-    if class_count <= MAX_CLASSES_FOR_ENTAILMENT_INFER {
+    if infer_pairwise_subsumptions && class_count <= MAX_CLASSES_FOR_ENTAILMENT_INFER {
         subsumptions.extend(infer_named_subsumptions(dl, seed)?);
     }
     subsumptions.sort_unstable_by_key(|(a, b)| (a.0, b.0));
@@ -803,8 +863,77 @@ fn run_tableau(dl: &DlOntology, seed: &TableauSeed) -> Result<Taxonomy, Error> {
     })
 }
 
-fn is_satisfiable(dl: &DlOntology, class: EntityId, seed: &TableauSeed) -> Result<bool, Error> {
-    is_named_class_satisfiable_with_seed(dl, class, seed)
+/// Propagate obvious atomic class unsatisfiability without tableau expansion.
+pub fn structural_unsat_classes(
+    dl: &DlOntology,
+    seed: &TableauSeed,
+    atomic_subs: &[(EntityId, EntityId)],
+) -> HashSet<EntityId> {
+    let nothing = dl
+        .core()
+        .entities()
+        .iter()
+        .find_map(|(id, record)| {
+            if record.kind != EntityKind::Class {
+                return None;
+            }
+            dl.core()
+                .resolve_iri(record.iri)
+                .ok()
+                .filter(|iri| {
+                    *iri == "http://www.w3.org/2002/07/owl#Nothing"
+                        || iri.ends_with("#Nothing")
+                        || *iri == "owl:Nothing"
+                })
+                .map(|_| id)
+        });
+
+    let mut disjoint = Vec::new();
+    for clause in dl.clauses().clauses() {
+        if let Clause::Disjoint { left, right } = clause {
+            if let (Some(a), Some(b)) = (atomic_entity(dl, *left), atomic_entity(dl, *right)) {
+                disjoint.push((a, b));
+            }
+        }
+    }
+
+    let mut unsat = HashSet::new();
+    let mut subs = atomic_subs.to_vec();
+    for &(sub, sup) in &seed.subsumptions {
+        if let (Some(a), Some(b)) = (atomic_entity(dl, sub), atomic_entity(dl, sup)) {
+            subs.push((a, b));
+        }
+    }
+
+    loop {
+        let mut changed = false;
+        for &(sub, sup) in &subs {
+            if unsat.contains(&sup) && unsat.insert(sub) {
+                changed = true;
+            }
+            if nothing == Some(sup) && unsat.insert(sub) {
+                changed = true;
+            }
+        }
+        for &(left, right) in &disjoint {
+            if unsat.contains(&right) && unsat.insert(left) {
+                changed = true;
+            }
+            if unsat.contains(&left) && unsat.insert(right) {
+                changed = true;
+            }
+            if subs.iter().any(|&(a, b)| a == left && b == right) && unsat.insert(left) {
+                changed = true;
+            }
+            if subs.iter().any(|&(a, b)| a == right && b == left) && unsat.insert(right) {
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    unsat
 }
 
 fn infer_named_subsumptions(

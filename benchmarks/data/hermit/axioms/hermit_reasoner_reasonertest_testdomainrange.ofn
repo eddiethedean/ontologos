@@ -5,5 +5,5 @@ Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
 Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
 Ontology(<file:/c/test.owl#>
-Declaration(DataProperty(:p1))Declaration(DataProperty(:p2))Declaration(DataProperty(:p3))Declaration(DataProperty(:p4))Declaration(DataProperty(:p5))Declaration(DataProperty(:p6))Declaration(Class(:c2))Declaration(Class(:c3))Declaration(Class(:c4))Declaration(Class(:c5))Declaration(Class(:c6))DataPropertyRange(:p1 rdf:PlainLiteral)DataPropertyDomain(:p2 :c2)ObjectPropertyRange(:p3 :c3)ObjectPropertyDomain(:p4 :c4)AnnotationPropertyDomain(:p5 :c5)AnnotationPropertyRange(:p6 rdf:PlainLiteral)
+Declaration(DataProperty(:p1))Declaration(DataProperty(:p2))Declaration(DataProperty(:p3))Declaration(DataProperty(:p4))Declaration(DataProperty(:p5))Declaration(DataProperty(:p6))Declaration(Class(:c2))Declaration(Class(:c3))Declaration(Class(:c4))Declaration(Class(:c5))Declaration(Class(:c6))DataPropertyRange(:p1 rdf:PlainLiteral)DataPropertyDomain(:p2 :c2)ObjectPropertyRange(:p3 :c3)ObjectPropertyDomain(:p4 :c4)AnnotationPropertyDomain(:p5 :c5)AnnotationPropertyRange(:p6 :c6)
 )

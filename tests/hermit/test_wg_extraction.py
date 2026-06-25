@@ -129,5 +129,23 @@ class WgExtractionTests(unittest.TestCase):
             self.assertIn("Prefix", prem_path.read_text())
 
 
+    def test_merge_rdf_xml_drops_imports(self) -> None:
+        from generate_catalog import merge_rdf_xml
+
+        main = """<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#">
+  <owl:Ontology><owl:imports rdf:resource="imports007"/></owl:Ontology>
+  <owl:Thing/>
+</rdf:RDF>"""
+        imported = """<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#">
+  <owl:ObjectProperty rdf:ID="p"/>
+</rdf:RDF>"""
+        merged = merge_rdf_xml(main, imported)
+        self.assertIn("ObjectProperty", merged)
+        self.assertNotIn("owl:imports", merged)
+        self.assertIn("owl:Thing", merged)
+
+
 if __name__ == "__main__":
     unittest.main()

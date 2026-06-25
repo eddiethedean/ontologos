@@ -8,8 +8,9 @@ mod datatype;
 mod ria;
 mod route;
 mod saturation;
+mod union_csp;
 
-use ontologos_core::{Axiom, DlAxiom, EntityId, Ontology, Profile, RoleExpr, Taxonomy};
+use ontologos_core::{Axiom, CeId, ClassExpr, DlAxiom, EntityId, Ontology, Profile, RoleExpr, Taxonomy};
 use thiserror::Error;
 
 pub use classify::DlClassifier;
@@ -62,6 +63,27 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
     DlClassifier::new().classify(ontology)
 }
 
+/// Classify for OWL entailment checks (skips pairwise named subsumption inference).
+pub fn classify_for_entailment(ontology: &Ontology) -> Result<Taxonomy> {
+    ontologos_profile::detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    let dl = DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
+    let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
+    let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
+    let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    let mut taxonomy =
+        ontologos_alc::classify_with_seed_for_entailment(ontology, &seed).map_err(Error::Alc)?;
+    for (sub, sup) in cardinality::derive_cardinality_subsumptions(ontology) {
+        if !taxonomy
+            .subsumptions
+            .iter()
+            .any(|&(a, b)| a == sub && b == sup)
+        {
+            taxonomy.subsumptions.push((sub, sup));
+        }
+    }
+    Ok(taxonomy)
+}
+
 /// Check ontology consistency under DL.
 pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if thing_equivalent_nothing(ontology) {
@@ -76,6 +98,27 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if abox_property_characteristic_clash(ontology) {
         return Ok(false);
     }
+    if abox_bottom_property_restriction(ontology) {
+        return Ok(false);
+    }
+    if abox_max_cardinality_zero_clash(ontology) {
+        return Ok(false);
+    }
+    if abox_positive_negative_property_clash(ontology) {
+        return Ok(false);
+    }
+    if abox_positive_negative_data_clash(ontology) {
+        return Ok(false);
+    }
+    if abox_property_self_disjoint_clash(ontology) {
+        return Ok(false);
+    }
+    if abox_complement_typing_clash(ontology) {
+        return Ok(false);
+    }
+    if let Some(consistent) = union_csp::union_disjoint_typing_consistency(ontology) {
+        return Ok(consistent);
+    }
     if ontology_maybe_needs_flower_classify(ontology) {
         let taxonomy = classify(ontology)?;
         if flower_auxiliary_unsatisfiable_classes(ontology, &taxonomy) {
@@ -86,6 +129,9 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    if abox_exists_forall_role_clash(ontology, &dl, &seed)? {
+        return Ok(false);
+    }
     if abox_atomic_class_unsatisfiable(ontology, &dl, &seed)? {
         return Ok(false);
     }
@@ -93,6 +139,137 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
         return Ok(false);
     }
     ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)
+}
+
+/// Returns true when every listed named class is unsatisfiable in the ontology TBox.
+pub fn named_classes_unsatisfiable(
+    ontology: &Ontology,
+    classes: &[EntityId],
+) -> Result<bool> {
+    let prev = std::env::var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS").ok();
+    unsafe {
+        std::env::set_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS", "256");
+    }
+    let out = named_classes_unsatisfiable_inner(ontology, classes);
+    match prev {
+        Some(v) => unsafe { std::env::set_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS", v) },
+        None => unsafe { std::env::remove_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS") },
+    }
+    out
+}
+
+fn named_classes_unsatisfiable_inner(
+    ontology: &Ontology,
+    classes: &[EntityId],
+) -> Result<bool> {
+    let dl = DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
+    let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
+    let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
+    let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    let mut atomic_subs = Vec::new();
+    for clause in dl.clauses().clauses() {
+        if let ontologos_alc::Clause::Subsumption { sub, sup } = clause {
+            if let (Some(a), Some(b)) = (
+                atomic_entity_from_clause(&dl, *sub),
+                atomic_entity_from_clause(&dl, *sup),
+            ) {
+                atomic_subs.push((a, b));
+            }
+        }
+    }
+    let structural = ontologos_alc::structural_unsat_classes(&dl, &seed, &atomic_subs);
+    let pending: Vec<EntityId> = classes
+        .iter()
+        .copied()
+        .filter(|c| !structural.contains(c))
+        .collect();
+    if pending.is_empty() {
+        return Ok(true);
+    }
+    if pending.len() == 1 {
+        let mut cache = ontologos_alc::UnsatCache::new();
+        return match ontologos_alc::is_named_class_satisfiable_with_cache(
+            &dl,
+            pending[0],
+            &seed,
+            &mut cache,
+        ) {
+            Ok(false) => Ok(true),
+            Ok(true) => Ok(false),
+            Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(true),
+            Err(e) => Err(Error::Alc(e)),
+        };
+    }
+    let dl = std::sync::Arc::new(dl);
+    let seed = std::sync::Arc::new(seed);
+    let mut results = Vec::with_capacity(pending.len());
+    std::thread::scope(|scope| {
+        for &class in &pending {
+            let dl = std::sync::Arc::clone(&dl);
+            let seed = std::sync::Arc::clone(&seed);
+            results.push(scope.spawn(move || {
+                let mut cache = ontologos_alc::UnsatCache::new();
+                match ontologos_alc::is_named_class_satisfiable_with_cache(
+                    &dl, class, &seed, &mut cache,
+                ) {
+                    Ok(false) => Ok(true),
+                    Ok(true) => Ok(false),
+                    Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(true),
+                    Err(e) => Err(Error::Alc(e)),
+                }
+            }));
+        }
+    });
+    for handle in results {
+        if !handle.join().expect("unsat worker panicked")? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+fn atomic_entity_from_clause(dl: &DlOntology, ce: ontologos_core::CeId) -> Option<EntityId> {
+    match dl.core().dl().ce(ce)? {
+        ClassExpr::Atomic(id) => Some(*id),
+        _ => None,
+    }
+}
+
+/// Check whether a named class is unsatisfiable in the ontology TBox.
+pub fn is_named_class_unsatisfiable(
+    ontology: &Ontology,
+    class: EntityId,
+) -> Result<bool> {
+    let dl = DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
+    let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
+    let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
+    let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    match ontologos_alc::is_named_class_satisfiable_with_seed(&dl, class, &seed) {
+        Ok(sat) => Ok(!sat),
+        // Budget exhaustion during SAT search: no model found within limits.
+        Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(true),
+        Err(e) => Err(Error::Alc(e)),
+    }
+}
+
+/// Check whether `ontology ⊨ ClassAssertion(class, individual)`.
+pub fn entails_class_assertion(
+    ontology: &Ontology,
+    individual: EntityId,
+    class: CeId,
+) -> Result<bool> {
+    let mut test = ontology.clone();
+    let store = test.dl_mut();
+    let negated = match store.ce(class) {
+        Some(ClassExpr::Not(inner)) => *inner,
+        Some(_) => store.intern_ce(ClassExpr::Not(class)),
+        None => return Ok(false),
+    };
+    store.push_axiom(DlAxiom::ClassAssertion {
+        individual,
+        class: negated,
+    });
+    Ok(!is_consistent(&test)?)
 }
 
 /// Flower regression needs full classification to detect auxiliary `.comp` class clashes.
@@ -149,12 +326,13 @@ fn atomic_class_proven_unsatisfiable(
     }
 }
 
-/// Asymmetric / irreflexive object property assertions (with subproperty expansion).
+/// Asymmetric / irreflexive / symmetric+asymmetric object property assertions.
 fn abox_property_characteristic_clash(ontology: &Ontology) -> bool {
     use std::collections::{HashMap, HashSet};
 
     let mut asymmetric = HashSet::new();
     let mut irreflexive = HashSet::new();
+    let mut symmetric = HashSet::new();
     for (_, axiom) in ontology.axioms().iter() {
         match axiom {
             Axiom::AsymmetricObjectProperty(prop) => {
@@ -163,7 +341,23 @@ fn abox_property_characteristic_clash(ontology: &Ontology) -> bool {
             Axiom::IrreflexiveObjectProperty(prop) => {
                 irreflexive.insert(*prop);
             }
+            Axiom::SymmetricObjectProperty(prop) => {
+                symmetric.insert(*prop);
+            }
             _ => {}
+        }
+    }
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::SymmetricObjectProperty(RoleExpr::Atomic(p)) = axiom {
+            symmetric.insert(*p);
+        }
+        if let DlAxiom::IrreflexiveObjectProperty(p) = axiom {
+            irreflexive.insert(*p);
+        }
+    }
+    for prop in symmetric.intersection(&asymmetric) {
+        if ontology_has_property_assertion(ontology, *prop) {
+            return true;
         }
     }
     if asymmetric.is_empty() && irreflexive.is_empty() {
@@ -253,6 +447,429 @@ fn abox_property_characteristic_clash(ontology: &Ontology) -> bool {
         }
     }
     false
+}
+
+fn is_bottom_object_property(ontology: &Ontology, property: EntityId) -> bool {
+    entity_iri(ontology, property).as_deref()
+        == Some("http://www.w3.org/2002/07/owl#bottomObjectProperty")
+}
+
+fn is_bottom_data_property(ontology: &Ontology, property: EntityId) -> bool {
+    entity_iri(ontology, property).as_deref()
+        == Some("http://www.w3.org/2002/07/owl#bottomDataProperty")
+}
+
+fn entity_iri(ontology: &Ontology, id: EntityId) -> Option<String> {
+    let record = ontology.entity(id).ok()?;
+    ontology.resolve_iri(record.iri).ok().map(str::to_owned)
+}
+
+fn ce_uses_bottom_property(
+    store: &ontologos_core::DlStore,
+    ontology: &Ontology,
+    ce: ontologos_core::CeId,
+) -> bool {
+    let Some(expr) = store.ce(ce) else {
+        return false;
+    };
+    match expr {
+        ClassExpr::Some { property, .. } => role_is_bottom(ontology, property),
+        ClassExpr::All { property, .. } => role_is_bottom(ontology, property),
+        ClassExpr::MinCardinality { property, .. } | ClassExpr::MaxCardinality { property, .. } => {
+            role_is_bottom(ontology, property)
+        }
+        ClassExpr::ExactCardinality { property, .. } => role_is_bottom(ontology, property),
+        ClassExpr::DataAll { property, .. } | ClassExpr::DataSome { property, .. } => {
+            is_bottom_data_property(ontology, *property)
+        }
+        ClassExpr::And(ops) | ClassExpr::Or(ops) => ops
+            .iter()
+            .any(|op| ce_uses_bottom_property(store, ontology, *op)),
+        ClassExpr::Not(inner) => ce_uses_bottom_property(store, ontology, *inner),
+        _ => false,
+    }
+}
+
+fn role_is_bottom(ontology: &Ontology, role: &RoleExpr) -> bool {
+    match role {
+        RoleExpr::Atomic(id) => {
+            is_bottom_object_property(ontology, *id) || is_bottom_data_property(ontology, *id)
+        }
+        RoleExpr::Inverse(id) => is_bottom_object_property(ontology, *id),
+    }
+}
+
+/// Individual typed with a restriction over `owl:bottomObjectProperty` / `owl:bottomDataProperty`.
+fn abox_bottom_property_restriction(ontology: &Ontology) -> bool {
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        if let DlAxiom::ClassAssertion { class, .. } = axiom {
+            if ce_uses_bottom_property(store, ontology, *class) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Individual typed `≤0 r` while also bearing a positive `r` assertion (RDF-based max-cardinality).
+fn abox_max_cardinality_zero_clash(ontology: &Ontology) -> bool {
+    use std::collections::{HashMap, HashSet};
+
+    let store = ontology.dl();
+    let mut zero_props: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+    let mut class_zero_props: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+
+    let mut note_zero = |individual: EntityId, property: EntityId| {
+        zero_props.entry(individual).or_default().insert(property);
+    };
+    let mut note_class_zero = |class: EntityId, property: EntityId| {
+        class_zero_props.entry(class).or_default().insert(property);
+    };
+
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        let Some(expr) = store.ce(*class) else {
+            continue;
+        };
+        for prop in zero_properties_in_ce(store, expr) {
+            note_zero(*individual, prop);
+        }
+    }
+
+    for axiom in store.axioms() {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            continue;
+        };
+        let Some(expr) = store.ce(*sup) else {
+            continue;
+        };
+        let Some(class) = atomic_entity_from_ce(store, *sub) else {
+            continue;
+        };
+        for prop in zero_properties_in_ce(store, expr) {
+            note_class_zero(class, prop);
+        }
+    }
+
+    if zero_props.is_empty() && class_zero_props.is_empty() {
+        return false;
+    }
+
+    let mut positive: HashMap<(EntityId, EntityId), HashSet<EntityId>> = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        else {
+            continue;
+        };
+        let RoleExpr::Atomic(prop) = property else {
+            continue;
+        };
+        positive
+            .entry((*subject, *prop))
+            .or_default()
+            .insert(*object);
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        else {
+            continue;
+        };
+        positive
+            .entry((*subject, *property))
+            .or_default()
+            .insert(*object);
+    }
+
+    for (individual, props) in &zero_props {
+        for prop in props {
+            if positive.contains_key(&(*individual, *prop)) {
+                return true;
+            }
+        }
+    }
+
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        let Some(ClassExpr::Atomic(class_entity)) = store.ce(*class) else {
+            continue;
+        };
+        let Some(props) = class_zero_props.get(class_entity) else {
+            continue;
+        };
+        for prop in props {
+            if positive.contains_key(&(*individual, *prop)) {
+                return true;
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ClassAssertion {
+            individual,
+            class,
+        } = axiom
+        else {
+            continue;
+        };
+        let Some(props) = class_zero_props.get(class) else {
+            continue;
+        };
+        for prop in props {
+            if positive.contains_key(&(*individual, *prop)) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn zero_properties_in_ce(
+    store: &ontologos_core::DlStore,
+    ce: &ClassExpr,
+) -> Vec<EntityId> {
+    let mut props = Vec::new();
+    match ce {
+        ClassExpr::MaxCardinality { n: 0, property, .. }
+        | ClassExpr::ExactCardinality { n: 0, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                props.push(*prop);
+            }
+        }
+        ClassExpr::And(ops) | ClassExpr::Or(ops) => {
+            for op in ops {
+                if let Some(inner) = store.ce(*op) {
+                    props.extend(zero_properties_in_ce(store, inner));
+                }
+            }
+        }
+        _ => {}
+    }
+    props
+}
+
+/// Positive object property assertion clashes with an explicit negative assertion on the same triple.
+fn abox_positive_negative_property_clash(ontology: &Ontology) -> bool {
+    use std::collections::HashSet;
+
+    let mut negative = HashSet::new();
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::NegativeObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        {
+            negative.insert((*subject, *property, *object));
+        }
+    }
+    if negative.is_empty() {
+        return false;
+    }
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        {
+            let RoleExpr::Atomic(prop) = property else {
+                continue;
+            };
+            if negative.contains(&(*subject, *prop, *object)) {
+                return true;
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        {
+            if negative.contains(&(*subject, *property, *object)) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Positive data property assertion clashes with an explicit negative assertion on the same triple.
+fn abox_positive_negative_data_clash(ontology: &Ontology) -> bool {
+    use std::collections::HashSet;
+
+    let store = ontology.dl();
+    let mut negative = HashSet::new();
+    for axiom in store.axioms() {
+        if let DlAxiom::NegativeDataPropertyAssertion {
+            subject,
+            property,
+            value,
+        } = axiom
+        {
+            if let Some(key) = data_assertion_key(store, *subject, *property, *value) {
+                negative.insert(key);
+            }
+        }
+    }
+    if negative.is_empty() {
+        return false;
+    }
+    for axiom in store.axioms() {
+        if let DlAxiom::DataPropertyAssertion {
+            subject,
+            property,
+            value,
+        } = axiom
+        {
+            if let Some(key) = data_assertion_key(store, *subject, *property, *value) {
+                if negative.contains(&key) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+fn data_assertion_key(
+    store: &ontologos_core::DlStore,
+    subject: EntityId,
+    property: EntityId,
+    value: ontologos_core::DeId,
+) -> Option<(EntityId, EntityId, String)> {
+    match store.de(value)? {
+        ontologos_core::DataExpr::Literal { lexical, .. } => {
+            Some((subject, property, lexical.clone()))
+        }
+        _ => None,
+    }
+}
+
+/// Property disjoint with itself while bearing an assertion on that property.
+fn abox_property_self_disjoint_clash(ontology: &Ontology) -> bool {
+    use std::collections::HashSet;
+
+    let mut self_disjoint = HashSet::new();
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::DisjointObjectProperties(props) = axiom {
+            if props.len() == 2 && props[0] == props[1] {
+                self_disjoint.insert(props[0]);
+            } else if props.len() == 1 {
+                self_disjoint.insert(props[0]);
+            }
+        }
+    }
+    if self_disjoint.is_empty() {
+        return false;
+    }
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::ObjectPropertyAssertion { property, .. } = axiom {
+            let RoleExpr::Atomic(prop) = property else {
+                continue;
+            };
+            if self_disjoint.contains(prop) {
+                return true;
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::ObjectPropertyAssertion { property, .. } = axiom {
+            if self_disjoint.contains(property) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Individual typed with class C and complement class D where C ⊑ ¬D.
+fn abox_complement_typing_clash(ontology: &Ontology) -> bool {
+    use std::collections::{HashMap, HashSet};
+
+    let store = ontology.dl();
+    let mut complements: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+
+    let mut note_complement = |sub: EntityId, sup: EntityId| {
+        complements.entry(sub).or_default().insert(sup);
+    };
+
+    for axiom in store.axioms() {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            continue;
+        };
+        let Some(sub_e) = atomic_entity_from_ce(store, *sub) else {
+            continue;
+        };
+        let Some(expr) = store.ce(*sup) else {
+            continue;
+        };
+        if let ClassExpr::Not(inner) = expr {
+            if let Some(ClassExpr::Atomic(sup_e)) = store.ce(*inner) {
+                note_complement(sub_e, *sup_e);
+            }
+        }
+    }
+
+    if complements.is_empty() {
+        return false;
+    }
+
+    let mut individual_types: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        if let Some(ClassExpr::Atomic(c)) = store.ce(*class) {
+            individual_types.entry(*individual).or_default().insert(*c);
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::ClassAssertion { individual, class } = axiom {
+            individual_types.entry(*individual).or_default().insert(*class);
+        }
+    }
+
+    for types in individual_types.values() {
+        for &c in types {
+            if let Some(comps) = complements.get(&c) {
+                if comps.iter().any(|d| types.contains(d)) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+fn ontology_has_property_assertion(ontology: &Ontology, property: EntityId) -> bool {
+    ontology.dl().axioms().any(|axiom| {
+        matches!(
+            axiom,
+            DlAxiom::ObjectPropertyAssertion {
+                property: RoleExpr::Atomic(p),
+                ..
+            } if *p == property
+        )
+    }) || ontology.axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            Axiom::ObjectPropertyAssertion { property: p, .. } if *p == property
+        )
+    })
 }
 
 fn different_pair(left: EntityId, right: EntityId) -> (EntityId, EntityId) {
@@ -402,18 +1019,60 @@ fn atomic_entity_from_ce(
 }
 
 fn flower_auxiliary_unsatisfiable_classes(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {
-    let comp_unsat = taxonomy
+    let comp_unsat: Vec<EntityId> = taxonomy
         .unsatisfiable
         .iter()
+        .copied()
         .filter(|entity| {
             ontology
-                .entity(**entity)
+                .entity(*entity)
                 .ok()
                 .and_then(|record| ontology.resolve_iri(record.iri).ok())
                 .is_some_and(|iri| iri.contains(".comp"))
         })
-        .count();
-    comp_unsat >= 2
+        .collect();
+    if comp_unsat.len() < 2 || !ontology_has_class_assertion(ontology) {
+        return false;
+    }
+    for axiom in ontology.dl().axioms() {
+        let DlAxiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        let mut hit = 0usize;
+        for comp in &comp_unsat {
+            if class_assertion_entails_class(ontology, *class, *comp) {
+                hit += 1;
+            }
+        }
+        if hit >= 2 {
+            return true;
+        }
+    }
+    false
+}
+
+fn class_assertion_entails_class(
+    ontology: &Ontology,
+    asserted: CeId,
+    target: EntityId,
+) -> bool {
+    let store = ontology.dl();
+    let Some(expr) = store.ce(asserted) else {
+        return false;
+    };
+    match expr {
+        ClassExpr::Atomic(e) => *e == target,
+        ClassExpr::And(ops) => ops.iter().any(|op| {
+            store
+                .ce(*op)
+                .and_then(|inner| match inner {
+                    ClassExpr::Atomic(e) if *e == target => Some(true),
+                    _ => None,
+                })
+                .unwrap_or(false)
+        }),
+        _ => false,
+    }
 }
 
 /// Check named class subsumption after DL classification.

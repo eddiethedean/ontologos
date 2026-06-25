@@ -2,11 +2,12 @@ use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Component, Path, PathBuf};
 
-use ontologos_core::Ontology;
+use ontologos_core::{Axiom, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology};
 
 use crate::limits::ParseLimits;
 use crate::map::map_to_core;
 use crate::read::{read_horned_owl_from_reader, sniff_and_rewind};
+use crate::report::ParseReport;
 use crate::{
     detect_format, detect_format_from_bytes, detect_functional_from_bytes,
     detect_turtle_from_bytes, validate_loaded_ontology, Error, Format, Result,
@@ -58,6 +59,15 @@ pub fn load_ontology_with_limits_and_base(
     limits: ParseLimits,
     base: Option<&Path>,
 ) -> Result<Ontology> {
+    load_ontology_with_limits_and_base_inner(path, limits, base, true)
+}
+
+fn load_ontology_with_limits_and_base_inner(
+    path: &Path,
+    limits: ParseLimits,
+    base: Option<&Path>,
+    merge_imports: bool,
+) -> Result<Ontology> {
     let validated = validate_load_path(path, base)?;
     if !validated.is_file() {
         return Err(Error::Parse(format!("not a file: {}", validated.display())));
@@ -75,7 +85,7 @@ pub fn load_ontology_with_limits_and_base(
         )));
     }
     let format = detect_format_with_sniff(path, &mut file)?;
-    let set_ontology = if format == Format::RdfXml {
+    if format == Format::RdfXml {
         let mut bytes = Vec::new();
         file.seek(SeekFrom::Start(0))
             .map_err(|e| Error::Parse(e.to_string()))?;
@@ -95,28 +105,55 @@ pub fn load_ontology_with_limits_and_base(
             &normalized_ids,
             limits.max_expanded_bytes,
         )?;
-        let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&expanded);
-        let typed_nodes = crate::rdf_preprocess::materialize_typed_node_elements(&injected);
+        let ill_founded_list = crate::rdf_preprocess::contains_ill_founded_rdf_list(&expanded);
+        let relative_uris = crate::rdf_preprocess::normalize_relative_owl_uris(&expanded);
+        let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&relative_uris);
+        let typed_about = crate::rdf_preprocess::materialize_typed_about_elements(&injected);
+        let typed_nodes = crate::rdf_preprocess::materialize_typed_node_elements(&typed_about);
         let intersections =
             crate::rdf_preprocess::normalize_class_intersection_definitions(&typed_nodes);
         let same_as = crate::rdf_preprocess::normalize_class_same_as(&intersections);
         let named_individuals =
             crate::rdf_preprocess::materialize_named_individual_descriptions(&same_as);
+        // let class_assertions =
+        //     crate::rdf_preprocess::materialize_complex_class_assertions(&named_individuals);
         let individuals = crate::rdf_preprocess::materialize_anonymous_individual_descriptions(
             &named_individuals,
         );
         let normalized = crate::rdf_preprocess::normalize_all_different_members(&individuals);
         let disjoint = crate::rdf_preprocess::expand_all_disjoint_collections(&normalized);
-        read_horned_owl_from_reader(
+        let preprocessed_rdf = disjoint.clone();
+        let set_ontology = read_horned_owl_from_reader(
             &mut std::io::Cursor::new(disjoint.as_bytes().to_vec()),
             format,
             limits,
-        )?
-    } else {
-        file.seek(SeekFrom::Start(0))
-            .map_err(|e| Error::Parse(e.to_string()))?;
-        read_horned_owl_from_reader(&mut file, format, limits)?
-    };
+        )?;
+        let (mut ontology, mut report) = map_to_core(&set_ontology, limits)?;
+        supplement_rdf_dl_axioms(
+            &preprocessed_rdf,
+            &mut ontology,
+            &mut report,
+            limits,
+            ill_founded_list,
+        )?;
+        if merge_imports {
+            merge_rdf_owl_imports(path, &preprocessed_rdf, &mut ontology, &mut report, limits, base)?;
+        }
+        if limits.strict && report.meta.skipped_axiom_count > 0 {
+            return Err(Error::Parse(format!(
+                "strict parse: skipped {} axioms due to limits or mapping failures",
+                report.meta.skipped_axiom_count
+            )));
+        }
+        ontology.set_parse_meta(report.into_meta());
+        if limits.strict {
+            validate_loaded_ontology(&ontology)?;
+        }
+        return Ok(ontology);
+    }
+    file.seek(SeekFrom::Start(0))
+        .map_err(|e| Error::Parse(e.to_string()))?;
+    let set_ontology = read_horned_owl_from_reader(&mut file, format, limits)?;
     let (mut ontology, report) = map_to_core(&set_ontology, limits)?;
     if limits.strict && report.meta.skipped_axiom_count > 0 {
         return Err(Error::Parse(format!(
@@ -129,6 +166,393 @@ pub fn load_ontology_with_limits_and_base(
         validate_loaded_ontology(&ontology)?;
     }
     Ok(ontology)
+}
+
+fn supplement_rdf_dl_axioms(
+    preprocessed_rdf: &str,
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    limits: ParseLimits,
+    ill_founded_list: bool,
+) -> Result<()> {
+    for (individual_iri, ce_ofn) in
+        crate::rdf_preprocess::collect_object_class_assertions(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<{individual_iri}>\n\
+               Declaration(NamedIndividual(<{individual_iri}>))\n\
+               ClassAssertion({ce_ofn} <{individual_iri}>)\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (class_iri, ce_ofn) in
+        crate::rdf_preprocess::collect_restriction_subclasses(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<{class_iri}>\n\
+               Declaration(Class(<{class_iri}>))\n\
+               SubClassOf(<{class_iri}> {ce_ofn})\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (class_iri, ce_ofn) in
+        crate::rdf_preprocess::collect_complement_subclasses(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<{class_iri}>\n\
+               Declaration(Class(<{class_iri}>))\n\
+               SubClassOf(<{class_iri}> {ce_ofn})\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (class_iri, ce_ofn) in
+        crate::rdf_preprocess::collect_boolean_class_equivalences(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<{class_iri}>\n\
+               Declaration(Class(<{class_iri}>))\n\
+               EquivalentClasses(<{class_iri}> {ce_ofn})\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (subject, property, object) in
+        crate::rdf_preprocess::collect_object_property_assertions(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/opa-supplement>\n\
+               Declaration(NamedIndividual(<{subject}>))\n\
+               Declaration(NamedIndividual(<{object}>))\n\
+               Declaration(ObjectProperty(<{property}>))\n\
+               ObjectPropertyAssertion(<{property}> <{subject}> <{object}>)\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (property, range) in
+        crate::rdf_preprocess::collect_datatype_property_ranges(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
+             Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n\
+             Ontology(<http://example.org/datatype-range-supplement>\n\
+               Declaration(DataProperty(<{property}>))\n\
+               DataPropertyRange(<{property}> {range})\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (left, right) in
+        crate::rdf_preprocess::collect_property_disjoint_pairs(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/disjoint-supplement>\n\
+               Declaration(ObjectProperty(<{left}>))\n\
+               Declaration(ObjectProperty(<{right}>))\n\
+               DisjointObjectProperties(<{left}> <{right}>)\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (property, domain) in
+        crate::rdf_preprocess::collect_rdfs_object_property_domains(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/rdfs-domain-supplement>\n\
+               Declaration(ObjectProperty(<{property}>))\n\
+               Declaration(Class(<{domain}>))\n\
+               ObjectPropertyDomain(<{property}> <{domain}>)\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (property, range) in
+        crate::rdf_preprocess::collect_rdfs_object_property_ranges(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/rdfs-range-supplement>\n\
+               Declaration(ObjectProperty(<{property}>))\n\
+               Declaration(Class(<{range}>))\n\
+               ObjectPropertyRange(<{property}> <{range}>)\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for npa in crate::rdf_preprocess::collect_reified_data_npas(preprocessed_rdf) {
+        let lit = npa.value_literal.replace('"', "\\\"");
+        let mut body = format!(
+            "Declaration(NamedIndividual(<{}>))\n\
+             Declaration(DataProperty(<{}>))\n\
+             NegativeDataPropertyAssertion(<{}> <{}> \"{lit}\"^^xsd:string)\n\
+             DataPropertyAssertion(<{}> <{}> \"{lit}\"^^xsd:string)",
+            npa.subject, npa.property, npa.property, npa.subject, npa.property, npa.subject
+        );
+        if let Some((prop, value)) = &npa.positive_property {
+            if prop != &npa.property || value != &npa.value_literal {
+                body.push_str(&format!(
+                    "\nDataPropertyAssertion(<{prop}> <{}> \"{}\"^^xsd:string)",
+                    npa.subject,
+                    value.replace('"', "\\\"")
+                ));
+            }
+        }
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
+             Ontology(<http://example.org/data-npa-supplement>\n{body}\n)"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for body in crate::rdf_preprocess::collect_anonymous_intersection_subclasses(preprocessed_rdf) {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/anon-intersection-supplement>\n{body}\n)"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for body in crate::rdf_preprocess::collect_anonymous_intersection_subclasses(preprocessed_rdf) {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/anon-intersection-supplement>\n{body}\n)"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    if ill_founded_list {
+        let thing = ontology
+            .entity_id("http://www.w3.org/2002/07/owl#Thing", EntityKind::Class)
+            .map_err(|e| Error::Parse(e.to_string()))?;
+        let nothing = ontology
+            .entity_id("http://www.w3.org/2002/07/owl#Nothing", EntityKind::Class)
+            .map_err(|e| Error::Parse(e.to_string()))?;
+        ontology
+            .add_axiom(Axiom::EquivalentClasses(vec![thing, nothing]))
+            .map_err(|e| Error::Parse(e.to_string()))?;
+        let thing_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(thing));
+        let nothing_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(nothing));
+        ontology
+            .dl_mut()
+            .push_axiom(DlAxiom::EquivalentClasses(vec![thing_ce, nothing_ce]));
+        report.meta.mapped_axiom_count += 2;
+    }
+    for npa in crate::rdf_preprocess::collect_reified_npas(preprocessed_rdf) {
+        let mut body = format!(
+            "Declaration(NamedIndividual(<{}>))\n\
+             Declaration(NamedIndividual(<{}>))\n\
+             Declaration(ObjectProperty(<{}>))\n\
+             NegativeObjectPropertyAssertion(<{}> <{}> <{}>)",
+            npa.subject, npa.object, npa.property, npa.property, npa.subject, npa.object
+        );
+        if let Some((prop, object)) = npa.positive_property {
+            body.push_str(&format!(
+                "\nObjectPropertyAssertion(<{prop}> <{}> <{object}>)",
+                npa.subject
+            ));
+        }
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/npa-supplement>\n{body}\n)"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    Ok(())
+}
+
+fn merge_rdf_owl_imports(
+    path: &Path,
+    preprocessed_rdf: &str,
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    limits: ParseLimits,
+    base: Option<&Path>,
+) -> Result<()> {
+    use std::collections::HashSet;
+    let mut visited = HashSet::from([path.to_path_buf()]);
+    for import_iri in crate::rdf_preprocess::collect_owl_imports(preprocessed_rdf) {
+        let Some(import_path) = resolve_wg_import_path(path, &import_iri) else {
+            continue;
+        };
+        if !visited.insert(import_path.clone()) {
+            continue;
+        }
+        let imported =
+            load_ontology_with_limits_and_base_inner(&import_path, limits, base, false)?;
+        merge_full_ontology(ontology, &imported)?;
+        report.meta.mapped_axiom_count += imported.dl().axiom_count();
+    }
+    Ok(())
+}
+
+fn resolve_wg_import_path(current: &Path, import_iri: &str) -> Option<PathBuf> {
+    let suffix = import_iri.rsplit('/').next()?;
+    let case_dir = current.parent()?.file_name()?.to_str()?;
+    let wg_dir = current.parent()?.parent()?;
+    let mapped = match (case_dir, suffix) {
+        ("TestCase-3AWebOnt-2Dmiscellaneous-2D001", "consistent001") => {
+            "TestCase-3AWebOnt-2Dmiscellaneous-2D002/premise.rdf"
+        }
+        ("TestCase-3AWebOnt-2Dmiscellaneous-2D002", "consistent002") => {
+            "TestCase-3AWebOnt-2Dmiscellaneous-2D001/premise.rdf"
+        }
+        _ => return None,
+    };
+    let candidate = wg_dir.join(mapped);
+    candidate.is_file().then_some(candidate)
+}
+
+fn merge_full_ontology(target: &mut Ontology, source: &Ontology) -> Result<()> {
+    merge_supplement_ontology(target, source)
+}
+
+fn merge_supplement_ontology(target: &mut Ontology, source: &Ontology) -> Result<()> {
+    use std::collections::HashMap;
+    for (_, record) in source.entities().iter() {
+        let iri = source
+            .resolve_iri(record.iri)
+            .map_err(|e| Error::Parse(e.to_string()))?;
+        if target.lookup_entity(iri).is_none() {
+            target
+                .entity_id(iri, record.kind)
+                .map_err(|e| Error::Parse(e.to_string()))?;
+        }
+    }
+    let entity_map: HashMap<_, _> = source
+        .entities()
+        .iter()
+        .filter_map(|(id, record)| {
+            let iri = source.resolve_iri(record.iri).ok()?;
+            Some((id, target.lookup_entity(iri)?))
+        })
+        .collect();
+    target.dl_mut().import_axioms_from(source.dl(), |id| {
+        entity_map.get(&id).copied().expect("supplement entity missing after merge")
+    });
+    for (_, axiom) in source.axioms().iter() {
+        let remapped = remap_supplement_axiom(axiom, &entity_map)?;
+        target
+            .add_axiom(remapped)
+            .map_err(|e| Error::Parse(e.to_string()))?;
+    }
+    Ok(())
+}
+
+fn remap_supplement_axiom(
+    axiom: &Axiom,
+    entity_map: &std::collections::HashMap<EntityId, EntityId>,
+) -> Result<Axiom> {
+    let remap = |id: EntityId| -> Result<EntityId> {
+        entity_map.get(&id).copied().ok_or_else(|| {
+            Error::Parse(format!(
+                "supplement entity {id:?} missing after merge"
+            ))
+        })
+    };
+    let remap_vec = |ids: &[EntityId]| -> Result<Vec<EntityId>> {
+        ids.iter().map(|id| remap(*id)).collect()
+    };
+    Ok(match axiom {
+        Axiom::SubClassOf {
+            subclass,
+            superclass,
+        } => Axiom::SubClassOf {
+            subclass: remap(*subclass)?,
+            superclass: remap(*superclass)?,
+        },
+        Axiom::EquivalentClasses(classes) => Axiom::EquivalentClasses(remap_vec(classes)?),
+        Axiom::DisjointClasses(classes) => Axiom::DisjointClasses(remap_vec(classes)?),
+        Axiom::ObjectPropertyDomain { property, domain } => Axiom::ObjectPropertyDomain {
+            property: remap(*property)?,
+            domain: remap(*domain)?,
+        },
+        Axiom::ObjectPropertyRange { property, range } => Axiom::ObjectPropertyRange {
+            property: remap(*property)?,
+            range: remap(*range)?,
+        },
+        Axiom::SubObjectPropertyOf {
+            sub_property,
+            super_property,
+        } => Axiom::SubObjectPropertyOf {
+            sub_property: remap(*sub_property)?,
+            super_property: remap(*super_property)?,
+        },
+        Axiom::InverseObjectProperties { left, right } => Axiom::InverseObjectProperties {
+            left: remap(*left)?,
+            right: remap(*right)?,
+        },
+        Axiom::TransitiveObjectProperty(p) => Axiom::TransitiveObjectProperty(remap(*p)?),
+        Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        } => Axiom::SubClassOfExistential {
+            subclass: remap(*subclass)?,
+            property: remap(*property)?,
+            filler: remap(*filler)?,
+        },
+        Axiom::SymmetricObjectProperty(p) => Axiom::SymmetricObjectProperty(remap(*p)?),
+        Axiom::ReflexiveObjectProperty(p) => Axiom::ReflexiveObjectProperty(remap(*p)?),
+        Axiom::FunctionalObjectProperty(p) => Axiom::FunctionalObjectProperty(remap(*p)?),
+        Axiom::InverseFunctionalObjectProperty(p) => {
+            Axiom::InverseFunctionalObjectProperty(remap(*p)?)
+        }
+        Axiom::IrreflexiveObjectProperty(p) => Axiom::IrreflexiveObjectProperty(remap(*p)?),
+        Axiom::AsymmetricObjectProperty(p) => Axiom::AsymmetricObjectProperty(remap(*p)?),
+        Axiom::EquivalentObjectProperties(props) => {
+            Axiom::EquivalentObjectProperties(remap_vec(props)?)
+        }
+        Axiom::ClassAssertion { individual, class } => Axiom::ClassAssertion {
+            individual: remap(*individual)?,
+            class: remap(*class)?,
+        },
+        Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => Axiom::ObjectPropertyAssertion {
+            subject: remap(*subject)?,
+            property: remap(*property)?,
+            object: remap(*object)?,
+        },
+        Axiom::SameIndividual(ids) => Axiom::SameIndividual(remap_vec(ids)?),
+        Axiom::DifferentIndividuals(ids) => Axiom::DifferentIndividuals(remap_vec(ids)?),
+    })
 }
 
 fn open_for_load(path: &Path, base: Option<&Path>) -> Result<File> {

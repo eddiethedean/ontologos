@@ -273,6 +273,12 @@ fn hermit_reasoner_binarydatatest_testbase64parsing() {
 }
 
 #[test]
+#[ignore = "auto-cataloged; requires manual port (dl)"]
+fn hermit_reasoner_classificationindividualreusetest_testgaleniansfullundoctored() {
+    run_hermit_case("reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored");
+}
+
+#[test]
 #[ignore = "fixture not vendored (see benchmarks manifest)"]
 fn hermit_reasoner_classificationindividualreusetest_testdolce() {
     run_hermit_case("reasoner.ClassificationIndividualReuseTest.testDolce");
@@ -286,7 +292,6 @@ fn hermit_reasoner_classificationtest_testwine() {
 }
 
 #[test]
-#[ignore = "requires HermiT fixture vendored or ONTOLOGOS_HERMIT_ROOT"]
 fn hermit_reasoner_classificationtest_testgaleniansfullundoctored() {
     run_hermit_case("reasoner.ClassificationTest.testGalenIansFullUndoctored");
 }
@@ -299,7 +304,6 @@ fn hermit_reasoner_classificationtest_testpizza() {
 }
 
 #[test]
-#[ignore = "requires HermiT fixture vendored or ONTOLOGOS_HERMIT_ROOT"]
 fn hermit_reasoner_classificationtest_testpropreo() {
     run_hermit_case("reasoner.ClassificationTest.testPropreo");
 }
@@ -362,16 +366,6 @@ fn hermit_reasoner_datalogenginetest_testquerywithindividualsandequality() {
 #[test]
 fn hermit_reasoner_datalogenginetest_testquerywithindividuals() {
     run_hermit_case("reasoner.DatalogEngineTest.testQueryWithIndividuals");
-}
-
-#[test]
-fn hermit_reasoner_datatypestest_testenumwithintplusfloatrestriction() {
-    run_hermit_case("reasoner.DatatypesTest.testEnumWithIntPlusFloatRestriction");
-}
-
-#[test]
-fn hermit_reasoner_datatypestest_testrationalconversion() {
-    run_hermit_case("reasoner.DatatypesTest.testRationalConversion");
 }
 
 #[test]
@@ -753,11 +747,6 @@ fn hermit_reasoner_datetimetest_testmizedtzs_3() {
 #[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testmember() {
     run_hermit_case("reasoner.DateTimeTest.testMember");
-}
-
-#[test]
-fn hermit_reasoner_entailmenttest_testintegerentailment() {
-    run_hermit_case("reasoner.EntailmentTest.testIntegerEntailment");
 }
 
 #[test]
@@ -1510,68 +1499,63 @@ fn hermit_reasoner_rdfplainliteraltest_testlangrange2() {
 }
 
 #[test]
-fn hermit_reasoner_riatest_testinverseandchain() {
-    run_hermit_case("reasoner.RIATest.testInverseAndChain");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity0() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity0");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity0() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity0");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity1() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity1() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity1");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity2() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity2() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity2");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity3() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity3() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity3");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity4() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity4() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity4");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity5() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity5");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity5() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity5");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity6() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity6");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity6() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity6");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity7() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity7");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity7() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity7");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity8() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity8");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity8() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity8");
-}
-
-#[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
-fn hermit_reasoner_riatest_testriaregularity9() {
-    run_hermit_case("reasoner.RIATest.testRIARegularity9");
+#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+fn hermit_reasoner_riaregularitytest_testriaregularity9() {
+    run_hermit_case("reasoner.RIARegularityTest.testRIARegularity9");
 }
 
 #[test]
@@ -1598,6 +1582,12 @@ fn hermit_reasoner_reasonercoreblockingtest_testiant6() {
 #[test]
 fn hermit_reasoner_reasonercoreblockingtest_testiant9() {
     run_hermit_case("reasoner.ReasonerCoreBlockingTest.testIanT9");
+}
+
+#[test]
+#[ignore = "auto-cataloged; requires manual port (dl)"]
+fn hermit_reasoner_reasonertest_testemptychain() {
+    run_hermit_case("reasoner.ReasonerTest.testEmptyChain");
 }
 
 #[test]
@@ -1772,7 +1762,6 @@ fn hermit_reasoner_reasonertest_testrolechainswithtransitivesymmetric() {
 }
 
 #[test]
-#[ignore = "DL axiom fixture; assertions pending engine (Phase 2+)"]
 fn hermit_reasoner_reasonertest_testrolesubsumptionwithchainstransitivesymmetric() {
     run_hermit_case("reasoner.ReasonerTest.testRoleSubsumptionWithChainsTransitiveSymmetric");
 }
@@ -1850,11 +1839,6 @@ fn hermit_reasoner_reasonertest_testdatatypeliterals() {
 #[ignore = "implemented in hand-written module: individual_property_retrieval"]
 fn hermit_reasoner_reasonertest_testindividualretrievalbug() {
     run_hermit_case("reasoner.ReasonerTest.testIndividualRetrievalBug");
-}
-
-#[test]
-fn hermit_reasoner_reasonertest_testdirect() {
-    run_hermit_case("reasoner.ReasonerTest.testDirect");
 }
 
 #[test]

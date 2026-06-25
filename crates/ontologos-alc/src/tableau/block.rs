@@ -2,7 +2,6 @@
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::sync::OnceLock;
 
 use ontologos_core::{CeId, RoleExpr};
 
@@ -19,24 +18,21 @@ fn env_u32(name: &str, default: u32) -> u32 {
 /// Override with `ONTOLOGOS_TABLEAU_MAX_EXPANSIONS` (default 4096).
 #[must_use]
 pub(crate) fn max_expansions() -> u32 {
-    static V: OnceLock<u32> = OnceLock::new();
-    *V.get_or_init(|| env_u32("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS", MAX_EXPANSIONS))
+    env_u32("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS", MAX_EXPANSIONS)
 }
 
 /// Cap on tableau worlds created during pre-expansion materialization.
 /// Override with `ONTOLOGOS_TABLEAU_MAX_WORLDS` (default 256).
 #[must_use]
 pub(crate) fn max_worlds() -> usize {
-    static V: OnceLock<usize> = OnceLock::new();
-    *V.get_or_init(|| env_u32("ONTOLOGOS_TABLEAU_MAX_WORLDS", MAX_WORLDS as u32) as usize)
+    env_u32("ONTOLOGOS_TABLEAU_MAX_WORLDS", MAX_WORLDS as u32) as usize
 }
 
 /// Maximum stall iterations while every pending world is blocked.
 /// Override with `ONTOLOGOS_TABLEAU_MAX_STALL_STEPS` (default 256).
 #[must_use]
 pub(crate) fn max_stall_steps() -> u32 {
-    static V: OnceLock<u32> = OnceLock::new();
-    *V.get_or_init(|| env_u32("ONTOLOGOS_TABLEAU_MAX_STALL_STEPS", MAX_STALL_STEPS))
+    env_u32("ONTOLOGOS_TABLEAU_MAX_STALL_STEPS", MAX_STALL_STEPS)
 }
 
 /// Maximum tableau expansions before returning [`Error::ResourceLimit`].

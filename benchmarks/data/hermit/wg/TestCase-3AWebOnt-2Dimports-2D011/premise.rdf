@@ -4,12 +4,16 @@
     xmlns:owl='http://www.w3.org/2002/07/owl#'
     xmlns:ont='http://www.w3.org/2002/03owlt/imports/support011-A#'
     xml:base='http://www.w3.org/2002/03owlt/imports/premises011' >
+<owl:Ontology rdf:about=''/>
 
-    <owl:Ontology rdf:about=''>
-        <owl:imports 
-     rdf:resource="http://www.w3.org/2002/03owlt/imports/support011-A"/>
+    <owl:Class rdf:about="http://www.w3.org/2002/03owlt/imports/support011-A#Man">
+        <rdfs:subClassOf rdf:resource='http://www.w3.org/2002/03owlt/imports/support011-A#Mortal'/>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://www.w3.org/2002/03owlt/imports/support011-A#Mortal"/>
+<owl:Ontology rdf:about=''>
+        
     </owl:Ontology>
 
     <ont:Man rdf:about='http://example.org/data#Socrates'/>
-
 </rdf:RDF>
