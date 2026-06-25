@@ -2654,7 +2654,6 @@ fn conclusion_nothing_subclass_entailment_targets(
                     return None;
                 }
             }
-            ontologos_core::Axiom::Declaration { .. } => {}
             _ => return None,
         }
     }

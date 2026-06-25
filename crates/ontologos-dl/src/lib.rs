@@ -10,7 +10,9 @@ mod route;
 mod saturation;
 mod union_csp;
 
-use ontologos_core::{Axiom, CeId, ClassExpr, DlAxiom, EntityId, Ontology, Profile, RoleExpr, Taxonomy};
+use ontologos_core::{
+    Axiom, CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, Profile, RoleExpr, Taxonomy,
+};
 use thiserror::Error;
 
 pub use classify::DlClassifier;
@@ -119,19 +121,19 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if let Some(consistent) = union_csp::union_disjoint_typing_consistency(ontology) {
         return Ok(consistent);
     }
+    let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
+    if abox_exists_forall_role_clash(ontology, &dl, &TableauSeed::default())? {
+        return Ok(false);
+    }
     if ontology_maybe_needs_flower_classify(ontology) {
         let taxonomy = classify(ontology)?;
         if flower_auxiliary_unsatisfiable_classes(ontology, &taxonomy) {
             return Ok(false);
         }
     }
-    let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
-    if abox_exists_forall_role_clash(ontology, &dl, &seed)? {
-        return Ok(false);
-    }
     if abox_atomic_class_unsatisfiable(ontology, &dl, &seed)? {
         return Ok(false);
     }
@@ -202,25 +204,23 @@ fn named_classes_unsatisfiable_inner(
     }
     let dl = std::sync::Arc::new(dl);
     let seed = std::sync::Arc::new(seed);
-    let mut results = Vec::with_capacity(pending.len());
-    std::thread::scope(|scope| {
-        for &class in &pending {
-            let dl = std::sync::Arc::clone(&dl);
-            let seed = std::sync::Arc::clone(&seed);
-            results.push(scope.spawn(move || {
-                let mut cache = ontologos_alc::UnsatCache::new();
-                match ontologos_alc::is_named_class_satisfiable_with_cache(
-                    &dl, class, &seed, &mut cache,
-                ) {
-                    Ok(false) => Ok(true),
-                    Ok(true) => Ok(false),
-                    Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(true),
-                    Err(e) => Err(Error::Alc(e)),
-                }
-            }));
-        }
-    });
-    for handle in results {
+    let mut handles = Vec::with_capacity(pending.len());
+    for &class in &pending {
+        let dl = std::sync::Arc::clone(&dl);
+        let seed = std::sync::Arc::clone(&seed);
+        handles.push(std::thread::spawn(move || {
+            let mut cache = ontologos_alc::UnsatCache::new();
+            match ontologos_alc::is_named_class_satisfiable_with_cache(
+                &dl, class, &seed, &mut cache,
+            ) {
+                Ok(false) => Ok(true),
+                Ok(true) => Ok(false),
+                Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(true),
+                Err(e) => Err(Error::Alc(e)),
+            }
+        }));
+    }
+    for handle in handles {
         if !handle.join().expect("unsat worker panicked")? {
             return Ok(false);
         }
@@ -323,6 +323,229 @@ fn atomic_class_proven_unsatisfiable(
         Ok(satisfiable) => Ok(!satisfiable),
         Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(false),
         Err(e) => Err(Error::Alc(e)),
+    }
+}
+
+/// `∃R.E ⊓ ∀R.F` on an individual's type is unsatisfiable when `E ⊓ F` is.
+fn abox_exists_forall_role_clash(
+    ontology: &Ontology,
+    dl: &ontologos_alc::DlOntology,
+    seed: &TableauSeed,
+) -> Result<bool> {
+    use std::collections::{HashMap, HashSet};
+
+    let store = ontology.dl();
+    for class in classes_with_individual_abox(ontology) {
+        let subs = entity_subsumption_closure(ontology, store, class);
+        let mut exists: HashMap<RoleExpr, Vec<CeId>> = HashMap::new();
+        let mut forall: HashMap<RoleExpr, Vec<CeId>> = HashMap::new();
+
+        for (_, axiom) in ontology.axioms().iter() {
+            if let Axiom::SubClassOfExistential {
+                subclass,
+                property,
+                filler,
+            } = axiom
+            {
+                if !subs.contains(subclass) {
+                    continue;
+                }
+                let Some(filler_ce) = named_class_ce(dl, *filler) else {
+                    continue;
+                };
+                exists
+                    .entry(RoleExpr::Atomic(*property))
+                    .or_default()
+                    .push(filler_ce);
+            }
+        }
+
+        for axiom in store.axioms() {
+            let DlAxiom::SubClassOf { sub, sup } = axiom else {
+                continue;
+            };
+            let Some(sub_e) = ce_atomic_entity(store, *sub) else {
+                continue;
+            };
+            if !subs.contains(&sub_e) {
+                continue;
+            }
+            match store.ce(*sup) {
+                Some(ClassExpr::Some { property, filler }) => {
+                    exists.entry(property.clone()).or_default().push(*filler);
+                }
+                Some(ClassExpr::All { property, filler }) => {
+                    forall.entry(property.clone()).or_default().push(*filler);
+                }
+                _ => {}
+            }
+        }
+
+        let start = named_class_ce(dl, class);
+        if let Some(start) = start {
+            let reachable = ce_subsumption_closure(store, start);
+            for ce in reachable {
+                match store.ce(ce) {
+                    Some(ClassExpr::Some { property, filler }) => {
+                        exists.entry(property.clone()).or_default().push(*filler);
+                    }
+                    Some(ClassExpr::All { property, filler }) => {
+                        forall.entry(property.clone()).or_default().push(*filler);
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        for (role, e_fillers) in exists {
+            let Some(f_fillers) = forall.get(&role) else {
+                continue;
+            };
+            for &e in &e_fillers {
+                for &f in f_fillers {
+                    if !ontologos_alc::is_ce_intersection_satisfiable_with_seed(dl, e, f, seed)? {
+                        return Ok(true);
+                    }
+                }
+            }
+        }
+    }
+    Ok(false)
+}
+
+fn entity_subsumption_closure(
+    ontology: &Ontology,
+    store: &ontologos_core::DlStore,
+    start: EntityId,
+) -> std::collections::HashSet<EntityId> {
+    use std::collections::HashSet;
+
+    let mut edges: Vec<(EntityId, EntityId)> = Vec::new();
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::SubClassOf { subclass, superclass } = axiom {
+            edges.push((*subclass, *superclass));
+        }
+    }
+    for axiom in store.axioms() {
+        if let DlAxiom::SubClassOf { sub, sup } = axiom {
+            if let (Some(sub_e), Some(sup_e)) = (ce_atomic_entity(store, *sub), ce_atomic_entity(store, *sup))
+            {
+                edges.push((sub_e, sup_e));
+            }
+        }
+    }
+
+    let mut reach = HashSet::new();
+    let mut work = vec![start];
+    while let Some(entity) = work.pop() {
+        if !reach.insert(entity) {
+            continue;
+        }
+        for &(sub, sup) in &edges {
+            if sub == entity {
+                work.push(sup);
+            }
+        }
+    }
+    reach
+}
+
+fn ce_atomic_entity(store: &ontologos_core::DlStore, ce: CeId) -> Option<EntityId> {
+    match store.ce(ce) {
+        Some(ClassExpr::Atomic(id)) => Some(*id),
+        _ => None,
+    }
+}
+
+fn classes_with_individual_abox(ontology: &Ontology) -> Vec<EntityId> {
+    use std::collections::HashSet;
+
+    let store = ontology.dl();
+    let mut out = HashSet::new();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if let Some(ClassExpr::Atomic(entity)) = store.ce(*class) {
+            out.insert(*entity);
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        out.insert(*class);
+    }
+    for (class, record) in ontology.entities().iter() {
+        if record.kind != EntityKind::Class {
+            continue;
+        }
+        let Ok(class_iri) = ontology.resolve_iri(record.iri) else {
+            continue;
+        };
+        let punned = ontology.entities().iter().any(|(_, irec)| {
+            irec.kind == EntityKind::Individual
+                && ontology
+                    .resolve_iri(irec.iri)
+                    .ok()
+                    .is_some_and(|iri| iri == class_iri)
+        });
+        if punned {
+            out.insert(class);
+        }
+    }
+    let mut v: Vec<_> = out.into_iter().collect();
+    v.sort_unstable_by_key(|e| e.0);
+    v
+}
+
+fn named_class_ce(dl: &ontologos_alc::DlOntology, class: EntityId) -> Option<CeId> {
+    dl.core().dl().expressions().find_map(|(id, e)| match e {
+        ClassExpr::Atomic(c) if *c == class => Some(id),
+        _ => None,
+    })
+}
+
+fn ce_subsumption_closure(
+    store: &ontologos_core::DlStore,
+    start: CeId,
+) -> std::collections::HashSet<CeId> {
+    use std::collections::HashSet;
+
+    let subs: Vec<(CeId, CeId)> = store
+        .axioms()
+        .filter_map(|a| match a {
+            DlAxiom::SubClassOf { sub, sup } => Some((*sub, *sup)),
+            _ => None,
+        })
+        .collect();
+
+    let mut reach = HashSet::new();
+    let mut work = vec![start];
+    while let Some(ce) = work.pop() {
+        if !reach.insert(ce) {
+            continue;
+        }
+        if let Some(ClassExpr::And(parts)) = store.ce(ce) {
+            work.extend(parts.iter().copied());
+        }
+        for &(sub, sup) in &subs {
+            if sub == ce || same_atomic_class(store, sub, ce) {
+                work.push(sup);
+            }
+        }
+    }
+    reach
+}
+
+fn same_atomic_class(
+    store: &ontologos_core::DlStore,
+    left: CeId,
+    right: CeId,
+) -> bool {
+    match (store.ce(left), store.ce(right)) {
+        (Some(ClassExpr::Atomic(a)), Some(ClassExpr::Atomic(b))) => a == b,
+        _ => false,
     }
 }
 
@@ -1090,4 +1313,30 @@ pub fn is_subsumed(ontology: &Ontology, sub: &str, sup: &str) -> Result<bool> {
 /// Check entailment of a named subsumption axiom.
 pub fn is_entailed(ontology: &Ontology, sub: &str, sup: &str) -> Result<bool> {
     is_subsumed(ontology, sub, sup)
+}
+
+#[cfg(test)]
+mod exists_forall_tests {
+    use super::*;
+    use ontologos_parser::load_ontology;
+    use std::path::PathBuf;
+    use std::time::Instant;
+
+    fn wg(case: &str) -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg")
+            .join(case)
+            .join("premise.rdf")
+    }
+
+    #[test]
+    fn dl040_exists_forall_clash() {
+        let ont = load_ontology(&wg("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D040")).expect("load");
+        let dl = DlOntology::from_ontology(&ont).expect("dl");
+        let start = Instant::now();
+        let clash =
+            abox_exists_forall_role_clash(&ont, &dl, &TableauSeed::default()).expect("clash");
+        eprintln!("dl040 clash={clash} elapsed={:?}", start.elapsed());
+        assert!(clash);
+    }
 }

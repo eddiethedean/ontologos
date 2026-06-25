@@ -87,6 +87,21 @@ pub fn is_consistent_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Resul
     kb_consistent(&dl, seed)
 }
 
+/// Test whether `C ⊓ D` is satisfiable in the TBox.
+pub fn is_ce_intersection_satisfiable_with_seed(
+    dl: &DlOntology,
+    a: CeId,
+    b: CeId,
+    seed: &TableauSeed,
+) -> Result<bool, Error> {
+    let mut work = dl.clone();
+    let inter = work
+        .core_mut()
+        .dl_mut()
+        .intern_ce(ClassExpr::And(vec![a, b]));
+    is_ce_satisfiable_with_seed(&work, inter, seed)
+}
+
 /// Test whether a class expression is satisfiable in the TBox (empty ABox).
 pub fn is_ce_satisfiable_with_seed(
     dl: &DlOntology,

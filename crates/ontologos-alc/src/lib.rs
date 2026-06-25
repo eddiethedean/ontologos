@@ -22,7 +22,7 @@ pub use tableau::AlcClassifier;
 pub use tableau::{
     classify as tableau_classify, classify_with_seed as tableau_classify_with_seed,
     classify_with_seed_options as tableau_classify_with_seed_options,
-    is_ce_satisfiable_with_seed, is_consistent as tableau_is_consistent,
+    is_ce_intersection_satisfiable_with_seed, is_ce_satisfiable_with_seed, is_consistent as tableau_is_consistent,
     is_consistent_with_seed as tableau_is_consistent_with_seed,
     is_named_class_satisfiable_with_cache, is_named_class_satisfiable_with_seed,
     structural_unsat_classes, TableauSeed,
