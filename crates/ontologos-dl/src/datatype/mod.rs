@@ -408,10 +408,49 @@ fn numeric_values_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
     if !lexical_looks_numeric(&a.lexical) || !lexical_looks_numeric(&b.lexical) {
         return false;
     }
+    if a.datatype != b.datatype {
+        return cross_datatype_numeric_equal(a, b);
+    }
     if let (Some(aq), Some(bq)) = (rational_pair(&a.lexical), rational_pair(&b.lexical)) {
         return aq.0 * bq.1 == bq.0 * aq.1;
     }
     parse_numeric(&a.lexical).to_bits() == parse_numeric(&b.lexical).to_bits()
+}
+
+/// Decimal/rational pairs compare equal only when the rational has a terminating
+/// base-10 expansion (WG Rational-002 vs Rational-003).
+fn cross_datatype_numeric_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
+    let (dec_lex, rat_lex) = if a.lexical.contains('.') && b.lexical.contains('/') {
+        (&a.lexical, &b.lexical)
+    } else if b.lexical.contains('.') && a.lexical.contains('/') {
+        (&b.lexical, &a.lexical)
+    } else {
+        return false;
+    };
+    let Some((rq, rd)) = rational_pair(rat_lex) else {
+        return false;
+    };
+    if !rational_has_terminating_decimal_expansion(rq, rd) {
+        return false;
+    }
+    let Some((dq, dd)) = rational_pair(dec_lex) else {
+        return false;
+    };
+    rq * dd == dq * rd
+}
+
+fn rational_has_terminating_decimal_expansion(num: i128, den: i128) -> bool {
+    if den == 0 {
+        return false;
+    }
+    let mut d = den.abs();
+    while d % 2 == 0 {
+        d /= 2;
+    }
+    while d % 5 == 0 {
+        d /= 5;
+    }
+    d == 1 && num.abs() <= i128::MAX / 10
 }
 
 pub(crate) fn rational_pair(s: &str) -> Option<(i128, i128)> {

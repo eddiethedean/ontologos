@@ -308,6 +308,15 @@ fn supplement_rdf_dl_axioms(
         merge_supplement_ontology(ontology, &supplement)?;
         report.meta.mapped_axiom_count += supplement.dl().axiom_count();
     }
+    for body in crate::rdf_preprocess::collect_disjoint_union_axioms(preprocessed_rdf) {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/disjoint-union-supplement>\n{body}\n)"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
     for npa in crate::rdf_preprocess::collect_reified_data_npas(preprocessed_rdf) {
         let lit = npa.value_literal.replace('"', "\\\"");
         let mut body = format!(

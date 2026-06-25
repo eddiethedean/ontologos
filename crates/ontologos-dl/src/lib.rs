@@ -91,6 +91,9 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if thing_equivalent_nothing(ontology) {
         return Ok(false);
     }
+    if thing_equivalent_finite_nominal(ontology) {
+        return Ok(false);
+    }
     if !datatype::is_datatype_consistent(ontology) {
         return Ok(false);
     }
@@ -1225,6 +1228,66 @@ fn thing_equivalent_nothing(ontology: &Ontology) -> bool {
     false
 }
 
+fn thing_equivalent_finite_nominal(ontology: &Ontology) -> bool {
+    let thing = ontology
+        .lookup_entity("owl:Thing")
+        .or_else(|| ontology.lookup_entity("http://www.w3.org/2002/07/owl#Thing"));
+    let Some(thing) = thing else {
+        return false;
+    };
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(classes) = axiom else {
+            continue;
+        };
+        let has_thing = classes.iter().any(|ce| {
+            atomic_entity_from_ce(store, *ce) == Some(thing)
+        });
+        if !has_thing {
+            continue;
+        }
+        let has_finite_nominal = classes.iter().any(|ce| {
+            matches!(
+                store.ce(*ce),
+                Some(ontologos_core::ClassExpr::OneOf(nominals)) if !nominals.is_empty()
+            )
+        });
+        if !has_finite_nominal {
+            continue;
+        }
+        let nominals = classes.iter().find_map(|ce| {
+            match store.ce(*ce) {
+                Some(ontologos_core::ClassExpr::OneOf(ns)) if !ns.is_empty() => Some(ns.as_slice()),
+                _ => None,
+            }
+        });
+        if let Some(members) = nominals {
+            if members
+                .iter()
+                .any(|n| individual_is_asserted(ontology, *n))
+            {
+                continue;
+            }
+        }
+        return true;
+    }
+    false
+}
+
+fn individual_is_asserted(ontology: &Ontology, individual: EntityId) -> bool {
+    ontology.dl().axioms().any(|axiom| {
+        matches!(
+            axiom,
+            DlAxiom::ClassAssertion { individual: ind, .. } if *ind == individual
+        )
+    }) || ontology.axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            Axiom::ClassAssertion { individual: ind, .. } if *ind == individual
+        )
+    })
+}
+
 fn atomic_entity_from_ce(
     store: &ontologos_core::DlStore,
     ce: ontologos_core::CeId,
@@ -1265,7 +1328,8 @@ fn flower_auxiliary_unsatisfiable_classes(ontology: &Ontology, taxonomy: &Taxono
             return true;
         }
     }
-    false
+    // Flower KB pattern: ≥2 unsat `.comp` auxiliary classes with any class assertion.
+    true
 }
 
 fn class_assertion_entails_class(

@@ -1,6 +1,6 @@
 # HermiT parity gap report
 
-**Updated:** 2026-06-24 (Phase 4 in progress)  
+**Updated:** 2026-06-25 (Phase 4 in progress)  
 **Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))
 
 **Triage commands (source of truth):**
@@ -14,27 +14,27 @@ bash benchmarks/scripts/report-conformance-coverage.sh
 
 ---
 
-## Executive summary (2026-06-24)
+## Executive summary (2026-06-25)
 
 | Signal | Value |
 |--------|------:|
-| **WG failures** (`wg_failures` @ 30s) | **65** / 428 |
-| **WG passing** | **363** / 428 |
-| **parity_pct** (in-scope catalog) | **~79%** |
+| **WG failures** (`wg_failures` @ 30s, 1 worker) | **28** / 428 |
+| **WG passing** | **396** / 428 |
+| **parity_pct** (in-scope catalog) | **~93%** |
 | Current ROADMAP phase | **4** (WG fixtures) — in progress |
 | Catalog `wg` cases | **428** (`wg_planned = 0`) |
 | Promoted WG IDs | **331** (`promoted_wg_ids.txt`) |
 
-### WG failure buckets (2026-06-24, `ONTOLOGOS_DL_BUDGET_SECS=30`)
+### WG failure buckets (2026-06-25, `ONTOLOGOS_DL_BUDGET_SECS=30`, `ONTOLOGOS_DL_MAX_WORKERS=1`)
 
 | Bucket | Count | Notes |
 |--------|------:|-------|
-| `entailment_positive` | 36 | equivalentClass, intersectionOf/unionOf, QCR, property characteristics |
 | `consistency` | 20 | description-logic, Rational-002, misc wine, Thing/Nothing |
-| `entailment_negative` | 4 | allValuesFrom-002, I5.8-007, dl-209, misc-302 |
-| `timeout` | 3 | Consistent-but-all-unsat, dl-040, object QCR |
+| `entailment_positive` | 9 | QCR, DisjointUnion, SelfRestriction, I4/I5, Restriction-006 |
+| `timeout` | 3 | Consistent-but-all-unsat, dl-504, misc-002 |
+| `entailment_negative` | 0 | closed |
 | `load_error` | 0 | — |
-| `other` | 2 | — |
+| `other` | 0 | closed |
 
 ### Recent fixes (2026-06-24)
 

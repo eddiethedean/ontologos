@@ -1406,6 +1406,18 @@ mod tests {
     use super::*;
 
     #[test]
+    fn rational002_oneof_clash_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D002/premise.rdf",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "0.5 and 1/2 are the same value; minCardinality 2 is unsatisfiable"
+        );
+    }
+
+    #[test]
     fn dl601_class_assertion_extracts_exact_cardinality() {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
             "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf",
@@ -1473,5 +1485,49 @@ mod tests {
             "expected >= 3 complement witnesses, got {count}"
         );
         assert!(is_datatype_consistent(&ont));
+    }
+
+    #[test]
+    fn rational003_datatype_is_consistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D003/premise.rdf",
+        );
+        let ont = load_ontology(&path).expect("load");
+        let store = ont.dl();
+        let idx = LiteralIndex::from_store(store);
+        for ax in store.axioms() {
+            eprintln!("{ax:?}");
+        }
+        for (id, de) in store.data_exprs() {
+            eprintln!("de{id:?}: {de:?}");
+        }
+        if let Some(DataExpr::Or(ops)) = store.de(DeId(0)) {
+            eprintln!("oneOf has {} members", ops.len());
+            for &op in ops {
+                if let Some(DataExpr::Literal { lexical, datatype }) = store.de(op) {
+                    let lit = LiteralValue {
+                        lexical: lexical.clone(),
+                        datatype: *datatype,
+                    };
+                    eprintln!(
+                        "  literal {lexical}^^{datatype:?} key={}",
+                        distinct_literal_key(&lit)
+                    );
+                }
+            }
+        }
+        for (id, ce) in store.expressions() {
+            eprintln!("ce{id:?}: {ce:?}");
+        }
+        for (id, ce) in store.expressions() {
+            if let ontologos_core::ClassExpr::DataAll { range, .. } = ce {
+                let count = max_distinct_values(&ont, &idx, *range);
+                eprintln!("allValuesFrom range distinct count={count}");
+            }
+        }
+        assert!(
+            is_datatype_consistent(&ont),
+            "Rational-003 should be datatype-consistent"
+        );
     }
 }

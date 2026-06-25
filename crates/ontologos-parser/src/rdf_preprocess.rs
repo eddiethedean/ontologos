@@ -984,6 +984,8 @@ fn resolve_relative_iri(iri: &str, base: &str) -> String {
         iri.to_owned()
     } else if let Some(stripped) = iri.strip_prefix('#') {
         format!("{base}#{stripped}")
+    } else if base.ends_with('/') {
+        format!("{base}{iri}")
     } else {
         format!("{base}/{iri}")
     }
@@ -1447,6 +1449,7 @@ pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, Stri
     let dt_props = declared_datatype_property_iris(rdf);
     let node_lists = build_rdf_collection_node_map(rdf, &base, &dt_props);
     let mut out = Vec::new();
+    let mut anon_counter = 0usize;
     let mut pos = 0usize;
     while pos < rdf.len() {
         let Some(rel) = rdf[pos..].find("<rdf:Description") else {
@@ -1459,7 +1462,7 @@ pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, Stri
         };
         let block = &rdf[start..end];
         if let Some(pair) =
-            boolean_equivalence_from_class_block(block, &base, &dt_props, &node_lists, false)
+            boolean_equivalence_from_class_block(block, &base, &dt_props, &node_lists, false, &mut anon_counter)
         {
             out.push(pair);
         }
@@ -1476,7 +1479,7 @@ pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, Stri
         };
         let block = &rdf[start..end];
         if let Some(pair) =
-            boolean_equivalence_from_class_block(block, &base, &dt_props, &node_lists, true)
+            boolean_equivalence_from_class_block(block, &base, &dt_props, &node_lists, true, &mut anon_counter)
         {
             out.push(pair);
         }
@@ -1666,12 +1669,17 @@ fn boolean_equivalence_from_class_block(
     dt_props: &std::collections::HashSet<String>,
     node_lists: &std::collections::HashMap<String, Vec<String>>,
     owl_class: bool,
+    anon_counter: &mut usize,
 ) -> Option<(String, String)> {
     let open_end = block.find('>')?;
     let open = &block[..=open_end];
     let class_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))
+        .unwrap_or_else(|| {
+            *anon_counter += 1;
+            format!("{base}#_:anon{anon_counter}")
+        });
     let close_tag = if owl_class {
         "</owl:Class>"
     } else {
@@ -1724,6 +1732,13 @@ fn collection_members_ofn(
     if op_block.contains("parseType=\"Collection\"") || op_block.contains("parseType='Collection'") {
         return Some(parse_collection_children_ofn(op_block, base, dt_props));
     }
+    if op_block.contains("rdf:List") || op_block.contains("<rdf:first") {
+        if let Some(members) = parse_rdf_list_members_ofn(op_block, base, dt_props) {
+            if !members.is_empty() {
+                return Some(members);
+            }
+        }
+    }
     if let Some(node) = extract_attribute(op_block, "rdf:nodeID") {
         return node_lists.get(&node).cloned();
     }
@@ -1731,6 +1746,46 @@ fn collection_members_ofn(
         return Some(vec![ofn_entity_ref(&resolve_relative_iri(&resource, base))]);
     }
     None
+}
+
+fn parse_rdf_list_members_ofn(
+    op_block: &str,
+    base: &str,
+    dt_props: &std::collections::HashSet<String>,
+) -> Option<Vec<String>> {
+    let inner = element_inner(op_block, "owl:unionOf");
+    let content = if inner.is_empty() {
+        op_block
+    } else {
+        inner.as_str()
+    };
+    let list_block = find_top_level_element_bounds(content, "rdf:List")
+        .map(|(_, _, block)| block)
+        .unwrap_or(content);
+    let list_inner = element_inner(list_block, "rdf:List");
+    let list_content = if list_inner.is_empty() {
+        list_block
+    } else {
+        list_inner.as_str()
+    };
+    let mut members = Vec::new();
+    let mut rest_block = list_content;
+    loop {
+        if let Some((_, _, first_block)) = find_top_level_element_bounds(rest_block, "rdf:first") {
+            if let Some(ofn) = member_block_to_ofn(first_block, base, dt_props) {
+                members.push(ofn);
+            }
+        }
+        let (_, _, rest_elem) = find_top_level_element_bounds(rest_block, "rdf:rest")?;
+        if rest_elem.contains("rdf:nil")
+            || extract_attribute(rest_elem, "rdf:resource")
+                .is_some_and(|r| r.contains("nil"))
+        {
+            break;
+        }
+        rest_block = rest_elem;
+    }
+    if members.is_empty() { None } else { Some(members) }
 }
 
 fn parse_collection_children_ofn(
@@ -1790,6 +1845,11 @@ fn member_block_to_ofn(
         return restriction_ce_to_ofn(block, base, dt_props);
     }
     if block.contains("<owl:Class") {
+        if let Some((_, _, class_block)) = find_top_level_element_bounds(block, "owl:Class") {
+            if let Some(ofn) = member_block_to_ofn(class_block, base, dt_props) {
+                return Some(ofn);
+            }
+        }
         let inner = element_inner(block, "owl:Class");
         if let Some(ofn) = inline_restriction_ce_to_ofn(inner.trim(), base, dt_props) {
             return Some(ofn);
@@ -2178,7 +2238,111 @@ pub(crate) fn collect_rdfs_object_property_domains(rdf: &str) -> Vec<(String, St
 
 /// Collect `ObjectPropertyRange` from `rdfs:range` on property resources (RDF/XML).
 pub(crate) fn collect_rdfs_object_property_ranges(rdf: &str) -> Vec<(String, String)> {
-    collect_rdfs_property_annotation(rdf, "rdfs:range")
+    let mut out = collect_rdfs_property_annotation(rdf, "rdfs:range");
+    let base = parse_xml_base(rdf);
+    let mut pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find("<owl:ObjectProperty") else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = tagged_element_end(rdf, start, "owl:ObjectProperty").or_else(|| {
+            element_block_end(rdf, start, "owl:ObjectProperty", "</owl:ObjectProperty>")
+                .map(|e| e - start)
+                .map(|len| start + len)
+        }) else {
+            break;
+        };
+        let block = &rdf[start..end];
+        if let Some(pair) = owl_property_range_from_block(block, &base) {
+            out.push(pair);
+        }
+        pos = end;
+    }
+    out
+}
+
+fn owl_property_range_from_block(block: &str, base: &str) -> Option<(String, String)> {
+    let open_end = block.find('>')?;
+    let open = &block[..=open_end];
+    let prop_iri = extract_attribute(open, "rdf:about")
+        .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+        .map(|iri| resolve_relative_iri(&iri, base))?;
+    let close_start = block
+        .rfind("</owl:ObjectProperty>")
+        .unwrap_or(block.len());
+    let inner = &block[open_end + 1..close_start];
+    let class_iri = extract_property_resource(inner, "rdfs:range", base)?;
+    Some((prop_iri, class_iri))
+}
+
+/// Collect disjoint-union definitions: `C disjointUnionOf {A,B,...}`.
+pub(crate) fn collect_disjoint_union_axioms(rdf: &str) -> Vec<String> {
+    let base = parse_xml_base(rdf);
+    let dt_props = declared_datatype_property_iris(rdf);
+    let node_lists = build_rdf_collection_node_map(rdf, &base, &dt_props);
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find("<rdf:Description") else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = element_block_end(rdf, start, "rdf:Description", "</rdf:Description>")
+        else {
+            break;
+        };
+        let block = &rdf[start..end];
+        if let Some((class_iri, union_ofn, member_iris)) =
+            disjoint_union_from_class_block(block, &base, &dt_props, &node_lists)
+        {
+            let mut body = format!(
+                "Declaration(Class(<{class_iri}>))\n\
+                 EquivalentClasses(<{class_iri}> {union_ofn})"
+            );
+            if member_iris.len() >= 2 {
+                let members = member_iris
+                    .iter()
+                    .map(|iri| format!("<{iri}>"))
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                body.push_str(&format!("\nDisjointClasses({members})"));
+            }
+            out.push(body);
+        }
+        pos = end;
+    }
+    out
+}
+
+fn disjoint_union_from_class_block(
+    block: &str,
+    base: &str,
+    dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
+) -> Option<(String, String, Vec<String>)> {
+    let open_end = block.find('>')?;
+    let open = &block[..=open_end];
+    let class_iri = extract_attribute(open, "rdf:about")
+        .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+        .map(|iri| resolve_relative_iri(&iri, base))?;
+    let close_start = block.rfind("</rdf:Description>")?;
+    let inner = &block[open_end + 1..close_start];
+    let (_, _, op_block) = find_top_level_element_bounds(inner, "owl:disjointUnionOf")?;
+    let members_ofn = collection_members_ofn(op_block, base, dt_props, node_lists)?;
+    if members_ofn.is_empty() {
+        return None;
+    }
+    let member_iris = members_ofn
+        .iter()
+        .filter_map(|ofn| {
+            ofn.strip_prefix('<')
+                .and_then(|s| s.strip_suffix('>'))
+                .map(str::to_owned)
+        })
+        .collect::<Vec<_>>();
+    let union_ofn = format!("ObjectUnionOf({})", members_ofn.join(" "));
+    Some((class_iri, union_ofn, member_iris))
 }
 
 fn collect_rdfs_property_annotation(rdf: &str, tag: &str) -> Vec<(String, String)> {
@@ -2459,6 +2623,15 @@ fn declared_datatype_property_iris(rdf: &str) -> std::collections::HashSet<Strin
     out
 }
 
+fn unwrap_typed_class_expression_block(ce_block: &str) -> String {
+    let trimmed = ce_block.trim();
+    if trimmed.starts_with("<rdf:Description") {
+        element_inner(trimmed, "rdf:Description")
+    } else {
+        trimmed.to_owned()
+    }
+}
+
 fn object_class_assertion_from_block(
     block: &str,
     open_tag: &str,
@@ -2482,10 +2655,9 @@ fn object_class_assertion_from_block(
         if is_simple_rdf_type_element(type_block) {
             return None;
         }
-        let ce_inner = element_inner(type_block, "rdf:type");
-        let ce_block = ce_inner.trim();
+        let ce_block = unwrap_typed_class_expression_block(&element_inner(type_block, "rdf:type"));
         if let Some(ce_ofn) = boolean_operator_ofn(
-            ce_block,
+            &ce_block,
             "owl:intersectionOf",
             "ObjectIntersectionOf",
             base,
@@ -2495,7 +2667,7 @@ fn object_class_assertion_from_block(
             return Some((individual_iri, ce_ofn));
         }
         if let Some(ce_ofn) = boolean_operator_ofn(
-            ce_block,
+            &ce_block,
             "owl:unionOf",
             "ObjectUnionOf",
             base,
@@ -2504,30 +2676,43 @@ fn object_class_assertion_from_block(
         ) {
             return Some((individual_iri, ce_ofn));
         }
-        if let Some(ce_ofn) = one_of_ofn(ce_block, base, dt_props, node_lists) {
+        if let Some(ce_ofn) = one_of_ofn(&ce_block, base, dt_props, node_lists) {
             return Some((individual_iri, ce_ofn));
         }
-        if let Some(ce_ofn) = restriction_ce_to_ofn(ce_block, base, dt_props) {
+        if let Some(ce_ofn) = restriction_ce_to_ofn(&ce_block, base, dt_props) {
             return Some((individual_iri, ce_ofn));
         }
-        if let Some(ce_ofn) = data_restriction_ce_to_ofn(ce_block, base, dt_props) {
+        if let Some(ce_ofn) = data_restriction_ce_to_ofn(&ce_block, base, dt_props) {
             return Some((individual_iri, ce_ofn));
         }
-        if let Some(class_iri) = atomic_class_type_iri(ce_block, base) {
+        if let Some(class_iri) = atomic_class_type_iri(&ce_block, base) {
             return Some((individual_iri, ofn_entity_ref(&class_iri)));
         }
         return None;
     }
 
-    if inner.contains("<owl:onProperty") && !is_class_restriction_description(inner) {
-        if let Some(ce_ofn) = inline_restriction_ce_to_ofn(inner, base, dt_props) {
-            return Some((individual_iri, ce_ofn));
-        }
+    if inner.contains("<owl:onProperty") {
         if let Some(ce_ofn) = data_restriction_ce_to_ofn(inner, base, dt_props) {
             return Some((individual_iri, ce_ofn));
         }
+        if !is_class_restriction_description(inner) {
+            if let Some(ce_ofn) = inline_restriction_ce_to_ofn(inner, base, dt_props) {
+                return Some((individual_iri, ce_ofn));
+            }
+        }
     }
     None
+}
+
+fn restriction_inner_body(block: &str) -> std::borrow::Cow<'_, str> {
+    let trimmed = block.trim();
+    if trimmed.starts_with("<owl:Restriction") {
+        return std::borrow::Cow::Owned(element_inner(trimmed, "owl:Restriction"));
+    }
+    if let Some((_, _, restriction)) = find_top_level_element_bounds(trimmed, "owl:Restriction") {
+        return std::borrow::Cow::Owned(element_inner(restriction, "owl:Restriction"));
+    }
+    std::borrow::Cow::Borrowed(block)
 }
 
 fn data_restriction_ce_to_ofn(
@@ -2535,26 +2720,27 @@ fn data_restriction_ce_to_ofn(
     base: &str,
     dt_props: &std::collections::HashSet<String>,
 ) -> Option<String> {
-    if !ce_block.contains("owl:onProperty") {
+    let body = restriction_inner_body(ce_block);
+    if !body.contains("owl:onProperty") {
         return None;
     }
-    let on_prop = extract_property_resource(ce_block, "owl:onProperty", base)?;
+    let on_prop = extract_property_resource(&body, "owl:onProperty", base)?;
     if !dt_props.contains(&on_prop) && !datatype_property_fallback(&on_prop) {
         return None;
     }
-    if let Some(range) = data_range_ofn(ce_block, base) {
+    if let Some(range) = data_range_ofn(&body, base) {
         return Some(format!("DataAllValuesFrom(<{on_prop}> {range})"));
     }
-    if let Some(n) = element_text_content(ce_block, "owl:maxCardinality") {
+    if let Some(n) = element_text_content(&body, "owl:maxCardinality") {
         return Some(format!("DataMaxCardinality({} <{on_prop}>)", n.trim()));
     }
-    if let Some(n) = element_text_content(ce_block, "owl:minCardinality") {
+    if let Some(n) = element_text_content(&body, "owl:minCardinality") {
         return Some(format!("DataMinCardinality({} <{on_prop}>)", n.trim()));
     }
-    if let Some(n) = element_text_content(ce_block, "owl:cardinality") {
+    if let Some(n) = element_text_content(&body, "owl:cardinality") {
         return Some(format!("DataExactCardinality({} <{on_prop}>)", n.trim()));
     }
-    if let Some(value) = data_has_value_ofn(ce_block, base) {
+    if let Some(value) = data_has_value_ofn(&body, base) {
         return Some(format!("DataHasValue(<{on_prop}> {value})"));
     }
     None
@@ -2562,7 +2748,12 @@ fn data_restriction_ce_to_ofn(
 
 fn data_range_ofn(ce_block: &str, base: &str) -> Option<String> {
     let (_, _, avf_block) = find_top_level_element_bounds(ce_block, "owl:allValuesFrom")?;
-    let inner = element_inner(avf_block, "owl:allValuesFrom");
+    let mut inner = element_inner(avf_block, "owl:allValuesFrom");
+    if inner.contains("rdfs:Datatype") || inner.contains("<Datatype") {
+        if let Some((_, _, dt_block)) = find_top_level_element_bounds(&inner, "rdfs:Datatype") {
+            inner = element_inner(dt_block, "rdfs:Datatype");
+        }
+    }
     if let Some(resource) = extract_attribute(
         avf_block
             .get(..avf_block.find('>').map(|i| i + 1).unwrap_or(avf_block.len()))
@@ -2586,14 +2777,30 @@ fn data_one_of_literals(inner: &str, base: &str) -> Option<Vec<String>> {
     if out.is_empty() { None } else { Some(out) }
 }
 
+fn rdf_rest_is_nil(rest_block: &str) -> bool {
+    rest_block.contains("rdf:nil")
+        || extract_attribute(
+            rest_block
+                .get(..rest_block.find('>').map(|i| i + 1).unwrap_or(rest_block.len()))
+                .unwrap_or(rest_block),
+            "rdf:resource",
+        )
+        .is_some_and(|r| r.contains("nil"))
+}
+
 fn collect_data_list_literals(inner: &str, base: &str, out: &mut Vec<String>) {
-    if let Some(lit) = data_literal_ofn_from_element(inner, "rdf:first", base) {
+    let inner = if inner.trim_start().starts_with("<rdf:Description") {
+        element_inner(inner.trim(), "rdf:Description")
+    } else {
+        inner.to_string()
+    };
+    if let Some(lit) = data_literal_ofn_from_element(&inner, "rdf:first", base) {
         out.push(lit);
     }
-    let Some((_, _, rest_block)) = find_top_level_element_bounds(inner, "rdf:rest") else {
+    let Some((_, _, rest_block)) = find_top_level_element_bounds(&inner, "rdf:rest") else {
         return;
     };
-    if rest_block.contains("rdf-syntax-ns#") && rest_block.contains("nil") {
+    if rdf_rest_is_nil(rest_block) {
         return;
     }
     let rest_inner = element_inner(rest_block, "rdf:rest");
@@ -2607,11 +2814,7 @@ fn data_literal_ofn_from_element(block: &str, tag: &str, base: &str) -> Option<S
     if let Some(dt) = extract_attribute(open, "rdf:datatype") {
         let text = element_text_content(elem, tag)?;
         let dt = resolve_relative_iri(&dt, base);
-        if dt.contains("rational") {
-            return Some(format!("\"{text}\"^^xsd:rational"));
-        }
-        let local = dt.rsplit('#').next().unwrap_or("string");
-        return Some(format!("\"{text}\"^^{local}"));
+        return Some(format!("\"{text}\"^^<{dt}>"));
     }
     if tag == "rdf:Description" {
         let inner = element_inner(elem, "rdf:Description");
@@ -3118,9 +3321,7 @@ fn tagged_element_end(input: &str, start: usize, tag: &str) -> Option<usize> {
             let gt = slice[tag_start..].find('>')?;
             let is_self_close = &slice[tag_start + gt - 1..=tag_start + gt] == "/>";
             if is_self_close {
-                if depth == 0 {
-                    return Some(start + tag_start + gt + 1);
-                }
+                // Self-closing children do not close the outer element.
             } else {
                 depth += 1;
             }
@@ -3234,15 +3435,20 @@ fn find_top_level_element<'a>(inner: &'a str, tag: &str) -> Option<(usize, usize
 
 fn element_inner(block: &str, tag: &str) -> String {
     let open = format!("<{tag}");
-    let close = format!("</{tag}>");
-    let open_end = block.find('>').map(|i| i + 1).unwrap_or(block.len());
-    if block.starts_with(&open) && block[open_end - 2..open_end].starts_with("/") {
+    if !block.trim_start().starts_with(&open) {
         return String::new();
     }
-    let Some(close_start) = block.find(&close) else {
+    let start = block.find(&open).unwrap_or(0);
+    let Some(end) = tagged_element_end(block, start, tag) else {
         return String::new();
     };
-    block[open_end..close_start].trim().to_owned()
+    let open_end = block[start..]
+        .find('>')
+        .map(|i| start + i + 1)
+        .unwrap_or(start);
+    let close = format!("</{tag}>");
+    let close_start = block[start..end].rfind(&close).unwrap_or(end);
+    block[open_end..start + close_start].trim().to_owned()
 }
 
 fn merge_intersection_first_member(intersection_block: &str, first_member: &str) -> String {
@@ -3870,7 +4076,86 @@ mod tests {
         }
     }
 
-    #[ignore = "union collection on nested rdf:Description still incomplete"]
+    #[test]
+    fn restriction_006_union_ofn_debug() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DRestriction-2D006/conclusion.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let injected = inject_rdf_based_punning_declarations(&expanded);
+        let typed = materialize_typed_node_elements(&injected);
+        let intersections = normalize_class_intersection_definitions(&typed);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        for (name, stage) in [
+            ("raw", text.as_str()),
+            ("deduped", deduped.as_str()),
+            ("expanded", expanded.as_str()),
+            ("injected", injected.as_str()),
+            ("typed", typed.as_str()),
+            ("intersections", intersections.as_str()),
+            ("same_as", same_as.as_str()),
+            ("named", named.as_str()),
+        ] {
+            let has_restriction = stage.contains("<owl:Restriction");
+            let has_union_child = stage.contains("unionOf") && stage.contains("<owl:Class");
+            eprintln!("{name}: restriction={has_restriction} union_child={has_union_child}");
+        }
+        let base = parse_xml_base(&text);
+        let dt_props = declared_datatype_property_iris(&text);
+        let node_lists = build_rdf_collection_node_map(&text, &base, &dt_props);
+        let mut pos = 0usize;
+        let mut ce_block = String::new();
+        while pos < named.len() {
+            let next_desc = named[pos..].find("<rdf:Description");
+            let next_ind = named[pos..].find("<owl:NamedIndividual");
+            let next = match (next_desc, next_ind) {
+                (Some(d), Some(i)) => Some(pos + d.min(i)),
+                (Some(d), None) => Some(pos + d),
+                (None, Some(i)) => Some(pos + i),
+                (None, None) => None,
+            };
+            let Some(start) = next else { break };
+            if named[start..].starts_with("</") {
+                pos = start + 1;
+                continue;
+            }
+            let (open_tag, close_tag) = if named[start..].starts_with("<owl:NamedIndividual") {
+                ("owl:NamedIndividual", "</owl:NamedIndividual>")
+            } else {
+                ("rdf:Description", "</rdf:Description>")
+            };
+            let Some(end) = element_block_end(&named, start, open_tag, close_tag) else {
+                break;
+            };
+            let block = &named[start..end];
+            if block.contains("premises006#x") {
+                let open_end = block.find('>').unwrap();
+                let close_start = block.rfind(close_tag).unwrap();
+                let inner = &block[open_end + 1..close_start];
+                if let Some((_, _, type_block)) = find_top_level_element_bounds(inner, "rdf:type") {
+                    ce_block = unwrap_typed_class_expression_block(&element_inner(type_block, "rdf:type"));
+                }
+                break;
+            }
+            pos = end;
+        }
+        let union_ofn = boolean_operator_ofn(
+            ce_block.trim(),
+            "owl:unionOf",
+            "ObjectUnionOf",
+            &base,
+            &dt_props,
+            &node_lists,
+        );
+        assert!(
+            union_ofn.as_deref().is_some_and(|u| u.contains("ObjectUnionOf")),
+            "union_ofn={union_ofn:?}"
+        );
+    }
+
     #[test]
     fn restriction_006_conclusion_emits_union_class_assertion() {
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
@@ -3947,6 +4232,157 @@ mod tests {
         let collected = collect_object_class_assertions(&named);
         assert_eq!(collected.len(), 1);
         assert!(collected[0].1.contains("bottomObjectProperty"));
+    }
+
+    #[test]
+    fn rational003_oneof_has_two_literals() {
+        let avf = r#"<owl:Restriction>
+      <owl:onProperty rdf:resource="dp" />
+      <owl:allValuesFrom>
+        <rdfs:Datatype>
+          <owl:oneOf>
+            <rdf:Description>
+              <rdf:first rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.3333333333333333</rdf:first>
+              <rdf:rest>
+                <rdf:Description>
+                  <rdf:first rdf:datatype="http://www.w3.org/2002/07/owl#rational">1/3</rdf:first>
+                  <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+                </rdf:Description>
+              </rdf:rest>
+            </rdf:Description>
+          </owl:oneOf>
+        </rdfs:Datatype>
+      </owl:allValuesFrom>
+    </owl:Restriction>"#;
+        let base = "http://example.org/";
+        let mut dt = std::collections::HashSet::new();
+        dt.insert("http://example.org/dp".to_string());
+        let ofn = data_restriction_ce_to_ofn(avf, base, &dt).expect("ofn");
+        assert!(ofn.contains("DataOneOf"), "{ofn}");
+        assert!(ofn.contains("0.3333333333333333"), "{ofn}");
+        assert!(ofn.contains("1/3"), "{ofn}");
+
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D003/premise.rdf",
+        );
+        let rdf = std::fs::read_to_string(&path).expect("read");
+        let deduped = dedupe_rdf_xml_ids(&rdf);
+        let normalized_ids = normalize_invalid_rdf_ids(&deduped);
+        let relative_uris = normalize_relative_owl_uris(&normalized_ids);
+        let injected = inject_rdf_based_punning_declarations(&relative_uris);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let intersections = normalize_class_intersection_definitions(&typed_nodes);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let collected = collect_object_class_assertions(&named);
+        assert_eq!(collected.len(), 2, "{collected:?}");
+        assert!(
+            collected
+                .iter()
+                .any(|(_, ce)| ce.contains("DataOneOf") && ce.contains("1/3")),
+            "{collected:?}"
+        );
+        assert!(
+            collected.iter().any(|(_, ce)| ce.contains("DataMinCardinality")),
+            "{collected:?}"
+        );
+    }
+
+    #[test]
+    fn rational002_allvaluesfrom_oneof_ofn() {
+        let avf = r#"<owl:Restriction>
+      <owl:onProperty rdf:resource="dp" />
+      <owl:allValuesFrom>
+        <rdfs:Datatype>
+          <owl:oneOf>
+            <rdf:Description>
+              <rdf:first rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.5</rdf:first>
+              <rdf:rest>
+                <rdf:Description>
+                  <rdf:first rdf:datatype="http://www.w3.org/2002/07/owl#rational">1/2</rdf:first>
+                  <rdf:rest rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+                </rdf:Description>
+              </rdf:rest>
+            </rdf:Description>
+          </owl:oneOf>
+        </rdfs:Datatype>
+      </owl:allValuesFrom>
+    </owl:Restriction>"#;
+        let base = "http://example.org/";
+        let mut dt = std::collections::HashSet::new();
+        dt.insert("http://example.org/dp".to_string());
+        let ofn = data_restriction_ce_to_ofn(avf, base, &dt);
+        assert!(ofn.is_some_and(|s| s.contains("DataAllValuesFrom")));
+    }
+
+    #[test]
+    fn data_restriction_min_cardinality_ofn() {
+        let ce = r#"<owl:Restriction>
+    <owl:onProperty rdf:resource="dp"/>
+    <owl:minCardinality>2</owl:minCardinality>
+  </owl:Restriction>"#;
+        let base = "http://example.org/";
+        let mut dt = std::collections::HashSet::new();
+        dt.insert("http://example.org/dp".to_string());
+        let ofn = data_restriction_ce_to_ofn(ce, base, &dt);
+        assert_eq!(
+            ofn.as_deref(),
+            Some("DataMinCardinality(2 <http://example.org/dp>)")
+        );
+    }
+
+    #[test]
+    fn rational002_collects_both_data_restrictions() {
+        let inline_min = r#"<rdf:RDF xml:base="http://example.org/"
+ xmlns:owl="http://www.w3.org/2002/07/owl#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<owl:DatatypeProperty rdf:about="dp"/>
+<rdf:Description rdf:about="a">
+  <owl:onProperty rdf:resource="dp"/>
+  <owl:minCardinality>2</owl:minCardinality>
+</rdf:Description>
+</rdf:RDF>"#;
+        let inline = collect_object_class_assertions(inline_min);
+        assert_eq!(inline.len(), 1, "inline={inline:?}");
+
+        let typed_min = r#"<rdf:RDF xml:base="http://example.org/"
+ xmlns:owl="http://www.w3.org/2002/07/owl#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<owl:DatatypeProperty rdf:about="dp"/>
+<rdf:Description rdf:about="a">
+  <rdf:type><owl:Restriction>
+    <owl:onProperty rdf:resource="dp"/>
+    <owl:minCardinality>2</owl:minCardinality>
+  </owl:Restriction></rdf:type>
+</rdf:Description>
+</rdf:RDF>"#;
+        let typed = collect_object_class_assertions(typed_min);
+        assert_eq!(typed.len(), 1, "typed={typed:?}");
+
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D002/premise.rdf",
+        );
+        let rdf = std::fs::read_to_string(&path).expect("read");
+        let deduped = dedupe_rdf_xml_ids(&rdf);
+        let normalized_ids = normalize_invalid_rdf_ids(&deduped);
+        let relative_uris = normalize_relative_owl_uris(&normalized_ids);
+        let injected = inject_rdf_based_punning_declarations(&relative_uris);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let intersections = normalize_class_intersection_definitions(&typed_nodes);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let collected = collect_object_class_assertions(&named);
+        assert_eq!(collected.len(), 2, "{collected:?}");
+        assert!(
+            collected.iter().any(|(_, ce)| ce.contains("DataAllValuesFrom")),
+            "{collected:?}"
+        );
+        assert!(
+            collected.iter().any(|(_, ce)| ce.contains("DataMinCardinality")),
+            "{collected:?}"
+        );
     }
 
     #[test]
@@ -4297,5 +4733,31 @@ mod tests {
             .filter(|(_, a)| matches!(a, ontologos_core::Axiom::ObjectPropertyAssertion { .. }))
             .count();
         assert_eq!(opa_count, 2, "loaded conclusion should have two OPAs");
+    }
+
+    #[test]
+    fn i5_5_005_singleton_union_supplement() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DI5.5-2D005/conclusion.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let normalized_ids = normalize_invalid_rdf_ids(&deduped);
+        let expanded = expand_xml_entities_with_limit(&normalized_ids, 10_000_000).unwrap();
+        let relative_uris = normalize_relative_owl_uris(&expanded);
+        let injected = inject_rdf_based_punning_declarations(&relative_uris);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let intersections = normalize_class_intersection_definitions(&typed_nodes);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let individuals = materialize_anonymous_individual_descriptions(&named);
+        let normalized = normalize_all_different_members(&individuals);
+        let preprocessed = expand_all_disjoint_collections(&normalized);
+        let equivs = collect_boolean_class_equivalences(&preprocessed);
+        assert!(
+            equivs.iter().any(|(_, ce)| ce.contains("ObjectUnionOf")),
+            "expected singleton union equivalence, got {equivs:?}"
+        );
     }
 }

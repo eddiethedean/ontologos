@@ -372,7 +372,7 @@ pub(crate) fn existential_already_satisfied(
     branch.edges.iter().any(|(from, role, to)| {
         *from == world
             && existential_role_matches(branch, property, role)
-            && world_satisfies_filler(branch, *to, filler)
+            && world_structurally_satisfies(branch, *to, filler)
     })
 }
 
@@ -858,7 +858,9 @@ pub(crate) fn recheck_functional_constraints(branch: &mut Branch<'_>) {
         let fp = RoleExpr::Atomic(f);
         let mut by_source: HashMap<usize, HashSet<usize>> = HashMap::new();
         for (from, prop, to) in &branch.edges {
-            if role_subsumes(branch, &fp, prop) {
+            // Count only edges on the declared functional role itself. Subproperty
+            // edges inherit their own functional declarations (dl-005 family).
+            if role_exprs_equal(prop, &fp) {
                 by_source.entry(*from).or_default().insert(*to);
             }
         }
@@ -1372,13 +1374,14 @@ fn existential_clashes_world_restriction(
         }
     }
     branch.worlds[world].negated.iter().any(|&neg_ce| {
-        matches!(
-            store.ce(neg_ce),
-            Some(ClassExpr::Some {
-                property: forbidden,
-                ..
-            }) if role_subsumes(branch, forbidden, property)
-        )
+        let Some(ClassExpr::Some {
+            property: forbidden,
+            filler: neg_filler,
+        }) = store.ce(neg_ce)
+        else {
+            return false;
+        };
+        role_subsumes(branch, forbidden, property) && ce_subsumes(branch, filler, *neg_filler)
     })
 }
 

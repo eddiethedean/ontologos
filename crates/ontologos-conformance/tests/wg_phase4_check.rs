@@ -146,3 +146,48 @@ fn wg_cardinality_002_entailment() {
 fn wg_cardinality_003_entailment() {
     check_wg_case(&case_by_suffix("cardinality-2D003")).expect("should entail");
 }
+
+#[test]
+fn wg_rational_003_consistent() {
+    assert_consistent("wg/New-2DFeature-2DRational-2D003/premise.rdf", true);
+}
+
+#[test]
+fn wg_thing_004_consistent() {
+    assert_consistent("wg/TestCase-3AWebOnt-2DThing-2D004/premise.rdf", true);
+}
+
+#[test]
+fn wg_dl_005_consistent() {
+    assert_consistent("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf", true);
+}
+
+#[test]
+fn wg_dl_601_inconsistent() {
+    assert_consistent("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf", false);
+}
+
+#[test]
+fn wg_rational_002_inconsistent() {
+    assert_consistent("wg/New-2DFeature-2DRational-2D002/premise.rdf", false);
+}
+
+#[test]
+fn wg_thing_005_inconsistent() {
+    assert_consistent("wg/TestCase-3AWebOnt-2DThing-2D005/premise.rdf", false);
+}
+
+#[test]
+fn wg_restriction_006_entailment() {
+    check_wg_case(&case_by_suffix("Restriction-2D006")).expect("should entail");
+}
+
+#[test]
+fn wg_dataqcr_001_entailment() {
+    check_wg_case(&case_by_suffix("DataQCR-2D001")).expect("should entail");
+}
+
+#[test]
+fn wg_objectqcr_001_entailment() {
+    check_wg_case(&case_by_suffix("ObjectQCR-2D001")).expect("should entail");
+}
