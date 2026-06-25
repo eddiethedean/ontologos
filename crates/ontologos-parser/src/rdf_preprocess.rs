@@ -438,11 +438,16 @@ fn declared_iris(input: &str, element: &str) -> HashSet<String> {
 }
 
 fn extract_attribute(tag: &str, name: &str) -> Option<String> {
-    let needle = format!("{name}=\"");
-    let idx = tag.find(&needle)?;
-    let rest = &tag[idx + needle.len()..];
-    let end = rest.find('"')?;
-    Some(rest[..end].to_owned())
+    for quote in ['"', '\''] {
+        let needle = format!("{name}={quote}");
+        if let Some(idx) = tag.find(&needle) {
+            let rest = &tag[idx + needle.len()..];
+            if let Some(end) = rest.find(quote) {
+                return Some(rest[..end].to_owned());
+            }
+        }
+    }
+    None
 }
 
 fn collect_class_axiom_iris(input: &str, out: &mut HashSet<String>) {
@@ -2852,11 +2857,32 @@ fn is_typed_entity_declaration(block: &str) -> bool {
         "owl#TransitiveProperty",
         "owl#NamedIndividual",
     ];
-    ENTITY_TYPES.iter().any(|marker| {
-        block.contains(marker)
-            && (block.contains("rdf:type rdf:resource=")
-                || block.contains("rdf:type rdf:resource ="))
-    })
+    let Some(open_end) = block.find('>') else {
+        return false;
+    };
+    let close_tag = if block.starts_with("<owl:NamedIndividual") {
+        "</owl:NamedIndividual>"
+    } else {
+        "</rdf:Description>"
+    };
+    let Some(close_start) = block.rfind(close_tag) else {
+        return false;
+    };
+    let inner = &block[open_end + 1..close_start];
+    let Some((_, _, type_block)) = find_top_level_element_bounds(inner, "rdf:type") else {
+        return false;
+    };
+    if !is_simple_rdf_type_element(type_block) {
+        return false;
+    }
+    let Some(type_open_end) = type_block.find('>') else {
+        return false;
+    };
+    let open = &type_block[..=type_open_end];
+    let Some(resource) = extract_attribute(open, "rdf:resource") else {
+        return false;
+    };
+    ENTITY_TYPES.iter().any(|marker| resource.contains(marker))
 }
 
 fn rewrite_description_to_named_individual(block: &str) -> String {
@@ -3790,6 +3816,46 @@ mod tests {
                 eprintln!("  {:?}", annotated.component);
             }
         }
+    }
+
+    #[test]
+    fn i5_1_premise_loads() {
+        use crate::load_ontology;
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DI5.1-2D001/premise.rdf",
+        );
+        load_ontology(&path).expect("load I5.1 premise");
+    }
+
+    #[test]
+    fn transitive_property_conclusion_emits_class_assertion() {
+        use crate::load_ontology;
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DTransitiveProperty-2D002/conclusion.rdf",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            ont.dl().axioms().any(|a| matches!(a, ontologos_core::DlAxiom::ClassAssertion { .. })),
+            "expected DL ClassAssertion"
+        );
+    }
+
+    #[test]
+    fn collect_object_class_assertion_restriction_with_nested_class_type() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DTransitiveProperty-2D002/conclusion.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let injected = inject_rdf_based_punning_declarations(&expanded);
+        let typed = materialize_typed_node_elements(&injected);
+        let intersections = normalize_class_intersection_definitions(&typed);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let collected = collect_object_class_assertions(&named);
+        assert_eq!(collected.len(), 1, "{collected:?}");
+        assert!(collected[0].1.contains("ObjectSomeValuesFrom"));
     }
 
     #[test]
