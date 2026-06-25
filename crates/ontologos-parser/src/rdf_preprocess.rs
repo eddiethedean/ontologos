@@ -1572,12 +1572,12 @@ pub(crate) fn collect_object_property_assertions(rdf: &str) -> Vec<(String, Stri
     while pos < rdf.len() {
         let next_desc = rdf[pos..].find("<rdf:Description");
         let next_ind = rdf[pos..].find("<owl:NamedIndividual");
-        let next = match (next_desc, next_ind) {
-            (Some(d), Some(i)) => Some(pos + d.min(i)),
-            (Some(d), None) => Some(pos + d),
-            (None, Some(i)) => Some(pos + i),
-            (None, None) => None,
-        };
+        let next_thing = rdf[pos..].find("<owl:Thing");
+        let next = [next_desc, next_ind, next_thing]
+            .into_iter()
+            .flatten()
+            .map(|rel| pos + rel)
+            .min();
         let Some(start) = next else {
             break;
         };
@@ -1587,6 +1587,8 @@ pub(crate) fn collect_object_property_assertions(rdf: &str) -> Vec<(String, Stri
         }
         let (open_tag, close_tag) = if rdf[start..].starts_with("<owl:NamedIndividual") {
             ("owl:NamedIndividual", "</owl:NamedIndividual>")
+        } else if rdf[start..].starts_with("<owl:Thing") {
+            ("owl:Thing", "</owl:Thing>")
         } else {
             ("rdf:Description", "</rdf:Description>")
         };
@@ -1990,21 +1992,95 @@ fn datatype_ofn_ref(iri: &str) -> String {
     }
 }
 
+fn blank_node_iri(base: &str, node: &str) -> String {
+    format!("{base}#_{node}")
+}
+
+fn object_iri_from_property_element(
+    prop_open: &str,
+    prop_block: &str,
+    tag_name: &str,
+    base: &str,
+) -> Option<String> {
+    extract_attribute(prop_open, "rdf:resource")
+        .map(|r| resolve_relative_iri(&r, base))
+        .or_else(|| {
+            extract_attribute(prop_open, "rdf:about").map(|a| resolve_relative_iri(&a, base))
+        })
+        .or_else(|| {
+            extract_attribute(prop_open, "rdf:nodeID").map(|n| blank_node_iri(base, &n))
+        })
+        .or_else(|| {
+            let close = format!("</{tag_name}>");
+            let cs = prop_block.rfind(&close)?;
+            let prop_open_end = prop_block.find('>')?;
+            let child_inner = &prop_block[prop_open_end + 1..cs];
+            child_inner
+                .split("rdf:about=\"")
+                .nth(1)
+                .and_then(|s| s.split('"').next())
+                .map(|a| resolve_relative_iri(a, base))
+                .or_else(|| {
+                    child_inner
+                        .split("rdf:nodeID=\"")
+                        .nth(1)
+                        .and_then(|s| s.split('"').next())
+                        .map(|n| blank_node_iri(base, n))
+                })
+        })
+}
+
+fn owl_thing_child_block(prop_block: &str, prop_tag: &str) -> Option<String> {
+    let prop_open_end = prop_block.find('>')?;
+    let close = format!("</{prop_tag}>");
+    let cs = prop_block.rfind(&close)?;
+    let child = prop_block[prop_open_end + 1..cs].trim();
+    if !child.starts_with("<owl:Thing") {
+        return None;
+    }
+    if child.ends_with("/>") {
+        return Some(child.to_string());
+    }
+    let end = tagged_element_end(child, 0, "owl:Thing")?;
+    Some(child[..end].to_string())
+}
+
 fn object_property_assertions_from_block(
     block: &str,
     open_tag: &str,
     base: &str,
     xmlns: &std::collections::HashMap<String, String>,
 ) -> Vec<(String, String, String)> {
+    let mut anon = 0usize;
+    object_property_assertions_from_subject_block(
+        None,
+        block,
+        open_tag,
+        base,
+        xmlns,
+        &mut anon,
+    )
+}
+
+fn object_property_assertions_from_subject_block(
+    subject_override: Option<String>,
+    block: &str,
+    open_tag: &str,
+    base: &str,
+    xmlns: &std::collections::HashMap<String, String>,
+    anon: &mut usize,
+) -> Vec<(String, String, String)> {
     let open_end = match block.find('>') {
         Some(i) => i + 1,
         None => return Vec::new(),
     };
     let open = &block[..=open_end - 1];
-    let Some(subject) = extract_attribute(open, "rdf:about")
-        .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, base))
-    else {
+    let subject = subject_override.or_else(|| {
+        extract_attribute(open, "rdf:about")
+            .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+            .map(|iri| resolve_relative_iri(&iri, base))
+    });
+    let Some(subject) = subject else {
         return Vec::new();
     };
     let close_tag = format!("</{open_tag}>");
@@ -2046,24 +2122,34 @@ fn object_property_assertions_from_block(
         };
         let prop_open_end = prop_block.find('>').unwrap_or(0);
         let prop_open = &prop_block[..=prop_open_end];
-        let object = extract_attribute(prop_open, "rdf:resource")
-            .map(|r| resolve_relative_iri(&r, base))
-            .or_else(|| {
-                extract_attribute(prop_open, "rdf:about")
-                    .map(|a| resolve_relative_iri(&a, base))
-            })
-            .or_else(|| {
-                let close = format!("</{tag_name}>");
-                let cs = prop_block.rfind(&close)?;
-                let child_inner = &prop_block[prop_open_end + 1..cs];
-                child_inner
-                    .split("rdf:about=\"")
-                    .nth(1)
-                    .and_then(|s| s.split('"').next())
-                    .map(|a| resolve_relative_iri(a, base))
-            });
-        if let Some(object) = object {
+        if let Some(object) =
+            object_iri_from_property_element(prop_open, prop_block, tag_name, base)
+        {
             out.push((subject.clone(), prop_iri, object));
+        } else if let Some(thing_block) = owl_thing_child_block(prop_block, tag_name) {
+            *anon += 1;
+            let object = blank_node_iri(base, &format!("anon{anon}"));
+            out.push((subject.clone(), prop_iri, object.clone()));
+            let wrapped = if thing_block.ends_with("/>") {
+                format!(
+                    "<owl:Thing rdf:about=\"{object}\"></owl:Thing>"
+                )
+            } else {
+                let open_end = thing_block.find('>').map(|i| i + 1).unwrap_or(0);
+                let close = thing_block.rfind("</owl:Thing>").unwrap_or(thing_block.len());
+                format!(
+                    "<owl:Thing rdf:about=\"{object}\">{}</owl:Thing>",
+                    &thing_block[open_end..close]
+                )
+            };
+            out.extend(object_property_assertions_from_subject_block(
+                Some(object),
+                &wrapped,
+                "owl:Thing",
+                base,
+                xmlns,
+                anon,
+            ));
         }
         pos = end;
     }
@@ -4017,5 +4103,60 @@ mod tests {
             ParseLimits::default(),
         )
         .expect("horned-owl parse");
+    }
+
+    #[test]
+    fn collect_opa_from_owl_thing_with_blank_node_object() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DallValuesFrom-2D002/conclusion.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let opas = collect_object_property_assertions(&text);
+        assert_eq!(opas.len(), 1, "expected one OPA, got {opas:?}");
+        assert!(opas[0].0.contains("premises002#i"));
+        assert!(opas[0].1.contains("premises002#p"));
+        assert!(opas[0].2.contains("#_o"));
+
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let normalized_ids = normalize_invalid_rdf_ids(&deduped);
+        let expanded = expand_xml_entities_with_limit(&normalized_ids, 1_000_000).unwrap();
+        let relative_uris = normalize_relative_owl_uris(&expanded);
+        let injected = inject_rdf_based_punning_declarations(&relative_uris);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let intersections = normalize_class_intersection_definitions(&typed_nodes);
+        let same_as = normalize_class_same_as(&intersections);
+        let named_individuals = materialize_named_individual_descriptions(&same_as);
+        let individuals = materialize_anonymous_individual_descriptions(&named_individuals);
+        let normalized = normalize_all_different_members(&individuals);
+        let preprocessed = expand_all_disjoint_collections(&normalized);
+        let preprocessed_opas = collect_object_property_assertions(&preprocessed);
+        assert_eq!(preprocessed_opas.len(), 1, "expected one OPA, got {preprocessed_opas:?}");
+        let loaded = crate::load_ontology(&path).expect("load conclusion");
+        let has_opa = loaded.dl().axioms().any(|a| {
+            matches!(a, ontologos_core::DlAxiom::ObjectPropertyAssertion { .. })
+        }) || loaded.axioms().iter().any(|(_, a)| {
+            matches!(a, ontologos_core::Axiom::ObjectPropertyAssertion { .. })
+        });
+        assert!(has_opa, "loaded ontology missing OPA");
+    }
+
+    #[test]
+    fn collect_nested_opa_from_somevalues_conclusion() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DsomeValuesFrom-2D003/conclusion.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let opas = collect_object_property_assertions(&text);
+        assert_eq!(opas.len(), 2, "expected two OPAs, got {opas:?}");
+        assert!(opas[0].0.contains("fred"));
+        assert!(opas[0].1.contains("parent"));
+        let loaded = crate::load_ontology(&path).expect("load conclusion");
+        let opa_count = loaded
+            .axioms()
+            .iter()
+            .filter(|(_, a)| matches!(a, ontologos_core::Axiom::ObjectPropertyAssertion { .. }))
+            .count();
+        assert_eq!(opa_count, 2, "loaded conclusion should have two OPAs");
     }
 }

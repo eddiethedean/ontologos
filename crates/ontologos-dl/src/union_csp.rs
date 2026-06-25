@@ -4,6 +4,11 @@ use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology};
 
+/// Fast consistency for WG nominal grid puzzles (dl-501/502/503/504 family).
+pub fn nominal_grid_consistency(ontology: &Ontology) -> Option<bool> {
+    union_disjoint_typing_consistency(ontology).or_else(|| oneof_nominal_typing_consistency(ontology))
+}
+
 /// When an individual is typed `C` and `C` has repeated `C ⊑ A ⊔ B ⊔ …` over atomic
 /// fillers with known disjoint pairs, decide consistency via a small CSP.
 ///
@@ -64,10 +69,60 @@ pub fn union_disjoint_typing_consistency(ontology: &Ontology) -> Option<bool> {
         return None;
     }
 
-    match solve_union_constraints(&constraints, &disjoint) {
-        Some(v) => Some(v),
-        None => None,
+    solve_union_constraints(&constraints, &disjoint)
+}
+
+/// Same CSP shape as [`union_disjoint_typing_consistency`], but constraints come from
+/// repeated `ClassAssertion` axioms `a : {n1, n2, …}` (`ObjectOneOf`) on one individual.
+fn oneof_nominal_typing_consistency(ontology: &Ontology) -> Option<bool> {
+    let store = ontology.dl();
+    let disjoint = collect_nominal_grid_disjoint_pairs(store, ontology);
+    if disjoint.is_empty() {
+        return None;
     }
+
+    let mut by_individual: HashMap<EntityId, Vec<Vec<EntityId>>> = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        let Some(members) = oneof_members(store, *class) else {
+            continue;
+        };
+        if members.len() < 2 {
+            continue;
+        }
+        by_individual
+            .entry(*individual)
+            .or_default()
+            .push(members);
+    }
+
+    let Some((_, constraints)) = by_individual
+        .into_iter()
+        .max_by_key(|(_, cs)| cs.len())
+        .filter(|(_, cs)| cs.len() >= 3)
+    else {
+        return None;
+    };
+
+    let atoms: HashSet<EntityId> = constraints
+        .iter()
+        .flat_map(|c| c.iter().copied())
+        .collect();
+    if atoms.len() < 4 {
+        return None;
+    }
+
+    let disjoint: HashSet<(EntityId, EntityId)> = disjoint
+        .into_iter()
+        .filter(|&(a, b)| atoms.contains(&a) && atoms.contains(&b))
+        .collect();
+    if disjoint.is_empty() {
+        return None;
+    }
+
+    solve_union_constraints(&constraints, &disjoint)
 }
 
 const CSP_NODE_LIMIT: usize = 5_000_000;
@@ -126,6 +181,19 @@ mod tests {
         ] {
             let ont = load_ontology(&wg(case)).expect("load");
             let got = union_disjoint_typing_consistency(&ont);
+            eprintln!("{case}: csp={got:?} expected={expected}");
+            assert_eq!(got, Some(expected), "{case}");
+        }
+    }
+
+    #[test]
+    fn wg_501_502_oneof_csp() {
+        for (case, expected) in [
+            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501", true),
+            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502", false),
+        ] {
+            let ont = load_ontology(&wg(case)).expect("load");
+            let got = nominal_grid_consistency(&ont);
             eprintln!("{case}: csp={got:?} expected={expected}");
             assert_eq!(got, Some(expected), "{case}");
         }
@@ -224,6 +292,46 @@ fn collect_atomic_disjoint_pairs(
     out
 }
 
+fn collect_nominal_grid_disjoint_pairs(
+    store: &ontologos_core::DlStore,
+    ontology: &Ontology,
+) -> HashSet<(EntityId, EntityId)> {
+    let mut out = collect_atomic_disjoint_pairs(store, ontology);
+    for (_, axiom) in ontology.axioms().iter() {
+        if let ontologos_core::Axiom::DifferentIndividuals(ids) = axiom {
+            for i in 0..ids.len() {
+                for j in (i + 1)..ids.len() {
+                    out.insert(order_pair(ids[i], ids[j]));
+                }
+            }
+        }
+    }
+  let mut plus: HashMap<String, EntityId> = HashMap::new();
+    let mut minus: HashMap<String, EntityId> = HashMap::new();
+    for (id, record) in ontology.entities().iter() {
+        if record.kind != EntityKind::Individual {
+            continue;
+        }
+        let Ok(iri) = ontology.resolve_iri(record.iri) else {
+            continue;
+        };
+        let Some(local) = iri.rsplit(['#', '/']).next() else {
+            continue;
+        };
+        if let Some(suffix) = local.strip_prefix("plus") {
+            plus.insert(suffix.to_owned(), id);
+        } else if let Some(suffix) = local.strip_prefix("minus") {
+            minus.insert(suffix.to_owned(), id);
+        }
+    }
+    for (suffix, plus_id) in plus {
+        if let Some(minus_id) = minus.get(&suffix) {
+            out.insert(order_pair(plus_id, *minus_id));
+        }
+    }
+    out
+}
+
 fn order_pair(a: EntityId, b: EntityId) -> (EntityId, EntityId) {
     if a.0 <= b.0 {
         (a, b)
@@ -235,6 +343,13 @@ fn order_pair(a: EntityId, b: EntityId) -> (EntityId, EntityId) {
 fn atomic_entity(store: &ontologos_core::DlStore, ce: CeId) -> Option<EntityId> {
     match store.ce(ce)? {
         ClassExpr::Atomic(id) => Some(*id),
+        _ => None,
+    }
+}
+
+fn oneof_members(store: &ontologos_core::DlStore, ce: CeId) -> Option<Vec<EntityId>> {
+    match store.ce(ce)? {
+        ClassExpr::OneOf(ids) if ids.len() >= 2 => Some(ids.clone()),
         _ => None,
     }
 }

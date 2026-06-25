@@ -1,14 +1,11 @@
 {
   "summary": {
-    "java_total": 200,
+    "java_total": 202,
     "java_by_category": {
-      "manual_port": 200
+      "manual_port": 202
     },
-    "wg_total": 67,
-    "wg_by_category": {
-      "missing_expectations": 15,
-      "missing_premise": 52
-    }
+    "wg_total": 0,
+    "wg_by_category": {}
   },
   "java": [
     {
@@ -259,6 +256,12 @@
     },
     {
       "id": "reasoner.BinaryDataTest.testBase64Parsing",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored",
       "engine": "dl",
       "category": "manual_port",
       "detail": "auto-cataloged; requires manual port (dl)"
@@ -1020,67 +1023,73 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity0",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity0",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity1",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity1",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity2",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity2",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity3",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity3",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity4",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity4",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity5",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity5",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity6",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity6",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity7",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity7",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity8",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity8",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
-      "id": "reasoner.RIATest.testRIARegularity9",
-      "engine": "dl",
+      "id": "reasoner.RIARegularityTest.testRIARegularity9",
+      "engine": "rdfs",
       "category": "manual_port",
-      "detail": "auto-cataloged; requires manual port (dl)"
+      "detail": "auto-cataloged; requires manual port (rdfs)"
     },
     {
       "id": "reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug",
+      "engine": "dl",
+      "category": "manual_port",
+      "detail": "auto-cataloged; requires manual port (dl)"
+    },
+    {
+      "id": "reasoner.ReasonerTest.testEmptyChain",
       "engine": "dl",
       "category": "manual_port",
       "detail": "auto-cataloged; requires manual port (dl)"
@@ -1212,341 +1221,5 @@
       "detail": "auto-cataloged; requires manual port (dl)"
     }
   ],
-  "wg": [
-    {
-      "id": "owl_wg_tests.Datatype-2Drestrictions-2Ddifferent-2Dtypes",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Owlreal-2Dplus-2DoneOf",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Consistent-2Dbut-2Dall-2Dunsat",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Consistent-2Ddataproperty-2Ddisjointness",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Consistent-2DdateTime",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Consistent-2Dinteger-2Dfiller",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Datatype-2Drestriction-2Dmin-2Dmax-2Dinconsistency",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Different-2Dtypes-2Dplus-2Dcomplement",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Functionality-2Dclash",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Inconsistent-2Dbyte-2Dfiller",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Datacomplement-2Dplus-2Drestrictions",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Inconsistent-2Ddisjoint-2Ddataproperties",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Inconsistent-2Dpattern-2Ddisjointness",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Inconsistent-2Dinteger-2Dfiller",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Inconsistent_datatypes",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Individual-2DClass_Punning_vs._ObjectOneOf",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D004",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D005",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D006",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.New-2DFeature-2DKeys-2D007",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.One_equals_two",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Owl2-2Drl-2Dinvalid-2Drightside-2Dsomevaluesfrom",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Owl2-2Drl-2Dvalid-2Drightside-2Dallvaluesfrom",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Plus-2Dand-2Dminus-2D0-2Dintegers",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Plus-2Dminus-2D0-2Dplus-2Ddisjointness",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.Qualified-2Dcardinality-2Dboolean",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI4.6-2D004",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.1-2D010",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D005",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D010",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.2-2D011",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.21-2D002",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.26-2D005",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DI5.3-2D009",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D003",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DRestriction-2D004",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DThing-2D003",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DallValuesFrom-2D002",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D019",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D021",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D022",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D023",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D040",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D108",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D111",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D201",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D205",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D208",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D209",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D503",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D504",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D606",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D661",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D665",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D902",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Ddescription-2Dlogic-2D904",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2DdisjointWith-2D008",
-      "category": "missing_expectations",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D001",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D002",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D203",
-      "category": "missing_premise",
-      "detail": null
-    },
-    {
-      "id": "owl_wg_tests.TestCase-3AWebOnt-2Dmiscellaneous-2D204",
-      "category": "missing_premise",
-      "detail": null
-    }
-  ]
+  "wg": []
 }

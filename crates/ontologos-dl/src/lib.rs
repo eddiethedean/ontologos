@@ -118,7 +118,7 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if abox_complement_typing_clash(ontology) {
         return Ok(false);
     }
-    if let Some(consistent) = union_csp::union_disjoint_typing_consistency(ontology) {
+    if let Some(consistent) = union_csp::nominal_grid_consistency(ontology) {
         return Ok(consistent);
     }
     let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
@@ -148,16 +148,10 @@ pub fn named_classes_unsatisfiable(
     ontology: &Ontology,
     classes: &[EntityId],
 ) -> Result<bool> {
-    let prev = std::env::var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS").ok();
-    unsafe {
-        std::env::set_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS", "256");
-    }
-    let out = named_classes_unsatisfiable_inner(ontology, classes);
-    match prev {
-        Some(v) => unsafe { std::env::set_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS", v) },
-        None => unsafe { std::env::remove_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS") },
-    }
-    out
+    // Do not mutate global tableau budgets here. This function can be called
+    // inside conformance and classification flows that already size budgets
+    // appropriately via environment variables.
+    named_classes_unsatisfiable_inner(ontology, classes)
 }
 
 fn named_classes_unsatisfiable_inner(

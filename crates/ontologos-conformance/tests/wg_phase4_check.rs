@@ -76,3 +76,38 @@ fn wg_imports_011_entailment() {
 fn wg_i46_negative_entailment() {
     check_wg_case(&case_by_suffix("I4.6-2D004")).expect("should not entail");
 }
+
+#[test]
+fn wg_allvaluesfrom_002_negative_entailment() {
+    check_wg_case(&case_by_suffix("allValuesFrom-2D002")).expect("should not entail");
+}
+
+#[test]
+fn wg_dl_501_consistent() {
+    check_wg_case(&case_by_suffix("description-2Dlogic-2D501")).expect("consistent");
+}
+
+#[test]
+fn wg_dl_502_inconsistent() {
+    check_wg_case(&case_by_suffix("description-2Dlogic-2D502")).expect("inconsistent");
+}
+
+#[test]
+fn wg_eqclass_sym_entailment() {
+    check_wg_case(&case_by_suffix("eqdis-2Deqclass-2Dsym")).expect("should entail");
+}
+
+#[test]
+fn wg_equivalent_class_002_entailment() {
+    check_wg_case(&case_by_suffix("equivalentClass-2D002")).expect("should entail");
+}
+
+#[test]
+fn wg_complement_001_entailment() {
+    check_wg_case(&case_by_suffix("complementOf-2D001")).expect("should entail");
+}
+
+#[test]
+fn wg_oneof_002_entailment() {
+    check_wg_case(&case_by_suffix("oneOf-2D002")).expect("should entail");
+}
