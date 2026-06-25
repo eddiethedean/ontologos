@@ -131,3 +131,18 @@ fn wg_disjoint_classes_003_entailment() {
 fn wg_i5_8_005_negative_entailment() {
     check_wg_case(&case_by_suffix("I5.8-2D005")).expect("should not entail");
 }
+
+#[test]
+fn wg_cardinality_001_entailment() {
+    check_wg_case(&case_by_suffix("cardinality-2D001")).expect("should entail");
+}
+
+#[test]
+fn wg_cardinality_002_entailment() {
+    check_wg_case(&case_by_suffix("cardinality-2D002")).expect("should entail");
+}
+
+#[test]
+fn wg_cardinality_003_entailment() {
+    check_wg_case(&case_by_suffix("cardinality-2D003")).expect("should entail");
+}

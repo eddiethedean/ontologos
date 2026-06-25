@@ -2908,6 +2908,9 @@ fn entailment_holds_with_budget_opts(
     if disjoint_complement_instance_typing_entailment_guard(premise, conclusion) {
         return Ok(true);
     }
+    if cardinality_restriction_subsumption_entailment_guard(premise, conclusion) {
+        return Ok(true);
+    }
     if subsumption_entailment_guard(premise, conclusion) {
         return Ok(true);
     }
@@ -3884,6 +3887,9 @@ fn complex_subclass_non_entailment_guard(premise: &Ontology, conclusion: &Ontolo
     if complement_symmetry_entailment_guard(premise, conclusion) {
         return false;
     }
+    if cardinality_restriction_subsumption_entailment_guard(premise, conclusion) {
+        return false;
+    }
     if conclusion_has_anonymous_intersection_subclass(conclusion)
         && !premise_has_anonymous_intersection_subclass(premise)
     {
@@ -4702,6 +4708,192 @@ fn complement_subclass_pairs(
         pairs.insert((sub_e, *sup_e));
     }
     pairs
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ObjectCardinalityKind {
+    Min,
+    Max,
+    Exact,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ObjectCardinalityRestriction {
+    kind: ObjectCardinalityKind,
+    n: u32,
+    property: EntityId,
+    filler: Option<CeId>,
+}
+
+/// Unqualified `owl:cardinality` entails matching `min`/`max` pairs and vice versa (WG cardinality-001/002/003).
+fn cardinality_restriction_subsumption_entailment_guard(
+    premise: &Ontology,
+    conclusion: &Ontology,
+) -> bool {
+    if !conclusion_only_subclass_axioms(conclusion) {
+        return false;
+    }
+    let conc_cards = object_cardinality_subclass_restrictions(conclusion);
+    if conc_cards.is_empty() {
+        return false;
+    }
+    for card in &conc_cards {
+        let Some(class_prem) = map_entity_by_iri(conclusion, premise, card.class)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, card.class))
+        else {
+            return false;
+        };
+        let Some(prop_prem) = map_entity_by_iri(conclusion, premise, card.restriction.property)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, card.restriction.property))
+        else {
+            return false;
+        };
+        if !premise_entails_object_cardinality_subclass(
+            premise,
+            class_prem,
+            &card.restriction,
+            prop_prem,
+        ) {
+            return false;
+        }
+    }
+    true
+}
+
+#[derive(Debug, Clone)]
+struct ClassCardinalityRestriction {
+    class: EntityId,
+    restriction: ObjectCardinalityRestriction,
+}
+
+fn object_cardinality_subclass_restrictions(ontology: &Ontology) -> Vec<ClassCardinalityRestriction> {
+    let mut out = Vec::new();
+    for axiom in ontology.dl().axioms() {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            continue;
+        };
+        let Some(class) = atomic_entity_from_ce(ontology.dl(), *sub) else {
+            continue;
+        };
+        let Some(expr) = ontology.dl().ce(*sup) else {
+            continue;
+        };
+        let Some(restriction) = object_cardinality_restriction_from_expr(ontology, expr) else {
+            continue;
+        };
+        out.push(ClassCardinalityRestriction {
+            class,
+            restriction,
+        });
+    }
+    out
+}
+
+fn object_cardinality_restriction_from_expr(
+    _ontology: &Ontology,
+    expr: &ClassExpr,
+) -> Option<ObjectCardinalityRestriction> {
+    match expr {
+        ClassExpr::MinCardinality { n, property, filler } => {
+            let prop = role_entity(property)?;
+            Some(ObjectCardinalityRestriction {
+                kind: ObjectCardinalityKind::Min,
+                n: *n,
+                property: prop,
+                filler: *filler,
+            })
+        }
+        ClassExpr::MaxCardinality { n, property, filler } => {
+            let prop = role_entity(property)?;
+            Some(ObjectCardinalityRestriction {
+                kind: ObjectCardinalityKind::Max,
+                n: *n,
+                property: prop,
+                filler: *filler,
+            })
+        }
+        ClassExpr::ExactCardinality { n, property, filler } => {
+            let prop = role_entity(property)?;
+            Some(ObjectCardinalityRestriction {
+                kind: ObjectCardinalityKind::Exact,
+                n: *n,
+                property: prop,
+                filler: *filler,
+            })
+        }
+        _ => None,
+    }
+}
+
+fn premise_entails_object_cardinality_subclass(
+    premise: &Ontology,
+    class: EntityId,
+    target: &ObjectCardinalityRestriction,
+    property: EntityId,
+) -> bool {
+    let prem_cards = object_cardinality_subclass_restrictions(premise)
+        .into_iter()
+        .filter(|c| entities_same_local_in_premise(premise, c.class, class))
+        .map(|c| c.restriction)
+        .collect::<Vec<_>>();
+    if prem_cards.iter().any(|c| {
+        c.kind == target.kind
+            && c.n == target.n
+            && entities_same_local_in_premise(premise, c.property, property)
+            && object_cardinality_fillers_compatible(premise, c.filler, target.filler)
+    }) {
+        return true;
+    }
+    match target.kind {
+        ObjectCardinalityKind::Min | ObjectCardinalityKind::Max => prem_cards.iter().any(|c| {
+            c.kind == ObjectCardinalityKind::Exact
+                && c.n == target.n
+                && entities_same_local_in_premise(premise, c.property, property)
+                && object_cardinality_fillers_compatible(premise, c.filler, target.filler)
+        }),
+        ObjectCardinalityKind::Exact => {
+            let has_min = prem_cards.iter().any(|c| {
+                c.kind == ObjectCardinalityKind::Min
+                    && c.n == target.n
+                    && entities_same_local_in_premise(premise, c.property, property)
+                    && object_cardinality_fillers_compatible(premise, c.filler, target.filler)
+            });
+            let has_max = prem_cards.iter().any(|c| {
+                c.kind == ObjectCardinalityKind::Max
+                    && c.n == target.n
+                    && entities_same_local_in_premise(premise, c.property, property)
+                    && object_cardinality_fillers_compatible(premise, c.filler, target.filler)
+            });
+            has_min && has_max
+        }
+    }
+}
+
+fn object_cardinality_fillers_compatible(
+    ontology: &Ontology,
+    left: Option<CeId>,
+    right: Option<CeId>,
+) -> bool {
+    match (left, right) {
+        (None, None) => true,
+        (Some(l), Some(r)) if l == r => true,
+        (None, Some(r)) => is_trivial_object_cardinality_filler(ontology, r),
+        (Some(l), None) => is_trivial_object_cardinality_filler(ontology, l),
+        (Some(l), Some(r)) => {
+            is_trivial_object_cardinality_filler(ontology, l)
+                && is_trivial_object_cardinality_filler(ontology, r)
+        }
+    }
+}
+
+fn is_trivial_object_cardinality_filler(ontology: &Ontology, filler: CeId) -> bool {
+    match ontology.dl().ce(filler) {
+        Some(ClassExpr::Top) => true,
+        Some(ClassExpr::Atomic(id)) => ontology
+            .lookup_entity("http://www.w3.org/2002/07/owl#Thing")
+            .is_some_and(|thing| *id == thing),
+        _ => false,
+    }
 }
 
 /// Conclusion contains only `SubClassOf` axioms already present in the premise.
@@ -6774,6 +6966,30 @@ mod entailment_guard_tests {
         ))
         .unwrap();
         assert!(restriction_instance_typing_entailment_guard(&prem, &conc));
+        assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
+    }
+
+    #[test]
+    fn cardinality_001_entailment() {
+        let prem = load_ontology(&wg("wg/TestCase-3AWebOnt-2Dcardinality-2D001/premise.rdf")).unwrap();
+        let conc = load_ontology(&wg("wg/TestCase-3AWebOnt-2Dcardinality-2D001/conclusion.rdf")).unwrap();
+        assert!(cardinality_restriction_subsumption_entailment_guard(&prem, &conc));
+        assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
+    }
+
+    #[test]
+    fn cardinality_002_entailment() {
+        let prem = load_ontology(&wg("wg/TestCase-3AWebOnt-2Dcardinality-2D002/premise.rdf")).unwrap();
+        let conc = load_ontology(&wg("wg/TestCase-3AWebOnt-2Dcardinality-2D002/conclusion.rdf")).unwrap();
+        assert!(cardinality_restriction_subsumption_entailment_guard(&prem, &conc));
+        assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
+    }
+
+    #[test]
+    fn cardinality_003_entailment() {
+        let prem = load_ontology(&wg("wg/TestCase-3AWebOnt-2Dcardinality-2D003/premise.rdf")).unwrap();
+        let conc = load_ontology(&wg("wg/TestCase-3AWebOnt-2Dcardinality-2D003/conclusion.rdf")).unwrap();
+        assert!(cardinality_restriction_subsumption_entailment_guard(&prem, &conc));
         assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
     }
 }

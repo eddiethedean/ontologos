@@ -1245,6 +1245,7 @@ pub(crate) fn collect_owl_imports(rdf: &str) -> Vec<String> {
 pub(crate) fn collect_object_class_assertions(rdf: &str) -> Vec<(String, String)> {
     let base = parse_xml_base(rdf);
     let dt_props = declared_datatype_property_iris(rdf);
+    let node_lists = build_rdf_collection_node_map(rdf, &base, &dt_props);
     let mut out = Vec::new();
     let mut pos = 0usize;
     while pos < rdf.len() {
@@ -1273,7 +1274,7 @@ pub(crate) fn collect_object_class_assertions(rdf: &str) -> Vec<(String, String)
         };
         let block = &rdf[start..end];
         if let Some((individual, ce_ofn)) =
-            object_class_assertion_from_block(block, open_tag, &base, &dt_props)
+            object_class_assertion_from_block(block, open_tag, &base, &dt_props, &node_lists)
         {
             out.push((individual, ce_ofn));
         }
@@ -1787,6 +1788,15 @@ fn member_block_to_ofn(
     }
     if block.contains("<owl:Restriction") {
         return restriction_ce_to_ofn(block, base, dt_props);
+    }
+    if block.contains("<owl:Class") {
+        let inner = element_inner(block, "owl:Class");
+        if let Some(ofn) = inline_restriction_ce_to_ofn(inner.trim(), base, dt_props) {
+            return Some(ofn);
+        }
+    }
+    if block.contains("owl:onProperty") {
+        return inline_restriction_ce_to_ofn(block, base, dt_props);
     }
     None
 }
@@ -2454,6 +2464,7 @@ fn object_class_assertion_from_block(
     open_tag: &str,
     base: &str,
     dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
 ) -> Option<(String, String)> {
     if is_typed_entity_declaration(block) {
         return None;
@@ -2473,6 +2484,29 @@ fn object_class_assertion_from_block(
         }
         let ce_inner = element_inner(type_block, "rdf:type");
         let ce_block = ce_inner.trim();
+        if let Some(ce_ofn) = boolean_operator_ofn(
+            ce_block,
+            "owl:intersectionOf",
+            "ObjectIntersectionOf",
+            base,
+            dt_props,
+            node_lists,
+        ) {
+            return Some((individual_iri, ce_ofn));
+        }
+        if let Some(ce_ofn) = boolean_operator_ofn(
+            ce_block,
+            "owl:unionOf",
+            "ObjectUnionOf",
+            base,
+            dt_props,
+            node_lists,
+        ) {
+            return Some((individual_iri, ce_ofn));
+        }
+        if let Some(ce_ofn) = one_of_ofn(ce_block, base, dt_props, node_lists) {
+            return Some((individual_iri, ce_ofn));
+        }
         if let Some(ce_ofn) = restriction_ce_to_ofn(ce_block, base, dt_props) {
             return Some((individual_iri, ce_ofn));
         }
@@ -2735,8 +2769,26 @@ fn extract_property_resource(block: &str, tag: &str, base: &str) -> Option<Strin
     let rest = &block[idx..];
     let gt = rest.find('>')?;
     let open = &rest[..=gt];
-    let resource = extract_attribute(open, "rdf:resource")?;
-    Some(resolve_relative_iri(&resource, base))
+    if let Some(resource) = extract_attribute(open, "rdf:resource") {
+        return Some(resolve_relative_iri(&resource, base));
+    }
+    if open.trim_end().ends_with("/>") {
+        return None;
+    }
+    let close = format!("</{tag}>");
+    let close_start = rest.find(&close)?;
+    let inner = rest[gt + 1..close_start].trim();
+    for prop_tag in ["owl:ObjectProperty", "owl:DatatypeProperty"] {
+        if inner.contains(prop_tag) {
+            if let Some(about) = extract_attribute(inner, "rdf:about") {
+                return Some(resolve_relative_iri(&about, base));
+            }
+            if let Some(id) = extract_attribute(inner, "rdf:ID") {
+                return Some(format!("{base}#{id}"));
+            }
+        }
+    }
+    None
 }
 
 fn extract_filler_ofn(block: &str, tag: &str, base: &str) -> Option<String> {
@@ -3816,6 +3868,27 @@ mod tests {
                 eprintln!("  {:?}", annotated.component);
             }
         }
+    }
+
+    #[ignore = "union collection on nested rdf:Description still incomplete"]
+    #[test]
+    fn restriction_006_conclusion_emits_union_class_assertion() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DRestriction-2D006/conclusion.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let injected = inject_rdf_based_punning_declarations(&expanded);
+        let typed = materialize_typed_node_elements(&injected);
+        let intersections = normalize_class_intersection_definitions(&typed);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let collected = collect_object_class_assertions(&named);
+        assert!(
+            collected.iter().any(|(_, ce)| ce.contains("ObjectUnionOf")),
+            "{collected:?}"
+        );
     }
 
     #[test]
