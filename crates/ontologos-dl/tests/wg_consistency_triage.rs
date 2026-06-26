@@ -179,6 +179,19 @@ fn diagnose_dl018_tableau() {
                                 eprintln!("equiv {other:?} => {:?}", store.ce(other));
                                 if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
                                     for op in ops {
+                                        if let Some(ontologos_core::ClassExpr::Some { filler, .. }) =
+                                            store.ce(*op)
+                                        {
+                                            eprintln!("  filler {filler:?}: {:?}", store.ce(*filler));
+                                        }
+                                    }
+                                    eprintln!(
+                                        "  equiv And sat={:?}",
+                                        is_ce_satisfiable_with_seed(&dl, other, &seed)
+                                    );
+                                }
+                                if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
+                                    for op in ops {
                                         eprintln!("  conjunct {op:?}: {:?}", store.ce(*op));
                                     }
                                 }

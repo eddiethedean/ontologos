@@ -272,7 +272,9 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D014
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D015
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D016
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D017
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D019
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D022
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D023
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D026

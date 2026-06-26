@@ -160,17 +160,6 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         | ClassExpr::DataMaxCardinality { .. }
         | ClassExpr::DataExactCardinality { .. } => {}
     }
-    if !branch.clash {
-        propagate_structural_existential_subsumptions(branch);
-        materialize_existential_successors(branch);
-        let named_worlds: Vec<usize> = branch.named_worlds.values().copied().collect();
-        for named_world in named_worlds {
-            recheck_cardinality_on_world(branch, named_world);
-            if branch.clash {
-                return Ok(());
-            }
-        }
-    }
     Ok(())
 }
 
@@ -302,9 +291,20 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
         }
     }
     if let Some(max_n) = unqualified_max_cardinality_on_role(branch, world, &property) {
+        let trace = std::env::var("ONTOLOGOS_EXPAND_TRACE").is_ok();
+        if trace {
+            eprintln!(
+                "expand_exists max_n={max_n} world={world} filler={filler:?} successors={}",
+                successors.len()
+            );
+        }
         for &target in &successors {
+            if materialize_filler_would_clash(branch, target, filler) {
+                continue;
+            }
             materialize_filler_on_world(branch, target, filler);
             if branch.clash {
+                branch.clash = false;
                 continue;
             }
             if world_satisfies_filler(branch, target, filler) {
@@ -316,8 +316,12 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
             if try_shrink_role_successors_to_max(branch, world, &property, None, max_n) {
                 let successors = role_successor_worlds(branch, world, &property, None);
                 for &target in &successors {
+                    if materialize_filler_would_clash(branch, target, filler) {
+                        continue;
+                    }
                     assert_label(branch, target, filler);
                     if branch.clash {
+                        branch.clash = false;
                         continue;
                     }
                     if world_satisfies_filler(branch, target, filler) {
@@ -327,6 +331,9 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
                 }
             }
             if role_successor_worlds(branch, world, &property, None).len() >= max_n as usize {
+                if trace {
+                    eprintln!("expand_exists: clash at max_n={max_n} successors after shrink");
+                }
                 branch.clash = true;
                 return;
             }
@@ -554,6 +561,12 @@ fn materialize_filler_on_world(branch: &mut Branch<'_>, world: usize, filler: Ce
     } else {
         assert_label(branch, world, filler);
     }
+}
+
+fn materialize_filler_would_clash(branch: &Branch<'_>, world: usize, filler: CeId) -> bool {
+    let mut probe = branch.clone();
+    materialize_filler_on_world(&mut probe, world, filler);
+    probe.clash
 }
 
 fn world_satisfies_filler(branch: &Branch<'_>, world: usize, filler: CeId) -> bool {
@@ -876,9 +889,14 @@ pub(crate) fn materialize_existential_successors(branch: &mut Branch<'_>) {
             };
             for (from, role, to) in branch.edges.clone() {
                 if from == world && role_subsumes(branch, property, &role) {
-                    assert_label(branch, to, *filler);
+                    if world_satisfies_filler(branch, to, *filler)
+                        || materialize_filler_would_clash(branch, to, *filler)
+                    {
+                        continue;
+                    }
+                    materialize_filler_on_world(branch, to, *filler);
                     if branch.clash {
-                        return;
+                        branch.clash = false;
                     }
                 }
             }
@@ -1205,6 +1223,12 @@ pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize
                         successors = role_successor_worlds(branch, world, &property, filler);
                     }
                     if successors.len() > n as usize {
+                        if std::env::var("ONTOLOGOS_EXPAND_TRACE").is_ok() {
+                            eprintln!(
+                                "recheck maxCard clash world={world} n={n} successors={}",
+                                successors.len()
+                            );
+                        }
                         branch.clash = true;
                         return;
                     }

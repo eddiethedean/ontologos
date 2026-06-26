@@ -141,7 +141,7 @@ Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 | **1** | Harness integrity | **Complete** | WG catalog generator stable | `cargo test -p ontologos-conformance --test hermit_wg_generated` |
 | **2** | Assertion harvest | **Complete** | `missing_assertions → 0`; 176 promoted axiom IDs | `audit-planned-backlog.sh` |
 | **3** | DL engine gaps | **Complete** | `engine_gap` **72 → 0**; **40** promotion candidates | `engine_failures` · `parity-scan.sh` · `promote_catalog` |
-| **4** | WG fixtures | **In progress** | `wg_planned = 0`; **~401/428** pass (30s); **~27** failures remain; **407** promoted | `wg_failures` · `wg_phase4_check` · `phase4_closure` |
+| **4** | WG fixtures | **In progress** | `wg_planned = 0`; **~403/428** pass (30s); **~25** failures remain; **409** promoted | `wg_failures` · `wg_phase4_check` · `phase4_closure` |
 | **5** | Manual ports | Planned | `java_planned → 0` (**202** cases) | `run-hermit-full-suite.sh` · `generate_catalog.py` |
 | **6** | Tier B corpora | Planned | `ClassificationTest` in CI | `compare-pizza-el-golden.sh` |
 | **7** | Tier C proof | Planned | HermiT JAR cross-check nightly | `compare-hermit-tier-c.sh` |
@@ -281,7 +281,7 @@ All bounded engine failures cleared (IanT6 ×2, IanT7b).
 
 All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-first workflow). Fix engine gaps by running the full suite and burning down failures — no `promote_wg` / `wg_failures` scan loop required for day-to-day work.
 
-**Status (2026-06-25):** Catalog **`wg_planned = 0`** — all **428** WG cases active. **~27** semantic failures remain at 30s DL budget (targeted triage; full `promote_wg` scan in progress). **407** promoted IDs in [promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt). **`wg_phase4_check` 32/32** green. Blocking gaps: dl-018 cluster (max-card `And`), One_equals_two / dl-608 complement, 9 entailment guards, Consistent-but-all-unsat budget.
+**Status (2026-06-25):** Catalog **`wg_planned = 0`** — all **428** WG cases active. **~25** semantic failures remain at 30s DL budget (targeted triage). **409** promoted IDs in [promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt). **`wg_phase4_check` 32/32** green. Blocking gaps: One_equals_two / dl-608 complement, dl-021+ max-card variants, 9 entailment guards, Consistent-but-all-unsat budget.
 
 **Recent fixes (2026-06-24):** RDF supplement merge now imports **core** axioms (`ObjectPropertyDomain`/`Range` from `rdfs:domain`/`range`); quote-aware `parse_xml_base`; `conflicting_instance_typing_non_entailment_guard` allows intersection/union member typings; import fixture merge in `generate_catalog.py`; `wg_phase4_check` **9/9**.
 

@@ -1,6 +1,6 @@
 # HermiT parity gap report
 
-**Updated:** 2026-06-25 (Phase 4 burndown — in progress)  
+**Updated:** 2026-06-25 (Phase 4 burndown — dl-018 cluster fixed)  
 **Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))
 
 **Triage commands (source of truth):**
@@ -18,9 +18,9 @@ bash benchmarks/scripts/report-conformance-coverage.sh
 
 | Signal | Value |
 |--------|------:|
-| **WG failures** (`wg_failures` @ 30s, 10 workers) | **~27** / 428 (targeted triage) |
-| **WG passing** (estimated) | **~401** / 428 |
-| Promoted WG IDs | **407** (`promoted_wg_ids.txt`) |
+| **WG failures** (`wg_failures` @ 30s, 10 workers) | **~25** / 428 (targeted triage) |
+| **WG passing** (estimated) | **~403** / 428 |
+| Promoted WG IDs | **409** (`promoted_wg_ids.txt`) |
 
 ### WG failure buckets (2026-06-25, `ONTOLOGOS_DL_BUDGET_SECS=30`, 10 parallel workers)
 
@@ -39,7 +39,7 @@ bash benchmarks/scripts/report-conformance-coverage.sh
 - **Parallel triage**: `ONTOLOGOS_SCAN_THREADS=10`, `ONTOLOGOS_DL_MAX_WORKERS=10` defaults in `wg_failures` / `promote_wg`
 - **Spurious consistency**: `flower_auxiliary_unsatisfiable_classes` fallback removed; `class_assertion_only_consistency` for class-assertion-only ABoxes; `named_class_skip_atomic_unsat_precheck` for complex equivalents
 - **Missed consistency**: `disjointWith-010` parser (anonymous `owl:Thing` OPAs); `abox_asserted_exact_zero_equiv_class` (dl-601); `union_csp` oneof grid (dl-502); `abox_exists_forall_role_clash` ordering fix
-- **Tableau cardinality**: `And` conjuncts assert cardinality before `∃`; `ce_has_unqualified_cardinality_bound` skip in nested ABox materialize; `world_satisfies_filler` / `materialize_filler_on_world` for max-card reuse
+- **Tableau cardinality**: `And` conjuncts assert cardinality before `∃`; `ce_has_unqualified_cardinality_bound` skip in nested ABox materialize; `world_satisfies_filler` / `materialize_filler_on_world` for max-card reuse; **dl-018 cluster**: skip incompatible filler materialization under max-card (`materialize_filler_would_clash`); safe `materialize_existential_successors`
 - **Entailment**: `singleton_range_functional_entailment_guard` (FunctionalProperty-004); `entailment_via_subclass_nothing` structural/classify fast paths
 - **`wg_phase4_check`**: **32/32** green at 30s DL budget
 
