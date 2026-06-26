@@ -399,3 +399,9 @@ TestCase-3AWebOnt-2DunionOf-2D004
 WebOnt-2Dimports-2D007-2Dimport-2Dimports007
 WebOnt-2Dimports-2D008-2Dimport-2Dimports008
 WebOnt-2Dimports-2D014-2Dimport-2Dimports014
+TestCase-3AWebOnt-2DdisjointWith-2D010
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601
+New-2DFeature-2DRational-2D002
+TestCase-3AWebOnt-2DThing-2D004
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005
+TestCase-3AWebOnt-2DThing-2D005

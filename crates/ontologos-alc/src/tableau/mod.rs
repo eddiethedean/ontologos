@@ -173,13 +173,20 @@ fn assert_top_tbox_axioms(branch: &mut Branch<'_>, world: usize) {
 
 /// Drive tableau expansion for class-satisfiability tests (TBox + optional seed).
 fn run_tbox_saturation(branch: &mut Branch<'_>) -> Result<bool, Error> {
+    let trace = std::env::var("ONTOLOGOS_CE_TRACE").is_ok();
     expand::materialize_existential_successors(branch);
     if branch.clash {
+        if trace {
+            eprintln!("ce_sat: clash after materialize_successors");
+        }
         return Ok(false);
     }
     expand::saturate_composed_edges(branch);
     clash::detect_clash(branch);
     if branch.clash {
+        if trace {
+            eprintln!("ce_sat: clash after detect_clash");
+        }
         return Ok(false);
     }
     let ok = match branch.expand() {
@@ -187,10 +194,16 @@ fn run_tbox_saturation(branch: &mut Branch<'_>) -> Result<bool, Error> {
         Err(e @ Error::ResourceLimit(_)) => return Err(e),
         Err(e) => return Err(e),
     };
+    if trace && (branch.clash || !ok) {
+        eprintln!("ce_sat: post expand clash={} ok={ok}", branch.clash);
+    }
     expand::saturate_composed_edges(branch);
     for world in 0..branch.worlds.len() {
         expand::recheck_cardinality_on_world(branch, world);
         if branch.clash {
+            if trace {
+                eprintln!("ce_sat: clash at recheck world {world}");
+            }
             return Ok(false);
         }
     }
@@ -287,13 +300,13 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
         Err(e @ Error::ResourceLimit(_)) => return Err(e),
         Err(e) => return Err(e),
     };
+    expand::saturate_composed_edges(&mut branch);
     for world in 0..branch.worlds.len() {
         expand::recheck_cardinality_on_world(&mut branch, world);
         if branch.clash {
-            kb_reject!("recheck_cardinality_immediate_post_expand");
+            kb_reject!("recheck_cardinality_post_expand_saturate");
         }
     }
-    expand::saturate_composed_edges(&mut branch);
     expand::reapply_universal_restrictions(&mut branch);
     if branch.clash {
         kb_reject!("after_expand_saturate");

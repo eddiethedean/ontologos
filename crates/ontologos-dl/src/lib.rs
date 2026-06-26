@@ -167,6 +167,12 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if abox_functional_different_individuals_clash(ontology) {
         reject!("functional_different_individuals");
     }
+    if let Some(consistent) = class_assertion_only_consistency(ontology, &dl, &seed)? {
+        if trace {
+            eprintln!("is_consistent: class_assertion_only => {consistent}");
+        }
+        return Ok(consistent);
+    }
     let tableau = ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)?;
     if trace {
         eprintln!("is_consistent: tableau => {tableau}");
@@ -190,9 +196,7 @@ fn named_classes_unsatisfiable_inner(
     classes: &[EntityId],
 ) -> Result<bool> {
     let dl = DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
-    let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
-    let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
-    let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    let seed = TableauSeed::default();
     let mut atomic_subs = Vec::new();
     for clause in dl.clauses().clauses() {
         if let ontologos_alc::Clause::Subsumption { sub, sup } = clause {
@@ -352,6 +356,9 @@ fn named_class_skip_atomic_unsat_precheck(
     store: &ontologos_core::DlStore,
     class: EntityId,
 ) -> bool {
+    if named_class_has_complex_equivalent(store, class) {
+        return true;
+    }
     store.axioms().any(|axiom| {
         let DlAxiom::SubClassOf { sub, sup } = axiom else {
             return false;
@@ -548,27 +555,174 @@ fn named_class_has_complex_equivalent(
     store: &ontologos_core::DlStore,
     class: EntityId,
 ) -> bool {
-    let class_ce = store.expressions().find_map(|(id, e)| match e {
+    named_class_complex_equivalent_ce(store, class).is_some()
+}
+
+fn named_class_complex_equivalent_ce(
+    store: &ontologos_core::DlStore,
+    class: EntityId,
+) -> Option<CeId> {
+    let mut candidates = named_class_complex_equivalent_candidates(store, class);
+    candidates.pop()
+}
+
+fn named_class_complex_equivalent_candidates(
+    store: &ontologos_core::DlStore,
+    class: EntityId,
+) -> Vec<CeId> {
+    let class_ce = match store.expressions().find_map(|(id, e)| match e {
         ClassExpr::Atomic(c) if *c == class => Some(id),
         _ => None,
-    });
-    let Some(class_ce) = class_ce else {
-        return false;
+    }) {
+        Some(id) => id,
+        None => return Vec::new(),
     };
-    store.axioms().any(|axiom| {
+    let mut best_score = 0u8;
+    let mut candidates = Vec::new();
+    for axiom in store.axioms() {
         let DlAxiom::EquivalentClasses(ops) = axiom else {
-            return false;
+            continue;
         };
         if !ops.contains(&class_ce) {
-            return false;
+            continue;
         }
-        ops.iter().any(|ce| {
-            matches!(
-                store.ce(*ce),
-                Some(ClassExpr::And(_) | ClassExpr::Or(_))
-            )
-        })
+        for &ce in ops {
+            if ce == class_ce {
+                continue;
+            }
+            let score = complex_equivalent_partner_preference(store, ce);
+            if score > best_score {
+                best_score = score;
+                candidates.clear();
+                candidates.push(ce);
+            } else if score == best_score && score > 0 {
+                candidates.push(ce);
+            }
+        }
+    }
+    candidates.sort_by(|&a, &b| {
+        complex_equivalent_operand_count(store, b).cmp(&complex_equivalent_operand_count(store, a))
+    });
+    candidates
+}
+
+fn complex_equivalent_operand_count(store: &ontologos_core::DlStore, ce: CeId) -> usize {
+    match store.ce(ce) {
+        Some(ClassExpr::And(ops) | ClassExpr::Or(ops)) => ops.len(),
+        _ => 0,
+    }
+}
+
+fn complex_equivalent_partner_preference(store: &ontologos_core::DlStore, ce: CeId) -> u8 {
+    match store.ce(ce) {
+        Some(ClassExpr::And(_) | ClassExpr::Or(_)) => 5,
+        Some(
+            ClassExpr::Some { .. }
+            | ClassExpr::All { .. }
+            | ClassExpr::MinCardinality { .. }
+            | ClassExpr::MaxCardinality { .. }
+            | ClassExpr::ExactCardinality { .. }
+            | ClassExpr::DataMinCardinality { .. }
+            | ClassExpr::DataMaxCardinality { .. }
+            | ClassExpr::DataExactCardinality { .. },
+        ) => 4,
+        Some(ClassExpr::Not(_)) => 3,
+        Some(ClassExpr::Atomic(_)) => 1,
+        _ => 2,
+    }
+}
+
+/// When the ABox has only class assertions (no role/data assertions or equality axioms),
+/// consistency reduces to satisfiability of each asserted type in the TBox.
+fn class_assertion_only_consistency(
+    ontology: &Ontology,
+    dl: &ontologos_alc::DlOntology,
+    _seed: &TableauSeed,
+) -> Result<Option<bool>> {
+    if abox_has_interacting_assertions(ontology) || !ontology_has_class_assertion(ontology) {
+        return Ok(None);
+    }
+    // CE satisfiability in an empty ABox uses the clausified TBox only; saturation seed
+    // subsumptions can spuriously constrain class-assertion-only consistency (dl-018 cluster).
+    let ce_seed = TableauSeed::default();
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if !class_assertion_type_satisfiable(dl, store, *class, &ce_seed)? {
+            return Ok(Some(false));
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if !class_assertion_type_satisfiable_entity(dl, store, *class, &ce_seed)? {
+            return Ok(Some(false));
+        }
+    }
+    Ok(None)
+}
+
+fn abox_has_interacting_assertions(ontology: &Ontology) -> bool {
+    let store = ontology.dl();
+    if store.axioms().any(|axiom| {
+        matches!(
+            axiom,
+            DlAxiom::ObjectPropertyAssertion { .. }
+                | DlAxiom::DataPropertyAssertion { .. }
+                | DlAxiom::SameIndividual(_)
+                | DlAxiom::DifferentIndividuals(_)
+        )
+    }) {
+        return true;
+    }
+    ontology.axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            Axiom::ObjectPropertyAssertion { .. }
+                | Axiom::SameIndividual(_)
+                | Axiom::DifferentIndividuals(_)
+        )
     })
+}
+
+fn class_assertion_type_satisfiable(
+    dl: &ontologos_alc::DlOntology,
+    store: &ontologos_core::DlStore,
+    ce: CeId,
+    seed: &TableauSeed,
+) -> Result<bool> {
+    match store.ce(ce) {
+        Some(ClassExpr::Atomic(entity)) => {
+            class_assertion_type_satisfiable_entity(dl, store, *entity, seed)
+        }
+        _ => Ok(
+            ontologos_alc::is_ce_satisfiable_with_seed(dl, ce, seed).map_err(Error::Alc)?,
+        ),
+    }
+}
+
+fn class_assertion_type_satisfiable_entity(
+    dl: &ontologos_alc::DlOntology,
+    store: &ontologos_core::DlStore,
+    entity: EntityId,
+    seed: &TableauSeed,
+) -> Result<bool> {
+    let candidates = named_class_complex_equivalent_candidates(store, entity);
+    if !candidates.is_empty() {
+        for equiv in candidates {
+            if ontologos_alc::is_ce_satisfiable_with_seed(dl, equiv, seed).map_err(Error::Alc)? {
+                return Ok(true);
+            }
+        }
+        return Ok(false);
+    }
+    Ok(
+        ontologos_alc::is_named_class_satisfiable_with_seed(dl, entity, seed)
+            .map_err(Error::Alc)?,
+    )
 }
 
 fn atomic_class_proven_unsatisfiable(

@@ -74,6 +74,15 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
 /// Assert `ce` into a world, detecting immediate clashes.
 pub fn assert_label(branch: &mut Branch<'_>, world: usize, ce: CeId) {
     let ce = super::effective_class_expression(branch.dl, ce);
+    if let Some(ClassExpr::And(ops)) = branch.dl.core().dl().ce(ce).cloned() {
+        for op in crate::tableau::expand::and_conjuncts_cardinality_first(branch.dl, ops) {
+            assert_label(branch, world, op);
+            if branch.clash {
+                return;
+            }
+        }
+        return;
+    }
     if matches!(branch.dl.core().dl().ce(ce), Some(ClassExpr::Bottom)) {
         branch.clash = true;
         return;

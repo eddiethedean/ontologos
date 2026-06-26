@@ -8,6 +8,30 @@ use super::block;
 use super::clash::{self, assert_label, assert_negation};
 use super::Branch;
 
+/// Order `And` operands so cardinality restrictions are asserted before `∃`/`∀`.
+pub(crate) fn and_conjuncts_cardinality_first(
+    dl: &crate::DlOntology,
+    ops: Vec<CeId>,
+) -> Vec<CeId> {
+    let store = dl.core().dl();
+    let mut cardinality_first = Vec::new();
+    let mut rest = Vec::new();
+    for op in ops {
+        match store.ce(op) {
+            Some(
+                ClassExpr::MaxCardinality { .. }
+                | ClassExpr::ExactCardinality { .. }
+                | ClassExpr::MinCardinality { .. }
+                | ClassExpr::DataMaxCardinality { .. }
+                | ClassExpr::DataExactCardinality { .. }
+                | ClassExpr::DataMinCardinality { .. },
+            ) => cardinality_first.push(op),
+            _ => rest.push(op),
+        }
+    }
+    cardinality_first.into_iter().chain(rest).collect()
+}
+
 /// Process one queued class expression in `world`.
 pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), crate::Error> {
     if branch.clash || block::is_blocked(branch, world) {
@@ -22,7 +46,7 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         ClassExpr::Top | ClassExpr::Atomic(_) => {}
         ClassExpr::Not(inner) => assert_negation(branch, world, inner),
         ClassExpr::And(ops) => {
-            for op in ops {
+            for op in and_conjuncts_cardinality_first(branch.dl, ops) {
                 assert_label(branch, world, op);
                 if branch.clash {
                     return Ok(());
@@ -279,7 +303,7 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
     }
     if let Some(max_n) = unqualified_max_cardinality_on_role(branch, world, &property) {
         for &target in &successors {
-            assert_label(branch, target, filler);
+            materialize_filler_on_world(branch, target, filler);
             if branch.clash {
                 continue;
             }
@@ -289,8 +313,23 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
             }
         }
         if successors.len() >= max_n as usize {
-            branch.clash = true;
-            return;
+            if try_shrink_role_successors_to_max(branch, world, &property, None, max_n) {
+                let successors = role_successor_worlds(branch, world, &property, None);
+                for &target in &successors {
+                    assert_label(branch, target, filler);
+                    if branch.clash {
+                        continue;
+                    }
+                    if world_satisfies_filler(branch, target, filler) {
+                        clash::check_negated_cardinality(branch);
+                        return;
+                    }
+                }
+            }
+            if role_successor_worlds(branch, world, &property, None).len() >= max_n as usize {
+                branch.clash = true;
+                return;
+            }
         }
     }
     let new_world = branch.worlds.len();
@@ -504,7 +543,25 @@ fn ensure_named_world(branch: &mut Branch<'_>, id: EntityId) -> usize {
     w
 }
 
+fn materialize_filler_on_world(branch: &mut Branch<'_>, world: usize, filler: CeId) {
+    if let Some(ClassExpr::And(ops)) = branch.dl.core().dl().ce(filler).cloned() {
+        for op in and_conjuncts_cardinality_first(branch.dl, ops) {
+            assert_label(branch, world, op);
+            if branch.clash {
+                return;
+            }
+        }
+    } else {
+        assert_label(branch, world, filler);
+    }
+}
+
 fn world_satisfies_filler(branch: &Branch<'_>, world: usize, filler: CeId) -> bool {
+    if let Some(ClassExpr::And(ops)) = branch.dl.core().dl().ce(filler).cloned() {
+        return ops
+            .iter()
+            .all(|&op| world_satisfies_filler(branch, world, op));
+    }
     if matches!(branch.dl.core().dl().ce(filler), Some(ClassExpr::Top))
         || clash::is_thing_ce(branch, filler)
     {
@@ -716,6 +773,21 @@ pub(crate) fn reapply_universal_restrictions(branch: &mut Branch<'_>) {
     }
 }
 
+/// Whether `ce` (including under `And`/`Or`) carries an unqualified cardinality bound.
+fn ce_has_unqualified_cardinality_bound(
+    store: &ontologos_core::DlStore,
+    ce: CeId,
+) -> bool {
+    match store.ce(ce) {
+        Some(ClassExpr::MaxCardinality { filler: None, .. })
+        | Some(ClassExpr::ExactCardinality { filler: None, .. }) => true,
+        Some(ClassExpr::And(ops) | ClassExpr::Or(ops)) => ops
+            .iter()
+            .any(|&op| ce_has_unqualified_cardinality_bound(store, op)),
+        _ => false,
+    }
+}
+
 /// Eagerly materialize nested `∃` chains from ABox class assertions (nominals / IF patterns).
 pub(crate) fn materialize_nested_abox_existentials(branch: &mut Branch<'_>) {
     if branch.clash {
@@ -725,13 +797,9 @@ pub(crate) fn materialize_nested_abox_existentials(branch: &mut Branch<'_>) {
     let world_count = branch.worlds.len();
     for world in 0..world_count {
         let labels = branch.worlds[world].labels.clone();
-        let skip_world = labels.iter().any(|&ce| {
-            matches!(
-                store.ce(ce),
-                Some(ClassExpr::MaxCardinality { filler: None, .. })
-                    | Some(ClassExpr::ExactCardinality { filler: None, .. })
-            )
-        });
+        let skip_world = labels
+            .iter()
+            .any(|&ce| ce_has_unqualified_cardinality_bound(store, ce));
         if skip_world {
             continue;
         }

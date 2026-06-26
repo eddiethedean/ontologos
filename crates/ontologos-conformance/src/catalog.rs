@@ -2666,10 +2666,24 @@ fn entailment_via_subclass_nothing(
     let entailed = run_dl_bounded(budget, move || -> Result<bool, String> {
         let mut targets = Vec::new();
         for sub_e in targets_conc {
-            let Some(sub_p) = map_entity_by_iri(&conclusion, &premise, sub_e) else {
+            let Some(sub_p) = map_entity_by_iri(&conclusion, &premise, sub_e)
+                .or_else(|| map_entity_by_local_iri(&conclusion, &premise, sub_e))
+            else {
                 return Ok(false);
             };
             targets.push(sub_p);
+        }
+        let dl = ontologos_alc::DlOntology::from_ontology(&premise).map_err(|e| e.to_string())?;
+        let seed = ontologos_alc::TableauSeed::default();
+        let structural =
+            ontologos_alc::structural_unsat_classes(&dl, &seed, &[]);
+        if targets.iter().all(|c| structural.contains(c)) {
+            return Ok(true);
+        }
+        if let Ok(tax) = ontologos_dl::classify_for_entailment(&premise) {
+            if targets.iter().all(|c| tax.unsatisfiable.contains(c)) {
+                return Ok(true);
+            }
         }
         ontologos_dl::named_classes_unsatisfiable(&premise, &targets).map_err(|e| e.to_string())
     })??;
@@ -8356,5 +8370,36 @@ mod entailment_guard_tests {
         let conc = load_ontology(&wg("wg/TestCase-3AWebOnt-2Dcardinality-2D003/conclusion.rdf")).unwrap();
         assert!(cardinality_restriction_subsumption_entailment_guard(&prem, &conc));
         assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
+    }
+
+    #[test]
+    #[ignore = "premise load: anonymous oneOf range — parser gap"]
+    fn functional_property_004_entailment() {
+        let prem =
+            load_ontology(&wg("wg/TestCase-3AWebOnt-2DFunctionalProperty-2D004/premise.rdf")).unwrap();
+        let conc = load_ontology(&wg(
+            "wg/TestCase-3AWebOnt-2DFunctionalProperty-2D004/conclusion.rdf",
+        ))
+        .unwrap();
+        assert!(
+            singleton_range_functional_entailment_guard(&prem, &conc),
+            "singleton range functional guard"
+        );
+        assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
+    }
+
+    #[test]
+    #[ignore = "named_classes_unsatisfiable exceeds 120s DL budget on this fixture"]
+    fn consistent_but_all_unsat_entailment() {
+        let prem =
+            load_ontology(&wg("wg/Consistent-2Dbut-2Dall-2Dunsat/premise.rdf")).unwrap();
+        let conc =
+            load_ontology(&wg("wg/Consistent-2Dbut-2Dall-2Dunsat/conclusion.rdf")).unwrap();
+        assert!(ontologos_dl::is_consistent(&prem).unwrap());
+        let targets = conclusion_nothing_subclass_entailment_targets(&conc);
+        eprintln!("nothing targets={targets:?}");
+        assert!(entailment_via_subclass_nothing(&prem, &conc, dl_classify_budget())
+            .unwrap()
+            .unwrap_or(false));
     }
 }
