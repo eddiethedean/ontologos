@@ -18,9 +18,9 @@ bash benchmarks/scripts/report-conformance-coverage.sh
 
 | Signal | Value |
 |--------|------:|
-| **WG failures** (`wg_failures` @ 30s, 10 workers) | **~25** / 428 (targeted triage) |
-| **WG passing** (estimated) | **~403** / 428 |
-| Promoted WG IDs | **409** (`promoted_wg_ids.txt`) |
+| **WG failures** (`wg_failures` @ 30s, 10 workers) | **~23** / 428 (targeted triage) |
+| **WG passing** (estimated) | **~405** / 428 |
+| Promoted WG IDs | **414** (`promoted_wg_ids.txt`) |
 
 ### WG failure buckets (2026-06-25, `ONTOLOGOS_DL_BUDGET_SECS=30`, 10 parallel workers)
 
