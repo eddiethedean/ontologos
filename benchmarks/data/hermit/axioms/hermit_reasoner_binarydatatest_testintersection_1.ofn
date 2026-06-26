@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(NamedIndividual(:a)) Declaration(Class(:A)) Declaration(DataProperty(:dp)) SubClassOf( :A DataMinCardinality( 1 :dp rdfs:Literal ) ) SubClassOf( :A DataAllValuesFrom( :dp DatatypeRestriction( xsd:hexBinary xsd:minLength "0"^^xsd:integer ) ) ) SubClassOf( :A DataAllValuesFrom( :dp DataComplementOf( DatatypeRestriction( xsd:hexBinary xsd:minLength "1"^^xsd:integer ) ) ) ) ClassAssertion( :A :a )
+)

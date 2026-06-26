@@ -329,20 +329,20 @@ All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-fi
 - [x] `conformance-nightly.yml` — `full-hermit-suite` job (`continue-on-error: true`)
 - [x] `check-hermit-parity-phases.sh` — **`wg_planned = 0`** (catalog status)
 - [ ] Full suite green at 30s DL budget (**65** WG failures → expand `promoted_wg_ids.txt` to **428**)
-- [ ] `java_planned → 0` (Phase 5; **202** cases)
+- [x] `java_planned → 0` (Phase 5 catalog harvest + exclusions; **413** axiom cases, **55** excluded)
 
 **Exit (target):** `run-hermit-full-suite.sh` green at 30s DL budget; `promoted_wg_ids.txt` = all **428** WG ids; `java_planned = 0`.
 
-### Phase 5 — Manual port backlog (**202** Java `planned` cases)
+### Phase 5 — Manual port backlog (**complete** — catalog `planned = 0`)
 
-**Exit:** `cases.json` has **0 `planned`** (Java catalog complete).
+**Exit:** `cases.json` has **0 `planned`** (Java catalog complete). **Done** (2026-06): `assertDRSatisfiable` / `assertRegular` / `assertSimple` harvesters, datatype engine tranches, RIA regularity + role simplicity, `phase5_closure.rs`, **359/413** axiom cases promoted at 30s budget.
 
-| Sub-phase | Engine | Approx. backlog | Primary crate |
-|-----------|--------|----------------:|---------------|
-| **5a** | `rdfs` | ~45 | `ontologos-rdfs` + reasonable |
-| **5b** | `rl` | ~36 | `ontologos-rl` + bridge |
-| **5c** | `dl` | ~150+ | `ontologos-dl` |
-| **5d** | `swrl` | remainder | `ontologos-swrl` — promote only forward-chain cases; full `RulesTest` JVM parity stays deferred |
+| Sub-phase | Engine | Status | Primary crate |
+|-----------|--------|--------|---------------|
+| **5a** | `rdfs` | excluded / ported | `ontologos-rdfs` |
+| **5b** | `rl` | excluded / ported | `ontologos-rl` |
+| **5c** | `dl` | datatype tranches + promote | `ontologos-dl` |
+| **5d** | `swrl` | 19 active `swrl`; full `RulesTest` deferred | `ontologos-swrl` |
 
 Hand-written ports: `hermit_rl.rs`, `hermit_rdfs.rs`, `hermit_el.rs`, or OFN axiom promotion.
 

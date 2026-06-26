@@ -119,7 +119,14 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
                 return false;
             }
         }
-        if !restrictions_satisfiable(ontology, &idx, restrictions, &functional) {
+        if !restrictions_satisfiable(
+            ontology,
+            &idx,
+            *individual,
+            restrictions,
+            &functional,
+            &disjoint_pairs,
+        ) {
             return false;
         }
         if !negative_assertions_consistent(ontology, &idx, store, *individual, restrictions) {
@@ -567,6 +574,14 @@ fn is_universal_data_type(ontology: &Ontology, dt: EntityId) -> bool {
     )
 }
 
+/// Returns true when a data range has at least one satisfying literal witness.
+#[must_use]
+pub fn is_data_range_satisfiable(ontology: &Ontology, range: DeId) -> bool {
+    let store = ontology.dl();
+    let idx = LiteralIndex::from_store(store);
+    data_range_has_witness(ontology, &idx, range)
+}
+
 fn data_range_has_witness(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> bool {
     if is_empty_float_window(ontology, range) {
         return false;
@@ -574,7 +589,7 @@ fn data_range_has_witness(ontology: &Ontology, idx: &LiteralIndex, range: DeId) 
     let store = ontology.dl();
     let defs = datatype_definitions(store);
     let range = simplify_double_complement(store, &defs, normalize_range(store, &defs, range));
-    distinct_values_satisfying_ranges(ontology, idx, &[range]) > 0
+    distinct_values_satisfying_ranges(ontology, idx, &[range], &[]) > 0
 }
 
 fn is_empty_float_window(ontology: &Ontology, range: DeId) -> bool {
@@ -700,7 +715,16 @@ pub fn named_class_datatype_satisfiable(ontology: &Ontology, class: EntityId) ->
             restrictions.push((*property, DataRestriction::All(*range)));
         }
     }
-    restrictions.is_empty() || restrictions_satisfiable(ontology, &idx, &restrictions, &functional)
+    let disjoint_pairs = disjoint_data_property_pairs(store);
+    restrictions.is_empty()
+        || restrictions_satisfiable(
+            ontology,
+            &idx,
+            EntityId(0),
+            &restrictions,
+            &functional,
+            &disjoint_pairs,
+        )
 }
 
 fn atomic_class_id(store: &ontologos_core::DlStore, ce: CeId) -> Option<EntityId> {
@@ -844,12 +868,55 @@ fn functional_data_literal_clash(ontology: &Ontology, functional: &HashSet<Entit
     false
 }
 
+fn collect_disjoint_assertion_literals(
+    ontology: &Ontology,
+    store: &ontologos_core::DlStore,
+    individual: EntityId,
+    property: EntityId,
+    disjoint_pairs: &[(EntityId, EntityId)],
+) -> Vec<LiteralValue> {
+    let mut out = Vec::new();
+    for &(left, right) in disjoint_pairs {
+        let sibling = if left == property {
+            right
+        } else if right == property {
+            left
+        } else {
+            continue;
+        };
+        for axiom in store.axioms() {
+            if let DlAxiom::DataPropertyAssertion {
+                subject,
+                property: prop,
+                value,
+            } = axiom
+            {
+                if *subject == individual && *prop == sibling {
+                    if let Some(lit) = literal_from_de(ontology, value) {
+                        out.push(lit);
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+fn literal_forbidden_by_disjoint(lit: &LiteralValue, forbidden: &[LiteralValue]) -> bool {
+    forbidden
+        .iter()
+        .any(|other| literals_equal_local(lit, other))
+}
+
 fn restrictions_satisfiable(
     ontology: &Ontology,
     idx: &LiteralIndex,
+    individual: EntityId,
     restrictions: &[(EntityId, DataRestriction)],
     functional: &HashSet<EntityId>,
+    disjoint_pairs: &[(EntityId, EntityId)],
 ) -> bool {
+    let store = ontology.dl();
     let mut by_property: HashMap<EntityId, Vec<DataRestriction>> = HashMap::new();
     for (prop, restriction) in restrictions {
         by_property
@@ -859,7 +926,20 @@ fn restrictions_satisfiable(
     }
 
     for (property, group) in &by_property {
-        if !property_restrictions_satisfiable(ontology, idx, group, functional.contains(property)) {
+        let forbidden = collect_disjoint_assertion_literals(
+            ontology,
+            store,
+            individual,
+            *property,
+            disjoint_pairs,
+        );
+        if !property_restrictions_satisfiable(
+            ontology,
+            idx,
+            group,
+            functional.contains(property),
+            &forbidden,
+        ) {
             return false;
         }
     }
@@ -871,6 +951,7 @@ fn property_restrictions_satisfiable(
     idx: &LiteralIndex,
     group: &[DataRestriction],
     functional: bool,
+    forbidden: &[LiteralValue],
 ) -> bool {
     let store = ontology.dl();
     let mut all_ranges: Vec<DeId> = Vec::new();
@@ -941,7 +1022,7 @@ fn property_restrictions_satisfiable(
         let mut count = if witness_ranges.is_empty() {
             0
         } else {
-            distinct_values_satisfying_ranges(ontology, idx, &witness_ranges)
+            distinct_values_satisfying_ranges(ontology, idx, &witness_ranges, forbidden)
         };
         if count < min_card {
             let mut seen = HashSet::new();
@@ -949,6 +1030,9 @@ fn property_restrictions_satisfiable(
                 let Some(lit) = literal_from_de(ontology, value) else {
                     continue;
                 };
+                if literal_forbidden_by_disjoint(&lit, forbidden) {
+                    continue;
+                }
                 if !all_ranges.is_empty() && !satisfies_all_ranges(ontology, idx, &lit, &all_ranges)
                 {
                     continue;
@@ -967,7 +1051,7 @@ fn property_restrictions_satisfiable(
         if witness_ranges.is_empty() {
             return false;
         }
-        if distinct_values_satisfying_ranges(ontology, idx, &witness_ranges) == 0 {
+        if distinct_values_satisfying_ranges(ontology, idx, &witness_ranges, forbidden) == 0 {
             return false;
         }
     }
@@ -985,7 +1069,7 @@ fn property_restrictions_satisfiable(
         let mut witness_ranges = combined_all.clone();
         witness_ranges.extend(some_ranges.clone());
         if !witness_ranges.is_empty() {
-            let count = distinct_values_satisfying_ranges(ontology, idx, &witness_ranges);
+            let count = distinct_values_satisfying_ranges(ontology, idx, &witness_ranges, forbidden);
             if count > max {
                 return false;
             }
@@ -1025,12 +1109,30 @@ fn distinct_values_satisfying_ranges(
     ontology: &Ontology,
     idx: &LiteralIndex,
     ranges: &[DeId],
+    forbidden: &[LiteralValue],
 ) -> u32 {
     if ranges.is_empty() {
         return u32::MAX;
     }
     if ranges.len() == 1 {
-        return max_distinct_values(ontology, idx, ranges[0]);
+        if forbidden.is_empty() {
+            return max_distinct_values(ontology, idx, ranges[0]);
+        }
+        let mut candidates = sample_literals(ontology, idx, ranges[0]);
+        let mut seen = HashSet::new();
+        let mut count = 0_u32;
+        for lit in candidates {
+            let key = distinct_literal_key(&lit);
+            if !seen.insert(key) {
+                continue;
+            }
+            if idx.satisfies_with_ontology(&lit, ontology, ranges[0])
+                && !literal_forbidden_by_disjoint(&lit, forbidden)
+            {
+                count += 1;
+            }
+        }
+        return count;
     }
     let mut candidates = sample_literals(ontology, idx, ranges[0]);
     for &range in &ranges[1..] {
@@ -1043,7 +1145,9 @@ fn distinct_values_satisfying_ranges(
         if !seen.insert(key) {
             continue;
         }
-        if satisfies_all_ranges(ontology, idx, &lit, ranges) {
+        if satisfies_all_ranges(ontology, idx, &lit, ranges)
+            && !literal_forbidden_by_disjoint(&lit, forbidden)
+        {
             count += 1;
         }
     }
@@ -1155,11 +1259,26 @@ fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> 
             if facet_contradiction_on_base(store, *base, facet_iri, value) {
                 return 0;
             }
-            max_distinct_values(ontology, idx, *base)
+            let candidates = sample_literals(ontology, idx, range);
+            let mut seen = HashSet::new();
+            let mut count = 0_u32;
+            for lit in candidates {
+                let key = distinct_literal_key(&lit);
+                if !seen.insert(key) {
+                    continue;
+                }
+                if idx.satisfies_with_ontology(&lit, ontology, range) {
+                    count += 1;
+                }
+            }
+            count
         }
         DataExpr::Datatype(dt) => {
             if defs.contains_key(dt) {
                 return max_distinct_values(ontology, idx, defs[dt]);
+            }
+            if let Some(n) = finite_datatype_value_count(ontology, *dt) {
+                return n;
             }
             u32::MAX
         }
@@ -1184,9 +1303,6 @@ fn facet_contradiction_on_base(
     facet_iri: &str,
     value: &str,
 ) -> bool {
-    let Some(DataExpr::Datatype(_)) = store.de(base) else {
-        return false;
-    };
     match facet_iri {
         "http://www.w3.org/2001/XMLSchema#minInclusive" => {
             if let Some(DataExpr::Facet {
@@ -1251,10 +1367,15 @@ fn singleton_facet_point_literal(
         _ => return None,
     };
     let dt = facet_base_datatype(ontology, store, inner_base)?;
-    Some(LiteralValue {
+    let lit = LiteralValue {
         lexical: point_value.to_string(),
         datatype: dt,
-    })
+    };
+    if super::literal_in_datatype_value_space(Some(ontology), &lit, dt) {
+        Some(lit)
+    } else {
+        None
+    }
 }
 
 fn facet_base_datatype(
@@ -1322,10 +1443,13 @@ fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<
             }
             let mut out = sample_literals(ontology, idx, *base);
             if let Some(dt) = facet_base_datatype(ontology, store, *base) {
-                out.push(LiteralValue {
+                let candidate = LiteralValue {
                     lexical: value.to_string(),
                     datatype: dt,
-                });
+                };
+                if super::literal_in_datatype_value_space(Some(ontology), &candidate, dt) {
+                    out.push(candidate);
+                }
             }
             out
         }
@@ -1369,17 +1493,31 @@ fn entity_iri(ontology: &Ontology, id: EntityId) -> Option<String> {
     ontology.resolve_iri(record.iri).ok().map(str::to_owned)
 }
 
+fn finite_datatype_value_count(ontology: &Ontology, datatype: EntityId) -> Option<u32> {
+    let iri = entity_iri(ontology, datatype)?;
+    Some(match iri.as_str() {
+        "http://www.w3.org/2001/XMLSchema#boolean" => 2,
+        "http://www.w3.org/2001/XMLSchema#byte" => 256,
+        "http://www.w3.org/2001/XMLSchema#unsignedByte" => 256,
+        "http://www.w3.org/2001/XMLSchema#short" => 65_536,
+        "http://www.w3.org/2001/XMLSchema#unsignedShort" => 65_536,
+        _ => return None,
+    })
+}
+
 fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<LiteralValue> {
     let Some(iri) = entity_iri(ontology, datatype) else {
         return Vec::new();
     };
     let witnesses: &[&str] = match iri.as_str() {
-        "http://www.w3.org/2001/XMLSchema#integer" => &["0", "1", "2", "-1"],
-        "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" => &["0", "1"],
+        "http://www.w3.org/2001/XMLSchema#integer" => {
+            &["0", "1", "2", "3", "4", "5", "6", "7", "-1", "2147483648", "-2147483649"]
+        }
+        "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" => &["0", "1", "2", "3", "4", "5"],
         "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" => &["0", "-1"],
-        "http://www.w3.org/2001/XMLSchema#int" => &["0", "1", "2"],
-        "http://www.w3.org/2001/XMLSchema#short" => &["0", "1"],
-        "http://www.w3.org/2001/XMLSchema#byte" => &["0", "1"],
+        "http://www.w3.org/2001/XMLSchema#int" => &["0", "1", "2", "3", "4", "5"],
+        "http://www.w3.org/2001/XMLSchema#short" => &["0", "1", "2"],
+        "http://www.w3.org/2001/XMLSchema#byte" => &[], // filled below
         "http://www.w3.org/2001/XMLSchema#unsignedInt" => &["0", "1"],
         "http://www.w3.org/2001/XMLSchema#string" => &["a", "b", "c", "abc"],
         "http://www.w3.org/2001/XMLSchema#decimal" => &["0", "1", "1.5", "6", "6.5", "-1"],
@@ -1395,6 +1533,14 @@ fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<Lite
         ],
         _ => &["0"],
     };
+    if iri == "http://www.w3.org/2001/XMLSchema#byte" {
+        return (-128..=127)
+            .map(|v| LiteralValue {
+                lexical: v.to_string(),
+                datatype,
+            })
+            .collect();
+    }
     witnesses
         .iter()
         .map(|lex| LiteralValue {
@@ -1473,6 +1619,18 @@ mod tests {
                 .iter()
                 .any(|(_, r)| { matches!(r, DataRestriction::ExactCardinality(0, _)) }),
             "expected exact-0 restriction from Unsatisfiable equiv, got {restrictions:?}"
+        );
+    }
+
+    #[test]
+    fn enum_int_neq_2_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_numericstest_testenumintneq_2.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "forbidden 3/4/5 leaves no integer in [2.2,5.2]"
         );
     }
 

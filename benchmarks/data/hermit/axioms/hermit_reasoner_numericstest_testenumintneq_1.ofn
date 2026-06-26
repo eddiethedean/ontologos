@@ -1,0 +1,8 @@
+Prefix(:=<file:/c/test.owl#>)
+Prefix(a:=<file:/c/test.owl#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Ontology(<file:/c/test.owl#>
+Declaration(NamedIndividual(:a)) Declaration(Class(:A)) Declaration(DataProperty(:dp)) SubClassOf( :A DataMinCardinality( 1 :dp rdfs:Literal ) ) SubClassOf( :A DataAllValuesFrom( :dp DatatypeRestriction( xsd:integer xsd:minInclusive "2.2"^^xsd:decimal xsd:maxInclusive "5.2"^^xsd:decimal ) ) ) ClassAssertion( :A :a ) Declaration(DataProperty(:fv0)) DisjointDataProperties( :dp :fv0 ) DataPropertyAssertion( :fv0 :a "3"^^xsd:integer ) Declaration(DataProperty(:fv1)) DisjointDataProperties( :dp :fv1 ) DataPropertyAssertion( :fv1 :a "4"^^xsd:integer )
+)

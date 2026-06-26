@@ -7,6 +7,7 @@ mod cardinality_grid;
 mod classify;
 mod datatype;
 mod ria;
+mod ria_regularity;
 mod route;
 mod saturation;
 mod union_csp;
@@ -20,9 +21,11 @@ pub use classify::DlClassifier;
 pub use datatype::{
     is_datatype_consistent, named_class_datatype_satisfiable, LiteralIndex, LiteralValue,
 };
+pub use datatype::is_data_range_satisfiable;
 pub use ontologos_alc::{classify as alc_classify, clausify, Clause, ClauseSet, DlOntology};
 pub use ontologos_alc::{classify_with_seed, TableauSeed};
 pub use ria::RoleHierarchy;
+pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};
 pub use route::{classify_reasoner, classify_with_profile, DlReport};
 pub use saturation::{saturate, SaturatedFacts};
 

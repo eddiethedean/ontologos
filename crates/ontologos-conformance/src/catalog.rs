@@ -305,6 +305,10 @@ pub struct HermitCase {
     pub ce_instance_checks: Vec<CeInstanceCheck>,
     #[serde(default)]
     pub ce_satisfiability: Vec<CeSatisfiabilityCheck>,
+    #[serde(default)]
+    pub ria_regular: Option<RiaRegularExpectation>,
+    #[serde(default)]
+    pub role_simple: Option<RoleSimpleExpectation>,
     pub rust_test: Option<String>,
     #[serde(default)]
     pub hand_written: bool,
@@ -356,6 +360,18 @@ pub struct IndividualTypeExpectation {
 #[derive(Debug, Clone, Deserialize)]
 pub struct CeSatisfiabilityCheck {
     pub ce_ofn: String,
+    pub expected: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct RiaRegularExpectation {
+    pub axioms: String,
+    pub expected: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct RoleSimpleExpectation {
+    pub axioms: String,
     pub expected: bool,
 }
 
@@ -510,7 +526,9 @@ fn case_has_axiom_assertions(case: &HermitCase) -> bool {
             || !case.individual_instances.is_empty()
             || !case.datalog_queries.is_empty()
             || !case.ce_instance_checks.is_empty()
-            || !case.ce_satisfiability.is_empty())
+            || !case.ce_satisfiability.is_empty()
+            || case.ria_regular.is_some()
+            || case.role_simple.is_some())
 }
 
 /// DL/SWRL case that only asserts KB consistency (no taxonomy-dependent checks).
@@ -523,6 +541,8 @@ fn case_is_dl_consistency_only(case: &HermitCase) -> bool {
         && case.datalog_queries.is_empty()
         && case.ce_instance_checks.is_empty()
         && case.ce_satisfiability.is_empty()
+        && case.ria_regular.is_none()
+        && case.role_simple.is_none()
         && case.property_characteristics.is_empty()
         && case.property_subsumptions.is_empty()
         && case.data_property_subsumptions.is_empty()
@@ -610,6 +630,30 @@ fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Re
     if case.engine == "swrl" {
         ontologos_swrl::apply_swrl_rules(&mut ontology)
             .map_err(|e| format!("{}: swrl: {e}", case.id))?;
+    }
+
+    if let Some(ria) = &case.ria_regular {
+        let regular = ontologos_dl::is_property_hierarchy_regular(&ontology)
+            .map_err(|e| format!("{}: ria regularity: {e}", case.id))?;
+        if regular != ria.expected {
+            return Err(format!(
+                "{}: RIA regularity expected {}, got {regular}",
+                case.id, ria.expected
+            ));
+        }
+        return Ok(());
+    }
+
+    if let Some(simple) = &case.role_simple {
+        let is_simple = ontologos_dl::is_property_hierarchy_simple(&ontology)
+            .map_err(|e| format!("{}: role simplicity: {e}", case.id))?;
+        if is_simple != simple.expected {
+            return Err(format!(
+                "{}: role simplicity expected {}, got {is_simple}",
+                case.id, simple.expected
+            ));
+        }
+        return Ok(());
     }
 
     if let (Some(conclusion_rel), Some(expected)) = (&case.conclusion_ofn, case.expected_entailment)

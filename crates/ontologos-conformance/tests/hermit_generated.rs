@@ -21,259 +21,227 @@ fn hermit_graph_graphtest_testgraph2() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_anyuritest_testinvalidanyuriliterals() {
     run_hermit_case("reasoner.AnyURITest.testInvalidAnyURILiterals");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testlength_1() {
     run_hermit_case("reasoner.AnyURITest.testLength_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testlength_2() {
     run_hermit_case("reasoner.AnyURITest.testLength_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testlength_3() {
     run_hermit_case("reasoner.AnyURITest.testLength_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testlength_4() {
     run_hermit_case("reasoner.AnyURITest.testLength_4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testlength_5() {
     run_hermit_case("reasoner.AnyURITest.testLength_5");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testsize_1() {
     run_hermit_case("reasoner.AnyURITest.testSize_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testsize_2() {
     run_hermit_case("reasoner.AnyURITest.testSize_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testsize_3() {
     run_hermit_case("reasoner.AnyURITest.testSize_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testintersection() {
     run_hermit_case("reasoner.AnyURITest.testIntersection");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpattern1_1() {
     run_hermit_case("reasoner.AnyURITest.testPattern1_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpattern1_2() {
     run_hermit_case("reasoner.AnyURITest.testPattern1_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpattern2_1() {
     run_hermit_case("reasoner.AnyURITest.testPattern2_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpattern2_2() {
     run_hermit_case("reasoner.AnyURITest.testPattern2_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpattern3() {
     run_hermit_case("reasoner.AnyURITest.testPattern3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpatternandlength1_1() {
     run_hermit_case("reasoner.AnyURITest.testPatternAndLength1_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpatternandlength1_2() {
     run_hermit_case("reasoner.AnyURITest.testPatternAndLength1_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpatternandlength1_3() {
     run_hermit_case("reasoner.AnyURITest.testPatternAndLength1_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_anyuritest_testpatternandlength2() {
     run_hermit_case("reasoner.AnyURITest.testPatternAndLength2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_anyuritest_testpatternandlength3() {
     run_hermit_case("reasoner.AnyURITest.testPatternAndLength3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpatterncomplement1_1() {
     run_hermit_case("reasoner.AnyURITest.testPatternComplement1_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpatterncomplement1_2() {
     run_hermit_case("reasoner.AnyURITest.testPatternComplement1_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_anyuritest_testpatterncomplement1_3() {
     run_hermit_case("reasoner.AnyURITest.testPatternComplement1_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_anyuritest_testcomplement2() {
     run_hermit_case("reasoner.AnyURITest.testComplement2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_anyuritest_testcomplement3() {
     run_hermit_case("reasoner.AnyURITest.testComplement3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_anyuritest_testcomplement4() {
     run_hermit_case("reasoner.AnyURITest.testComplement4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testparsing_1() {
     run_hermit_case("reasoner.BinaryDataTest.testParsing_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testparsing_2() {
     run_hermit_case("reasoner.BinaryDataTest.testParsing_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testlength_1() {
     run_hermit_case("reasoner.BinaryDataTest.testLength_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testlength_2() {
     run_hermit_case("reasoner.BinaryDataTest.testLength_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testlength_3() {
     run_hermit_case("reasoner.BinaryDataTest.testLength_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testlength_4() {
     run_hermit_case("reasoner.BinaryDataTest.testLength_4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testlength_5() {
     run_hermit_case("reasoner.BinaryDataTest.testLength_5");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testsize_1() {
     run_hermit_case("reasoner.BinaryDataTest.testSize_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testsize_2() {
     run_hermit_case("reasoner.BinaryDataTest.testSize_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testsize_3() {
     run_hermit_case("reasoner.BinaryDataTest.testSize_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testintersection_1() {
     run_hermit_case("reasoner.BinaryDataTest.testIntersection_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_binarydatatest_testintersection_2() {
     run_hermit_case("reasoner.BinaryDataTest.testIntersection_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_binarydatatest_testexplicitsize() {
     run_hermit_case("reasoner.BinaryDataTest.testExplicitSize");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_binarydatatest_testenumerate1() {
     run_hermit_case("reasoner.BinaryDataTest.testEnumerate1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_binarydatatest_testenumerate2() {
     run_hermit_case("reasoner.BinaryDataTest.testEnumerate2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_binarydatatest_testbase64parsing() {
     run_hermit_case("reasoner.BinaryDataTest.testBase64Parsing");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_classificationindividualreusetest_testgaleniansfullundoctored() {
     run_hermit_case("reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored");
 }
@@ -654,97 +622,87 @@ fn hermit_reasoner_datatypestest_testnegativedpassertions() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_datetimetest_testparsing() {
     run_hermit_case("reasoner.DateTimeTest.testParsing");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_datetimetest_testexactintervalswithouttz1() {
     run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithoutTZ1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_datetimetest_testexactintervalswithouttz2() {
     run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithoutTZ2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_datetimetest_testexactintervalswithtz1() {
     run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithTZ1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_datetimetest_testexactintervalswithtz2() {
     run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithTZ2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_datetimetest_testexactintervalswithtz3() {
     run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithTZ3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testfinite1_1() {
     run_hermit_case("reasoner.DateTimeTest.testFinite1_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testfinite1_2() {
     run_hermit_case("reasoner.DateTimeTest.testFinite1_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testfinite2_1() {
     run_hermit_case("reasoner.DateTimeTest.testFinite2_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testfinite2_2() {
     run_hermit_case("reasoner.DateTimeTest.testFinite2_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testinfinite_1() {
     run_hermit_case("reasoner.DateTimeTest.testInfinite_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testinfinite_2() {
     run_hermit_case("reasoner.DateTimeTest.testInfinite_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testmizedtzs_1() {
     run_hermit_case("reasoner.DateTimeTest.testMizedTZs_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testmizedtzs_2() {
     run_hermit_case("reasoner.DateTimeTest.testMizedTZs_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testmizedtzs_3() {
     run_hermit_case("reasoner.DateTimeTest.testMizedTZs_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_datetimetest_testmember() {
     run_hermit_case("reasoner.DateTimeTest.testMember");
 }
@@ -800,415 +758,347 @@ fn hermit_reasoner_floatdoubletest_testinf() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatrange() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatRange");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatzerorange_1() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatZeroRange_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatzerorange_2() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatZeroRange_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatzerorange_3() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatZeroRange_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatrangeenum() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatRangeEnum");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatnan_1() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatNaN_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatnan_2() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatNaN_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatnan_3() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatNaN_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testnumberoffloats_1() {
     run_hermit_case("reasoner.FloatDoubleTest.testNumberOfFloats_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testnumberoffloats_2() {
     run_hermit_case("reasoner.FloatDoubleTest.testNumberOfFloats_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testnumberoffloats_3() {
     run_hermit_case("reasoner.FloatDoubleTest.testNumberOfFloats_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testfloatanddouble() {
     run_hermit_case("reasoner.FloatDoubleTest.testFloatAndDouble");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testdoublerange() {
     run_hermit_case("reasoner.FloatDoubleTest.testDoubleRange");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testdoublezerorange_1() {
     run_hermit_case("reasoner.FloatDoubleTest.testDoubleZeroRange_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testdoublezerorange_2() {
     run_hermit_case("reasoner.FloatDoubleTest.testDoubleZeroRange_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testdoublezerorange_3() {
     run_hermit_case("reasoner.FloatDoubleTest.testDoubleZeroRange_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testdoublerangeenum() {
     run_hermit_case("reasoner.FloatDoubleTest.testDoubleRangeEnum");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testdoublenan_1() {
     run_hermit_case("reasoner.FloatDoubleTest.testDoubleNaN_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testdoublenan_2() {
     run_hermit_case("reasoner.FloatDoubleTest.testDoubleNaN_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testdoublenan_3() {
     run_hermit_case("reasoner.FloatDoubleTest.testDoubleNaN_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testnumberofdoubles_1() {
     run_hermit_case("reasoner.FloatDoubleTest.testNumberOfDoubles_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testnumberofdoubles_2() {
     run_hermit_case("reasoner.FloatDoubleTest.testNumberOfDoubles_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_floatdoubletest_testnumberofdoubles_3() {
     run_hermit_case("reasoner.FloatDoubleTest.testNumberOfDoubles_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testintegerrange1() {
     run_hermit_case("reasoner.NumericsTest.testIntegerRange1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testintegerrange2_1() {
     run_hermit_case("reasoner.NumericsTest.testIntegerRange2_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testintegerrange2_2() {
     run_hermit_case("reasoner.NumericsTest.testIntegerRange2_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testintegerrange2_3() {
     run_hermit_case("reasoner.NumericsTest.testIntegerRange2_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testintegerrange2_4() {
     run_hermit_case("reasoner.NumericsTest.testIntegerRange2_4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalnotinteger_1() {
     run_hermit_case("reasoner.NumericsTest.testDecimalNotInteger_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalnotinteger_2() {
     run_hermit_case("reasoner.NumericsTest.testDecimalNotInteger_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalnotinteger_3() {
     run_hermit_case("reasoner.NumericsTest.testDecimalNotInteger_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testrealnotdecimal() {
     run_hermit_case("reasoner.NumericsTest.testRealNotDecimal");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testrealnotdecimal_2() {
     run_hermit_case("reasoner.NumericsTest.testRealNotDecimal_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testmininclusiveint() {
     run_hermit_case("reasoner.NumericsTest.testMinInclusiveInt");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testmininclusiveint_2() {
     run_hermit_case("reasoner.NumericsTest.testMinInclusiveInt_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testminexclusivedec() {
     run_hermit_case("reasoner.NumericsTest.testMinExclusiveDec");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testmaxinclusiveint() {
     run_hermit_case("reasoner.NumericsTest.testMaxInclusiveInt");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testmaxinclusiveint_2() {
     run_hermit_case("reasoner.NumericsTest.testMaxInclusiveInt_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testmaxexclusivedec() {
     run_hermit_case("reasoner.NumericsTest.testMaxExclusiveDec");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumint_1() {
     run_hermit_case("reasoner.NumericsTest.testEnumInt_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumint_2() {
     run_hermit_case("reasoner.NumericsTest.testEnumInt_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumint_3() {
     run_hermit_case("reasoner.NumericsTest.testEnumInt_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumint_4() {
     run_hermit_case("reasoner.NumericsTest.testEnumInt_4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumint_5() {
     run_hermit_case("reasoner.NumericsTest.testEnumInt_5");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumintneq_1() {
     run_hermit_case("reasoner.NumericsTest.testEnumIntNEQ_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumintneq_2() {
     run_hermit_case("reasoner.NumericsTest.testEnumIntNEQ_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumintneq_3() {
     run_hermit_case("reasoner.NumericsTest.testEnumIntNEQ_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumintneq_4() {
     run_hermit_case("reasoner.NumericsTest.testEnumIntNEQ_4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testenumintneq_5() {
     run_hermit_case("reasoner.NumericsTest.testEnumIntNEQ_5");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testminmaxequal_1() {
     run_hermit_case("reasoner.NumericsTest.testMinMaxEqual_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testminmaxequal_2() {
     run_hermit_case("reasoner.NumericsTest.testMinMaxEqual_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testminmaxequal_3() {
     run_hermit_case("reasoner.NumericsTest.testMinMaxEqual_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testminmaxequal_4() {
     run_hermit_case("reasoner.NumericsTest.testMinMaxEqual_4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testinvalidminmax() {
     run_hermit_case("reasoner.NumericsTest.testInvalidMinMax");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalminusint_1() {
     run_hermit_case("reasoner.NumericsTest.testDecimalMinusInt_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalminusint_2() {
     run_hermit_case("reasoner.NumericsTest.testDecimalMinusInt_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalminusint_3() {
     run_hermit_case("reasoner.NumericsTest.testDecimalMinusInt_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalminusint_4() {
     run_hermit_case("reasoner.NumericsTest.testDecimalMinusInt_4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalminusintneq_1() {
     run_hermit_case("reasoner.NumericsTest.testDecimalMinusIntNEQ_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalminusintneq_2() {
     run_hermit_case("reasoner.NumericsTest.testDecimalMinusIntNEQ_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testdecimalminusintneq_3() {
     run_hermit_case("reasoner.NumericsTest.testDecimalMinusIntNEQ_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testlargerange1_1() {
     run_hermit_case("reasoner.NumericsTest.testLargeRange1_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testlargerange1_2() {
     run_hermit_case("reasoner.NumericsTest.testLargeRange1_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testlargerange1_3() {
     run_hermit_case("reasoner.NumericsTest.testLargeRange1_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testlargerange2_1() {
     run_hermit_case("reasoner.NumericsTest.testLargeRange2_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testlargerange2_2() {
     run_hermit_case("reasoner.NumericsTest.testLargeRange2_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testlargerange2_3() {
     run_hermit_case("reasoner.NumericsTest.testLargeRange2_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_numericstest_testclique() {
     run_hermit_case("reasoner.NumericsTest.testClique");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owllinktest_testbobtestaandb() {
     run_hermit_case("reasoner.OWLLinkTest.testBobTestAandB");
 }
@@ -1228,49 +1118,49 @@ fn hermit_reasoner_owllinktest_testupdatesnonbuffered() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owllinktest_testinverses() {
     run_hermit_case("reasoner.OWLLinkTest.testInverses");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owllinktest_testobjectproperties() {
     run_hermit_case("reasoner.OWLLinkTest.testObjectProperties");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owllinktest_testsuccessivecalls() {
     run_hermit_case("reasoner.OWLLinkTest.testSuccessiveCalls");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owllinktest_testbobtestc() {
     run_hermit_case("reasoner.OWLLinkTest.testBobTestC");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owllinktest_testdisjointproperties() {
     run_hermit_case("reasoner.OWLLinkTest.testDisjointProperties");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owllinktest_testdisjointclasses() {
     run_hermit_case("reasoner.OWLLinkTest.testDisjointClasses");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owllinktest_testbobtests() {
     run_hermit_case("reasoner.OWLLinkTest.testBobTests");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owlreasonertest_testgetinverseobjectpropertyexpressions() {
     run_hermit_case("reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions");
 }
@@ -1301,259 +1191,232 @@ fn hermit_reasoner_owlreasonertest_testgetdatapropertyvalues() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owlreasonertest_testequivalenceclasses() {
     run_hermit_case("reasoner.OWLReasonerTest.testEquivalenceClasses");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_owlreasonertest_testnonequivalenceclasses() {
     run_hermit_case("reasoner.OWLReasonerTest.testNonEquivalenceClasses");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testinvalidstringliterals() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testInvalidStringLiterals");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testlength_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testLength_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testlength_2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testLength_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testlength_3() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testLength_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testlength_4() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testLength_4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testlength_5() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testLength_5");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testsize_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testSize_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testsize_2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testSize_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testsize_3() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testSize_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testintersection_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testIntersection_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testintersection_2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testIntersection_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testexplicitsize() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testExplicitSize");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testenumerate() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testEnumerate");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpattern1_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPattern1_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpattern1_2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPattern1_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpattern2_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPattern2_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpattern2_2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPattern2_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpattern3() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPattern3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpatternandlength1_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternAndLength1_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpatternandlength1_2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternAndLength1_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpatternandlength1_3() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternAndLength1_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testpatternandlength2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternAndLength2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testpatternandlength3() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternAndLength3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpatterncomplement1_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternComplement1_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpatterncomplement1_2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternComplement1_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_rdfplainliteraltest_testpatterncomplement1_3() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternComplement1_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testcomplement2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testComplement2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testcomplement3() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testComplement3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testcomplement4() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testComplement4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testlangrange1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testLangRange1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_rdfplainliteraltest_testlangrange2() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testLangRange2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity0() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity0");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity1() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity2() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity3() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity4() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity5() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity5");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity6() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity6");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity7() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity7");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity8() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity8");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity9() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity9");
 }
@@ -1569,7 +1432,7 @@ fn hermit_reasoner_reasonercoreblockingtest_testwidmann2() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_reasoner_reasonercoreblockingtest_testdependencydisjunctionmergingbug() {
     run_hermit_case("reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug");
 }
@@ -1585,13 +1448,13 @@ fn hermit_reasoner_reasonercoreblockingtest_testiant9() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testemptychain() {
     run_hermit_case("reasoner.ReasonerTest.testEmptyChain");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testonydeclaredentitiesinhierarchy() {
     run_hermit_case("reasoner.ReasonerTest.testOnyDeclaredEntitiesInHierarchy");
 }
@@ -1612,7 +1475,7 @@ fn hermit_reasoner_reasonertest_testincrementalwithsameas() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testclassificationwithvalidatedblockingerror() {
     run_hermit_case("reasoner.ReasonerTest.testClassificationWithValidatedBlockingError");
 }
@@ -1653,7 +1516,7 @@ fn hermit_reasoner_reasonertest_testincrementalwithfreshnames() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testinstantemanagererror() {
     run_hermit_case("reasoner.ReasonerTest.testInstanteManagerError");
 }
@@ -1829,7 +1692,7 @@ fn hermit_reasoner_reasonertest_testobjectpropertydomainstimothybug() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testdatatypeliterals() {
     run_hermit_case("reasoner.ReasonerTest.testDatatypeLiterals");
 }
@@ -1996,13 +1859,13 @@ fn hermit_reasoner_reasonertest_testnonunarykeys2() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testhierarchyprinting1() {
     run_hermit_case("reasoner.ReasonerTest.testHierarchyPrinting1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (rdfs)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testhierarchyprinting2() {
     run_hermit_case("reasoner.ReasonerTest.testHierarchyPrinting2");
 }
@@ -2174,7 +2037,7 @@ fn hermit_reasoner_reasonertest_testheinsohntbox3modified() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testheinsohntbox4a() {
     run_hermit_case("reasoner.ReasonerTest.testHeinsohnTBox4a");
 }
@@ -2185,7 +2048,7 @@ fn hermit_reasoner_reasonertest_testheinsohntbox4b() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testheinsohntbox7() {
     run_hermit_case("reasoner.ReasonerTest.testHeinsohnTBox7");
 }
@@ -2306,7 +2169,7 @@ fn hermit_reasoner_reasonertest_testianbug1b() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testianbug3() {
     run_hermit_case("reasoner.ReasonerTest.testIanBug3");
 }
@@ -2412,7 +2275,7 @@ fn hermit_reasoner_reasonertest_testnominals6() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_reasoner_reasonertest_testdependencydisjunctionmergingbug() {
     run_hermit_case("reasoner.ReasonerTest.testDependencyDisjunctionMergingBug");
 }
@@ -2678,67 +2541,56 @@ fn hermit_reasoner_rulestest_testdiffrentfrom2() {
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_simplerolestest_testsimpleroles1() {
     run_hermit_case("reasoner.SimpleRolesTest.testSimpleRoles1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_simplerolestest_testsimpleroles2() {
     run_hermit_case("reasoner.SimpleRolesTest.testSimpleRoles2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_simplerolestest_testsimpleroles3() {
     run_hermit_case("reasoner.SimpleRolesTest.testSimpleRoles3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_simplerolestest_testsimpleroles4() {
     run_hermit_case("reasoner.SimpleRolesTest.testSimpleRoles4");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_xmlliteraltest_testcanonicalization_1() {
     run_hermit_case("reasoner.XMLLiteralTest.testCanonicalization_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_xmlliteraltest_testcanonicalization_2() {
     run_hermit_case("reasoner.XMLLiteralTest.testCanonicalization_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_xmlliteraltest_testrange_1() {
     run_hermit_case("reasoner.XMLLiteralTest.testRange_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_xmlliteraltest_testrange_2() {
     run_hermit_case("reasoner.XMLLiteralTest.testRange_2");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_xmlliteraltest_testrange_3() {
     run_hermit_case("reasoner.XMLLiteralTest.testRange_3");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_xmlliteraltest_testmembership_1() {
     run_hermit_case("reasoner.XMLLiteralTest.testMembership_1");
 }
 
 #[test]
-#[ignore = "auto-cataloged; requires manual port (dl)"]
 fn hermit_reasoner_xmlliteraltest_testmembership_2() {
     run_hermit_case("reasoner.XMLLiteralTest.testMembership_2");
 }

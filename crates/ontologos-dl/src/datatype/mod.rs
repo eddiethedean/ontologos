@@ -6,7 +6,9 @@ use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{DataExpr, DeId, DlAxiom, DlStore, EntityId, Ontology};
 
-pub use consistency::{is_datatype_consistent, named_class_datatype_satisfiable};
+pub use consistency::{
+    is_data_range_satisfiable, is_datatype_consistent, named_class_datatype_satisfiable,
+};
 
 /// Literal with lexical form and datatype.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -196,7 +198,14 @@ fn facet_check(
         DataExpr::Or(ops) => ops
             .iter()
             .any(|op| facet_check(lit, store, *op, ontology, defs)),
-        DataExpr::Not(inner) => !facet_check(lit, store, *inner, ontology, defs),
+        DataExpr::Not(inner) => {
+            if let Some(members) = oneof_member_literals(store, *inner) {
+                return !members
+                    .iter()
+                    .any(|member| oneof_literal_matches(lit, member));
+            }
+            !facet_check(lit, store, *inner, ontology, defs)
+        }
     }
 }
 
@@ -207,12 +216,16 @@ fn integer_value_space(target_iri: &str, value: i64) -> bool {
         "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" => value <= 0,
         "http://www.w3.org/2001/XMLSchema#positiveInteger" => value >= 1,
         "http://www.w3.org/2001/XMLSchema#negativeInteger" => value <= -1,
-        "http://www.w3.org/2001/XMLSchema#long"
-        | "http://www.w3.org/2001/XMLSchema#int"
-        | "http://www.w3.org/2001/XMLSchema#short"
-        | "http://www.w3.org/2001/XMLSchema#unsignedInt"
-        | "http://www.w3.org/2001/XMLSchema#unsignedShort"
-        | "http://www.w3.org/2001/XMLSchema#unsignedByte" => value >= 0,
+        "http://www.w3.org/2001/XMLSchema#long" => true,
+        "http://www.w3.org/2001/XMLSchema#int" => (-2_147_483_648..=2_147_483_647).contains(&value),
+        "http://www.w3.org/2001/XMLSchema#short" => (-32_768..=32_767).contains(&value),
+        "http://www.w3.org/2001/XMLSchema#unsignedInt" => {
+            value >= 0 && (value as u64) <= 4_294_967_295
+        }
+        "http://www.w3.org/2001/XMLSchema#unsignedShort" => {
+            value >= 0 && (value as u64) <= 65_535
+        }
+        "http://www.w3.org/2001/XMLSchema#unsignedByte" => value >= 0 && (value as u64) <= 255,
         "http://www.w3.org/2001/XMLSchema#byte" => (-128..=127).contains(&value),
         _ => false,
     }
@@ -248,7 +261,7 @@ fn is_numeric_literal_type(ont: &ontologos_core::Ontology, datatype: EntityId) -
     )
 }
 
-fn literal_in_datatype_value_space(
+pub(crate) fn literal_in_datatype_value_space(
     ontology: Option<&ontologos_core::Ontology>,
     lit: &LiteralValue,
     target: EntityId,
@@ -272,6 +285,27 @@ fn literal_in_datatype_value_space(
         let value = if value == 0 { 0 } else { value };
         return integer_value_space(target_iri, value);
     }
+    if lit.lexical.contains('.')
+        && !lit.lexical.contains('/')
+        && matches!(
+            target_iri,
+            "http://www.w3.org/2001/XMLSchema#int"
+                | "http://www.w3.org/2001/XMLSchema#integer"
+                | "http://www.w3.org/2001/XMLSchema#short"
+                | "http://www.w3.org/2001/XMLSchema#byte"
+                | "http://www.w3.org/2001/XMLSchema#long"
+        )
+    {
+        let numeric = parse_numeric(&lit.lexical);
+        if numeric.is_finite()
+            && !numeric.is_nan()
+            && numeric.fract() == 0.0
+            && numeric >= i64::MIN as f64
+            && numeric <= i64::MAX as f64
+        {
+            return integer_value_space(target_iri, numeric as i64);
+        }
+    }
     if is_numeric_literal_type(ont, lit.datatype) {
         let numeric = parse_numeric(&lit.lexical);
         if numeric.is_finite()
@@ -284,8 +318,16 @@ fn literal_in_datatype_value_space(
         }
     }
     match target_iri {
-        "http://www.w3.org/2001/XMLSchema#decimal"
-        | "http://www.w3.org/2001/XMLSchema#float"
+        "http://www.w3.org/2001/XMLSchema#decimal" => {
+            if lit.lexical.contains('/') {
+                if let Some((num, den)) = rational_pair(&lit.lexical) {
+                    return rational_has_terminating_decimal_expansion(num, den);
+                }
+                return false;
+            }
+            parse_numeric(&lit.lexical).is_finite()
+        }
+        "http://www.w3.org/2001/XMLSchema#float"
         | "http://www.w3.org/2001/XMLSchema#double"
         | "http://www.w3.org/2002/07/owl#real" => parse_numeric(&lit.lexical).is_finite(),
         "http://www.w3.org/2002/07/owl#rational" => {
@@ -402,6 +444,54 @@ pub(crate) fn plain_literal_key(lex: &str, datatype_iri: Option<&str>) -> String
         return canonical_plain_literal(lex);
     }
     canonical_plain_literal(lex)
+}
+
+fn oneof_member_literals(store: &DlStore, range: DeId) -> Option<Vec<LiteralValue>> {
+    let DataExpr::Or(ops) = store.de(range)? else {
+        return None;
+    };
+    let mut members = Vec::new();
+    for op in ops {
+        let DataExpr::Literal { lexical, datatype } = store.de(*op)? else {
+            return None;
+        };
+        members.push(LiteralValue {
+            lexical: lexical.clone(),
+            datatype: *datatype,
+        });
+    }
+    Some(members)
+}
+
+fn oneof_literal_matches(a: &LiteralValue, b: &LiteralValue) -> bool {
+    if literals_equal(a, b) {
+        return true;
+    }
+    if a.datatype == b.datatype {
+        return false;
+    }
+    if let (Some(va), Some(vb)) = (
+        whole_number_lexical(&a.lexical),
+        whole_number_lexical(&b.lexical),
+    ) {
+        return va == vb;
+    }
+    false
+}
+
+pub(crate) fn whole_number_lexical(lex: &str) -> Option<i128> {
+    let trimmed = lex.strip_prefix('+').unwrap_or(lex);
+    if trimmed.contains('/') {
+        return None;
+    }
+    if trimmed.contains('.') {
+        let numeric = parse_numeric(trimmed);
+        if !numeric.is_finite() || numeric.fract() != 0.0 {
+            return None;
+        }
+        return Some(numeric as i128);
+    }
+    trimmed.parse().ok()
 }
 
 fn numeric_values_equal(a: &LiteralValue, b: &LiteralValue) -> bool {

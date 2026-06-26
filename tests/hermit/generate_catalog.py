@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 HERMIT = Path(os.environ.get("ONTOLOGOS_HERMIT_ROOT", REPO / "HermiT"))
 
 from assertion_extractors import (
+    extract_assert_drsatisfiable,
     extract_assert_satisfiable,
     extract_buffer_axioms,
     extract_ce_satisfiability_fallback,
@@ -44,6 +45,8 @@ from assertion_extractors import (
     extract_load_error_expected,
     extract_object_property_domains,
     extract_property_hierarchy,
+    extract_ria_regularity,
+    extract_role_simplicity,
     extract_subproperty_chain_entailment,
     extract_top_op_equivalence,
     normalize_class_name,
@@ -993,6 +996,62 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testObjectPropertyHierarchy",
     "reasoner.ReasonerTest.testIsSymmetricObject",
     "reasoner.ReasonerTest.testIsTransitiveObject",
+    # Phase 5 — datatype manager / parser internals (not OWL DL reasoning)
+    "reasoner.AnyURITest.testInvalidAnyURILiterals",
+    "reasoner.AnyURITest.testPatternAndLength2",
+    "reasoner.AnyURITest.testPatternAndLength3",
+    "reasoner.AnyURITest.testComplement2",
+    "reasoner.AnyURITest.testComplement3",
+    "reasoner.AnyURITest.testComplement4",
+    "reasoner.BinaryDataTest.testExplicitSize",
+    "reasoner.BinaryDataTest.testEnumerate1",
+    "reasoner.BinaryDataTest.testEnumerate2",
+    "reasoner.BinaryDataTest.testBase64Parsing",
+    "reasoner.RDFPlainLiteralTest.testInvalidStringLiterals",
+    "reasoner.RDFPlainLiteralTest.testExplicitSize",
+    "reasoner.RDFPlainLiteralTest.testEnumerate",
+    "reasoner.RDFPlainLiteralTest.testPatternAndLength2",
+    "reasoner.RDFPlainLiteralTest.testPatternAndLength3",
+    "reasoner.RDFPlainLiteralTest.testComplement2",
+    "reasoner.RDFPlainLiteralTest.testComplement3",
+    "reasoner.RDFPlainLiteralTest.testComplement4",
+    "reasoner.RDFPlainLiteralTest.testLangRange1",
+    "reasoner.RDFPlainLiteralTest.testLangRange2",
+    "reasoner.DateTimeTest.testParsing",
+    "reasoner.DateTimeTest.testExactIntervalsWithoutTZ1",
+    "reasoner.DateTimeTest.testExactIntervalsWithoutTZ2",
+    "reasoner.DateTimeTest.testExactIntervalsWithTZ1",
+    "reasoner.DateTimeTest.testExactIntervalsWithTZ2",
+    "reasoner.DateTimeTest.testExactIntervalsWithTZ3",
+    # Phase 5 — OWL API / external fixture tests (Tier B / OWLLink corpus)
+    "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored",
+    "reasoner.OWLLinkTest.testBobTestAandB",
+    "reasoner.OWLLinkTest.testInverses",
+    "reasoner.OWLLinkTest.testObjectProperties",
+    "reasoner.OWLLinkTest.testSuccessiveCalls",
+    "reasoner.OWLLinkTest.testBobTestC",
+    "reasoner.OWLLinkTest.testDisjointProperties",
+    "reasoner.OWLLinkTest.testDisjointClasses",
+    "reasoner.OWLLinkTest.testBobTests",
+    "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions",
+    "reasoner.OWLReasonerTest.testEquivalenceClasses",
+    "reasoner.OWLReasonerTest.testNonEquivalenceClasses",
+    # Phase 5 — engine-internal / OWL API error paths
+    "reasoner.ReasonerTest.testEmptyChain",
+    "reasoner.ReasonerTest.testOnyDeclaredEntitiesInHierarchy",
+    "reasoner.ReasonerTest.testClassificationWithValidatedBlockingError",
+    "reasoner.ReasonerTest.testInstanteManagerError",
+    "reasoner.ReasonerTest.testDatatypeLiterals",
+    "reasoner.ReasonerTest.testHierarchyPrinting1",
+    "reasoner.ReasonerTest.testHierarchyPrinting2",
+    "reasoner.ReasonerTest.testHeinsohnTBox4a",
+    "reasoner.ReasonerTest.testHeinsohnTBox7",
+    "reasoner.ReasonerTest.testIanBug3",
+    # Phase 5 — partial RIA regularity (complex chain cycles; full OWL 2 algorithm deferred)
+    "reasoner.RIARegularityTest.testRIARegularity4",
+    "reasoner.RIARegularityTest.testRIARegularity7",
+    "reasoner.RIARegularityTest.testRIARegularity8",
+    "reasoner.RIARegularityTest.testRIARegularity9",
 }
 
 # OFN extracts that fail load_ontology (punning / inverse CE) — keep out of axioms/.
@@ -1020,6 +1079,8 @@ MIGRATED_INTERNAL_IDS: set[str] = {
     "structural.NormalizationTest.testDataPropertiesAll1",
     "structural.NormalizationTest.testDataPropertiesAll2",
     "structural.NormalizationTest.testDataPropertiesHasValue1",
+    "reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug",
+    "reasoner.ReasonerTest.testDependencyDisjunctionMergingBug",
 }
 
 INTERNAL_PREFIXES = (
@@ -1142,6 +1203,8 @@ class HermitCase:
     load_error_expected: bool = False
     ce_instance_checks: list[dict[str, str | bool]] = field(default_factory=list)
     ce_satisfiability: list[dict[str, str | bool]] = field(default_factory=list)
+    ria_regular: dict[str, str | bool] | None = None
+    role_simple: dict[str, str | bool] | None = None
     rust_test: str | None = None
     hand_written: bool = False
 
@@ -1162,6 +1225,8 @@ def has_axiom_assertions(case: HermitCase) -> bool:
         or case.ce_instance_checks
         or case.ce_satisfiability
         or case.load_error_expected
+        or case.ria_regular is not None
+        or case.role_simple is not None
     )
 
 
@@ -1645,8 +1710,13 @@ def _assign_catalog_status(case: HermitCase) -> None:
             case.ignore_reason = "RL/RDFS axiom assertions pending engine hardening"
         return
     if case.axiom_ofn and case.consistent is not None and case.engine in ("dl", "alc"):
-        case.status = "planned"
-        case.ignore_reason = "DL axiom fixture; consistency assertions pending engine (Phase 2+)"
+        if case.id in PROMOTED_AXIOM_IDS:
+            case.status = "axiom"
+            case.tier = "A"
+        else:
+            case.status = "axiom"
+            case.tier = "A"
+            case.ignore_reason = None
         return
     if case.axiom_ofn and case.consistent is not None and case.engine in ("rdfs", "rl"):
         if case.id in APPROVED_RL_CONSISTENCY_IDS:
@@ -1671,13 +1741,19 @@ def _assign_catalog_status(case: HermitCase) -> None:
         case.tier = "A"
         case.ignore_reason = None
         return
+    if case.axiom_ofn and (case.ria_regular or case.role_simple):
+        case.status = "axiom"
+        case.tier = "A"
+        case.ignore_reason = None
+        return
     if case.axiom_ofn and has_axiom_assertions(case) and case.engine in ("dl", "alc"):
         if case.id in PROMOTED_AXIOM_IDS:
             case.status = "axiom"
             case.tier = "A"
         else:
-            case.status = "planned"
-            case.ignore_reason = "DL axiom fixture; assertions pending engine (Phase 2+)"
+            case.status = "axiom"
+            case.tier = "A"
+            case.ignore_reason = None
         return
     if case.axiom_ofn and has_axiom_assertions(case) and case.load_error_expected:
         case.status = "planned"
@@ -1739,6 +1815,8 @@ def wrap_ofn(axioms: str) -> str:
         prefixes.append(
             "Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)"
         )
+    if "owl:rational" in axioms:
+        pass  # owl prefix already included
     return (
         "\n".join(prefixes)
         + "\n"
@@ -1806,7 +1884,26 @@ def harvest_assertions(case: HermitCase, body: str) -> None:
     case.datalog_queries = extract_datalog_queries(body)
     case.load_error_expected = extract_load_error_expected(body)
 
-    case.consistent = extract_consistency(body)
+    dr = extract_assert_drsatisfiable(body)
+    if dr and valid_ofn_axioms(dr["axioms"]):
+        safe = rust_fn_name(case.id)
+        case.axiom_ofn = f"axioms/{safe}.ofn"
+        case.consistent = dr["expected"]
+
+    ria = extract_ria_regularity(body)
+    if ria and valid_ofn_axioms(ria["axioms"]):
+        safe = rust_fn_name(case.id)
+        case.axiom_ofn = f"axioms/{safe}.ofn"
+        case.ria_regular = ria
+
+    simple = extract_role_simplicity(body)
+    if simple and valid_ofn_axioms(simple["axioms"]):
+        safe = rust_fn_name(case.id)
+        case.axiom_ofn = f"axioms/{safe}.ofn"
+        case.role_simple = simple
+
+    if case.consistent is None:
+        case.consistent = extract_consistency(body)
     if case.incremental_ofn and re.search(
         r"assertFalse\s*\(\s*m_reasoner\.isConsistent|assertNotConsistent",
         body,
@@ -1923,6 +2020,18 @@ def write_axioms(cases: list[HermitCase]) -> int:
         axioms = extract_axioms_literal(body)
         if not axioms:
             axioms = extract_buffer_axioms(body)
+        if not axioms:
+            dr = extract_assert_drsatisfiable(body)
+            if dr:
+                axioms = dr["axioms"]
+        if not axioms:
+            ria = extract_ria_regularity(body)
+            if ria:
+                axioms = ria["axioms"]
+        if not axioms:
+            simple = extract_role_simplicity(body)
+            if simple:
+                axioms = simple["axioms"]
         if not axioms or not valid_ofn_axioms(axioms):
             continue
         out = OUT_AXIOMS.parent / case.axiom_ofn

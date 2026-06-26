@@ -1,6 +1,6 @@
 # Planned backlog triage
 
-**Generated:** 2026-06-25 (UTC) via `benchmarks/scripts/audit-planned-backlog.sh`
+**Generated:** 2026-06-26 (UTC) via `benchmarks/scripts/audit-planned-backlog.sh`
 
 Do not edit by hand — regenerate after catalog or engine changes.
 
@@ -8,14 +8,13 @@ Do not edit by hand — regenerate after catalog or engine changes.
 
 | Catalog | Planned |
 |---------|--------:|
-| HermiT Java (`cases.json`) | 202 |
+| HermiT Java (`cases.json`) | 0 |
 | OWL WG (`wg_cases.json`) | 0 |
 
 ### Java by category
 
 | Category | Count |
 |----------|------:|
-| `manual_port` | 202 |
 
 ### WG by category
 

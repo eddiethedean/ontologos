@@ -573,3 +573,302 @@ def extract_buffer_axioms(body: str) -> str:
     ):
         chunks.append(m.group(1) + m.group(2))
     return "".join(chunks)
+
+
+# --- Phase 5: datatype DR satisfiability, RIA regularity, role simplicity ---
+
+
+def _split_java_call_args(inner: str) -> list[str]:
+    """Split a Java argument list on top-level commas."""
+    args: list[str] = []
+    depth = 0
+    in_str = False
+    escape = False
+    current: list[str] = []
+    for ch in inner:
+        if in_str:
+            current.append(ch)
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+            current.append(ch)
+            continue
+        if ch in "([{":
+            depth += 1
+            current.append(ch)
+            continue
+        if ch in ")]}":
+            depth -= 1
+            current.append(ch)
+            continue
+        if ch == "," and depth == 0:
+            arg = "".join(current).strip()
+            if arg:
+                args.append(arg)
+            current = []
+            continue
+        current.append(ch)
+    tail = "".join(current).strip()
+    if tail:
+        args.append(tail)
+    return args
+
+
+def _java_string_literal(expr: str) -> str | None:
+    m = re.fullmatch(r'"((?:[^"\\]|\\.)*)"', expr.strip())
+    if not m:
+        return None
+    return bytes(m.group(1), "utf-8").decode("unicode_escape")
+
+
+def _expand_dr_java_expr(expr: str) -> str:
+    """Expand HermiT AbstractReasonerTest DR/NOT/OO/INT/... helpers to OFN data ranges."""
+    expr = expr.strip()
+    if not expr:
+        return expr
+
+    lit = _java_string_literal(expr)
+    if lit is not None:
+        return f'"{lit}"'
+
+    m = re.match(r"(\w+)\s*\((.*)\)\s*$", expr, re.DOTALL)
+    if not m:
+        return expr
+    func, inner = m.group(1), m.group(2)
+    args = _split_java_call_args(inner)
+
+    if func == "NOT":
+        return f"DataComplementOf( {_expand_dr_java_expr(args[0])} )"
+    if func == "DR":
+        dt = args[0].strip().strip('"')
+        if len(args) == 1:
+            return dt
+        expanded_facets: list[str] = []
+        i = 1
+        while i < len(args):
+            facet_name = args[i].strip().strip('"')
+            expanded_facets.append(facet_name)
+            i += 1
+            if i < len(args) and not args[i].strip().strip('"').startswith(
+                ("xsd:", "owl:", "rdf:")
+            ):
+                expanded_facets.append(_expand_dr_java_expr(args[i]))
+                i += 1
+        return f"DatatypeRestriction( {dt} {' '.join(expanded_facets)} )"
+    if func == "OO" or func == "S":
+        parts = " ".join(_expand_dr_java_expr(a) for a in args)
+        return f"DataOneOf( {parts} )"
+    if func == "INT":
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        return f'"{v}"^^xsd:integer'
+    if func == "DEC":
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        return f'"{v}"^^xsd:decimal'
+    if func == "RAT":
+        num = _java_string_literal(args[0]) or args[0].strip('"')
+        denom = _java_string_literal(args[1]) or args[1].strip('"')
+        return f'"{num}/{denom}"^^owl:rational'
+    if func == "FLT":
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        return f'"{v}"^^xsd:float'
+    if func == "DBL":
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        return f'"{v}"^^xsd:double'
+    if func in ("DATE", "DATES"):
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        dt = "xsd:dateTimeStamp" if func == "DATES" else "xsd:dateTime"
+        return f'"{v}"^^{dt}'
+    if func == "XMLL":
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        return f'"{v}"^^rdf:XMLLiteral'
+    if func in ("HEXB", "B64B"):
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        dt = "xsd:hexBinary" if func == "HEXB" else "xsd:base64Binary"
+        return f'"{v}"^^{dt}'
+    if func == "STR":
+        if len(args) == 1:
+            v = _java_string_literal(args[0]) or args[0].strip('"')
+            return f'"{v}"^^xsd:string'
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        lang = _java_string_literal(args[1]) or args[1].strip('"')
+        return f'"{v}"@{lang}'
+    if func == "AURI":
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        return f'"{v}"^^xsd:anyURI'
+    if func == "PL":
+        v = _java_string_literal(args[0]) or args[0].strip('"')
+        lang = _java_string_literal(args[1]) if len(args) > 1 else None
+        if lang:
+            return f'"{v}"@{lang}'
+        return f'"{v}"^^rdf:PlainLiteral'
+    return expr
+
+
+def _parse_s_literals(part: str) -> list[str] | None:
+    """Parse HermiT S(...) literal sets used by assertDRSatisfiableNEQ."""
+    m = re.match(r"S\s*\((.*)\)\s*$", part.strip(), re.DOTALL)
+    if not m:
+        return None
+    args = _split_java_call_args(m.group(1))
+    if not args:
+        return None
+    return [_expand_dr_java_expr(a) for a in args]
+
+
+def _build_drsatisfiable_axioms(
+    expected: bool,
+    cardinality: int,
+    parts: list[str],
+    *,
+    forbidden_internal: bool,
+    forbidden_literals: list[str] | None = None,
+) -> str:
+    """Mirror HermiT AbstractReasonerTest.assertDRSatisfiableNEQ OFN assembly."""
+    del expected
+    buf: list[str] = [
+        "Declaration(NamedIndividual(:a))",
+        "Declaration(Class(:A))",
+        "Declaration(DataProperty(:dp))",
+        f"SubClassOf( :A DataMinCardinality( {cardinality} :dp rdfs:Literal ) )",
+    ]
+    for part in parts:
+        expanded = _expand_dr_java_expr(part)
+        buf.append(f"SubClassOf( :A DataAllValuesFrom( :dp {expanded} ) )")
+    buf.append("ClassAssertion( :A :a )")
+    if forbidden_literals:
+        for index, forbidden in enumerate(forbidden_literals):
+            fv = f":fv{index}"
+            buf.extend(
+                [
+                    f"Declaration(DataProperty({fv}))",
+                    f"DisjointDataProperties( :dp {fv} )",
+                    f"DataPropertyAssertion( {fv} :a {forbidden} )",
+                ]
+            )
+    elif forbidden_internal:
+        buf.extend(
+            [
+                "Declaration(DataProperty(:fv0))",
+                "DisjointDataProperties( :dp :fv0 )",
+                'DataPropertyAssertion( :fv0 :a "$internal$"^^xsd:string )',
+            ]
+        )
+    return " ".join(buf)
+
+
+def extract_assert_drsatisfiable(body: str) -> dict[str, Any] | None:
+    """Harvest assertDRSatisfiable* calls into OFN axioms + expected consistency."""
+    for method in (
+        "assertDRSatisfiableUseCliqueOptimization",
+        "assertDRSatisfiableNEQ",
+        "assertDRSatisfiable",
+    ):
+        m = re.search(rf"{method}\s*\((.*)\)\s*;", body, re.DOTALL)
+        if not m:
+            continue
+        args = _split_java_call_args(m.group(1))
+        if not args:
+            continue
+        idx = 0
+        expected = args[idx].strip() == "true"
+        idx += 1
+        cardinality = 1
+        forbidden_internal = method == "assertDRSatisfiable" and len(args) > 2
+        if method == "assertDRSatisfiableNEQ":
+            forbidden_internal = False
+            if idx < len(args) and re.fullmatch(r"\d+", args[idx].strip()):
+                cardinality = int(args[idx].strip())
+                idx += 1
+            if idx < len(args) and args[idx].strip() == "null":
+                idx += 1
+            elif idx < len(args) and args[idx].strip().startswith("new String[]"):
+                idx += 1
+        elif method == "assertDRSatisfiableUseCliqueOptimization":
+            forbidden_internal = False
+            if idx < len(args) and re.fullmatch(r"\d+", args[idx].strip()):
+                cardinality = int(args[idx].strip())
+                idx += 1
+        elif method == "assertDRSatisfiable":
+            if idx < len(args) and re.fullmatch(r"\d+", args[idx].strip()):
+                cardinality = int(args[idx].strip())
+                idx += 1
+                forbidden_internal = True
+            else:
+                forbidden_internal = False
+        parts = args[idx:]
+        forbidden_literals: list[str] | None = None
+        if method == "assertDRSatisfiableNEQ" and parts:
+            s_literals = _parse_s_literals(parts[0])
+            if s_literals is not None:
+                forbidden_literals = s_literals
+                parts = parts[1:]
+        axioms = _build_drsatisfiable_axioms(
+            expected,
+            cardinality,
+            parts,
+            forbidden_internal=forbidden_internal,
+            forbidden_literals=forbidden_literals,
+        )
+        return {"axioms": axioms, "expected": expected, "cardinality": cardinality}
+    return None
+
+
+def _extract_java_axioms_string(body: str) -> str:
+    """Pull a Java string-literal axiom block from assertRegular/assertSimple calls."""
+    m = re.search(
+        r"assert(?:Regular|Simple)\s*\(\s*((?:\"[^\"\\]*(?:\\.[^\"\\]*)*\"\s*)+)\s*,\s*(true|false)\s*\)",
+        body,
+    )
+    if m:
+        parts = re.findall(r'"([^"\\]*(?:\\.[^\"\\]*)*)"', m.group(1))
+        return bytes("".join(parts), "utf-8").decode("unicode_escape")
+    m = re.search(
+        r"assert(?:Regular|Simple)\s*\(\s*(\w+)\s*,\s*(true|false)\s*\)",
+        body,
+    )
+    if not m:
+        return ""
+    var = m.group(1)
+    assign = re.search(
+        rf"String\s+{re.escape(var)}\s*=\s*((?:(?:\"[^\"\\]*(?:\\.[^\"\\]*)*\"\s*)|(?:\+\s*\"[^\"\\]*(?:\\.[^\"\\]*)*\"\s*))+)",
+        body,
+        re.DOTALL,
+    )
+    if not assign:
+        return ""
+    parts = re.findall(r'"([^"\\]*(?:\\.[^\"\\]*)*)"', assign.group(1))
+    return bytes("".join(parts), "utf-8").decode("unicode_escape")
+
+
+def extract_ria_regularity(body: str) -> dict[str, Any] | None:
+    m = re.search(
+        r"assertRegular\s*\(\s*(.+?)\s*,\s*(true|false)\s*\)\s*;",
+        body,
+        re.DOTALL,
+    )
+    if not m:
+        return None
+    axioms = _extract_java_axioms_string(body)
+    if not axioms:
+        return None
+    return {"axioms": axioms, "expected": m.group(2) == "true"}
+
+
+def extract_role_simplicity(body: str) -> dict[str, Any] | None:
+    m = re.search(
+        r"assertSimple\s*\(\s*(.+?)\s*,\s*(true|false)\s*\)\s*;",
+        body,
+        re.DOTALL,
+    )
+    if not m:
+        return None
+    axioms = _extract_java_axioms_string(body)
+    if not axioms:
+        return None
+    return {"axioms": axioms, "expected": m.group(2) == "true"}
