@@ -37,9 +37,13 @@ if [[ -n "${KONCLUDE_BIN:-}" ]] && command -v "${KONCLUDE_BIN}" >/dev/null; then
 fi
 
 if [[ -n "${HERMIT_JAR:-}" ]] && [[ -f "${HERMIT_JAR}" ]]; then
-  echo "HermiT JAR found at ${HERMIT_JAR} — running optional cross-check"
+  echo "HermiT JAR found at ${HERMIT_JAR} — running cross-check"
   chmod +x "${ROOT}/benchmarks/scripts/compare-dl-hermit-crosscheck.sh"
-  "${ROOT}/benchmarks/scripts/compare-dl-hermit-crosscheck.sh" || true
+  if [[ "${ONTOLOGOS_REQUIRE_HERMIT_JAR:-0}" == "1" ]]; then
+    "${ROOT}/benchmarks/scripts/compare-dl-hermit-crosscheck.sh"
+  else
+    "${ROOT}/benchmarks/scripts/compare-dl-hermit-crosscheck.sh" || true
+  fi
 fi
 
 echo "Tier C harness: all gated checks passed"

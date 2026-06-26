@@ -46,6 +46,35 @@ if [[ "${PHASE6_FAIL}" -eq 0 ]]; then
 else
   echo "WARN Phase 6 Tier B incomplete (see ROADMAP Phase 6)" >&2
 fi
+
+# Phase 7 — Tier C external proof (informational sub-gate).
+PHASE7_FAIL=0
+for script in compare-tier-c-gate.sh compare-dl-hermit-crosscheck.sh download-hermit-jar.sh benchmark-dl-perf.sh; do
+  path="${ROOT}/benchmarks/scripts/${script}"
+  if [[ -x "${path}" ]]; then
+    echo "OK  Phase 7: ${script} executable"
+  else
+    echo "FAIL Phase 7: missing ${path}" >&2
+    PHASE7_FAIL=1
+  fi
+done
+if grep -q 'ONTOLOGOS_REQUIRE_HERMIT_JAR' "${ROOT}/benchmarks/scripts/compare-dl-hermit-crosscheck.sh" 2>/dev/null; then
+  echo "OK  Phase 7: compare-dl-hermit-crosscheck.sh supports ONTOLOGOS_REQUIRE_HERMIT_JAR"
+else
+  echo "FAIL Phase 7: compare-dl-hermit-crosscheck.sh missing REQUIRE mode" >&2
+  PHASE7_FAIL=1
+fi
+if [[ -f "${ROOT}/crates/ontologos-conformance/tests/phase7_closure.rs" ]]; then
+  echo "OK  Phase 7: phase7_closure.rs present"
+else
+  echo "FAIL Phase 7: missing phase7_closure.rs" >&2
+  PHASE7_FAIL=1
+fi
+if [[ "${PHASE7_FAIL}" -eq 0 ]]; then
+  echo "OK  Phase 7 Tier C external proof harness"
+else
+  echo "WARN Phase 7 Tier C incomplete (see ROADMAP Phase 7)" >&2
+fi
 echo ""
 
 if [[ "${JAVA_PLANNED}" -eq 0 ]] && [[ "${WG_PLANNED}" -eq 0 ]]; then

@@ -5,15 +5,12 @@
     "family.owl": {
       "profile": "dl",
       "hermit_crosscheck": true,
+      "namespace_prefix": "http://a.com/ontology#",
       "status": "classified",
-      "subsumption_count": 59,
+      "subsumption_count": 39,
       "subsumptions": [
         [
           "http://a.com/ontology#Aunt",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Aunt",
           "http://a.com/ontology#Person"
         ],
         [
@@ -23,10 +20,6 @@
         [
           "http://a.com/ontology#Aunt",
           "http://a.com/ontology#Woman"
-        ],
-        [
-          "http://a.com/ontology#Brother",
-          "http://a.com/ontology#Gender"
         ],
         [
           "http://a.com/ontology#Brother",
@@ -42,27 +35,11 @@
         ],
         [
           "http://a.com/ontology#Child",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Child",
-          "http://a.com/ontology#Parent"
-        ],
-        [
-          "http://a.com/ontology#Child",
           "http://a.com/ontology#Person"
         ],
         [
           "http://a.com/ontology#Daugther",
           "http://a.com/ontology#Child"
-        ],
-        [
-          "http://a.com/ontology#Daugther",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Daugther",
-          "http://a.com/ontology#Parent"
         ],
         [
           "http://a.com/ontology#Daugther",
@@ -71,14 +48,6 @@
         [
           "http://a.com/ontology#Daugther",
           "http://a.com/ontology#Woman"
-        ],
-        [
-          "http://a.com/ontology#Father",
-          "http://a.com/ontology#Child"
-        ],
-        [
-          "http://a.com/ontology#Father",
-          "http://a.com/ontology#Gender"
         ],
         [
           "http://a.com/ontology#Father",
@@ -94,19 +63,7 @@
         ],
         [
           "http://a.com/ontology#Man",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Man",
           "http://a.com/ontology#Person"
-        ],
-        [
-          "http://a.com/ontology#Mother",
-          "http://a.com/ontology#Child"
-        ],
-        [
-          "http://a.com/ontology#Mother",
-          "http://a.com/ontology#Gender"
         ],
         [
           "http://a.com/ontology#Mother",
@@ -122,10 +79,6 @@
         ],
         [
           "http://a.com/ontology#Nephew",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Nephew",
           "http://a.com/ontology#Man"
         ],
         [
@@ -135,10 +88,6 @@
         [
           "http://a.com/ontology#Nephew",
           "http://a.com/ontology#Relative"
-        ],
-        [
-          "http://a.com/ontology#Niece",
-          "http://a.com/ontology#Gender"
         ],
         [
           "http://a.com/ontology#Niece",
@@ -154,23 +103,7 @@
         ],
         [
           "http://a.com/ontology#Parent",
-          "http://a.com/ontology#Child"
-        ],
-        [
-          "http://a.com/ontology#Parent",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Parent",
           "http://a.com/ontology#Person"
-        ],
-        [
-          "http://a.com/ontology#Person",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Relative",
-          "http://a.com/ontology#Gender"
         ],
         [
           "http://a.com/ontology#Relative",
@@ -178,15 +111,7 @@
         ],
         [
           "http://a.com/ontology#Sibling",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Sibling",
           "http://a.com/ontology#Person"
-        ],
-        [
-          "http://a.com/ontology#Sister",
-          "http://a.com/ontology#Gender"
         ],
         [
           "http://a.com/ontology#Sister",
@@ -206,23 +131,11 @@
         ],
         [
           "http://a.com/ontology#Son",
-          "http://a.com/ontology#Gender"
-        ],
-        [
-          "http://a.com/ontology#Son",
           "http://a.com/ontology#Man"
         ],
         [
           "http://a.com/ontology#Son",
-          "http://a.com/ontology#Parent"
-        ],
-        [
-          "http://a.com/ontology#Son",
           "http://a.com/ontology#Person"
-        ],
-        [
-          "http://a.com/ontology#Uncle",
-          "http://a.com/ontology#Gender"
         ],
         [
           "http://a.com/ontology#Uncle",
@@ -238,14 +151,21 @@
         ],
         [
           "http://a.com/ontology#Woman",
-          "http://a.com/ontology#Gender"
+          "http://a.com/ontology#Person"
         ],
         [
-          "http://a.com/ontology#Woman",
-          "http://a.com/ontology#Person"
+          "http://a.com/ontology#Child",
+          "http://a.com/ontology#Relative"
+        ],
+        [
+          "http://a.com/ontology#Parent",
+          "http://a.com/ontology#Relative"
+        ],
+        [
+          "http://a.com/ontology#Sibling",
+          "http://a.com/ontology#Relative"
         ]
-      ],
-      "namespace_prefix": "http://a.com/ontology#"
+      ]
     },
     "go-subset.owl": {
       "profile": "dl",
@@ -13215,6 +13135,7 @@
       ],
       "optional": true,
       "hermit_crosscheck": true,
+      "namespace_prefix": "http://ex.org/gosubset#",
       "notes": "OBO biomedical subset; optional slow gate (~2min release classify)"
     },
     "pizza.owl": {
@@ -29305,6 +29226,7 @@
       ],
       "optional": true,
       "hermit_crosscheck": true,
+      "namespace_prefix": "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#",
       "notes": "Tutorial DL corpus; optional slow gate (~5min release classify)"
     }
   }

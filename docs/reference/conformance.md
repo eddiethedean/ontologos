@@ -12,6 +12,7 @@ Tests are cataloged in [tests/hermit/manifest.toml](https://github.com/eddiethed
 |------|-----|--------------------------|---------|
 | **A** | Always (`cargo test -p ontologos-conformance`) | No | Inlined RL logic + small fixtures |
 | **B** | Always | No (vendored under `benchmarks/data/hermit/`) | `ClassificationTest` taxonomy goldens via [`compare-classification-fixtures.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-classification-fixtures.sh) |
+| **C** | PR (`compare-tier-c-gate.sh`) + nightly HermiT JAR | JVM nightly only | DL taxonomy goldens + HermiT ⊆ OntoLogos cross-check — [taxonomy tolerance](taxonomy-tolerance.md) |
 
 Run locally:
 
@@ -63,7 +64,7 @@ The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL too
 | Large DL corpora (GALEN, SNOMED) | Optional stress tests only |
 | Wine / galen / propreo `ClassificationTest` | Active via parser preprocess (entities, `rdf:ID`) |
 | SWRL `RulesTest` (24 cases) | Active via `ontologos-swrl` forward chaining |
-| Tier C DL taxonomy | `family.owl` golden — [taxonomy tolerance](taxonomy-tolerance.md) |
+| Tier C DL taxonomy | `family.owl` golden — [taxonomy tolerance](taxonomy-tolerance.md); nightly HermiT JAR cross-check (`tier-c-hermit-crosscheck` in `conformance-nightly.yml`) |
 
 ## Benchmark corpora
 

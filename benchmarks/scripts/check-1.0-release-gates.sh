@@ -35,9 +35,12 @@ check "Tier A conformance" cargo test -p ontologos-conformance --quiet
 # Tier B/C harness.
 check "Tier B classification gate script" test -x "${ROOT}/benchmarks/scripts/compare-classification-fixtures.sh"
 check "Tier B classification fixtures" "${ROOT}/benchmarks/scripts/compare-classification-fixtures.sh"
+check "Tier C PR gate script" test -x "${ROOT}/benchmarks/scripts/compare-tier-c-gate.sh"
 check "Tier C smoke script" test -x "${ROOT}/benchmarks/scripts/compare-hermit-tier-c.sh"
 check "DL taxonomy gate script" test -x "${ROOT}/benchmarks/scripts/compare-dl-taxonomy.sh"
+check "HermiT JAR download script" test -x "${ROOT}/benchmarks/scripts/download-hermit-jar.sh"
 check "reference baseline script" test -x "${ROOT}/benchmarks/scripts/run-reference-baseline.sh"
+check "Tier C PR gate" "${ROOT}/benchmarks/scripts/compare-tier-c-gate.sh"
 check "Tier C harness" "${ROOT}/benchmarks/scripts/compare-hermit-tier-c.sh"
 
 if [[ "${FAIL}" -ne 0 ]]; then

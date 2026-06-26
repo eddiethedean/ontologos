@@ -292,6 +292,7 @@ ONTOLOGOS_DL_BUDGET_SECS=120 bash benchmarks/scripts/hermit-burndown.sh promote
 | Promoted conformance | `ci.yml` | **Yes** |
 | Parity phase gate | `check-hermit-parity-phases.sh` | No (`\|\| true` until Phase 9) |
 | Full HermiT suite | `conformance-nightly.yml` | No (`continue-on-error`) |
+| Tier C HermiT JAR cross-check | `conformance-nightly.yml` (`tier-c-hermit-crosscheck`) | No (nightly blocking for that job) |
 | Ignored tier | `conformance-nightly.yml` | No |
 
 Before opening a PR that touches DL/conformance:

@@ -73,6 +73,10 @@ Results are written under `target/criterion/`.
 |--------|---------|
 | `scripts/compare-pizza-el-golden.sh` | Pizza EL golden regression gate (in-house EL vs committed JSON) |
 | `scripts/compare-classification-fixtures.sh` | HermiT Tier B gate — pizza/wine/galen/propreo XML vs HermiT hierarchy goldens |
+| `scripts/compare-tier-c-gate.sh` | Tier C PR gate — `family.owl` DL golden + Pizza EL golden |
+| `scripts/compare-dl-hermit-crosscheck.sh` | Optional/nightly HermiT JAR ⊆ OntoLogos DL cross-check |
+| `scripts/download-hermit-jar.sh` | Fetch standalone HermiT CLI JAR to `benchmarks/data/hermit.jar` |
+| `scripts/benchmark-dl-perf.sh` | DL classification wall-time snapshot |
 | `scripts/generate-go-subset.sh` | Trim GO with ROBOT for `<10s` EL CI test |
 
 EL integration tests: `cargo test -p ontologos-el --test pizza_el`

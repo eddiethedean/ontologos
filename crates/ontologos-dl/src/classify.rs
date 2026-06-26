@@ -1,7 +1,7 @@
 //! DL classification: EL for EL fragment, saturation + tableau for DL.
 
 use ontologos_alc::{DlOntology, TableauSeed};
-use ontologos_core::{ClassExpr, Ontology, Taxonomy};
+use ontologos_core::{ClassExpr, DlAxiom, EntityId, Ontology, Taxonomy};
 use ontologos_el::ElClassifier;
 use ontologos_profile::{
     detect_profile, el_classification_forbidden_in, merge_taxonomies, scanner::scan_constructs,
@@ -47,10 +47,12 @@ impl DlClassifier {
         }
 
         let tab_tax = tableau_classify(ontology)?;
-        match try_el_classify(ontology)? {
-            Some(el_tax) => Ok(merge_taxonomies(vec![el_tax, tab_tax])),
-            None => Ok(tab_tax),
-        }
+        let mut taxonomy = match try_el_classify(ontology)? {
+            Some(el_tax) => merge_taxonomies(vec![el_tax, tab_tax]),
+            None => tab_tax,
+        };
+        enrich_taxonomy(ontology, &mut taxonomy);
+        Ok(taxonomy)
     }
 }
 
@@ -86,6 +88,51 @@ fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
         }
     }
     Ok(taxonomy)
+}
+
+/// Union equivalence: `A ≡ C₁ ⊔ … ⊔ Cₙ` implies each `Cᵢ ⊑ A`.
+fn derive_union_equivalence_subsumptions(ontology: &Ontology) -> Vec<(EntityId, EntityId)> {
+    let store = ontology.dl();
+    let mut out = Vec::new();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        if ids.len() < 2 {
+            continue;
+        }
+        for &named in ids {
+            let Some(ClassExpr::Atomic(entity)) = store.ce(named) else {
+                continue;
+            };
+            for &def_id in ids {
+                if def_id == named {
+                    continue;
+                }
+                let Some(ClassExpr::Or(ops)) = store.ce(def_id) else {
+                    continue;
+                };
+                for op in ops {
+                    if let Some(ClassExpr::Atomic(member)) = store.ce(*op) {
+                        out.push((*member, *entity));
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+fn enrich_taxonomy(ontology: &Ontology, taxonomy: &mut Taxonomy) {
+    for (sub, sup) in derive_union_equivalence_subsumptions(ontology) {
+        if !taxonomy
+            .subsumptions
+            .iter()
+            .any(|&(a, b)| a == sub && b == sup)
+        {
+            taxonomy.subsumptions.push((sub, sup));
+        }
+    }
 }
 
 /// Build tableau seed from saturation (used by consistency checking).

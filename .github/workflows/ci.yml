@@ -76,9 +76,11 @@ jobs:
           ./benchmarks/scripts/check-hermit-catalog.sh
       - name: Tier C reference harness smoke
         run: |
+          chmod +x benchmarks/scripts/compare-tier-c-gate.sh
           chmod +x benchmarks/scripts/compare-hermit-tier-c.sh
           chmod +x benchmarks/scripts/compare-dl-taxonomy.sh
           chmod +x benchmarks/scripts/compare-taxonomy.py
+          ./benchmarks/scripts/compare-tier-c-gate.sh
           ./benchmarks/scripts/compare-hermit-tier-c.sh
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh
@@ -88,6 +90,8 @@ jobs:
         run: cargo test -p ontologos-conformance --test phase3_closure --locked
       - name: Phase 6 closure gate
         run: cargo test -p ontologos-conformance --test phase6_closure --release --locked
+      - name: Phase 7 closure gate
+        run: cargo test -p ontologos-conformance --test phase7_closure --release --locked
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
 

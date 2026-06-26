@@ -29,6 +29,39 @@ jobs:
           cargo test -p ontologos-conformance --release --test classify_timeout --
           --test-threads=1
 
+  tier-c-hermit-crosscheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Download benchmark corpora
+        run: ./benchmarks/scripts/download.sh
+      - name: Download HermiT JAR
+        run: |
+          chmod +x benchmarks/scripts/download-hermit-jar.sh
+          ./benchmarks/scripts/download-hermit-jar.sh
+      - name: Build release CLI
+        run: cargo build -p ontologos-cli --release --locked
+      - name: HermiT JAR cross-check (Tier C)
+        env:
+          HERMIT_JAR: benchmarks/data/hermit.jar
+          ONTOLOGOS_REQUIRE_HERMIT_JAR: "1"
+          RUN_SLOW_DL_GATES: "1"
+        run: |
+          chmod +x benchmarks/scripts/compare-dl-hermit-crosscheck.sh
+          ./benchmarks/scripts/compare-dl-hermit-crosscheck.sh
+      - name: DL performance snapshot (informational)
+        env:
+          RUN_SLOW_DL_GATES: "1"
+        run: |
+          chmod +x benchmarks/scripts/benchmark-dl-perf.sh
+          ./benchmarks/scripts/benchmark-dl-perf.sh || true
+
   full-hermit-suite:
     runs-on: ubuntu-latest
     continue-on-error: true

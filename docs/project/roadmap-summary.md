@@ -12,7 +12,7 @@ The **v1.0.0 git tag** is blocked until [HermiT parity phases](https://github.co
 | 2 | In progress | Assertion harvest (~87 cases) |
 | 3–5 | Complete | Engine gaps, WG fixtures, manual ports |
 | 6 | Complete | Tier B classification corpora |
-| 7 | Planned | Tier C corpora + HermiT JAR proof |
+| 7 | Complete | Tier C corpora + HermiT JAR proof |
 | 8 | In progress | Expressivity v1.5–v1.9 |
 | 9 | Planned | Tag v1.0.0 |
 
