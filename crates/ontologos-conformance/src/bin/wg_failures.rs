@@ -1,9 +1,10 @@
 //! List active OWL WG catalog cases that fail semantic checks (for triage).
 use std::collections::BTreeMap;
 
-use ontologos_conformance::{scan_all_wg_failures, WgFailureBucket};
+use ontologos_conformance::{ensure_concurrent_scan_defaults, scan_all_wg_failures, WgFailureBucket};
 
 fn main() {
+    ensure_concurrent_scan_defaults();
     let args: Vec<String> = std::env::args().collect();
     let json = args.iter().any(|a| a == "--json");
 

@@ -3,8 +3,8 @@
 #
 # Speed (local triage / promotion loops):
 #   ONTOLOGOS_DL_BUDGET_SECS=30     — fast scan; use 120 for final promotion
-#   ONTOLOGOS_DL_MAX_WORKERS=8      — concurrent DL ops (default 8)
-#   ONTOLOGOS_SCAN_THREADS=8        — rayon case parallelism (default: all cores)
+#   ONTOLOGOS_DL_MAX_WORKERS=10     — concurrent DL ops (default 10)
+#   ONTOLOGOS_SCAN_THREADS=10       — rayon case parallelism (default 10)
 #   ONTOLOGOS_TABLEAU_MAX_STALL_STEPS=4096 — large nominal WG fixtures
 #
 # Incremental mode skips re-checking catalog cases already at status=axiom|wg.
@@ -14,7 +14,8 @@ cd "$ROOT"
 
 BIN="$("${ROOT}/benchmarks/scripts/build-conformance-tools.sh")"
 export ONTOLOGOS_DL_BUDGET_SECS="${ONTOLOGOS_DL_BUDGET_SECS:-120}"
-export ONTOLOGOS_DL_MAX_WORKERS="${ONTOLOGOS_DL_MAX_WORKERS:-8}"
+export ONTOLOGOS_DL_MAX_WORKERS="${ONTOLOGOS_DL_MAX_WORKERS:-10}"
+export ONTOLOGOS_SCAN_THREADS="${ONTOLOGOS_SCAN_THREADS:-10}"
 
 echo "==> Scanning planned axiom cases for promotion (release, incremental)"
 "${BIN}/promote_catalog" --incremental

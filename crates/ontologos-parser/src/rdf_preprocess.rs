@@ -1844,15 +1844,16 @@ fn member_block_to_ofn(
     if block.contains("<owl:Restriction") {
         return restriction_ce_to_ofn(block, base, dt_props);
     }
-    if block.contains("<owl:Class") {
+    if block.trim_start().starts_with("<owl:Class") {
+        let inner = element_inner(block, "owl:Class");
+        if let Some(ofn) = inline_restriction_ce_to_ofn(inner.trim(), base, dt_props) {
+            return Some(ofn);
+        }
+    } else if block.contains("<owl:Class") {
         if let Some((_, _, class_block)) = find_top_level_element_bounds(block, "owl:Class") {
             if let Some(ofn) = member_block_to_ofn(class_block, base, dt_props) {
                 return Some(ofn);
             }
-        }
-        let inner = element_inner(block, "owl:Class");
-        if let Some(ofn) = inline_restriction_ce_to_ofn(inner.trim(), base, dt_props) {
-            return Some(ofn);
         }
     }
     if block.contains("owl:onProperty") {

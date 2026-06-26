@@ -38,17 +38,33 @@ fn dl_classify_budget() -> Duration {
 }
 
 /// Maximum concurrent DL worker threads (limits orphan work after timeouts).
-/// Override with `ONTOLOGOS_DL_MAX_WORKERS` (default 8).
-const DEFAULT_DL_MAX_WORKERS: usize = 8;
+/// Override with `ONTOLOGOS_DL_MAX_WORKERS` (default 10).
+const DEFAULT_DL_MAX_WORKERS: usize = 10;
+
+/// Rayon pool size for catalog / WG scans (`ONTOLOGOS_SCAN_THREADS`, default 10).
+const DEFAULT_SCAN_THREADS: usize = 10;
 
 fn dl_max_workers() -> usize {
     static LIMIT: OnceLock<usize> = OnceLock::new();
     *LIMIT.get_or_init(|| {
-        std::env::var("ONTOLOGOS_DL_MAX_WORKERS")
+        let n = std::env::var("ONTOLOGOS_DL_MAX_WORKERS")
             .ok()
             .and_then(|s| s.parse().ok())
             .filter(|&n| n > 0)
-            .unwrap_or(DEFAULT_DL_MAX_WORKERS)
+            .unwrap_or(DEFAULT_DL_MAX_WORKERS);
+        n.max(DEFAULT_DL_MAX_WORKERS)
+    })
+}
+
+fn scan_thread_count() -> usize {
+    static COUNT: OnceLock<usize> = OnceLock::new();
+    *COUNT.get_or_init(|| {
+        let n = std::env::var("ONTOLOGOS_SCAN_THREADS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .filter(|&n| n > 0)
+            .unwrap_or(DEFAULT_SCAN_THREADS);
+        n.max(DEFAULT_SCAN_THREADS)
     })
 }
 
@@ -79,19 +95,41 @@ fn configure_wg_tableau_limits() {
     }
 }
 
-/// Optional rayon pool size for catalog scans (`ONTOLOGOS_SCAN_THREADS`).
+/// Floor WG/catalog scan parallelism at 10 threads and DL workers (never sequential).
+pub fn ensure_concurrent_scan_defaults() {
+    // SAFETY: must run before catalog `OnceLock` initializers read these variables.
+    unsafe {
+        if std::env::var("ONTOLOGOS_SCAN_THREADS")
+            .ok()
+            .and_then(|s| s.parse::<usize>().ok())
+            .is_none_or(|n| n < DEFAULT_SCAN_THREADS)
+        {
+            std::env::set_var(
+                "ONTOLOGOS_SCAN_THREADS",
+                DEFAULT_SCAN_THREADS.to_string(),
+            );
+        }
+        if std::env::var("ONTOLOGOS_DL_MAX_WORKERS")
+            .ok()
+            .and_then(|s| s.parse::<usize>().ok())
+            .is_none_or(|n| n < DEFAULT_DL_MAX_WORKERS)
+        {
+            std::env::set_var(
+                "ONTOLOGOS_DL_MAX_WORKERS",
+                DEFAULT_DL_MAX_WORKERS.to_string(),
+            );
+        }
+    }
+}
+
+/// Configure the global rayon pool for catalog scans (always parallel, default 10 threads).
 fn configure_scan_parallelism() {
     static INIT: OnceLock<()> = OnceLock::new();
     INIT.get_or_init(|| {
-        if let Ok(n) = std::env::var("ONTOLOGOS_SCAN_THREADS") {
-            if let Ok(n) = n.parse::<usize>() {
-                if n > 0 {
-                    let _ = rayon::ThreadPoolBuilder::new()
-                        .num_threads(n)
-                        .build_global();
-                }
-            }
-        }
+        let n = scan_thread_count();
+        let _ = rayon::ThreadPoolBuilder::new()
+            .num_threads(n)
+            .build_global();
     });
 }
 
@@ -2169,6 +2207,7 @@ pub fn scan_planned_passing_wg_cases() -> Vec<String> {
 
 /// All runnable WG cases that pass semantic checks (full catalog rescan).
 pub fn scan_all_passing_wg_cases() -> Vec<String> {
+    ensure_concurrent_scan_defaults();
     configure_scan_parallelism();
     let mut passing: Vec<String> = read_wg_catalog_file()
         .par_iter()
@@ -2228,62 +2267,28 @@ fn classify_wg_failure(case: &WgCase, err: &str) -> WgFailureBucket {
     WgFailureBucket::Other
 }
 
-/// When false, catalog scans run cases sequentially (stable tableau env + DL budgets).
-fn wg_scan_use_parallelism() -> bool {
-    if std::env::var("ONTOLOGOS_SCAN_THREADS")
-        .ok()
-        .and_then(|s| s.parse::<usize>().ok())
-        .is_some_and(|n| n <= 1)
-    {
-        return false;
-    }
-  if std::env::var("ONTOLOGOS_DL_MAX_WORKERS")
-        .ok()
-        .and_then(|s| s.parse::<usize>().ok())
-        .is_some_and(|n| n <= 1)
-    {
-        return false;
-    }
-    true
-}
-
 /// All active WG cases that fail semantic checks (for triage).
 pub fn scan_all_wg_failures() -> Vec<WgFailure> {
+    ensure_concurrent_scan_defaults();
     configure_wg_tableau_limits();
-    if wg_scan_use_parallelism() {
-        configure_scan_parallelism();
-    }
+    configure_scan_parallelism();
     let active: Vec<_> = read_wg_catalog_file()
         .into_iter()
         .filter(|case| case.status == "wg" && wg_case_runnable(case))
         .collect();
     let total = active.len();
     let done = AtomicUsize::new(0);
-    let mut failures: Vec<WgFailure> = if wg_scan_use_parallelism() {
-        active
-            .par_iter()
-            .filter_map(|case| {
-                log_parallel_progress("wg all", &done, total, &case.id);
-                check_wg_case(case).err().map(|err| WgFailure {
-                    bucket: classify_wg_failure(case, &err),
-                    id: case.id.clone(),
-                    detail: err,
-                })
+    let mut failures: Vec<WgFailure> = active
+        .par_iter()
+        .filter_map(|case| {
+            log_parallel_progress("wg all", &done, total, &case.id);
+            check_wg_case(case).err().map(|err| WgFailure {
+                bucket: classify_wg_failure(case, &err),
+                id: case.id.clone(),
+                detail: err,
             })
-            .collect()
-    } else {
-        active
-            .iter()
-            .filter_map(|case| {
-                log_parallel_progress("wg all", &done, total, &case.id);
-                check_wg_case(case).err().map(|err| WgFailure {
-                    bucket: classify_wg_failure(case, &err),
-                    id: case.id.clone(),
-                    detail: err,
-                })
-            })
-            .collect()
-    };
+        })
+        .collect();
     failures.sort_by(|a, b| a.id.cmp(&b.id));
     failures
 }
@@ -2936,6 +2941,9 @@ fn entailment_holds_with_budget_opts(
         return Ok(true);
     }
     if object_property_range_subsumption_entailment_guard(premise, conclusion) {
+        return Ok(true);
+    }
+    if singleton_range_functional_entailment_guard(premise, conclusion) {
         return Ok(true);
     }
     if subsumption_entailment_guard(premise, conclusion) {
@@ -5800,6 +5808,90 @@ fn known_datatype_subsumption_pairs() -> &'static [(&'static str, &'static str)]
         ("float", "double"),
         ("double", "double"),
     ]
+}
+
+/// Object property with range `oneOf` of a single individual entails functionality (WG FunctionalProperty-004).
+fn singleton_range_functional_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
+    let mut wants_functional = Vec::new();
+    for (_, axiom) in conclusion.axioms().iter() {
+        if let ontologos_core::Axiom::FunctionalObjectProperty(prop) = axiom {
+            wants_functional.push(*prop);
+        }
+    }
+    if wants_functional.is_empty() {
+        return false;
+    }
+    wants_functional.iter().any(|prop_conc| {
+        let Some(prop_prem) = map_entity_by_iri(conclusion, premise, *prop_conc)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, *prop_conc))
+        else {
+            return false;
+        };
+        premise_object_property_has_singleton_object_range(premise, prop_prem)
+    })
+}
+
+fn premise_object_property_has_singleton_object_range(
+    premise: &Ontology,
+    property: EntityId,
+) -> bool {
+    let store = premise.dl();
+    for axiom in store.axioms() {
+        let DlAxiom::ObjectPropertyRange {
+            property: prop,
+            range,
+        } = axiom
+        else {
+            continue;
+        };
+        if *prop != property {
+            continue;
+        }
+        if let Some(ClassExpr::OneOf(individuals)) = store.ce(*range) {
+            return individuals.len() == 1;
+        }
+        if let Some(ClassExpr::Atomic(range_class)) = store.ce(*range) {
+            return store.axioms().any(|ax| {
+                let DlAxiom::EquivalentClasses(ops) = ax else {
+                    return false;
+                };
+                ops.iter().any(|ce| {
+                    matches!(store.ce(*ce), Some(ClassExpr::OneOf(ids)) if ids.len() == 1)
+                }) && ops.iter().any(|ce| {
+                    matches!(
+                        store.ce(*ce),
+                        Some(ClassExpr::Atomic(c)) if c == range_class
+                    )
+                })
+            });
+        }
+    }
+    for (_, axiom) in premise.axioms().iter() {
+        let ontologos_core::Axiom::ObjectPropertyRange { property: prop, range } = axiom else {
+            continue;
+        };
+        if *prop != property {
+            continue;
+        }
+        let Some(range_ce) = store.expressions().find_map(|(id, e)| match e {
+            ClassExpr::Atomic(c) if *c == *range => Some(id),
+            _ => None,
+        }) else {
+            continue;
+        };
+        if store.axioms().any(|ax| {
+            let DlAxiom::EquivalentClasses(ops) = ax else {
+                return false;
+            };
+            ops.contains(&range_ce)
+                && ops.iter().any(|ce| {
+                    matches!(store.ce(*ce), Some(ClassExpr::OneOf(ids)) if ids.len() == 1)
+                })
+        }) {
+            return true;
+        }
+    }
+    false
 }
 
 /// Object property `rdfs:range` entails `owl:Thing ⊑ ∀p.A` (WG I5.24-003).

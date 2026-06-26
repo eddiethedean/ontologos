@@ -25,7 +25,7 @@ bash benchmarks/scripts/report-conformance-coverage.sh
 | Catalog `wg` cases | **428** (`wg_planned = 0`) |
 | Promoted WG IDs | **331** (`promoted_wg_ids.txt`) |
 
-### WG failure buckets (2026-06-25, `ONTOLOGOS_DL_BUDGET_SECS=30`, `ONTOLOGOS_DL_MAX_WORKERS=1`)
+### WG failure buckets (2026-06-25, `ONTOLOGOS_DL_BUDGET_SECS=30`, 10 parallel workers)
 
 | Bucket | Count | Notes |
 |--------|------:|-------|

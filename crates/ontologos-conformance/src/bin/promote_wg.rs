@@ -2,11 +2,12 @@
 use std::collections::BTreeSet;
 
 use ontologos_conformance::{
-    promoted_wg_ids_path, read_wg_catalog_file, scan_all_passing_wg_cases,
-    scan_planned_passing_wg_cases, write_promoted_wg_ids,
+    ensure_concurrent_scan_defaults, promoted_wg_ids_path, read_wg_catalog_file,
+    scan_all_passing_wg_cases, scan_planned_passing_wg_cases, write_promoted_wg_ids,
 };
 
 fn main() {
+    ensure_concurrent_scan_defaults();
     let args: Vec<String> = std::env::args().collect();
     let incremental = args.iter().any(|a| a == "--incremental");
 

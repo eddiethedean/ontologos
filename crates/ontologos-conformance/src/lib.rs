@@ -7,7 +7,8 @@
 mod catalog;
 
 pub use catalog::{
-    audit_planned_backlog, check_axiom_case, check_axiom_case_bounded, check_wg_case, load_catalog,
+    audit_planned_backlog, check_axiom_case, check_axiom_case_bounded, check_wg_case,
+    ensure_concurrent_scan_defaults, load_catalog,
     load_wg_catalog, promoted_axiom_ids_path, promoted_wg_ids_path, read_catalog_file,
     read_promoted_axiom_ids, read_promoted_wg_ids, read_wg_catalog_file,
     refresh_catalog_file_cache, run_hermit_case, run_wg_case, scan_all_passing_axiom_cases,

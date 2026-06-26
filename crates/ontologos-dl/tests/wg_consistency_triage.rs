@@ -140,6 +140,73 @@ fn diagnose_dl005_is_consistent_steps() {
 }
 
 #[test]
+fn diagnose_dl018_tableau() {
+    use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed, tableau_is_consistent_with_seed};
+
+    let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf";
+    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let dl = DlOntology::from_ontology(&ont).expect("dl");
+    let seed = TableauSeed::default();
+    eprintln!("kb={:?}", tableau_is_consistent_with_seed(&ont, &seed));
+    use ontologos_alc::is_ce_satisfiable_with_seed;
+    use ontologos_core::CeId;
+    eprintln!(
+        "and18 sat={:?}",
+        is_ce_satisfiable_with_seed(&dl, CeId(18), &seed)
+    );
+    if let Some(id) = ont.lookup_entity("http://oiled.man.example.net/test#Satisfiable") {
+        let store = ont.dl();
+        let ce = store.expressions().find_map(|(cid, e)| match e {
+            ontologos_core::ClassExpr::Atomic(c) if *c == id => Some(cid),
+            _ => None,
+        });
+        eprintln!("atomic ce={ce:?} equiv18 sat={:?}", is_ce_satisfiable_with_seed(&dl, CeId(18), &seed));
+        eprintln!(
+            "Satisfiable sat={:?}",
+            is_named_class_satisfiable_with_seed(&dl, id, &seed)
+        );
+        let store = ont.dl();
+        let def = store.expressions().find_map(|(ce, e)| match e {
+            ontologos_core::ClassExpr::Atomic(c) if *c == id => Some(ce),
+            _ => None,
+        });
+        if let Some(def) = def {
+            for ax in store.axioms() {
+                if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax {
+                    if ids.contains(&def) {
+                        for &other in ids {
+                            if other != def {
+                                eprintln!("equiv {other:?} => {:?}", store.ce(other));
+                                if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
+                                    for op in ops {
+                                        eprintln!("  conjunct {op:?}: {:?}", store.ce(*op));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn spot_check_consistency_fixes() {
+    let cases = [
+        ("disjoint-010", "wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf", false),
+        ("dl-601", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf", false),
+        ("dl-018", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf", true),
+        ("dl-020", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020/premise.rdf", true),
+    ];
+    for (name, rel, expected) in cases {
+        let ont = load_ontology(&wg_premise(rel)).expect("load");
+        let actual = is_consistent(&ont).expect("check");
+        assert_eq!(actual, expected, "{name}");
+    }
+}
+
+#[test]
 fn diagnose_flower_and_one_equals_two() {
     let cases = [
         ("One_equals_two", "wg/One_equals_two/premise.rdf", false),

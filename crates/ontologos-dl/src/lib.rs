@@ -88,62 +88,84 @@ pub fn classify_for_entailment(ontology: &Ontology) -> Result<Taxonomy> {
 
 /// Check ontology consistency under DL.
 pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
+    let trace = std::env::var("ONTOLOGOS_CONSISTENCY_TRACE").is_ok();
+    macro_rules! reject {
+        ($step:expr) => {{
+            if trace {
+                eprintln!("is_consistent: reject at {}", $step);
+            }
+            return Ok(false);
+        }};
+    }
     if thing_equivalent_nothing(ontology) {
-        return Ok(false);
+        reject!("thing_equivalent_nothing");
     }
     if thing_equivalent_finite_nominal(ontology) {
-        return Ok(false);
+        reject!("thing_equivalent_finite_nominal");
     }
     if !datatype::is_datatype_consistent(ontology) {
-        return Ok(false);
+        reject!("datatype");
     }
     if ontologos_bridge::has_bottom_chain_violation(ontology) {
-        return Ok(false);
+        reject!("bottom_chain");
     }
     if abox_property_characteristic_clash(ontology) {
-        return Ok(false);
+        reject!("property_characteristic_clash");
     }
     if abox_bottom_property_restriction(ontology) {
-        return Ok(false);
+        reject!("bottom_property_restriction");
     }
     if abox_max_cardinality_zero_clash(ontology) {
-        return Ok(false);
+        reject!("max_cardinality_zero");
     }
     if abox_positive_negative_property_clash(ontology) {
-        return Ok(false);
+        reject!("positive_negative_property");
     }
     if abox_positive_negative_data_clash(ontology) {
-        return Ok(false);
+        reject!("positive_negative_data");
     }
     if abox_property_self_disjoint_clash(ontology) {
-        return Ok(false);
+        reject!("property_self_disjoint");
+    }
+    if abox_self_disjoint_restriction_clash(ontology) {
+        reject!("self_disjoint_restriction");
     }
     if abox_complement_typing_clash(ontology) {
-        return Ok(false);
+        reject!("complement_typing");
     }
     if let Some(consistent) = union_csp::nominal_grid_consistency(ontology) {
+        if trace {
+            eprintln!("is_consistent: union_csp => {consistent}");
+        }
         return Ok(consistent);
     }
     let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
-    if abox_exists_forall_role_clash(ontology, &dl, &TableauSeed::default())? {
-        return Ok(false);
+    let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
+    let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
+    let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    if abox_exists_forall_role_clash(ontology, &dl, &seed)? {
+        reject!("exists_forall_role_clash");
     }
     if ontology_maybe_needs_flower_classify(ontology) {
         let taxonomy = classify(ontology)?;
         if flower_auxiliary_unsatisfiable_classes(ontology, &taxonomy) {
-            return Ok(false);
+            reject!("flower_auxiliary");
+        }
+        if abox_asserted_taxonomy_unsatisfiable(ontology, &taxonomy) {
+            reject!("abox_taxonomy_unsat");
         }
     }
-    let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
-    let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
-    let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
     if abox_atomic_class_unsatisfiable(ontology, &dl, &seed)? {
-        return Ok(false);
+        reject!("abox_atomic_class");
     }
     if abox_functional_different_individuals_clash(ontology) {
-        return Ok(false);
+        reject!("functional_different_individuals");
     }
-    ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)
+    let tableau = ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)?;
+    if trace {
+        eprintln!("is_consistent: tableau => {tableau}");
+    }
+    Ok(tableau)
 }
 
 /// Returns true when every listed named class is unsatisfiable in the ontology TBox.
@@ -296,6 +318,9 @@ fn abox_atomic_class_unsatisfiable(
         let Some(ontologos_core::ClassExpr::Atomic(entity)) = store.ce(*class) else {
             continue;
         };
+        if named_class_skip_atomic_unsat_precheck(store, *entity) {
+            continue;
+        }
         if atomic_class_proven_unsatisfiable(dl, *entity, seed)? {
             return Ok(true);
         }
@@ -304,11 +329,154 @@ fn abox_atomic_class_unsatisfiable(
         let ontologos_core::Axiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
+        if named_class_skip_atomic_unsat_precheck(store, *class) {
+            continue;
+        }
         if atomic_class_proven_unsatisfiable(dl, *class, seed)? {
             return Ok(true);
         }
     }
     Ok(false)
+}
+
+fn named_class_skip_atomic_unsat_precheck(
+    store: &ontologos_core::DlStore,
+    class: EntityId,
+) -> bool {
+    if named_class_has_complex_equivalent(store, class) {
+        return true;
+    }
+    store.axioms().any(|axiom| {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            return false;
+        };
+        ce_atomic_entity(store, *sub) == Some(class)
+            && !matches!(store.ce(*sup), Some(ClassExpr::Atomic(_)))
+    })
+}
+
+fn abox_asserted_taxonomy_unsatisfiable(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {
+    if taxonomy.unsatisfiable.is_empty() {
+        return false;
+    }
+    let unsat: std::collections::HashSet<EntityId> = taxonomy.unsatisfiable.iter().copied().collect();
+    for axiom in ontology.dl().axioms() {
+        let DlAxiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        let Some(ClassExpr::Atomic(entity)) = ontology.dl().ce(*class) else {
+            continue;
+        };
+        if unsat.contains(entity) {
+            return true;
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if unsat.contains(class) {
+            return true;
+        }
+    }
+    false
+}
+
+fn abox_self_disjoint_restriction_clash(ontology: &Ontology) -> bool {
+    let store = ontology.dl();
+    let mut self_disjoint_ces = Vec::new();
+    for axiom in store.axioms() {
+        let DlAxiom::DisjointClasses(classes) = axiom else {
+            continue;
+        };
+        if classes.len() == 2 && classes[0] == classes[1] {
+            self_disjoint_ces.push(classes[0]);
+        } else if classes.len() == 1 {
+            self_disjoint_ces.push(classes[0]);
+        }
+    }
+    if self_disjoint_ces.is_empty() {
+        return false;
+    }
+    for &ce in &self_disjoint_ces {
+        let Some(ClassExpr::MinCardinality {
+            n,
+            property,
+            filler: _,
+        }) = store.ce(ce).cloned()
+        else {
+            continue;
+        };
+        if n == 0 {
+            continue;
+        }
+        for axiom in store.axioms() {
+            let DlAxiom::ObjectPropertyAssertion {
+                subject,
+                property: prop,
+                ..
+            } = axiom
+            else {
+                continue;
+            };
+            if role_matches_property(&property, prop) {
+                let _ = subject;
+                return true;
+            }
+        }
+        for (_, axiom) in ontology.axioms().iter() {
+            let Axiom::ObjectPropertyAssertion {
+                subject: _,
+                property: prop,
+                ..
+            } = axiom
+            else {
+                continue;
+            };
+            if role_matches_atomic_property(&property, *prop) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn role_matches_property(required: &RoleExpr, actual: &RoleExpr) -> bool {
+    match (required, actual) {
+        (RoleExpr::Atomic(req), RoleExpr::Atomic(act)) => req == act,
+        _ => required == actual,
+    }
+}
+
+fn role_matches_atomic_property(required: &RoleExpr, actual: EntityId) -> bool {
+    matches!(required, RoleExpr::Atomic(req) if *req == actual)
+}
+
+fn named_class_has_complex_equivalent(
+    store: &ontologos_core::DlStore,
+    class: EntityId,
+) -> bool {
+    let class_ce = store.expressions().find_map(|(id, e)| match e {
+        ClassExpr::Atomic(c) if *c == class => Some(id),
+        _ => None,
+    });
+    let Some(class_ce) = class_ce else {
+        return false;
+    };
+    store.axioms().any(|axiom| {
+        let DlAxiom::EquivalentClasses(ops) = axiom else {
+            return false;
+        };
+        if !ops.contains(&class_ce) {
+            return false;
+        }
+        ops.iter().any(|ce| {
+            matches!(
+                store.ce(*ce),
+                Some(ClassExpr::And(_) | ClassExpr::Or(_))
+            )
+        })
+    })
 }
 
 fn atomic_class_proven_unsatisfiable(
@@ -398,6 +566,11 @@ fn abox_exists_forall_role_clash(
             let Some(f_fillers) = forall.get(&role) else {
                 continue;
             };
+            // Multiple ∃ on the same role may use different successors; only
+            // pair ∀ with ∃ when a single witness is forced.
+            if e_fillers.len() > 1 {
+                continue;
+            }
             for &e in &e_fillers {
                 for &f in f_fillers {
                     if !ontologos_alc::is_ce_intersection_satisfiable_with_seed(dl, e, f, seed)? {
@@ -1328,8 +1501,7 @@ fn flower_auxiliary_unsatisfiable_classes(ontology: &Ontology, taxonomy: &Taxono
             return true;
         }
     }
-    // Flower KB pattern: ≥2 unsat `.comp` auxiliary classes with any class assertion.
-    true
+    false
 }
 
 fn class_assertion_entails_class(
