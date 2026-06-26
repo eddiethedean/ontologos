@@ -29,7 +29,10 @@ fn main() {
     };
 
     let added = passing.len().saturating_sub(previous.len());
-    println!("passing WG cases: {} (+{added} since last promote)", passing.len());
+    println!(
+        "passing WG cases: {} (+{added} since last promote)",
+        passing.len()
+    );
     write_promoted_wg_ids(&passing).expect("write promoted_wg_ids.txt");
     println!("wrote {}", promoted_wg_ids_path().display());
 }

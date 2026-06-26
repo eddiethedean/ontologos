@@ -1,6 +1,6 @@
 //! CE satisfiability for dl-650 Unsatisfiable intersection pattern.
 
-use ontologos_alc::{DlOntology, TableauSeed, is_ce_satisfiable_with_seed};
+use ontologos_alc::{is_ce_satisfiable_with_seed, DlOntology, TableauSeed};
 use ontologos_core::DlAxiom;
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;

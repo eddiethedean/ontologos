@@ -96,7 +96,10 @@ fn main() {
                 println!("  {} [{:?}] {}", f.id, f.bucket, truncate(&f.detail, 80));
             }
             if failures.len() > 15 {
-                println!("  … and {} more (use wg_failures for full list)", failures.len() - 15);
+                println!(
+                    "  … and {} more (use wg_failures for full list)",
+                    failures.len() - 15
+                );
             }
         }
     }
@@ -114,18 +117,24 @@ fn print_text_header(metrics: &ontologos_conformance::ParityMetrics) {
     println!("HermiT burndown status");
     println!("  parity_pct:      {:.1}%", metrics.parity_pct);
     println!("  in_scope_total:  {}", metrics.in_scope_total);
-    println!("  backlog:         {} (java {} + wg {})", metrics.backlog, metrics.java_planned, metrics.wg_planned);
-    println!("  promoted:        axiom {} / wg {} of {} active", metrics.promoted_axiom, metrics.promoted_wg, metrics.active_wg);
+    println!(
+        "  backlog:         {} (java {} + wg {})",
+        metrics.backlog, metrics.java_planned, metrics.wg_planned
+    );
+    println!(
+        "  promoted:        axiom {} / wg {} of {} active",
+        metrics.promoted_axiom, metrics.promoted_wg, metrics.active_wg
+    );
     if metrics.unpromoted_wg > 0 {
-        println!("  unpromoted WG:   {} cases to burn down", metrics.unpromoted_wg);
+        println!(
+            "  unpromoted WG:   {} cases to burn down",
+            metrics.unpromoted_wg
+        );
     }
     println!("  runnable Java:   {}", metrics.runnable_java);
 }
 
-fn print_audit_summary(
-    title: &str,
-    summary: &ontologos_conformance::PlannedBacklogSummary,
-) {
+fn print_audit_summary(title: &str, summary: &ontologos_conformance::PlannedBacklogSummary) {
     println!();
     println!("{title}");
     println!("  java planned: {}", summary.java_total);
@@ -144,11 +153,17 @@ fn print_next_steps(metrics: &ontologos_conformance::ParityMetrics) {
     println!();
     println!("Next steps:");
     if metrics.unpromoted_wg > 0 {
-        println!("  parity_status --scan          # triage {} unpromoted WG failures", metrics.unpromoted_wg);
+        println!(
+            "  parity_status --scan          # triage {} unpromoted WG failures",
+            metrics.unpromoted_wg
+        );
         println!("  bash benchmarks/scripts/hermit-burndown.sh promote");
     }
     if metrics.java_planned > 0 {
-        println!("  parity_status --audit-fast    # classify {} Java planned cases", metrics.java_planned);
+        println!(
+            "  parity_status --audit-fast    # classify {} Java planned cases",
+            metrics.java_planned
+        );
     }
     if metrics.backlog == 0 && metrics.unpromoted_wg == 0 {
         println!("  catalog parity 100% — run check-hermit-parity-phases.sh");

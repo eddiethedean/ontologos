@@ -9,10 +9,7 @@ use super::clash::{self, assert_label, assert_negation};
 use super::Branch;
 
 /// Order `And` operands so cardinality restrictions are asserted before `∃`/`∀`.
-pub(crate) fn and_conjuncts_cardinality_first(
-    dl: &crate::DlOntology,
-    ops: Vec<CeId>,
-) -> Vec<CeId> {
+pub(crate) fn and_conjuncts_cardinality_first(dl: &crate::DlOntology, ops: Vec<CeId>) -> Vec<CeId> {
     let store = dl.core().dl();
     let mut cardinality_first = Vec::new();
     let mut rest = Vec::new();
@@ -134,10 +131,9 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
             let filler = effective_cardinality_filler(branch, filler);
             let mut successors = role_successor_worlds(branch, world, &property, filler);
             if successors.len() > n as usize {
-                if n == 1 && try_merge_role_successors(branch, &successors) {
-                    successors = role_successor_worlds(branch, world, &property, filler);
-                } else if n > 1
-                    && try_shrink_role_successors_to_max(branch, world, &property, filler, n)
+                if (n == 1 && try_merge_role_successors(branch, &successors))
+                    || (n > 1
+                        && try_shrink_role_successors_to_max(branch, world, &property, filler, n))
                 {
                     successors = role_successor_worlds(branch, world, &property, filler);
                 }
@@ -446,6 +442,7 @@ fn unqualified_max_cardinality_on_role(
     bound
 }
 
+#[allow(dead_code)]
 fn existing_role_successor(
     branch: &Branch<'_>,
     world: usize,
@@ -790,10 +787,7 @@ pub(crate) fn reapply_universal_restrictions(branch: &mut Branch<'_>) {
 }
 
 /// Whether `ce` (including under `And`/`Or`) carries an unqualified cardinality bound.
-fn ce_has_unqualified_cardinality_bound(
-    store: &ontologos_core::DlStore,
-    ce: CeId,
-) -> bool {
+fn ce_has_unqualified_cardinality_bound(store: &ontologos_core::DlStore, ce: CeId) -> bool {
     match store.ce(ce) {
         Some(ClassExpr::MaxCardinality { filler: None, .. })
         | Some(ClassExpr::ExactCardinality { filler: None, .. }) => true,
@@ -850,7 +844,8 @@ fn materialize_existential_chain(branch: &mut Branch<'_>, start_world: usize, st
                 if branch.clash {
                     return;
                 }
-                for &target in &role_successor_worlds(branch, world, &property_for_successors, None) {
+                for &target in &role_successor_worlds(branch, world, &property_for_successors, None)
+                {
                     if world_satisfies_filler(branch, target, filler)
                         || branch.worlds[target].labels.contains(&filler)
                     {
@@ -1218,10 +1213,11 @@ pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize
                 let filler = effective_cardinality_filler(branch, filler);
                 let mut successors = role_successor_worlds(branch, world, &property, filler);
                 if successors.len() > n as usize {
-                    if n == 1 && try_merge_role_successors(branch, &successors) {
-                        successors = role_successor_worlds(branch, world, &property, filler);
-                    } else if n > 1
-                        && try_shrink_role_successors_to_max(branch, world, &property, filler, n)
+                    if (n == 1 && try_merge_role_successors(branch, &successors))
+                        || (n > 1
+                            && try_shrink_role_successors_to_max(
+                                branch, world, &property, filler, n,
+                            ))
                     {
                         successors = role_successor_worlds(branch, world, &property, filler);
                     }
@@ -1245,10 +1241,11 @@ pub(crate) fn recheck_cardinality_on_world(branch: &mut Branch<'_>, world: usize
                 let filler = effective_cardinality_filler(branch, filler);
                 let mut successors = role_successor_worlds(branch, world, &property, filler);
                 if successors.len() > n as usize {
-                    if n == 1 && try_merge_role_successors(branch, &successors) {
-                        successors = role_successor_worlds(branch, world, &property, filler);
-                    } else if n > 1
-                        && try_shrink_role_successors_to_max(branch, world, &property, filler, n)
+                    if (n == 1 && try_merge_role_successors(branch, &successors))
+                        || (n > 1
+                            && try_shrink_role_successors_to_max(
+                                branch, world, &property, filler, n,
+                            ))
                     {
                         successors = role_successor_worlds(branch, world, &property, filler);
                     }

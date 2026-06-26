@@ -13,6 +13,11 @@ use crate::{
     detect_turtle_from_bytes, validate_loaded_ontology, Error, Format, Result,
 };
 
+const SUPPLEMENT_STANDARD_PREFIXES: &str = "\
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n";
+
 #[cfg(target_os = "linux")]
 const O_NOFOLLOW: i32 = 0o100_000;
 #[cfg(target_os = "macos")]
@@ -138,7 +143,14 @@ fn load_ontology_with_limits_and_base_inner(
             ill_founded_list,
         )?;
         if merge_imports {
-            merge_rdf_owl_imports(path, &preprocessed_rdf, &mut ontology, &mut report, limits, base)?;
+            merge_rdf_owl_imports(
+                path,
+                &preprocessed_rdf,
+                &mut ontology,
+                &mut report,
+                limits,
+                base,
+            )?;
         }
         if limits.strict && report.meta.skipped_axiom_count > 0 {
             return Err(Error::Parse(format!(
@@ -218,7 +230,7 @@ fn supplement_rdf_dl_axioms(
         crate::rdf_preprocess::collect_self_disjoint_restriction_assertions(preprocessed_rdf)
     {
         let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+            "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<{individual_iri}>\n\
                Declaration(Class(<{restriction_iri}>))\n\
                Declaration(NamedIndividual(<{individual_iri}>))\n\
@@ -236,7 +248,7 @@ fn supplement_rdf_dl_axioms(
         crate::rdf_preprocess::collect_object_class_assertions(preprocessed_rdf)
     {
         let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+            "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<{individual_iri}>\n\
                Declaration(NamedIndividual(<{individual_iri}>))\n\
                ClassAssertion({ce_ofn} <{individual_iri}>)\n\
@@ -250,7 +262,7 @@ fn supplement_rdf_dl_axioms(
         crate::rdf_preprocess::collect_restriction_subclasses(preprocessed_rdf)
     {
         let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+            "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<{class_iri}>\n\
                Declaration(Class(<{class_iri}>))\n\
                SubClassOf(<{class_iri}> {ce_ofn})\n\
@@ -264,7 +276,7 @@ fn supplement_rdf_dl_axioms(
         crate::rdf_preprocess::collect_complement_subclasses(preprocessed_rdf)
     {
         let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+            "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<{class_iri}>\n\
                Declaration(Class(<{class_iri}>))\n\
                SubClassOf(<{class_iri}> {ce_ofn})\n\
@@ -280,7 +292,7 @@ fn supplement_rdf_dl_axioms(
         let (extra_prefixes, ce_qualified) =
             crate::rdf_preprocess::qualify_ce_ofn_for_supplement(&ce_ofn);
         let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+            "{SUPPLEMENT_STANDARD_PREFIXES}\
              {extra_prefixes}\n\
              Ontology(<{class_iri}>\n\
                Declaration(Class(<{class_iri}>))\n\
@@ -339,9 +351,7 @@ fn supplement_rdf_dl_axioms(
         merge_supplement_ontology(ontology, &supplement)?;
         report.meta.mapped_axiom_count += supplement.dl().axiom_count();
     }
-    for (left, right) in
-        crate::rdf_preprocess::collect_property_disjoint_pairs(preprocessed_rdf)
-    {
+    for (left, right) in crate::rdf_preprocess::collect_property_disjoint_pairs(preprocessed_rdf) {
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Ontology(<http://example.org/disjoint-supplement>\n\
@@ -423,11 +433,7 @@ fn supplement_rdf_dl_axioms(
     for dpa in crate::rdf_preprocess::collect_direct_data_literal_assertions(preprocessed_rdf) {
         let (lexical, datatype_iri) = if dpa.value_literal.contains("^^") {
             let mut parts = dpa.value_literal.splitn(2, "^^");
-            let lex = parts
-                .next()
-                .unwrap_or("")
-                .trim_matches('"')
-                .to_string();
+            let lex = parts.next().unwrap_or("").trim_matches('"').to_string();
             let dt = parts
                 .next()
                 .unwrap_or("")
@@ -438,11 +444,7 @@ fn supplement_rdf_dl_axioms(
         };
         let (extra_prefixes, lit, dt_decl) = if datatype_iri.is_empty() {
             if dpa.value_literal.contains('@') || dpa.value_literal.contains("^^") {
-                (
-                    String::new(),
-                    dpa.value_literal.clone(),
-                    None,
-                )
+                (String::new(), dpa.value_literal.clone(), None)
             } else {
                 (
                     String::new(),
@@ -456,9 +458,7 @@ fn supplement_rdf_dl_axioms(
         } else {
             crate::rdf_preprocess::qualify_typed_literal_for_supplement(&lexical, &datatype_iri)
         };
-        let dt_decl_line = dt_decl
-            .map(|d| format!("\n       {d}"))
-            .unwrap_or_default();
+        let dt_decl_line = dt_decl.map(|d| format!("\n       {d}")).unwrap_or_default();
         let body = format!(
             "Declaration(NamedIndividual(<{}>))\n\
              Declaration(DataProperty(<{}>))\n\
@@ -570,8 +570,7 @@ fn merge_rdf_owl_imports(
         if !visited.insert(import_path.clone()) {
             continue;
         }
-        let imported =
-            load_ontology_with_limits_and_base_inner(&import_path, limits, base, false)?;
+        let imported = load_ontology_with_limits_and_base_inner(&import_path, limits, base, false)?;
         merge_full_ontology(ontology, &imported)?;
         report.meta.mapped_axiom_count += imported.dl().axiom_count();
     }
@@ -620,7 +619,10 @@ fn merge_supplement_ontology(target: &mut Ontology, source: &Ontology) -> Result
         })
         .collect();
     target.dl_mut().import_axioms_from(source.dl(), |id| {
-        entity_map.get(&id).copied().expect("supplement entity missing after merge")
+        entity_map
+            .get(&id)
+            .copied()
+            .expect("supplement entity missing after merge")
     });
     for (_, axiom) in source.axioms().iter() {
         let remapped = remap_supplement_axiom(axiom, &entity_map)?;
@@ -639,15 +641,13 @@ fn remap_supplement_axiom(
     entity_map: &std::collections::HashMap<EntityId, EntityId>,
 ) -> Result<Axiom> {
     let remap = |id: EntityId| -> Result<EntityId> {
-        entity_map.get(&id).copied().ok_or_else(|| {
-            Error::Parse(format!(
-                "supplement entity {id:?} missing after merge"
-            ))
-        })
+        entity_map
+            .get(&id)
+            .copied()
+            .ok_or_else(|| Error::Parse(format!("supplement entity {id:?} missing after merge")))
     };
-    let remap_vec = |ids: &[EntityId]| -> Result<Vec<EntityId>> {
-        ids.iter().map(|id| remap(*id)).collect()
-    };
+    let remap_vec =
+        |ids: &[EntityId]| -> Result<Vec<EntityId>> { ids.iter().map(|id| remap(*id)).collect() };
     Ok(match axiom {
         Axiom::SubClassOf {
             subclass,

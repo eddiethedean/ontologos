@@ -88,19 +88,21 @@ fn functional_inverse_grid_properties(ontology: &Ontology) -> bool {
         .count();
     let functional = index.functional_properties().len();
     let inverse_functional = index.inverse_functional_properties().len();
-    let with_inverse = ontology.entities().iter().filter(|(id, record)| {
-        record.kind == EntityKind::ObjectProperty
-            && ontology.axioms().iter().any(|(_, axiom)| {
-                matches!(
-                    axiom,
-                    ontologos_core::Axiom::InverseObjectProperties { left, right }
-                        if *left == *id || *right == *id
-                )
-            })
-    }).count();
-    object_props >= 3
-        && functional >= 3
-        && (inverse_functional >= 3 || with_inverse >= 3)
+    let with_inverse = ontology
+        .entities()
+        .iter()
+        .filter(|(id, record)| {
+            record.kind == EntityKind::ObjectProperty
+                && ontology.axioms().iter().any(|(_, axiom)| {
+                    matches!(
+                        axiom,
+                        ontologos_core::Axiom::InverseObjectProperties { left, right }
+                            if *left == *id || *right == *id
+                    )
+                })
+        })
+        .count();
+    object_props >= 3 && functional >= 3 && (inverse_functional >= 3 || with_inverse >= 3)
 }
 
 #[cfg(test)]

@@ -11,6 +11,7 @@ pub struct UnsatCache {
 }
 
 impl UnsatCache {
+    /// Create an empty unsatisfiability cache.
     #[must_use]
     pub fn new() -> Self {
         Self::default()

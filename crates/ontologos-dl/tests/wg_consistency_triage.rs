@@ -30,33 +30,85 @@ fn wg_consistency_burndown_triage() {
         ("wg/New-2DFeature-2DRational-2D002/premise.rdf", false),
         ("wg/One_equals_two/premise.rdf", false),
         ("wg/TestCase-3AWebOnt-2DThing-2D005/premise.rdf", false),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf", false),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf", false),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf", false),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf", false),
-        ("wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf", false),
-        ("wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf", false),
-        ("wg/TestCase-3AWebOnt-2Dmiscellaneous-2D204/premise.rdf", false),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502/premise.rdf", false),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf",
+            false,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf",
+            false,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf",
+            false,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf",
+            false,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf",
+            false,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
+            false,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D204/premise.rdf",
+            false,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502/premise.rdf",
+            false,
+        ),
     ];
     let spurious_inconsistency = [
         ("wg/TestCase-3AWebOntology-2D005/premise.rdf", true), // placeholder wrong
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf", true),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf", true),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020/premise.rdf", true),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D021/premise.rdf", true),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D024/premise.rdf", true),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D025/premise.rdf", true),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D624/premise.rdf", true),
-        ("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D625/premise.rdf", true),
-        ("wg/TestCase-3AWebOnt-2Dmiscellaneous-2D002/premise.rdf", true),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf",
+            true,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf",
+            true,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020/premise.rdf",
+            true,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D021/premise.rdf",
+            true,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D024/premise.rdf",
+            true,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D025/premise.rdf",
+            true,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D624/premise.rdf",
+            true,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D625/premise.rdf",
+            true,
+        ),
+        (
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D002/premise.rdf",
+            true,
+        ),
     ];
 
     let mut failures = Vec::new();
-    for (rel, expected) in missed_inconsistency
-        .iter()
-        .chain(spurious_inconsistency.iter().filter(|(r, _)| !r.contains("WebOntology")))
-    {
+    for (rel, expected) in missed_inconsistency.iter().chain(
+        spurious_inconsistency
+            .iter()
+            .filter(|(r, _)| !r.contains("WebOntology")),
+    ) {
         if let Err(msg) = check(rel, *expected) {
             eprintln!("FAIL: {msg}");
             failures.push(msg);
@@ -82,8 +134,7 @@ fn diagnose_dl005_is_consistent_steps() {
         ontologos_alc::tableau_is_consistent_with_seed(&ont, &seed)
     );
     if let Some(id) = ont.lookup_entity("http://oiled.man.example.net/test#Satisfiable") {
-        let sat =
-            ontologos_alc::is_named_class_satisfiable_with_seed(&dl, id, &seed).expect("sat");
+        let sat = ontologos_alc::is_named_class_satisfiable_with_seed(&dl, id, &seed).expect("sat");
         eprintln!("Satisfiable class sat={sat}");
         let store = ont.dl();
         let def = store.expressions().find_map(|(ce, e)| match e {
@@ -109,25 +160,32 @@ fn diagnose_dl005_is_consistent_steps() {
                                 eprintln!("  ce3={:?}", store.ce(CeId(3)));
                                 eprintln!("  ce1={:?}", store.ce(CeId(1)));
                                 eprintln!("  ce2={:?}", store.ce(CeId(2)));
-                                let sat56 = ontologos_alc::is_ce_intersection_satisfiable_with_seed(
-                                    &dl, CeId(5), CeId(6), &seed,
-                                )
-                                .expect("sat");
+                                let sat56 =
+                                    ontologos_alc::is_ce_intersection_satisfiable_with_seed(
+                                        &dl,
+                                        CeId(5),
+                                        CeId(6),
+                                        &seed,
+                                    )
+                                    .expect("sat");
                                 eprintln!("ce5 AND ce6 sat={sat56}");
-                                let sat57 = ontologos_alc::is_ce_intersection_satisfiable_with_seed(
-                                    &dl, CeId(5), CeId(7), &seed,
-                                )
-                                .expect("sat");
+                                let sat57 =
+                                    ontologos_alc::is_ce_intersection_satisfiable_with_seed(
+                                        &dl,
+                                        CeId(5),
+                                        CeId(7),
+                                        &seed,
+                                    )
+                                    .expect("sat");
                                 eprintln!("ce5 AND ce7 sat={sat57}");
                                 for (label, ce) in [
                                     ("ce5 alone", CeId(5)),
                                     ("ce6 alone", CeId(6)),
                                     ("full and", CeId(8)),
                                 ] {
-                                    let sat = ontologos_alc::is_ce_satisfiable_with_seed(
-                                        &dl, ce, &seed,
-                                    )
-                                    .expect("sat");
+                                    let sat =
+                                        ontologos_alc::is_ce_satisfiable_with_seed(&dl, ce, &seed)
+                                            .expect("sat");
                                     eprintln!("{label} sat={sat}");
                                 }
                             }
@@ -141,7 +199,10 @@ fn diagnose_dl005_is_consistent_steps() {
 
 #[test]
 fn diagnose_dl018_tableau() {
-    use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed, tableau_is_consistent_with_seed};
+    use ontologos_alc::{
+        is_named_class_satisfiable_with_seed, tableau_is_consistent_with_seed, DlOntology,
+        TableauSeed,
+    };
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf";
     let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -160,7 +221,10 @@ fn diagnose_dl018_tableau() {
             ontologos_core::ClassExpr::Atomic(c) if *c == id => Some(cid),
             _ => None,
         });
-        eprintln!("atomic ce={ce:?} equiv18 sat={:?}", is_ce_satisfiable_with_seed(&dl, CeId(18), &seed));
+        eprintln!(
+            "atomic ce={ce:?} equiv18 sat={:?}",
+            is_ce_satisfiable_with_seed(&dl, CeId(18), &seed)
+        );
         eprintln!(
             "Satisfiable sat={:?}",
             is_named_class_satisfiable_with_seed(&dl, id, &seed)
@@ -179,10 +243,15 @@ fn diagnose_dl018_tableau() {
                                 eprintln!("equiv {other:?} => {:?}", store.ce(other));
                                 if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
                                     for op in ops {
-                                        if let Some(ontologos_core::ClassExpr::Some { filler, .. }) =
-                                            store.ce(*op)
+                                        if let Some(ontologos_core::ClassExpr::Some {
+                                            filler,
+                                            ..
+                                        }) = store.ce(*op)
                                         {
-                                            eprintln!("  filler {filler:?}: {:?}", store.ce(*filler));
+                                            eprintln!(
+                                                "  filler {filler:?}: {:?}",
+                                                store.ce(*filler)
+                                            );
                                         }
                                     }
                                     eprintln!(
@@ -206,7 +275,7 @@ fn diagnose_dl018_tableau() {
 
 #[test]
 fn dl601_unsatisfiable_class_sat() {
-    use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
+    use ontologos_alc::{is_named_class_satisfiable_with_seed, DlOntology, TableauSeed};
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf";
     let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -214,8 +283,7 @@ fn dl601_unsatisfiable_class_sat() {
     let id = ont
         .lookup_entity("http://oiled.man.example.net/test#Unsatisfiable")
         .expect("Unsatisfiable");
-    let sat =
-        is_named_class_satisfiable_with_seed(&dl, id, &TableauSeed::default()).expect("sat");
+    let sat = is_named_class_satisfiable_with_seed(&dl, id, &TableauSeed::default()).expect("sat");
     eprintln!("Unsatisfiable sat={sat}");
     assert!(!is_consistent(&ont).expect("check"));
 }
@@ -230,18 +298,66 @@ fn dl018_is_consistent() {
 #[test]
 fn spot_check_consistency_fixes() {
     let cases = [
-        ("disjoint-010", "wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf", false),
-        ("dl-601", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf", false),
-        ("dl-018", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf", true),
-        ("dl-020", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020/premise.rdf", true),
-        ("dl-021", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D021/premise.rdf", true),
-        ("dl-024", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D024/premise.rdf", true),
-        ("dl-025", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D025/premise.rdf", true),
-        ("dl-624", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D624/premise.rdf", true),
-        ("dl-625", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D625/premise.rdf", true),
-        ("dl-608", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf", false),
-        ("misc-203", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf", false),
-        ("misc-204", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D204/premise.rdf", false),
+        (
+            "disjoint-010",
+            "wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf",
+            false,
+        ),
+        (
+            "dl-601",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf",
+            false,
+        ),
+        (
+            "dl-018",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf",
+            true,
+        ),
+        (
+            "dl-020",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D020/premise.rdf",
+            true,
+        ),
+        (
+            "dl-021",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D021/premise.rdf",
+            true,
+        ),
+        (
+            "dl-024",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D024/premise.rdf",
+            true,
+        ),
+        (
+            "dl-025",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D025/premise.rdf",
+            true,
+        ),
+        (
+            "dl-624",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D624/premise.rdf",
+            true,
+        ),
+        (
+            "dl-625",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D625/premise.rdf",
+            true,
+        ),
+        (
+            "dl-608",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf",
+            false,
+        ),
+        (
+            "misc-203",
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
+            false,
+        ),
+        (
+            "misc-204",
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D204/premise.rdf",
+            false,
+        ),
     ];
     for (name, rel, expected) in cases {
         let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -252,7 +368,9 @@ fn spot_check_consistency_fixes() {
 
 #[test]
 fn diagnose_dl608_unsatisfiable() {
-    use ontologos_alc::{DlOntology, TableauSeed, is_ce_satisfiable_with_seed, is_named_class_satisfiable_with_seed};
+    use ontologos_alc::{
+        is_ce_satisfiable_with_seed, is_named_class_satisfiable_with_seed, DlOntology, TableauSeed,
+    };
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf";
     let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -313,10 +431,14 @@ fn diagnose_dl608_unsatisfiable() {
         for ent in [p1, p2] {
             if let Ok(record) = dl.core().entity(ent) {
                 if let Ok(iri) = dl.core().resolve_iri(record.iri) {
-                    eprintln!("{iri} equiv ce: {:?}", store.expressions().find_map(|(id, e)| match e {
-                        ontologos_core::ClassExpr::Atomic(c) if *c == ent => store.ce(id).cloned(),
-                        _ => None,
-                    }));
+                    eprintln!(
+                        "{iri} equiv ce: {:?}",
+                        store.expressions().find_map(|(id, e)| match e {
+                            ontologos_core::ClassExpr::Atomic(c) if *c == ent =>
+                                store.ce(id).cloned(),
+                            _ => None,
+                        })
+                    );
                 }
             }
         }
@@ -344,7 +466,7 @@ fn diagnose_dl608_unsatisfiable() {
                 }
             }
         }
-        use ontologos_alc::{TableauSeed, is_ce_intersection_satisfiable_with_seed};
+        use ontologos_alc::TableauSeed;
         let seed = TableauSeed::default();
         if let (Some(p1_ce), Some(p2_ce)) = (p1_ce, p2_ce) {
             use ontologos_alc::is_ce_intersection_satisfiable_with_seed;
@@ -360,8 +482,14 @@ fn diagnose_dl608_unsatisfiable() {
 #[ignore = "dl-650/dl-910 comp-grid variants — still open"]
 fn dl650_and_dl910_should_be_inconsistent() {
     for (name, rel) in [
-        ("dl-650", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf"),
-        ("dl-910", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf"),
+        (
+            "dl-650",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf",
+        ),
+        (
+            "dl-910",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf",
+        ),
     ] {
         check(rel, false).unwrap_or_else(|e| panic!("{name}: {e}"));
     }
@@ -369,7 +497,7 @@ fn dl650_and_dl910_should_be_inconsistent() {
 
 #[test]
 fn dl608_equiv_and_should_be_unsatisfiable() {
-    use ontologos_alc::{DlOntology, TableauSeed, is_ce_satisfiable_with_seed};
+    use ontologos_alc::{is_ce_satisfiable_with_seed, DlOntology, TableauSeed};
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf";
     let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -385,13 +513,15 @@ fn dl608_equiv_and_should_be_unsatisfiable() {
             _ => None,
         })
         .expect("ce");
-    let equiv_and = store.axioms().find_map(|ax| match ax {
-        ontologos_core::DlAxiom::EquivalentClasses(ids) if ids.contains(&unsat_ce) => ids
-            .iter()
-            .copied()
-            .find(|&id| id != unsat_ce),
-        _ => None,
-    }).expect("equiv");
+    let equiv_and = store
+        .axioms()
+        .find_map(|ax| match ax {
+            ontologos_core::DlAxiom::EquivalentClasses(ids) if ids.contains(&unsat_ce) => {
+                ids.iter().copied().find(|&id| id != unsat_ce)
+            }
+            _ => None,
+        })
+        .expect("equiv");
     let sat = is_ce_satisfiable_with_seed(&dl, equiv_and, &TableauSeed::default()).expect("sat");
     assert!(!sat, "Unsatisfiable equiv And should be unsat");
 }
@@ -400,20 +530,35 @@ fn dl608_equiv_and_should_be_unsatisfiable() {
 fn diagnose_flower_and_one_equals_two() {
     let cases = [
         ("One_equals_two", "wg/One_equals_two/premise.rdf", false),
-        ("dl-601", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf", false),
-        ("dl-608", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf", false),
-        ("disjointWith-010", "wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf", false),
+        (
+            "dl-601",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf",
+            false,
+        ),
+        (
+            "dl-608",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf",
+            false,
+        ),
+        (
+            "disjointWith-010",
+            "wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf",
+            false,
+        ),
     ];
     for (name, rel, expected) in cases {
         let ont = load_ontology(&wg_premise(rel)).expect("load");
         let actual = is_consistent(&ont).expect("check");
-        eprintln!("{name}: expected={expected} actual={actual} datatype={}", is_datatype_consistent(&ont));
+        eprintln!(
+            "{name}: expected={expected} actual={actual} datatype={}",
+            is_datatype_consistent(&ont)
+        );
     }
 }
 
 #[test]
 fn diagnose_satisfiable_class_sat() {
-    use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
+    use ontologos_alc::{is_named_class_satisfiable_with_seed, DlOntology, TableauSeed};
     use ontologos_core::EntityKind;
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf";
@@ -437,10 +582,22 @@ fn diagnose_satisfiable_class_sat() {
 #[test]
 fn diagnose_priority_cases() {
     let cases = [
-        ("Rational-003", "wg/New-2DFeature-2DRational-2D003/premise.rdf"),
-        ("Thing-004", "wg/TestCase-3AWebOnt-2DThing-2D004/premise.rdf"),
-        ("Thing-005", "wg/TestCase-3AWebOnt-2DThing-2D005/premise.rdf"),
-        ("dl-005", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf"),
+        (
+            "Rational-003",
+            "wg/New-2DFeature-2DRational-2D003/premise.rdf",
+        ),
+        (
+            "Thing-004",
+            "wg/TestCase-3AWebOnt-2DThing-2D004/premise.rdf",
+        ),
+        (
+            "Thing-005",
+            "wg/TestCase-3AWebOnt-2DThing-2D005/premise.rdf",
+        ),
+        (
+            "dl-005",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf",
+        ),
     ];
     for (name, rel) in cases {
         let ont = load_ontology(&wg_premise(rel)).expect("load");

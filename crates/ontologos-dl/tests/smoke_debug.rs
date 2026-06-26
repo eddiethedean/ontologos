@@ -11,8 +11,9 @@ fn ax(name: &str) -> PathBuf {
 
 #[test]
 fn debug_bottom_wg() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/hermit/wg/New-2DFeature-2DBottomObjectProperty-2D001/premise.rdf");
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../benchmarks/data/hermit/wg/New-2DFeature-2DBottomObjectProperty-2D001/premise.rdf",
+    );
     let ont = load_ontology(&path).unwrap();
     eprintln!("entities {}", ont.entity_count());
     eprintln!("dl axioms {}", ont.dl().axiom_count());
@@ -52,11 +53,16 @@ fn smoke_kb_consistency() {
 fn debug_domain_cond() {
     let prem = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Drdfs-2Ddomain-2Dcond/premise.rdf");
-    let conc = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Drdfs-2Ddomain-2Dcond/conclusion.rdf");
+    let conc = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Drdfs-2Ddomain-2Dcond/conclusion.rdf",
+    );
     for (label, path) in [("prem", &prem), ("conc", &conc)] {
         let ont = load_ontology(path).unwrap();
-        eprintln!("{label} dl={} core={}", ont.dl().axiom_count(), ont.axiom_count());
+        eprintln!(
+            "{label} dl={} core={}",
+            ont.dl().axiom_count(),
+            ont.axiom_count()
+        );
         for (id, ce) in ont.dl().expressions() {
             eprintln!("  CeId({}): {ce:?}", id.0);
         }
@@ -81,11 +87,19 @@ fn debug_bool_intersection() {
         .join("../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Dbool-2Dintersection-2Dinst-2Dcomp/conclusion.rdf");
     for (label, path) in [("prem", &prem), ("conc", &conc)] {
         let ont = load_ontology(path).unwrap();
-        eprintln!("{label} dl={} core={}", ont.dl().axiom_count(), ont.axiom_count());
+        eprintln!(
+            "{label} dl={} core={}",
+            ont.dl().axiom_count(),
+            ont.axiom_count()
+        );
         for (id, ce) in ont.dl().expressions() {
             eprintln!("  CeId({}): {ce:?}", id.0);
         }
-        for ax in ont.dl().axioms() { eprintln!("  dl {ax:?}"); }
-        for (_, ax) in ont.axioms().iter() { eprintln!("  core {ax:?}"); }
+        for ax in ont.dl().axioms() {
+            eprintln!("  dl {ax:?}");
+        }
+        for (_, ax) in ont.axioms().iter() {
+            eprintln!("  core {ax:?}");
+        }
     }
 }

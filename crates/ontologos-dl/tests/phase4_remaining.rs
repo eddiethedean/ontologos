@@ -44,36 +44,63 @@ fn diagnose_misc203_axioms() {
 
 #[test]
 fn diagnose_dl650_unsatisfiable() {
-    use ontologos_alc::{DlOntology, TableauSeed, is_ce_intersection_satisfiable_with_seed, is_ce_satisfiable_with_seed};
+    use ontologos_alc::{
+        is_ce_intersection_satisfiable_with_seed, is_ce_satisfiable_with_seed, DlOntology,
+        TableauSeed,
+    };
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf";
     let ont = load_ontology(&wg_premise(rel)).expect("load");
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let store = ont.dl();
-    let e = ont.lookup_entity("http://oiled.man.example.net/test#e").expect("e");
-    let e_ce = store.expressions().find_map(|(id, expr)| match expr {
-        ontologos_core::ClassExpr::Atomic(c) if *c == e => Some(id),
-        _ => None,
-    }).expect("e ce");
-    let ecomp = ont.lookup_entity("http://oiled.man.example.net/test#e.comp").expect("e.comp");
-    let ecomp_ce = store.expressions().find_map(|(id, expr)| match expr {
-        ontologos_core::ClassExpr::Atomic(c) if *c == ecomp => Some(id),
-        _ => None,
-    }).expect("ecomp ce");
+    let e = ont
+        .lookup_entity("http://oiled.man.example.net/test#e")
+        .expect("e");
+    let e_ce = store
+        .expressions()
+        .find_map(|(id, expr)| match expr {
+            ontologos_core::ClassExpr::Atomic(c) if *c == e => Some(id),
+            _ => None,
+        })
+        .expect("e ce");
+    let ecomp = ont
+        .lookup_entity("http://oiled.man.example.net/test#e.comp")
+        .expect("e.comp");
+    let ecomp_ce = store
+        .expressions()
+        .find_map(|(id, expr)| match expr {
+            ontologos_core::ClassExpr::Atomic(c) if *c == ecomp => Some(id),
+            _ => None,
+        })
+        .expect("ecomp ce");
     let seed = TableauSeed::default();
-    eprintln!("e+e.comp intersection={:?}", is_ce_intersection_satisfiable_with_seed(&dl, e_ce, ecomp_ce, &seed));
-    let unsat = ont.lookup_entity("http://oiled.man.example.net/test#Unsatisfiable").expect("unsat");
-    let unsat_ce = store.expressions().find_map(|(id, expr)| match expr {
-        ontologos_core::ClassExpr::Atomic(c) if *c == unsat => Some(id),
-        _ => None,
-    }).expect("unsat ce");
-    let equiv_and = store.axioms().find_map(|ax| match ax {
-        ontologos_core::DlAxiom::EquivalentClasses(ids) if ids.contains(&unsat_ce) => {
-            ids.iter().copied().find(|&id| id != unsat_ce)
-        }
-        _ => None,
-    }).expect("equiv");
-    eprintln!("unsat equiv sat={:?}", is_ce_satisfiable_with_seed(&dl, equiv_and, &seed));
+    eprintln!(
+        "e+e.comp intersection={:?}",
+        is_ce_intersection_satisfiable_with_seed(&dl, e_ce, ecomp_ce, &seed)
+    );
+    let unsat = ont
+        .lookup_entity("http://oiled.man.example.net/test#Unsatisfiable")
+        .expect("unsat");
+    let unsat_ce = store
+        .expressions()
+        .find_map(|(id, expr)| match expr {
+            ontologos_core::ClassExpr::Atomic(c) if *c == unsat => Some(id),
+            _ => None,
+        })
+        .expect("unsat ce");
+    let equiv_and = store
+        .axioms()
+        .find_map(|ax| match ax {
+            ontologos_core::DlAxiom::EquivalentClasses(ids) if ids.contains(&unsat_ce) => {
+                ids.iter().copied().find(|&id| id != unsat_ce)
+            }
+            _ => None,
+        })
+        .expect("equiv");
+    eprintln!(
+        "unsat equiv sat={:?}",
+        is_ce_satisfiable_with_seed(&dl, equiv_and, &seed)
+    );
     eprintln!("kb consistent={:?}", is_consistent(&ont));
 }
 
@@ -81,10 +108,26 @@ fn diagnose_dl650_unsatisfiable() {
 fn phase4_remaining_consistency_cases_fast() {
     let cases = [
         ("One_equals_two", "wg/One_equals_two/premise.rdf", false),
-        ("dl-650", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf", false),
-        ("dl-910", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf", false),
-        ("misc-203", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf", false),
-        ("misc-204", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D204/premise.rdf", false),
+        (
+            "dl-650",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf",
+            false,
+        ),
+        (
+            "dl-910",
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf",
+            false,
+        ),
+        (
+            "misc-203",
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
+            false,
+        ),
+        (
+            "misc-204",
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D204/premise.rdf",
+            false,
+        ),
     ];
     let mut failures = Vec::new();
     for (name, rel, expected) in cases {
@@ -98,8 +141,16 @@ fn phase4_remaining_consistency_cases_fast() {
 #[test]
 fn phase4_misc_wine_consistency_cases() {
     let cases = [
-        ("misc-001", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D001/premise.rdf", true),
-        ("misc-002", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D002/premise.rdf", true),
+        (
+            "misc-001",
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D001/premise.rdf",
+            true,
+        ),
+        (
+            "misc-002",
+            "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D002/premise.rdf",
+            true,
+        ),
     ];
     for (name, rel, expected) in cases {
         check_consistency(rel, expected).unwrap_or_else(|e| panic!("{name}: {e}"));

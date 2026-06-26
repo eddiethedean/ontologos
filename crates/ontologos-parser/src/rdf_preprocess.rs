@@ -200,10 +200,9 @@ fn rdf_document_nesting_depth_at(input: &str, pos: usize) -> usize {
         } else if !tag.trim_end().ends_with("/>")
             && !tag.starts_with("<?")
             && !tag.starts_with("<!")
+            && depth > 0
         {
-            if depth > 0 {
-                depth += 1;
-            }
+            depth += 1;
         }
         cursor = tag_end;
     }
@@ -439,11 +438,10 @@ fn declared_iris(input: &str, element: &str) -> HashSet<String> {
 
 fn extract_attribute(tag: &str, name: &str) -> Option<String> {
     for quote in ['"', '\''] {
-        let needle = format!("{name}");
         let mut search_from = 0usize;
-        while let Some(rel) = tag[search_from..].find(&needle) {
+        while let Some(rel) = tag[search_from..].find(name) {
             let abs = search_from + rel;
-            let after_name = tag[abs + needle.len()..].trim_start();
+            let after_name = tag[abs + name.len()..].trim_start();
             let after_eq = after_name.strip_prefix('=')?.trim_start();
             if !after_eq.starts_with(quote) {
                 search_from = abs + 1;
@@ -673,12 +671,30 @@ pub fn normalize_rdfs_class_elements(input: &str) -> String {
 #[must_use]
 pub fn normalize_relative_owl_uris(input: &str) -> String {
     input
-        .replace("rdf:datatype=\"/2001/XMLSchema#", "rdf:datatype=\"http://www.w3.org/2001/XMLSchema#")
-        .replace("rdf:datatype='/2001/XMLSchema#", "rdf:datatype='http://www.w3.org/2001/XMLSchema#")
-        .replace("rdf:resource=\"/2002/07/owl#", "rdf:resource=\"http://www.w3.org/2002/07/owl#")
-        .replace("rdf:resource='/2002/07/owl#", "rdf:resource='http://www.w3.org/2002/07/owl#")
-        .replace("rdf:about=\"/2002/07/owl#", "rdf:about=\"http://www.w3.org/2002/07/owl#")
-        .replace("rdf:about='/2002/07/owl#", "rdf:about='http://www.w3.org/2002/07/owl#")
+        .replace(
+            "rdf:datatype=\"/2001/XMLSchema#",
+            "rdf:datatype=\"http://www.w3.org/2001/XMLSchema#",
+        )
+        .replace(
+            "rdf:datatype='/2001/XMLSchema#",
+            "rdf:datatype='http://www.w3.org/2001/XMLSchema#",
+        )
+        .replace(
+            "rdf:resource=\"/2002/07/owl#",
+            "rdf:resource=\"http://www.w3.org/2002/07/owl#",
+        )
+        .replace(
+            "rdf:resource='/2002/07/owl#",
+            "rdf:resource='http://www.w3.org/2002/07/owl#",
+        )
+        .replace(
+            "rdf:about=\"/2002/07/owl#",
+            "rdf:about=\"http://www.w3.org/2002/07/owl#",
+        )
+        .replace(
+            "rdf:about='/2002/07/owl#",
+            "rdf:about='http://www.w3.org/2002/07/owl#",
+        )
 }
 
 ///
@@ -737,7 +753,9 @@ pub fn materialize_typed_node_elements(input: &str) -> String {
                     .filter(|&e| e <= input.len())
                     .unwrap_or(tag_end + 1);
                 let block = &input[start..end];
-                if let Some(rewritten) = rewrite_typed_node_block(block, qname, &xmlns, &base, &mut counter) {
+                if let Some(rewritten) =
+                    rewrite_typed_node_block(block, qname, &xmlns, &base, &mut counter)
+                {
                     out.push_str(&rewritten);
                     pos = end;
                     continue;
@@ -759,7 +777,7 @@ fn rewrite_typed_node_block(
 ) -> Option<String> {
     let open_end = block.find('>')?;
     let open = &block[..=open_end];
-    if !element_qname(open).is_some_and(|q| q == qname) {
+    if element_qname(open).is_none_or(|q| q != qname) {
         return None;
     }
     let class_iri = builtin_owl_typed_node_iri(qname).or_else(|| expand_qname(qname, xmlns))?;
@@ -811,8 +829,8 @@ pub fn materialize_typed_about_elements(input: &str) -> String {
         };
         let tag_end = start + tag_end_rel;
         let open_tag = &input[start..=tag_end];
-        let is_candidate = extract_attribute(open_tag, "rdf:about").is_some()
-            && element_qname(open_tag).is_some();
+        let is_candidate =
+            extract_attribute(open_tag, "rdf:about").is_some() && element_qname(open_tag).is_some();
         if !is_candidate {
             if open_tag.trim_end().ends_with("/>") {
                 out.push_str(open_tag);
@@ -855,9 +873,7 @@ fn rewrite_typed_about_block(
 ) -> Option<String> {
     let open_end = block.find('>')?;
     let open = &block[..=open_end];
-    if element_qname(open).is_none() {
-        return None;
-    }
+    element_qname(open)?;
     let about = extract_attribute(open, "rdf:about")?;
     let qname = element_name(open)?;
     let class_iri = expand_qname(qname, xmlns)?;
@@ -1134,6 +1150,7 @@ fn rewrite_anonymous_description_block(block: &str, iri: &str) -> String {
 ///
 /// Horned-OWL's RDF reader does not surface `ClassAssertion` from `owl:NamedIndividual` or
 /// `rdf:Description` elements with nested class expressions (e.g. `owl:Restriction`).
+#[allow(dead_code)]
 #[must_use]
 pub fn materialize_complex_class_assertions(input: &str) -> String {
     if !input.contains("rdf:type") {
@@ -1214,11 +1231,8 @@ fn element_block_end(input: &str, start: usize, open_tag: &str, close_tag: &str)
     None
 }
 
-fn rewrite_individual_with_complex_type(
-    block: &str,
-    open_tag: &str,
-    base: &str,
-) -> Option<String> {
+#[allow(dead_code)]
+fn rewrite_individual_with_complex_type(block: &str, open_tag: &str, base: &str) -> Option<String> {
     if is_typed_entity_declaration(block) {
         return None;
     }
@@ -1233,7 +1247,7 @@ fn rewrite_individual_with_complex_type(
     let open = &block[..=open_end];
     let individual_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let type_open_end = type_block.find('>')?;
     let type_close = "</rdf:type>";
     let type_close_start = type_block.rfind(type_close)?;
@@ -1414,7 +1428,7 @@ fn restriction_subclass_from_description_block(
     let open = &block[..=open_end];
     let class_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let close_start = block.rfind("</rdf:Description>")?;
     let inner = &block[open_end + 1..close_start];
     if !is_class_restriction_description(inner) {
@@ -1433,7 +1447,7 @@ fn restriction_subclass_from_owl_class_block(
     let open = &block[..=open_end];
     let class_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let close_start = block.rfind("</owl:Class>")?;
     let inner = &block[open_end + 1..close_start];
     let (_, _, sub_block) = find_top_level_element_bounds(inner, "rdfs:subClassOf")?;
@@ -1471,8 +1485,12 @@ pub(crate) fn collect_direct_data_literal_assertions(rdf: &str) -> Vec<DirectDat
     let base = parse_xml_base(rdf);
     let xmlns = parse_xmlns(rdf);
     let mut out = Vec::new();
-    out.extend(collect_direct_data_literals_from_owl_thing(rdf, &base, &xmlns));
-    out.extend(collect_direct_data_literals_from_descriptions(rdf, &base, &xmlns));
+    out.extend(collect_direct_data_literals_from_owl_thing(
+        rdf, &base, &xmlns,
+    ));
+    out.extend(collect_direct_data_literals_from_descriptions(
+        rdf, &base, &xmlns,
+    ));
     out
 }
 
@@ -1535,10 +1553,8 @@ fn collect_direct_data_literals_from_descriptions(
             continue;
         }
         let Some(subject) = extract_attribute(open, "rdf:about")
-            .or_else(|| {
-                extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}"))
-            })
-            .map(|iri| resolve_relative_iri(&iri, &base))
+            .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+            .map(|iri| resolve_relative_iri(&iri, base))
         else {
             pos = end;
             continue;
@@ -1641,9 +1657,7 @@ pub(crate) fn collect_owl_same_as_pairs(rdf: &str) -> Vec<(String, String)> {
         let open_end = block.find('>').unwrap_or(0);
         let open = &block[..=open_end];
         let Some(subject) = extract_attribute(open, "rdf:about")
-            .or_else(|| {
-                extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}"))
-            })
+            .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
             .map(|iri| resolve_relative_iri(&iri, &base))
         else {
             pos = end;
@@ -1713,7 +1727,7 @@ fn complement_subclass_from_block(block: &str, base: &str) -> Option<(String, St
     let open = &block[..=open_end];
     let class_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let close_start = block.rfind("</rdf:Description>")?;
     let inner = &block[open_end + 1..close_start];
     if !inner.contains("owl:complementOf") {
@@ -1741,9 +1755,14 @@ pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, Stri
             break;
         };
         let block = &rdf[start..end];
-        if let Some(pair) =
-            boolean_equivalence_from_class_block(block, &base, &dt_props, &node_lists, false, &mut anon_counter)
-        {
+        if let Some(pair) = boolean_equivalence_from_class_block(
+            block,
+            &base,
+            &dt_props,
+            &node_lists,
+            false,
+            &mut anon_counter,
+        ) {
             out.push(pair);
         }
         pos = end;
@@ -1758,9 +1777,14 @@ pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, Stri
             break;
         };
         let block = &rdf[start..end];
-        if let Some(pair) =
-            boolean_equivalence_from_class_block(block, &base, &dt_props, &node_lists, true, &mut anon_counter)
-        {
+        if let Some(pair) = boolean_equivalence_from_class_block(
+            block,
+            &base,
+            &dt_props,
+            &node_lists,
+            true,
+            &mut anon_counter,
+        ) {
             out.push(pair);
         }
         pos = end;
@@ -1769,6 +1793,7 @@ pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, Stri
 }
 
 /// Collect `SubClassOf(sub sup)` from `rdfs:subClassOf` on named class resources.
+#[allow(dead_code)]
 pub(crate) fn collect_subclass_axioms(rdf: &str) -> Vec<(String, String)> {
     let base = parse_xml_base(rdf);
     let dt_props = declared_datatype_property_iris(rdf);
@@ -1784,7 +1809,9 @@ pub(crate) fn collect_subclass_axioms(rdf: &str) -> Vec<(String, String)> {
             break;
         };
         let block = &rdf[start..end];
-        out.extend(subclass_axioms_from_class_block(block, &base, &dt_props, false));
+        out.extend(subclass_axioms_from_class_block(
+            block, &base, &dt_props, false,
+        ));
         pos = end;
     }
     pos = 0usize;
@@ -1797,7 +1824,9 @@ pub(crate) fn collect_subclass_axioms(rdf: &str) -> Vec<(String, String)> {
             break;
         };
         let block = &rdf[start..end];
-        out.extend(subclass_axioms_from_class_block(block, &base, &dt_props, true));
+        out.extend(subclass_axioms_from_class_block(
+            block, &base, &dt_props, true,
+        ));
         pos = end;
     }
     out
@@ -1813,16 +1842,14 @@ pub(crate) fn collect_datatype_property_ranges(rdf: &str) -> Vec<(String, String
             break;
         };
         let start = pos + rel;
-        let Some(end) =
-            tagged_element_end(rdf, start, "owl:DatatypeProperty").or_else(|| {
-                let gt = rdf[start..].find('>')?;
-                if rdf.as_bytes().get(start + gt - 1) == Some(&b'/') {
-                    Some(start + gt + 1)
-                } else {
-                    None
-                }
-            })
-        else {
+        let Some(end) = tagged_element_end(rdf, start, "owl:DatatypeProperty").or_else(|| {
+            let gt = rdf[start..].find('>')?;
+            if rdf.as_bytes().get(start + gt - 1) == Some(&b'/') {
+                Some(start + gt + 1)
+            } else {
+                None
+            }
+        }) else {
             break;
         };
         let block = &rdf[start..end];
@@ -1885,7 +1912,9 @@ pub(crate) fn collect_object_property_assertions(rdf: &str) -> Vec<(String, Stri
             break;
         };
         let block = &rdf[start..end];
-        out.extend(object_property_assertions_from_block(block, open_tag, &base, &xmlns));
+        out.extend(object_property_assertions_from_block(
+            block, open_tag, &base, &xmlns,
+        ));
         pos = end;
     }
     out
@@ -1918,13 +1947,19 @@ pub(crate) fn collect_anonymous_intersection_subclasses(rdf: &str) -> Vec<String
         }
         let close_start = block.rfind("</owl:Class>").unwrap_or(block.len());
         let inner = &block[open_end + 1..close_start];
-        let Some(inter_ofn) =
-            boolean_operator_ofn(inner, "owl:intersectionOf", "ObjectIntersectionOf", &base, &dt_props, &node_lists)
-        else {
+        let Some(inter_ofn) = boolean_operator_ofn(
+            inner,
+            "owl:intersectionOf",
+            "ObjectIntersectionOf",
+            &base,
+            &dt_props,
+            &node_lists,
+        ) else {
             pos = end;
             continue;
         };
-        let Some((_, _, sub_block)) = find_top_level_element_bounds(inner, "rdfs:subClassOf") else {
+        let Some((_, _, sub_block)) = find_top_level_element_bounds(inner, "rdfs:subClassOf")
+        else {
             pos = end;
             continue;
         };
@@ -1955,7 +1990,7 @@ fn boolean_equivalence_from_class_block(
     let open = &block[..=open_end];
     let class_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))
+        .map(|iri| resolve_relative_iri(&iri, base))
         .unwrap_or_else(|| {
             *anon_counter += 1;
             format!("{base}#_:anon{anon_counter}")
@@ -1967,9 +2002,25 @@ fn boolean_equivalence_from_class_block(
     };
     let close_start = block.rfind(close_tag)?;
     let inner = &block[open_end + 1..close_start];
-    let ce_ofn = boolean_operator_ofn(inner, "owl:intersectionOf", "ObjectIntersectionOf", base, dt_props, node_lists)
-        .or_else(|| boolean_operator_ofn(inner, "owl:unionOf", "ObjectUnionOf", base, dt_props, node_lists))
-        .or_else(|| one_of_ofn(inner, base, dt_props, node_lists))?;
+    let ce_ofn = boolean_operator_ofn(
+        inner,
+        "owl:intersectionOf",
+        "ObjectIntersectionOf",
+        base,
+        dt_props,
+        node_lists,
+    )
+    .or_else(|| {
+        boolean_operator_ofn(
+            inner,
+            "owl:unionOf",
+            "ObjectUnionOf",
+            base,
+            dt_props,
+            node_lists,
+        )
+    })
+    .or_else(|| one_of_ofn(inner, base, dt_props, node_lists))?;
     Some((class_iri, ce_ofn))
 }
 
@@ -2012,7 +2063,8 @@ fn collection_members_ofn(
     dt_props: &std::collections::HashSet<String>,
     node_lists: &std::collections::HashMap<String, Vec<String>>,
 ) -> Option<Vec<String>> {
-    if op_block.contains("parseType=\"Collection\"") || op_block.contains("parseType='Collection'") {
+    if op_block.contains("parseType=\"Collection\"") || op_block.contains("parseType='Collection'")
+    {
         return Some(parse_collection_children_ofn(op_block, base, dt_props));
     }
     if op_block.contains("rdf:List") || op_block.contains("<rdf:first") {
@@ -2058,14 +2110,17 @@ fn parse_rdf_list_members_ofn(
         let (_, _, rest_elem) = find_top_level_element_bounds(rest_block, "rdf:rest")?;
         if rest_elem.contains("rdf:nil")
             || rest_elem.contains("#nil")
-            || extract_attribute(rest_elem, "rdf:resource")
-                .is_some_and(|r| r.contains("nil"))
+            || extract_attribute(rest_elem, "rdf:resource").is_some_and(|r| r.contains("nil"))
         {
             break;
         }
         rest_block = rest_elem;
     }
-    if members.is_empty() { None } else { Some(members) }
+    if members.is_empty() {
+        None
+    } else {
+        Some(members)
+    }
 }
 
 fn parse_collection_children_ofn(
@@ -2197,7 +2252,8 @@ fn parse_rdf_list_description(
         }
     }
     let (_, _, rest_block) = find_top_level_element_bounds(inner, "rdf:rest")?;
-    if rest_block.contains("parseType=\"Collection\"") || rest_block.contains("parseType='Collection'")
+    if rest_block.contains("parseType=\"Collection\"")
+        || rest_block.contains("parseType='Collection'")
     {
         members.extend(parse_collection_children_ofn(rest_block, base, dt_props));
     } else if let Some(rest) = extract_property_resource(rest_block, "rdf:rest", base) {
@@ -2208,9 +2264,14 @@ fn parse_rdf_list_description(
             members.push(ofn);
         }
     }
-    if members.is_empty() { None } else { Some(members) }
+    if members.is_empty() {
+        None
+    } else {
+        Some(members)
+    }
 }
 
+#[allow(dead_code)]
 fn subclass_axioms_from_class_block(
     block: &str,
     base: &str,
@@ -2224,7 +2285,7 @@ fn subclass_axioms_from_class_block(
     let open = &block[..=open_end - 1];
     let Some(sub_iri) = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))
+        .map(|iri| resolve_relative_iri(&iri, base))
     else {
         return Vec::new();
     };
@@ -2240,7 +2301,7 @@ fn subclass_axioms_from_class_block(
     let inner = &block[open_end..close_start];
     let mut out = Vec::new();
     let mut pos = 0usize;
-    while let Some((start, end, sub_block)) =
+    while let Some((_start, end, sub_block)) =
         find_top_level_element_from(inner, pos, "rdfs:subClassOf")
     {
         let sup_ofn = superclass_ofn_from_subclass_element(sub_block, base, dt_props);
@@ -2252,6 +2313,7 @@ fn subclass_axioms_from_class_block(
     out
 }
 
+#[allow(dead_code)]
 fn find_top_level_element_from<'a>(
     inner: &'a str,
     from: usize,
@@ -2279,6 +2341,7 @@ fn find_top_level_element_from<'a>(
     None
 }
 
+#[allow(dead_code)]
 fn superclass_ofn_from_subclass_element(
     sub_block: &str,
     base: &str,
@@ -2315,8 +2378,10 @@ fn datatype_property_range_from_block(block: &str, base: &str) -> Option<(String
     let open = &block[..=open_end];
     let prop_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
-    let close_start = block.rfind("</owl:DatatypeProperty>").unwrap_or(block.len());
+        .map(|iri| resolve_relative_iri(&iri, base))?;
+    let close_start = block
+        .rfind("</owl:DatatypeProperty>")
+        .unwrap_or(block.len());
     let inner = if block[open_end..].starts_with("/>") {
         ""
     } else {
@@ -2334,7 +2399,7 @@ fn datatype_property_range_from_description_block(
     let open = &block[..=open_end];
     let prop_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let close_start = block.rfind("</rdf:Description>")?;
     let inner = &block[open_end + 1..close_start];
     if !inner.contains("rdfs:range") {
@@ -2345,7 +2410,11 @@ fn datatype_property_range_from_description_block(
 }
 
 fn datatype_ofn_ref(iri: &str) -> String {
-    if let Some(local) = iri.rsplit('#').next().filter(|_| iri.contains("XMLSchema#")) {
+    if let Some(local) = iri
+        .rsplit('#')
+        .next()
+        .filter(|_| iri.contains("XMLSchema#"))
+    {
         format!("xsd:{local}")
     } else if iri == "http://www.w3.org/2000/01/rdf-schema#Literal" {
         "rdfs:Literal".to_owned()
@@ -2369,9 +2438,7 @@ fn object_iri_from_property_element(
         .or_else(|| {
             extract_attribute(prop_open, "rdf:about").map(|a| resolve_relative_iri(&a, base))
         })
-        .or_else(|| {
-            extract_attribute(prop_open, "rdf:nodeID").map(|n| blank_node_iri(base, &n))
-        })
+        .or_else(|| extract_attribute(prop_open, "rdf:nodeID").map(|n| blank_node_iri(base, &n)))
         .or_else(|| {
             let close = format!("</{tag_name}>");
             let cs = prop_block.rfind(&close)?;
@@ -2421,7 +2488,7 @@ fn object_property_assertions_from_block(
     let open = &block[..=open_end - 1];
     let subject = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))
+        .map(|iri| resolve_relative_iri(&iri, base))
         .or_else(|| {
             if open_tag == "owl:Thing" {
                 anon += 1;
@@ -2430,14 +2497,7 @@ fn object_property_assertions_from_block(
                 None
             }
         });
-    object_property_assertions_from_subject_block(
-        subject,
-        block,
-        open_tag,
-        base,
-        xmlns,
-        &mut anon,
-    )
+    object_property_assertions_from_subject_block(subject, block, open_tag, base, xmlns, &mut anon)
 }
 
 fn object_property_assertions_from_subject_block(
@@ -2456,7 +2516,7 @@ fn object_property_assertions_from_subject_block(
     let subject = subject_override.or_else(|| {
         extract_attribute(open, "rdf:about")
             .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-            .map(|iri| resolve_relative_iri(&iri, &base))
+            .map(|iri| resolve_relative_iri(&iri, base))
     });
     let Some(subject) = subject else {
         return Vec::new();
@@ -2509,12 +2569,12 @@ fn object_property_assertions_from_subject_block(
             let object = blank_node_iri(base, &format!("anon{anon}"));
             out.push((subject.clone(), prop_iri, object.clone()));
             let wrapped = if thing_block.ends_with("/>") {
-                format!(
-                    "<owl:Thing rdf:about=\"{object}\"></owl:Thing>"
-                )
+                format!("<owl:Thing rdf:about=\"{object}\"></owl:Thing>")
             } else {
                 let open_end = thing_block.find('>').map(|i| i + 1).unwrap_or(0);
-                let close = thing_block.rfind("</owl:Thing>").unwrap_or(thing_block.len());
+                let close = thing_block
+                    .rfind("</owl:Thing>")
+                    .unwrap_or(thing_block.len());
                 format!(
                     "<owl:Thing rdf:about=\"{object}\">{}</owl:Thing>",
                     &thing_block[open_end..close]
@@ -2539,25 +2599,46 @@ pub(crate) fn collect_rdfs_object_property_domains(rdf: &str) -> Vec<(String, St
     collect_rdfs_property_annotation(rdf, "rdfs:domain")
 }
 
+const OWL_PROPERTY_RANGE_TAGS: &[&str] = &[
+    "owl:ObjectProperty",
+    "owl:FunctionalProperty",
+    "owl:SymmetricProperty",
+    "owl:InverseFunctionalProperty",
+    "owl:TransitiveProperty",
+    "owl:ReflexiveProperty",
+    "owl:IrreflexiveProperty",
+    "owl:AsymmetricProperty",
+];
+
 /// Collect `ObjectPropertyRange` from `rdfs:range` on property resources (RDF/XML).
 pub(crate) fn collect_rdfs_object_property_ranges(rdf: &str) -> Vec<(String, String)> {
     let mut out = collect_rdfs_property_annotation(rdf, "rdfs:range");
     let base = parse_xml_base(rdf);
+    for tag in OWL_PROPERTY_RANGE_TAGS {
+        out.extend(collect_owl_property_ranges_for_tag(rdf, tag, &base));
+    }
+    out
+}
+
+fn collect_owl_property_ranges_for_tag(rdf: &str, tag: &str, base: &str) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    let open = format!("<{tag}");
     let mut pos = 0usize;
     while pos < rdf.len() {
-        let Some(rel) = rdf[pos..].find("<owl:ObjectProperty") else {
+        let Some(rel) = rdf[pos..].find(&open) else {
             break;
         };
         let start = pos + rel;
-        let Some(end) = tagged_element_end(rdf, start, "owl:ObjectProperty").or_else(|| {
-            element_block_end(rdf, start, "owl:ObjectProperty", "</owl:ObjectProperty>")
+        let Some(end) = tagged_element_end(rdf, start, tag).or_else(|| {
+            let close = format!("</{tag}>");
+            element_block_end(rdf, start, tag, &close)
                 .map(|e| e - start)
                 .map(|len| start + len)
         }) else {
             break;
         };
         let block = &rdf[start..end];
-        if let Some(pair) = owl_property_range_from_block(block, &base) {
+        if let Some(pair) = owl_property_range_from_block(block, base) {
             out.push(pair);
         }
         pos = end;
@@ -2570,10 +2651,8 @@ fn owl_property_range_from_block(block: &str, base: &str) -> Option<(String, Str
     let open = &block[..=open_end];
     let prop_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
-    let close_start = block
-        .rfind("</owl:ObjectProperty>")
-        .unwrap_or(block.len());
+        .map(|iri| resolve_relative_iri(&iri, base))?;
+    let close_start = block.rfind("</owl:ObjectProperty>").unwrap_or(block.len());
     let inner = &block[open_end + 1..close_start];
     let class_iri = extract_property_resource(inner, "rdfs:range", base)?;
     Some((prop_iri, class_iri))
@@ -2628,7 +2707,7 @@ fn disjoint_union_from_class_block(
     let open = &block[..=open_end];
     let class_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let close_start = block.rfind("</rdf:Description>")?;
     let inner = &block[open_end + 1..close_start];
     let (_, _, op_block) = find_top_level_element_bounds(inner, "owl:disjointUnionOf")?;
@@ -2679,7 +2758,7 @@ fn rdfs_property_annotation_from_block(
     let open = &block[..=open_end];
     let prop_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let close_start = block.rfind("</rdf:Description>")?;
     let inner = &block[open_end + 1..close_start];
     if !inner.contains(tag) {
@@ -2717,7 +2796,7 @@ fn property_disjoint_from_block(block: &str, base: &str) -> Option<(String, Stri
     let open = &block[..=open_end];
     let prop_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let close_start = block.rfind("</rdf:Description>")?;
     let inner = &block[open_end + 1..close_start];
     if !inner.contains("owl:propertyDisjointWith") {
@@ -2779,7 +2858,7 @@ fn reified_data_npa_from_block(
                 extract_attribute(source_open, "rdf:ID").map(|id| format!("{base}#{id}"))
             })
         })
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let positive_property = positive_data_property_from_inner(&source_inner, base, xmlns);
     Some(ReifiedDataNpa {
         subject,
@@ -2791,7 +2870,7 @@ fn reified_data_npa_from_block(
 
 fn positive_data_property_from_inner(
     inner: &str,
-    base: &str,
+    _base: &str,
     xmlns: &HashMap<String, String>,
 ) -> Option<(String, String)> {
     let mut pos = 0usize;
@@ -2855,7 +2934,7 @@ fn reified_npa_from_block(
                 extract_attribute(source_open, "rdf:ID").map(|id| format!("{base}#{id}"))
             })
         })
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let positive_property = positive_property_from_inner(&source_inner, base, xmlns);
     Some(ReifiedNpa {
         subject,
@@ -2949,7 +3028,7 @@ fn object_class_assertion_from_block(
     let open = &block[..=open_end];
     let individual_iri = extract_attribute(open, "rdf:about")
         .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, &base))?;
+        .map(|iri| resolve_relative_iri(&iri, base))?;
     let close_tag = format!("</{open_tag}>");
     let close_start = block.rfind(&close_tag)?;
     let inner = &block[open_end + 1..close_start];
@@ -3059,7 +3138,12 @@ fn data_range_ofn(ce_block: &str, base: &str) -> Option<String> {
     }
     if let Some(resource) = extract_attribute(
         avf_block
-            .get(..avf_block.find('>').map(|i| i + 1).unwrap_or(avf_block.len()))
+            .get(
+                ..avf_block
+                    .find('>')
+                    .map(|i| i + 1)
+                    .unwrap_or(avf_block.len()),
+            )
             .unwrap_or(avf_block),
         "rdf:resource",
     ) {
@@ -3077,14 +3161,23 @@ fn data_one_of_literals(inner: &str, base: &str) -> Option<Vec<String>> {
     let list_inner = element_inner(one_block, "owl:oneOf");
     let mut out = Vec::new();
     collect_data_list_literals(&list_inner, base, &mut out);
-    if out.is_empty() { None } else { Some(out) }
+    if out.is_empty() {
+        None
+    } else {
+        Some(out)
+    }
 }
 
 fn rdf_rest_is_nil(rest_block: &str) -> bool {
     rest_block.contains("rdf:nil")
         || extract_attribute(
             rest_block
-                .get(..rest_block.find('>').map(|i| i + 1).unwrap_or(rest_block.len()))
+                .get(
+                    ..rest_block
+                        .find('>')
+                        .map(|i| i + 1)
+                        .unwrap_or(rest_block.len()),
+                )
                 .unwrap_or(rest_block),
             "rdf:resource",
         )
@@ -3337,7 +3430,8 @@ pub(crate) fn qualify_ce_ofn_for_supplement(ce_ofn: &str) -> (String, String) {
         let end = start + 1 + rel_end;
         let iri = &out[start + 1..end];
         search_from = end + 1;
-        if iri == "http://www.w3.org/2002/07/owl#Thing" || iri == "http://www.w3.org/2002/07/owl#Nothing"
+        if iri == "http://www.w3.org/2002/07/owl#Thing"
+            || iri == "http://www.w3.org/2002/07/owl#Nothing"
         {
             continue;
         }
@@ -3404,10 +3498,7 @@ fn ofn_literal_from_rdf_literal(body: &str, _tag: &str) -> String {
         let text = strip_xml_tags(body);
         return format!("\"{}\"@{lang}", escape_ofn_string(&text));
     }
-    format!(
-        "\"{}\"^^rdf:XMLLiteral",
-        escape_ofn_string(body)
-    )
+    format!("\"{}\"^^rdf:XMLLiteral", escape_ofn_string(body))
 }
 
 fn ofn_entity_ref(iri: &str) -> String {
@@ -3434,11 +3525,7 @@ pub(crate) fn qualify_typed_literal_for_supplement(
     let normalized = datatype_iri.replace("%23", "#");
     if normalized.starts_with("http://www.w3.org/2001/XMLSchema#") {
         let local = normalized.rsplit('#').next().unwrap_or("string");
-        return (
-            String::new(),
-            format!("\"{lexical}\"^^xsd:{local}"),
-            None,
-        );
+        return (String::new(), format!("\"{lexical}\"^^xsd:{local}"), None);
     }
     if normalized == "rdf:PlainLiteral"
         || normalized == "http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral"
@@ -3457,6 +3544,15 @@ pub(crate) fn qualify_typed_literal_for_supplement(
             format!("\"{}\"^^rdf:XMLLiteral", escape_ofn_string(lexical)),
             None,
         );
+    }
+    if let Some(qname) = known_supplement_datatype_qname(&normalized) {
+        let lit = format!("\"{}\"^^{qname}", escape_ofn_string(lexical));
+        let decl = if qname.starts_with("owl:") {
+            Some(format!("Declaration(Datatype({qname}))"))
+        } else {
+            None
+        };
+        return (String::new(), lit, decl);
     }
     let Some(pos) = normalized.rfind('#') else {
         return (
@@ -3486,11 +3582,30 @@ pub(crate) fn qualify_typed_literal_for_supplement(
 }
 
 /// QName refs for datatype IRIs used in supplement OFN.
+fn known_supplement_datatype_qname(normalized: &str) -> Option<String> {
+    if normalized.starts_with("http://www.w3.org/2002/07/owl#") {
+        let local = normalized.rsplit('#').next().unwrap_or("");
+        if !local.is_empty() {
+            return Some(format!("owl:{local}"));
+        }
+    }
+    if normalized.starts_with("http://www.w3.org/1999/02/22-rdf-syntax-ns#") {
+        let local = normalized.rsplit('#').next().unwrap_or("");
+        if !local.is_empty() {
+            return Some(format!("rdf:{local}"));
+        }
+    }
+    None
+}
+
 pub(crate) fn qualify_datatype_ref_for_supplement(datatype_iri: &str) -> (String, String) {
     let normalized = datatype_iri.replace("%23", "#");
     if normalized.starts_with("http://www.w3.org/2001/XMLSchema#") {
         let local = normalized.rsplit('#').next().unwrap_or("string");
         return (String::new(), format!("xsd:{local}"));
+    }
+    if let Some(qname) = known_supplement_datatype_qname(&normalized) {
+        return (String::new(), qname);
     }
     let Some(pos) = normalized.rfind('#') else {
         return (String::new(), ofn_entity_ref(datatype_iri));
@@ -4402,8 +4517,9 @@ mod tests {
 
     #[test]
     fn misc203_dpa_supplement_ofn_parses() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
+        );
         let text = std::fs::read_to_string(&path).unwrap();
         let deduped = dedupe_rdf_xml_ids(&text);
         let normalized_ids = normalize_invalid_rdf_ids(&deduped);
@@ -4424,10 +4540,7 @@ mod tests {
         let (lexical, datatype_iri) = if dpa.value_literal.contains("^^") {
             let mut parts = dpa.value_literal.splitn(2, "^^");
             let lex = parts.next().unwrap().trim_matches('"').to_string();
-            let dt = parts
-                .next()
-                .unwrap()
-                .trim_matches(|c| c == '<' || c == '>');
+            let dt = parts.next().unwrap().trim_matches(|c| c == '<' || c == '>');
             (lex, dt.to_string())
         } else {
             panic!("unexpected literal");
@@ -4451,15 +4564,17 @@ mod tests {
         );
         eprintln!("{ofn}");
         let ont = crate::load_ofn_from_str(&ofn).expect("supplement ofn");
-        assert!(ont.dl().axioms().any(|a| {
-            matches!(a, ontologos_core::DlAxiom::DataPropertyAssertion { .. })
-        }));
+        assert!(ont
+            .dl()
+            .axioms()
+            .any(|a| { matches!(a, ontologos_core::DlAxiom::DataPropertyAssertion { .. }) }));
     }
 
     #[test]
     fn misc203_full_load_has_data_assertions() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
+        );
         let ont = crate::load_ontology(&path).expect("load misc203");
         let dpas: Vec<_> = ont
             .dl()
@@ -4467,13 +4582,19 @@ mod tests {
             .filter(|a| matches!(a, ontologos_core::DlAxiom::DataPropertyAssertion { .. }))
             .collect();
         eprintln!("dpas={dpas:?}");
-        assert_eq!(dpas.len(), 2, "all axioms: {:?}", ont.dl().axioms().collect::<Vec<_>>());
+        assert_eq!(
+            dpas.len(),
+            2,
+            "all axioms: {:?}",
+            ont.dl().axioms().collect::<Vec<_>>()
+        );
     }
 
     #[test]
     fn collect_direct_data_literals_from_misc203_after_full_preprocess() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
+        );
         let text = std::fs::read_to_string(&path).unwrap();
         let deduped = dedupe_rdf_xml_ids(&text);
         let normalized_ids = normalize_invalid_rdf_ids(&deduped);
@@ -4496,8 +4617,9 @@ mod tests {
 
     #[test]
     fn collect_direct_data_literals_from_misc203() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
+        );
         let text = std::fs::read_to_string(&path).unwrap();
         let deduped = dedupe_rdf_xml_ids(&text);
         let normalized_ids = normalize_invalid_rdf_ids(&deduped);
@@ -4521,10 +4643,15 @@ mod tests {
                DataPropertyAssertion(<http://example.org/p> <http://example.org/i> \"<b>x</b>\"^^rdf:XMLLiteral)\n\
              )";
         let ont = crate::load_ofn_from_str(ofn).expect("load xml literal dpa");
-        let has_dpa = ont.dl().axioms().any(|a| {
-            matches!(a, ontologos_core::DlAxiom::DataPropertyAssertion { .. })
-        });
-        assert!(has_dpa, "axioms: {:?}", ont.dl().axioms().collect::<Vec<_>>());
+        let has_dpa = ont
+            .dl()
+            .axioms()
+            .any(|a| matches!(a, ontologos_core::DlAxiom::DataPropertyAssertion { .. }));
+        assert!(
+            has_dpa,
+            "axioms: {:?}",
+            ont.dl().axioms().collect::<Vec<_>>()
+        );
     }
 
     #[test]
@@ -4738,7 +4865,8 @@ mod tests {
                 let close_start = block.rfind(close_tag).unwrap();
                 let inner = &block[open_end + 1..close_start];
                 if let Some((_, _, type_block)) = find_top_level_element_bounds(inner, "rdf:type") {
-                    ce_block = unwrap_typed_class_expression_block(&element_inner(type_block, "rdf:type"));
+                    ce_block =
+                        unwrap_typed_class_expression_block(&element_inner(type_block, "rdf:type"));
                 }
                 break;
             }
@@ -4753,7 +4881,9 @@ mod tests {
             &node_lists,
         );
         assert!(
-            union_ofn.as_deref().is_some_and(|u| u.contains("ObjectUnionOf")),
+            union_ofn
+                .as_deref()
+                .is_some_and(|u| u.contains("ObjectUnionOf")),
             "union_ofn={union_ofn:?}"
         );
     }
@@ -4781,9 +4911,8 @@ mod tests {
     #[test]
     fn i5_1_premise_loads() {
         use crate::load_ontology;
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
-            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DI5.1-2D001/premise.rdf",
-        );
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DI5.1-2D001/premise.rdf");
         load_ontology(&path).expect("load I5.1 premise");
     }
 
@@ -4795,7 +4924,9 @@ mod tests {
         );
         let ont = load_ontology(&path).expect("load");
         assert!(
-            ont.dl().axioms().any(|a| matches!(a, ontologos_core::DlAxiom::ClassAssertion { .. })),
+            ont.dl()
+                .axioms()
+                .any(|a| matches!(a, ontologos_core::DlAxiom::ClassAssertion { .. })),
             "expected DL ClassAssertion"
         );
     }
@@ -4864,9 +4995,8 @@ mod tests {
         assert!(ofn.contains("0.3333333333333333"), "{ofn}");
         assert!(ofn.contains("1/3"), "{ofn}");
 
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
-            "../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D003/premise.rdf",
-        );
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D003/premise.rdf");
         let rdf = std::fs::read_to_string(&path).expect("read");
         let deduped = dedupe_rdf_xml_ids(&rdf);
         let normalized_ids = normalize_invalid_rdf_ids(&deduped);
@@ -4886,7 +5016,9 @@ mod tests {
             "{collected:?}"
         );
         assert!(
-            collected.iter().any(|(_, ce)| ce.contains("DataMinCardinality")),
+            collected
+                .iter()
+                .any(|(_, ce)| ce.contains("DataMinCardinality")),
             "{collected:?}"
         );
     }
@@ -4962,9 +5094,8 @@ mod tests {
         let typed = collect_object_class_assertions(typed_min);
         assert_eq!(typed.len(), 1, "typed={typed:?}");
 
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
-            "../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D002/premise.rdf",
-        );
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D002/premise.rdf");
         let rdf = std::fs::read_to_string(&path).expect("read");
         let deduped = dedupe_rdf_xml_ids(&rdf);
         let normalized_ids = normalize_invalid_rdf_ids(&deduped);
@@ -4978,13 +5109,26 @@ mod tests {
         let collected = collect_object_class_assertions(&named);
         assert_eq!(collected.len(), 2, "{collected:?}");
         assert!(
-            collected.iter().any(|(_, ce)| ce.contains("DataAllValuesFrom")),
+            collected
+                .iter()
+                .any(|(_, ce)| ce.contains("DataAllValuesFrom")),
             "{collected:?}"
         );
         assert!(
-            collected.iter().any(|(_, ce)| ce.contains("DataMinCardinality")),
+            collected
+                .iter()
+                .any(|(_, ce)| ce.contains("DataMinCardinality")),
             "{collected:?}"
         );
+    }
+
+    #[test]
+    fn rational002_full_load_parses() {
+        use crate::load_ontology;
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D002/premise.rdf");
+        let ont = load_ontology(&path).expect("load rational002");
+        assert!(ont.dl().axiom_count() > 0);
     }
 
     #[test]
@@ -5217,8 +5361,7 @@ mod tests {
         let text = std::fs::read_to_string(&path).unwrap();
         let deduped = dedupe_rdf_xml_ids(&text);
         let normalized_ids = normalize_invalid_rdf_ids(&deduped);
-        let expanded =
-            expand_xml_entities_with_limit(&normalized_ids, 10_000_000).expect("expand");
+        let expanded = expand_xml_entities_with_limit(&normalized_ids, 10_000_000).expect("expand");
         let relative_uris = normalize_relative_owl_uris(&expanded);
         let injected = inject_rdf_based_punning_declarations(&relative_uris);
         let typed_about = materialize_typed_about_elements(&injected);
@@ -5244,8 +5387,7 @@ mod tests {
         let text = std::fs::read_to_string(&path).unwrap();
         let deduped = dedupe_rdf_xml_ids(&text);
         let normalized_ids = normalize_invalid_rdf_ids(&deduped);
-        let expanded =
-            expand_xml_entities_with_limit(&normalized_ids, 10_000_000).expect("expand");
+        let expanded = expand_xml_entities_with_limit(&normalized_ids, 10_000_000).expect("expand");
         let relative_uris = normalize_relative_owl_uris(&expanded);
         let injected = inject_rdf_based_punning_declarations(&relative_uris);
         let typed_about = materialize_typed_about_elements(&injected);
@@ -5268,12 +5410,15 @@ mod tests {
             ("final", &final_out),
         ] {
             if out.matches("<rdf:Description").count() > 2 {
-                eprintln!("=== {label} ({} descriptions) ===\n{out}\n", out.matches("<rdf:Description").count());
+                eprintln!(
+                    "=== {label} ({} descriptions) ===\n{out}\n",
+                    out.matches("<rdf:Description").count()
+                );
             }
         }
+        use crate::limits::ParseLimits;
         use crate::read::read_horned_owl_from_reader;
         use crate::Format;
-        use crate::limits::ParseLimits;
         read_horned_owl_from_reader(
             &mut std::io::Cursor::new(final_out.into_bytes()),
             Format::RdfXml,
@@ -5308,13 +5453,20 @@ mod tests {
         let normalized = normalize_all_different_members(&individuals);
         let preprocessed = expand_all_disjoint_collections(&normalized);
         let preprocessed_opas = collect_object_property_assertions(&preprocessed);
-        assert_eq!(preprocessed_opas.len(), 1, "expected one OPA, got {preprocessed_opas:?}");
+        assert_eq!(
+            preprocessed_opas.len(),
+            1,
+            "expected one OPA, got {preprocessed_opas:?}"
+        );
         let loaded = crate::load_ontology(&path).expect("load conclusion");
-        let has_opa = loaded.dl().axioms().any(|a| {
-            matches!(a, ontologos_core::DlAxiom::ObjectPropertyAssertion { .. })
-        }) || loaded.axioms().iter().any(|(_, a)| {
-            matches!(a, ontologos_core::Axiom::ObjectPropertyAssertion { .. })
-        });
+        let has_opa = loaded
+            .dl()
+            .axioms()
+            .any(|a| matches!(a, ontologos_core::DlAxiom::ObjectPropertyAssertion { .. }))
+            || loaded
+                .axioms()
+                .iter()
+                .any(|(_, a)| matches!(a, ontologos_core::Axiom::ObjectPropertyAssertion { .. }));
         assert!(has_opa, "loaded ontology missing OPA");
     }
 
@@ -5339,9 +5491,8 @@ mod tests {
 
     #[test]
     fn i5_5_005_singleton_union_supplement() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
-            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DI5.5-2D005/conclusion.rdf",
-        );
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DI5.5-2D005/conclusion.rdf");
         let text = std::fs::read_to_string(&path).unwrap();
         let deduped = dedupe_rdf_xml_ids(&text);
         let normalized_ids = normalize_invalid_rdf_ids(&deduped);
@@ -5372,10 +5523,14 @@ mod tests {
         let opas = collect_object_property_assertions(&text);
         assert_eq!(opas.len(), 1, "expected one OPA, got {opas:?}");
         let typing = collect_self_disjoint_restriction_assertions(&text);
-        assert_eq!(typing.len(), 1, "expected one class assertion, got {typing:?}");
+        assert_eq!(
+            typing.len(),
+            1,
+            "expected one class assertion, got {typing:?}"
+        );
         let loaded = crate::load_ontology(&path).expect("load");
         assert!(
-            loaded.dl().axiom_count() > 0 || loaded.axioms().len() > 0,
+            loaded.dl().axiom_count() > 0 || !loaded.axioms().is_empty(),
             "loaded ontology should have axioms"
         );
         assert!(

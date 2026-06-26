@@ -159,12 +159,18 @@ fn wg_thing_004_consistent() {
 
 #[test]
 fn wg_dl_005_consistent() {
-    assert_consistent("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf", true);
+    assert_consistent(
+        "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf",
+        true,
+    );
 }
 
 #[test]
 fn wg_dl_601_inconsistent() {
-    assert_consistent("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf", false);
+    assert_consistent(
+        "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf",
+        false,
+    );
 }
 
 #[test]
@@ -199,12 +205,18 @@ fn wg_one_equals_two_inconsistent() {
 
 #[test]
 fn wg_dl650_inconsistent() {
-    assert_consistent("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf", false);
+    assert_consistent(
+        "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf",
+        false,
+    );
 }
 
 #[test]
 fn wg_dl910_inconsistent() {
-    assert_consistent("wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf", false);
+    assert_consistent(
+        "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf",
+        false,
+    );
 }
 
 #[test]

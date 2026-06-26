@@ -37,24 +37,15 @@ pub fn union_disjoint_typing_consistency(ontology: &Ontology) -> Option<bool> {
         if members.len() < 2 {
             continue;
         }
-        union_constraints
-            .entry(sub_e)
-            .or_default()
-            .push(members);
+        union_constraints.entry(sub_e).or_default().push(members);
     }
 
-    let Some((class, constraints)) = union_constraints
+    let (class, constraints) = union_constraints
         .into_iter()
         .max_by_key(|(_, cs)| cs.len())
-        .filter(|(_, cs)| cs.len() >= 3)
-    else {
-        return None;
-    };
+        .filter(|(_, cs)| cs.len() >= 3)?;
 
-    let atoms: HashSet<EntityId> = constraints
-        .iter()
-        .flat_map(|c| c.iter().copied())
-        .collect();
+    let atoms: HashSet<EntityId> = constraints.iter().flat_map(|c| c.iter().copied()).collect();
     if atoms.len() < 4 {
         return None;
     }
@@ -94,24 +85,15 @@ fn oneof_nominal_typing_consistency(ontology: &Ontology) -> Option<bool> {
         if members.len() < 2 {
             continue;
         }
-        by_individual
-            .entry(*individual)
-            .or_default()
-            .push(members);
+        by_individual.entry(*individual).or_default().push(members);
     }
 
-    let Some((_, constraints)) = by_individual
+    let (_, constraints) = by_individual
         .into_iter()
         .max_by_key(|(_, cs)| cs.len())
-        .filter(|(_, cs)| cs.len() >= 3)
-    else {
-        return None;
-    };
+        .filter(|(_, cs)| cs.len() >= 3)?;
 
-    let atoms: HashSet<EntityId> = constraints
-        .iter()
-        .flat_map(|c| c.iter().copied())
-        .collect();
+    let atoms: HashSet<EntityId> = constraints.iter().flat_map(|c| c.iter().copied()).collect();
     if atoms.len() < 4 {
         return None;
     }
@@ -144,7 +126,11 @@ fn solve_union_constraints(
     Some(ok)
 }
 
-fn compatible(atom: EntityId, chosen: &HashSet<EntityId>, disjoint: &HashSet<(EntityId, EntityId)>) -> bool {
+fn compatible(
+    atom: EntityId,
+    chosen: &HashSet<EntityId>,
+    disjoint: &HashSet<(EntityId, EntityId)>,
+) -> bool {
     chosen
         .iter()
         .all(|&prev| prev == atom || !disjoint.contains(&order_pair(prev, atom)))
@@ -163,45 +149,6 @@ fn remaining_satisfiable(
     })
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ontologos_parser::load_ontology;
-
-    fn wg(case: &str) -> std::path::PathBuf {
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../benchmarks/data/hermit/wg")
-            .join(case)
-            .join("premise.rdf")
-    }
-
-    #[test]
-    fn wg_503_504_csp() {
-        for (case, expected) in [
-            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D503", true),
-            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D504", false),
-        ] {
-            let ont = load_ontology(&wg(case)).expect("load");
-            let got = union_disjoint_typing_consistency(&ont);
-            eprintln!("{case}: csp={got:?} expected={expected}");
-            assert_eq!(got, Some(expected), "{case}");
-        }
-    }
-
-    #[test]
-    fn wg_501_502_oneof_csp() {
-        for (case, expected) in [
-            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501", true),
-            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502", false),
-        ] {
-            let ont = load_ontology(&wg(case)).expect("load");
-            let got = nominal_grid_consistency(&ont);
-            eprintln!("{case}: csp={got:?} expected={expected}");
-            assert_eq!(got, Some(expected), "{case}");
-        }
-    }
-}
-
 fn individual_typed_with_class(ontology: &Ontology, class: EntityId) -> bool {
     let store = ontology.dl();
     let class_iri = entity_iri(ontology, class);
@@ -215,8 +162,7 @@ fn individual_typed_with_class(ontology: &Ontology, class: EntityId) -> bool {
     }
     for (_, axiom) in ontology.axioms().iter() {
         if let ontologos_core::Axiom::ClassAssertion {
-            class: asserted,
-            ..
+            class: asserted, ..
         } = axiom
         {
             if *asserted == class {
@@ -242,7 +188,11 @@ fn individual_typed_with_class(ontology: &Ontology, class: EntityId) -> bool {
     false
 }
 
-fn class_assertion_entails_atomic(store: &ontologos_core::DlStore, ce: CeId, class: EntityId) -> bool {
+fn class_assertion_entails_atomic(
+    store: &ontologos_core::DlStore,
+    ce: CeId,
+    class: EntityId,
+) -> bool {
     match store.ce(ce) {
         Some(ClassExpr::Atomic(c)) => *c == class,
         Some(ClassExpr::And(ops)) => ops.iter().any(|op| {
@@ -355,7 +305,7 @@ fn collect_nominal_grid_disjoint_pairs(
             }
         }
     }
-  let mut plus: HashMap<String, EntityId> = HashMap::new();
+    let mut plus: HashMap<String, EntityId> = HashMap::new();
     let mut minus: HashMap<String, EntityId> = HashMap::new();
     for (id, record) in ontology.entities().iter() {
         if record.kind != EntityKind::Individual {
@@ -469,4 +419,43 @@ fn backtrack(
         }
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ontologos_parser::load_ontology;
+
+    fn wg(case: &str) -> std::path::PathBuf {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg")
+            .join(case)
+            .join("premise.rdf")
+    }
+
+    #[test]
+    fn wg_503_504_csp() {
+        for (case, expected) in [
+            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D503", true),
+            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D504", false),
+        ] {
+            let ont = load_ontology(&wg(case)).expect("load");
+            let got = union_disjoint_typing_consistency(&ont);
+            eprintln!("{case}: csp={got:?} expected={expected}");
+            assert_eq!(got, Some(expected), "{case}");
+        }
+    }
+
+    #[test]
+    fn wg_501_502_oneof_csp() {
+        for (case, expected) in [
+            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501", true),
+            ("TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502", false),
+        ] {
+            let ont = load_ontology(&wg(case)).expect("load");
+            let got = nominal_grid_consistency(&ont);
+            eprintln!("{case}: csp={got:?} expected={expected}");
+            assert_eq!(got, Some(expected), "{case}");
+        }
+    }
 }

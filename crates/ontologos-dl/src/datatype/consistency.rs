@@ -814,10 +814,7 @@ fn functional_data_properties(store: &ontologos_core::DlStore) -> HashSet<Entity
 }
 
 /// Two or more distinct literal values on a functional datatype property for one individual.
-fn functional_data_literal_clash(
-    ontology: &Ontology,
-    functional: &HashSet<EntityId>,
-) -> bool {
+fn functional_data_literal_clash(ontology: &Ontology, functional: &HashSet<EntityId>) -> bool {
     if functional.is_empty() {
         return false;
     }
@@ -1447,9 +1444,8 @@ mod tests {
 
     #[test]
     fn rational002_oneof_clash_is_inconsistent() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-            "../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D002/premise.rdf",
-        );
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D002/premise.rdf");
         let ont = load_ontology(&path).expect("load");
         assert!(
             !is_datatype_consistent(&ont),
@@ -1513,7 +1509,10 @@ mod tests {
                 }
             }
         }
-        eprintln!("literal keys={keys:?} clash={}", functional_data_literal_clash(&ont, &functional));
+        eprintln!(
+            "literal keys={keys:?} clash={}",
+            functional_data_literal_clash(&ont, &functional)
+        );
         assert!(!is_datatype_consistent(&ont));
         assert!(!crate::is_consistent(&ont).unwrap());
     }
@@ -1554,9 +1553,8 @@ mod tests {
 
     #[test]
     fn rational003_datatype_is_consistent() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-            "../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D003/premise.rdf",
-        );
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D003/premise.rdf");
         let ont = load_ontology(&path).expect("load");
         let store = ont.dl();
         let idx = LiteralIndex::from_store(store);
@@ -1584,7 +1582,7 @@ mod tests {
         for (id, ce) in store.expressions() {
             eprintln!("ce{id:?}: {ce:?}");
         }
-        for (id, ce) in store.expressions() {
+        for (_id, ce) in store.expressions() {
             if let ontologos_core::ClassExpr::DataAll { range, .. } = ce {
                 let count = max_distinct_values(&ont, &idx, *range);
                 eprintln!("allValuesFrom range distinct count={count}");

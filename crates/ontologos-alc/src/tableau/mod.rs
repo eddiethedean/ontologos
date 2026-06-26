@@ -275,7 +275,10 @@ struct CardinalityRange {
     max: Option<u32>,
 }
 
-fn named_class_cardinality_bounds(dl: &DlOntology, class: EntityId) -> HashMap<CardinalityKey, CardinalityRange> {
+fn named_class_cardinality_bounds(
+    dl: &DlOntology,
+    class: EntityId,
+) -> HashMap<CardinalityKey, CardinalityRange> {
     let store = dl.core().dl();
     let Some(class_ce) = store.expressions().find_map(|(id, expr)| match expr {
         ClassExpr::Atomic(c) if *c == class => Some(id),
@@ -315,43 +318,61 @@ fn merge_cardinality_bounds(
                 merge_cardinality_bounds(store, op, bounds);
             }
         }
-        ClassExpr::MinCardinality { n, property, .. } => {
-            if let RoleExpr::Atomic(prop) = property {
-                let entry = bounds
-                    .entry(CardinalityKey::Object(prop))
-                    .or_insert(CardinalityRange { min: None, max: None });
-                entry.min = Some(entry.min.map_or(n, |cur| cur.max(n)));
-            }
+        ClassExpr::MinCardinality {
+            n,
+            property: RoleExpr::Atomic(prop),
+            ..
+        } => {
+            let entry = bounds
+                .entry(CardinalityKey::Object(prop))
+                .or_insert(CardinalityRange {
+                    min: None,
+                    max: None,
+                });
+            entry.min = Some(entry.min.map_or(n, |cur| cur.max(n)));
         }
-        ClassExpr::MaxCardinality { n, property, .. } => {
-            if let RoleExpr::Atomic(prop) = property {
-                let entry = bounds
-                    .entry(CardinalityKey::Object(prop))
-                    .or_insert(CardinalityRange { min: None, max: None });
-                entry.max = Some(entry.max.map_or(n, |cur| cur.min(n)));
-            }
+        ClassExpr::MaxCardinality {
+            n,
+            property: RoleExpr::Atomic(prop),
+            ..
+        } => {
+            let entry = bounds
+                .entry(CardinalityKey::Object(prop))
+                .or_insert(CardinalityRange {
+                    min: None,
+                    max: None,
+                });
+            entry.max = Some(entry.max.map_or(n, |cur| cur.min(n)));
         }
-        ClassExpr::ExactCardinality { n, property, .. } => {
-            if let RoleExpr::Atomic(prop) = property {
-                bounds.insert(
-                    CardinalityKey::Object(prop),
-                    CardinalityRange {
-                        min: Some(n),
-                        max: Some(n),
-                    },
-                );
-            }
+        ClassExpr::ExactCardinality {
+            n,
+            property: RoleExpr::Atomic(prop),
+            ..
+        } => {
+            bounds.insert(
+                CardinalityKey::Object(prop),
+                CardinalityRange {
+                    min: Some(n),
+                    max: Some(n),
+                },
+            );
         }
         ClassExpr::DataMinCardinality { n, property, .. } => {
             let entry = bounds
                 .entry(CardinalityKey::Data(property))
-                .or_insert(CardinalityRange { min: None, max: None });
+                .or_insert(CardinalityRange {
+                    min: None,
+                    max: None,
+                });
             entry.min = Some(entry.min.map_or(n, |cur| cur.max(n)));
         }
         ClassExpr::DataMaxCardinality { n, property, .. } => {
             let entry = bounds
                 .entry(CardinalityKey::Data(property))
-                .or_insert(CardinalityRange { min: None, max: None });
+                .or_insert(CardinalityRange {
+                    min: None,
+                    max: None,
+                });
             entry.max = Some(entry.max.map_or(n, |cur| cur.min(n)));
         }
         ClassExpr::DataExactCardinality { n, property, .. } => {
@@ -1197,24 +1218,20 @@ pub fn structural_unsat_classes(
     seed: &TableauSeed,
     atomic_subs: &[(EntityId, EntityId)],
 ) -> HashSet<EntityId> {
-    let nothing = dl
-        .core()
-        .entities()
-        .iter()
-        .find_map(|(id, record)| {
-            if record.kind != EntityKind::Class {
-                return None;
-            }
-            dl.core()
-                .resolve_iri(record.iri)
-                .ok()
-                .filter(|iri| {
-                    *iri == "http://www.w3.org/2002/07/owl#Nothing"
-                        || iri.ends_with("#Nothing")
-                        || *iri == "owl:Nothing"
-                })
-                .map(|_| id)
-        });
+    let nothing = dl.core().entities().iter().find_map(|(id, record)| {
+        if record.kind != EntityKind::Class {
+            return None;
+        }
+        dl.core()
+            .resolve_iri(record.iri)
+            .ok()
+            .filter(|iri| {
+                *iri == "http://www.w3.org/2002/07/owl#Nothing"
+                    || iri.ends_with("#Nothing")
+                    || *iri == "owl:Nothing"
+            })
+            .map(|_| id)
+    });
 
     let mut disjoint = Vec::new();
     for clause in dl.clauses().clauses() {
