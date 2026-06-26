@@ -39,7 +39,8 @@ bash benchmarks/scripts/report-conformance-coverage.sh
 - **Parallel triage**: `ONTOLOGOS_SCAN_THREADS=10`, `ONTOLOGOS_DL_MAX_WORKERS=10` defaults in `wg_failures` / `promote_wg`
 - **Spurious consistency**: `flower_auxiliary_unsatisfiable_classes` fallback removed; `class_assertion_only_consistency` for class-assertion-only ABoxes; `named_class_skip_atomic_unsat_precheck` for complex equivalents
 - **Missed consistency**: `disjointWith-010` parser (anonymous `owl:Thing` OPAs); `abox_asserted_exact_zero_equiv_class` (dl-601); `union_csp` oneof grid (dl-502); `abox_exists_forall_role_clash` ordering fix
-- **Tableau cardinality**: `And` conjuncts assert cardinality before `∃`; `ce_has_unqualified_cardinality_bound` skip in nested ABox materialize; `world_satisfies_filler` / `materialize_filler_on_world` for max-card reuse; **dl-018 cluster**: skip incompatible filler materialization under max-card (`materialize_filler_would_clash`); safe `materialize_existential_successors`
+- **Tableau cardinality**: `And` conjuncts assert cardinality before `∃`; `ce_has_unqualified_cardinality_bound` skip in nested ABox materialize; `world_satisfies_filler` / `materialize_filler_on_world` for max-card reuse; **dl-018 cluster**: skip incompatible filler materialization under max-card (`materialize_filler_would_clash`); safe `materialize_existential_successors`; ∃ fillers resolved via `effective_class_expression`
+- **Subclass normalization**: `SubClassOf` through atomic supers now expands `EquivalentClasses` `And`/`Or` partners into per-conjunct subsumptions (dl-608 `.comp` grid prerequisite)
 - **Entailment**: `singleton_range_functional_entailment_guard` (FunctionalProperty-004); `entailment_via_subclass_nothing` structural/classify fast paths
 - **`wg_phase4_check`**: **32/32** green at 30s DL budget
 

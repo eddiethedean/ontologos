@@ -284,6 +284,38 @@ fn diagnose_dl608_unsatisfiable() {
         }
     }
     eprintln!("consistent={:?}", is_consistent(&ont));
+    let taxonomy = ontologos_dl::classify(&ont).expect("classify");
+    eprintln!("classify unsat count={}", taxonomy.unsatisfiable.len());
+}
+
+#[test]
+#[ignore = "dl-608 comp-grid requires chained ∃/subclass clash — still open"]
+fn dl608_equiv_and_should_be_unsatisfiable() {
+    use ontologos_alc::{DlOntology, TableauSeed, is_ce_satisfiable_with_seed};
+
+    let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf";
+    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let dl = DlOntology::from_ontology(&ont).expect("dl");
+    let store = ont.dl();
+    let unsat = ont
+        .lookup_entity("http://oiled.man.example.net/test#Unsatisfiable")
+        .expect("Unsatisfiable");
+    let unsat_ce = store
+        .expressions()
+        .find_map(|(id, e)| match e {
+            ontologos_core::ClassExpr::Atomic(c) if *c == unsat => Some(id),
+            _ => None,
+        })
+        .expect("ce");
+    let equiv_and = store.axioms().find_map(|ax| match ax {
+        ontologos_core::DlAxiom::EquivalentClasses(ids) if ids.contains(&unsat_ce) => ids
+            .iter()
+            .copied()
+            .find(|&id| id != unsat_ce),
+        _ => None,
+    }).expect("equiv");
+    let sat = is_ce_satisfiable_with_seed(&dl, equiv_and, &TableauSeed::default()).expect("sat");
+    assert!(!sat, "Unsatisfiable equiv And should be unsat");
 }
 
 #[test]

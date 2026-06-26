@@ -26,8 +26,17 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
                 superclass,
             } => {
                 let sub = atomic_ce(ontology, *subclass);
-                let sup = atomic_ce(ontology, *superclass);
-                out.push(Clause::Subsumption { sub, sup });
+                let sup_atomic = atomic_ce(ontology, *superclass);
+                let store = ontology.dl();
+                let sup = resolve_subclass_super(store, sup_atomic);
+                if let Some(ClassExpr::And(ops)) = store.ce(sup).cloned() {
+                    for op in ops {
+                        let op_nnf = nnf(ontology, op);
+                        out.push(Clause::Subsumption { sub, sup: op_nnf });
+                    }
+                } else {
+                    out.push(Clause::Subsumption { sub, sup });
+                }
             }
             Axiom::SubClassOfExistential {
                 subclass,
@@ -89,7 +98,9 @@ pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {
         match axiom {
             DlAxiom::SubClassOf { sub, sup } => {
                 let sub_nnf = nnf(ontology, sub);
-                if let Some(ClassExpr::And(ops)) = ontology.dl().ce(sup).cloned() {
+                let store = ontology.dl();
+                let sup = resolve_subclass_super(store, sup);
+                if let Some(ClassExpr::And(ops)) = store.ce(sup).cloned() {
                     for op in ops {
                         let op_nnf = nnf(ontology, op);
                         out.push(Clause::Subsumption {
@@ -386,6 +397,48 @@ fn nnf_negate(ontology: &mut Ontology, id: CeId) -> CeId {
             ontology.dl_mut().intern_ce(ClassExpr::Not(inner))
         }
     }
+}
+
+/// When `sup` is an atomic named class, prefer its complex `EquivalentClasses` partner.
+fn resolve_subclass_super(store: &ontologos_core::DlStore, sup: CeId) -> CeId {
+    if !matches!(store.ce(sup), Some(ClassExpr::Atomic(_))) {
+        return sup;
+    }
+    let mut best = None;
+    let mut best_score = 0u8;
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        if !ids.contains(&sup) {
+            continue;
+        }
+        for &other in ids {
+            if other == sup {
+                continue;
+            }
+            let score = match store.ce(other) {
+                Some(ClassExpr::And(_) | ClassExpr::Or(_)) => 5,
+                Some(
+                    ClassExpr::Some { .. }
+                    | ClassExpr::All { .. }
+                    | ClassExpr::MinCardinality { .. }
+                    | ClassExpr::MaxCardinality { .. }
+                    | ClassExpr::ExactCardinality { .. }
+                    | ClassExpr::DataMinCardinality { .. }
+                    | ClassExpr::DataMaxCardinality { .. }
+                    | ClassExpr::DataExactCardinality { .. },
+                ) => 4,
+                Some(ClassExpr::Not(_)) => 3,
+                _ => 1,
+            };
+            if score > best_score {
+                best_score = score;
+                best = Some(other);
+            }
+        }
+    }
+    best.unwrap_or(sup)
 }
 
 /// Negate a class expression into NNF (may intern new CEs in `ontology`).
