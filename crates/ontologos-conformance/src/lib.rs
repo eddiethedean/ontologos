@@ -1,5 +1,8 @@
 //! Shared helpers for HermiT-ported conformance tests.
 //!
+//! **Contributors:** start with [HermiT burndown guide](../../docs/guides/hermit-burndown.md)
+//! and `bash benchmarks/scripts/hermit-burndown.sh status`.
+//!
 //! HermiT fixtures are vendored under `benchmarks/data/hermit/` for CI. A full
 //! HermiT source tree at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT` is
 //! also supported.
@@ -7,16 +10,18 @@
 mod catalog;
 
 pub use catalog::{
-    audit_planned_backlog, check_axiom_case, check_axiom_case_bounded, check_wg_case,
-    ensure_concurrent_scan_defaults, load_catalog,
-    load_wg_catalog, promoted_axiom_ids_path, promoted_wg_ids_path, read_catalog_file,
-    read_promoted_axiom_ids, read_promoted_wg_ids, read_wg_catalog_file,
-    refresh_catalog_file_cache, run_hermit_case, run_wg_case, scan_all_passing_axiom_cases,
-    scan_all_passing_wg_cases, scan_all_wg_failures, scan_planned_dl_failures,
-    scan_planned_engine_failures, scan_planned_passing_wg_cases, scan_planned_wg_failures,
-    scan_promotable_axiom_cases, stable_promoted_axiom_ids, write_promoted_axiom_ids,
-    write_promoted_wg_ids, wg_case_short_id, HermitCase, PlannedBacklogAudit, PlannedJavaAudit,
-    PlannedJavaCategory, PlannedWgAudit, PlannedWgCategory, WgCase, WgFailure, WgFailureBucket,
+    audit_planned_backlog, audit_planned_backlog_with, check_axiom_case, check_axiom_case_bounded,
+    check_wg_case, ensure_concurrent_scan_defaults, load_catalog, load_wg_catalog,
+    parity_metrics, promoted_axiom_ids_path, promoted_wg_ids_path, read_catalog_file,
+    read_promoted_axiom_ids, read_promoted_wg_ids, read_wg_catalog_file, refresh_catalog_file_cache,
+    run_hermit_case, run_wg_case, scan_all_passing_axiom_cases, scan_all_passing_wg_cases,
+    scan_all_wg_failures, scan_planned_dl_failures, scan_planned_engine_failures,
+    scan_planned_passing_wg_cases, scan_planned_wg_failures, scan_promotable_axiom_cases,
+    scan_unpromoted_passing_axiom_cases, scan_unpromoted_passing_wg_cases, scan_wg_failures,
+    stable_promoted_axiom_ids, write_promoted_axiom_ids, write_promoted_wg_ids, wg_case_short_id,
+    AuditOptions, HermitCase, ParityMetrics, PlannedBacklogAudit, PlannedBacklogSummary,
+    PlannedJavaAudit, PlannedJavaCategory, PlannedWgAudit, PlannedWgCategory, WgCase, WgFailure,
+    WgFailureBucket,
 };
 
 use std::path::{Path, PathBuf};

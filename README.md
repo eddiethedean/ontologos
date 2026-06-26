@@ -270,7 +270,7 @@ Full site: **[ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/late
 | CLI | [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli.html) |
 | Python | [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html) |
 | Errors | [Error reference](https://ontologos.readthedocs.io/en/latest/reference/errors.html) |
-| Conformance | [HermiT-ported tests](https://ontologos.readthedocs.io/en/latest/reference/conformance.html) |
+| Conformance | [HermiT-ported tests](https://ontologos.readthedocs.io/en/latest/reference/conformance.html) · [Burndown guide](https://ontologos.readthedocs.io/en/latest/guides/hermit-burndown.html) (contributors) |
 | Migration | [Upgrade hub](https://ontologos.readthedocs.io/en/latest/migration/) |
 
 Source markdown: `docs/` · Changelog: [CHANGELOG.md](CHANGELOG.md) · Security: [docs/project/security-policy.md](docs/project/security-policy.md)
@@ -286,6 +286,8 @@ cd ontologos
 cargo test --workspace --exclude ontologos-conformance
 cargo clippy --workspace --all-targets -- -D warnings
 ```
+
+**Working on HermiT parity (v1.0)?** Start with the [HermiT burndown guide](docs/guides/hermit-burndown.md) and `bash benchmarks/scripts/hermit-burndown.sh status`.
 
 | Change type | Usually enough |
 |-------------|----------------|

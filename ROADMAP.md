@@ -105,7 +105,7 @@ flowchart TB
 
 The **v1.0.0 git tag** ships only when **in-scope HermiT catalog parity reaches 100%** and [Phase 8–9](#phase-8--expressivity-prerequisites-v15v19) expressivity gates are met. The automated script `check-1.0-release-gates.sh` (≥400 active tests, Tier A + C) is **necessary but not sufficient** — it can pass while catalog backlog remains (`java_planned` + semantic failures in the full suite).
 
-Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-report.md) · `bash benchmarks/scripts/report-ci-gate-status.sh` · `bash benchmarks/scripts/audit-planned-backlog.sh`
+Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-report.md) · `bash benchmarks/scripts/hermit-burndown.sh status` · [Burndown guide](docs/guides/hermit-burndown.md) (contributors)
 
 ### Scope
 

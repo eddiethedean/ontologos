@@ -77,6 +77,7 @@ nav:
       - Facade API: guides/facade-api.md
       - Preview profiles: guides/preview-profiles.md
       - Evaluator playbook: guides/evaluator-playbook.md
+      - HermiT burndown (contributors): guides/hermit-burndown.md
       - Profile detection: guides/profile-detection.md
       - Python: guides/python.md
       - Glossary: guides/glossary.md

@@ -11,6 +11,12 @@ echo ""
 "${ROOT}/benchmarks/scripts/report-conformance-coverage.sh"
 echo ""
 
+BIN="$("${ROOT}/benchmarks/scripts/build-conformance-tools.sh" 2>/dev/null || true)"
+if [[ -x "${BIN}/parity_status" ]]; then
+  "${BIN}/parity_status"
+  echo ""
+fi
+
 if bash "${ROOT}/benchmarks/scripts/check-1.0-release-gates.sh" >/tmp/ontologos-gates.log 2>&1; then
   echo "1.0 release gates: PASS"
   grep '^OK' /tmp/ontologos-gates.log || true

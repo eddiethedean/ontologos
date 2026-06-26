@@ -126,6 +126,20 @@ pytest tests/ -q
 
 See [Roadmap summary](docs/project/roadmap-summary.md) (full checklist: [ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md)).
 
+## Working on HermiT parity (v1.0 burndown)
+
+If you are fixing DL engine gaps, porting HermiT tests, or burning down conformance failures, start with the **[HermiT burndown guide](docs/guides/hermit-burndown.md)**.
+
+```bash
+./benchmarks/scripts/download.sh
+bash benchmarks/scripts/hermit-burndown.sh status   # parity %, backlog, next steps
+bash benchmarks/scripts/hermit-burndown.sh loop     # daily fix-verify loop
+```
+
+**Remember:** PR CI only runs *promoted* passing cases (`ONTOLOGOS_CI_PROMOTED_ONLY=1`). After fixing a test, run `hermit-burndown.sh promote` so CI enforces it. Use `hermit-burndown.sh test-full` to see the real failure set.
+
+Catalog mechanics: [tests/hermit/README.md](tests/hermit/README.md).
+
 ## Releases
 
 ### Release checklist

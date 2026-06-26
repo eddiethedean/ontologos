@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 
 use ontologos_conformance::{
     promoted_axiom_ids_path, read_catalog_file, read_promoted_axiom_ids,
-    scan_all_passing_axiom_cases, scan_promotable_axiom_cases, stable_promoted_axiom_ids,
+    scan_all_passing_axiom_cases, scan_promotable_axiom_cases, scan_unpromoted_passing_axiom_cases,
     write_promoted_axiom_ids,
 };
 
@@ -13,7 +13,10 @@ fn main() {
 
     let previous = read_promoted_axiom_ids();
     let passing = if incremental {
-        let mut merged: BTreeSet<String> = stable_promoted_axiom_ids().into_iter().collect();
+        let mut merged: BTreeSet<String> = previous.iter().cloned().collect();
+        for id in scan_unpromoted_passing_axiom_cases() {
+            merged.insert(id);
+        }
         for id in scan_promotable_axiom_cases() {
             merged.insert(id);
         }
@@ -32,6 +35,10 @@ fn main() {
         .filter(|id| planned.contains(*id) && !previous.contains(*id))
         .cloned()
         .collect();
+    let newly_unpromoted: usize = passing
+        .iter()
+        .filter(|id| !previous.contains(*id) && !planned.contains(*id))
+        .count();
 
     println!(
         "newly promotable planned axiom cases: {}",
@@ -39,6 +46,9 @@ fn main() {
     );
     for id in &newly_planned {
         println!("  {id}");
+    }
+    if incremental {
+        println!("newly passing unpromoted axiom cases: {newly_unpromoted}");
     }
     println!("all passing axiom cases: {}", passing.len());
     write_promoted_axiom_ids(&passing).expect("write promoted_axiom_ids.txt");

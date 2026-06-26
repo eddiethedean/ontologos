@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Scan planned HermiT cases, promote passing ones, regenerate catalog artifacts.
 #
-# Speed (local triage / promotion loops):
+# Default: incremental (unpromoted cases only). Use --full for complete rescan.
+# Prefer: bash benchmarks/scripts/hermit-burndown.sh promote
 #   ONTOLOGOS_DL_BUDGET_SECS=30     — fast scan; use 120 for final promotion
 #   ONTOLOGOS_DL_MAX_WORKERS=10     — concurrent DL ops (default 10)
 #   ONTOLOGOS_SCAN_THREADS=10       — rayon case parallelism (default 10)
@@ -11,6 +12,10 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
+
+# shellcheck source=burndown-process-guard.sh
+source "${ROOT}/benchmarks/scripts/burndown-process-guard.sh"
+burndown_guard_begin
 
 BIN="$("${ROOT}/benchmarks/scripts/build-conformance-tools.sh")"
 export ONTOLOGOS_DL_BUDGET_SECS="${ONTOLOGOS_DL_BUDGET_SECS:-120}"

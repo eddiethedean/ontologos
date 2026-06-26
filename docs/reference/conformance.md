@@ -4,6 +4,8 @@ Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. 
 
 ## HermiT porting strategy
 
+**Contributors:** see the **[HermiT burndown guide](../guides/hermit-burndown.md)** for the daily workflow, parity scoreboard, and what to fix when.
+
 Tests are cataloged in [tests/hermit/manifest.toml](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/manifest.toml) and implemented in `ontologos-conformance`.
 
 | Tier | CI | HermiT checkout required | Purpose |
@@ -19,7 +21,7 @@ cargo test -p ontologos-conformance
 
 Optional full HermiT tree: set `ONTOLOGOS_HERMIT_ROOT` or clone to `HermiT/` for additional fixtures.
 
-See [tests/hermit/README.md](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/README.md) for maintainer setup.
+See [tests/hermit/README.md](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/README.md) for catalog regeneration. **New contributors:** start with the [HermiT burndown guide](../guides/hermit-burndown.md).
 
 ## Tier A coverage (RL engine)
 

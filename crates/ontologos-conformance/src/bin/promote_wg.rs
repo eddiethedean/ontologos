@@ -2,8 +2,9 @@
 use std::collections::BTreeSet;
 
 use ontologos_conformance::{
-    ensure_concurrent_scan_defaults, promoted_wg_ids_path, read_wg_catalog_file,
-    scan_all_passing_wg_cases, scan_planned_passing_wg_cases, write_promoted_wg_ids,
+    ensure_concurrent_scan_defaults, promoted_wg_ids_path, read_promoted_wg_ids,
+    scan_all_passing_wg_cases, scan_unpromoted_passing_wg_cases, wg_case_short_id,
+    write_promoted_wg_ids,
 };
 
 fn main() {
@@ -11,25 +12,24 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let incremental = args.iter().any(|a| a == "--incremental");
 
-    let passing = if incremental {
-        let existing: BTreeSet<String> = read_wg_catalog_file()
-            .iter()
-            .filter(|c| c.status == "wg")
-            .map(|c| c.id.clone())
-            .collect();
-        let mut merged: BTreeSet<String> = existing;
-        for id in scan_planned_passing_wg_cases() {
-            merged.insert(id);
+    let previous = read_promoted_wg_ids();
+    let passing: Vec<String> = if incremental {
+        let mut merged: BTreeSet<String> = previous.iter().cloned().collect();
+        let newly_passing = scan_unpromoted_passing_wg_cases();
+        println!("newly passing unpromoted WG: {}", newly_passing.len());
+        for full_id in newly_passing {
+            merged.insert(wg_case_short_id(&full_id).to_string());
         }
         merged.into_iter().collect()
     } else {
         scan_all_passing_wg_cases()
+            .into_iter()
+            .map(|id| wg_case_short_id(&id).to_string())
+            .collect()
     };
 
-    println!("passing WG cases: {}", passing.len());
-    for id in &passing {
-        println!("  {id}");
-    }
+    let added = passing.len().saturating_sub(previous.len());
+    println!("passing WG cases: {} (+{added} since last promote)", passing.len());
     write_promoted_wg_ids(&passing).expect("write promoted_wg_ids.txt");
     println!("wrote {}", promoted_wg_ids_path().display());
 }

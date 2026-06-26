@@ -6,6 +6,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "${ROOT}"
 
+# shellcheck source=burndown-process-guard.sh
+source "${ROOT}/benchmarks/scripts/burndown-process-guard.sh"
+burndown_guard_begin
+
 export ONTOLOGOS_DL_BUDGET_SECS="${ONTOLOGOS_DL_BUDGET_SECS:-120}"
 unset ONTOLOGOS_CI_PROMOTED_ONLY
 

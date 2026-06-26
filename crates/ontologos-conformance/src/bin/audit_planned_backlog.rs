@@ -2,10 +2,17 @@
 use std::env;
 use std::path::PathBuf;
 
-use ontologos_conformance::audit_planned_backlog;
+use ontologos_conformance::{audit_planned_backlog, audit_planned_backlog_with, AuditOptions};
 
 fn main() {
-    let audit = audit_planned_backlog();
+    let fast = std::env::args().any(|a| a == "--fast");
+    let audit = if fast {
+        audit_planned_backlog_with(AuditOptions {
+            run_engine_checks: false,
+        })
+    } else {
+        audit_planned_backlog()
+    };
     let json = serde_json::to_string_pretty(&audit).expect("serialize audit");
     println!("{json}");
 

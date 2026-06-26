@@ -1,14 +1,25 @@
 # HermiT conformance porting
 
+> **New to HermiT parity work?** Read the **[HermiT burndown guide](../../docs/guides/hermit-burndown.md)** first — it explains what to do, why, and the daily loop. This file covers catalog mechanics.
+
 This directory catalogs tests ported from the [HermiT reasoner](https://github.com/owlcs/hermit-reasoner) (Java) into Rust integration tests under `crates/ontologos-conformance/`.
 
-HermiT source is **not committed** (see root `.gitignore`). Place a checkout at `HermiT/` or set:
+## Quick start (contributors)
+
+```bash
+./benchmarks/scripts/download.sh
+bash benchmarks/scripts/hermit-burndown.sh status    # parity dashboard
+bash benchmarks/scripts/hermit-burndown.sh loop      # daily fix-verify loop
+```
+
+HermiT source is **not committed** (see root `.gitignore`). Optional for full catalog regen:
 
 ```bash
 export ONTOLOGOS_HERMIT_ROOT=/path/to/hermit-reasoner
+# or clone to HermiT/
 ```
 
-## Catalog (599 tests)
+## Catalog regeneration
 
 Regenerate from vendored fixtures (no HermiT checkout required):
 
@@ -46,24 +57,18 @@ This writes:
 
 Hand-written ports are listed in [manifest.toml](manifest.toml) and implemented in dedicated test modules.
 
-## Run tests
+## Tests and CI
+
+See [HermiT burndown guide](../../docs/guides/hermit-burndown.md) for the full workflow. Short version:
 
 ```bash
-# Blocking CI subset (promoted passing cases only)
-ONTOLOGOS_CI_PROMOTED_ONLY=1 ONTOLOGOS_DL_BUDGET_SECS=30 \
-  cargo test -p ontologos-conformance --release
-
-# Full failure-first suite (local or nightly)
-bash benchmarks/scripts/run-hermit-full-suite.sh
-
-# Active vs ignored inventory
-./benchmarks/scripts/report-conformance-coverage.sh
-
-# Legacy ignored tier (permanent exclusions, hand-written stubs)
-cargo test -p ontologos-conformance -- --ignored
+bash benchmarks/scripts/hermit-burndown.sh triage    # what to fix next
+bash benchmarks/scripts/hermit-burndown.sh promote   # update CI promoted lists
+bash benchmarks/scripts/hermit-burndown.sh test      # blocking CI subset
+bash benchmarks/scripts/hermit-burndown.sh test-full # failure-first truth
 ```
 
-**Coverage honesty:** Blocking CI runs `ONTOLOGOS_CI_PROMOTED_ONLY=1` so only cases listed in `promoted_wg_ids.txt` / `promoted_axiom_ids.txt` execute semantic checks. The full suite (`run-hermit-full-suite.sh`) runs every active test and is the source of truth for parity progress.
+**Coverage honesty:** Blocking CI runs `ONTOLOGOS_CI_PROMOTED_ONLY=1` so only cases in `promoted_wg_ids.txt` / `promoted_axiom_ids.txt` execute semantic checks. The full suite is the source of truth for parity progress.
 
 ## Add a hand-written port
 

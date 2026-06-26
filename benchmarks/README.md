@@ -75,3 +75,14 @@ Results are written under `target/criterion/`.
 | `scripts/generate-go-subset.sh` | Trim GO with ROBOT for `<10s` EL CI test |
 
 EL integration tests: `cargo test -p ontologos-el --test pizza_el`
+
+## HermiT conformance burndown
+
+OntoLogos v1.0 is gated on **HermiT catalog parity** (`parity_pct → 100%`). Contributors should read **[docs/guides/hermit-burndown.md](../docs/guides/hermit-burndown.md)** before touching `ontologos-conformance` or `ontologos-dl`.
+
+```bash
+bash benchmarks/scripts/hermit-burndown.sh status   # parity dashboard
+bash benchmarks/scripts/hermit-burndown.sh loop     # daily workflow
+```
+
+HermiT fixtures live under `benchmarks/data/hermit/`. Catalog tooling: `tests/hermit/`.

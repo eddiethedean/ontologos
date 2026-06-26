@@ -1568,6 +1568,23 @@ pub fn scan_all_passing_axiom_cases() -> Vec<String> {
     passing
 }
 
+/// Passing active axiom cases not yet in `promoted_axiom_ids.txt`.
+pub fn scan_unpromoted_passing_axiom_cases() -> Vec<String> {
+    configure_scan_parallelism();
+    let promoted = read_promoted_axiom_ids();
+    let mut passing: Vec<String> = read_catalog_file()
+        .par_iter()
+        .filter(|case| is_axiom_checkable(case) && !promoted.contains(&case.id))
+        .filter_map(|case| {
+            check_axiom_case_for_promotion(case)
+                .ok()
+                .map(|_| case.id.clone())
+        })
+        .collect();
+    passing.sort();
+    passing
+}
+
 /// Cases with `status=planned` that pass semantic checks (candidates for promotion).
 pub fn scan_promotable_axiom_cases() -> Vec<String> {
     configure_scan_parallelism();
@@ -2267,21 +2284,54 @@ fn classify_wg_failure(case: &WgCase, err: &str) -> WgFailureBucket {
     WgFailureBucket::Other
 }
 
+fn active_wg_cases_to_scan(unpromoted_only: bool) -> Vec<WgCase> {
+    let promoted = if unpromoted_only {
+        Some(read_promoted_wg_ids())
+    } else {
+        None
+    };
+    read_wg_catalog_file()
+        .into_iter()
+        .filter(|case| case.status == "wg" && wg_case_runnable(case))
+        .filter(|case| {
+            promoted.as_ref().is_none_or(|ids| !ids.contains(wg_case_short_id(&case.id)))
+        })
+        .collect()
+}
+
+/// Active WG cases not yet listed in `promoted_wg_ids.txt` (fast daily triage scope).
+#[must_use]
+pub fn unpromoted_wg_case_count() -> usize {
+    let promoted = read_promoted_wg_ids();
+    read_wg_catalog_file()
+        .iter()
+        .filter(|case| case.status == "wg" && wg_case_runnable(case))
+        .filter(|case| !promoted.contains(wg_case_short_id(&case.id)))
+        .count()
+}
+
 /// All active WG cases that fail semantic checks (for triage).
 pub fn scan_all_wg_failures() -> Vec<WgFailure> {
+    scan_wg_failures(false)
+}
+
+/// Scan WG failures, optionally limiting to cases not yet in `promoted_wg_ids.txt`.
+pub fn scan_wg_failures(unpromoted_only: bool) -> Vec<WgFailure> {
     ensure_concurrent_scan_defaults();
     configure_wg_tableau_limits();
     configure_scan_parallelism();
-    let active: Vec<_> = read_wg_catalog_file()
-        .into_iter()
-        .filter(|case| case.status == "wg" && wg_case_runnable(case))
-        .collect();
+    let active = active_wg_cases_to_scan(unpromoted_only);
+    let label = if unpromoted_only {
+        "wg unpromoted"
+    } else {
+        "wg all"
+    };
     let total = active.len();
     let done = AtomicUsize::new(0);
     let mut failures: Vec<WgFailure> = active
         .par_iter()
         .filter_map(|case| {
-            log_parallel_progress("wg all", &done, total, &case.id);
+            log_parallel_progress(label, &done, total, &case.id);
             check_wg_case(case).err().map(|err| WgFailure {
                 bucket: classify_wg_failure(case, &err),
                 id: case.id.clone(),
@@ -2291,6 +2341,25 @@ pub fn scan_all_wg_failures() -> Vec<WgFailure> {
         .collect();
     failures.sort_by(|a, b| a.id.cmp(&b.id));
     failures
+}
+
+/// Passing active WG cases not yet in `promoted_wg_ids.txt` (incremental promotion).
+pub fn scan_unpromoted_passing_wg_cases() -> Vec<String> {
+    ensure_concurrent_scan_defaults();
+    configure_wg_tableau_limits();
+    configure_scan_parallelism();
+    let active = active_wg_cases_to_scan(true);
+    let total = active.len();
+    let done = AtomicUsize::new(0);
+    let mut passing: Vec<String> = active
+        .par_iter()
+        .filter_map(|case| {
+            log_parallel_progress("wg unpromoted pass", &done, total, &case.id);
+            check_wg_case(case).ok().map(|_| case.id.clone())
+        })
+        .collect();
+    passing.sort();
+    passing
 }
 
 /// Planned WG cases that fail semantic checks (for triage).
@@ -2323,6 +2392,8 @@ pub enum PlannedJavaCategory {
     MissingAssertions,
     /// Classification XML golden missing (fixture engine).
     MissingFixture,
+    /// Assertions present; engine check skipped (use full audit).
+    EnginePending,
     /// Assertions present and engine check fails.
     EngineGap,
     /// Assertions present and engine check passes — promote via `promote_catalog`.
@@ -2338,6 +2409,7 @@ pub enum PlannedWgCategory {
     MissingPremise,
     MissingConclusion,
     MissingExpectations,
+    EnginePending,
     EngineGap,
     PromotionCandidate,
 }
@@ -2376,13 +2448,101 @@ pub struct PlannedBacklogAudit {
     pub wg: Vec<PlannedWgAudit>,
 }
 
+/// HermiT catalog parity snapshot (metadata only — no engine scans).
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct ParityMetrics {
+    pub java_total: usize,
+    pub java_by_status: std::collections::BTreeMap<String, usize>,
+    pub wg_total: usize,
+    pub wg_by_status: std::collections::BTreeMap<String, usize>,
+    pub java_planned: usize,
+    pub wg_planned: usize,
+    pub in_scope_total: usize,
+    pub backlog: usize,
+    pub parity_pct: f64,
+    pub promoted_axiom: usize,
+    pub promoted_wg: usize,
+    pub active_wg: usize,
+    pub unpromoted_wg: usize,
+    pub runnable_java: usize,
+}
+
+const JAVA_OUT_OF_SCOPE: &[&str] = &["internal", "excluded", "migrated"];
+
+fn count_by_status<T, F>(items: &[T], status: F) -> std::collections::BTreeMap<String, usize>
+where
+    F: Fn(&T) -> &str,
+{
+    let mut counts = std::collections::BTreeMap::new();
+    for item in items {
+        *counts.entry(status(item).to_string()).or_default() += 1;
+    }
+    counts
+}
+
+/// Fast catalog parity metrics (reads JSON + promoted lists only).
+#[must_use]
+pub fn parity_metrics() -> ParityMetrics {
+    let cases = read_catalog_file();
+    let wg = read_wg_catalog_file();
+    let java_by_status = count_by_status(&cases, |c| c.status.as_str());
+    let wg_by_status = count_by_status(&wg, |c| c.status.as_str());
+    let java_planned = java_by_status.get("planned").copied().unwrap_or(0);
+    let wg_planned = wg_by_status.get("planned").copied().unwrap_or(0);
+    let java_out: usize = JAVA_OUT_OF_SCOPE
+        .iter()
+        .filter_map(|s| java_by_status.get(*s))
+        .sum();
+    let in_scope_total = cases.len() - java_out + wg.len();
+    let backlog = java_planned + wg_planned;
+    let parity_pct = if in_scope_total == 0 {
+        0.0
+    } else {
+        100.0 * (1.0 - backlog as f64 / in_scope_total as f64)
+    };
+    let promoted_axiom = read_promoted_axiom_ids().len();
+    let promoted_wg = read_promoted_wg_ids().len();
+    let active_wg = wg
+        .iter()
+        .filter(|c| c.status == "wg" && wg_case_runnable(c))
+        .count();
+    let unpromoted_wg = unpromoted_wg_case_count();
+    let runnable_java = cases
+        .iter()
+        .filter(|c| matches!(c.status.as_str(), "axiom" | "clausify" | "swrl" | "fixture"))
+        .count();
+    ParityMetrics {
+        java_total: cases.len(),
+        java_by_status,
+        wg_total: wg.len(),
+        wg_by_status,
+        java_planned,
+        wg_planned,
+        in_scope_total,
+        backlog,
+        parity_pct,
+        promoted_axiom,
+        promoted_wg,
+        active_wg,
+        unpromoted_wg,
+        runnable_java,
+    }
+}
+
+/// Options for planned-backlog triage scans.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct AuditOptions {
+    /// When false, skip `check_axiom_case_bounded` / `check_wg_case` (metadata triage only).
+    pub run_engine_checks: bool,
+}
+
 fn axiom_ofn_on_disk(case: &HermitCase) -> bool {
     case.axiom_ofn
         .as_ref()
         .is_some_and(|rel| hermit_data_path(rel).is_file())
 }
 
-fn classify_planned_java(case: &HermitCase) -> PlannedJavaAudit {
+fn classify_planned_java(case: &HermitCase, run_engine_checks: bool) -> PlannedJavaAudit {
     let id = case.id.clone();
     let engine = case.engine.clone();
     if matches!(
@@ -2439,6 +2599,14 @@ fn classify_planned_java(case: &HermitCase) -> PlannedJavaAudit {
             detail: case.axiom_ofn.clone(),
         };
     }
+    if !run_engine_checks {
+        return PlannedJavaAudit {
+            id,
+            engine,
+            category: PlannedJavaCategory::EnginePending,
+            detail: None,
+        };
+    }
     match check_axiom_case_bounded(case) {
         Ok(()) => PlannedJavaAudit {
             id,
@@ -2455,7 +2623,7 @@ fn classify_planned_java(case: &HermitCase) -> PlannedJavaAudit {
     }
 }
 
-fn classify_planned_wg(case: &WgCase) -> PlannedWgAudit {
+fn classify_planned_wg(case: &WgCase, run_engine_checks: bool) -> PlannedWgAudit {
     let id = case.id.clone();
     let premise = case.premise_ofn.as_ref();
     if premise.is_none() {
@@ -2492,6 +2660,13 @@ fn classify_planned_wg(case: &WgCase) -> PlannedWgAudit {
             };
         }
     }
+    if !run_engine_checks {
+        return PlannedWgAudit {
+            id,
+            category: PlannedWgCategory::EnginePending,
+            detail: None,
+        };
+    }
     match check_wg_case(case) {
         Ok(()) => PlannedWgAudit {
             id,
@@ -2508,6 +2683,13 @@ fn classify_planned_wg(case: &WgCase) -> PlannedWgAudit {
 
 /// Audit all `status=planned` HermiT Java and WG catalog cases.
 pub fn audit_planned_backlog() -> PlannedBacklogAudit {
+    audit_planned_backlog_with(AuditOptions {
+        run_engine_checks: true,
+    })
+}
+
+/// Audit planned backlog with optional fast metadata-only mode.
+pub fn audit_planned_backlog_with(options: AuditOptions) -> PlannedBacklogAudit {
     use std::collections::BTreeMap;
 
     configure_scan_parallelism();
@@ -2515,13 +2697,13 @@ pub fn audit_planned_backlog() -> PlannedBacklogAudit {
     let java: Vec<PlannedJavaAudit> = read_catalog_file()
         .par_iter()
         .filter(|case| case.status == "planned")
-        .map(classify_planned_java)
+        .map(|case| classify_planned_java(case, options.run_engine_checks))
         .collect();
 
     let wg: Vec<PlannedWgAudit> = read_wg_catalog_file()
         .par_iter()
         .filter(|case| case.status == "planned")
-        .map(classify_planned_wg)
+        .map(|case| classify_planned_wg(case, options.run_engine_checks))
         .collect();
 
     let mut java_by_category: BTreeMap<String, usize> = BTreeMap::new();
@@ -2530,6 +2712,7 @@ pub fn audit_planned_backlog() -> PlannedBacklogAudit {
             PlannedJavaCategory::MissingOfn => "missing_ofn",
             PlannedJavaCategory::MissingAssertions => "missing_assertions",
             PlannedJavaCategory::MissingFixture => "missing_fixture",
+            PlannedJavaCategory::EnginePending => "engine_pending",
             PlannedJavaCategory::EngineGap => "engine_gap",
             PlannedJavaCategory::PromotionCandidate => "promotion_candidate",
             PlannedJavaCategory::ManualPort => "manual_port",
@@ -2542,6 +2725,7 @@ pub fn audit_planned_backlog() -> PlannedBacklogAudit {
             PlannedWgCategory::MissingPremise => "missing_premise",
             PlannedWgCategory::MissingConclusion => "missing_conclusion",
             PlannedWgCategory::MissingExpectations => "missing_expectations",
+            PlannedWgCategory::EnginePending => "engine_pending",
             PlannedWgCategory::EngineGap => "engine_gap",
             PlannedWgCategory::PromotionCandidate => "promotion_candidate",
         };
