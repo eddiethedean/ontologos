@@ -362,6 +362,24 @@ fn supplement_rdf_dl_axioms(
         merge_supplement_ontology(ontology, &supplement)?;
         report.meta.mapped_axiom_count += supplement.dl().axiom_count();
     }
+    for dpa in crate::rdf_preprocess::collect_direct_data_literal_assertions(preprocessed_rdf) {
+        let lit = dpa.value_literal.replace('"', "\\\"");
+        let body = format!(
+            "Declaration(NamedIndividual(<{}>))\n\
+             Declaration(DataProperty(<{}>))\n\
+             ClassAssertion(owl:Thing <{}>)\n\
+             DataPropertyAssertion(<{}> <{}> \"{lit}\"^^rdf:PlainLiteral)",
+            dpa.subject, dpa.property, dpa.subject, dpa.property, dpa.subject
+        );
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n\
+             Ontology(<http://example.org/thing-data-literal-supplement>\n{body}\n)"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
     for body in crate::rdf_preprocess::collect_anonymous_intersection_subclasses(preprocessed_rdf) {
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\

@@ -239,6 +239,9 @@ fn spot_check_consistency_fixes() {
         ("dl-025", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D025/premise.rdf", true),
         ("dl-624", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D624/premise.rdf", true),
         ("dl-625", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D625/premise.rdf", true),
+        ("dl-608", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf", false),
+        ("misc-203", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf", false),
+        ("misc-204", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D204/premise.rdf", false),
     ];
     for (name, rel, expected) in cases {
         let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -286,10 +289,85 @@ fn diagnose_dl608_unsatisfiable() {
     eprintln!("consistent={:?}", is_consistent(&ont));
     let taxonomy = ontologos_dl::classify(&ont).expect("classify");
     eprintln!("classify unsat count={}", taxonomy.unsatisfiable.len());
+    let p1 = ont.lookup_entity("http://oiled.man.example.net/test#p1");
+    let p2 = ont.lookup_entity("http://oiled.man.example.net/test#p2");
+    if let (Some(p1), Some(p2)) = (p1, p2) {
+        let p1_ce = store.expressions().find_map(|(id, e)| match e {
+            ontologos_core::ClassExpr::Atomic(c) if *c == p1 => Some(id),
+            _ => None,
+        });
+        let p2_ce = store.expressions().find_map(|(id, e)| match e {
+            ontologos_core::ClassExpr::Atomic(c) if *c == p2 => Some(id),
+            _ => None,
+        });
+        for clause in dl.clauses().clauses() {
+            if let ontologos_alc::Clause::Subsumption { sub, sup } = clause {
+                if p1_ce == Some(*sub) {
+                    eprintln!("  p1 subsumes {:?}", store.ce(*sup));
+                }
+                if p2_ce == Some(*sub) {
+                    eprintln!("  p2 subsumes {:?}", store.ce(*sup));
+                }
+            }
+        }
+        for ent in [p1, p2] {
+            if let Ok(record) = dl.core().entity(ent) {
+                if let Ok(iri) = dl.core().resolve_iri(record.iri) {
+                    eprintln!("{iri} equiv ce: {:?}", store.expressions().find_map(|(id, e)| match e {
+                        ontologos_core::ClassExpr::Atomic(c) if *c == ent => store.ce(id).cloned(),
+                        _ => None,
+                    }));
+                }
+            }
+        }
+        let p2comp = store.expressions().find_map(|(id, e)| match e {
+            ontologos_core::ClassExpr::Atomic(c) if c.0 == 4 => Some(id),
+            _ => None,
+        });
+        if let Some(p2comp) = p2comp {
+            eprintln!("p2.comp ce {:?} = {:?}", p2comp, store.ce(p2comp));
+            for ax in store.axioms() {
+                if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax {
+                    if ids.contains(&p2comp) {
+                        for id in ids {
+                            eprintln!("  equiv partner {:?}: {:?}", id, store.ce(*id));
+                        }
+                    }
+                }
+            }
+        }
+        for eid in [4u32, 19, 20, 23] {
+            let e = ontologos_core::EntityId(eid);
+            if let Ok(record) = dl.core().entity(e) {
+                if let Ok(iri) = dl.core().resolve_iri(record.iri) {
+                    eprintln!("EntityId({eid}) = {iri}");
+                }
+            }
+        }
+        use ontologos_alc::{TableauSeed, is_ce_intersection_satisfiable_with_seed};
+        let seed = TableauSeed::default();
+        if let (Some(p1_ce), Some(p2_ce)) = (p1_ce, p2_ce) {
+            use ontologos_alc::is_ce_intersection_satisfiable_with_seed;
+            eprintln!(
+                "p1+p2 intersection sat={:?}",
+                is_ce_intersection_satisfiable_with_seed(&dl, p1_ce, p2_ce, &seed)
+            );
+        }
+    }
 }
 
 #[test]
-#[ignore = "dl-608 comp-grid requires chained ∃/subclass clash — still open"]
+#[ignore = "dl-650/dl-910 comp-grid variants — still open"]
+fn dl650_and_dl910_should_be_inconsistent() {
+    for (name, rel) in [
+        ("dl-650", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf"),
+        ("dl-910", "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf"),
+    ] {
+        check(rel, false).unwrap_or_else(|e| panic!("{name}: {e}"));
+    }
+}
+
+#[test]
 fn dl608_equiv_and_should_be_unsatisfiable() {
     use ontologos_alc::{DlOntology, TableauSeed, is_ce_satisfiable_with_seed};
 

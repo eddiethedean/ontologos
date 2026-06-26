@@ -23,6 +23,10 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
         if branch.clash {
             return;
         }
+        check_cross_kind_cardinality_bounds(branch, world_idx);
+        if branch.clash {
+            return;
+        }
     }
     for (world_idx, world) in branch.worlds.iter().enumerate() {
         for &ce in &world.labels {
@@ -106,35 +110,41 @@ fn propagate_subsumptions(branch: &mut Branch<'_>, world: usize, _trigger: CeId)
     loop {
         let mut progressed = false;
         for &(sub, sup) in branch.tbox_subsumptions.clone().iter() {
-            if world_satisfies_sub(branch, world, sub)
-                && !branch.worlds[world].labels.contains(&sup)
-            {
-                let w = &mut branch.worlds[world];
-                if let Some(ClassExpr::And(ops)) = branch.dl.core().dl().ce(sup).cloned() {
-                    if ops.iter().all(|op| w.labels.contains(op)) {
-                        w.labels.insert(sup);
-                        continue;
+            if !world_satisfies_sub(branch, world, sub) {
+                continue;
+            }
+            let sup = super::effective_class_expression(branch.dl, sup);
+            if branch.worlds[world].labels.contains(&sup) {
+                continue;
+            }
+            let w = &mut branch.worlds[world];
+            if let Some(ClassExpr::And(ops)) = branch.dl.core().dl().ce(sup).cloned() {
+                if ops.iter().all(|op| w.labels.contains(op)) {
+                    if w.labels.insert(sup) {
+                        progressed = true;
                     }
-                    for op in ops {
-                        if w.negated.contains(&op) {
-                            branch.clash = true;
-                            return;
-                        }
-                        if w.labels.insert(op) {
-                            w.queue.push_back(op);
-                            progressed = true;
-                        }
-                    }
-                    w.labels.insert(sup);
-                } else {
-                    if w.negated.contains(&sup) {
+                    continue;
+                }
+                for op in ops {
+                    let op = super::effective_class_expression(branch.dl, op);
+                    if w.negated.contains(&op) {
                         branch.clash = true;
                         return;
                     }
-                    if w.labels.insert(sup) {
-                        w.queue.push_back(sup);
+                    if w.labels.insert(op) {
+                        w.queue.push_back(op);
                         progressed = true;
                     }
+                }
+                w.labels.insert(sup);
+            } else {
+                if w.negated.contains(&sup) {
+                    branch.clash = true;
+                    return;
+                }
+                if w.labels.insert(sup) {
+                    w.queue.push_back(sup);
+                    progressed = true;
                 }
             }
         }
@@ -241,7 +251,92 @@ pub fn check_conflicting_datatype_cardinality_bounds(branch: &mut Branch<'_>, wo
     }
     for (min_n, min_p) in mins {
         for (max_n, max_p) in &maxs {
-            if min_p == *max_p && min_n > *max_n {
+            if entity_same(branch, min_p, *max_p) && min_n > *max_n {
+                branch.clash = true;
+                return;
+            }
+        }
+    }
+}
+
+fn entity_same(branch: &Branch<'_>, left: EntityId, right: EntityId) -> bool {
+    if left == right {
+        return true;
+    }
+    let left_iri = branch
+        .dl
+        .core()
+        .entity(left)
+        .ok()
+        .and_then(|r| branch.dl.core().resolve_iri(r.iri).ok());
+    let right_iri = branch
+        .dl
+        .core()
+        .entity(right)
+        .ok()
+        .and_then(|r| branch.dl.core().resolve_iri(r.iri).ok());
+    left_iri.is_some() && left_iri == right_iri
+}
+
+fn role_atomic_same(branch: &Branch<'_>, left: &RoleExpr, right: &RoleExpr) -> bool {
+    match (left, right) {
+        (RoleExpr::Atomic(a), RoleExpr::Atomic(b)) => entity_same(branch, *a, *b),
+        _ => left == right,
+    }
+}
+
+/// Clash when object- and datatype-property cardinality bounds disagree on the same IRI.
+fn check_cross_kind_cardinality_bounds(branch: &mut Branch<'_>, world: usize) {
+    if branch.clash {
+        return;
+    }
+    let labels = branch.worlds[world].labels.clone();
+    let store = branch.dl.core().dl();
+    let mut mins: Vec<(u32, EntityId)> = Vec::new();
+    let mut maxs: Vec<(u32, EntityId)> = Vec::new();
+    for ce in labels {
+        let Some(expr) = store.ce(ce).cloned() else {
+            continue;
+        };
+        match expr {
+            ClassExpr::MinCardinality {
+                n,
+                property: RoleExpr::Atomic(id),
+                filler,
+            } if n > 0 && effective_cardinality_filler(branch, filler).is_none() => {
+                mins.push((n, id));
+            }
+            ClassExpr::MaxCardinality {
+                n,
+                property: RoleExpr::Atomic(id),
+                filler,
+            } if effective_cardinality_filler(branch, filler).is_none() => {
+                maxs.push((n, id));
+            }
+            ClassExpr::ExactCardinality {
+                n,
+                property: RoleExpr::Atomic(id),
+                filler,
+            } if effective_cardinality_filler(branch, filler).is_none() => {
+                mins.push((n, id));
+                maxs.push((n, id));
+            }
+            ClassExpr::DataMinCardinality { n, property, .. } if n > 0 => {
+                mins.push((n, property));
+            }
+            ClassExpr::DataMaxCardinality { n, property, .. } => {
+                maxs.push((n, property));
+            }
+            ClassExpr::DataExactCardinality { n, property, .. } => {
+                mins.push((n, property));
+                maxs.push((n, property));
+            }
+            _ => {}
+        }
+    }
+    for (min_n, min_p) in &mins {
+        for (max_n, max_p) in &maxs {
+            if entity_same(branch, *min_p, *max_p) && min_n > max_n {
                 branch.clash = true;
                 return;
             }
@@ -257,14 +352,17 @@ pub fn would_datatype_clash_when_merged(
 ) -> bool {
     let left_bounds = datatype_bounds_from_world(branch, left);
     let right_bounds = datatype_bounds_from_world(branch, right);
-    for (prop, (lmin, lmax)) in &left_bounds {
-        let (rmin, rmax) = right_bounds.get(prop).copied().unwrap_or((0, u32::MAX));
+    for (lprop, (lmin, lmax)) in &left_bounds {
+        let (rmin, rmax) = matching_datatype_bound(branch, &right_bounds, *lprop);
         if (*lmin).max(rmin) > (*lmax).min(rmax) {
             return true;
         }
     }
-    for (prop, (rmin, rmax)) in &right_bounds {
-        if left_bounds.contains_key(prop) {
+    for (rprop, (rmin, rmax)) in &right_bounds {
+        if left_bounds
+            .keys()
+            .any(|lprop| entity_same(branch, *lprop, *rprop))
+        {
             continue;
         }
         let (lmin, lmax) = (0, u32::MAX);
@@ -273,6 +371,19 @@ pub fn would_datatype_clash_when_merged(
         }
     }
     false
+}
+
+fn matching_datatype_bound(
+    branch: &Branch<'_>,
+    bounds: &std::collections::HashMap<EntityId, (u32, u32)>,
+    prop: EntityId,
+) -> (u32, u32) {
+    for (candidate, bound) in bounds {
+        if entity_same(branch, prop, *candidate) {
+            return *bound;
+        }
+    }
+    (0, u32::MAX)
 }
 
 /// Whether merging would place an atomic class and its negation on one world.
@@ -385,12 +496,19 @@ pub fn check_conflicting_cardinality_bounds(branch: &mut Branch<'_>, world: usiz
             } => {
                 maxs.push((n, property, effective_cardinality_filler(branch, filler)));
             }
+            ClassExpr::ExactCardinality {
+                n,
+                property,
+                filler,
+            } => {
+                maxs.push((n, property, effective_cardinality_filler(branch, filler)));
+            }
             _ => {}
         }
     }
     for (min_n, min_p, min_f) in mins {
         for (max_n, max_p, max_f) in &maxs {
-            if min_p == *max_p && min_f == *max_f && min_n > *max_n {
+            if role_atomic_same(branch, &min_p, max_p) && min_f == *max_f && min_n > *max_n {
                 branch.clash = true;
                 return;
             }

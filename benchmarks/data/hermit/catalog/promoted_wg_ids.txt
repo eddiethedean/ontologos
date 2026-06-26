@@ -316,6 +316,7 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D603
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D604
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D605
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D606
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D609
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D610
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D611
@@ -387,6 +388,8 @@ TestCase-3AWebOnt-2DmaxCardinality-2D001
 TestCase-3AWebOnt-2Dmiscellaneous-2D102
 TestCase-3AWebOnt-2Dmiscellaneous-2D103
 TestCase-3AWebOnt-2Dmiscellaneous-2D202
+TestCase-3AWebOnt-2Dmiscellaneous-2D203
+TestCase-3AWebOnt-2Dmiscellaneous-2D204
 TestCase-3AWebOnt-2Dmiscellaneous-2D301
 TestCase-3AWebOnt-2Dmiscellaneous-2D302
 TestCase-3AWebOnt-2Dmiscellaneous-2D302-2DDirect

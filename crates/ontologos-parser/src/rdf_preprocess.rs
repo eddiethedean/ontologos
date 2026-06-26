@@ -1431,6 +1431,152 @@ pub(crate) struct ReifiedDataNpa {
     pub positive_property: Option<(String, String)>,
 }
 
+/// Direct datatype literal assertions on anonymous `owl:Thing` individuals (misc-203/204).
+#[derive(Debug)]
+pub(crate) struct DirectDataLiteralAssertion {
+    pub subject: String,
+    pub property: String,
+    pub value_literal: String,
+}
+
+pub(crate) fn collect_direct_data_literal_assertions(rdf: &str) -> Vec<DirectDataLiteralAssertion> {
+    let base = parse_xml_base(rdf);
+    let xmlns = parse_xmlns(rdf);
+    let mut out = Vec::new();
+    out.extend(collect_direct_data_literals_from_owl_thing(rdf, &base, &xmlns));
+    out.extend(collect_direct_data_literals_from_descriptions(rdf, &base, &xmlns));
+    out
+}
+
+fn collect_direct_data_literals_from_owl_thing(
+    rdf: &str,
+    base: &str,
+    xmlns: &std::collections::HashMap<String, String>,
+) -> Vec<DirectDataLiteralAssertion> {
+    let mut out = Vec::new();
+    let mut counter = 0usize;
+    let mut pos = 0usize;
+    while let Some(rel) = rdf[pos..].find("<owl:Thing") {
+        let start = pos + rel;
+        if rdf[start..].starts_with("</owl:Thing") {
+            pos = start + 1;
+            continue;
+        }
+        let Some(end) = tagged_element_end(rdf, start, "owl:Thing") else {
+            break;
+        };
+        let block = &rdf[start..end];
+        counter += 1;
+        let subject = format!("{base}#_:thing{counter}");
+        let inner = element_inner(block, "owl:Thing");
+        for (property, value) in literal_property_assertions_from_inner(&inner, base, xmlns) {
+            out.push(DirectDataLiteralAssertion {
+                subject: subject.clone(),
+                property,
+                value_literal: value,
+            });
+        }
+        pos = end;
+    }
+    out
+}
+
+fn collect_direct_data_literals_from_descriptions(
+    rdf: &str,
+    base: &str,
+    xmlns: &std::collections::HashMap<String, String>,
+) -> Vec<DirectDataLiteralAssertion> {
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find("<rdf:Description") else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = element_block_end(rdf, start, "rdf:Description", "</rdf:Description>")
+        else {
+            break;
+        };
+        let block = &rdf[start..end];
+        if !description_typed_owl_thing(block) {
+            pos = end;
+            continue;
+        }
+        let open_end = block.find('>').unwrap_or(0);
+        let open = &block[..=open_end];
+        let Some(subject) = extract_attribute(open, "rdf:about")
+            .map(|iri| resolve_relative_iri(&iri, base))
+        else {
+            pos = end;
+            continue;
+        };
+        let inner = element_inner(block, "rdf:Description");
+        for (property, value) in literal_property_assertions_from_inner(&inner, base, xmlns) {
+            out.push(DirectDataLiteralAssertion {
+                subject: subject.clone(),
+                property,
+                value_literal: value,
+            });
+        }
+        pos = end;
+    }
+    out
+}
+
+fn description_typed_owl_thing(block: &str) -> bool {
+    block.contains("rdf:type")
+        && (block.contains("http://www.w3.org/2002/07/owl#Thing") || block.contains("owl:Thing"))
+}
+
+fn literal_property_assertions_from_inner(
+    inner: &str,
+    base: &str,
+    xmlns: &HashMap<String, String>,
+) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while let Some(rel) = inner[pos..].find('<') {
+        let start = pos + rel;
+        if inner[start..].starts_with("</") || inner[start..].starts_with("<!--") {
+            pos = start + 1;
+            continue;
+        }
+        let Some(gt) = inner[start..].find('>') else {
+            break;
+        };
+        let tag = &inner[start..=start + gt];
+        let Some(qname) = element_qname(tag) else {
+            pos = start + gt + 1;
+            continue;
+        };
+        let prefix = qname.split(':').next().unwrap_or("");
+        if matches!(prefix, "owl" | "rdf" | "rdfs" | "xsd" | "xml") {
+            pos = start + gt + 1;
+            continue;
+        }
+        let Some(prop_iri) = expand_qname(qname, xmlns) else {
+            pos = start + gt + 1;
+            continue;
+        };
+        if tag.trim_end().ends_with("/>") {
+            pos = start + gt + 1;
+            continue;
+        }
+        let close = format!("</{qname}>");
+        let Some(close_start_rel) = inner[start..].find(&close) else {
+            pos = start + gt + 1;
+            continue;
+        };
+        let close_start = start + close_start_rel;
+        let body = inner[start + gt + 1..close_start].trim();
+        if !body.is_empty() {
+            out.push((prop_iri, body.to_owned()));
+        }
+        pos = close_start + close.len();
+    }
+    out
+}
+
 pub(crate) fn collect_reified_npas(rdf: &str) -> Vec<ReifiedNpa> {
     let base = parse_xml_base(rdf);
     let xmlns = parse_xmlns(rdf);
@@ -3993,6 +4139,23 @@ mod tests {
         );
         let collected = collect_reified_data_npas(text);
         assert_eq!(collected.len(), 1, "{collected:?}");
+    }
+
+    #[test]
+    fn collect_direct_data_literals_from_misc203() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let normalized_ids = normalize_invalid_rdf_ids(&deduped);
+        let expanded = expand_xml_entities_with_limit(&normalized_ids, 1_000_000).unwrap();
+        let relative_uris = normalize_relative_owl_uris(&expanded);
+        let injected = inject_rdf_based_punning_declarations(&relative_uris);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let collected = collect_direct_data_literal_assertions(&typed_nodes);
+        eprintln!("collected={collected:?}");
+        assert_eq!(collected.len(), 2, "{collected:?}");
     }
 
     #[test]

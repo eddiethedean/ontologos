@@ -29,6 +29,9 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
 
     let idx = LiteralIndex::from_store(store);
     let functional = functional_data_properties(store);
+    if functional_data_literal_clash(ontology, &functional) {
+        return false;
+    }
     let mut class_restrictions: HashMap<EntityId, Vec<(EntityId, DataRestriction)>> =
         HashMap::new();
 
@@ -810,6 +813,40 @@ fn functional_data_properties(store: &ontologos_core::DlStore) -> HashSet<Entity
         .collect()
 }
 
+/// Two or more distinct literal values on a functional datatype property for one individual.
+fn functional_data_literal_clash(
+    ontology: &Ontology,
+    functional: &HashSet<EntityId>,
+) -> bool {
+    if functional.is_empty() {
+        return false;
+    }
+    let store = ontology.dl();
+    let mut seen: HashMap<(EntityId, EntityId), HashSet<String>> = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::DataPropertyAssertion {
+            subject,
+            property,
+            value,
+        } = axiom
+        else {
+            continue;
+        };
+        if !functional.contains(property) {
+            continue;
+        }
+        let Some(lit) = literal_from_de(ontology, value) else {
+            continue;
+        };
+        let entry = seen.entry((*subject, *property)).or_default();
+        entry.insert(distinct_literal_key(&lit));
+        if entry.len() > 1 {
+            return true;
+        }
+    }
+    false
+}
+
 fn restrictions_satisfiable(
     ontology: &Ontology,
     idx: &LiteralIndex,
@@ -1017,6 +1054,9 @@ fn distinct_values_satisfying_ranges(
 }
 
 fn distinct_literal_key(lit: &LiteralValue) -> String {
+    if lit.lexical.contains('<') {
+        return canonical_plain_literal(&lit.lexical);
+    }
     if is_signed_zero_lexical(&lit.lexical) {
         return format!("sz:{}", lit.lexical);
     }
@@ -1451,6 +1491,31 @@ mod tests {
             datatype: EntityId(0),
         };
         assert_ne!(distinct_literal_key(&a), distinct_literal_key(&b));
+    }
+
+    #[test]
+    fn misc203_functional_literal_clash() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
+        );
+        let ont = load_ontology(&path).expect("load");
+        let store = ont.dl();
+        let functional = functional_data_properties(store);
+        eprintln!("functional={functional:?}");
+        for ax in store.axioms() {
+            eprintln!("{ax:?}");
+        }
+        let mut keys = Vec::new();
+        for ax in store.axioms() {
+            if let DlAxiom::DataPropertyAssertion { value, .. } = ax {
+                if let Some(lit) = literal_from_de(&ont, value) {
+                    keys.push(distinct_literal_key(&lit));
+                }
+            }
+        }
+        eprintln!("literal keys={keys:?} clash={}", functional_data_literal_clash(&ont, &functional));
+        assert!(!is_datatype_consistent(&ont));
+        assert!(!crate::is_consistent(&ont).unwrap());
     }
 
     #[test]
