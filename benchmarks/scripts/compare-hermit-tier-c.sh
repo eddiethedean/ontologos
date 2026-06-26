@@ -27,7 +27,8 @@ if [[ -f "${DATA}/go-subset.owl" ]]; then
 fi
 
 if [[ -f "${DATA}/hermit/reasoner/res/pizza.xml" ]]; then
-  echo "HermiT pizza fixture present — Tier B: cargo test -p ontologos-conformance hermit_classification_pizza"
+  chmod +x "${ROOT}/benchmarks/scripts/compare-classification-fixtures.sh"
+  "${ROOT}/benchmarks/scripts/compare-classification-fixtures.sh"
 fi
 
 if [[ -n "${KONCLUDE_BIN:-}" ]] && command -v "${KONCLUDE_BIN}" >/dev/null; then

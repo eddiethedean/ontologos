@@ -72,6 +72,7 @@ Results are written under `target/criterion/`.
 | Script | Purpose |
 |--------|---------|
 | `scripts/compare-pizza-el-golden.sh` | Pizza EL golden regression gate (in-house EL vs committed JSON) |
+| `scripts/compare-classification-fixtures.sh` | HermiT Tier B gate — pizza/wine/galen/propreo XML vs HermiT hierarchy goldens |
 | `scripts/generate-go-subset.sh` | Trim GO with ROBOT for `<10s` EL CI test |
 
 EL integration tests: `cargo test -p ontologos-el --test pizza_el`

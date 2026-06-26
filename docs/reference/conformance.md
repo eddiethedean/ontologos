@@ -11,7 +11,7 @@ Tests are cataloged in [tests/hermit/manifest.toml](https://github.com/eddiethed
 | Tier | CI | HermiT checkout required | Purpose |
 |------|-----|--------------------------|---------|
 | **A** | Always (`cargo test -p ontologos-conformance`) | No | Inlined RL logic + small fixtures |
-| **B** | Always for pizza; wine optional | No (vendored under `benchmarks/data/hermit/`) | `ClassificationTest` taxonomy goldens |
+| **B** | Always | No (vendored under `benchmarks/data/hermit/`) | `ClassificationTest` taxonomy goldens via [`compare-classification-fixtures.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-classification-fixtures.sh) |
 
 Run locally:
 
@@ -49,7 +49,7 @@ Representative ported cases (see manifest for full list):
 
 ## EL golden conformance
 
-Pizza EL taxonomy is checked in CI via [`benchmarks/scripts/compare-pizza-el-golden.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-pizza-el-golden.sh) against committed `benchmarks/data/pizza-el-golden.json`. This is a **regression gate** against the in-house EL engine baseline (84 direct subsumptions), not a diff against ELK or whelk. Regenerate baselines when updating completion rules.
+Pizza EL taxonomy is checked in CI via [`benchmarks/scripts/compare-pizza-el-golden.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-pizza-el-golden.sh) against committed `benchmarks/data/pizza-el-golden.json`. This is a **regression gate** against the in-house EL engine baseline (84 direct subsumptions), not a diff against ELK or whelk. HermiT `ClassificationTest` XML fixtures (pizza, wine, galen, propreo) are checked via [`compare-classification-fixtures.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-classification-fixtures.sh).
 
 The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL tools emit for orphan classes; HermiT vendored Pizza tests do not require those edges.
 

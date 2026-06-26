@@ -117,7 +117,14 @@ pub fn hermit_available() -> bool {
 /// Returns true when `ClassificationTest` fixtures are available (vendored or local HermiT).
 #[must_use]
 pub fn classification_fixtures_available() -> bool {
-    classification_fixture_path("reasoner/res/pizza.xml").is_some()
+    [
+        "reasoner/res/pizza.xml",
+        "reasoner/res/wine.xml",
+        "reasoner/res/galen-ians-full-undoctored.xml",
+        "reasoner/res/propreo.xml",
+    ]
+    .iter()
+    .all(|relative| classification_fixture_path(relative).is_some())
 }
 
 /// Assert `subclass` has a direct or indirect super-class `superclass`.

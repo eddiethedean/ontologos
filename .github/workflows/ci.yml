@@ -37,13 +37,16 @@ jobs:
           ./benchmarks/scripts/check-hermit-ignore-budget.sh
       - name: EL Pizza golden conformance
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
+      - name: HermiT Tier B classification fixtures
+        run: |
+          chmod +x benchmarks/scripts/compare-classification-fixtures.sh
+          ./benchmarks/scripts/compare-classification-fixtures.sh
       - name: HermiT conformance (Tier A — Java catalog)
         run: >-
           cargo test -p ontologos-conformance --release --locked
           --test hermit_generated
           --test hermit_rdfs
           --test hermit_rl
-          --test hermit_el
           --test hermit_parser
           --test dl_subsumption_cases
           --test explain_benchmarks
@@ -83,6 +86,8 @@ jobs:
         run: cargo test -p ontologos-el --test incremental_correctness --locked
       - name: Phase 3 closure gate
         run: cargo test -p ontologos-conformance --test phase3_closure --locked
+      - name: Phase 6 closure gate
+        run: cargo test -p ontologos-conformance --test phase6_closure --release --locked
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
 

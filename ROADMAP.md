@@ -143,7 +143,7 @@ Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 | **3** | DL engine gaps | **Complete** | `engine_gap` **72 → 0**; **40** promotion candidates | `engine_failures` · `parity-scan.sh` · `promote_catalog` |
 | **4** | WG fixtures | **In progress** | `wg_planned = 0`; **~405/428** pass (30s); **~23** failures remain; **414** promoted | `wg_failures` · `wg_phase4_check` · `phase4_closure` |
 | **5** | Manual ports | Planned | `java_planned → 0` (**202** cases) | `run-hermit-full-suite.sh` · `generate_catalog.py` |
-| **6** | Tier B corpora | Planned | `ClassificationTest` in CI | `compare-pizza-el-golden.sh` |
+| **6** | Tier B corpora | **Complete** | `ClassificationTest` in CI (4 fixtures) | `compare-classification-fixtures.sh` · `phase6_closure` |
 | **7** | Tier C proof | Planned | HermiT JAR cross-check nightly | `compare-hermit-tier-c.sh` |
 | **8** | Expressivity v1.5–v1.9 | In progress | Hybrid, ABox, ALC, QL, DL stable | ROADMAP checklists below |
 | **9** | v1.0.0 tag | Planned | `parity_pct = 100%` | `check-hermit-parity-phases.sh` |
@@ -349,9 +349,10 @@ Hand-written ports: `hermit_rl.rs`, `hermit_rdfs.rs`, `hermit_el.rs`, or OFN axi
 ### Phase 6 — Tier B classification corpora
 
 - [x] Pizza EL golden — `compare-pizza-el-golden.sh` in CI
-- [ ] Wine / GALEN / Propreo `ClassificationTest` active in default CI (not `#[ignore]` only locally)
+- [x] Wine / GALEN / Propreo `ClassificationTest` active in default CI via [`compare-classification-fixtures.sh`](benchmarks/scripts/compare-classification-fixtures.sh) and [`hermit_el.rs`](crates/ontologos-conformance/tests/hermit_el.rs)
+- [x] Phase 6 closure gate — [`phase6_closure.rs`](crates/ontologos-conformance/tests/phase6_closure.rs)
 
-**Exit:** ROADMAP §1.0 Tier B checklist fully checked.
+**Exit (met):** ROADMAP §1.0 Tier B **ClassificationTest** checklist checked; `owl_wg_tests` subset remains Phase 4 / 1.0 DL gate.
 
 ### Phase 7 — Tier C external proof
 
@@ -428,7 +429,7 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Hand-w
 | Tier | Runs in CI | HermiT source | OntoLogos milestone |
 |------|------------|---------------|---------------------|
 | **A** | Yes | Logic inlined (no checkout) | **0.3** RDFS (6); **0.4** RL (17) — see manifest |
-| **B** | `#[ignore]` locally | Fixture files under `HermiT/project/test/` | **0.2** parser smoke; **0.5** `ClassificationTest` goldens |
+| **B** | Yes (vendored fixtures) | `benchmarks/data/hermit/reasoner/res/` | **0.5** `ClassificationTest` goldens; **0.2** parser smoke (OWLLink optional) |
 | **C** | Manual / release gate | HermiT JAR + Konclude CLI | **1.0** DL parity gate |
 
 **Ported (Tier A):**
@@ -445,7 +446,7 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Hand-w
 **Next ports:**
 
 - [x] `ClassificationTest` pizza taxonomy golden — **0.5** EL (CI via `compare-pizza-el-golden.sh`)
-- [ ] `ClassificationTest` wine / galen taxonomy goldens — wine blocked on `wine.xml` parse error
+- [x] `ClassificationTest` wine / galen / propreo taxonomy goldens — CI via `compare-classification-fixtures.sh`
 - [ ] `owl_wg_tests` approved entailment subset — **1.0**
 - [ ] `structural/ClausificationTest` — **1.0** DL internal
 - [ ] SWRL `RulesTest` — **deferred** (out of scope 1.x)
@@ -885,7 +886,7 @@ See [hermit-replacement.md](docs/internal/research/hermit-replacement.md) and [h
 | **B** | `ClassificationTest` goldens (pizza CI; wine/galen where parseable); `owl_wg_tests` approved entailment subset |
 | **C** | HermiT JAR + Konclude CLI reference harness; DL corpora (Pizza-DL, Galen subset, ≥1 OBO DL corpus) within documented taxonomy tolerance |
 
-- [ ] `ontologos-conformance` Tier B enabled in CI (not `#[ignore]` only locally)
+- [x] `ontologos-conformance` Tier B enabled in CI (`compare-classification-fixtures.sh` + `hermit_el.rs`)
 - [ ] `owl_wg_tests` approved entailment subset passes
 - [ ] Port HermiT `structural/ClausificationTest` as DL internal regression suite
 - [x] HermiT JAR / Konclude CLI reference harness in `benchmarks/` (Tier C; optional external cross-check)

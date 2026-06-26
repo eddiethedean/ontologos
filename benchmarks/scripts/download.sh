@@ -79,4 +79,16 @@ for vendored in go-subset.owl pizza-el-golden.json; do
   fi
 done
 
+# HermiT ClassificationTest fixtures (Tier B — vendored under benchmarks/data/hermit/).
+HERMIT_RES="${DATA}/hermit/reasoner/res"
+for fixture in pizza.xml pizza.xml.txt wine.xml wine.xml.txt \
+  galen-ians-full-undoctored.xml galen-ians-full-undoctored.xml.txt \
+  propreo.xml propreo.xml.txt; do
+  if [[ ! -f "${HERMIT_RES}/${fixture}" ]]; then
+    echo "missing vendored ClassificationTest fixture: ${HERMIT_RES}/${fixture}" >&2
+    exit 1
+  fi
+done
+echo "classification fixtures ok: pizza, wine, galen, propreo"
+
 echo "Done. Corpus files in ${DATA}"

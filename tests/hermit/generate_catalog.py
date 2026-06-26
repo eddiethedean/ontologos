@@ -989,6 +989,8 @@ IMPLEMENTED: dict[str, str] = {
     "reasoner.OWLLinkTest.testUpdatesNonBuffered": "owllink_update_hierarchy_non_buffered",
     "reasoner.ClassificationTest.testPizza": "hermit_classification_pizza_taxonomy",
     "reasoner.ClassificationTest.testWine": "hermit_classification_wine_taxonomy",
+    "reasoner.ClassificationTest.testGalenIansFullUndoctored": "hermit_classification_galen_taxonomy",
+    "reasoner.ClassificationTest.testPropreo": "hermit_classification_propreo_taxonomy",
 }
 
 EXCLUDED_IDS = {

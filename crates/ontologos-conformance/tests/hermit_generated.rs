@@ -259,7 +259,9 @@ fn hermit_reasoner_classificationtest_testwine() {
     run_hermit_case("reasoner.ClassificationTest.testWine");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
+#[ignore = "implemented in hand-written module: hermit_classification_galen_taxonomy"]
 fn hermit_reasoner_classificationtest_testgaleniansfullundoctored() {
     run_hermit_case("reasoner.ClassificationTest.testGalenIansFullUndoctored");
 }
@@ -271,7 +273,9 @@ fn hermit_reasoner_classificationtest_testpizza() {
     run_hermit_case("reasoner.ClassificationTest.testPizza");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
+#[ignore = "implemented in hand-written module: hermit_classification_propreo_taxonomy"]
 fn hermit_reasoner_classificationtest_testpropreo() {
     run_hermit_case("reasoner.ClassificationTest.testPropreo");
 }

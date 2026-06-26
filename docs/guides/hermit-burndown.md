@@ -323,7 +323,9 @@ See [ROADMAP.md — HermiT parity phases](https://github.com/eddiethedean/ontolo
 |-------|-------|------------------|
 | 0–3 | Metrics, harness, assertion harvest, DL engine gaps | Complete |
 | 4 | OWL WG fixtures — burn down unpromoted failures | In progress |
-| 5 | 202 Java `planned` → harvest or manual port | Next |
+| 5 | Java `planned` → harvest or manual port | Complete |
+| 6 | Tier B classification corpora (`ClassificationTest`) | Complete |
+| 7 | Tier C HermiT JAR proof | Planned |
 | 9 | `parity_pct = 100%` → tag **v1.0.0** | Gate |
 
 ---

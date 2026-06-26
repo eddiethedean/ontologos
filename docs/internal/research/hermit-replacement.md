@@ -82,12 +82,12 @@ Logic ported inline; provenance tracked in `tests/hermit/manifest.toml`. **23** 
 | Incremental/buffered reasoner tests | No buffered reasoner until v0.7 |
 | Nominals, complements, role chains, hasKey | DL / unmapped constructs |
 
-### Tier B — optional local (`HermiT/` present)
+### Tier B — vendored classification corpora (CI)
 
 | HermiT suite | Count | Milestone | Notes |
 |--------------|-------|-----------|-------|
-| `reasoner/res/OWLLink/*.owl` load | ~40 files | 0.2 | Parser smoke (UTF-8; ISO-8859-1 RDF/XML gap) |
-| `ClassificationTest` (pizza, wine, galen) | 4 | 0.5 | Taxonomy golden files |
+| `reasoner/res/OWLLink/*.owl` load | ~40 files | 0.2 | Parser smoke (UTF-8; ISO-8859-1 RDF/XML gap); optional `HermiT/` checkout |
+| `ClassificationTest` (pizza, wine, galen, propreo) | 4 | 0.5 / Phase 6 | Vendored under `benchmarks/data/hermit/`; CI via `compare-classification-fixtures.sh` |
 | `owl_wg_tests` entailment | large | 1.0 | Approved WG subset |
 | `structural/ClausificationTest` | 8+ | 2.0 | Internal DL clauses |
 | `tableau/*` | 10+ | 2.0 | Engine internals |
@@ -100,9 +100,9 @@ Heavy classification corpora (GALEN full, OWLlink Bob tests). Use `benchmarks/` 
 
 ## Conformance workflow
 
-1. Clone HermiT beside OntoLogos (already at `HermiT/`, gitignored).
-2. Run `cargo test -p ontologos-conformance` — Tier A always; Tier B skipped if `HermiT/` missing.
-3. Run `cargo test -p ontologos-conformance -- --ignored` locally with full HermiT tree.
+1. Clone HermiT beside OntoLogos (optional — `benchmarks/data/hermit/` vendored fixtures suffice for Tier B classification).
+2. Run `cargo test -p ontologos-conformance` — Tier A always; Tier B classification via `compare-classification-fixtures.sh`.
+3. Run `cargo test -p ontologos-conformance -- --ignored` locally with full HermiT tree (OWLLink parser survey, etc.).
 4. Add manifest entries when porting a Java test; link `source_class` + `source_method`.
 
 Environment override: `ONTOLOGOS_HERMIT_ROOT=/path/to/HermiT`
