@@ -192,6 +192,29 @@ fn diagnose_dl018_tableau() {
 }
 
 #[test]
+fn dl601_unsatisfiable_class_sat() {
+    use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
+
+    let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf";
+    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let dl = DlOntology::from_ontology(&ont).expect("dl");
+    let id = ont
+        .lookup_entity("http://oiled.man.example.net/test#Unsatisfiable")
+        .expect("Unsatisfiable");
+    let sat =
+        is_named_class_satisfiable_with_seed(&dl, id, &TableauSeed::default()).expect("sat");
+    eprintln!("Unsatisfiable sat={sat}");
+    assert!(!is_consistent(&ont).expect("check"));
+}
+
+#[test]
+fn dl018_is_consistent() {
+    let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf";
+    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    assert!(is_consistent(&ont).expect("check"));
+}
+
+#[test]
 fn spot_check_consistency_fixes() {
     let cases = [
         ("disjoint-010", "wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf", false),

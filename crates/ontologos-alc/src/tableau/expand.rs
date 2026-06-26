@@ -721,9 +721,20 @@ pub(crate) fn materialize_nested_abox_existentials(branch: &mut Branch<'_>) {
     if branch.clash {
         return;
     }
+    let store = branch.dl.core().dl();
     let world_count = branch.worlds.len();
     for world in 0..world_count {
         let labels = branch.worlds[world].labels.clone();
+        let skip_world = labels.iter().any(|&ce| {
+            matches!(
+                store.ce(ce),
+                Some(ClassExpr::MaxCardinality { filler: None, .. })
+                    | Some(ClassExpr::ExactCardinality { filler: None, .. })
+            )
+        });
+        if skip_world {
+            continue;
+        }
         for ce in labels {
             materialize_existential_chain(branch, world, ce);
             if branch.clash {

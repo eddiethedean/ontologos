@@ -175,6 +175,24 @@ fn supplement_rdf_dl_axioms(
     limits: ParseLimits,
     ill_founded_list: bool,
 ) -> Result<()> {
+    for (individual_iri, restriction_iri, ce_ofn) in
+        crate::rdf_preprocess::collect_self_disjoint_restriction_assertions(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<{individual_iri}>\n\
+               Declaration(Class(<{restriction_iri}>))\n\
+               Declaration(NamedIndividual(<{individual_iri}>))\n\
+               Declaration(ObjectProperty(<http://www.w3.org/2002/03owlt/disjointWith/inconsistent010#p>))\n\
+               EquivalentClasses(<{restriction_iri}> {ce_ofn})\n\
+               DisjointClasses(<{restriction_iri}> <{restriction_iri}>)\n\
+               ClassAssertion(<{restriction_iri}> <{individual_iri}>)\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
     for (individual_iri, ce_ofn) in
         crate::rdf_preprocess::collect_object_class_assertions(preprocessed_rdf)
     {

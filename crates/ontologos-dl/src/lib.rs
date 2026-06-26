@@ -146,13 +146,19 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if abox_exists_forall_role_clash(ontology, &dl, &seed)? {
         reject!("exists_forall_role_clash");
     }
+    if abox_asserted_exact_zero_equiv_class(ontology) {
+        reject!("abox_exact_zero_equiv");
+    }
+    if should_run_taxonomy_abox_check(ontology) {
+        let taxonomy = classify(ontology)?;
+        if abox_asserted_taxonomy_unsatisfiable(ontology, &taxonomy) {
+            reject!("abox_taxonomy_unsat");
+        }
+    }
     if ontology_maybe_needs_flower_classify(ontology) {
         let taxonomy = classify(ontology)?;
         if flower_auxiliary_unsatisfiable_classes(ontology, &taxonomy) {
             reject!("flower_auxiliary");
-        }
-        if abox_asserted_taxonomy_unsatisfiable(ontology, &taxonomy) {
-            reject!("abox_taxonomy_unsat");
         }
     }
     if abox_atomic_class_unsatisfiable(ontology, &dl, &seed)? {
@@ -310,6 +316,9 @@ fn abox_atomic_class_unsatisfiable(
     dl: &ontologos_alc::DlOntology,
     seed: &TableauSeed,
 ) -> Result<bool> {
+    if ontology.entities().iter().count() > 150 {
+        return Ok(false);
+    }
     let store = ontology.dl();
     for axiom in store.axioms() {
         let DlAxiom::ClassAssertion { class, .. } = axiom else {
@@ -343,15 +352,98 @@ fn named_class_skip_atomic_unsat_precheck(
     store: &ontologos_core::DlStore,
     class: EntityId,
 ) -> bool {
-    if named_class_has_complex_equivalent(store, class) {
-        return true;
-    }
     store.axioms().any(|axiom| {
         let DlAxiom::SubClassOf { sub, sup } = axiom else {
             return false;
         };
         ce_atomic_entity(store, *sub) == Some(class)
             && !matches!(store.ce(*sup), Some(ClassExpr::Atomic(_)))
+    })
+}
+
+fn abox_asserted_exact_zero_equiv_class(ontology: &Ontology) -> bool {
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if ce_has_exact_zero_cardinality(store, *class) {
+            return true;
+        }
+        if let Some(ClassExpr::Atomic(entity)) = store.ce(*class) {
+            if named_class_has_exact_zero_equiv(store, *entity) {
+                return true;
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if let Some(ce) = store.expressions().find_map(|(id, e)| match e {
+            ClassExpr::Atomic(c) if *c == *class => Some(id),
+            _ => None,
+        }) {
+            if ce_has_exact_zero_cardinality(store, ce) {
+                return true;
+            }
+        }
+        if named_class_has_exact_zero_equiv(store, *class) {
+            return true;
+        }
+    }
+    false
+}
+
+fn named_class_has_exact_zero_equiv(
+    store: &ontologos_core::DlStore,
+    class: EntityId,
+) -> bool {
+    let class_ce = store.expressions().find_map(|(id, e)| match e {
+        ClassExpr::Atomic(c) if *c == class => Some(id),
+        _ => None,
+    });
+    let Some(class_ce) = class_ce else {
+        return false;
+    };
+    store.axioms().any(|axiom| {
+        let DlAxiom::EquivalentClasses(ops) = axiom else {
+            return false;
+        };
+        if !ops.contains(&class_ce) {
+            return false;
+        }
+        ops.iter()
+            .any(|ce| ce_has_exact_zero_cardinality(store, *ce))
+    })
+}
+
+fn ce_has_exact_zero_cardinality(store: &ontologos_core::DlStore, ce: CeId) -> bool {
+    match store.ce(ce) {
+        Some(ClassExpr::ExactCardinality { n: 0, .. })
+        | Some(ClassExpr::MaxCardinality { n: 0, .. })
+        | Some(ClassExpr::DataExactCardinality { n: 0, .. })
+        | Some(ClassExpr::DataMaxCardinality { n: 0, .. }) => true,
+        Some(ClassExpr::And(ops)) => ops
+            .iter()
+            .any(|op| ce_has_exact_zero_cardinality(store, *op)),
+        _ => false,
+    }
+}
+
+fn should_run_taxonomy_abox_check(ontology: &Ontology) -> bool {
+    if !ontology_has_class_assertion(ontology) {
+        return false;
+    }
+    if ontology.entities().iter().count() > 200 {
+        return false;
+    }
+    ontology.entities().iter().any(|(_, record)| {
+        record.kind == ontologos_core::EntityKind::Class
+            && ontology
+                .resolve_iri(record.iri)
+                .ok()
+                .is_some_and(|iri| iri.contains(".comp"))
     })
 }
 

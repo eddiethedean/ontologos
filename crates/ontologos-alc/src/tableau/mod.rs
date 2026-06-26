@@ -207,6 +207,15 @@ fn needs_nominal_unraveling(branch: &Branch<'_>) -> bool {
 }
 
 fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
+    let trace = std::env::var("ONTOLOGOS_KB_TRACE").is_ok();
+    macro_rules! kb_reject {
+        ($step:expr) => {{
+            if trace {
+                eprintln!("kb_consistent: reject at {}", $step);
+            }
+            return Ok(false);
+        }};
+    }
     let mut branch = Branch::new(dl, seed);
     let mut worlds: HashMap<EntityId, usize> = HashMap::new();
 
@@ -224,12 +233,12 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     expand::materialize_nested_abox_existentials(&mut branch);
     expand::recheck_inverse_functional_source_merge(&mut branch);
     if branch.clash {
-        return Ok(false);
+        kb_reject!("after_nested_abox");
     }
 
     expand::materialize_existential_successors(&mut branch);
     if branch.clash {
-        return Ok(false);
+        kb_reject!("after_materialize_successors");
     }
 
     if worlds.is_empty() {
@@ -250,27 +259,27 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     apply_same_individual_axioms(&mut branch, &mut worlds, dl);
     apply_different_individual_axioms(&mut branch, &mut worlds, dl);
     if branch.clash {
-        return Ok(false);
+        kb_reject!("after_different_individuals");
     }
 
     expand::saturate_composed_edges(&mut branch);
     expand::reapply_universal_restrictions(&mut branch);
     if branch.clash {
-        return Ok(false);
+        kb_reject!("after_saturate_composed");
     }
     for (from, _, to) in branch.edges.clone() {
         expand::apply_universal_on_edge(&mut branch, from, to);
     }
 
     if negative_object_property_assertions_clash(&branch) {
-        return Ok(false);
+        kb_reject!("negative_opa");
     }
 
     expand::materialize_top_object_property_loops(&mut branch, &worlds);
     expand::materialize_has_self_from_loops(&mut branch);
     clash::detect_clash(&mut branch);
     if branch.clash {
-        return Ok(false);
+        kb_reject!("after_detect_clash_pre_expand");
     }
 
     let ok = match branch.expand() {
@@ -278,18 +287,24 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
         Err(e @ Error::ResourceLimit(_)) => return Err(e),
         Err(e) => return Err(e),
     };
+    for world in 0..branch.worlds.len() {
+        expand::recheck_cardinality_on_world(&mut branch, world);
+        if branch.clash {
+            kb_reject!("recheck_cardinality_immediate_post_expand");
+        }
+    }
     expand::saturate_composed_edges(&mut branch);
     expand::reapply_universal_restrictions(&mut branch);
     if branch.clash {
-        return Ok(false);
+        kb_reject!("after_expand_saturate");
     }
     if negative_object_property_assertions_clash(&branch) {
-        return Ok(false);
+        kb_reject!("negative_opa_post_expand");
     }
     for world in 0..branch.worlds.len() {
         expand::recheck_cardinality_on_world(&mut branch, world);
         if branch.clash {
-            return Ok(false);
+            kb_reject!("recheck_cardinality_post_expand");
         }
     }
     // Nominal / HasValue unraveling (NI-rule pattern) — only when the TBox requires it.
@@ -325,12 +340,15 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     }
     clash::check_existential_bottom_subsumptions(&mut branch);
     if branch.clash {
-        return Ok(false);
+        kb_reject!("existential_bottom");
     }
     expand::reapply_universal_restrictions(&mut branch);
     expand::materialize_existential_successors(&mut branch);
     expand::recheck_inverse_functional_source_merge(&mut branch);
     clash::detect_clash(&mut branch);
+    if trace {
+        eprintln!("kb_consistent: ok={ok} clash={}", branch.clash);
+    }
     Ok(ok && !branch.clash)
 }
 

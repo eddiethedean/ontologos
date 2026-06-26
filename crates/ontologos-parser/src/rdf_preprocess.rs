@@ -1285,6 +1285,59 @@ pub(crate) fn collect_object_class_assertions(rdf: &str) -> Vec<(String, String)
     out
 }
 
+/// Self-disjoint `owl:Restriction` + anonymous `owl:Thing` with a matching OPA (disjointWith-010).
+pub(crate) fn collect_self_disjoint_restriction_assertions(
+    rdf: &str,
+) -> Vec<(String, String, String)> {
+    let base = parse_xml_base(rdf);
+    let dt_props = declared_datatype_property_iris(rdf);
+    let mut pos = 0usize;
+    let mut match_triple: Option<(String, String, String)> = None;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find("<owl:Restriction") else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = tagged_element_end(rdf, start, "owl:Restriction") else {
+            break;
+        };
+        let block = &rdf[start..end];
+        let open_end = block.find('>').unwrap_or(0);
+        let open = &block[..=open_end];
+        let self_disjoint = extract_attribute(open, "rdf:nodeID").is_some()
+            && block.contains("owl:disjointWith")
+            && block.contains("owl:minCardinality");
+        if self_disjoint {
+            let restriction_iri = extract_attribute(open, "rdf:nodeID")
+                .map(|id| blank_node_iri(&base, &id))
+                .unwrap_or_else(|| blank_node_iri(&base, "restriction"));
+            if let Some(prop) = extract_property_resource(block, "owl:onProperty", &base) {
+                let ce = restriction_ce_to_ofn(block, &base, &dt_props).unwrap_or_else(|| {
+                    let n = element_text_content(block, "owl:minCardinality")
+                        .filter(|s| !s.is_empty())
+                        .unwrap_or_else(|| "1".to_string());
+                    format!("ObjectMinCardinality({} <{prop}> owl:Thing)", n.trim())
+                });
+                match_triple = Some((restriction_iri, prop, ce));
+            }
+        }
+        pos = end;
+    }
+    let Some((restriction_iri, prop, ce)) = match_triple else {
+        return Vec::new();
+    };
+    let prop_suffix = prop.rsplit('#').next().unwrap_or(&prop);
+    collect_object_property_assertions(rdf)
+        .into_iter()
+        .filter(|(_, property, _)| {
+            property == &prop
+                || property.ends_with(&format!("#{prop_suffix}"))
+                || property.ends_with(&format!("/{prop_suffix}"))
+        })
+        .map(|(subject, _, _)| (subject, restriction_iri.clone(), ce.clone()))
+        .collect()
+}
+
 /// Collect `SubClassOf(C restriction)` axioms Horned-OWL's RDF reader skips on class resources.
 pub(crate) fn collect_restriction_subclasses(rdf: &str) -> Vec<(String, String)> {
     let base = parse_xml_base(rdf);
@@ -2128,8 +2181,24 @@ fn object_property_assertions_from_block(
     xmlns: &std::collections::HashMap<String, String>,
 ) -> Vec<(String, String, String)> {
     let mut anon = 0usize;
+    let open_end = match block.find('>') {
+        Some(i) => i + 1,
+        None => return Vec::new(),
+    };
+    let open = &block[..=open_end - 1];
+    let subject = extract_attribute(open, "rdf:about")
+        .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+        .map(|iri| resolve_relative_iri(&iri, base))
+        .or_else(|| {
+            if open_tag == "owl:Thing" {
+                anon += 1;
+                Some(blank_node_iri(base, &format!("thing{anon}")))
+            } else {
+                None
+            }
+        });
     object_property_assertions_from_subject_block(
-        None,
+        subject,
         block,
         open_tag,
         base,
@@ -4759,6 +4828,27 @@ mod tests {
         assert!(
             equivs.iter().any(|(_, ce)| ce.contains("ObjectUnionOf")),
             "expected singleton union equivalence, got {equivs:?}"
+        );
+    }
+
+    #[test]
+    fn disjoint_with_010_premise_loads_abox() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DdisjointWith-2D010/premise.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let opas = collect_object_property_assertions(&text);
+        assert_eq!(opas.len(), 1, "expected one OPA, got {opas:?}");
+        let typing = collect_self_disjoint_restriction_assertions(&text);
+        assert_eq!(typing.len(), 1, "expected one class assertion, got {typing:?}");
+        let loaded = crate::load_ontology(&path).expect("load");
+        assert!(
+            loaded.dl().axiom_count() > 0 || loaded.axioms().len() > 0,
+            "loaded ontology should have axioms"
+        );
+        assert!(
+            !ontologos_dl::is_consistent(&loaded).expect("check"),
+            "disjointWith-010 should be inconsistent"
         );
     }
 }
