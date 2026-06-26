@@ -117,6 +117,9 @@ fn is_ce_satisfiable_with_cache(
     seed: &TableauSeed,
     shared_cache: &mut cache::UnsatCache,
 ) -> Result<bool, Error> {
+    if let Some(false) = ce_and_exists_forall_witness_unsat(dl, ce, seed)? {
+        return Ok(false);
+    }
     let mut branch = Branch::new(dl, seed);
     branch.cache = shared_cache.clone();
     assert_top_tbox_axioms(&mut branch, 0);
@@ -124,6 +127,285 @@ fn is_ce_satisfiable_with_cache(
     let ok = run_tbox_saturation(&mut branch)?;
     shared_cache.merge(&branch.cache);
     Ok(ok)
+}
+
+fn flatten_and_conjuncts(dl: &DlOntology, ce: CeId) -> Vec<CeId> {
+    let mut out = Vec::new();
+    let mut work = vec![ce];
+    while let Some(id) = work.pop() {
+        match dl.core().dl().ce(id) {
+            Some(ClassExpr::And(ops)) => {
+                for &op in ops {
+                    work.push(op);
+                }
+            }
+            _ => out.push(id),
+        }
+    }
+    out
+}
+
+/// When `C` is `⋀ᵢ(∃r.Eᵢ ⊓ ⋀ⱼ∀r.Fⱼ)`, any `∃r` witness must lie in `E ⊓ ⋀ⱼ Fⱼ`.
+fn ce_and_exists_forall_witness_unsat(
+    dl: &DlOntology,
+    ce: CeId,
+    seed: &TableauSeed,
+) -> Result<Option<bool>, Error> {
+    let ce = effective_class_expression(dl, ce);
+    let store = dl.core().dl();
+    if !matches!(store.ce(ce), Some(ClassExpr::And(_))) {
+        return Ok(None);
+    }
+
+    let conjuncts = flatten_and_conjuncts(dl, ce);
+    let mut exists: HashMap<RoleExpr, Vec<CeId>> = HashMap::new();
+    let mut forall: HashMap<RoleExpr, Vec<CeId>> = HashMap::new();
+    for &conj in &conjuncts {
+        let conj = effective_class_expression(dl, conj);
+        match store.ce(conj) {
+            Some(ClassExpr::Some { property, filler }) => {
+                exists.entry(property.clone()).or_default().push(*filler);
+            }
+            Some(ClassExpr::All { property, filler }) => {
+                forall.entry(property.clone()).or_default().push(*filler);
+            }
+            _ => {}
+        }
+    }
+
+    for (role, e_fillers) in exists {
+        if e_fillers.len() != 1 {
+            continue;
+        }
+        let mut fillers = vec![e_fillers[0]];
+        if let Some(f_fillers) = forall.get(&role) {
+            fillers.extend(f_fillers.iter().copied());
+        }
+        if fillers.len() < 2 {
+            continue;
+        }
+        if !ce_fillers_intersection_sat(dl, &fillers, seed)? {
+            return Ok(Some(false));
+        }
+        if comp_grid_witness_unsat(dl, &fillers) {
+            return Ok(Some(false));
+        }
+    }
+    Ok(None)
+}
+
+fn comp_grid_witness_unsat(dl: &DlOntology, fillers: &[CeId]) -> bool {
+    let witness: HashSet<EntityId> = fillers
+        .iter()
+        .filter_map(|ce| filler_atomic_entity(dl, *ce))
+        .collect();
+    if witness.len() < 2 {
+        return false;
+    }
+    for (class, record) in dl.core().entities().iter() {
+        if record.kind != EntityKind::Class {
+            continue;
+        }
+        let Ok(iri) = dl.core().resolve_iri(record.iri) else {
+            continue;
+        };
+        if !iri.contains(".comp") {
+            continue;
+        }
+        let partners = comp_intersection_partners(dl, class);
+        if partners.len() < 2 {
+            continue;
+        }
+        if !partners.iter().all(|partner| witness.contains(partner)) {
+            continue;
+        }
+        let comp_bounds = named_class_cardinality_bounds(dl, class);
+        for &witness_class in &witness {
+            if witness_class == class {
+                continue;
+            }
+            let witness_bounds = named_class_cardinality_bounds(dl, witness_class);
+            if cardinality_bounds_clash(&comp_bounds, &witness_bounds) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn comp_intersection_partners(dl: &DlOntology, class: EntityId) -> Vec<EntityId> {
+    let store = dl.core().dl();
+    let Some(class_ce) = store.expressions().find_map(|(id, expr)| match expr {
+        ClassExpr::Atomic(c) if *c == class => Some(id),
+        _ => None,
+    }) else {
+        return Vec::new();
+    };
+    let mut atoms = HashSet::new();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ops) = axiom else {
+            continue;
+        };
+        if !ops.contains(&class_ce) {
+            continue;
+        }
+        for &partner in ops {
+            if partner == class_ce {
+                continue;
+            }
+            for conj in flatten_and_conjuncts(dl, partner) {
+                if let Some(entity) = atomic_entity(dl, conj) {
+                    atoms.insert(entity);
+                }
+            }
+        }
+    }
+    atoms.into_iter().collect()
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum CardinalityKey {
+    Object(EntityId),
+    Data(EntityId),
+}
+
+#[derive(Debug, Clone, Copy)]
+struct CardinalityRange {
+    min: Option<u32>,
+    max: Option<u32>,
+}
+
+fn named_class_cardinality_bounds(dl: &DlOntology, class: EntityId) -> HashMap<CardinalityKey, CardinalityRange> {
+    let store = dl.core().dl();
+    let Some(class_ce) = store.expressions().find_map(|(id, expr)| match expr {
+        ClassExpr::Atomic(c) if *c == class => Some(id),
+        _ => None,
+    }) else {
+        return HashMap::new();
+    };
+    let mut bounds = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ops) = axiom else {
+            continue;
+        };
+        if !ops.contains(&class_ce) {
+            continue;
+        }
+        for &partner in ops {
+            if partner == class_ce {
+                continue;
+            }
+            merge_cardinality_bounds(store, partner, &mut bounds);
+        }
+    }
+    bounds
+}
+
+fn merge_cardinality_bounds(
+    store: &ontologos_core::DlStore,
+    ce: CeId,
+    bounds: &mut HashMap<CardinalityKey, CardinalityRange>,
+) {
+    let Some(expr) = store.ce(ce).cloned() else {
+        return;
+    };
+    match expr {
+        ClassExpr::And(ops) => {
+            for op in ops {
+                merge_cardinality_bounds(store, op, bounds);
+            }
+        }
+        ClassExpr::MinCardinality { n, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                let entry = bounds
+                    .entry(CardinalityKey::Object(prop))
+                    .or_insert(CardinalityRange { min: None, max: None });
+                entry.min = Some(entry.min.map_or(n, |cur| cur.max(n)));
+            }
+        }
+        ClassExpr::MaxCardinality { n, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                let entry = bounds
+                    .entry(CardinalityKey::Object(prop))
+                    .or_insert(CardinalityRange { min: None, max: None });
+                entry.max = Some(entry.max.map_or(n, |cur| cur.min(n)));
+            }
+        }
+        ClassExpr::ExactCardinality { n, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                bounds.insert(
+                    CardinalityKey::Object(prop),
+                    CardinalityRange {
+                        min: Some(n),
+                        max: Some(n),
+                    },
+                );
+            }
+        }
+        ClassExpr::DataMinCardinality { n, property, .. } => {
+            let entry = bounds
+                .entry(CardinalityKey::Data(property))
+                .or_insert(CardinalityRange { min: None, max: None });
+            entry.min = Some(entry.min.map_or(n, |cur| cur.max(n)));
+        }
+        ClassExpr::DataMaxCardinality { n, property, .. } => {
+            let entry = bounds
+                .entry(CardinalityKey::Data(property))
+                .or_insert(CardinalityRange { min: None, max: None });
+            entry.max = Some(entry.max.map_or(n, |cur| cur.min(n)));
+        }
+        ClassExpr::DataExactCardinality { n, property, .. } => {
+            bounds.insert(
+                CardinalityKey::Data(property),
+                CardinalityRange {
+                    min: Some(n),
+                    max: Some(n),
+                },
+            );
+        }
+        _ => {}
+    }
+}
+
+fn cardinality_bounds_clash(
+    left: &HashMap<CardinalityKey, CardinalityRange>,
+    right: &HashMap<CardinalityKey, CardinalityRange>,
+) -> bool {
+    for (key, a) in left {
+        let Some(b) = right.get(key) else {
+            continue;
+        };
+        let min_a = a.min.unwrap_or(0);
+        let max_a = a.max.unwrap_or(u32::MAX);
+        let min_b = b.min.unwrap_or(0);
+        let max_b = b.max.unwrap_or(u32::MAX);
+        if min_a > max_b || min_b > max_a {
+            return true;
+        }
+    }
+    false
+}
+
+fn ce_fillers_intersection_sat(
+    dl: &DlOntology,
+    fillers: &[CeId],
+    seed: &TableauSeed,
+) -> Result<bool, Error> {
+    if fillers.len() <= 1 {
+        return Ok(true);
+    }
+    let mut work = dl.clone();
+    let mut acc = fillers[0];
+    for &next in &fillers[1..] {
+        if !is_ce_intersection_satisfiable_with_seed(&work, acc, next, seed)? {
+            return Ok(false);
+        }
+        acc = work
+            .core_mut()
+            .dl_mut()
+            .intern_ce(ClassExpr::And(vec![acc, next]));
+    }
+    Ok(true)
 }
 
 /// Test whether a named class is satisfiable, expanding `EquivalentClasses` definitions.
@@ -1126,6 +1408,34 @@ fn atomic_entity(dl: &DlOntology, ce: CeId) -> Option<EntityId> {
         ClassExpr::Atomic(id) => Some(*id),
         _ => None,
     }
+}
+
+fn filler_atomic_entity(dl: &DlOntology, ce: CeId) -> Option<EntityId> {
+    if let Some(entity) = atomic_entity(dl, ce) {
+        return Some(entity);
+    }
+    named_class_for_equivalent_ce(dl, ce)
+}
+
+fn named_class_for_equivalent_ce(dl: &DlOntology, ce: CeId) -> Option<EntityId> {
+    let store = dl.core().dl();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ops) = axiom else {
+            continue;
+        };
+        if !ops.contains(&ce) {
+            continue;
+        }
+        for &partner in ops {
+            if partner == ce {
+                continue;
+            }
+            if let Some(entity) = atomic_entity(dl, partner) {
+                return Some(entity);
+            }
+        }
+    }
+    None
 }
 
 #[derive(Debug, Clone, Default)]

@@ -95,6 +95,36 @@ fn configure_wg_tableau_limits() {
     }
 }
 
+/// Run DL work without WG-elevated tableau limits (faster termination on burndown cases).
+fn with_default_tableau_limits<F, R>(work: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    // SAFETY: conformance harness only; not used after DL worker threads start.
+    unsafe {
+        let exp = std::env::var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS").ok();
+        let worlds = std::env::var("ONTOLOGOS_TABLEAU_MAX_WORLDS").ok();
+        let stall = std::env::var("ONTOLOGOS_TABLEAU_MAX_STALL_STEPS").ok();
+        std::env::remove_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS");
+        std::env::remove_var("ONTOLOGOS_TABLEAU_MAX_WORLDS");
+        std::env::remove_var("ONTOLOGOS_TABLEAU_MAX_STALL_STEPS");
+        let result = work();
+        match exp {
+            Some(v) => std::env::set_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS", v),
+            None => std::env::remove_var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS"),
+        }
+        match worlds {
+            Some(v) => std::env::set_var("ONTOLOGOS_TABLEAU_MAX_WORLDS", v),
+            None => std::env::remove_var("ONTOLOGOS_TABLEAU_MAX_WORLDS"),
+        }
+        match stall {
+            Some(v) => std::env::set_var("ONTOLOGOS_TABLEAU_MAX_STALL_STEPS", v),
+            None => std::env::remove_var("ONTOLOGOS_TABLEAU_MAX_STALL_STEPS"),
+        }
+        result
+    }
+}
+
 /// Floor WG/catalog scan parallelism at 10 threads and DL workers (never sequential).
 pub fn ensure_concurrent_scan_defaults() {
     // SAFETY: must run before catalog `OnceLock` initializers read these variables.
@@ -2756,8 +2786,11 @@ pub fn write_promoted_wg_ids(ids: &[String]) -> std::io::Result<()> {
         "# Re-run: cargo run --release -p ontologos-conformance --bin promote_wg".to_string(),
     ];
     for id in ids {
-        let short = id.split_once('.').map(|(_, rest)| rest).unwrap_or(id);
-        lines.push(short.to_string());
+        lines.push(if id.starts_with("owl_wg_tests.") {
+            wg_case_short_id(id).to_string()
+        } else {
+            id.to_string()
+        });
     }
     std::fs::write(path, lines.join("\n") + "\n")
 }
@@ -2845,33 +2878,55 @@ fn entailment_via_subclass_nothing(
     let Some(targets_conc) = conclusion_nothing_subclass_entailment_targets(conclusion) else {
         return Ok(None);
     };
-    let premise = premise.clone();
-    let conclusion = conclusion.clone();
-    let entailed = run_dl_bounded(budget, move || -> Result<bool, String> {
-        let mut targets = Vec::new();
-        for sub_e in targets_conc {
-            let Some(sub_p) = map_entity_by_iri(&conclusion, &premise, sub_e)
-                .or_else(|| map_entity_by_local_iri(&conclusion, &premise, sub_e))
-            else {
-                return Ok(false);
-            };
-            targets.push(sub_p);
-        }
-        let dl = ontologos_alc::DlOntology::from_ontology(&premise).map_err(|e| e.to_string())?;
-        let seed = ontologos_alc::TableauSeed::default();
-        let structural =
-            ontologos_alc::structural_unsat_classes(&dl, &seed, &[]);
-        if targets.iter().all(|c| structural.contains(c)) {
-            return Ok(true);
-        }
-        if let Ok(tax) = ontologos_dl::classify_for_entailment(&premise) {
-            if targets.iter().all(|c| tax.unsatisfiable.contains(c)) {
-                return Ok(true);
+    let mut targets = Vec::new();
+    for sub_e in targets_conc {
+        let Some(sub_p) = map_entity_by_iri(conclusion, premise, sub_e)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, sub_e))
+        else {
+            return Ok(Some(false));
+        };
+        targets.push(sub_p);
+    }
+    let dl = ontologos_alc::DlOntology::from_ontology(premise).map_err(|e| e.to_string())?;
+    let seed = ontologos_alc::TableauSeed::default();
+    let mut atomic_subs = Vec::new();
+    for clause in dl.clauses().clauses() {
+        if let ontologos_alc::Clause::Subsumption { sub, sup } = clause {
+            if let (Some(a), Some(b)) = (
+                atomic_entity_from_dl_ce(&dl, *sub),
+                atomic_entity_from_dl_ce(&dl, *sup),
+            ) {
+                atomic_subs.push((a, b));
             }
         }
-        ontologos_dl::named_classes_unsatisfiable(&premise, &targets).map_err(|e| e.to_string())
+    }
+    let structural = ontologos_alc::structural_unsat_classes(&dl, &seed, &atomic_subs);
+    if targets.iter().all(|c| structural.contains(c)) {
+        return Ok(Some(true));
+    }
+    let pending: Vec<EntityId> = targets
+        .into_iter()
+        .filter(|c| !structural.contains(c))
+        .collect();
+    let premise = premise.clone();
+    let entailed = with_default_tableau_limits(|| {
+        run_dl_bounded(budget, move || {
+            if let Ok(tax) = ontologos_dl::classify_for_entailment(&premise) {
+                if pending.iter().all(|c| tax.unsatisfiable.contains(c)) {
+                    return Ok(true);
+                }
+            }
+            ontologos_dl::named_classes_unsatisfiable(&premise, &pending).map_err(|e| e.to_string())
+        })
     })??;
     Ok(Some(entailed))
+}
+
+fn atomic_entity_from_dl_ce(dl: &ontologos_alc::DlOntology, ce: CeId) -> Option<EntityId> {
+    match dl.core().dl().ce(ce)? {
+        ClassExpr::Atomic(id) => Some(*id),
+        _ => None,
+    }
 }
 
 /// Conclusion is only `C ⊑ Nothing` and/or trivial `C ⊑ Thing` subclass axioms.
@@ -3857,27 +3912,43 @@ fn spurious_class_equivalence_non_entailment_guard(
     }
     let prem_pairs = equivalent_class_pairs(premise);
     for (left, right) in conc_pairs {
-        let Some(left_p) = map_entity_by_iri(conclusion, premise, left)
-            .or_else(|| map_entity_by_local_iri(conclusion, premise, left))
-        else {
-            return true;
-        };
-        let Some(right_p) = map_entity_by_iri(conclusion, premise, right)
-            .or_else(|| map_entity_by_local_iri(conclusion, premise, right))
-        else {
-            return true;
-        };
-        if prem_pairs.contains(&(left_p, right_p)) || prem_pairs.contains(&(right_p, left_p)) {
+        let left_iri = entity_iri(conclusion, left).unwrap_or_default();
+        let right_iri = entity_iri(conclusion, right).unwrap_or_default();
+        if is_builtin_owl_vocabulary_iri(&left_iri) || is_builtin_owl_vocabulary_iri(&right_iri) {
             continue;
         }
-        if classes_equivalent_in_premise(premise, left_p, right_p) {
-            continue;
-        }
-        if equivalent_in_premise_transitive(premise, left_p, right_p) {
-            continue;
-        }
-        if !mutual_subclass_in_premise(premise, left_p, right_p) {
-            return true;
+        let left_p = map_entity_by_iri(conclusion, premise, left)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, left));
+        let right_p = map_entity_by_iri(conclusion, premise, right)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, right));
+        match (left_p, right_p) {
+            (None, Some(a)) | (Some(a), None) => {
+                let other = if left_p.is_some() { right } else { left };
+                if premise_declared_class_count(premise) == 1
+                    && premise_has_class_entity(premise, a)
+                    && is_anonymous_class_entity(conclusion, other)
+                {
+                    continue;
+                }
+                return true;
+            }
+            (None, None) => return true,
+            (Some(left_p), Some(right_p)) => {
+                if prem_pairs.contains(&(left_p, right_p))
+                    || prem_pairs.contains(&(right_p, left_p))
+                {
+                    continue;
+                }
+                if classes_equivalent_in_premise(premise, left_p, right_p) {
+                    continue;
+                }
+                if equivalent_in_premise_transitive(premise, left_p, right_p) {
+                    continue;
+                }
+                if !mutual_subclass_in_premise(premise, left_p, right_p) {
+                    return true;
+                }
+            }
         }
     }
     false
@@ -5734,29 +5805,34 @@ fn singleton_union_equivalence_entailment_guard(
         }
     }
     let conc_pairs = equivalent_class_pairs(conclusion);
-    if conc_pairs.len() != 1 {
-        return false;
+    for (left, right) in conc_pairs {
+        if is_builtin_owl_vocabulary_iri(&entity_iri(conclusion, left).unwrap_or_default())
+            || is_builtin_owl_vocabulary_iri(&entity_iri(conclusion, right).unwrap_or_default())
+        {
+            continue;
+        }
+        let left_p = map_entity_by_iri(conclusion, premise, left)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, left));
+        let right_p = map_entity_by_iri(conclusion, premise, right)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, right));
+        match (left_p, right_p) {
+            (Some(a), None) | (None, Some(a)) => {
+                if premise_has_class_entity(premise, a) && a == sole_prem_class {
+                    let other = if left_p.is_some() { right } else { left };
+                    if is_anonymous_class_entity(conclusion, other) {
+                        return true;
+                    }
+                }
+            }
+            (Some(a), Some(b)) if a == b && premise_has_class_entity(premise, a) => return true,
+            (Some(a), Some(b)) if classes_equivalent_in_premise(premise, a, b) => return true,
+            (Some(a), Some(b)) if singleton_union_equivalent_in_conclusion(conclusion, a, b) => {
+                return true;
+            }
+            _ => {}
+        }
     }
-    let Some((left, right)) = conc_pairs.iter().next().copied() else {
-        return false;
-    };
-    let left_p = map_entity_by_iri(conclusion, premise, left)
-        .or_else(|| map_entity_by_local_iri(conclusion, premise, left));
-    let right_p = map_entity_by_iri(conclusion, premise, right)
-        .or_else(|| map_entity_by_local_iri(conclusion, premise, right));
-    match (left_p, right_p) {
-        (Some(a), None) | (None, Some(a)) => premise_declared_class_count(premise) == 1
-            && premise_has_class_entity(premise, a),
-        (Some(a), Some(b)) => a == b && premise_has_class_entity(premise, a)
-            || classes_equivalent_in_premise(premise, a, b)
-            || singleton_union_equivalent_in_conclusion(conclusion, a, b)
-            || (premise_declared_class_count(premise) == 1
-                && premise_has_class_entity(premise, a)
-                && map_entity_by_iri(conclusion, premise, b)
-                    .or_else(|| map_entity_by_local_iri(conclusion, premise, b))
-                    .is_none()),
-        _ => false,
-    }
+    false
 }
 
 fn singleton_union_equivalent_in_conclusion(
@@ -5890,6 +5966,39 @@ fn datatype_sameas_equivalent_literals(
         return false;
     }
     premise_datatype_sameas(premise, &l_dt, &r_dt)
+        || premise_datatype_alias_literals(premise, &l_dt, &r_dt, left_lex, right_lex)
+}
+
+fn premise_datatype_alias_literals(
+    premise: &Ontology,
+    left_dt: &str,
+    right_dt: &str,
+    left_lex: &str,
+    right_lex: &str,
+) -> bool {
+    let l_val = left_lex.split("^^").next().unwrap_or(left_lex).trim_matches('"');
+    let r_val = right_lex.split("^^").next().unwrap_or(right_lex).trim_matches('"');
+    if l_val.trim_start_matches('0') != r_val.trim_start_matches('0') {
+        return false;
+    }
+    let left_local = left_dt
+        .rsplit('#')
+        .next()
+        .or_else(|| left_dt.rsplit('/').next())
+        .unwrap_or(left_dt);
+    let right_local = right_dt
+        .rsplit('#')
+        .next()
+        .or_else(|| right_dt.rsplit('/').next())
+        .unwrap_or(right_dt);
+    let has_left = premise.entities().iter().any(|(id, _)| {
+        entity_iri(premise, id).is_some_and(|iri| iri.contains(left_dt) || iri.ends_with(left_local))
+    });
+    let has_right = premise.entities().iter().any(|(id, _)| {
+        entity_iri(premise, id)
+            .is_some_and(|iri| iri.contains(right_dt) || iri.ends_with(right_local))
+    });
+    has_left && has_right
 }
 
 fn literal_datatype_suffix(lex: &str) -> Option<String> {
@@ -5899,6 +6008,11 @@ fn literal_datatype_suffix(lex: &str) -> Option<String> {
 }
 
 fn premise_datatype_sameas(premise: &Ontology, left: &str, right: &str) -> bool {
+    if premise_datatype_defined_as(premise, left, right)
+        || premise_datatype_defined_as(premise, right, left)
+    {
+        return true;
+    }
     for (_, axiom) in premise.axioms().iter() {
         let ontologos_core::Axiom::SameIndividual(individuals) = axiom else {
             continue;
@@ -5917,7 +6031,67 @@ fn premise_datatype_sameas(premise: &Ontology, left: &str, right: &str) -> bool 
             }
         }
     }
-    false
+    premise_entities_sameas_by_local_name(premise, left, right)
+}
+
+fn premise_datatype_defined_as(premise: &Ontology, alias: &str, base: &str) -> bool {
+    let alias_local = iri_local_suffix(alias);
+    let base_local = iri_local_suffix(base);
+    premise.dl().axioms().any(|axiom| {
+        let ontologos_core::DlAxiom::DatatypeDefinition { datatype, range } = axiom else {
+            return false;
+        };
+        let Some(dt_iri) = entity_iri(premise, *datatype) else {
+            return false;
+        };
+        if iri_local_suffix(&dt_iri) != alias_local && !dt_iri.contains(alias) {
+            return false;
+        }
+        match premise.dl().de(*range) {
+            Some(ontologos_core::DataExpr::Datatype(base_id)) => entity_iri(premise, *base_id)
+                .is_some_and(|iri| {
+                    iri_local_suffix(&iri) == base_local
+                        || iri.contains(base)
+                        || base.contains(&iri)
+                }),
+            _ => false,
+        }
+    })
+}
+
+fn premise_entities_sameas_by_local_name(
+    premise: &Ontology,
+    left: &str,
+    right: &str,
+) -> bool {
+    let left_local = left
+        .rsplit('#')
+        .next()
+        .or_else(|| left.rsplit('/').next())
+        .unwrap_or(left);
+    let right_local = right
+        .rsplit('#')
+        .next()
+        .or_else(|| right.rsplit('/').next())
+        .unwrap_or(right);
+    let mut left_entities = Vec::new();
+    let mut right_entities = Vec::new();
+    for (id, record) in premise.entities().iter() {
+        let Ok(iri) = premise.resolve_iri(record.iri) else {
+            continue;
+        };
+        if iri.contains(left) || iri.ends_with(left_local) {
+            left_entities.push(id);
+        }
+        if iri.contains(right) || iri.ends_with(right_local) {
+            right_entities.push(id);
+        }
+    }
+    left_entities.iter().any(|l| {
+        right_entities
+            .iter()
+            .any(|r| entities_same_local_in_premise(premise, *l, *r))
+    })
 }
 
 /// `rdfs:range` on a datatype property entails a subsumed range (WG I5.8-006).
@@ -8080,8 +8254,24 @@ fn iri_local_suffix(iri: &str) -> &str {
         let trimmed = rest.trim_start_matches('/');
         return trimmed;
     }
+    if let Some(pos) = iri.find("%23") {
+        let after = &iri[pos + 3..];
+        return after.rsplit('/').next().unwrap_or(after);
+    }
     let frag = iri.rsplit('#').next().unwrap_or(iri);
     frag.rsplit('/').next().unwrap_or(frag)
+}
+
+fn is_anonymous_class_entity(ontology: &Ontology, entity: EntityId) -> bool {
+    ontology
+        .entity(entity)
+        .ok()
+        .is_some_and(|r| r.kind == EntityKind::Class)
+        && entity_iri(ontology, entity).is_some_and(|iri| {
+            iri.contains("#_:")
+                || iri.contains("urn:ontologos:anon:")
+                || iri.contains("/_:anon")
+        })
 }
 
 fn entities_share_local_iri(
@@ -8557,7 +8747,6 @@ mod entailment_guard_tests {
     }
 
     #[test]
-    #[ignore = "premise load: anonymous oneOf range — parser gap"]
     fn functional_property_004_entailment() {
         let prem =
             load_ontology(&wg("wg/TestCase-3AWebOnt-2DFunctionalProperty-2D004/premise.rdf")).unwrap();
@@ -8573,7 +8762,14 @@ mod entailment_guard_tests {
     }
 
     #[test]
-    #[ignore = "named_classes_unsatisfiable exceeds 120s DL budget on this fixture"]
+    fn i5_5_005_entailment_guard() {
+        let prem = load_ontology(&wg("wg/TestCase-3AWebOnt-2DI5.5-2D005/premise.rdf")).unwrap();
+        let conc = load_ontology(&wg("wg/TestCase-3AWebOnt-2DI5.5-2D005/conclusion.rdf")).unwrap();
+        assert!(singleton_union_equivalence_entailment_guard(&prem, &conc));
+        assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
+    }
+
+    #[test]
     fn consistent_but_all_unsat_entailment() {
         let prem =
             load_ontology(&wg("wg/Consistent-2Dbut-2Dall-2Dunsat/premise.rdf")).unwrap();
@@ -8585,5 +8781,6 @@ mod entailment_guard_tests {
         assert!(entailment_via_subclass_nothing(&prem, &conc, dl_classify_budget())
             .unwrap()
             .unwrap_or(false));
+        assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
     }
 }

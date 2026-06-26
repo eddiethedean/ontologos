@@ -281,7 +281,7 @@ All bounded engine failures cleared (IanT6 ×2, IanT7b).
 
 All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-first workflow). Fix engine gaps by running the full suite and burning down failures — no `promote_wg` / `wg_failures` scan loop required for day-to-day work.
 
-**Status (2026-06-25):** Catalog **`wg_planned = 0`** — all **428** WG cases active. **~23** semantic failures remain at 30s DL budget (targeted triage). **414** promoted IDs in [promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt). **`wg_phase4_check` 32/32** green. dl-018 max-card cluster fixed (dl-018–dl-025, dl-624/625). Blocking gaps: One_equals_two, dl-608/650/910, misc-203/204, 9 entailment guards, Consistent-but-all-unsat budget.
+**Status (2026-06-26):** Catalog **`wg_planned = 0`** — all **428** WG cases active. **14-case burndown complete** — **428/428** promoted IDs ([promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt)); unpromoted `wg_failures` → **0**. Engine fixes: One_equals_two / dl-650 / dl-910 inconsistency; wine import consistency shortcut; 9 entailment guards/parser paths; `write_promoted_wg_ids` ID fix for `I5.5.x` cases.
 
 **Recent fixes (2026-06-24):** RDF supplement merge now imports **core** axioms (`ObjectPropertyDomain`/`Range` from `rdfs:domain`/`range`); quote-aware `parse_xml_base`; `conflicting_instance_typing_non_entailment_guard` allows intersection/union member typings; import fixture merge in `generate_catalog.py`; `wg_phase4_check` **9/9**.
 
@@ -314,9 +314,9 @@ All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-fi
 #### WS3 — DL engine fixes (in progress)
 
 - [x] Entailment guards, `thing_equivalent_nothing`, pattern datatype disjointness, tableau limits
-- [x] [wg_phase4_check.rs](crates/ontologos-conformance/tests/wg_phase4_check.rs) — **9/9** regression tests
+- [x] [wg_phase4_check.rs](crates/ontologos-conformance/tests/wg_phase4_check.rs) — **14-case burndown** regressions + prior tranche
 - [x] RDF supplement core merge, `rdfs:domain`/`range`, import fixture vendoring, entailment guard tranches
-- [ ] **~65** WG failures — equivalentClass/intersectionOf, description-logic consistency, QCR, timeouts
+- [x] **14-case WG burndown** — inconsistency (3), wine consistency (2), entailment (9); `promote_wg` → 428 IDs
 - [ ] **~202** Java `planned` — assertion harvest (Phase 2) or manual ports (Phase 5)
 
 #### WS4 — Conformance harness (complete)

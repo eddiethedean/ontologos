@@ -107,7 +107,8 @@ fn load_ontology_with_limits_and_base_inner(
         )?;
         let ill_founded_list = crate::rdf_preprocess::contains_ill_founded_rdf_list(&expanded);
         let relative_uris = crate::rdf_preprocess::normalize_relative_owl_uris(&expanded);
-        let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&relative_uris);
+        let rdfs_classes = crate::rdf_preprocess::normalize_rdfs_class_elements(&relative_uris);
+        let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&rdfs_classes);
         let typed_about = crate::rdf_preprocess::materialize_typed_about_elements(&injected);
         let typed_nodes = crate::rdf_preprocess::materialize_typed_node_elements(&typed_about);
         let intersections =
@@ -166,6 +167,44 @@ fn load_ontology_with_limits_and_base_inner(
         validate_loaded_ontology(&ontology)?;
     }
     Ok(ontology)
+}
+
+fn merge_datatype_sameas_supplement(
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    limits: ParseLimits,
+    left: &str,
+    right: &str,
+) -> Result<bool> {
+    if !(left.contains("XMLSchema") || right.contains("XMLSchema")) {
+        return Ok(false);
+    }
+    let alias = if left.contains("XMLSchema") {
+        right
+    } else {
+        left
+    };
+    let xsd = if left.contains("XMLSchema") {
+        left
+    } else {
+        right
+    };
+    let (alias_prefixes, alias_ref) =
+        crate::rdf_preprocess::qualify_datatype_ref_for_supplement(alias);
+    let (_, xsd_ref) = crate::rdf_preprocess::qualify_datatype_ref_for_supplement(xsd);
+    let ofn = format!(
+        "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+         Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
+         {alias_prefixes}\n\
+         Ontology(<http://example.org/datatype-sameas-supplement>\n\
+           Declaration(Datatype({alias_ref}))\n\
+           DatatypeDefinition({alias_ref} {xsd_ref})\n\
+         )"
+    );
+    let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+    merge_supplement_ontology(ontology, &supplement)?;
+    report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    Ok(true)
 }
 
 fn supplement_rdf_dl_axioms(
@@ -238,11 +277,14 @@ fn supplement_rdf_dl_axioms(
     for (class_iri, ce_ofn) in
         crate::rdf_preprocess::collect_boolean_class_equivalences(preprocessed_rdf)
     {
+        let (extra_prefixes, ce_qualified) =
+            crate::rdf_preprocess::qualify_ce_ofn_for_supplement(&ce_ofn);
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             {extra_prefixes}\n\
              Ontology(<{class_iri}>\n\
                Declaration(Class(<{class_iri}>))\n\
-               EquivalentClasses(<{class_iri}> {ce_ofn})\n\
+               EquivalentClasses(<{class_iri}> {ce_qualified})\n\
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
@@ -275,6 +317,22 @@ fn supplement_rdf_dl_axioms(
              Ontology(<http://example.org/datatype-range-supplement>\n\
                Declaration(DataProperty(<{property}>))\n\
                DataPropertyRange(<{property}> {range})\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (left, right) in crate::rdf_preprocess::collect_owl_same_as_pairs(preprocessed_rdf) {
+        if merge_datatype_sameas_supplement(ontology, report, limits, &left, &right)? {
+            continue;
+        }
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/same-as-supplement>\n\
+               Declaration(NamedIndividual(<{left}>))\n\
+               Declaration(NamedIndividual(<{right}>))\n\
+               SameIndividual(<{left}> <{right}>)\n\
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
@@ -363,18 +421,73 @@ fn supplement_rdf_dl_axioms(
         report.meta.mapped_axiom_count += supplement.dl().axiom_count();
     }
     for dpa in crate::rdf_preprocess::collect_direct_data_literal_assertions(preprocessed_rdf) {
-        let lit = dpa.value_literal.replace('"', "\\\"");
+        let (lexical, datatype_iri) = if dpa.value_literal.contains("^^") {
+            let mut parts = dpa.value_literal.splitn(2, "^^");
+            let lex = parts
+                .next()
+                .unwrap_or("")
+                .trim_matches('"')
+                .to_string();
+            let dt = parts
+                .next()
+                .unwrap_or("")
+                .trim_matches(|c| c == '<' || c == '>');
+            (lex, dt.to_string())
+        } else {
+            (dpa.value_literal.replace('"', "\\\""), String::new())
+        };
+        let (extra_prefixes, lit, dt_decl) = if datatype_iri.is_empty() {
+            if dpa.value_literal.contains('@') || dpa.value_literal.contains("^^") {
+                (
+                    String::new(),
+                    dpa.value_literal.clone(),
+                    None,
+                )
+            } else {
+                (
+                    String::new(),
+                    format!(
+                        "\"{}\"^^rdf:PlainLiteral",
+                        crate::rdf_preprocess::escape_ofn_string(&lexical)
+                    ),
+                    None,
+                )
+            }
+        } else {
+            crate::rdf_preprocess::qualify_typed_literal_for_supplement(&lexical, &datatype_iri)
+        };
+        let dt_decl_line = dt_decl
+            .map(|d| format!("\n       {d}"))
+            .unwrap_or_default();
         let body = format!(
             "Declaration(NamedIndividual(<{}>))\n\
              Declaration(DataProperty(<{}>))\n\
-             ClassAssertion(owl:Thing <{}>)\n\
-             DataPropertyAssertion(<{}> <{}> \"{lit}\"^^rdf:PlainLiteral)",
+             ClassAssertion(owl:Thing <{}>){dt_decl_line}\n\
+             DataPropertyAssertion(<{}> <{}> {lit})",
             dpa.subject, dpa.property, dpa.subject, dpa.property, dpa.subject
         );
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
              Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n\
+             {extra_prefixes}\n\
              Ontology(<http://example.org/thing-data-literal-supplement>\n{body}\n)"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for (left, right) in crate::rdf_preprocess::collect_owl_same_as_pairs(preprocessed_rdf) {
+        if merge_datatype_sameas_supplement(ontology, report, limits, &left, &right)? {
+            continue;
+        }
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/same-as-supplement>\n\
+               Declaration(NamedIndividual(<{left}>))\n\
+               Declaration(NamedIndividual(<{right}>))\n\
+               SameIndividual(<{left}> <{right}>)\n\
+             )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
         merge_supplement_ontology(ontology, &supplement)?;
@@ -511,9 +624,12 @@ fn merge_supplement_ontology(target: &mut Ontology, source: &Ontology) -> Result
     });
     for (_, axiom) in source.axioms().iter() {
         let remapped = remap_supplement_axiom(axiom, &entity_map)?;
-        target
-            .add_axiom(remapped)
-            .map_err(|e| Error::Parse(e.to_string()))?;
+        if let Err(e) = target.add_axiom(remapped) {
+            if matches!(axiom, Axiom::ObjectPropertyRange { .. }) {
+                continue;
+            }
+            return Err(Error::Parse(e.to_string()));
+        }
     }
     Ok(())
 }

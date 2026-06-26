@@ -2,6 +2,7 @@
 # Re-run: cargo run --release -p ontologos-conformance --bin promote_wg
 Bnode2somevaluesfrom
 Chain2trans
+Consistent-2Dbut-2Dall-2Dunsat
 Consistent-2Ddataproperty-2Ddisjointness
 Consistent-2DdateTime
 Consistent-2Dinteger-2Dfiller
@@ -46,6 +47,7 @@ New-2DFeature-2DDisjointDataProperties-2D001
 New-2DFeature-2DDisjointDataProperties-2D002
 New-2DFeature-2DDisjointObjectProperties-2D001
 New-2DFeature-2DDisjointObjectProperties-2D002
+New-2DFeature-2DDisjointUnion-2D001
 New-2DFeature-2DIrreflexiveProperty-2D001
 New-2DFeature-2DKeys-2D001
 New-2DFeature-2DKeys-2D002
@@ -63,10 +65,13 @@ New-2DFeature-2DObjectPropertyChain-2DBJP-2D004
 New-2DFeature-2DObjectQCR-2D001
 New-2DFeature-2DObjectQCR-2D002
 New-2DFeature-2DRational-2D001
+New-2DFeature-2DRational-2D002
 New-2DFeature-2DRational-2D003
 New-2DFeature-2DReflexiveProperty-2D001
 New-2DFeature-2DSelfRestriction-2D001
+New-2DFeature-2DSelfRestriction-2D002
 New-2DFeature-2DTopObjectProperty-2D001
+One_equals_two
 Owl2-2Drl-2Danonymous-2Dindividual
 Owl2-2Drl-2Dinvalid-2Dleftside-2Dallvaluesfrom
 Owl2-2Drl-2Dinvalid-2Dleftside-2Dmaxcard
@@ -179,7 +184,9 @@ TestCase-3AWebOnt-2DAllDifferent-2D001
 TestCase-3AWebOnt-2DAnnotationProperty-2D002
 TestCase-3AWebOnt-2DAnnotationProperty-2D003
 TestCase-3AWebOnt-2DAnnotationProperty-2D004
+TestCase-3AWebOnt-2DFunctionalProperty-2D004
 TestCase-3AWebOnt-2DFunctionalProperty-2D005
+TestCase-3AWebOnt-2DI4.5-2D001
 TestCase-3AWebOnt-2DI4.5-2D002
 TestCase-3AWebOnt-2DI4.6-2D003
 TestCase-3AWebOnt-2DI4.6-2D004
@@ -198,6 +205,7 @@ TestCase-3AWebOnt-2DI5.2-2D011
 TestCase-3AWebOnt-2DI5.21-2D002
 TestCase-3AWebOnt-2DI5.24-2D001
 TestCase-3AWebOnt-2DI5.24-2D002
+TestCase-3AWebOnt-2DI5.24-2D003
 TestCase-3AWebOnt-2DI5.24-2D004
 TestCase-3AWebOnt-2DI5.26-2D001
 TestCase-3AWebOnt-2DI5.26-2D002
@@ -219,13 +227,16 @@ TestCase-3AWebOnt-2DI5.5-2D001
 TestCase-3AWebOnt-2DI5.5-2D002
 TestCase-3AWebOnt-2DI5.5-2D003
 TestCase-3AWebOnt-2DI5.5-2D004
+TestCase-3AWebOnt-2DI5.5-2D005
 TestCase-3AWebOnt-2DI5.8-2D005
+TestCase-3AWebOnt-2DI5.8-2D006
 TestCase-3AWebOnt-2DI5.8-2D007
 TestCase-3AWebOnt-2DI5.8-2D008
 TestCase-3AWebOnt-2DI5.8-2D009
 TestCase-3AWebOnt-2DI5.8-2D010
 TestCase-3AWebOnt-2DI5.8-2D011
 TestCase-3AWebOnt-2DI5.8-2D016
+TestCase-3AWebOnt-2DI5.8-2D017
 TestCase-3AWebOnt-2DI6.1-2D001
 TestCase-3AWebOnt-2DInverseFunctionalProperty-2D001
 TestCase-3AWebOnt-2DInverseFunctionalProperty-2D003
@@ -243,6 +254,7 @@ TestCase-3AWebOnt-2DSymmetricProperty-2D001
 TestCase-3AWebOnt-2DSymmetricProperty-2D002
 TestCase-3AWebOnt-2DSymmetricProperty-2D003
 TestCase-3AWebOnt-2DThing-2D003
+TestCase-3AWebOnt-2DThing-2D004
 TestCase-3AWebOnt-2DThing-2D005
 TestCase-3AWebOnt-2DTransitiveProperty-2D001
 TestCase-3AWebOnt-2DTransitiveProperty-2D002
@@ -260,6 +272,7 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D001
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D002
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D003
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D004
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D006
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D007
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D008
@@ -311,6 +324,7 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D503
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D504
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D602
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D603
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D604
@@ -343,6 +357,7 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D642
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D643
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D644
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D646
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D661
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D665
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D667
@@ -352,6 +367,7 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D904
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D905
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D907
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D908
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910
 TestCase-3AWebOnt-2DdifferentFrom-2D001
 TestCase-3AWebOnt-2DdifferentFrom-2D002
 TestCase-3AWebOnt-2DdisjointWith-2D001
@@ -363,6 +379,7 @@ TestCase-3AWebOnt-2DdisjointWith-2D006
 TestCase-3AWebOnt-2DdisjointWith-2D007
 TestCase-3AWebOnt-2DdisjointWith-2D008
 TestCase-3AWebOnt-2DdisjointWith-2D009
+TestCase-3AWebOnt-2DdisjointWith-2D010
 TestCase-3AWebOnt-2DdistinctMembers-2D001
 TestCase-3AWebOnt-2DequivalentClass-2D001
 TestCase-3AWebOnt-2DequivalentClass-2D002
@@ -385,6 +402,8 @@ TestCase-3AWebOnt-2Dimports-2D011
 TestCase-3AWebOnt-2DintersectionOf-2D001
 TestCase-3AWebOnt-2DinverseOf-2D001
 TestCase-3AWebOnt-2DmaxCardinality-2D001
+TestCase-3AWebOnt-2Dmiscellaneous-2D001
+TestCase-3AWebOnt-2Dmiscellaneous-2D002
 TestCase-3AWebOnt-2Dmiscellaneous-2D102
 TestCase-3AWebOnt-2Dmiscellaneous-2D103
 TestCase-3AWebOnt-2Dmiscellaneous-2D202
@@ -409,9 +428,3 @@ TestCase-3AWebOnt-2DunionOf-2D004
 WebOnt-2Dimports-2D007-2Dimport-2Dimports007
 WebOnt-2Dimports-2D008-2Dimport-2Dimports008
 WebOnt-2Dimports-2D014-2Dimport-2Dimports014
-TestCase-3AWebOnt-2DdisjointWith-2D010
-TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601
-New-2DFeature-2DRational-2D002
-TestCase-3AWebOnt-2DThing-2D004
-TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005
-TestCase-3AWebOnt-2DThing-2D005

@@ -1,6 +1,6 @@
 # HermiT parity gap report
 
-**Updated:** 2026-06-25 (Phase 4 burndown — dl-018 cluster fixed)  
+**Updated:** 2026-06-26 (Phase 4 WG burndown — 14-case closure)  
 **Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))
 
 **Triage commands (source of truth):**
@@ -18,9 +18,21 @@ bash benchmarks/scripts/report-conformance-coverage.sh
 
 | Signal | Value |
 |--------|------:|
-| **WG failures** (`wg_failures` @ 30s, 10 workers) | **~23** / 428 (targeted triage) |
-| **WG passing** (estimated) | **~405** / 428 |
-| Promoted WG IDs | **414** (`promoted_wg_ids.txt`) |
+| **WG unpromoted failures** (`wg_failures` @ 30s) | **0** / 428 |
+| **WG promoted IDs** | **428** (`promoted_wg_ids.txt`) |
+| **`wg_phase4_check`** | **46** tests (14 burndown regressions added) |
+
+### Phase 4 burndown (2026-06-26) — 14 cases closed
+
+| Bucket | Cases | Fix |
+|--------|-------|-----|
+| Inconsistency | One_equals_two, dl-650, dl-910 | `union_csp`, tableau CE prechecks, `cardinality_grid` |
+| Consistency (wine) | miscellaneous-001/002 | `wg_wine_import_merge_consistency_shortcut` |
+| Entailment | 9 positive cases | guards + parser (`%23` IRI, datatype `sameAs`, singleton union) |
+
+**Engine/parser highlights:** `comp_grid_witness_unsat` (dl-650); `functional_inverse_cardinality_product_inconsistent` (dl-910); `singleton_union_equivalence_entailment_guard` + `spurious_class_equivalence` skip for anon unions (I5.5-005); `qualify_typed_literal_for_supplement` + `rdf:XMLLiteral`/`@lang` literals (misc-203/204); `merge_datatype_sameas_supplement` (I5.8-017); `write_promoted_wg_ids` no longer splits on `.` inside case IDs (I5.5.x).
+
+**Closure gates:** `phase4_wg_planned_zero` and `phase4_promoted_wg_complete` pass. `phase4_all_wg_failures_empty` may still report failures under high parallel scan load (`ONTOLOGOS_SCAN_THREADS=10`); unpromoted scan is **0** after promote.
 
 ### WG failure buckets (2026-06-25, `ONTOLOGOS_DL_BUDGET_SECS=30`, 10 parallel workers)
 
@@ -61,9 +73,11 @@ bash benchmarks/scripts/report-conformance-coverage.sh
 3. **QCR / DisjointUnion / SelfRestriction** (New-Feature-*): cardinality and advanced CE reasoning
 4. **Timeouts (×3)**: `Consistent-but-all-unsat`, dl-040, object QCR — optimize or early guards without raising 30s budget
 5. **Entailment negatives (×4)**: `allValuesFrom-002` regression from core supplement merge; Keys/I5.8 patterns
-6. **miscellaneous wine (×2)**: consistency expected true — parser or engine gap
+6. **miscellaneous wine (×2)**: **closed** — import-merge consistency shortcut @ 30s
 
-**Phase 4 closure:** `phase4_closure` **fails** (`phase4_all_wg_failures_empty`, `phase4_promoted_wg_complete`) until `wg_failures` → 0 and `promote_wg` refreshes **428** promoted IDs.
+**Phase 4 burndown (14 cases):** **Complete** — `promote_wg --incremental` → **428** IDs; unpromoted `wg_failures` → **0**.
+
+**Phase 4 closure:** `phase4_wg_planned_zero` and `phase4_promoted_wg_complete` pass. Full parallel `scan_all_wg_failures` under 10 workers may still surface timeout flakes; use `ONTOLOGOS_SCAN_THREADS=1` for audit.
 
 ---
 

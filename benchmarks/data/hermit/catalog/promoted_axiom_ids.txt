@@ -7,7 +7,9 @@ reasoner.ComplexConceptTest.testConceptWithNominals3
 reasoner.ComplexConceptTest.testConceptWithNominals4
 reasoner.ComplexConceptTest.testConceptWithNominals5
 reasoner.DatalogEngineTest.testBasic
+reasoner.DatalogEngineTest.testEquality
 reasoner.DatalogEngineTest.testQueryWithIndividuals
+reasoner.DatalogEngineTest.testQueryWithIndividualsAndEquality
 reasoner.DatatypesTest.testAllValuesFromDifferentTypes1
 reasoner.DatatypesTest.testAllValuesFromDifferentTypes2
 reasoner.DatatypesTest.testAllValuesFromDifferentTypes3
@@ -76,6 +78,7 @@ reasoner.EntailmentTest.testIntegerEntailment
 reasoner.EntailmentTest.testInvalidBlankNodes
 reasoner.EntailmentTest.testValidBlankNodes
 reasoner.EntailmentTest.testValidBlankNodesInPremise
+reasoner.EntailmentTest.testValidBlankNodesWithNominals
 reasoner.FloatDoubleTest.testINF
 reasoner.OWLReasonerTest.testBottomObjectPropertySubs
 reasoner.OWLReasonerTest.testGetDataPropertyValues
@@ -129,6 +132,7 @@ reasoner.ReasonerTest.testHeinsohnTBox3c
 reasoner.ReasonerTest.testHeinsohnTBox3cIrh
 reasoner.ReasonerTest.testHeinsohnTBox4b
 reasoner.ReasonerTest.testHierarchyPrinting3
+reasoner.ReasonerTest.testIanBackjumping1
 reasoner.ReasonerTest.testIanBackjumping2
 reasoner.ReasonerTest.testIanBug1b
 reasoner.ReasonerTest.testIanBug4
@@ -149,6 +153,7 @@ reasoner.ReasonerTest.testIanT1a
 reasoner.ReasonerTest.testIanT1b
 reasoner.ReasonerTest.testIanT1c
 reasoner.ReasonerTest.testIanT2
+reasoner.ReasonerTest.testIanT3
 reasoner.ReasonerTest.testIanT4
 reasoner.ReasonerTest.testIanT5
 reasoner.ReasonerTest.testIanT7b
@@ -189,6 +194,7 @@ reasoner.ReasonerTest.testNominalMerging
 reasoner.ReasonerTest.testNominals1
 reasoner.ReasonerTest.testNominals2
 reasoner.ReasonerTest.testNominals3
+reasoner.ReasonerTest.testNominals4
 reasoner.ReasonerTest.testNominals5
 reasoner.ReasonerTest.testNominals6
 reasoner.ReasonerTest.testNonUnaryKeys
@@ -210,6 +216,7 @@ reasoner.ReasonerTest.testRoleDisjointness2
 reasoner.ReasonerTest.testRoleDisjointness_1
 reasoner.ReasonerTest.testRoleDisjointness_2
 reasoner.ReasonerTest.testRoleSubsumption
+reasoner.ReasonerTest.testRoleSubsumptionWithChainsTransitiveSymmetric
 reasoner.ReasonerTest.testSatisfiability1
 reasoner.ReasonerTest.testSatisfiability2
 reasoner.ReasonerTest.testSatisfiability3

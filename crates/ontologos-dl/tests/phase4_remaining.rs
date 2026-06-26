@@ -96,7 +96,6 @@ fn phase4_remaining_consistency_cases_fast() {
 }
 
 #[test]
-#[ignore = "large wine import ontology — run explicitly"]
 fn phase4_misc_wine_consistency_cases() {
     let cases = [
         ("misc-001", "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D001/premise.rdf", true),

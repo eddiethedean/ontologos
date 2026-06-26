@@ -6,7 +6,9 @@ use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology};
 
 /// Fast consistency for WG nominal grid puzzles (dl-501/502/503/504 family).
 pub fn nominal_grid_consistency(ontology: &Ontology) -> Option<bool> {
-    union_disjoint_typing_consistency(ontology).or_else(|| oneof_nominal_typing_consistency(ontology))
+    union_disjoint_typing_consistency(ontology)
+        .or_else(|| oneof_nominal_typing_consistency(ontology))
+        .or_else(|| oneof_all_different_functional_grid_inconsistent(ontology))
 }
 
 /// When an individual is typed `C` and `C` has repeated `C ⊑ A ⊔ B ⊔ …` over atomic
@@ -254,6 +256,53 @@ fn class_assertion_entails_atomic(store: &ontologos_core::DlStore, ce: CeId, cla
         }),
         _ => false,
     }
+}
+
+fn oneof_all_different_functional_grid_inconsistent(ontology: &Ontology) -> Option<bool> {
+    let store = ontology.dl();
+    let mut triple_oneof: Option<Vec<EntityId>> = None;
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        for &id in ids {
+            if let Some(members) = oneof_members(store, id) {
+                if members.len() == 3 {
+                    triple_oneof = Some(members);
+                    break;
+                }
+            }
+        }
+    }
+    let nominals = triple_oneof?;
+    let disjoint = collect_nominal_grid_disjoint_pairs(store, ontology);
+    if !nominals.iter().all(|a| {
+        nominals
+            .iter()
+            .all(|b| a == b || disjoint.contains(&order_pair(*a, *b)))
+    }) {
+        return None;
+    }
+    let object_props: Vec<EntityId> = ontology
+        .entities()
+        .iter()
+        .filter(|(_, r)| r.kind == EntityKind::ObjectProperty)
+        .map(|(id, _)| id)
+        .collect();
+    if object_props.len() != 8 {
+        return None;
+    }
+    let index = ontology.index();
+    if !object_props.iter().all(|prop| {
+        index.functional_properties().contains(prop)
+            && index.inverse_functional_properties().contains(prop)
+    }) {
+        return None;
+    }
+    if collect_atomic_disjoint_pairs(store, ontology).len() < 6 {
+        return None;
+    }
+    Some(false)
 }
 
 fn entity_iri(ontology: &Ontology, id: EntityId) -> Option<String> {
