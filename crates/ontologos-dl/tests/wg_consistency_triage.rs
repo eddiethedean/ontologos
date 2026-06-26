@@ -255,31 +255,10 @@ fn diagnose_dl608_unsatisfiable() {
     let ont = load_ontology(&wg_premise(rel)).expect("load");
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let store = ont.dl();
-    for ax in store.axioms() {
-        eprintln!("dl axiom: {ax:?}");
-    }
-    for (_, ax) in ont.axioms().iter() {
-        if matches!(ax, ontologos_core::Axiom::SubClassOf { .. }) {
-            eprintln!("core sub: {ax:?}");
-        }
-    }
     let id = ont
         .lookup_entity("http://oiled.man.example.net/test#Unsatisfiable")
         .expect("Unsatisfiable");
-    let p2 = ont
-        .lookup_entity("http://oiled.man.example.net/test#p2")
-        .expect("p2");
     let seed = TableauSeed::default();
-    eprintln!("p2 named sat={:?}", is_named_class_satisfiable_with_seed(&dl, p2, &seed));
-    let taxonomy = ontologos_dl::classify(&ont).expect("classify");
-    eprintln!("taxonomy unsat: {:?}", taxonomy.unsatisfiable.len());
-    for u in &taxonomy.unsatisfiable {
-        if let Ok(iri) = ont.resolve_iri(ont.entity(*u).unwrap().iri) {
-            if iri.contains("p2") || iri.contains("Unsatisfiable") {
-                eprintln!("  unsat class: {iri}");
-            }
-        }
-    }
     eprintln!(
         "Unsatisfiable named sat={:?}",
         is_named_class_satisfiable_with_seed(&dl, id, &seed)
@@ -288,20 +267,16 @@ fn diagnose_dl608_unsatisfiable() {
         ontologos_core::ClassExpr::Atomic(c) if *c == id => Some(cid),
         _ => None,
     }) {
-        eprintln!("Unsatisfiable ce sat={:?}", is_ce_satisfiable_with_seed(&dl, ce, &seed));
         for ax in store.axioms() {
             if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax {
                 if ids.contains(&ce) {
                     for &other in ids {
                         if other != ce {
                             eprintln!("equiv {other:?}: {:?}", store.ce(other));
-                            eprintln!("  and sat={:?}", is_ce_satisfiable_with_seed(&dl, other, &seed));
-                            if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
-                                for op in ops {
-                                    eprintln!("    conjunct {op:?}: {:?}", store.ce(*op));
-                                    eprintln!("      sat={:?}", is_ce_satisfiable_with_seed(&dl, *op, &seed));
-                                }
-                            }
+                            eprintln!(
+                                "  and sat={:?}",
+                                is_ce_satisfiable_with_seed(&dl, other, &seed)
+                            );
                         }
                     }
                 }

@@ -250,6 +250,7 @@ fn expand_has_value(
 }
 
 fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr, filler: CeId) {
+    let filler = super::effective_class_expression(branch.dl, filler);
     if existential_clashes_world_restriction(branch, world, &property, filler) {
         branch.clash = true;
         return;
@@ -551,6 +552,7 @@ fn ensure_named_world(branch: &mut Branch<'_>, id: EntityId) -> usize {
 }
 
 fn materialize_filler_on_world(branch: &mut Branch<'_>, world: usize, filler: CeId) {
+    let filler = super::effective_class_expression(branch.dl, filler);
     if let Some(ClassExpr::And(ops)) = branch.dl.core().dl().ce(filler).cloned() {
         for op in and_conjuncts_cardinality_first(branch.dl, ops) {
             assert_label(branch, world, op);
@@ -570,6 +572,7 @@ fn materialize_filler_would_clash(branch: &Branch<'_>, world: usize, filler: CeI
 }
 
 fn world_satisfies_filler(branch: &Branch<'_>, world: usize, filler: CeId) -> bool {
+    let filler = super::effective_class_expression(branch.dl, filler);
     if let Some(ClassExpr::And(ops)) = branch.dl.core().dl().ce(filler).cloned() {
         return ops
             .iter()
