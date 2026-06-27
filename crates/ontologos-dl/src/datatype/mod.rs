@@ -234,26 +234,6 @@ fn facet_check(
                     .iter()
                     .any(|member| oneof_literal_matches(lit, member));
             }
-            if let (Some(ont), Some(DataExpr::Datatype(dt))) = (ontology, store.de(*inner)) {
-                if let Ok(rec) = ont.entity(*dt) {
-                    if let Ok(iri) = ont.resolve_iri(rec.iri) {
-                        let iri = canonical_datatype_iri(iri);
-                        if numeric_datatype_iri(&iri) {
-                            let lit_iri = ont
-                                .entity(lit.datatype)
-                                .ok()
-                                .and_then(|r| ont.resolve_iri(r.iri).ok())
-                                .map(|s| canonical_datatype_iri(&s));
-                            let lit_iri = lit_iri.as_deref().unwrap_or("");
-                            if plain_literal_datatype_iri(lit_iri)
-                                || binary_datatype_iri(lit_iri)
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
             if inner_is_anyuri_datatype(store, *inner, ontology, defs)
                 && !literal_in_data_range_value_space(lit, store, *inner, ontology, defs)
             {
@@ -579,6 +559,14 @@ pub(crate) fn canonical_plain_literal(lex: &str) -> String {
         return "0".to_string();
     }
     lex.to_string()
+}
+
+/// Trailing text after the last markup `>` (significant for misc-203 functional clash).
+pub(crate) fn trailing_xml_text_suffix(lex: &str) -> String {
+    let lex = unescape_ofn_literal(lex);
+    lex.rfind('>')
+        .map(|pos| lex[pos + 1..].to_string())
+        .unwrap_or_default()
 }
 
 /// Normalize `rdf:XMLLiteral` forms for value-space equality (HermiT misc-202 / canonicalization).

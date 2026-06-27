@@ -1715,9 +1715,10 @@ fn literal_property_assertions_from_inner(
             continue;
         };
         let close_start = start + close_start_rel;
-        let body = inner[start + gt + 1..close_start].trim();
+        let raw_body = &inner[start + gt + 1..close_start];
+        let body = raw_body.trim();
         if tag.contains("rdf:parseType=\"Literal\"") || tag.contains("rdf:parseType='Literal'") {
-            let lit = ofn_literal_from_rdf_literal(body.trim(), tag);
+            let lit = ofn_literal_from_rdf_literal(raw_body, tag);
             out.push((prop_iri, lit));
         } else if let Some(dt) = extract_attribute(tag, "rdf:datatype") {
             let dt = resolve_relative_iri(&dt, base);

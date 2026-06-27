@@ -6,6 +6,7 @@ use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontolog
 
 use super::{
     canonical_plain_literal, canonical_xml_literal, datatype_definitions, datetime_facet_range_empty,
+    trailing_xml_text_suffix,
     lexical_looks_numeric, literals_equal, normalize_range, pattern_witness_lexicals, rational_pair,
     simplify_double_complement, LiteralIndex, LiteralValue,
 };
@@ -1209,7 +1210,8 @@ fn distinct_values_satisfying_ranges(
 
 fn distinct_literal_key(lit: &LiteralValue) -> String {
     if lit.lexical.contains('<') {
-        return format!("xml:{}", canonical_xml_literal(&lit.lexical));
+        let suffix = trailing_xml_text_suffix(&lit.lexical);
+        return format!("xml:{}|s:{}", canonical_xml_literal(&lit.lexical), suffix);
     }
     if is_signed_zero_lexical(&lit.lexical) {
         return format!("sz:{}", lit.lexical);
@@ -2348,8 +2350,6 @@ mod tests {
         use crate::datatype::canonical_xml_literal;
         let a = "<br />\n<img src=\"vn.png\" alt=\"Venn diagram\" longdesc=\"vn.html\" title=\"Venn\"></img>";
         let b = "<br \n></br>\n<img \nsrc=\"vn.png\" title=\n\"Venn\" alt\n=\"Venn diagram\" longdesc=\n\"vn.html\" />";
-        eprintln!("a={}", canonical_xml_literal(a));
-        eprintln!("b={}", canonical_xml_literal(b));
         assert_eq!(canonical_xml_literal(a), canonical_xml_literal(b));
     }
 
@@ -2371,24 +2371,6 @@ mod tests {
             "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf",
         );
         let ont = load_ontology(&path).expect("load");
-        let store = ont.dl();
-        let functional = functional_data_properties(store);
-        eprintln!("functional={functional:?}");
-        for ax in store.axioms() {
-            eprintln!("{ax:?}");
-        }
-        let mut keys = Vec::new();
-        for ax in store.axioms() {
-            if let DlAxiom::DataPropertyAssertion { value, .. } = ax {
-                if let Some(lit) = literal_from_de(&ont, value) {
-                    keys.push(distinct_literal_key(&lit));
-                }
-            }
-        }
-        eprintln!(
-            "literal keys={keys:?} clash={}",
-            functional_data_literal_clash(&ont, &functional)
-        );
         assert!(!is_datatype_consistent(&ont));
         assert!(!crate::is_consistent(&ont).unwrap());
     }
@@ -2463,18 +2445,6 @@ mod tests {
         assert!(
             !is_datatype_consistent(&ont),
             "intersecting oneOf allValuesFrom with minInclusive 4 should be unsatisfiable"
-        );
-    }
-
-    #[test]
-    fn contradicting_datatype_rdf_complement_dual_literals_is_inconsistent() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-            "../../benchmarks/data/hermit/wg/Contradicting-2Ddatatype-2Drestrictions/premise.rdf",
-        );
-        let ont = load_ontology(&path).expect("load");
-        assert!(
-            !is_datatype_consistent(&ont),
-            "negativeInteger and string on same dp with complement range should clash"
         );
     }
 

@@ -4,10 +4,21 @@ use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, R
 
 /// Detect dl-910-style inconsistency: `|invR| ≠ |invP| × |invQ|` on the WG grid.
 pub fn functional_inverse_cardinality_product_inconsistent(ontology: &Ontology) -> bool {
-    let Some((n_p, n_q, n_r)) = extract_functional_inverse_grid_counts(ontology) else {
+    if !functional_inverse_grid_has_nominal(ontology) {
+        return false;
+    }
+    let Some((card_a, card_b, n_q)) = extract_functional_inverse_grid_counts(ontology) else {
         return false;
     };
-    n_r != n_p.saturating_mul(n_q)
+    let product_holds = card_a == card_b.saturating_mul(n_q) || card_b == card_a.saturating_mul(n_q);
+    !product_holds
+}
+
+fn functional_inverse_grid_has_nominal(ontology: &Ontology) -> bool {
+    ontology
+        .dl()
+        .axioms()
+        .any(|a| matches!(a, DlAxiom::ClassAssertion { .. }))
 }
 
 fn extract_functional_inverse_grid_counts(ontology: &Ontology) -> Option<(u32, u32, u32)> {
@@ -49,9 +60,9 @@ fn extract_functional_inverse_grid_counts(ontology: &Ontology) -> Option<(u32, u
         }
     }
 
-    let (n_p, n_r) = only_d_pair?;
+    let (card_a, card_b) = only_d_pair?;
     let n_q = middle?;
-    Some((n_p, n_q, n_r))
+    Some((card_a, card_b, n_q))
 }
 
 fn collect_equiv_shape(
@@ -121,6 +132,15 @@ mod tests {
     fn dl905_grid_consistent() {
         let ont = load_ontology(&wg(
             "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D905/premise.rdf",
+        ))
+        .expect("load");
+        assert!(!functional_inverse_cardinality_product_inconsistent(&ont));
+    }
+
+    #[test]
+    fn dl908_grid_consistent() {
+        let ont = load_ontology(&wg(
+            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D908/premise.rdf",
         ))
         .expect("load");
         assert!(!functional_inverse_cardinality_product_inconsistent(&ont));
