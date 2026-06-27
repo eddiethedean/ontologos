@@ -2361,6 +2361,12 @@ WG_PREMISE_OFN_WHEN_DUAL = frozenset(
     }
 )
 
+WG_CONCLUSION_OFN_WHEN_DUAL = frozenset(
+    {
+        "Qualified-2Dcardinality-2Drestricted-2Dint",
+    }
+)
+
 
 def wg_premise_on_disk(out_dir: Path, test_id: str = "") -> Path | None:
     """Select vendored premise fixture; prefer OFN only for ``WG_PREMISE_OFN_WHEN_DUAL``."""
@@ -2375,9 +2381,11 @@ def wg_premise_on_disk(out_dir: Path, test_id: str = "") -> Path | None:
     return None
 
 
-def wg_conclusion_on_disk(out_dir: Path) -> Path | None:
+def wg_conclusion_on_disk(out_dir: Path, test_id: str = "") -> Path | None:
     conc_rdf = out_dir / "conclusion.rdf"
     conc_ofn = out_dir / "conclusion.ofn"
+    if conc_ofn.is_file() and conc_rdf.is_file():
+        return conc_ofn if test_id in WG_CONCLUSION_OFN_WHEN_DUAL else conc_rdf
     if conc_rdf.is_file() and not is_stub_rdf(conc_rdf.read_text(errors="replace")):
         return conc_rdf
     if conc_ofn.is_file():
@@ -2389,7 +2397,7 @@ def wg_disk_fixture_refs(test_id: str) -> tuple[str | None, str | None]:
     """Return catalog-relative paths when fixtures were vendored on a prior run."""
     out_dir = OUT_WG_DATA / test_id
     prem = wg_premise_on_disk(out_dir, test_id)
-    conc = wg_conclusion_on_disk(out_dir)
+    conc = wg_conclusion_on_disk(out_dir, test_id)
     prem_rel = f"wg/{test_id}/{prem.name}" if prem is not None else None
     conc_rel = f"wg/{test_id}/{conc.name}" if conc is not None else None
     return prem_rel, conc_rel
@@ -2560,7 +2568,7 @@ def promote_wg_from_disk() -> None:
         conc_rdf = OUT_WG_DATA / test_id / "conclusion.rdf"
         conc_ofn = OUT_WG_DATA / test_id / "conclusion.ofn"
         prem = wg_premise_on_disk(OUT_WG_DATA / test_id, test_id)
-        conc = wg_conclusion_on_disk(OUT_WG_DATA / test_id)
+        conc = wg_conclusion_on_disk(OUT_WG_DATA / test_id, test_id)
         if prem is not None and is_stub_rdf(prem.read_text(errors="replace")):
             prem = None
         if conc is not None and is_stub_rdf(conc.read_text(errors="replace")):

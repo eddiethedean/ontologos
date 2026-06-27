@@ -885,8 +885,13 @@ fn rewrite_typed_node_block(
     let close = format!("</{qname}>");
     let close_start = block.rfind(&close)?;
     let inner = &block[open_end + 1..close_start];
-    *counter += 1;
-    let iri = format!("{base}#_:tn{counter}");
+    let iri = extract_attribute(open, "rdf:about")
+        .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+        .map(|iri| resolve_relative_iri(&iri, base))
+        .unwrap_or_else(|| {
+            *counter += 1;
+            format!("{base}#_:tn{counter}")
+        });
     Some(format!(
         "<rdf:Description rdf:about=\"{iri}\">\n  <rdf:type rdf:resource=\"{class_iri}\"/>\n{inner}</rdf:Description>"
     ))
@@ -1613,8 +1618,15 @@ fn collect_direct_data_literals_from_owl_thing(
             break;
         };
         let block = &rdf[start..end];
-        counter += 1;
-        let subject = format!("{base}#_:thing{counter}");
+        let open_end = block.find('>').unwrap_or(0);
+        let open = &block[..=open_end];
+        let subject = extract_attribute(open, "rdf:about")
+            .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+            .map(|iri| resolve_relative_iri(&iri, base))
+            .unwrap_or_else(|| {
+                counter += 1;
+                format!("{base}#_:thing{counter}")
+            });
         let inner = element_inner(block, "owl:Thing");
         for (property, value) in literal_property_assertions_from_inner(&inner, base, xmlns) {
             out.push(DirectDataLiteralAssertion {
@@ -1839,6 +1851,90 @@ fn complement_subclass_from_block(block: &str, base: &str) -> Option<(String, St
     Some((class_iri, format!("ObjectComplementOf(<{complement}>)")))
 }
 
+/// Collect `EquivalentClasses(left right)` when both operands are boolean class expressions.
+pub(crate) fn collect_boolean_binary_equivalences(rdf: &str) -> Vec<(String, String)> {
+    let base = parse_xml_base(rdf);
+    let dt_props = declared_datatype_property_iris(rdf);
+    let node_lists = build_rdf_collection_node_map(rdf, &base, &dt_props);
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find("<rdf:Description") else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = element_block_end(rdf, start, "rdf:Description", "</rdf:Description>")
+        else {
+            break;
+        };
+        let block = &rdf[start..end];
+        if let Some(pair) =
+            boolean_binary_equivalence_from_block(block, &base, &dt_props, &node_lists)
+        {
+            out.push(pair);
+        }
+        pos = end;
+    }
+    pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find("<owl:Class") else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = owl_class_element_end(rdf, start) else {
+            break;
+        };
+        let block = &rdf[start..end];
+        if let Some(pair) =
+            boolean_binary_equivalence_from_block(block, &base, &dt_props, &node_lists)
+        {
+            out.push(pair);
+        }
+        pos = end;
+    }
+    out
+}
+
+fn boolean_binary_equivalence_from_block(
+    block: &str,
+    base: &str,
+    dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
+) -> Option<(String, String)> {
+    let open_end = block.find('>')?;
+    let close_tag = if block.trim_start().starts_with("<owl:Class") {
+        "</owl:Class>"
+    } else {
+        "</rdf:Description>"
+    };
+    let close_start = block.rfind(close_tag)?;
+    let inner = &block[open_end + 1..close_start];
+    find_top_level_element(inner, "owl:equivalentClass")?;
+    let left = boolean_operator_ofn(
+        inner,
+        "owl:intersectionOf",
+        "ObjectIntersectionOf",
+        base,
+        dt_props,
+        node_lists,
+    )
+    .or_else(|| {
+        boolean_operator_ofn(
+            inner,
+            "owl:unionOf",
+            "ObjectUnionOf",
+            base,
+            dt_props,
+            node_lists,
+        )
+    })?;
+    let (_, _, equiv_block) = find_top_level_element_bounds(inner, "owl:equivalentClass")?;
+    let equiv_inner = element_inner(equiv_block, "owl:equivalentClass");
+    let right = member_block_to_ofn(equiv_inner.trim(), base, dt_props, node_lists)
+        .or_else(|| member_block_to_ofn(equiv_block, base, dt_props, node_lists))?;
+    Some((left, right))
+}
+
 /// Collect `EquivalentClasses(C boolean-expr)` from `intersectionOf` / `unionOf` / `oneOf` on class resources.
 pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, String)> {
     let base = parse_xml_base(rdf);
@@ -1857,6 +1953,10 @@ pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, Stri
             break;
         };
         let block = &rdf[start..end];
+        if boolean_binary_equivalence_from_block(block, &base, &dt_props, &node_lists).is_some() {
+            pos = end;
+            continue;
+        }
         if let Some(pair) = boolean_equivalence_from_class_block(
             block,
             &base,
@@ -1879,6 +1979,10 @@ pub(crate) fn collect_boolean_class_equivalences(rdf: &str) -> Vec<(String, Stri
             break;
         };
         let block = &rdf[start..end];
+        if boolean_binary_equivalence_from_block(block, &base, &dt_props, &node_lists).is_some() {
+            pos = end;
+            continue;
+        }
         if let Some(pair) = boolean_equivalence_from_class_block(
             block,
             &base,
@@ -2167,10 +2271,13 @@ fn collection_members_ofn(
 ) -> Option<Vec<String>> {
     if op_block.contains("parseType=\"Collection\"") || op_block.contains("parseType='Collection'")
     {
-        return Some(parse_collection_children_ofn(op_block, base, dt_props));
+        return Some(parse_collection_children_ofn(
+            op_block, base, dt_props, node_lists,
+        ));
     }
     if op_block.contains("rdf:List") || op_block.contains("<rdf:first") {
-        return parse_rdf_list_members_ofn(op_block, base, dt_props).filter(|m| !m.is_empty());
+        return parse_rdf_list_members_ofn(op_block, base, dt_props, node_lists)
+            .filter(|m| !m.is_empty());
     }
     if let Some(node) = extract_attribute(op_block, "rdf:nodeID") {
         return node_lists.get(&node).cloned();
@@ -2185,6 +2292,7 @@ fn parse_rdf_list_members_ofn(
     op_block: &str,
     base: &str,
     dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
 ) -> Option<Vec<String>> {
     let inner = element_inner(op_block, "owl:unionOf");
     let content = if inner.is_empty() {
@@ -2205,7 +2313,7 @@ fn parse_rdf_list_members_ofn(
     let mut rest_block = list_content;
     loop {
         if let Some((_, _, first_block)) = find_top_level_element_bounds(rest_block, "rdf:first") {
-            if let Some(ofn) = member_block_to_ofn(first_block, base, dt_props) {
+            if let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists) {
                 members.push(ofn);
             }
         }
@@ -2229,6 +2337,7 @@ fn parse_collection_children_ofn(
     collection_block: &str,
     base: &str,
     dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
 ) -> Vec<String> {
     let open_end = collection_block.find('>').map(|i| i + 1).unwrap_or(0);
     let close_start = collection_block
@@ -2240,6 +2349,7 @@ fn parse_collection_children_ofn(
         .unwrap_or(collection_block.len());
     let inner = &collection_block[open_end..close_start];
     let mut members = Vec::new();
+    let mut nominal = 0usize;
     let mut pos = 0usize;
     while pos < inner.len() {
         while pos < inner.len() && inner.as_bytes()[pos].is_ascii_whitespace() {
@@ -2257,32 +2367,125 @@ fn parse_collection_children_ofn(
             break;
         };
         let member_block = &inner[start..end];
-        if let Some(ofn) = member_block_to_ofn(member_block, base, dt_props) {
+        if let Some(ofn) = member_block_to_ofn(member_block, base, dt_props, node_lists) {
             members.push(ofn);
+        } else if is_empty_anonymous_description(member_block) {
+            nominal += 1;
+            members.push(ofn_entity_ref(&format!("{base}#_:nominal{nominal}")));
         }
         pos = end;
     }
     members
 }
 
+fn is_empty_anonymous_description(block: &str) -> bool {
+    let Some(open_end) = block.find('>') else {
+        return false;
+    };
+    let open = &block[..=open_end];
+    block.trim_start().starts_with("<rdf:Description")
+        && extract_attribute(open, "rdf:about").is_none()
+        && extract_attribute(open, "rdf:ID").is_none()
+        && extract_attribute(open, "rdf:resource").is_none()
+        && element_inner(block, "rdf:Description").trim().is_empty()
+}
+
+fn complement_block_to_ofn(
+    block: &str,
+    base: &str,
+    dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
+) -> Option<String> {
+    if !block.contains("owl:complementOf") {
+        return None;
+    }
+    if block.trim_start().starts_with("<owl:complementOf") {
+        let open_end = block.find('>')?;
+        let open = &block[..=open_end];
+        if let Some(resource) = extract_attribute(open, "rdf:resource") {
+            return Some(format!(
+                "ObjectComplementOf(<{}>)",
+                resolve_relative_iri(&resource, base)
+            ));
+        }
+        let comp_inner = element_inner(block, "owl:complementOf");
+        let nested = member_block_to_ofn(comp_inner.trim(), base, dt_props, node_lists)?;
+        return Some(format!("ObjectComplementOf({nested})"));
+    }
+    let search_body = if block.trim_start().starts_with("<rdf:Description") {
+        element_inner(block, "rdf:Description")
+    } else {
+        let open_end = block.find('>').map(|i| i + 1).unwrap_or(0);
+        block[open_end..].to_string()
+    };
+    if search_body.is_empty() {
+        return None;
+    }
+    if let Some(resource) = extract_property_resource(&search_body, "owl:complementOf", base) {
+        return Some(format!("ObjectComplementOf(<{resource}>)"));
+    }
+    let (_, _, comp_elem) = find_top_level_element_bounds(&search_body, "owl:complementOf")?;
+    let comp_inner = element_inner(comp_elem, "owl:complementOf");
+    let nested = member_block_to_ofn(comp_inner.trim(), base, dt_props, node_lists)
+        .or_else(|| member_block_to_ofn(comp_elem, base, dt_props, node_lists))?;
+    Some(format!("ObjectComplementOf({nested})"))
+}
+
 fn member_block_to_ofn(
     block: &str,
     base: &str,
     dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
 ) -> Option<String> {
     if block.contains("<rdf:first") {
         let inner = element_inner(block, "rdf:first");
-        if let Some(ofn) = member_block_to_ofn(inner.trim(), base, dt_props) {
+        if let Some(ofn) = member_block_to_ofn(inner.trim(), base, dt_props, node_lists) {
             return Some(ofn);
         }
     }
     let open_end = block.find('>')?;
     let open = &block[..=open_end];
+    if block.trim_start().starts_with("<owl:complementOf") {
+        return complement_block_to_ofn(block, base, dt_props, node_lists);
+    }
     if let Some(about) = extract_attribute(open, "rdf:about") {
         return Some(ofn_entity_ref(&resolve_relative_iri(&about, base)));
     }
     if let Some(resource) = extract_attribute(open, "rdf:resource") {
         return Some(ofn_entity_ref(&resolve_relative_iri(&resource, base)));
+    }
+    if block.trim_start().starts_with("<rdf:Description")
+        && extract_attribute(open, "rdf:about").is_none()
+        && extract_attribute(open, "rdf:ID").is_none()
+        && extract_attribute(open, "rdf:resource").is_none()
+    {
+        let inner = element_inner(block, "rdf:Description");
+        if !inner.is_empty() {
+            return member_block_to_ofn(inner.trim(), base, dt_props, node_lists);
+        }
+    }
+    if let Some(ofn) = boolean_operator_ofn(
+        block,
+        "owl:unionOf",
+        "ObjectUnionOf",
+        base,
+        dt_props,
+        node_lists,
+    ) {
+        return Some(ofn);
+    }
+    if let Some(ofn) = boolean_operator_ofn(
+        block,
+        "owl:intersectionOf",
+        "ObjectIntersectionOf",
+        base,
+        dt_props,
+        node_lists,
+    ) {
+        return Some(ofn);
+    }
+    if let Some(ofn) = complement_block_to_ofn(block, base, dt_props, node_lists) {
+        return Some(ofn);
     }
     if block.contains("<owl:Restriction") {
         return restriction_ce_to_ofn(block, base, dt_props);
@@ -2294,19 +2497,13 @@ fn member_block_to_ofn(
         }
     } else if block.contains("<owl:Class") {
         if let Some((_, _, class_block)) = find_top_level_element_bounds(block, "owl:Class") {
-            if let Some(ofn) = member_block_to_ofn(class_block, base, dt_props) {
+            if let Some(ofn) = member_block_to_ofn(class_block, base, dt_props, node_lists) {
                 return Some(ofn);
             }
         }
     }
     if block.contains("owl:onProperty") {
         return inline_restriction_ce_to_ofn(block, base, dt_props);
-    }
-    if block.trim_start().starts_with("<rdf:Description")
-        && extract_attribute(open, "rdf:about").is_none()
-        && extract_attribute(open, "rdf:resource").is_none()
-    {
-        return Some(ofn_entity_ref(&format!("{base}#_:nominal0")));
     }
     None
 }
@@ -2337,7 +2534,7 @@ fn build_rdf_collection_node_map(
         let close_start = block.rfind("</rdf:Description>").unwrap_or(block.len());
         let inner = &block[open_end + 1..close_start];
         if inner.contains("rdf:first") {
-            if let Some(members) = parse_rdf_list_description(inner, base, dt_props) {
+            if let Some(members) = parse_rdf_list_description(inner, base, dt_props, &map) {
                 map.insert(node, members);
             }
         }
@@ -2350,12 +2547,13 @@ fn parse_rdf_list_description(
     inner: &str,
     base: &str,
     dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
 ) -> Option<Vec<String>> {
     let mut members = Vec::new();
     if let Some(first) = extract_property_resource(inner, "rdf:first", base) {
         members.push(ofn_entity_ref(&first));
     } else if let Some((_, _, first_block)) = find_top_level_element_bounds(inner, "rdf:first") {
-        if let Some(ofn) = member_block_to_ofn(first_block, base, dt_props) {
+        if let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists) {
             members.push(ofn);
         }
     }
@@ -2363,12 +2561,14 @@ fn parse_rdf_list_description(
     if rest_block.contains("parseType=\"Collection\"")
         || rest_block.contains("parseType='Collection'")
     {
-        members.extend(parse_collection_children_ofn(rest_block, base, dt_props));
+        members.extend(parse_collection_children_ofn(
+            rest_block, base, dt_props, node_lists,
+        ));
     } else if let Some(rest) = extract_property_resource(rest_block, "rdf:rest", base) {
         let _ = rest;
     } else if rest_block.contains("rdf:Description") || rest_block.contains("owl:Class") {
         let rest_inner = element_inner(rest_block, "rdf:rest");
-        if let Some(ofn) = member_block_to_ofn(rest_inner.trim(), base, dt_props) {
+        if let Some(ofn) = member_block_to_ofn(rest_inner.trim(), base, dt_props, node_lists) {
             members.push(ofn);
         }
     }
@@ -5615,6 +5815,44 @@ mod tests {
         let individuals = materialize_anonymous_individual_descriptions(&named);
         assert!(individuals.contains("test#spy"));
         assert!(individuals.contains("owl:NamedIndividual"));
+    }
+
+    #[test]
+    fn equivalent_class_007_binary_equivalence_ofn() {
+        use crate::load_ontology;
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DequivalentClass-2D007/conclusion.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let deduped = dedupe_rdf_xml_ids(&text);
+        let expanded = expand_xml_entities_with_limit(&deduped, 1_000_000).unwrap();
+        let relative = normalize_relative_owl_uris(&expanded);
+        let rdfs = normalize_rdfs_class_elements(&relative);
+        let injected = inject_rdf_based_punning_declarations(&rdfs);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let intersections = normalize_class_intersection_definitions(&typed_nodes);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let individuals = materialize_anonymous_individual_descriptions(&named);
+        let normalized = normalize_all_different_members(&individuals);
+        let disjoint = expand_all_disjoint_collections(&normalized);
+        let preprocessed = normalize_property_same_as(&disjoint);
+        let pairs = collect_boolean_binary_equivalences(&preprocessed);
+        assert_eq!(pairs.len(), 1, "pairs={pairs:?}");
+        let left = &pairs[0].0;
+        let right = &pairs[0].1;
+        assert!(left.contains("ObjectComplementOf"), "left={left}");
+        assert!(right.contains("ObjectComplementOf"), "right={right}");
+        assert!(left.contains("ObjectIntersectionOf"), "left={left}");
+        assert!(right.contains("ObjectUnionOf"), "right={right}");
+        let conc = load_ontology(&path).unwrap();
+        assert!(
+            conc.dl()
+                .axioms()
+                .any(|a| matches!(a, ontologos_core::DlAxiom::EquivalentClasses(_))),
+            "expected EquivalentClasses in DL"
+        );
     }
 
     #[test]

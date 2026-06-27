@@ -990,7 +990,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/Qualified-2Dcardinality-2Drestricted-2Dint/conclusion.rdf",
+    "conclusion_ofn": "wg/Qualified-2Dcardinality-2Drestricted-2Dint/conclusion.ofn",
     "engine": "dl",
     "expected_consistent": null,
     "expected_entailment": true,

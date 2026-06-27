@@ -356,6 +356,25 @@ fn supplement_rdf_dl_axioms(
         merge_supplement_ontology(ontology, &supplement)?;
         report.meta.mapped_axiom_count += supplement.dl().axiom_count();
     }
+    for (left_ofn, right_ofn) in
+        crate::rdf_preprocess::collect_boolean_binary_equivalences(preprocessed_rdf)
+    {
+        let (left_prefixes, left_q) =
+            crate::rdf_preprocess::qualify_ce_ofn_for_supplement(&left_ofn);
+        let (right_prefixes, right_q) =
+            crate::rdf_preprocess::qualify_ce_ofn_for_supplement(&right_ofn);
+        let ofn = format!(
+            "{SUPPLEMENT_STANDARD_PREFIXES}\
+             {left_prefixes}\n\
+             {right_prefixes}\n\
+             Ontology(<http://example.org/boolean-binary-equiv-supplement>\n\
+               EquivalentClasses({left_q} {right_q})\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
     for (subject, property, object) in
         crate::rdf_preprocess::collect_object_property_assertions(preprocessed_rdf)
     {
