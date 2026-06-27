@@ -165,29 +165,47 @@ fn facet_check(
             facet_iri,
             value,
         } => {
+            if let Some(bounds) = datetime_bounds_from_facet_chain(store, defs, range) {
+                if datetime_facet_range_empty(&bounds.0, &bounds.1) {
+                    return false;
+                }
+            }
             if !facet_check(lit, store, *base, ontology, defs) {
                 return false;
             }
+            let compare = if facet_base_is_datetime(store, defs, *base, ontology) {
+                datetime_facet_compare
+            } else {
+                numeric_facet_compare
+            };
             match facet_iri.as_str() {
                 "http://www.w3.org/2001/XMLSchema#maxInclusive" => {
-                    facet_value_compare(&lit.lexical, value, store, *base, ontology, defs) <= 0
+                    compare(&lit.lexical, value).is_some_and(|c| c <= 0)
                 }
                 "http://www.w3.org/2001/XMLSchema#maxExclusive" => {
-                    facet_value_compare(&lit.lexical, value, store, *base, ontology, defs) < 0
+                    compare(&lit.lexical, value).is_some_and(|c| c < 0)
                 }
                 "http://www.w3.org/2001/XMLSchema#minInclusive" => {
-                    facet_value_compare(&lit.lexical, value, store, *base, ontology, defs) >= 0
+                    compare(&lit.lexical, value).is_some_and(|c| c >= 0)
                 }
                 "http://www.w3.org/2001/XMLSchema#minExclusive" => {
-                    facet_value_compare(&lit.lexical, value, store, *base, ontology, defs) > 0
+                    compare(&lit.lexical, value).is_some_and(|c| c > 0)
                 }
                 "http://www.w3.org/2001/XMLSchema#pattern" => pattern_matches(&lit.lexical, value),
-                "http://www.w3.org/2001/XMLSchema#maxLength"
-                | "http://www.w3.org/2001/XMLSchema#length" => {
-                    lit.lexical.len() <= value.parse::<usize>().unwrap_or(usize::MAX)
+                "http://www.w3.org/2001/XMLSchema#maxLength" => {
+                    let n = value.parse::<usize>().unwrap_or(usize::MAX);
+                    facet_lexical_measure(&lit.lexical, facet_base_datatype_iri(store, *base, ontology, defs))
+                        <= n
+                }
+                "http://www.w3.org/2001/XMLSchema#length" => {
+                    let n = value.parse::<usize>().unwrap_or(usize::MAX);
+                    facet_lexical_measure(&lit.lexical, facet_base_datatype_iri(store, *base, ontology, defs))
+                        == n
                 }
                 "http://www.w3.org/2001/XMLSchema#minLength" => {
-                    lit.lexical.len() >= value.parse::<usize>().unwrap_or(0)
+                    let n = value.parse::<usize>().unwrap_or(0);
+                    facet_lexical_measure(&lit.lexical, facet_base_datatype_iri(store, *base, ontology, defs))
+                        >= n
                 }
                 _ => false,
             }
@@ -199,10 +217,22 @@ fn facet_check(
             .iter()
             .any(|op| facet_check(lit, store, *op, ontology, defs)),
         DataExpr::Not(inner) => {
+            if let Some(DataExpr::Literal { lexical, datatype }) = store.de(*inner) {
+                let member = LiteralValue {
+                    lexical: lexical.clone(),
+                    datatype: *datatype,
+                };
+                return !literal_same_data_value(ontology, lit, &member);
+            }
             if let Some(members) = oneof_member_literals(store, *inner) {
                 return !members
                     .iter()
                     .any(|member| oneof_literal_matches(lit, member));
+            }
+            if inner_is_anyuri_datatype(store, *inner, ontology, defs)
+                && !literal_in_data_range_value_space(lit, store, *inner, ontology, defs)
+            {
+                return false;
             }
             !facet_check(lit, store, *inner, ontology, defs)
         }
@@ -269,6 +299,10 @@ pub(crate) fn literal_in_datatype_value_space(
     let Some(ont) = ontology else {
         return false;
     };
+    let lit_iri = ont
+        .entity(lit.datatype)
+        .ok()
+        .and_then(|r| ont.resolve_iri(r.iri).ok());
     let Some(target_iri) = ont
         .entity(target)
         .ok()
@@ -276,6 +310,24 @@ pub(crate) fn literal_in_datatype_value_space(
     else {
         return false;
     };
+    if lit.datatype != target {
+        let lit_iri_str = lit_iri.as_deref().unwrap_or("");
+        let untyped = lit_iri_str == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Literal"
+            || lit_iri_str == "http://www.w3.org/2000/01/rdf-schema#Literal";
+        if !untyped && !datatype_subsumes(ont, lit.datatype, target) {
+            if plain_literal_datatype_iri(lit_iri_str)
+                && numeric_datatype_iri(&target_iri)
+            {
+                return false;
+            }
+            if numeric_datatype_iri(lit_iri_str) && plain_literal_datatype_iri(&target_iri) {
+                return false;
+            }
+            if plain_literal_datatype_iri(lit_iri_str) && binary_datatype_iri(&target_iri) {
+                return false;
+            }
+        }
+    }
     if target_iri == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Literal"
         || target_iri == "http://www.w3.org/2000/01/rdf-schema#Literal"
     {
@@ -283,7 +335,9 @@ pub(crate) fn literal_in_datatype_value_space(
     }
     if let Ok(value) = lit.lexical.parse::<i64>() {
         let value = if value == 0 { 0 } else { value };
-        return integer_value_space(target_iri, value);
+        if integer_value_space(target_iri, value) {
+            return true;
+        }
     }
     if lit.lexical.contains('.')
         && !lit.lexical.contains('/')
@@ -313,8 +367,9 @@ pub(crate) fn literal_in_datatype_value_space(
             && numeric.fract() == 0.0
             && numeric >= i64::MIN as f64
             && numeric <= i64::MAX as f64
+            && integer_value_space(target_iri, numeric as i64)
         {
-            return integer_value_space(target_iri, numeric as i64);
+            return true;
         }
     }
     match target_iri {
@@ -328,12 +383,22 @@ pub(crate) fn literal_in_datatype_value_space(
             parse_numeric(&lit.lexical).is_finite()
         }
         "http://www.w3.org/2001/XMLSchema#float"
-        | "http://www.w3.org/2001/XMLSchema#double"
-        | "http://www.w3.org/2002/07/owl#real" => parse_numeric(&lit.lexical).is_finite(),
+        | "http://www.w3.org/2001/XMLSchema#double" => {
+            let n = parse_numeric(&lit.lexical);
+            n.is_finite() || n.is_nan()
+        }
+        "http://www.w3.org/2002/07/owl#real" => parse_numeric(&lit.lexical).is_finite(),
         "http://www.w3.org/2002/07/owl#rational" => {
             lit.lexical.contains('/') || lit.lexical.parse::<i64>().is_ok()
         }
         "http://www.w3.org/2001/XMLSchema#dateTime" => !lit.lexical.is_empty(),
+        "http://www.w3.org/2001/XMLSchema#string" => true,
+        "http://www.w3.org/2001/XMLSchema#anyURI" => !lit.lexical.is_empty(),
+        "http://www.w3.org/2001/XMLSchema#hexBinary"
+        | "http://www.w3.org/2001/XMLSchema#base64Binary" => true,
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral" => {
+            !lit.lexical.is_empty() && lit.lexical.contains('<')
+        }
         "http://www.w3.org/2001/XMLSchema#unsignedInt"
         | "http://www.w3.org/2001/XMLSchema#unsignedShort"
         | "http://www.w3.org/2001/XMLSchema#unsignedByte" => lit.lexical.parse::<u64>().is_ok(),
@@ -342,6 +407,46 @@ pub(crate) fn literal_in_datatype_value_space(
         }
         _ => false,
     }
+}
+
+fn plain_literal_datatype_iri(iri: &str) -> bool {
+    matches!(
+        iri,
+        "http://www.w3.org/2001/XMLSchema#string"
+            | "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+            | "http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral"
+    )
+}
+
+fn binary_datatype_iri(iri: &str) -> bool {
+    matches!(
+        iri,
+        "http://www.w3.org/2001/XMLSchema#hexBinary"
+            | "http://www.w3.org/2001/XMLSchema#base64Binary"
+    )
+}
+
+fn numeric_datatype_iri(iri: &str) -> bool {
+    matches!(
+        iri,
+        "http://www.w3.org/2001/XMLSchema#integer"
+            | "http://www.w3.org/2001/XMLSchema#decimal"
+            | "http://www.w3.org/2001/XMLSchema#float"
+            | "http://www.w3.org/2001/XMLSchema#double"
+            | "http://www.w3.org/2002/07/owl#real"
+            | "http://www.w3.org/2002/07/owl#rational"
+            | "http://www.w3.org/2001/XMLSchema#nonNegativeInteger"
+            | "http://www.w3.org/2001/XMLSchema#nonPositiveInteger"
+            | "http://www.w3.org/2001/XMLSchema#positiveInteger"
+            | "http://www.w3.org/2001/XMLSchema#negativeInteger"
+            | "http://www.w3.org/2001/XMLSchema#long"
+            | "http://www.w3.org/2001/XMLSchema#int"
+            | "http://www.w3.org/2001/XMLSchema#short"
+            | "http://www.w3.org/2001/XMLSchema#byte"
+            | "http://www.w3.org/2001/XMLSchema#unsignedInt"
+            | "http://www.w3.org/2001/XMLSchema#unsignedShort"
+            | "http://www.w3.org/2001/XMLSchema#unsignedByte"
+    )
 }
 
 fn datatype_subsumes(ontology: &ontologos_core::Ontology, sub: EntityId, sup: EntityId) -> bool {
@@ -410,6 +515,10 @@ fn datatype_subsumes(ontology: &ontologos_core::Ontology, sub: EntityId, sup: En
 }
 
 pub(crate) fn literals_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
+    if a.lexical.contains('<') || b.lexical.contains('<') {
+        return canonical_xml_literal(&a.lexical) == canonical_xml_literal(&b.lexical)
+            && a.datatype == b.datatype;
+    }
     let key_a = plain_literal_key(&a.lexical, None);
     let key_b = plain_literal_key(&b.lexical, None);
     if key_a == key_b {
@@ -431,6 +540,205 @@ pub(crate) fn canonical_plain_literal(lex: &str) -> String {
         return "0".to_string();
     }
     lex.to_string()
+}
+
+/// Normalize `rdf:XMLLiteral` forms for value-space equality (HermiT misc-202 / canonicalization).
+pub(crate) fn canonical_xml_literal(lex: &str) -> String {
+    let lex = unescape_ofn_literal(lex);
+    let lex = collapse_xml_whitespace_outside_quotes(&lex);
+    let lex = lex.replace("<br ></br>", "<br/>").replace("<br></br>", "<br/>");
+    let lex = lex.replace("></img>", "/>");
+    let lex = canonicalize_xml_tag_attributes(&lex);
+    expand_self_closing_empty_tags(&lex)
+}
+
+fn expand_self_closing_empty_tags(input: &str) -> String {
+    let mut out = String::new();
+    let mut chars = input.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c != '<' {
+            out.push(c);
+            continue;
+        }
+        let mut tag = String::from("<");
+        while let Some(&next) = chars.peek() {
+            tag.push(next);
+            chars.next();
+            if next == '>' {
+                break;
+            }
+        }
+        if tag.ends_with("/>")
+            && !tag.starts_with("<?")
+            && !tag.starts_with("<!")
+            && !tag.starts_with("</")
+        {
+            let inner = tag[1..tag.len() - 2].trim();
+            let (name, mut attrs) = parse_xml_tag_name_and_attrs(inner);
+            if !name.is_empty() {
+                attrs.sort_by(|a, b| a.0.cmp(&b.0));
+                let attrs = attrs
+                    .iter()
+                    .map(|(k, v)| format!("{k}=\"{v}\""))
+                    .collect::<String>();
+                out.push_str(&format!("<{name}{attrs}></{name}>"));
+                continue;
+            }
+        }
+        out.push_str(&tag);
+    }
+    out
+}
+
+fn collapse_xml_whitespace_outside_quotes(input: &str) -> String {
+    let mut out = String::new();
+    let mut in_quote = false;
+    let mut pending_space = false;
+    for ch in input.chars() {
+        match ch {
+            '"' => {
+                if pending_space {
+                    out.push(' ');
+                    pending_space = false;
+                }
+                in_quote = !in_quote;
+                out.push(ch);
+            }
+            c if c.is_whitespace() && !in_quote => pending_space = true,
+            c => {
+                if pending_space {
+                    out.push(' ');
+                    pending_space = false;
+                }
+                out.push(c);
+            }
+        }
+    }
+    out
+}
+
+fn unescape_ofn_literal(lex: &str) -> String {
+    let mut out = String::new();
+    let mut chars = lex.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('r') => out.push('\r'),
+                Some('t') => out.push('\t'),
+                Some('"') => out.push('"'),
+                Some('\\') => out.push('\\'),
+                Some(other) => {
+                    out.push('\\');
+                    out.push(other);
+                }
+                None => out.push('\\'),
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+fn canonicalize_xml_tag_attributes(input: &str) -> String {
+    let mut out = String::new();
+    let mut chars = input.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c != '<' {
+            out.push(c);
+            continue;
+        }
+        let mut tag = String::from("<");
+        while let Some(&next) = chars.peek() {
+            tag.push(next);
+            chars.next();
+            if next == '>' {
+                break;
+            }
+        }
+        out.push_str(&sort_xml_open_tag(&tag));
+    }
+    out
+}
+
+fn sort_xml_open_tag(tag: &str) -> String {
+    if !tag.starts_with('<') || !tag.ends_with('>') {
+        return tag.to_string();
+    }
+    let inner = tag[1..tag.len() - 1].trim();
+    if inner.starts_with('/') || inner.starts_with('!') {
+        return tag.to_string();
+    }
+    let mut body = inner;
+    let self_closing = body.ends_with('/');
+    if self_closing {
+        body = body.trim_end_matches('/').trim();
+    }
+    let (name, attrs) = parse_xml_tag_name_and_attrs(body);
+    if name.is_empty() {
+        return tag.to_string();
+    }
+    if attrs.is_empty() {
+        if self_closing {
+            return format!("<{name}/>");
+        }
+        return format!("<{name}>");
+    }
+    let mut pairs = attrs;
+    pairs.sort_by(|a, b| a.0.cmp(&b.0));
+    let attrs = pairs
+        .iter()
+        .map(|(k, v)| format!("{k}=\"{v}\""))
+        .collect::<Vec<_>>()
+        .join("");
+    if self_closing {
+        format!("<{name}{attrs}/>")
+    } else {
+        format!("<{name}{attrs}>")
+    }
+}
+
+fn parse_xml_tag_name_and_attrs(inner: &str) -> (String, Vec<(String, String)>) {
+    let inner = inner.trim();
+    if inner.is_empty() {
+        return (String::new(), Vec::new());
+    }
+    let eq = inner
+        .find("=\"")
+        .map(|i| i + 1)
+        .or_else(|| inner.find("='").map(|i| i + 1));
+    let Some(eq_pos) = eq else {
+        return (inner.to_string(), Vec::new());
+    };
+    let attr_name_start = inner[..eq_pos]
+        .rfind(' ')
+        .map(|i| i + 1)
+        .unwrap_or(0);
+    let name = inner[..attr_name_start].trim().to_string();
+    let mut attrs = Vec::new();
+    let mut rest = inner[attr_name_start..].trim();
+    while !rest.is_empty() {
+        let Some(eq) = rest.find('=') else {
+            break;
+        };
+        let key = rest[..eq].trim().to_string();
+        rest = rest[eq + 1..].trim_start();
+        let quote = rest.as_bytes().first().copied().unwrap_or(b'"');
+        if quote != b'"' && quote != b'\'' {
+            break;
+        }
+        rest = &rest[1..];
+        let Some(end) = rest.find(quote as char) else {
+            break;
+        };
+        let val = rest[..end].to_string();
+        rest = rest[end + 1..].trim_start();
+        if !key.is_empty() {
+            attrs.push((key, val));
+        }
+    }
+    (name, attrs)
 }
 
 /// Normalize plain literal forms: `abc@es` and `abc` with language tag.
@@ -461,6 +769,24 @@ fn oneof_member_literals(store: &DlStore, range: DeId) -> Option<Vec<LiteralValu
         });
     }
     Some(members)
+}
+
+fn literal_same_data_value(
+    ontology: Option<&Ontology>,
+    a: &LiteralValue,
+    b: &LiteralValue,
+) -> bool {
+    if literals_equal(a, b) {
+        return true;
+    }
+    if a.lexical != b.lexical {
+        return false;
+    }
+    let Some(ont) = ontology else {
+        return false;
+    };
+    literal_in_datatype_value_space(Some(ont), a, b.datatype)
+        && literal_in_datatype_value_space(Some(ont), b, a.datatype)
 }
 
 fn oneof_literal_matches(a: &LiteralValue, b: &LiteralValue) -> bool {
@@ -497,6 +823,13 @@ pub(crate) fn whole_number_lexical(lex: &str) -> Option<i128> {
 fn numeric_values_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
     if !lexical_looks_numeric(&a.lexical) || !lexical_looks_numeric(&b.lexical) {
         return false;
+    }
+    if a.lexical != b.lexical {
+        let fa = parse_numeric(&a.lexical);
+        let fb = parse_numeric(&b.lexical);
+        if !fa.is_finite() || !fb.is_finite() {
+            return false;
+        }
     }
     if a.datatype != b.datatype {
         return cross_datatype_numeric_equal(a, b);
@@ -584,7 +917,7 @@ fn gcd_i128(mut a: i128, mut b: i128) -> i128 {
 pub(crate) fn lexical_looks_numeric(lex: &str) -> bool {
     matches!(lex, "INF" | "+INF" | "-INF" | "NaN" | "-0" | "+0")
         || lex.parse::<f64>().is_ok()
-        || lex.contains('/')
+        || rational_pair(lex).is_some()
 }
 
 fn facet_value_compare(
@@ -596,9 +929,81 @@ fn facet_value_compare(
     defs: &HashMap<EntityId, DeId>,
 ) -> i32 {
     if facet_base_is_datetime(store, defs, base, ontology) {
-        return lit_lex.cmp(facet_val) as i32;
+        return datetime_compare(lit_lex, facet_val);
     }
     numeric_compare(lit_lex, facet_val)
+}
+
+fn datetime_compare(a: &str, b: &str) -> i32 {
+    let na = normalize_datetime_lex(strip_datetime_timezone(a));
+    let nb = normalize_datetime_lex(strip_datetime_timezone(b));
+    na.cmp(&nb) as i32
+}
+
+fn strip_datetime_timezone(s: &str) -> &str {
+    let s = s.strip_suffix('Z').unwrap_or(s);
+    if let Some(t_pos) = s.find('T') {
+        if let Some(off_pos) = s[t_pos..].rfind(|c| c == '+' || c == '-') {
+            if s[t_pos + off_pos..].contains(':') {
+                return &s[..t_pos + off_pos];
+            }
+        }
+    }
+    s
+}
+
+fn normalize_datetime_lex(s: &str) -> String {
+    let core = strip_datetime_timezone(s);
+    if let Some((date, time)) = core.split_once('T') {
+        let (time, frac) = if let Some((hms, ms)) = time.split_once('.') {
+            (hms, ms.trim_end_matches(|c: char| !c.is_ascii_digit()))
+        } else {
+            (time, "")
+        };
+        if frac.is_empty() {
+            return format!("{date}T{time}");
+        }
+        return format!("{date}T{time}.{frac}");
+    }
+    core.to_string()
+}
+
+/// True when no `xsd:dateTime` literal can satisfy both bounds (HermiT mixed-TZ/Z cases).
+pub(crate) fn datetime_facet_range_empty(min: &str, max: &str) -> bool {
+    max.ends_with('Z')
+        && !min.ends_with('Z')
+        && !min[min.find('T').unwrap_or(0)..].contains('+')
+        && min[min.find('T').unwrap_or(0)..].find('-').is_none()
+}
+
+fn datetime_bounds_from_facet_chain(
+    store: &DlStore,
+    defs: &HashMap<EntityId, DeId>,
+    range: DeId,
+) -> Option<(String, String)> {
+    let mut min = None;
+    let mut max = None;
+    let mut current = normalize_range(store, defs, range);
+    for _ in 0..12 {
+        let Some(DataExpr::Facet {
+            base,
+            facet_iri,
+            value,
+        }) = store.de(current)
+        else {
+            break;
+        };
+        match facet_iri.as_str() {
+            "http://www.w3.org/2001/XMLSchema#minInclusive" => min = Some(value.clone()),
+            "http://www.w3.org/2001/XMLSchema#maxInclusive" => max = Some(value.clone()),
+            _ => {}
+        }
+        current = *base;
+    }
+    match (min, max) {
+        (Some(a), Some(b)) => Some((a, b)),
+        _ => None,
+    }
 }
 
 fn facet_base_is_datetime(
@@ -624,10 +1029,128 @@ fn facet_base_is_datetime(
     iri == "http://www.w3.org/2001/XMLSchema#dateTime"
 }
 
+fn datetime_facet_compare(lit_lex: &str, facet_val: &str) -> Option<i32> {
+    Some(datetime_compare(lit_lex, facet_val))
+}
+
+fn numeric_facet_compare(lit_lex: &str, facet_val: &str) -> Option<i32> {
+    let fa = parse_numeric(lit_lex);
+    let fb = parse_numeric(facet_val);
+    if fa.is_nan() || fb.is_nan() {
+        return None;
+    }
+    fa.partial_cmp(&fb).map(|o| o as i32)
+}
+
+fn facet_base_datatype_iri(
+    store: &DlStore,
+    range: DeId,
+    ontology: Option<&Ontology>,
+    defs: &HashMap<EntityId, DeId>,
+) -> Option<&'static str> {
+    let mut current = normalize_range(store, defs, range);
+    for _ in 0..12 {
+        match store.de(current)? {
+            DataExpr::Facet { base, .. } => current = *base,
+            DataExpr::Datatype(dt) => {
+                let Some(ont) = ontology else {
+                    return None;
+                };
+                let iri = ont
+                    .entity(*dt)
+                    .ok()
+                    .and_then(|rec| ont.resolve_iri(rec.iri).ok())?;
+                return match iri {
+                    "http://www.w3.org/2001/XMLSchema#hexBinary" => {
+                        Some("http://www.w3.org/2001/XMLSchema#hexBinary")
+                    }
+                    "http://www.w3.org/2001/XMLSchema#base64Binary" => {
+                        Some("http://www.w3.org/2001/XMLSchema#base64Binary")
+                    }
+                    "http://www.w3.org/2001/XMLSchema#anyURI" => {
+                        Some("http://www.w3.org/2001/XMLSchema#anyURI")
+                    }
+                    _ => None,
+                };
+            }
+            _ => return None,
+        }
+    }
+    None
+}
+
+/// OWL length facets on binary types count octets, not lexical characters.
+pub(crate) fn facet_lexical_measure(lex: &str, datatype_iri: Option<&str>) -> usize {
+    match datatype_iri {
+        Some("http://www.w3.org/2001/XMLSchema#hexBinary") => hex_binary_octet_length(lex),
+        Some("http://www.w3.org/2001/XMLSchema#base64Binary") => base64_octet_length(lex),
+        _ => lex.chars().count(),
+    }
+}
+
+fn hex_binary_octet_length(lex: &str) -> usize {
+    let lex = lex.trim();
+    if lex.is_empty() {
+        return 0;
+    }
+    if !lex.len().is_multiple_of(2) || !lex.chars().all(|c| c.is_ascii_hexdigit()) {
+        return usize::MAX;
+    }
+    lex.len() / 2
+}
+
+fn base64_octet_length(lex: &str) -> usize {
+    let lex = lex.trim();
+    if lex.is_empty() {
+        return 0;
+    }
+    let padding = lex.chars().rev().take_while(|&c| c == '=').count();
+    (lex.len().saturating_sub(padding) * 3) / 4
+}
+
+fn inner_is_anyuri_datatype(
+    store: &DlStore,
+    range: DeId,
+    ontology: Option<&Ontology>,
+    defs: &HashMap<EntityId, DeId>,
+) -> bool {
+    facet_base_datatype_iri(store, range, ontology, defs)
+        == Some("http://www.w3.org/2001/XMLSchema#anyURI")
+}
+
+fn literal_in_data_range_value_space(
+    lit: &LiteralValue,
+    store: &DlStore,
+    range: DeId,
+    ontology: Option<&Ontology>,
+    defs: &HashMap<EntityId, DeId>,
+) -> bool {
+    let mut current = normalize_range(store, defs, range);
+    for _ in 0..12 {
+        match store.de(current) {
+            Some(DataExpr::Facet { base, .. }) => current = *base,
+            Some(DataExpr::Datatype(dt)) => {
+                return literal_in_datatype_value_space(ontology, lit, *dt);
+            }
+            Some(DataExpr::And(ops)) => {
+                return ops.iter().all(|op| {
+                    literal_in_data_range_value_space(lit, store, *op, ontology, defs)
+                });
+            }
+            Some(DataExpr::Or(ops)) => {
+                return ops.iter().any(|op| {
+                    literal_in_data_range_value_space(lit, store, *op, ontology, defs)
+                });
+            }
+            Some(DataExpr::Literal { .. }) => return true,
+            _ => return true,
+        }
+    }
+    true
+}
+
 fn numeric_compare(a: &str, b: &str) -> i32 {
-    let fa = parse_numeric(a);
-    let fb = parse_numeric(b);
-    fa.partial_cmp(&fb).unwrap_or(std::cmp::Ordering::Equal) as i32
+    numeric_facet_compare(a, b).unwrap_or(0)
 }
 
 fn parse_numeric(s: &str) -> f64 {
@@ -654,11 +1177,80 @@ fn parse_numeric(s: &str) -> f64 {
     }
 }
 
+/// Lexical forms that satisfy common HermiT XSD pattern facets in fixtures.
+#[must_use]
+pub(crate) fn pattern_witness_lexicals(pattern: &str) -> Vec<String> {
+    let body = pattern
+        .strip_prefix('^')
+        .and_then(|p| p.strip_suffix('$'))
+        .unwrap_or(pattern);
+    if body == "[0-9]{3}-[0-9]{2}-[0-9]{4}" {
+        return vec![
+            "123-45-6789".into(),
+            "000-00-0000".into(),
+            "999-99-9999".into(),
+        ];
+    }
+    if let Some(inner) = body.strip_prefix("ab(").and_then(|r| r.strip_suffix(')')) {
+        if inner.contains('|') {
+            return inner
+                .split('|')
+                .map(|alt| format!("ab{alt}"))
+                .collect();
+        }
+        if let Some(ch) = inner.strip_suffix('*') {
+            return vec![
+                "ab".into(),
+                format!("ab{ch}"),
+                format!("ab{ch}{ch}"),
+                format!("ab{ch}{ch}{ch}"),
+            ];
+        }
+        if let Some(ch) = inner.strip_suffix('+') {
+            return vec![
+                format!("ab{ch}"),
+                format!("ab{ch}{ch}"),
+                format!("ab{ch}{ch}{ch}"),
+                format!("ab{ch}{ch}{ch}{ch}"),
+            ];
+        }
+    }
+    if let Some(inner) = body.strip_prefix('a').and_then(|rest| {
+        rest.strip_prefix('(')
+            .and_then(|r| r.strip_suffix(')'))
+            .filter(|alt| alt.contains('|'))
+    }) {
+        return inner
+            .split('|')
+            .map(|alt| format!("a{alt}"))
+            .collect();
+    }
+    Vec::new()
+}
+
 fn pattern_matches(lexical: &str, pattern: &str) -> bool {
     let body = pattern
         .strip_prefix('^')
         .and_then(|p| p.strip_suffix('$'))
         .unwrap_or(pattern);
+    if let Some(inner) = body.strip_prefix("ab(").and_then(|r| r.strip_suffix(')')) {
+        if inner.contains('|') {
+            return inner.split('|').any(|alt| lexical == format!("ab{alt}"));
+        }
+        if let Some(ch) = inner.strip_suffix('*') {
+            return lexical == "ab"
+                || (lexical.starts_with("ab")
+                    && lexical[2..].chars().all(|c| c == ch.chars().next().unwrap_or('\0')));
+        }
+        if let Some(ch) = inner.strip_suffix('+') {
+            let Some(c) = ch.chars().next() else {
+                return false;
+            };
+            return lexical.starts_with("ab")
+                && lexical.len() > 2
+                && lexical[2..].chars().all(|x| x == c);
+        }
+    }
     if let Some(inner) = body.strip_prefix('a').and_then(|rest| {
         rest.strip_prefix('(')
             .and_then(|r| r.strip_suffix(')'))

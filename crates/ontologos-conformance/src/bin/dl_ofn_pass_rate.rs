@@ -15,9 +15,11 @@ fn family(java_class: &str) -> String {
 
 #[derive(Debug)]
 struct CaseOutcome {
+    id: String,
     family: String,
     passed: bool,
     skipped: bool,
+    error: Option<String>,
 }
 
 fn evaluate_case(case: &HermitCase) -> Option<CaseOutcome> {
@@ -36,24 +38,44 @@ fn evaluate_case(case: &HermitCase) -> Option<CaseOutcome> {
 
     if skipped {
         return Some(CaseOutcome {
+            id: case.id.clone(),
             family: family(&case.java_class),
             passed: false,
             skipped: true,
+            error: None,
         });
     }
 
+    let check = check_axiom_case_bounded(case);
     Some(CaseOutcome {
+        id: case.id.clone(),
         family: family(&case.java_class),
-        passed: check_axiom_case_bounded(case).is_ok(),
+        passed: check.is_ok(),
         skipped: false,
+        error: check.err().map(|e| e.to_string()),
     })
 }
 
 fn main() {
+    let list_failures = std::env::args().any(|a| a == "--failures");
     let outcomes: Vec<CaseOutcome> = load_catalog()
         .par_iter()
         .filter_map(evaluate_case)
         .collect();
+
+    if list_failures {
+        let mut failures: Vec<_> = outcomes
+            .iter()
+            .filter(|o| !o.skipped && !o.passed)
+            .collect();
+        failures.sort_by(|a, b| a.id.cmp(&b.id));
+        let count = failures.len();
+        for f in &failures {
+            println!("{} [{}] {}", f.id, f.family, f.error.as_deref().unwrap_or("?"));
+        }
+        eprintln!("failures: {count}");
+        return;
+    }
 
     let mut candidates = 0_u32;
     let mut passed = 0_u32;

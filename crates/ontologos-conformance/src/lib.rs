@@ -17,8 +17,9 @@ pub use catalog::{
     run_wg_case, scan_all_passing_axiom_cases, scan_all_passing_wg_cases, scan_all_wg_failures,
     scan_planned_dl_failures, scan_planned_engine_failures, scan_planned_passing_wg_cases,
     scan_planned_wg_failures, scan_promotable_axiom_cases, scan_unpromoted_passing_axiom_cases,
-    scan_unpromoted_passing_wg_cases, scan_wg_failures, stable_promoted_axiom_ids,
-    wg_case_short_id, write_promoted_axiom_ids, write_promoted_wg_ids, AuditOptions, HermitCase,
+    scan_unpromoted_passing_wg_cases, scan_wg_failures, scan_promoted_axiom_failures,
+    scan_promoted_wg_failures, stable_promoted_axiom_ids, sync_promoted_lists, wg_case_short_id,
+    write_promoted_axiom_ids, write_promoted_wg_ids, AuditOptions, HermitCase,
     ParityMetrics, PlannedBacklogAudit, PlannedBacklogSummary, PlannedJavaAudit,
     PlannedJavaCategory, PlannedWgAudit, PlannedWgCategory, WgCase, WgFailure, WgFailureBucket,
 };

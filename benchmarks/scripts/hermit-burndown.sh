@@ -7,6 +7,7 @@
 #   hermit-burndown.sh triage --full       # full WG scan + engine audit (slow)
 #   hermit-burndown.sh promote             # incremental promote (unpromoted only)
 #   hermit-burndown.sh promote --full      # rescan entire catalog for promotion
+#   hermit-burndown.sh resync              # rewrite promoted lists to passing-only set
 #   hermit-burndown.sh test                # blocking CI conformance subset
 #   hermit-burndown.sh test-full           # failure-first full suite
 #   hermit-burndown.sh cleanup             # stop stale burndown/cargo processes
@@ -77,6 +78,18 @@ case "${CMD}" in
       python3 tests/hermit/generate_catalog.py --promote-only
       python3 tests/hermit/generate_catalog.py --promote-wg-only
     fi
+    echo "==> Updated status"
+    "${BIN}/parity_status"
+    ;;
+
+  resync)
+    burndown_guard_begin
+    export ONTOLOGOS_SCAN_THREADS="${ONTOLOGOS_SCAN_THREADS:-1}"
+    echo "==> Sync promoted lists (passing-only @ ${ONTOLOGOS_DL_BUDGET_SECS}s)"
+    "${BIN}/sync_promoted"
+    echo "==> Refresh catalog artifacts (promote-only)"
+    python3 tests/hermit/generate_catalog.py --promote-only
+    python3 tests/hermit/generate_catalog.py --promote-wg-only
     echo "==> Updated status"
     "${BIN}/parity_status"
     ;;

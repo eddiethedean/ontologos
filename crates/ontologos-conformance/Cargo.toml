@@ -57,6 +57,10 @@ path = "src/bin/audit_planned_backlog.rs"
 name = "parity_status"
 path = "src/bin/parity_status.rs"
 
+[[bin]]
+name = "sync_promoted"
+path = "src/bin/sync_promoted.rs"
+
 [dev-dependencies]
 ontologos-conformance = { path = "." }
 ontologos-el = { workspace = true }

@@ -74,6 +74,12 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/check-hermit-catalog.sh
           ./benchmarks/scripts/check-hermit-catalog.sh
+      - name: Promoted-list hygiene (Phase 9)
+        run: >-
+          cargo test -p ontologos-conformance --release --locked
+          --test phase9_closure
+          --
+          --test-threads=1
       - name: Tier C reference harness smoke
         run: |
           chmod +x benchmarks/scripts/compare-tier-c-gate.sh

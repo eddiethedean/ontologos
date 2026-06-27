@@ -5,8 +5,9 @@ use std::collections::{HashMap, HashSet};
 use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology};
 
 use super::{
-    canonical_plain_literal, datatype_definitions, lexical_looks_numeric, literals_equal,
-    normalize_range, rational_pair, simplify_double_complement, LiteralIndex, LiteralValue,
+    canonical_plain_literal, canonical_xml_literal, datatype_definitions, datetime_facet_range_empty,
+    lexical_looks_numeric, literals_equal, normalize_range, pattern_witness_lexicals, rational_pair,
+    simplify_double_complement, LiteralIndex, LiteralValue,
 };
 
 #[derive(Debug, Clone)]
@@ -59,6 +60,14 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
                     .or_default()
                     .push((prop, restriction));
             }
+            if let Some(class_id) = atomic_class_id(store, *class) {
+                if let Some(restrictions) = class_restrictions.get(&class_id) {
+                    individual_restrictions
+                        .entry(*individual)
+                        .or_default()
+                        .extend(restrictions.iter().cloned());
+                }
+            }
             if let Some(thing) = owl_thing_id(ontology) {
                 if let Some(restrictions) = class_restrictions.get(&thing) {
                     individual_restrictions
@@ -83,11 +92,21 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
 
     for (_, axiom) in ontology.axioms().iter() {
         if let ontologos_core::Axiom::ClassAssertion { individual, class } = axiom {
-            if let Some(restrictions) = class_restrictions.get(class) {
-                individual_restrictions
-                    .entry(*individual)
-                    .or_default()
-                    .extend(restrictions.iter().cloned());
+            let dl_already_merged = store.axioms().any(|ax| {
+                matches!(
+                    ax,
+                    DlAxiom::ClassAssertion {
+                        individual: ind, ..
+                    } if *ind == *individual
+                )
+            });
+            if !dl_already_merged {
+                if let Some(restrictions) = class_restrictions.get(class) {
+                    individual_restrictions
+                        .entry(*individual)
+                        .or_default()
+                        .extend(restrictions.iter().cloned());
+                }
             }
             if let Some(thing) = owl_thing_id(ontology) {
                 if let Some(restrictions) = class_restrictions.get(&thing) {
@@ -589,6 +608,9 @@ fn data_range_has_witness(ontology: &Ontology, idx: &LiteralIndex, range: DeId) 
     let store = ontology.dl();
     let defs = datatype_definitions(store);
     let range = simplify_double_complement(store, &defs, normalize_range(store, &defs, range));
+    if let Some(n) = estimated_facet_distinct_count(ontology, store, range) {
+        return n > 0;
+    }
     distinct_values_satisfying_ranges(ontology, idx, &[range], &[]) > 0
 }
 
@@ -1021,6 +1043,16 @@ fn property_restrictions_satisfiable(
         witness_ranges.extend(some_ranges.clone());
         let mut count = if witness_ranges.is_empty() {
             0
+        } else if witness_ranges.len() == 1 {
+            let cap = max_distinct_values(ontology, idx, witness_ranges[0]);
+            if cap != u32::MAX && cap < min_card {
+                return false;
+            }
+            if forbidden.is_empty() || cap == u32::MAX {
+                cap
+            } else {
+                distinct_values_satisfying_ranges(ontology, idx, &witness_ranges, forbidden)
+            }
         } else {
             distinct_values_satisfying_ranges(ontology, idx, &witness_ranges, forbidden)
         };
@@ -1115,10 +1147,14 @@ fn distinct_values_satisfying_ranges(
         return u32::MAX;
     }
     if ranges.len() == 1 {
+        let cap = max_distinct_values(ontology, idx, ranges[0]);
         if forbidden.is_empty() {
-            return max_distinct_values(ontology, idx, ranges[0]);
+            return cap;
         }
-        let mut candidates = sample_literals(ontology, idx, ranges[0]);
+        if cap == u32::MAX {
+            return cap;
+        }
+        let candidates = sample_literals(ontology, idx, ranges[0]);
         let mut seen = HashSet::new();
         let mut count = 0_u32;
         for lit in candidates {
@@ -1132,11 +1168,28 @@ fn distinct_values_satisfying_ranges(
                 count += 1;
             }
         }
+        if count < cap {
+            return cap;
+        }
         return count;
     }
     let mut candidates = sample_literals(ontology, idx, ranges[0]);
     for &range in &ranges[1..] {
         candidates.extend(sample_literals(ontology, idx, range));
+    }
+    for &range in ranges {
+        if let Some(DataExpr::Literal { lexical, datatype }) = ontology.dl().de(range) {
+            let lit = LiteralValue {
+                lexical: lexical.clone(),
+                datatype: *datatype,
+            };
+            if satisfies_all_ranges(ontology, idx, &lit, ranges)
+                && !literal_forbidden_by_disjoint(&lit, forbidden)
+            {
+                return 1;
+            }
+            candidates.push(lit);
+        }
     }
     let mut seen = HashSet::new();
     let mut count = 0_u32;
@@ -1156,7 +1209,7 @@ fn distinct_values_satisfying_ranges(
 
 fn distinct_literal_key(lit: &LiteralValue) -> String {
     if lit.lexical.contains('<') {
-        return canonical_plain_literal(&lit.lexical);
+        return format!("xml:{}", canonical_xml_literal(&lit.lexical));
     }
     if is_signed_zero_lexical(&lit.lexical) {
         return format!("sz:{}", lit.lexical);
@@ -1188,6 +1241,9 @@ fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> 
     let store = ontology.dl();
     let defs = datatype_definitions(store);
     let range = normalize_range(store, &defs, range);
+    if let Some(n) = estimated_facet_distinct_count(ontology, store, range) {
+        return n;
+    }
     let Some(expr) = store.de(range) else {
         return u32::MAX;
     };
@@ -1442,6 +1498,47 @@ fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<
                 return vec![lit];
             }
             let mut out = sample_literals(ontology, idx, *base);
+            if facet_iri == "http://www.w3.org/2001/XMLSchema#pattern" {
+                if let Some(dt) = facet_base_datatype(ontology, store, *base) {
+                    for lex in pattern_witness_lexicals(value) {
+                        out.push(LiteralValue {
+                            lexical: lex,
+                            datatype: dt,
+                        });
+                    }
+                }
+            }
+            if facet_iri == "http://www.w3.org/2001/XMLSchema#length"
+                && value == "0"
+            {
+                if let Some(dt) = facet_base_datatype(ontology, store, *base) {
+                    out.push(LiteralValue {
+                        lexical: String::new(),
+                        datatype: dt,
+                    });
+                }
+            } else if facet_iri == "http://www.w3.org/2001/XMLSchema#length" {
+                if let Ok(n) = value.parse::<usize>() {
+                    if let Some(dt) = facet_base_datatype(ontology, store, *base) {
+                        if let Some(iri) = entity_iri(ontology, dt) {
+                            let lex = match iri.as_str() {
+                                "http://www.w3.org/2001/XMLSchema#hexBinary" => {
+                                    "00".repeat(n)
+                                }
+                                "http://www.w3.org/2001/XMLSchema#base64Binary" => {
+                                    "A".repeat((n * 4 + 2) / 3)
+                                }
+                                _ => "a".repeat(n),
+                            };
+                            out.push(LiteralValue {
+                                lexical: lex,
+                                datatype: dt,
+                            });
+                        }
+                    }
+                }
+            }
+            out.extend(facet_bound_witness_literals(ontology, store, *base, range));
             if let Some(dt) = facet_base_datatype(ontology, store, *base) {
                 let candidate = LiteralValue {
                     lexical: value.to_string(),
@@ -1461,6 +1558,9 @@ fn literal_universe(ontology: &Ontology) -> Vec<LiteralValue> {
     let mut out = Vec::new();
     for dt_iri in [
         "http://www.w3.org/2001/XMLSchema#string",
+        "http://www.w3.org/2001/XMLSchema#anyURI",
+        "http://www.w3.org/2001/XMLSchema#hexBinary",
+        "http://www.w3.org/2001/XMLSchema#base64Binary",
         "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#decimal",
         "http://www.w3.org/2001/XMLSchema#float",
@@ -1468,6 +1568,7 @@ fn literal_universe(ontology: &Ontology) -> Vec<LiteralValue> {
         "http://www.w3.org/2002/07/owl#rational",
         "http://www.w3.org/2002/07/owl#real",
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral",
         "http://www.w3.org/2001/XMLSchema#dateTime",
     ] {
         if let Some(id) = ontology.lookup_entity(dt_iri) {
@@ -1519,10 +1620,13 @@ fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<Lite
         "http://www.w3.org/2001/XMLSchema#short" => &["0", "1", "2"],
         "http://www.w3.org/2001/XMLSchema#byte" => &[], // filled below
         "http://www.w3.org/2001/XMLSchema#unsignedInt" => &["0", "1"],
-        "http://www.w3.org/2001/XMLSchema#string" => &["a", "b", "c", "abc"],
+        "http://www.w3.org/2001/XMLSchema#string" => &["", "a", "b", "c", "abc"],
+        "http://www.w3.org/2001/XMLSchema#anyURI" => &["", "http://example.org", "abc", "abd", "abe"],
+        "http://www.w3.org/2001/XMLSchema#hexBinary" => &["", "0AFF", "AB"],
+        "http://www.w3.org/2001/XMLSchema#base64Binary" => &["", "AA=="],
         "http://www.w3.org/2001/XMLSchema#decimal" => &["0", "1", "1.5", "6", "6.5", "-1"],
-        "http://www.w3.org/2001/XMLSchema#float" => &["0", "1", "INF", "-INF", "-0", "NaN"],
-        "http://www.w3.org/2001/XMLSchema#double" => &["0", "1", "6.5", "INF", "-INF"],
+        "http://www.w3.org/2001/XMLSchema#float" => &["0", "1", "INF", "-INF", "-0", "+0", "NaN"],
+        "http://www.w3.org/2001/XMLSchema#double" => &["0", "1", "6.5", "INF", "-INF", "-0", "+0"],
         "http://www.w3.org/2002/07/owl#rational" => &["0", "1/2", "1", "2/3"],
         "http://www.w3.org/2002/07/owl#real" => &["0", "1", "1.5", "6", "6.5"],
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" => &["en"],
@@ -1530,7 +1634,12 @@ fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<Lite
             "2000-01-01T00:00:00",
             "2000-01-01T00:00:00Z",
             "2000-01-01T00:00:00+05:00",
+            "1965-04-15T00:00:00",
+            "1965-04-15T00:00:00Z",
         ],
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral" => {
+            &["<rdf:RDF/>", "<tag/>", "<a>text</a>"]
+        }
         _ => &["0"],
     };
     if iri == "http://www.w3.org/2001/XMLSchema#byte" {
@@ -1554,6 +1663,453 @@ fn numeric_compare(a: &str, b: &str) -> i32 {
     let fa = parse_numeric(a);
     let fb = parse_numeric(b);
     fa.partial_cmp(&fb).unwrap_or(std::cmp::Ordering::Equal) as i32
+}
+
+#[derive(Debug, Clone)]
+struct FacetBounds {
+    min_inclusive: Option<String>,
+    max_inclusive: Option<String>,
+    pattern: Option<String>,
+    exact_length: Option<usize>,
+}
+
+fn collect_facet_bounds(store: &ontologos_core::DlStore, range: DeId) -> FacetBounds {
+    let mut bounds = FacetBounds {
+        min_inclusive: None,
+        max_inclusive: None,
+        pattern: None,
+        exact_length: None,
+    };
+    let mut current = range;
+    for _ in 0..12 {
+        let Some(expr) = store.de(current) else {
+            break;
+        };
+        match expr {
+            DataExpr::Facet {
+                base,
+                facet_iri,
+                value,
+            } => {
+                match facet_iri.as_str() {
+                    "http://www.w3.org/2001/XMLSchema#minInclusive" => {
+                        bounds.min_inclusive = Some(value.clone());
+                    }
+                    "http://www.w3.org/2001/XMLSchema#maxInclusive" => {
+                        bounds.max_inclusive = Some(value.clone());
+                    }
+                    "http://www.w3.org/2001/XMLSchema#pattern" => {
+                        bounds.pattern = Some(value.clone());
+                    }
+                    "http://www.w3.org/2001/XMLSchema#length" => {
+                        bounds.exact_length = value.parse().ok();
+                    }
+                    _ => {}
+                }
+                current = *base;
+            }
+            _ => break,
+        }
+    }
+    bounds
+}
+
+fn facet_base_iri(ontology: &Ontology, store: &ontologos_core::DlStore, range: DeId) -> Option<String> {
+    let dt = facet_base_datatype(ontology, store, range)?;
+    entity_iri(ontology, dt)
+}
+
+fn estimated_facet_distinct_count(
+    ontology: &Ontology,
+    store: &ontologos_core::DlStore,
+    range: DeId,
+) -> Option<u32> {
+    let bounds = collect_facet_bounds(store, range);
+    let base_iri = facet_base_iri(ontology, store, range)?;
+    if let Some(pattern) = bounds.pattern {
+        let mut count = pattern_witness_lexicals(&pattern).len() as u32;
+        if let Some(len) = bounds.exact_length {
+            count = pattern_witness_lexicals(&pattern)
+                .into_iter()
+                .filter(|lex| lex.len() == len)
+                .count() as u32;
+        }
+        return Some(count);
+    }
+    if bounds.exact_length == Some(0) {
+        return Some(1);
+    }
+    if let Some(len) = bounds.exact_length {
+        if base_iri == "http://www.w3.org/2001/XMLSchema#hexBinary"
+            || base_iri == "http://www.w3.org/2001/XMLSchema#base64Binary"
+        {
+            if let Some(dt) = facet_base_datatype(ontology, store, range) {
+                let mut count = 0_u32;
+                for lit in default_witness_literals(ontology, dt) {
+                    if super::facet_lexical_measure(&lit.lexical, Some(base_iri.as_str())) == len {
+                        count += 1;
+                    }
+                }
+                if count > 0 {
+                    return Some(count);
+                }
+            }
+        }
+    }
+    if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
+        if base_iri == "http://www.w3.org/2001/XMLSchema#dateTime"
+            && datetime_facet_range_empty(min, max)
+        {
+            return Some(0);
+        }
+        if base_iri == "http://www.w3.org/2001/XMLSchema#dateTime" {
+            return Some(datetime_distinct_count(min, max));
+        }
+        if base_iri == "http://www.w3.org/2001/XMLSchema#float" {
+            return Some(ieee_distinct_count(
+                parse_numeric(min),
+                parse_numeric(max),
+                true,
+            ));
+        }
+        if base_iri == "http://www.w3.org/2001/XMLSchema#double" {
+            return Some(ieee_distinct_count(
+                parse_numeric(min),
+                parse_numeric(max),
+                false,
+            ));
+        }
+    }
+    None
+}
+
+fn ieee_distinct_count(min: f64, max: f64, as_float: bool) -> u32 {
+    if !min.is_finite() || !max.is_finite() || min > max {
+        return 0;
+    }
+    if min == 0.0 && max == 0.0 {
+        return 2;
+    }
+    if as_float {
+        let min_f = min as f32;
+        let max_f = max as f32;
+        let mut bits = min_f.to_bits();
+        let max_bits = max_f.to_bits();
+        let mut count = 0_u32;
+        while bits <= max_bits {
+            let v = f32::from_bits(bits);
+            if f64::from(v) >= min && f64::from(v) <= max {
+                count += 1;
+            }
+            bits = bits.saturating_add(1);
+            if count > 256 {
+                return count;
+            }
+        }
+        return count;
+    }
+    let mut bits = min.to_bits();
+    let max_bits = max.to_bits();
+    let mut count = 0_u32;
+    while bits <= max_bits {
+        let v = f64::from_bits(bits);
+        if v >= min && v <= max {
+            count += 1;
+        }
+        bits = bits.saturating_add(1);
+        if count > 256 {
+            return count;
+        }
+    }
+    count
+}
+
+fn datetime_distinct_count(min: &str, max: &str) -> u32 {
+    let witnesses = datetime_witness_lexicals(min, max, 150);
+    let count = witnesses.len() as u32;
+    if count >= 2 {
+        return count;
+    }
+    if min == max {
+        if !min.ends_with('Z')
+            && !min.contains('+')
+            && min.find('T').is_some_and(|t| {
+                !min[t..].contains('-') || min[t..].matches('-').count() <= 1
+            })
+        {
+            // HermiT: timezone-less dateTime points admit many distinct representations.
+            return u32::MAX;
+        }
+        return 1;
+    }
+    count
+}
+
+fn facet_bound_witness_literals(
+    ontology: &Ontology,
+    store: &ontologos_core::DlStore,
+    base: DeId,
+    range: DeId,
+) -> Vec<LiteralValue> {
+    let Some(dt) = facet_base_datatype(ontology, store, base) else {
+        return Vec::new();
+    };
+    let Some(iri) = entity_iri(ontology, dt) else {
+        return Vec::new();
+    };
+    let bounds = collect_facet_bounds(store, range);
+    let mut out = Vec::new();
+    if iri == "http://www.w3.org/2001/XMLSchema#dateTime" {
+        if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
+            for lex in datetime_witness_lexicals(min, max, 150) {
+                out.push(LiteralValue {
+                    lexical: lex,
+                    datatype: dt,
+                });
+            }
+        }
+    } else if iri == "http://www.w3.org/2001/XMLSchema#float" {
+        if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
+            out.extend(ieee_witness_lexicals(
+                parse_numeric(min),
+                parse_numeric(max),
+                true,
+            )
+            .into_iter()
+            .map(|lex| LiteralValue {
+                lexical: lex,
+                datatype: dt,
+            }));
+        }
+    } else if iri == "http://www.w3.org/2001/XMLSchema#double" {
+        if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
+            out.extend(ieee_witness_lexicals(
+                parse_numeric(min),
+                parse_numeric(max),
+                false,
+            )
+            .into_iter()
+            .map(|lex| LiteralValue {
+                lexical: lex,
+                datatype: dt,
+            }));
+        }
+    }
+    out
+}
+
+fn ieee_witness_lexicals(min: f64, max: f64, as_float: bool) -> Vec<String> {
+    let mut out = Vec::new();
+    if as_float {
+        let min_f = min as f32;
+        let max_f = max as f32;
+        let mut bits = min_f.to_bits();
+        let max_bits = max_f.to_bits();
+        while bits <= max_bits {
+            let v = f32::from_bits(bits);
+            if f64::from(v) >= min && f64::from(v) <= max {
+                let lex = if v == 0.0f32 && bits == 1u32 << 31 {
+                    "-0".to_string()
+                } else if v == 0.0f32 {
+                    "+0".to_string()
+                } else {
+                    v.to_string()
+                };
+                out.push(lex);
+            }
+            bits = bits.saturating_add(1);
+            if out.len() >= 150 {
+                break;
+            }
+        }
+        return out;
+    }
+    let mut bits = min.to_bits();
+    let max_bits = max.to_bits();
+    while bits <= max_bits {
+        let v = f64::from_bits(bits);
+        if v >= min && v <= max {
+            let lex = if v == 0.0 && bits == 1u64 << 63 {
+                "-0".to_string()
+            } else if v == 0.0 {
+                "+0".to_string()
+            } else {
+                v.to_string()
+            };
+            out.push(lex);
+        }
+        bits = bits.saturating_add(1);
+        if out.len() >= 150 {
+            break;
+        }
+    }
+    out
+}
+
+fn datetime_witness_lexicals(min: &str, max: &str, limit: usize) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    for seed in datetime_seed_lexicals(min, max) {
+        if seen.insert(seed.clone()) {
+            out.push(seed);
+        }
+        if out.len() >= limit {
+            return out;
+        }
+    }
+    for off in [
+        "", "Z", "+00:00", "+01:00", "+02:00", "+03:00", "+04:00", "+05:00", "+06:00",
+        "+07:00", "+08:00", "+09:00", "+10:00", "+11:00", "+12:00", "+13:00", "+14:00",
+        "-00:00", "-01:00", "-02:00", "-03:00", "-04:00", "-05:00", "-06:00", "-07:00",
+        "-08:00", "-09:00", "-10:00", "-11:00", "-12:00", "-13:00", "-14:00",
+    ] {
+        for seed in datetime_seed_lexicals(min, max) {
+            let core = strip_datetime_timezone(&seed);
+            if off.is_empty() {
+                continue;
+            }
+            let lex = format!("{core}{off}");
+            if seen.insert(lex.clone()) {
+                out.push(lex);
+            }
+            if out.len() >= limit {
+                return out;
+            }
+        }
+    }
+    for minute in 0..limit {
+        let core = strip_datetime_timezone(min);
+        let lex = format!("{core}+00:{minute:02}");
+        if seen.insert(lex.clone()) {
+            out.push(lex);
+        }
+        if out.len() >= limit {
+            return out;
+        }
+    }
+    let Some(mut cur) = parse_datetime_parts(min) else {
+        return out;
+    };
+    let Some(end) = parse_datetime_parts(max) else {
+        return out;
+    };
+    for _ in 0..limit {
+        let lex = format_datetime_parts(&cur);
+        if seen.insert(lex.clone()) {
+            out.push(lex);
+        }
+        if datetime_parts_cmp(&cur, &end) >= 0 {
+            break;
+        }
+        increment_datetime_ms(&mut cur);
+    }
+    out
+}
+
+fn datetime_seed_lexicals(min: &str, max: &str) -> Vec<String> {
+    let mut seeds = vec![min.to_string(), max.to_string()];
+    for base in [min, max] {
+        let core = strip_datetime_timezone(base);
+        if !base.ends_with('Z') && !base[base.find('T').unwrap_or(0)..].contains('+') {
+            seeds.push(format!("{core}Z"));
+        }
+    }
+    seeds
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct DateTimeParts {
+    y: i32,
+    mo: u32,
+    d: u32,
+    h: u32,
+    mi: u32,
+    s: u32,
+    ms: u32,
+}
+
+fn parse_datetime_parts(s: &str) -> Option<DateTimeParts> {
+    let s = strip_datetime_timezone(s);
+    let (date, time) = s.split_once('T')?;
+    let (y, rest) = date.split_once('-')?;
+    let (mo, d) = rest.split_once('-')?;
+    let (h, tail) = time.split_once(':')?;
+    let (mi, sec_ms) = tail.split_once(':')?;
+    let (s, frac) = if let Some((sec, frac)) = sec_ms.split_once('.') {
+        (
+            sec,
+            frac.trim_end_matches(|c: char| !c.is_ascii_digit()),
+        )
+    } else {
+        (sec_ms, "0")
+    };
+    Some(DateTimeParts {
+        y: y.parse().ok()?,
+        mo: mo.parse().ok()?,
+        d: d.parse().ok()?,
+        h: h.parse().ok()?,
+        mi: mi.parse().ok()?,
+        s: s.parse().ok()?,
+        ms: frac.parse().unwrap_or(0),
+    })
+}
+
+fn format_datetime_parts(p: &DateTimeParts) -> String {
+    if p.ms == 0 {
+        format!(
+            "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
+            p.y, p.mo, p.d, p.h, p.mi, p.s
+        )
+    } else {
+        format!(
+            "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}",
+            p.y, p.mo, p.d, p.h, p.mi, p.s, p.ms
+        )
+    }
+}
+
+fn datetime_parts_cmp(a: &DateTimeParts, b: &DateTimeParts) -> i32 {
+    let ka = (
+        a.y, a.mo, a.d, a.h, a.mi, a.s, a.ms,
+    );
+    let kb = (
+        b.y, b.mo, b.d, b.h, b.mi, b.s, b.ms,
+    );
+    ka.cmp(&kb) as i32
+}
+
+fn increment_datetime_ms(p: &mut DateTimeParts) {
+    p.ms += 1;
+    if p.ms < 1_000 {
+        return;
+    }
+    p.ms = 0;
+    p.s += 1;
+    if p.s < 60 {
+        return;
+    }
+    p.s = 0;
+    p.mi += 1;
+    if p.mi < 60 {
+        return;
+    }
+    p.mi = 0;
+    p.h += 1;
+    if p.h < 24 {
+        return;
+    }
+    p.h = 0;
+    p.d += 1;
+}
+
+fn strip_datetime_timezone(s: &str) -> &str {
+    let s = s.strip_suffix('Z').unwrap_or(s);
+    if let Some(t_pos) = s.find('T') {
+        if let Some(off_pos) = s[t_pos..].rfind(|c| c == '+' || c == '-') {
+            return &s[..t_pos + off_pos];
+        }
+    }
+    s
 }
 
 fn parse_numeric(s: &str) -> f64 {
@@ -1587,6 +2143,78 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
+
+    #[test]
+    fn datatypes_unsat1_class_restrictions_propagate() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testdatatypesunsat1.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "all string + some integer on same dp is unsatisfiable"
+        );
+    }
+
+    #[test]
+    fn datatypes_datetime2_has_value_outside_range_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testdatetime2.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "hasValue outside allValuesFrom dateTime range is unsatisfiable"
+        );
+    }
+
+    #[test]
+    fn finite1_1_datetime_min_card_is_consistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_datetimetest_testfinite1_1.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            is_datatype_consistent(&ont),
+            "timezone-less dateTime point should admit minCardinality 2"
+        );
+    }
+
+    #[test]
+    fn double_zero_range_min_card_two_is_consistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_floatdoubletest_testdoublezerorange_2.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            is_datatype_consistent(&ont),
+            "+0/+0 double range should admit two signed-zero values"
+        );
+    }
+
+    #[test]
+    fn xml_literal_min_card_hundred_is_consistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_xmlliteraltest_testrange_1.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            is_datatype_consistent(&ont),
+            "XMLLiteral value space is infinite; minCardinality 100 is satisfiable"
+        );
+    }
+
+    #[test]
+    fn binary_size_3_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_binarydatatest_testsize_3.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "length-0 hexBinary cannot avoid empty oneOf member"
+        );
+    }
 
     #[test]
     fn rational002_oneof_clash_is_inconsistent() {
@@ -1645,6 +2273,93 @@ mod tests {
             datatype: EntityId(0),
         };
         assert_ne!(distinct_literal_key(&a), distinct_literal_key(&b));
+    }
+
+    #[test]
+    fn xml_self_closing_matches_empty_element() {
+        use crate::datatype::{canonical_xml_literal, literals_equal};
+        let a = LiteralValue {
+            lexical: "abc<a/>".to_string(),
+            datatype: EntityId(0),
+        };
+        let b = LiteralValue {
+            lexical: "abc<a></a>".to_string(),
+            datatype: EntityId(0),
+        };
+        eprintln!("a={}", canonical_xml_literal("abc<a/>"));
+        eprintln!("b={}", canonical_xml_literal("abc<a></a>"));
+        assert!(literals_equal(&a, &b));
+    }
+
+    #[test]
+    fn xml_canonicalization_1_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_xmlliteraltest_testcanonicalization_1.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "<a/> and <a></a> without suffix should canonicalize to the same value"
+        );
+    }
+
+    #[test]
+    fn xml_literals_are_not_universal_equal() {
+        use crate::datatype::literals_equal;
+        let a = LiteralValue {
+            lexical: "<tag/>".to_string(),
+            datatype: EntityId(0),
+        };
+        let b = LiteralValue {
+            lexical: "abc<a></a>".to_string(),
+            datatype: EntityId(0),
+        };
+        assert!(
+            !literals_equal(&a, &b),
+            "unrelated XML literals must not compare equal"
+        );
+    }
+
+    #[test]
+    fn xml_canonicalization_2_is_consistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_xmlliteraltest_testcanonicalization_2.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            is_datatype_consistent(&ont),
+            "<a/> and <a></a> variants should leave a witness in oneOf \\ complement"
+        );
+    }
+
+    #[test]
+    fn xml_canonicalization_2_literals_differ() {
+        use crate::datatype::canonical_xml_literal;
+        let a = "abc<a/>d";
+        let b = "abc<a></a>";
+        assert_ne!(canonical_xml_literal(a), canonical_xml_literal(b));
+    }
+
+    #[test]
+    fn misc202_xml_literal_keys_match() {
+        use crate::datatype::canonical_xml_literal;
+        let a = "<br />\n<img src=\"vn.png\" alt=\"Venn diagram\" longdesc=\"vn.html\" title=\"Venn\"></img>";
+        let b = "<br \n></br>\n<img \nsrc=\"vn.png\" title=\n\"Venn\" alt\n=\"Venn diagram\" longdesc=\n\"vn.html\" />";
+        eprintln!("a={}", canonical_xml_literal(a));
+        eprintln!("b={}", canonical_xml_literal(b));
+        assert_eq!(canonical_xml_literal(a), canonical_xml_literal(b));
+    }
+
+    #[test]
+    fn misc202_functional_xml_literals_is_consistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2Dmiscellaneous-2D202/premise.rdf",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            is_datatype_consistent(&ont),
+            "distinct XML literal forms on functional dp should be consistent"
+        );
     }
 
     #[test]

@@ -12,6 +12,28 @@ pub fn expand_xml_entities(input: &str) -> String {
     expand_xml_entities_with_limit(input, usize::MAX).unwrap_or_else(|_| input.to_owned())
 }
 
+/// Collapse a multiline `<rdf:RDF ...>` opening tag onto one line for Horned-OWL's RDF/XML reader.
+#[must_use]
+pub fn normalize_multiline_rdf_root_tag(input: &str) -> String {
+    let Some(root_start) = input.find("<rdf:RDF") else {
+        return input.to_owned();
+    };
+    let Some(rel_end) = input[root_start..].find('>') else {
+        return input.to_owned();
+    };
+    let root_end = root_start + rel_end + 1;
+    let root_tag = &input[root_start..root_end];
+    if !root_tag.contains(['\n', '\r']) {
+        return input.to_owned();
+    }
+    let collapsed = root_tag.split_whitespace().collect::<Vec<_>>().join(" ");
+    let mut out = String::with_capacity(input.len());
+    out.push_str(&input[..root_start]);
+    out.push_str(&collapsed);
+    out.push_str(&input[root_end..]);
+    out
+}
+
 /// Remove duplicate `rdf:ID` element subtrees (legacy fixtures such as HermiT `wine.xml`).
 #[must_use]
 pub fn dedupe_rdf_xml_ids(input: &str) -> String {
@@ -662,9 +684,18 @@ pub fn normalize_rdfs_class_elements(input: &str) -> String {
     if !input.contains("rdfs:Class") {
         return input.to_owned();
     }
-    input
+    let mut out = input
         .replace("<rdfs:Class", "<owl:Class")
-        .replace("</rdfs:Class>", "</owl:Class>")
+        .replace("</rdfs:Class>", "</owl:Class>");
+    if out.contains("owl:Class") && !out.contains("xmlns:owl") {
+        if let Some(root_start) = out.find("<rdf:RDF") {
+            if let Some(rel_end) = out[root_start..].find('>') {
+                let insert_at = root_start + rel_end;
+                out.insert_str(insert_at, " xmlns:owl=\"http://www.w3.org/2002/07/owl#\"");
+            }
+        }
+    }
+    out
 }
 
 /// Rewrite legacy relative `rdf:datatype` / `rdf:resource` IRIs (`/2001/XMLSchema#...`).
@@ -2200,6 +2231,12 @@ fn member_block_to_ofn(
     if block.contains("owl:onProperty") {
         return inline_restriction_ce_to_ofn(block, base, dt_props);
     }
+    if block.trim_start().starts_with("<rdf:Description")
+        && extract_attribute(open, "rdf:about").is_none()
+        && extract_attribute(open, "rdf:resource").is_none()
+    {
+        return Some(ofn_entity_ref(&format!("{base}#_:nominal0")));
+    }
     None
 }
 
@@ -2620,6 +2657,85 @@ pub(crate) fn collect_rdfs_object_property_ranges(rdf: &str) -> Vec<(String, Str
     out
 }
 
+/// Collect object properties declared as `owl:FunctionalProperty` (RDF/XML typing idiom).
+pub(crate) fn collect_functional_object_properties(rdf: &str) -> Vec<String> {
+    let base = parse_xml_base(rdf);
+    let functional = "http://www.w3.org/2002/07/owl#FunctionalProperty";
+    let mut out = collect_owl_property_characteristic_elements(rdf, "owl:FunctionalProperty", &base);
+    out.extend(collect_properties_with_rdf_type(rdf, functional, &base));
+    out.sort();
+    out.dedup();
+    out
+}
+
+fn collect_owl_property_characteristic_elements(
+    rdf: &str,
+    tag: &str,
+    base: &str,
+) -> Vec<String> {
+    let open = format!("<{tag}");
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find(&open) else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(tag_end_rel) = rdf[start..].find('>') else {
+            break;
+        };
+        let tag_end = start + tag_end_rel + 1;
+        let open_tag = &rdf[start..tag_end];
+        if let Some(iri) = extract_attribute(open_tag, "rdf:about").or_else(|| {
+            extract_attribute(open_tag, "rdf:ID").map(|id| format!("{base}#{id}"))
+        }) {
+            out.push(resolve_relative_iri(&iri, base));
+        }
+        pos = if open_tag.trim_end().ends_with("/>") {
+            tag_end
+        } else {
+            tagged_element_end(rdf, start, tag).unwrap_or(tag_end)
+        };
+    }
+    out
+}
+
+fn collect_properties_with_rdf_type(rdf: &str, type_iri: &str, base: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find("<rdf:Description") else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = element_block_end(rdf, start, "rdf:Description", "</rdf:Description>")
+        else {
+            break;
+        };
+        let block = &rdf[start..end];
+        let open_end = block.find('>').unwrap_or(0);
+        let open = &block[..=open_end];
+        let Some(about) = extract_attribute(open, "rdf:about").or_else(|| {
+            extract_attribute(open, "rdf:ID")
+                .map(|id| format!("{base}#{id}"))
+        }) else {
+            pos = end;
+            continue;
+        };
+        let close_start = block.rfind("</rdf:Description>").unwrap_or(block.len());
+        let inner = &block[open_end + 1..close_start];
+        let typed = extract_property_resource(inner, "rdf:type", base)
+            .is_some_and(|t| t == type_iri)
+            || inner.contains(&format!("resource=\"{type_iri}\""))
+            || inner.contains(&format!("resource='{type_iri}'"));
+        if typed {
+            out.push(resolve_relative_iri(&about, base));
+        }
+        pos = end;
+    }
+    out
+}
+
 fn collect_owl_property_ranges_for_tag(rdf: &str, tag: &str, base: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     let open = format!("<{tag}");
@@ -2987,7 +3103,7 @@ fn positive_property_from_inner(
     None
 }
 
-fn declared_datatype_property_iris(rdf: &str) -> std::collections::HashSet<String> {
+pub(crate) fn declared_datatype_property_iris(rdf: &str) -> std::collections::HashSet<String> {
     let base = parse_xml_base(rdf);
     let mut out = std::collections::HashSet::new();
     let mut pos = 0usize;
@@ -2999,6 +3115,8 @@ fn declared_datatype_property_iris(rdf: &str) -> std::collections::HashSet<Strin
         let open = &rdf[start..=start + gt];
         if let Some(about) = extract_attribute(open, "rdf:about") {
             out.insert(resolve_relative_iri(&about, &base));
+        } else if let Some(id) = extract_attribute(open, "rdf:ID") {
+            out.insert(format!("{base}#{id}"));
         }
         pos = start + gt + 1;
     }
@@ -5266,6 +5384,72 @@ mod tests {
             }
         }
         assert!(dupes.is_empty(), "duplicate ids remain: {dupes:?}");
+    }
+
+    #[test]
+    fn functional_property_004_conclusion_loads_functional_axiom() {
+        use crate::load_ontology;
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DFunctionalProperty-2D004/conclusion.rdf",
+        );
+        let ont = load_ontology(&path).expect("load");
+        let has_functional = ont.axioms().iter().any(|(_, ax)| {
+            matches!(ax, ontologos_core::Axiom::FunctionalObjectProperty(_))
+        });
+        eprintln!("conclusion axioms: {:?}", ont.axioms().iter().collect::<Vec<_>>());
+        eprintln!("conclusion dl: {:?}", ont.dl().axioms().collect::<Vec<_>>());
+        assert!(has_functional, "expected FunctionalObjectProperty in conclusion");
+    }
+
+    #[test]
+    fn functional_property_004_oneof_supplement() {
+        use crate::load_ontology;
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DFunctionalProperty-2D004/premise.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let root = normalize_multiline_rdf_root_tag(&text);
+        let deduped = dedupe_rdf_xml_ids(&root);
+        let normalized_ids = normalize_invalid_rdf_ids(&deduped);
+        let expanded = expand_xml_entities_with_limit(&normalized_ids, 10_000_000).unwrap();
+        let relative_uris = normalize_relative_owl_uris(&expanded);
+        let rdfs_classes = normalize_rdfs_class_elements(&relative_uris);
+        let injected = inject_rdf_based_punning_declarations(&rdfs_classes);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let intersections = normalize_class_intersection_definitions(&typed_nodes);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let individuals = materialize_anonymous_individual_descriptions(&named);
+        let normalized = normalize_all_different_members(&individuals);
+        let preprocessed = expand_all_disjoint_collections(&normalized);
+        let equivs = collect_boolean_class_equivalences(&preprocessed);
+        assert!(
+            equivs.iter().any(|(_, ce)| ce.contains("ObjectOneOf")),
+            "expected singleton oneOf equivalence, got {equivs:?}\npreprocessed:\n{preprocessed}"
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            ont.dl().axiom_count() > 0,
+            "dl axioms: {:?}",
+            ont.dl().axioms().collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn normalize_multiline_rdf_root_tag_collapses_functional_property_fixture() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DFunctionalProperty-2D004/premise.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let collapsed = normalize_multiline_rdf_root_tag(&text);
+        assert!(
+            !collapsed.contains("\n  xmlns:owl"),
+            "root tag should be collapsed: {}",
+            &collapsed[..collapsed.find('>').unwrap_or(collapsed.len())]
+        );
+        let loaded = crate::load_ontology(&path).expect("load functional property premise");
+        assert!(loaded.axiom_count() > 0 || loaded.dl().axiom_count() > 0);
     }
 
     #[test]

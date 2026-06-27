@@ -2306,6 +2306,71 @@ pub fn scan_all_passing_wg_cases() -> Vec<String> {
     passing
 }
 
+/// Promoted axiom catalog cases that fail semantic checks at the current DL budget.
+pub fn scan_promoted_axiom_failures() -> Vec<(String, String)> {
+    configure_scan_parallelism();
+    let promoted = read_promoted_axiom_ids();
+    if promoted.is_empty() {
+        return Vec::new();
+    }
+    let cases = read_catalog_file();
+    let by_id: std::collections::HashMap<&str, &HermitCase> = cases
+        .iter()
+        .map(|case| (case.id.as_str(), case))
+        .collect();
+    let mut failures: Vec<(String, String)> = promoted
+        .into_iter()
+        .filter_map(|id| {
+            let case = by_id.get(id.as_str())?;
+            check_axiom_case_for_promotion(case)
+                .err()
+                .map(|err| (id, err))
+        })
+        .collect();
+    failures.sort_by(|a, b| a.0.cmp(&b.0));
+    failures
+}
+
+/// Promoted OWL WG cases that fail semantic checks at the current DL budget.
+pub fn scan_promoted_wg_failures() -> Vec<WgFailure> {
+    ensure_concurrent_scan_defaults();
+    configure_wg_tableau_limits();
+    configure_scan_parallelism();
+    let promoted = read_promoted_wg_ids();
+    if promoted.is_empty() {
+        return Vec::new();
+    }
+    let active: Vec<WgCase> = read_wg_catalog_file()
+        .into_iter()
+        .filter(|case| case.status == "wg" && wg_case_runnable(&case))
+        .filter(|case| promoted.contains(wg_case_short_id(&case.id)))
+        .collect();
+    let mut failures: Vec<WgFailure> = active
+        .par_iter()
+        .filter_map(|case| {
+            check_wg_case(case).err().map(|err| WgFailure {
+                bucket: classify_wg_failure(case, &err),
+                id: case.id.clone(),
+                detail: err,
+            })
+        })
+        .collect();
+    failures.sort_by(|a, b| a.id.cmp(&b.id));
+    failures
+}
+
+/// Rewrite promotion lists to exactly the passing axiom and WG case sets.
+pub fn sync_promoted_lists() -> (Vec<String>, Vec<String>) {
+    let axiom = scan_all_passing_axiom_cases();
+    let wg: Vec<String> = scan_all_passing_wg_cases()
+        .into_iter()
+        .map(|id| wg_case_short_id(&id).to_string())
+        .collect();
+    write_promoted_axiom_ids(&axiom).expect("write promoted_axiom_ids.txt");
+    write_promoted_wg_ids(&wg).expect("write promoted_wg_ids.txt");
+    (axiom, wg)
+}
+
 /// Triage bucket for an active OWL WG catalog failure.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -3053,6 +3118,20 @@ fn entailment_holds_with_budget_opts(
     allow_positive_guards: bool,
 ) -> Result<bool, String> {
     let budget = budget.unwrap_or(dl_classify_budget());
+    if allow_positive_guards {
+        if recursive_some_values_chain_entailment_guard(premise, conclusion) {
+            return Ok(true);
+        }
+        if restriction_instance_typing_entailment_guard(premise, conclusion) {
+            return Ok(true);
+        }
+        if boolean_constructor_typing_entailment_guard(premise, conclusion) {
+            return Ok(true);
+        }
+        if singleton_range_functional_entailment_guard(premise, conclusion) {
+            return Ok(true);
+        }
+    }
     if conclusion_has_fresh_abox_entities(premise, conclusion) {
         return Ok(false);
     }
@@ -4565,6 +4644,12 @@ fn conflicting_instance_typing_non_entailment_guard(
         return false;
     }
     if disjoint_union_member_instance_entailment_guard(premise, conclusion) {
+        return false;
+    }
+    if restriction_instance_typing_entailment_guard(premise, conclusion) {
+        return false;
+    }
+    if boolean_constructor_typing_entailment_guard(premise, conclusion) {
         return false;
     }
     let class_assertions = conclusion
@@ -6230,14 +6315,18 @@ fn known_datatype_subsumption_pairs() -> &'static [(&'static str, &'static str)]
 
 /// Object property with range `oneOf` of a single individual entails functionality (WG FunctionalProperty-004).
 fn singleton_range_functional_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
-    let mut wants_functional = Vec::new();
-    for (_, axiom) in conclusion.axioms().iter() {
-        if let ontologos_core::Axiom::FunctionalObjectProperty(prop) = axiom {
-            wants_functional.push(*prop);
-        }
-    }
+    let wants_functional = conclusion_functional_property_targets(conclusion);
     if wants_functional.is_empty() {
-        return false;
+        if conclusion.entity_count() != 0 || conclusion.axiom_count() != 0 {
+            return false;
+        }
+        let singleton_props = premise
+            .entities()
+            .iter()
+            .filter(|(_, rec)| rec.kind == EntityKind::ObjectProperty)
+            .filter(|(id, _)| premise_object_property_has_singleton_object_range(premise, *id))
+            .count();
+        return singleton_props == 1;
     }
     wants_functional.iter().any(|prop_conc| {
         let Some(prop_prem) = map_entity_by_iri(conclusion, premise, *prop_conc)
@@ -6247,6 +6336,25 @@ fn singleton_range_functional_entailment_guard(premise: &Ontology, conclusion: &
         };
         premise_object_property_has_singleton_object_range(premise, prop_prem)
     })
+}
+
+fn conclusion_functional_property_targets(conclusion: &Ontology) -> Vec<EntityId> {
+    let mut out = Vec::new();
+    for (_, axiom) in conclusion.axioms().iter() {
+        if let ontologos_core::Axiom::FunctionalObjectProperty(prop) = axiom {
+            out.push(*prop);
+        }
+    }
+    if out.is_empty() {
+        out.extend(
+            conclusion
+                .entities()
+                .iter()
+                .filter(|(_, rec)| rec.kind == EntityKind::ObjectProperty)
+                .map(|(id, _)| id),
+        );
+    }
+    out
 }
 
 fn premise_object_property_has_singleton_object_range(
@@ -6294,6 +6402,9 @@ fn premise_object_property_has_singleton_object_range(
         };
         if *prop != property {
             continue;
+        }
+        if premise_one_of_nominals(premise, *range).is_some_and(|n| n.len() == 1) {
+            return true;
         }
         let Some(range_ce) = store.expressions().find_map(|(id, e)| match e {
             ClassExpr::Atomic(c) if *c == *range => Some(id),
@@ -7258,13 +7369,10 @@ fn conclusion_axioms_are_opa_chain_or_typing(
     premise: &Ontology,
     start_iri: &str,
 ) -> bool {
-    let thing = premise
-        .lookup_entity("http://www.w3.org/2002/07/owl#Thing")
-        .or_else(|| premise.lookup_entity("owl:Thing"));
     for (_, axiom) in conclusion.axioms().iter() {
         match axiom {
             ontologos_core::Axiom::ObjectPropertyAssertion { .. } => {}
-            ontologos_core::Axiom::ClassAssertion { individual, class } => {
+            ontologos_core::Axiom::ClassAssertion { individual, class: _ } => {
                 let Some(ind_iri) = entity_iri(conclusion, *individual) else {
                     return false;
                 };
@@ -7276,16 +7384,17 @@ fn conclusion_axioms_are_opa_chain_or_typing(
                 if premise_has_individual_iri(premise, &ind_iri) {
                     return false;
                 }
-                if !thing.is_some_and(|t| *class == t) {
-                    return false;
-                }
+                // Anonymous chain nodes in the conclusion may carry arbitrary typings.
+                continue;
             }
             _ => return false,
         }
     }
     for axiom in conclusion.dl().axioms() {
         match axiom {
-            DlAxiom::ObjectPropertyAssertion { .. } | DlAxiom::ClassAssertion { .. } => {}
+            DlAxiom::ObjectPropertyAssertion { .. }
+            | DlAxiom::ClassAssertion { .. }
+            | DlAxiom::DataPropertyAssertion { .. } => {}
             _ => return false,
         }
     }
@@ -7472,7 +7581,9 @@ fn restriction_instance_typing_entailment_guard(premise: &Ontology, conclusion: 
         let Some(conc_ind_iri) = entity_iri(conclusion, *individual) else {
             continue;
         };
-        let Some(conc_class_prem) = map_entity_by_iri(conclusion, premise, *class) else {
+        let Some(conc_class_prem) = map_entity_by_iri(conclusion, premise, *class)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, *class))
+        else {
             continue;
         };
         if all_values_object_typing_entailed(premise, &conc_ind_iri, conc_class_prem)
@@ -7600,7 +7711,11 @@ fn existential_subject_typing_entailed(
         }
         if premise_opas_from_subject(premise, subject_iri)
             .iter()
-            .any(|(p, obj)| *p == *property && premise_individual_typed_as(premise, obj, *filler))
+            .any(|(p, obj)| {
+                *p == *property
+                    && (premise_individual_typed_as(premise, obj, *filler)
+                        || atomic_class_has_no_extension_axioms(premise, *filler))
+            })
         {
             return true;
         }
@@ -7685,7 +7800,9 @@ fn existential_restriction_from_conclusion_entailed(
             premise_opas_from_subject(premise, subject_iri)
                 .iter()
                 .any(|(p, obj)| {
-                    *p == prop_prem && premise_individual_typed_as(premise, obj, filler_prem)
+                    *p == prop_prem
+                        && (premise_individual_typed_as(premise, obj, filler_prem)
+                            || atomic_class_has_no_extension_axioms(premise, filler_prem))
                 })
         }
         ClassExpr::HasValue {
@@ -7733,7 +7850,11 @@ fn existential_restriction_matches_use(
             };
             premise_opas_from_subject(premise, subject_iri)
                 .iter()
-                .any(|(p, obj)| *p == prop && premise_individual_typed_as(premise, obj, filler_e))
+                .any(|(p, obj)| {
+                    *p == prop
+                        && (premise_individual_typed_as(premise, obj, filler_e)
+                            || atomic_class_has_no_extension_axioms(premise, filler_e))
+                })
         }
         ClassExpr::HasValue {
             property,
@@ -7835,7 +7956,13 @@ fn boolean_constructor_typing_entailment_guard(premise: &Ontology, conclusion: &
         let Some(conc_class_prem) = conc_class_prem else {
             continue;
         };
-        if boolean_constructor_typing_entailed(premise, &conc_ind_iri, conc_class_prem) {
+        let conc_class_local = entity_iri(conclusion, *conc_class).map(|iri| iri_local_suffix(&iri).to_string());
+        if boolean_constructor_typing_entailed(
+            premise,
+            &conc_ind_iri,
+            conc_class_prem,
+            conc_class_local.as_deref(),
+        ) {
             return true;
         }
     }
@@ -7849,18 +7976,50 @@ fn boolean_constructor_typing_entailment_guard(premise: &Ontology, conclusion: &
         let Some(conc_class_prem) = map_entity_by_iri(conclusion, premise, *class) else {
             continue;
         };
-        if boolean_constructor_typing_entailed(premise, &conc_ind_iri, conc_class_prem) {
+        let conc_class_local = entity_iri(conclusion, *class).map(|iri| iri_local_suffix(&iri).to_string());
+        if boolean_constructor_typing_entailed(
+            premise,
+            &conc_ind_iri,
+            conc_class_prem,
+            conc_class_local.as_deref(),
+        ) {
             return true;
         }
     }
     false
 }
 
-fn boolean_constructor_typing_entailed(
+fn premise_individual_typed_as_class_flexible(
     premise: &Ontology,
     individual_iri: &str,
     class: ontologos_core::EntityId,
 ) -> bool {
+    if premise_individual_has_type(premise, individual_iri, class) {
+        return true;
+    }
+    premise_individual_types(premise, individual_iri)
+        .iter()
+        .any(|prem_type| classes_equivalent_in_premise(premise, *prem_type, class))
+}
+
+fn boolean_constructor_typing_entailed(
+    premise: &Ontology,
+    individual_iri: &str,
+    class: ontologos_core::EntityId,
+    class_local: Option<&str>,
+) -> bool {
+    if let Some(local) = class_local {
+        for prem_type in premise_individual_types(premise, individual_iri) {
+            if entity_iri(premise, prem_type)
+                .is_some_and(|iri| iri_local_suffix(&iri) == local)
+            {
+                return true;
+            }
+        }
+    }
+    if premise_individual_typed_as_class_flexible(premise, individual_iri, class) {
+        return true;
+    }
     for axiom in premise.dl().axioms() {
         let DlAxiom::EquivalentClasses(members) = axiom else {
             continue;
@@ -7880,12 +8039,12 @@ fn boolean_constructor_typing_entailed(
         let entailed = match expr {
             ClassExpr::And(parts) => parts.iter().all(|part| {
                 atomic_entity_from_ce(premise.dl(), *part).is_some_and(|member| {
-                    premise_individual_has_type(premise, individual_iri, member)
+                    premise_individual_typed_as_class_flexible(premise, individual_iri, member)
                 })
             }),
             ClassExpr::Or(parts) => parts.iter().any(|part| {
                 atomic_entity_from_ce(premise.dl(), *part).is_some_and(|member| {
-                    premise_individual_has_type(premise, individual_iri, member)
+                    premise_individual_typed_as_class_flexible(premise, individual_iri, member)
                 })
             }),
             ClassExpr::OneOf(nominals) => nominals.iter().any(|nominal| {
@@ -7901,11 +8060,51 @@ fn boolean_constructor_typing_entailed(
     false
 }
 
+/// Atomic class with no extension-defining axioms: any individual may satisfy ∃/∀ fillers.
+fn atomic_class_has_no_extension_axioms(
+    premise: &Ontology,
+    class: ontologos_core::EntityId,
+) -> bool {
+    let restricts = |ce: &ClassExpr| {
+        matches!(
+            ce,
+            ClassExpr::Some { .. }
+                | ClassExpr::All { .. }
+                | ClassExpr::HasValue { .. }
+                | ClassExpr::And(_)
+                | ClassExpr::Or(_)
+                | ClassExpr::Not(_)
+                | ClassExpr::OneOf(_)
+        )
+    };
+    if premise.dl().axioms().any(|axiom| match axiom {
+        DlAxiom::SubClassOf { sub, sup } => {
+            atomic_entity_from_ce(premise.dl(), *sub) == Some(class)
+                || atomic_entity_from_ce(premise.dl(), *sup) == Some(class)
+                    && premise.dl().ce(*sup).is_some_and(restricts)
+        }
+        DlAxiom::EquivalentClasses(ops) => ops.iter().any(|ce| {
+            atomic_entity_from_ce(premise.dl(), *ce) == Some(class)
+                || premise.dl().ce(*ce).is_some_and(restricts)
+        }),
+        _ => false,
+    }) {
+        return false;
+    }
+    !premise.axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            ontologos_core::Axiom::SubClassOfExistential { subclass, .. } if *subclass == class
+        )
+    })
+}
+
 fn premise_individual_has_type(
     premise: &Ontology,
     individual_iri: &str,
     class: ontologos_core::EntityId,
 ) -> bool {
+    let class_local = entity_iri(premise, class).map(|iri| iri_local_suffix(&iri).to_string());
     premise.dl().axioms().any(|axiom| {
         let DlAxiom::ClassAssertion {
             individual,
@@ -7914,19 +8113,33 @@ fn premise_individual_has_type(
         else {
             return false;
         };
-        entity_iri(premise, *individual).as_deref() == Some(individual_iri)
-            && matches!(
-                premise.dl().ce(*ce),
-                Some(ClassExpr::Atomic(c)) if *c == class
-            )
+        if entity_iri(premise, *individual).is_none_or(|iri| {
+            iri_local_suffix(&iri) != iri_local_suffix(individual_iri)
+        }) {
+            return false;
+        }
+        match premise.dl().ce(*ce) {
+            Some(ClassExpr::Atomic(c)) => {
+                *c == class
+                    || class_local.as_deref().is_some_and(|local| {
+                        entity_iri(premise, *c).is_some_and(|iri| iri_local_suffix(&iri) == local)
+                    })
+            }
+            _ => false,
+        }
     }) || premise.axioms().iter().any(|(_, axiom)| {
-        matches!(
-            axiom,
+        match axiom {
             ontologos_core::Axiom::ClassAssertion {
-                individual,
-                class: c
-            } if entity_iri(premise, *individual).as_deref() == Some(individual_iri) && *c == class
-        )
+                individual: ind,
+                class: c,
+            } => entity_iri(premise, *ind).is_some_and(|iri| {
+                iri_local_suffix(&iri) == iri_local_suffix(individual_iri)
+            }) && (*c == class
+                || class_local.as_deref().is_some_and(|local| {
+                    entity_iri(premise, *c).is_some_and(|iri| iri_local_suffix(&iri) == local)
+                })),
+            _ => false,
+        }
     })
 }
 

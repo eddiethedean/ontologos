@@ -104,7 +104,8 @@ fn load_ontology_with_limits_and_base_inner(
             )));
         }
         let text = String::from_utf8_lossy(&bytes);
-        let deduped = crate::rdf_preprocess::dedupe_rdf_xml_ids(&text);
+        let root_tag = crate::rdf_preprocess::normalize_multiline_rdf_root_tag(&text);
+        let deduped = crate::rdf_preprocess::dedupe_rdf_xml_ids(&root_tag);
         let normalized_ids = crate::rdf_preprocess::normalize_invalid_rdf_ids(&deduped);
         let expanded = crate::rdf_preprocess::expand_xml_entities_with_limit(
             &normalized_ids,
@@ -211,6 +212,56 @@ fn merge_datatype_sameas_supplement(
          Ontology(<http://example.org/datatype-sameas-supplement>\n\
            Declaration(Datatype({alias_ref}))\n\
            DatatypeDefinition({alias_ref} {xsd_ref})\n\
+         )"
+    );
+    let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+    merge_supplement_ontology(ontology, &supplement)?;
+    report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    Ok(true)
+}
+
+fn sameas_pair_is_property_entities(
+    ontology: &Ontology,
+    preprocessed_rdf: &str,
+    left: &str,
+    right: &str,
+) -> bool {
+    fn is_property_iri(ontology: &Ontology, preprocessed_rdf: &str, iri: &str) -> bool {
+        if let Some(id) = ontology.lookup_entity(iri) {
+            if let Ok(rec) = ontology.entity(id) {
+                if matches!(
+                    rec.kind,
+                    EntityKind::ObjectProperty | EntityKind::DataProperty
+                ) {
+                    return true;
+                }
+            }
+        }
+        crate::rdf_preprocess::collect_object_property_assertions(preprocessed_rdf)
+            .iter()
+            .any(|(_, property, _)| property == iri)
+    }
+    is_property_iri(ontology, preprocessed_rdf, left)
+        || is_property_iri(ontology, preprocessed_rdf, right)
+}
+
+fn merge_property_sameas_supplement(
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    limits: ParseLimits,
+    preprocessed_rdf: &str,
+    left: &str,
+    right: &str,
+) -> Result<bool> {
+    if !sameas_pair_is_property_entities(ontology, preprocessed_rdf, left, right) {
+        return Ok(false);
+    }
+    let ofn = format!(
+        "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+         Ontology(<http://example.org/property-sameas-supplement>\n\
+           Declaration(ObjectProperty(<{left}>))\n\
+           Declaration(ObjectProperty(<{right}>))\n\
+           EquivalentObjectProperties(<{left}> <{right}>)\n\
          )"
     );
     let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
@@ -339,6 +390,16 @@ fn supplement_rdf_dl_axioms(
         if merge_datatype_sameas_supplement(ontology, report, limits, &left, &right)? {
             continue;
         }
+        if merge_property_sameas_supplement(
+            ontology,
+            report,
+            limits,
+            preprocessed_rdf,
+            &left,
+            &right,
+        )? {
+            continue;
+        }
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Ontology(<http://example.org/same-as-supplement>\n\
@@ -390,6 +451,30 @@ fn supplement_rdf_dl_axioms(
                ObjectPropertyRange(<{property}> <{range}>)\n\
              )"
         );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_ontology(ontology, &supplement)?;
+        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    }
+    for property in crate::rdf_preprocess::collect_functional_object_properties(preprocessed_rdf) {
+        let datatype_props =
+            crate::rdf_preprocess::declared_datatype_property_iris(preprocessed_rdf);
+        let ofn = if datatype_props.contains(&property) {
+            format!(
+                "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+                 Ontology(<http://example.org/functional-property-supplement>\n\
+                   Declaration(DataProperty(<{property}>))\n\
+                   FunctionalDataProperty(<{property}>)\n\
+                 )"
+            )
+        } else {
+            format!(
+                "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+                 Ontology(<http://example.org/functional-property-supplement>\n\
+                   Declaration(ObjectProperty(<{property}>))\n\
+                   FunctionalObjectProperty(<{property}>)\n\
+                 )"
+            )
+        };
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
         merge_supplement_ontology(ontology, &supplement)?;
         report.meta.mapped_axiom_count += supplement.dl().axiom_count();
@@ -479,6 +564,16 @@ fn supplement_rdf_dl_axioms(
     }
     for (left, right) in crate::rdf_preprocess::collect_owl_same_as_pairs(preprocessed_rdf) {
         if merge_datatype_sameas_supplement(ontology, report, limits, &left, &right)? {
+            continue;
+        }
+        if merge_property_sameas_supplement(
+            ontology,
+            report,
+            limits,
+            preprocessed_rdf,
+            &left,
+            &right,
+        )? {
             continue;
         }
         let ofn = format!(

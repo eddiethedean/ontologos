@@ -7,7 +7,7 @@ TARGET_DIR="${CARGO_TARGET_DIR:-${ROOT}/target}"
 BIN_DIR="${TARGET_DIR}/release"
 
 needs_build=0
-for bin in parity_status wg_failures promote_catalog promote_wg audit_planned_backlog engine_failures; do
+for bin in parity_status wg_failures promote_catalog promote_wg sync_promoted audit_planned_backlog engine_failures; do
   if [[ ! -x "${BIN_DIR}/${bin}" ]]; then
     needs_build=1
     break

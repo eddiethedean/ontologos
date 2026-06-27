@@ -122,6 +122,9 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if abox_max_cardinality_zero_clash(ontology) {
         reject!("max_cardinality_zero");
     }
+    if abox_max_cardinality_exceeded_clash(ontology) {
+        reject!("max_cardinality_exceeded");
+    }
     if abox_positive_negative_property_clash(ontology) {
         reject!("positive_negative_property");
     }
@@ -1281,6 +1284,108 @@ fn abox_max_cardinality_zero_clash(ontology: &Ontology) -> bool {
         }
     }
     false
+}
+
+/// Individual typed `≤n r` while bearing more than `n` distinct `r`-successors.
+fn abox_max_cardinality_exceeded_clash(ontology: &Ontology) -> bool {
+    use std::collections::{HashMap, HashSet};
+
+    let store = ontology.dl();
+    let mut limits: HashMap<(EntityId, EntityId), u32> = HashMap::new();
+
+    let mut note_limit = |individual: EntityId, property: EntityId, max: u32| {
+        limits
+            .entry((individual, property))
+            .and_modify(|m| *m = (*m).min(max))
+            .or_insert(max);
+    };
+
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        let Some(expr) = store.ce(*class) else {
+            continue;
+        };
+        for (prop, max) in max_cardinality_limits_in_ce(store, expr) {
+            note_limit(*individual, prop, max);
+        }
+    }
+
+    if limits.is_empty() {
+        return false;
+    }
+
+    let mut positive: HashMap<(EntityId, EntityId), HashSet<EntityId>> = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        else {
+            continue;
+        };
+        let RoleExpr::Atomic(prop) = property else {
+            continue;
+        };
+        positive
+            .entry((*subject, *prop))
+            .or_default()
+            .insert(*object);
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } = axiom
+        else {
+            continue;
+        };
+        positive
+            .entry((*subject, *property))
+            .or_default()
+            .insert(*object);
+    }
+
+    for ((individual, prop), max) in limits {
+        let Some(objects) = positive.get(&(individual, prop)) else {
+            continue;
+        };
+        if (objects.len() as u32) > max {
+            return true;
+        }
+    }
+    false
+}
+
+fn max_cardinality_limits_in_ce(
+    store: &ontologos_core::DlStore,
+    ce: &ClassExpr,
+) -> Vec<(EntityId, u32)> {
+    let mut limits = Vec::new();
+    match ce {
+        ClassExpr::MaxCardinality { n, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                limits.push((*prop, *n));
+            }
+        }
+        ClassExpr::ExactCardinality { n, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                limits.push((*prop, *n));
+            }
+        }
+        ClassExpr::And(ops) | ClassExpr::Or(ops) => {
+            for op in ops {
+                if let Some(inner) = store.ce(*op) {
+                    limits.extend(max_cardinality_limits_in_ce(store, inner));
+                }
+            }
+        }
+        _ => {}
+    }
+    limits
 }
 
 fn zero_properties_in_ce(store: &ontologos_core::DlStore, ce: &ClassExpr) -> Vec<EntityId> {

@@ -1975,7 +1975,7 @@
     "expected_entailment": null,
     "id": "owl_wg_tests.String-2Dinteger-2Dclash",
     "ignore_reason": null,
-    "premise_ofn": "wg/String-2Dinteger-2Dclash/premise.rdf",
+    "premise_ofn": "wg/String-2Dinteger-2Dclash/premise.ofn",
     "status": "wg",
     "test_type": "inconsistency"
   },
