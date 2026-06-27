@@ -94,7 +94,7 @@
     "expected_entailment": null,
     "id": "owl_wg_tests.Contradicting-2Ddatatype-2Drestrictions",
     "ignore_reason": null,
-    "premise_ofn": "wg/Contradicting-2Ddatatype-2Drestrictions/premise.ofn",
+    "premise_ofn": "wg/Contradicting-2Ddatatype-2Drestrictions/premise.rdf",
     "status": "wg",
     "test_type": "inconsistency"
   },
@@ -105,7 +105,7 @@
     "expected_entailment": null,
     "id": "owl_wg_tests.Contradicting-2DdateTime-2Drestrictions",
     "ignore_reason": null,
-    "premise_ofn": "wg/Contradicting-2DdateTime-2Drestrictions/premise.ofn",
+    "premise_ofn": "wg/Contradicting-2DdateTime-2Drestrictions/premise.rdf",
     "status": "wg",
     "test_type": "inconsistency"
   },
@@ -413,7 +413,7 @@
     "expected_entailment": null,
     "id": "owl_wg_tests.Minus-2Dinf-2Dnot-2Dowlreal",
     "ignore_reason": null,
-    "premise_ofn": "wg/Minus-2Dinf-2Dnot-2Dowlreal/premise.ofn",
+    "premise_ofn": "wg/Minus-2Dinf-2Dnot-2Dowlreal/premise.rdf",
     "status": "wg",
     "test_type": "inconsistency"
   },
@@ -1975,7 +1975,7 @@
     "expected_entailment": null,
     "id": "owl_wg_tests.String-2Dinteger-2Dclash",
     "ignore_reason": null,
-    "premise_ofn": "wg/String-2Dinteger-2Dclash/premise.ofn",
+    "premise_ofn": "wg/String-2Dinteger-2Dclash/premise.rdf",
     "status": "wg",
     "test_type": "inconsistency"
   },
