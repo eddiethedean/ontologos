@@ -389,6 +389,74 @@ pub fn inject_rdf_based_punning_declarations(input: &str) -> String {
     out
 }
 
+/// Declare `owl:ObjectProperty` for IRIs used as RDF/XML property elements (including nested `owl:sameAs`).
+pub fn inject_object_property_declarations_from_usage(input: &str) -> String {
+    let declared = declared_iris(input, "owl:ObjectProperty");
+    let mut props: HashSet<String> = collect_object_property_assertions(input)
+        .into_iter()
+        .map(|(_, property, _)| property)
+        .filter(|iri| !declared.contains(iri))
+        .collect();
+    if props.is_empty() {
+        return input.to_owned();
+    }
+    let mut list: Vec<_> = props.drain().collect();
+    list.sort();
+    let mut injections = String::new();
+    for iri in list {
+        injections.push_str(&format!("  <owl:ObjectProperty rdf:about=\"{iri}\"/>\n"));
+    }
+    let Some(insert_at) = find_rdf_open_body_start(input) else {
+        return input.to_owned();
+    };
+    let root_end = input.find("<rdf:RDF").and_then(|s| input[s..].find('>').map(|e| s + e + 1));
+    let mut out = String::with_capacity(input.len() + injections.len() + 64);
+    if let Some(root_end) = root_end {
+        let root_tag = &input[..root_end];
+        if !root_tag.contains("xmlns:owl=") {
+            let without_close = root_tag.strip_suffix('>').unwrap_or(root_tag);
+            out.push_str(without_close);
+            out.push_str(" xmlns:owl=\"http://www.w3.org/2002/07/owl#\">");
+            out.push_str(&input[root_end..insert_at]);
+        } else {
+            out.push_str(&input[..insert_at]);
+        }
+    } else {
+        out.push_str(&input[..insert_at]);
+    }
+    out.push_str(&injections);
+    out.push_str(&input[insert_at..]);
+    out
+}
+
+/// Rewrite `owl:sameAs` between property IRIs into `owl:equivalentProperty` before Horned-OWL load.
+pub fn normalize_property_same_as(input: &str) -> String {
+    let mut property_iris: HashSet<String> = declared_iris(input, "owl:ObjectProperty");
+    property_iris.extend(
+        collect_object_property_assertions(input)
+            .into_iter()
+            .map(|(_, property, _)| property),
+    );
+    let mut out = input.to_owned();
+    for (left, right) in collect_owl_same_as_pairs(&out) {
+        if !property_iris.contains(&left) && !property_iris.contains(&right) {
+            continue;
+        }
+        property_iris.insert(left.clone());
+        property_iris.insert(right.clone());
+        let patterns = [
+            format!("<owl:sameAs rdf:resource=\"{right}\"/>"),
+            format!("<owl:sameAs rdf:resource=\"{right}\" />"),
+            format!("<owl:sameAs rdf:resource='{right}'/>"),
+        ];
+        let replacement = format!("<owl:equivalentProperty rdf:resource=\"{right}\"/>");
+        for pattern in patterns {
+            out = out.replace(&pattern, &replacement);
+        }
+    }
+    out
+}
+
 fn find_rdf_open_body_start(input: &str) -> Option<usize> {
     let root_start = input.find("<rdf:RDF")?;
     let root_end = input[root_start..].find('>')? + root_start + 1;
@@ -2587,7 +2655,16 @@ fn object_property_assertions_from_subject_block(
         };
         let prop_block = &inner[start..end];
         let prefix = tag_name.split(':').next().unwrap_or("");
-        if matches!(prefix, "owl" | "rdf" | "rdfs" | "xsd" | "xml") {
+        if prefix == "owl" {
+            if tag_name == "owl:sameAs" {
+                out.extend(object_property_assertions_from_sameas_block(
+                    prop_block, base, xmlns, anon,
+                ));
+            }
+            pos = end;
+            continue;
+        }
+        if matches!(prefix, "rdf" | "rdfs" | "xsd" | "xml") {
             pos = end;
             continue;
         }
@@ -2626,6 +2703,35 @@ fn object_property_assertions_from_subject_block(
                 anon,
             ));
         }
+        pos = end;
+    }
+    out
+}
+
+fn object_property_assertions_from_sameas_block(
+    block: &str,
+    base: &str,
+    xmlns: &std::collections::HashMap<String, String>,
+    anon: &mut usize,
+) -> Vec<(String, String, String)> {
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while pos < block.len() {
+        let Some(rel) = block[pos..].find("<rdf:Description") else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = element_block_end(block, start, "rdf:Description", "</rdf:Description>")
+        else {
+            break;
+        };
+        let nested = &block[start..end];
+        out.extend(object_property_assertions_from_block(
+            nested,
+            "rdf:Description",
+            base,
+            xmlns,
+        ));
         pos = end;
     }
     out
@@ -5720,6 +5826,29 @@ mod tests {
         assert!(
             !ontologos_dl::is_consistent(&loaded).expect("check"),
             "disjointWith-010 should be inconsistent"
+        );
+    }
+
+    #[test]
+    fn sameas_subst_premise_collects_nested_opa_and_loads() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/Rdfbased-2Dsem-2Deqdis-2Dsameas-2Dsubst/premise.rdf",
+        );
+        let text = std::fs::read_to_string(&path).unwrap();
+        let opas = collect_object_property_assertions(&text);
+        assert!(
+            opas.iter().any(|(_, prop, _)| prop.contains("#p1")),
+            "expected nested sameAs OPA on p1, got {opas:?}"
+        );
+        let loaded = crate::load_ontology(&path).expect("load premise");
+        let p1 = "http://www.example.org#p1";
+        let id = loaded.lookup_entity(p1).expect("p1 entity");
+        let rec = loaded.entity(id).expect("p1 record");
+        assert_eq!(
+            rec.kind,
+            ontologos_core::EntityKind::ObjectProperty,
+            "p1 should be object property, got {:?}",
+            rec.kind
         );
     }
 }
