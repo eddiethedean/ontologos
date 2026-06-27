@@ -1800,16 +1800,29 @@ fn thing_equivalent_finite_nominal(ontology: &Ontology) -> bool {
     false
 }
 
+fn canonical_entity_iri(ontology: &Ontology, id: EntityId) -> Option<String> {
+    let record = ontology.entity(id).ok()?;
+    ontology
+        .resolve_iri(record.iri)
+        .ok()
+        .map(|iri| iri.replace("%23", "#"))
+}
+
 fn individual_is_asserted(ontology: &Ontology, individual: EntityId) -> bool {
+    let Some(target) = canonical_entity_iri(ontology, individual) else {
+        return false;
+    };
     ontology.dl().axioms().any(|axiom| {
         matches!(
             axiom,
-            DlAxiom::ClassAssertion { individual: ind, .. } if *ind == individual
+            DlAxiom::ClassAssertion { individual: ind, .. }
+                if canonical_entity_iri(ontology, *ind).as_deref() == Some(target.as_str())
         )
     }) || ontology.axioms().iter().any(|(_, axiom)| {
         matches!(
             axiom,
-            Axiom::ClassAssertion { individual: ind, .. } if *ind == individual
+            Axiom::ClassAssertion { individual: ind, .. }
+                if canonical_entity_iri(ontology, *ind).as_deref() == Some(target.as_str())
         )
     })
 }
@@ -1906,6 +1919,20 @@ mod exists_forall_tests {
             .join("../../benchmarks/data/hermit/wg")
             .join(case)
             .join("premise.rdf")
+    }
+
+    #[test]
+    fn thing_004_is_consistent_005_is_not() {
+        let ont004 = load_ontology(&wg("TestCase-3AWebOnt-2DThing-2D004")).expect("load 004");
+        let ont005 = load_ontology(&wg("TestCase-3AWebOnt-2DThing-2D005")).expect("load 005");
+        assert!(
+            is_consistent(&ont004).expect("check"),
+            "Thing-004 should be consistent"
+        );
+        assert!(
+            !is_consistent(&ont005).expect("check"),
+            "Thing-005 should be inconsistent"
+        );
     }
 
     #[test]

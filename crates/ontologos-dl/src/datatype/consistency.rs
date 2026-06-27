@@ -2455,6 +2455,42 @@ mod tests {
     }
 
     #[test]
+    fn contradicting_datatype_restrictions_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/Contradicting-2Ddatatype-2Drestrictions/premise.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "intersecting oneOf allValuesFrom with minInclusive 4 should be unsatisfiable"
+        );
+    }
+
+    #[test]
+    fn contradicting_datatype_rdf_complement_dual_literals_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/Contradicting-2Ddatatype-2Drestrictions/premise.rdf",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "negativeInteger and string on same dp with complement range should clash"
+        );
+    }
+
+    #[test]
+    fn contradicting_datetime_restrictions_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/wg/Contradicting-2DdateTime-2Drestrictions/premise.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            !is_datatype_consistent(&ont),
+            "hasValue outside allValuesFrom dateTime window should be unsatisfiable"
+        );
+    }
+
+    #[test]
     fn rational003_datatype_is_consistent() {
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D003/premise.rdf");

@@ -413,7 +413,7 @@ pub fn inject_object_property_declarations_from_usage(input: &str) -> String {
     let mut out = String::with_capacity(input.len() + injections.len() + 64);
     if let Some(root_end) = root_end {
         let root_tag = &input[..root_end];
-        if !root_tag.contains("xmlns:owl=") {
+        if !root_tag.contains("xmlns:owl") {
             let without_close = root_tag.strip_suffix('>').unwrap_or(root_tag);
             out.push_str(without_close);
             out.push_str(" xmlns:owl=\"http://www.w3.org/2002/07/owl#\">");

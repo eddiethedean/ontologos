@@ -94,7 +94,7 @@
     "expected_entailment": null,
     "id": "owl_wg_tests.Contradicting-2Ddatatype-2Drestrictions",
     "ignore_reason": null,
-    "premise_ofn": "wg/Contradicting-2Ddatatype-2Drestrictions/premise.rdf",
+    "premise_ofn": "wg/Contradicting-2Ddatatype-2Drestrictions/premise.ofn",
     "status": "wg",
     "test_type": "inconsistency"
   },
@@ -105,7 +105,7 @@
     "expected_entailment": null,
     "id": "owl_wg_tests.Contradicting-2DdateTime-2Drestrictions",
     "ignore_reason": null,
-    "premise_ofn": "wg/Contradicting-2DdateTime-2Drestrictions/premise.rdf",
+    "premise_ofn": "wg/Contradicting-2DdateTime-2Drestrictions/premise.ofn",
     "status": "wg",
     "test_type": "inconsistency"
   },
