@@ -5,10 +5,10 @@ use std::collections::{HashMap, HashSet};
 use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology};
 
 use super::{
-    canonical_plain_literal, canonical_xml_literal, datatype_definitions, datetime_facet_range_empty,
-    trailing_xml_text_suffix,
-    lexical_looks_numeric, literals_equal, normalize_range, pattern_witness_lexicals, rational_pair,
-    simplify_double_complement, LiteralIndex, LiteralValue,
+    canonical_plain_literal, canonical_xml_literal, datatype_definitions,
+    datetime_facet_range_empty, lexical_looks_numeric, literals_equal, normalize_range,
+    pattern_witness_lexicals, rational_pair, simplify_double_complement, trailing_xml_text_suffix,
+    LiteralIndex, LiteralValue,
 };
 
 #[derive(Debug, Clone)]
@@ -1102,7 +1102,8 @@ fn property_restrictions_satisfiable(
         let mut witness_ranges = combined_all.clone();
         witness_ranges.extend(some_ranges.clone());
         if !witness_ranges.is_empty() {
-            let count = distinct_values_satisfying_ranges(ontology, idx, &witness_ranges, forbidden);
+            let count =
+                distinct_values_satisfying_ranges(ontology, idx, &witness_ranges, forbidden);
             if count > max {
                 return false;
             }
@@ -1170,7 +1171,7 @@ fn distinct_values_satisfying_ranges(
             }
         }
         if count < cap {
-            return cap;
+            return if forbidden.is_empty() { cap } else { count };
         }
         return count;
     }
@@ -1510,9 +1511,7 @@ fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<
                     }
                 }
             }
-            if facet_iri == "http://www.w3.org/2001/XMLSchema#length"
-                && value == "0"
-            {
+            if facet_iri == "http://www.w3.org/2001/XMLSchema#length" && value == "0" {
                 if let Some(dt) = facet_base_datatype(ontology, store, *base) {
                     out.push(LiteralValue {
                         lexical: String::new(),
@@ -1524,9 +1523,7 @@ fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<
                     if let Some(dt) = facet_base_datatype(ontology, store, *base) {
                         if let Some(iri) = entity_iri(ontology, dt) {
                             let lex = match iri.as_str() {
-                                "http://www.w3.org/2001/XMLSchema#hexBinary" => {
-                                    "00".repeat(n)
-                                }
+                                "http://www.w3.org/2001/XMLSchema#hexBinary" => "00".repeat(n),
                                 "http://www.w3.org/2001/XMLSchema#base64Binary" => {
                                     "A".repeat((n * 4 + 2) / 3)
                                 }
@@ -1616,9 +1613,19 @@ fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<Lite
         return Vec::new();
     };
     let witnesses: &[&str] = match iri.as_str() {
-        "http://www.w3.org/2001/XMLSchema#integer" => {
-            &["0", "1", "2", "3", "4", "5", "6", "7", "-1", "2147483648", "-2147483649"]
-        }
+        "http://www.w3.org/2001/XMLSchema#integer" => &[
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "-1",
+            "2147483648",
+            "-2147483649",
+        ],
         "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" => &["0", "1", "2", "3", "4", "5"],
         "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" => &["0", "-1"],
         "http://www.w3.org/2001/XMLSchema#int" => &["0", "1", "2", "3", "4", "5"],
@@ -1626,7 +1633,9 @@ fn default_witness_literals(ontology: &Ontology, datatype: EntityId) -> Vec<Lite
         "http://www.w3.org/2001/XMLSchema#byte" => &[], // filled below
         "http://www.w3.org/2001/XMLSchema#unsignedInt" => &["0", "1"],
         "http://www.w3.org/2001/XMLSchema#string" => &["", "a", "b", "c", "abc"],
-        "http://www.w3.org/2001/XMLSchema#anyURI" => &["", "http://example.org", "abc", "abd", "abe"],
+        "http://www.w3.org/2001/XMLSchema#anyURI" => {
+            &["", "http://example.org", "abc", "abd", "abe"]
+        }
         "http://www.w3.org/2001/XMLSchema#hexBinary" => &["", "0AFF", "AB"],
         "http://www.w3.org/2001/XMLSchema#base64Binary" => &["", "AA=="],
         "http://www.w3.org/2001/XMLSchema#decimal" => &["0", "1", "1.5", "6", "6.5", "-1"],
@@ -1719,7 +1728,11 @@ fn collect_facet_bounds(store: &ontologos_core::DlStore, range: DeId) -> FacetBo
     bounds
 }
 
-fn facet_base_iri(ontology: &Ontology, store: &ontologos_core::DlStore, range: DeId) -> Option<String> {
+fn facet_base_iri(
+    ontology: &Ontology,
+    store: &ontologos_core::DlStore,
+    range: DeId,
+) -> Option<String> {
     let dt = facet_base_datatype(ontology, store, range)?;
     entity_iri(ontology, dt)
 }
@@ -1838,9 +1851,9 @@ fn datetime_distinct_count(min: &str, max: &str) -> u32 {
     if min == max {
         if !min.ends_with('Z')
             && !min.contains('+')
-            && min.find('T').is_some_and(|t| {
-                !min[t..].contains('-') || min[t..].matches('-').count() <= 1
-            })
+            && min
+                .find('T')
+                .is_some_and(|t| !min[t..].contains('-') || min[t..].matches('-').count() <= 1)
         {
             // HermiT: timezone-less dateTime points admit many distinct representations.
             return u32::MAX;
@@ -1875,29 +1888,25 @@ fn facet_bound_witness_literals(
         }
     } else if iri == "http://www.w3.org/2001/XMLSchema#float" {
         if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
-            out.extend(ieee_witness_lexicals(
-                parse_numeric(min),
-                parse_numeric(max),
-                true,
-            )
-            .into_iter()
-            .map(|lex| LiteralValue {
-                lexical: lex,
-                datatype: dt,
-            }));
+            out.extend(
+                ieee_witness_lexicals(parse_numeric(min), parse_numeric(max), true)
+                    .into_iter()
+                    .map(|lex| LiteralValue {
+                        lexical: lex,
+                        datatype: dt,
+                    }),
+            );
         }
     } else if iri == "http://www.w3.org/2001/XMLSchema#double" {
         if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
-            out.extend(ieee_witness_lexicals(
-                parse_numeric(min),
-                parse_numeric(max),
-                false,
-            )
-            .into_iter()
-            .map(|lex| LiteralValue {
-                lexical: lex,
-                datatype: dt,
-            }));
+            out.extend(
+                ieee_witness_lexicals(parse_numeric(min), parse_numeric(max), false)
+                    .into_iter()
+                    .map(|lex| LiteralValue {
+                        lexical: lex,
+                        datatype: dt,
+                    }),
+            );
         }
     }
     out
@@ -1963,10 +1972,10 @@ fn datetime_witness_lexicals(min: &str, max: &str, limit: usize) -> Vec<String> 
         }
     }
     for off in [
-        "", "Z", "+00:00", "+01:00", "+02:00", "+03:00", "+04:00", "+05:00", "+06:00",
-        "+07:00", "+08:00", "+09:00", "+10:00", "+11:00", "+12:00", "+13:00", "+14:00",
-        "-00:00", "-01:00", "-02:00", "-03:00", "-04:00", "-05:00", "-06:00", "-07:00",
-        "-08:00", "-09:00", "-10:00", "-11:00", "-12:00", "-13:00", "-14:00",
+        "", "Z", "+00:00", "+01:00", "+02:00", "+03:00", "+04:00", "+05:00", "+06:00", "+07:00",
+        "+08:00", "+09:00", "+10:00", "+11:00", "+12:00", "+13:00", "+14:00", "-00:00", "-01:00",
+        "-02:00", "-03:00", "-04:00", "-05:00", "-06:00", "-07:00", "-08:00", "-09:00", "-10:00",
+        "-11:00", "-12:00", "-13:00", "-14:00",
     ] {
         for seed in datetime_seed_lexicals(min, max) {
             let core = strip_datetime_timezone(&seed);
@@ -2041,10 +2050,7 @@ fn parse_datetime_parts(s: &str) -> Option<DateTimeParts> {
     let (h, tail) = time.split_once(':')?;
     let (mi, sec_ms) = tail.split_once(':')?;
     let (s, frac) = if let Some((sec, frac)) = sec_ms.split_once('.') {
-        (
-            sec,
-            frac.trim_end_matches(|c: char| !c.is_ascii_digit()),
-        )
+        (sec, frac.trim_end_matches(|c: char| !c.is_ascii_digit()))
     } else {
         (sec_ms, "0")
     };
@@ -2074,12 +2080,8 @@ fn format_datetime_parts(p: &DateTimeParts) -> String {
 }
 
 fn datetime_parts_cmp(a: &DateTimeParts, b: &DateTimeParts) -> i32 {
-    let ka = (
-        a.y, a.mo, a.d, a.h, a.mi, a.s, a.ms,
-    );
-    let kb = (
-        b.y, b.mo, b.d, b.h, b.mi, b.s, b.ms,
-    );
+    let ka = (a.y, a.mo, a.d, a.h, a.mi, a.s, a.ms);
+    let kb = (b.y, b.mo, b.d, b.h, b.mi, b.s, b.ms);
     ka.cmp(&kb) as i32
 }
 

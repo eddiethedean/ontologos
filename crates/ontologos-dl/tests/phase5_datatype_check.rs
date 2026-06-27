@@ -15,7 +15,8 @@ fn assert_consistent_ofn(name: &str, expected: bool) {
     let ont = load_ontology(&path).expect("load");
     let actual = is_consistent(&ont).expect("check");
     assert_eq!(
-        actual, expected,
+        actual,
+        expected,
         "{}: expected {expected}, got {actual}",
         path.display()
     );

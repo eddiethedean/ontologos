@@ -32,7 +32,9 @@ fn phase4_promoted_wg_subset_of_active() {
     let promoted = read_promoted_wg_ids();
     for short in &promoted {
         assert!(
-            active.iter().any(|c| wg_case_short_id(&c.id) == short.as_str()),
+            active
+                .iter()
+                .any(|c| wg_case_short_id(&c.id) == short.as_str()),
             "promoted WG id {short} is not an active catalog case"
         );
     }

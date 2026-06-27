@@ -124,7 +124,13 @@ fn subproperty_cycle_intersects_chain(
     }
 
     for &start in graph.keys() {
-        dfs(start, &graph, &mut visiting, &mut visited, &mut cyclic_nodes);
+        dfs(
+            start,
+            &graph,
+            &mut visiting,
+            &mut visited,
+            &mut cyclic_nodes,
+        );
     }
     if cyclic_nodes.is_empty() {
         return false;
@@ -141,7 +147,9 @@ fn subproperty_cycle_intersects_chain(
     })
 }
 
-fn saturate_subproperties(subprops: &HashSet<(EntityId, EntityId)>) -> HashSet<(EntityId, EntityId)> {
+fn saturate_subproperties(
+    subprops: &HashSet<(EntityId, EntityId)>,
+) -> HashSet<(EntityId, EntityId)> {
     let mut closure = subprops.clone();
     let mut changed = true;
     while changed {
@@ -224,8 +232,9 @@ fn chain_regularity_ok(
         let left = &chain[i];
         let right = &chain[i + 1];
         let pair = [left.clone(), right.clone()];
-        if pair_chain_in_closure(&pair, right, all_chains, closure, inverses, reflexive, transitive)
-        {
+        if pair_chain_in_closure(
+            &pair, right, all_chains, closure, inverses, reflexive, transitive,
+        ) {
             return false;
         }
     }
@@ -384,13 +393,14 @@ fn compute_non_simple_roles(ontology: &Ontology) -> Result<HashSet<EntityId>> {
     Ok(non_simple)
 }
 
-fn cardinality_roles_in_axiom(
-    store: &ontologos_core::DlStore,
-    axiom: &DlAxiom,
-) -> Vec<EntityId> {
+fn cardinality_roles_in_axiom(store: &ontologos_core::DlStore, axiom: &DlAxiom) -> Vec<EntityId> {
     use ontologos_core::ClassExpr;
     let mut out = Vec::new();
-    fn collect_ce(store: &ontologos_core::DlStore, ce: ontologos_core::CeId, out: &mut Vec<EntityId>) {
+    fn collect_ce(
+        store: &ontologos_core::DlStore,
+        ce: ontologos_core::CeId,
+        out: &mut Vec<EntityId>,
+    ) {
         let Some(expr) = store.ce(ce) else {
             return;
         };

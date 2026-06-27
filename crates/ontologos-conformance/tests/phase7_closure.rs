@@ -20,12 +20,13 @@ fn phase7_dl_golden_vendored() {
         .get("corpora")
         .and_then(|c| c.get("family.owl"))
         .expect("family.owl corpus in golden");
-    assert_eq!(
-        family.get("profile").and_then(|v| v.as_str()),
-        Some("dl")
-    );
+    assert_eq!(family.get("profile").and_then(|v| v.as_str()), Some("dl"));
     assert!(
-        family.get("subsumption_count").and_then(|v| v.as_u64()).unwrap_or(0) > 0,
+        family
+            .get("subsumption_count")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0)
+            > 0,
         "family.owl golden should list subsumptions"
     );
 }

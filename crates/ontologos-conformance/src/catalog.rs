@@ -2314,10 +2314,8 @@ pub fn scan_promoted_axiom_failures() -> Vec<(String, String)> {
         return Vec::new();
     }
     let cases = read_catalog_file();
-    let by_id: std::collections::HashMap<&str, &HermitCase> = cases
-        .iter()
-        .map(|case| (case.id.as_str(), case))
-        .collect();
+    let by_id: std::collections::HashMap<&str, &HermitCase> =
+        cases.iter().map(|case| (case.id.as_str(), case)).collect();
     let mut failures: Vec<(String, String)> = promoted
         .into_iter()
         .filter_map(|id| {
@@ -7372,7 +7370,10 @@ fn conclusion_axioms_are_opa_chain_or_typing(
     for (_, axiom) in conclusion.axioms().iter() {
         match axiom {
             ontologos_core::Axiom::ObjectPropertyAssertion { .. } => {}
-            ontologos_core::Axiom::ClassAssertion { individual, class: _ } => {
+            ontologos_core::Axiom::ClassAssertion {
+                individual,
+                class: _,
+            } => {
                 let Some(ind_iri) = entity_iri(conclusion, *individual) else {
                     return false;
                 };
@@ -7956,7 +7957,8 @@ fn boolean_constructor_typing_entailment_guard(premise: &Ontology, conclusion: &
         let Some(conc_class_prem) = conc_class_prem else {
             continue;
         };
-        let conc_class_local = entity_iri(conclusion, *conc_class).map(|iri| iri_local_suffix(&iri).to_string());
+        let conc_class_local =
+            entity_iri(conclusion, *conc_class).map(|iri| iri_local_suffix(&iri).to_string());
         if boolean_constructor_typing_entailed(
             premise,
             &conc_ind_iri,
@@ -7976,7 +7978,8 @@ fn boolean_constructor_typing_entailment_guard(premise: &Ontology, conclusion: &
         let Some(conc_class_prem) = map_entity_by_iri(conclusion, premise, *class) else {
             continue;
         };
-        let conc_class_local = entity_iri(conclusion, *class).map(|iri| iri_local_suffix(&iri).to_string());
+        let conc_class_local =
+            entity_iri(conclusion, *class).map(|iri| iri_local_suffix(&iri).to_string());
         if boolean_constructor_typing_entailed(
             premise,
             &conc_ind_iri,
@@ -8010,9 +8013,7 @@ fn boolean_constructor_typing_entailed(
 ) -> bool {
     if let Some(local) = class_local {
         for prem_type in premise_individual_types(premise, individual_iri) {
-            if entity_iri(premise, prem_type)
-                .is_some_and(|iri| iri_local_suffix(&iri) == local)
-            {
+            if entity_iri(premise, prem_type).is_some_and(|iri| iri_local_suffix(&iri) == local) {
                 return true;
             }
         }
@@ -8113,9 +8114,9 @@ fn premise_individual_has_type(
         else {
             return false;
         };
-        if entity_iri(premise, *individual).is_none_or(|iri| {
-            iri_local_suffix(&iri) != iri_local_suffix(individual_iri)
-        }) {
+        if entity_iri(premise, *individual)
+            .is_none_or(|iri| iri_local_suffix(&iri) != iri_local_suffix(individual_iri))
+        {
             return false;
         }
         match premise.dl().ce(*ce) {
@@ -8127,19 +8128,19 @@ fn premise_individual_has_type(
             }
             _ => false,
         }
-    }) || premise.axioms().iter().any(|(_, axiom)| {
-        match axiom {
-            ontologos_core::Axiom::ClassAssertion {
-                individual: ind,
-                class: c,
-            } => entity_iri(premise, *ind).is_some_and(|iri| {
-                iri_local_suffix(&iri) == iri_local_suffix(individual_iri)
-            }) && (*c == class
-                || class_local.as_deref().is_some_and(|local| {
-                    entity_iri(premise, *c).is_some_and(|iri| iri_local_suffix(&iri) == local)
-                })),
-            _ => false,
+    }) || premise.axioms().iter().any(|(_, axiom)| match axiom {
+        ontologos_core::Axiom::ClassAssertion {
+            individual: ind,
+            class: c,
+        } => {
+            entity_iri(premise, *ind)
+                .is_some_and(|iri| iri_local_suffix(&iri) == iri_local_suffix(individual_iri))
+                && (*c == class
+                    || class_local.as_deref().is_some_and(|local| {
+                        entity_iri(premise, *c).is_some_and(|iri| iri_local_suffix(&iri) == local)
+                    }))
         }
+        _ => false,
     })
 }
 

@@ -131,8 +131,7 @@ fn load_ontology_with_limits_and_base_inner(
         let disjoint = crate::rdf_preprocess::expand_all_disjoint_collections(&normalized);
         let property_usage =
             crate::rdf_preprocess::inject_object_property_declarations_from_usage(&disjoint);
-        let preprocessed_rdf =
-            crate::rdf_preprocess::normalize_property_same_as(&property_usage);
+        let preprocessed_rdf = crate::rdf_preprocess::normalize_property_same_as(&property_usage);
         let set_ontology = read_horned_owl_from_reader(
             &mut std::io::Cursor::new(preprocessed_rdf.as_bytes().to_vec()),
             format,

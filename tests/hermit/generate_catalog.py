@@ -2348,20 +2348,51 @@ def write_wg_fixture(
     )
 
 
+# When both ``premise.rdf`` and ``premise.ofn`` exist, the RDF export is usually the WG
+# entailment fixture; these ids use curated OFN instead (RDF on disk is a stale alternate).
+WG_PREMISE_OFN_WHEN_DUAL = frozenset(
+    {
+        "Contradicting-2Ddatatype-2Drestrictions",
+        "Contradicting-2DdateTime-2Drestrictions",
+        "Minus-2Dinf-2Dnot-2Dowlreal",
+        "Qualified-2Dcardinality-2Dboolean",
+        "Qualified-2Dcardinality-2Drestricted-2Dint",
+        "String-2Dinteger-2Dclash",
+    }
+)
+
+
+def wg_premise_on_disk(out_dir: Path, test_id: str = "") -> Path | None:
+    """Select vendored premise fixture; prefer OFN only for ``WG_PREMISE_OFN_WHEN_DUAL``."""
+    prem_rdf = out_dir / "premise.rdf"
+    prem_ofn = out_dir / "premise.ofn"
+    if prem_ofn.is_file() and prem_rdf.is_file():
+        return prem_ofn if test_id in WG_PREMISE_OFN_WHEN_DUAL else prem_rdf
+    if prem_rdf.is_file() and not is_stub_rdf(prem_rdf.read_text(errors="replace")):
+        return prem_rdf
+    if prem_ofn.is_file():
+        return prem_ofn
+    return None
+
+
+def wg_conclusion_on_disk(out_dir: Path) -> Path | None:
+    conc_rdf = out_dir / "conclusion.rdf"
+    conc_ofn = out_dir / "conclusion.ofn"
+    if conc_rdf.is_file() and not is_stub_rdf(conc_rdf.read_text(errors="replace")):
+        return conc_rdf
+    if conc_ofn.is_file():
+        return conc_ofn
+    return None
+
+
 def wg_disk_fixture_refs(test_id: str) -> tuple[str | None, str | None]:
     """Return catalog-relative paths when fixtures were vendored on a prior run."""
     out_dir = OUT_WG_DATA / test_id
-    prem = None
-    conc = None
-    for name in ("premise.rdf", "premise.ofn"):
-        if (out_dir / name).is_file():
-            prem = f"wg/{test_id}/{name}"
-            break
-    for name in ("conclusion.rdf", "conclusion.ofn"):
-        if (out_dir / name).is_file():
-            conc = f"wg/{test_id}/{name}"
-            break
-    return prem, conc
+    prem = wg_premise_on_disk(out_dir, test_id)
+    conc = wg_conclusion_on_disk(out_dir)
+    prem_rel = f"wg/{test_id}/{prem.name}" if prem is not None else None
+    conc_rel = f"wg/{test_id}/{conc.name}" if conc is not None else None
+    return prem_rel, conc_rel
 
 
 def detect_wg_test_type(block: str) -> tuple[str, bool | None, bool | None]:
@@ -2528,8 +2559,8 @@ def promote_wg_from_disk() -> None:
         prem_ofn = OUT_WG_DATA / test_id / "premise.ofn"
         conc_rdf = OUT_WG_DATA / test_id / "conclusion.rdf"
         conc_ofn = OUT_WG_DATA / test_id / "conclusion.ofn"
-        prem = prem_rdf if prem_rdf.is_file() else prem_ofn if prem_ofn.is_file() else None
-        conc = conc_rdf if conc_rdf.is_file() else conc_ofn if conc_ofn.is_file() else None
+        prem = wg_premise_on_disk(OUT_WG_DATA / test_id, test_id)
+        conc = wg_conclusion_on_disk(OUT_WG_DATA / test_id)
         if prem is not None and is_stub_rdf(prem.read_text(errors="replace")):
             prem = None
         if conc is not None and is_stub_rdf(conc.read_text(errors="replace")):

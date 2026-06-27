@@ -10,7 +10,8 @@ pub fn functional_inverse_cardinality_product_inconsistent(ontology: &Ontology) 
     let Some((card_a, card_b, n_q)) = extract_functional_inverse_grid_counts(ontology) else {
         return false;
     };
-    let product_holds = card_a == card_b.saturating_mul(n_q) || card_b == card_a.saturating_mul(n_q);
+    let product_holds =
+        card_a == card_b.saturating_mul(n_q) || card_b == card_a.saturating_mul(n_q);
     !product_holds
 }
 

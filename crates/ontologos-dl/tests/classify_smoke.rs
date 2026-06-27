@@ -43,8 +43,8 @@ fn detects_disjoint_unsatisfiable_class() {
 
 #[test]
 fn family_relative_union_members_subsumed() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data/family.owl");
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/family.owl");
     let ontology = ontologos_parser::load_ontology(&path).expect("load family");
     let taxonomy = classify(&ontology).expect("classify");
     let ns = "http://a.com/ontology#";
@@ -54,5 +54,8 @@ fn family_relative_union_members_subsumed() {
     let relative = ontology.lookup_entity(&format!("{ns}Relative")).unwrap();
     assert!(taxonomy.is_subsumed(child, relative), "Child ⊑ Relative");
     assert!(taxonomy.is_subsumed(parent, relative), "Parent ⊑ Relative");
-    assert!(taxonomy.is_subsumed(sibling, relative), "Sibling ⊑ Relative");
+    assert!(
+        taxonomy.is_subsumed(sibling, relative),
+        "Sibling ⊑ Relative"
+    );
 }

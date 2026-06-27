@@ -199,18 +199,24 @@ fn facet_check(
                 "http://www.w3.org/2001/XMLSchema#pattern" => pattern_matches(&lit.lexical, value),
                 "http://www.w3.org/2001/XMLSchema#maxLength" => {
                     let n = value.parse::<usize>().unwrap_or(usize::MAX);
-                    facet_lexical_measure(&lit.lexical, facet_base_datatype_iri(store, *base, ontology, defs))
-                        <= n
+                    facet_lexical_measure(
+                        &lit.lexical,
+                        facet_base_datatype_iri(store, *base, ontology, defs),
+                    ) <= n
                 }
                 "http://www.w3.org/2001/XMLSchema#length" => {
                     let n = value.parse::<usize>().unwrap_or(usize::MAX);
-                    facet_lexical_measure(&lit.lexical, facet_base_datatype_iri(store, *base, ontology, defs))
-                        == n
+                    facet_lexical_measure(
+                        &lit.lexical,
+                        facet_base_datatype_iri(store, *base, ontology, defs),
+                    ) == n
                 }
                 "http://www.w3.org/2001/XMLSchema#minLength" => {
                     let n = value.parse::<usize>().unwrap_or(0);
-                    facet_lexical_measure(&lit.lexical, facet_base_datatype_iri(store, *base, ontology, defs))
-                        >= n
+                    facet_lexical_measure(
+                        &lit.lexical,
+                        facet_base_datatype_iri(store, *base, ontology, defs),
+                    ) >= n
                 }
                 _ => false,
             }
@@ -257,9 +263,7 @@ fn integer_value_space(target_iri: &str, value: i64) -> bool {
         "http://www.w3.org/2001/XMLSchema#unsignedInt" => {
             value >= 0 && (value as u64) <= 4_294_967_295
         }
-        "http://www.w3.org/2001/XMLSchema#unsignedShort" => {
-            value >= 0 && (value as u64) <= 65_535
-        }
+        "http://www.w3.org/2001/XMLSchema#unsignedShort" => value >= 0 && (value as u64) <= 65_535,
         "http://www.w3.org/2001/XMLSchema#unsignedByte" => value >= 0 && (value as u64) <= 255,
         "http://www.w3.org/2001/XMLSchema#byte" => (-128..=127).contains(&value),
         _ => false,
@@ -328,17 +332,18 @@ pub(crate) fn literal_in_datatype_value_space(
                 && numeric_datatype_iri(target_iri.as_str())
             {
                 return false;
-            } else if numeric_datatype_iri(lit_iri_str) && plain_literal_datatype_iri(target_iri.as_str())
+            } else if numeric_datatype_iri(lit_iri_str)
+                && plain_literal_datatype_iri(target_iri.as_str())
             {
                 return false;
-            } else if plain_literal_datatype_iri(lit_iri_str) && binary_datatype_iri(target_iri.as_str())
+            } else if plain_literal_datatype_iri(lit_iri_str)
+                && binary_datatype_iri(target_iri.as_str())
             {
                 return false;
             } else if numeric_datatype_iri(lit_iri_str)
                 && matches!(
                     target_iri.as_str(),
-                    "http://www.w3.org/2002/07/owl#real"
-                        | "http://www.w3.org/2002/07/owl#rational"
+                    "http://www.w3.org/2002/07/owl#real" | "http://www.w3.org/2002/07/owl#rational"
                 )
             {
                 // Fall through to value-space rules (owl:real excludes non-finite floats).
@@ -360,7 +365,7 @@ pub(crate) fn literal_in_datatype_value_space(
     }
     if lit.lexical.contains('.')
         && !lit.lexical.contains('/')
-        &&         matches!(
+        && matches!(
             target_iri.as_str(),
             "http://www.w3.org/2001/XMLSchema#int"
                 | "http://www.w3.org/2001/XMLSchema#integer"
@@ -401,8 +406,7 @@ pub(crate) fn literal_in_datatype_value_space(
             }
             parse_numeric(&lit.lexical).is_finite()
         }
-        "http://www.w3.org/2001/XMLSchema#float"
-        | "http://www.w3.org/2001/XMLSchema#double" => {
+        "http://www.w3.org/2001/XMLSchema#float" | "http://www.w3.org/2001/XMLSchema#double" => {
             let n = parse_numeric(&lit.lexical);
             n.is_finite() || n.is_nan()
         }
@@ -573,7 +577,9 @@ pub(crate) fn trailing_xml_text_suffix(lex: &str) -> String {
 pub(crate) fn canonical_xml_literal(lex: &str) -> String {
     let lex = unescape_ofn_literal(lex);
     let lex = collapse_xml_whitespace_outside_quotes(&lex);
-    let lex = lex.replace("<br ></br>", "<br/>").replace("<br></br>", "<br/>");
+    let lex = lex
+        .replace("<br ></br>", "<br/>")
+        .replace("<br></br>", "<br/>");
     let lex = lex.replace("></img>", "/>");
     let lex = canonicalize_xml_tag_attributes(&lex);
     expand_self_closing_empty_tags(&lex)
@@ -738,10 +744,7 @@ fn parse_xml_tag_name_and_attrs(inner: &str) -> (String, Vec<(String, String)>) 
     let Some(eq_pos) = eq else {
         return (inner.to_string(), Vec::new());
     };
-    let attr_name_start = inner[..eq_pos]
-        .rfind(' ')
-        .map(|i| i + 1)
-        .unwrap_or(0);
+    let attr_name_start = inner[..eq_pos].rfind(' ').map(|i| i + 1).unwrap_or(0);
     let name = inner[..attr_name_start].trim().to_string();
     let mut attrs = Vec::new();
     let mut rest = inner[attr_name_start..].trim();
@@ -1169,14 +1172,14 @@ fn literal_in_data_range_value_space(
                 return literal_in_datatype_value_space(ontology, lit, *dt);
             }
             Some(DataExpr::And(ops)) => {
-                return ops.iter().all(|op| {
-                    literal_in_data_range_value_space(lit, store, *op, ontology, defs)
-                });
+                return ops
+                    .iter()
+                    .all(|op| literal_in_data_range_value_space(lit, store, *op, ontology, defs));
             }
             Some(DataExpr::Or(ops)) => {
-                return ops.iter().any(|op| {
-                    literal_in_data_range_value_space(lit, store, *op, ontology, defs)
-                });
+                return ops
+                    .iter()
+                    .any(|op| literal_in_data_range_value_space(lit, store, *op, ontology, defs));
             }
             Some(DataExpr::Literal { .. }) => return true,
             _ => return true,
@@ -1229,10 +1232,7 @@ pub(crate) fn pattern_witness_lexicals(pattern: &str) -> Vec<String> {
     }
     if let Some(inner) = body.strip_prefix("ab(").and_then(|r| r.strip_suffix(')')) {
         if inner.contains('|') {
-            return inner
-                .split('|')
-                .map(|alt| format!("ab{alt}"))
-                .collect();
+            return inner.split('|').map(|alt| format!("ab{alt}")).collect();
         }
         if let Some(ch) = inner.strip_suffix('*') {
             return vec![
@@ -1256,10 +1256,7 @@ pub(crate) fn pattern_witness_lexicals(pattern: &str) -> Vec<String> {
             .and_then(|r| r.strip_suffix(')'))
             .filter(|alt| alt.contains('|'))
     }) {
-        return inner
-            .split('|')
-            .map(|alt| format!("a{alt}"))
-            .collect();
+        return inner.split('|').map(|alt| format!("a{alt}")).collect();
     }
     Vec::new()
 }
@@ -1276,7 +1273,9 @@ fn pattern_matches(lexical: &str, pattern: &str) -> bool {
         if let Some(ch) = inner.strip_suffix('*') {
             return lexical == "ab"
                 || (lexical.starts_with("ab")
-                    && lexical[2..].chars().all(|c| c == ch.chars().next().unwrap_or('\0')));
+                    && lexical[2..]
+                        .chars()
+                        .all(|c| c == ch.chars().next().unwrap_or('\0')));
         }
         if let Some(ch) = inner.strip_suffix('+') {
             let Some(c) = ch.chars().next() else {

@@ -18,10 +18,10 @@ use ontologos_core::{
 use thiserror::Error;
 
 pub use classify::DlClassifier;
+pub use datatype::is_data_range_satisfiable;
 pub use datatype::{
     is_datatype_consistent, named_class_datatype_satisfiable, LiteralIndex, LiteralValue,
 };
-pub use datatype::is_data_range_satisfiable;
 pub use ontologos_alc::{classify as alc_classify, clausify, Clause, ClauseSet, DlOntology};
 pub use ontologos_alc::{classify_with_seed, TableauSeed};
 pub use ria::RoleHierarchy;

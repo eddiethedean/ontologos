@@ -71,7 +71,12 @@ fn main() {
         failures.sort_by(|a, b| a.id.cmp(&b.id));
         let count = failures.len();
         for f in &failures {
-            println!("{} [{}] {}", f.id, f.family, f.error.as_deref().unwrap_or("?"));
+            println!(
+                "{} [{}] {}",
+                f.id,
+                f.family,
+                f.error.as_deref().unwrap_or("?")
+            );
         }
         eprintln!("failures: {count}");
         return;

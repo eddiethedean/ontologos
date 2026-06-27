@@ -409,7 +409,9 @@ pub fn inject_object_property_declarations_from_usage(input: &str) -> String {
     let Some(insert_at) = find_rdf_open_body_start(input) else {
         return input.to_owned();
     };
-    let root_end = input.find("<rdf:RDF").and_then(|s| input[s..].find('>').map(|e| s + e + 1));
+    let root_end = input
+        .find("<rdf:RDF")
+        .and_then(|s| input[s..].find('>').map(|e| s + e + 1));
     let mut out = String::with_capacity(input.len() + injections.len() + 64);
     if let Some(root_end) = root_end {
         let root_tag = &input[..root_end];
@@ -2713,7 +2715,7 @@ fn object_property_assertions_from_sameas_block(
     block: &str,
     base: &str,
     xmlns: &std::collections::HashMap<String, String>,
-    anon: &mut usize,
+    _anon: &mut usize,
 ) -> Vec<(String, String, String)> {
     let mut out = Vec::new();
     let mut pos = 0usize;
@@ -2768,18 +2770,15 @@ pub(crate) fn collect_rdfs_object_property_ranges(rdf: &str) -> Vec<(String, Str
 pub(crate) fn collect_functional_object_properties(rdf: &str) -> Vec<String> {
     let base = parse_xml_base(rdf);
     let functional = "http://www.w3.org/2002/07/owl#FunctionalProperty";
-    let mut out = collect_owl_property_characteristic_elements(rdf, "owl:FunctionalProperty", &base);
+    let mut out =
+        collect_owl_property_characteristic_elements(rdf, "owl:FunctionalProperty", &base);
     out.extend(collect_properties_with_rdf_type(rdf, functional, &base));
     out.sort();
     out.dedup();
     out
 }
 
-fn collect_owl_property_characteristic_elements(
-    rdf: &str,
-    tag: &str,
-    base: &str,
-) -> Vec<String> {
+fn collect_owl_property_characteristic_elements(rdf: &str, tag: &str, base: &str) -> Vec<String> {
     let open = format!("<{tag}");
     let mut out = Vec::new();
     let mut pos = 0usize;
@@ -2793,9 +2792,9 @@ fn collect_owl_property_characteristic_elements(
         };
         let tag_end = start + tag_end_rel + 1;
         let open_tag = &rdf[start..tag_end];
-        if let Some(iri) = extract_attribute(open_tag, "rdf:about").or_else(|| {
-            extract_attribute(open_tag, "rdf:ID").map(|id| format!("{base}#{id}"))
-        }) {
+        if let Some(iri) = extract_attribute(open_tag, "rdf:about")
+            .or_else(|| extract_attribute(open_tag, "rdf:ID").map(|id| format!("{base}#{id}")))
+        {
             out.push(resolve_relative_iri(&iri, base));
         }
         pos = if open_tag.trim_end().ends_with("/>") {
@@ -2822,10 +2821,9 @@ fn collect_properties_with_rdf_type(rdf: &str, type_iri: &str, base: &str) -> Ve
         let block = &rdf[start..end];
         let open_end = block.find('>').unwrap_or(0);
         let open = &block[..=open_end];
-        let Some(about) = extract_attribute(open, "rdf:about").or_else(|| {
-            extract_attribute(open, "rdf:ID")
-                .map(|id| format!("{base}#{id}"))
-        }) else {
+        let Some(about) = extract_attribute(open, "rdf:about")
+            .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+        else {
             pos = end;
             continue;
         };
@@ -5500,12 +5498,19 @@ mod tests {
             "../../benchmarks/data/hermit/wg/TestCase-3AWebOnt-2DFunctionalProperty-2D004/conclusion.rdf",
         );
         let ont = load_ontology(&path).expect("load");
-        let has_functional = ont.axioms().iter().any(|(_, ax)| {
-            matches!(ax, ontologos_core::Axiom::FunctionalObjectProperty(_))
-        });
-        eprintln!("conclusion axioms: {:?}", ont.axioms().iter().collect::<Vec<_>>());
+        let has_functional = ont
+            .axioms()
+            .iter()
+            .any(|(_, ax)| matches!(ax, ontologos_core::Axiom::FunctionalObjectProperty(_)));
+        eprintln!(
+            "conclusion axioms: {:?}",
+            ont.axioms().iter().collect::<Vec<_>>()
+        );
         eprintln!("conclusion dl: {:?}", ont.dl().axioms().collect::<Vec<_>>());
-        assert!(has_functional, "expected FunctionalObjectProperty in conclusion");
+        assert!(
+            has_functional,
+            "expected FunctionalObjectProperty in conclusion"
+        );
     }
 
     #[test]
