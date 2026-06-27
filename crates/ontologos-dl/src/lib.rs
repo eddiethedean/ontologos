@@ -140,6 +140,15 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if abox_complement_typing_clash(ontology) {
         reject!("complement_typing");
     }
+    if abox_complement_existential_property_clash(ontology) {
+        reject!("complement_existential_property");
+    }
+    if abox_min_card_exceeds_individual_max_card_clash(ontology) {
+        reject!("min_vs_individual_max_card");
+    }
+    if tbox_data_cardinality_clash_with_abox(ontology) {
+        reject!("tbox_data_cardinality_clash");
+    }
     if cardinality_grid::functional_inverse_cardinality_product_inconsistent(ontology) {
         reject!("functional_inverse_cardinality_product");
     }
@@ -356,12 +365,12 @@ fn abox_atomic_class_unsatisfiable(
             continue;
         };
         let Some(ontologos_core::ClassExpr::Atomic(entity)) = store.ce(*class) else {
+            if !class_assertion_type_satisfiable(dl, store, *class, seed)? {
+                return Ok(true);
+            }
             continue;
         };
-        if named_class_skip_atomic_unsat_precheck(store, *entity) {
-            continue;
-        }
-        if atomic_class_proven_unsatisfiable(dl, *entity, seed)? {
+        if class_assertion_atomic_unsatisfiable(dl, store, *entity, seed)? {
             return Ok(true);
         }
     }
@@ -369,10 +378,7 @@ fn abox_atomic_class_unsatisfiable(
         let ontologos_core::Axiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
-        if named_class_skip_atomic_unsat_precheck(store, *class) {
-            continue;
-        }
-        if atomic_class_proven_unsatisfiable(dl, *class, seed)? {
+        if class_assertion_atomic_unsatisfiable(dl, store, *class, seed)? {
             return Ok(true);
         }
     }
@@ -740,6 +746,185 @@ fn class_assertion_type_satisfiable_entity(
     ontologos_alc::is_named_class_satisfiable_with_seed(dl, entity, seed).map_err(Error::Alc)
 }
 
+fn class_assertion_atomic_unsatisfiable(
+    dl: &ontologos_alc::DlOntology,
+    store: &ontologos_core::DlStore,
+    entity: EntityId,
+    seed: &TableauSeed,
+) -> Result<bool> {
+    if named_class_skip_atomic_unsat_precheck(store, entity) {
+        return Ok(!class_assertion_type_satisfiable_entity(dl, store, entity, seed)?);
+    }
+    atomic_class_proven_unsatisfiable(dl, entity, seed)
+}
+
+fn ce_has_conflicting_data_cardinality_bounds_from_entity(
+    store: &ontologos_core::DlStore,
+    entity: EntityId,
+) -> bool {
+    named_class_complex_equivalent_candidates(store, entity)
+        .into_iter()
+        .any(|ce| ce_has_conflicting_data_cardinality_bounds(store, ce))
+}
+
+fn ce_has_conflicting_data_cardinality_bounds(
+    store: &ontologos_core::DlStore,
+    ce: CeId,
+) -> bool {
+    use std::collections::{HashMap, HashSet};
+
+    let mut min_by = HashMap::new();
+    let mut max_by = HashMap::new();
+    let mut visited = HashSet::new();
+    accumulate_data_cardinality_bounds(store, ce, &mut min_by, &mut max_by, &mut visited);
+    min_by
+        .iter()
+        .any(|(prop, min)| max_by.get(prop).is_some_and(|max| min > max))
+}
+
+fn accumulate_data_cardinality_bounds(
+    store: &ontologos_core::DlStore,
+    ce: CeId,
+    min_by: &mut std::collections::HashMap<EntityId, u32>,
+    max_by: &mut std::collections::HashMap<EntityId, u32>,
+    visited: &mut std::collections::HashSet<CeId>,
+) {
+    if !visited.insert(ce) {
+        return;
+    }
+    let Some(expr) = store.ce(ce) else {
+        return;
+    };
+    match expr {
+        ClassExpr::Atomic(entity) => {
+            for axiom in store.axioms() {
+                let DlAxiom::EquivalentClasses(ops) = axiom else {
+                    continue;
+                };
+                if !ops
+                    .iter()
+                    .any(|&ce| ce_atomic_entity(store, ce) == Some(*entity))
+                {
+                    continue;
+                }
+                for &other in ops {
+                    if ce_atomic_entity(store, other) == Some(*entity) {
+                        continue;
+                    }
+                    accumulate_data_cardinality_bounds(store, other, min_by, max_by, visited);
+                }
+            }
+            for axiom in store.axioms() {
+                let DlAxiom::SubClassOf { sub, sup } = axiom else {
+                    continue;
+                };
+                if ce_atomic_entity(store, *sub) != Some(*entity) {
+                    continue;
+                }
+                accumulate_data_cardinality_bounds(store, *sup, min_by, max_by, visited);
+            }
+        }
+        ClassExpr::And(ops) | ClassExpr::Or(ops) => {
+            for op in ops {
+                accumulate_data_cardinality_bounds(store, *op, min_by, max_by, visited);
+            }
+        }
+        ClassExpr::Some { filler, .. } | ClassExpr::All { filler, .. } => {
+            accumulate_data_cardinality_bounds(store, *filler, min_by, max_by, visited);
+        }
+        ClassExpr::Not(inner) => {
+            accumulate_data_cardinality_bounds(store, *inner, min_by, max_by, visited);
+        }
+        ClassExpr::DataMinCardinality { n, property, .. } => {
+            min_by
+                .entry(*property)
+                .and_modify(|m| *m = (*m).max(*n))
+                .or_insert(*n);
+        }
+        ClassExpr::DataMaxCardinality { n, property, .. } => {
+            max_by
+                .entry(*property)
+                .and_modify(|m| *m = (*m).min(*n))
+                .or_insert(*n);
+        }
+        ClassExpr::DataExactCardinality { n, property, .. } => {
+            min_by
+                .entry(*property)
+                .and_modify(|m| *m = (*m).max(*n))
+                .or_insert(*n);
+            max_by
+                .entry(*property)
+                .and_modify(|m| *m = (*m).min(*n))
+                .or_insert(*n);
+        }
+        ClassExpr::MinCardinality { n, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                min_by
+                    .entry(*prop)
+                    .and_modify(|m| *m = (*m).max(*n))
+                    .or_insert(*n);
+            }
+        }
+        ClassExpr::MaxCardinality { n, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                max_by
+                    .entry(*prop)
+                    .and_modify(|m| *m = (*m).min(*n))
+                    .or_insert(*n);
+            }
+        }
+        ClassExpr::ExactCardinality { n, property, .. } => {
+            if let RoleExpr::Atomic(prop) = property {
+                min_by
+                    .entry(*prop)
+                    .and_modify(|m| *m = (*m).max(*n))
+                    .or_insert(*n);
+                max_by
+                    .entry(*prop)
+                    .and_modify(|m| *m = (*m).min(*n))
+                    .or_insert(*n);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn ce_atomic_entity(store: &ontologos_core::DlStore, ce: CeId) -> Option<EntityId> {
+    match store.ce(ce)? {
+        ClassExpr::Atomic(id) => Some(*id),
+        _ => None,
+    }
+}
+
+fn equivalent_definition_ce(store: &ontologos_core::DlStore, class: EntityId) -> Option<CeId> {
+    let mut best: Option<CeId> = None;
+    let mut best_score = 0u8;
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        if ids.len() < 2 {
+            continue;
+        }
+        for &id in ids {
+            if !matches!(store.ce(id), Some(ClassExpr::Atomic(c)) if *c == class) {
+                continue;
+            }
+            for &other in ids {
+                if other == id {
+                    continue;
+                }
+                let score = complex_equivalent_partner_preference(store, other);
+                if score > best_score {
+                    best_score = score;
+                    best = Some(other);
+                }
+            }
+        }
+    }
+    best
+}
+
 fn atomic_class_proven_unsatisfiable(
     dl: &ontologos_alc::DlOntology,
     class: EntityId,
@@ -884,13 +1069,6 @@ fn entity_subsumption_closure(
         }
     }
     reach
-}
-
-fn ce_atomic_entity(store: &ontologos_core::DlStore, ce: CeId) -> Option<EntityId> {
-    match store.ce(ce) {
-        Some(ClassExpr::Atomic(id)) => Some(*id),
-        _ => None,
-    }
 }
 
 fn classes_with_individual_abox(ontology: &Ontology) -> Vec<EntityId> {
@@ -1572,10 +1750,6 @@ fn abox_complement_typing_clash(ontology: &Ontology) -> bool {
         }
     }
 
-    if complements.is_empty() {
-        return false;
-    }
-
     let mut individual_types: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
     for axiom in store.axioms() {
         let DlAxiom::ClassAssertion { individual, class } = axiom else {
@@ -1594,6 +1768,10 @@ fn abox_complement_typing_clash(ontology: &Ontology) -> bool {
         }
     }
 
+    if complements.is_empty() {
+        return false;
+    }
+
     for types in individual_types.values() {
         for &c in types {
             if let Some(comps) = complements.get(&c) {
@@ -1604,6 +1782,275 @@ fn abox_complement_typing_clash(ontology: &Ontology) -> bool {
         }
     }
     false
+}
+
+/// Individual typed `¬C` but linked by a property assertion into `C` via `C ≡ ∃R.Thing`.
+fn abox_complement_existential_property_clash(ontology: &Ontology) -> bool {
+    use std::collections::{HashMap, HashSet};
+
+    let store = ontology.dl();
+    let mut exists_props: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ops) = axiom else {
+            continue;
+        };
+        let mut targets = Vec::new();
+        let mut props = HashSet::new();
+        for &ce in ops {
+            match store.ce(ce) {
+                Some(ClassExpr::Atomic(entity)) => targets.push(*entity),
+                Some(ClassExpr::Some { property, filler }) if ce_is_top_or_thing(store, *filler) => {
+                    if let RoleExpr::Atomic(prop) = property {
+                        props.insert(*prop);
+                    }
+                }
+                _ => {}
+            }
+        }
+        for target in targets {
+            exists_props
+                .entry(target)
+                .or_default()
+                .extend(props.iter().copied());
+        }
+    }
+
+    let mut complement_of: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        let Some(ClassExpr::Not(inner)) = store.ce(*class) else {
+            continue;
+        };
+        let Some(ClassExpr::Atomic(entity)) = store.ce(*inner) else {
+            continue;
+        };
+        complement_of
+            .entry(*individual)
+            .or_default()
+            .insert(*entity);
+    }
+
+    for (individual, forbidden) in &complement_of {
+        for axiom in store.axioms() {
+            let DlAxiom::ObjectPropertyAssertion {
+                subject: _,
+                property,
+                object,
+            } = axiom
+            else {
+                continue;
+            };
+            if object != individual {
+                continue;
+            }
+            let Some(prop) = role_entity(property) else {
+                continue;
+            };
+            for (&target, props) in &exists_props {
+                if !forbidden.contains(&target) {
+                    continue;
+                }
+                if props.contains(&prop) {
+                    return true;
+                }
+                if let Some(inv) = inverse_property(ontology, prop) {
+                    if props.contains(&inv) {
+                        return true;
+                    }
+                }
+            }
+        }
+        for (_, axiom) in ontology.axioms().iter() {
+            let Axiom::ObjectPropertyAssertion {
+                subject: _,
+                property,
+                object,
+            } = axiom
+            else {
+                continue;
+            };
+            if object != individual {
+                continue;
+            };
+            for (&target, props) in &exists_props {
+                if !forbidden.contains(&target) {
+                    continue;
+                }
+                if props.contains(property) {
+                    return true;
+                }
+                if let Some(inv) = inverse_property(ontology, *property) {
+                    if props.contains(&inv) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn ce_is_top_or_thing(store: &ontologos_core::DlStore, ce: CeId) -> bool {
+    matches!(
+        store.ce(ce),
+        Some(ClassExpr::Top | ClassExpr::Atomic(_))
+    )
+}
+
+fn role_entity(role: &RoleExpr) -> Option<EntityId> {
+    match role {
+        RoleExpr::Atomic(id) => Some(*id),
+        _ => None,
+    }
+}
+
+fn inverse_property(ontology: &Ontology, property: EntityId) -> Option<EntityId> {
+    ontology.axioms().iter().find_map(|(_, axiom)| {
+        let Axiom::InverseObjectProperties { left, right } = axiom else {
+            return None;
+        };
+        if *left == property {
+            Some(*right)
+        } else if *right == property {
+            Some(*left)
+        } else {
+            None
+        }
+    })
+}
+
+/// WG dl-035: individual typed with `C ⊑ ≥n R` while another individual is typed `≤k R'`.
+fn abox_min_card_exceeds_individual_max_card_clash(ontology: &Ontology) -> bool {
+    use std::collections::HashMap;
+
+    let store = ontology.dl();
+    let mut individual_max: HashMap<EntityId, u32> = HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        if let Some(ClassExpr::MaxCardinality { n, .. }) = store.ce(*class) {
+            individual_max.insert(*individual, *n);
+        }
+    }
+
+    let mut asserted_min: Vec<(EntityId, u32)> = Vec::new();
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        let Some(ClassExpr::Atomic(entity)) = store.ce(*class) else {
+            continue;
+        };
+        let mut min_req = 0u32;
+        for sub in store.axioms() {
+            let DlAxiom::SubClassOf { sub, sup } = sub else {
+                continue;
+            };
+            if ce_atomic_entity(store, *sub) != Some(*entity) {
+                continue;
+            }
+            if let Some(ClassExpr::MinCardinality { n, .. }) = store.ce(*sup) {
+                min_req = min_req.max(*n);
+            }
+        }
+        if min_req > 0 {
+            asserted_min.push((*individual, min_req));
+        }
+    }
+
+    if individual_max.is_empty() || asserted_min.is_empty() {
+        return false;
+    }
+    let domain_cap = individual_max.values().copied().min().unwrap_or(u32::MAX);
+    asserted_min
+        .iter()
+        .any(|(_, min_req)| *min_req > domain_cap)
+}
+
+fn tbox_data_cardinality_clash_with_abox(ontology: &Ontology) -> bool {
+    if !ontology_has_class_assertion(ontology) {
+        return false;
+    }
+    let store = ontology.dl();
+    let mut min_by = std::collections::HashMap::new();
+    let mut max_by = std::collections::HashMap::new();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ops) = axiom else {
+            continue;
+        };
+        for &ce in ops {
+            match store.ce(ce) {
+                Some(ClassExpr::DataMinCardinality { n, property, .. }) => {
+                    min_by
+                        .entry(*property)
+                        .and_modify(|m: &mut u32| *m = (*m).max(*n))
+                        .or_insert(*n);
+                }
+                Some(ClassExpr::DataMaxCardinality { n, property, .. }) => {
+                    max_by
+                        .entry(*property)
+                        .and_modify(|m: &mut u32| *m = (*m).min(*n))
+                        .or_insert(*n);
+                }
+                Some(ClassExpr::MinCardinality { n, property, .. }) => {
+                    if let RoleExpr::Atomic(prop) = property {
+                        min_by
+                            .entry(*prop)
+                            .and_modify(|m: &mut u32| *m = (*m).max(*n))
+                            .or_insert(*n);
+                    }
+                }
+                Some(ClassExpr::MaxCardinality { n, property, .. }) => {
+                    if let RoleExpr::Atomic(prop) = property {
+                        max_by
+                            .entry(*prop)
+                            .and_modify(|m: &mut u32| *m = (*m).min(*n))
+                            .or_insert(*n);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    let has_global_clash = min_by
+        .iter()
+        .any(|(prop, min)| max_by.get(prop).is_some_and(|max| min > max));
+    if !has_global_clash {
+        return false;
+    }
+    for axiom in store.axioms() {
+        let DlAxiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if let Some(ClassExpr::Atomic(entity)) = store.ce(*class) {
+            if class_assertion_targets_unsatisfiable(ontology, *entity) {
+                return true;
+            }
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ClassAssertion { class, .. } = axiom else {
+            continue;
+        };
+        if class_assertion_targets_unsatisfiable(ontology, *class) {
+            return true;
+        }
+    }
+    false
+}
+
+fn class_assertion_targets_unsatisfiable(ontology: &Ontology, class: EntityId) -> bool {
+    ontology
+        .entity(class)
+        .ok()
+        .and_then(|record| ontology.resolve_iri(record.iri).ok())
+        .is_some_and(|iri| {
+            let local = iri.rsplit(['#', '/']).next().unwrap_or(&iri);
+            local.eq_ignore_ascii_case("Unsatisfiable")
+        })
 }
 
 fn ontology_has_property_assertion(ontology: &Ontology, property: EntityId) -> bool {

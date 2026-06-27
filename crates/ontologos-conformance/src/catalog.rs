@@ -2975,6 +2975,42 @@ fn conclusion_only_class_assertions(conclusion: &Ontology) -> bool {
             .any(|(_, a)| matches!(a, ontologos_core::Axiom::ClassAssertion { .. }))
 }
 
+/// Fast path for WG `Consistent-but-all-unsat` — avoids full merged classification.
+fn consistent_but_all_unsat_fast_entailment(
+    premise: &Ontology,
+    conclusion: &Ontology,
+    budget: Duration,
+) -> Result<Option<bool>, String> {
+    let Some(targets_conc) = conclusion_nothing_subclass_entailment_targets(conclusion) else {
+        return Ok(None);
+    };
+    if targets_conc.len() < 4 {
+        return Ok(None);
+    }
+    let mut targets = Vec::new();
+    for sub_e in targets_conc {
+        let Some(sub_p) = map_entity_by_iri(conclusion, premise, sub_e)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, sub_e))
+        else {
+            return Ok(None);
+        };
+        targets.push(sub_p);
+    }
+    let premise_for_consistency = premise.clone();
+    let consistent = with_default_tableau_limits(|| {
+        ontologos_dl::is_consistent(&premise_for_consistency).map_err(|e| e.to_string())
+    })?;
+    if !consistent {
+        return Ok(Some(false));
+    }
+    let premise_for_unsat = premise.clone();
+    let entailed = with_default_tableau_limits(|| {
+        ontologos_dl::named_classes_unsatisfiable(&premise_for_unsat, &targets)
+            .map_err(|e| e.to_string())
+    })?;
+    Ok(Some(entailed))
+}
+
 fn entailment_via_subclass_nothing(
     premise: &Ontology,
     conclusion: &Ontology,
@@ -3116,6 +3152,16 @@ fn entailment_holds_with_budget_opts(
     allow_positive_guards: bool,
 ) -> Result<bool, String> {
     let budget = budget.unwrap_or(dl_classify_budget());
+    if allow_positive_guards {
+        if let Some(true) = consistent_but_all_unsat_fast_entailment(premise, conclusion, budget)? {
+            return Ok(true);
+        }
+    }
+    if allow_positive_guards && conclusion_nothing_subclass_entailment_targets(conclusion).is_some() {
+        if let Some(entailed) = entailment_via_subclass_nothing(premise, conclusion, budget)? {
+            return Ok(entailed);
+        }
+    }
     if allow_positive_guards {
         if data_exact_cardinality_literal_entailment_guard(premise, conclusion) {
             return Ok(true);
