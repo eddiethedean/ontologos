@@ -10,6 +10,11 @@ pub use consistency::{
     is_data_range_satisfiable, is_datatype_consistent, named_class_datatype_satisfiable,
 };
 
+/// Normalize percent-encoded `#` in IRIs from RDF/XML `rdf:resource` attributes.
+pub(crate) fn canonical_datatype_iri(iri: &str) -> String {
+    iri.replace("%23", "#")
+}
+
 /// Literal with lexical form and datatype.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LiteralValue {
@@ -303,27 +308,41 @@ pub(crate) fn literal_in_datatype_value_space(
         .entity(lit.datatype)
         .ok()
         .and_then(|r| ont.resolve_iri(r.iri).ok());
-    let Some(target_iri) = ont
+    let Some(target_iri_raw) = ont
         .entity(target)
         .ok()
         .and_then(|r| ont.resolve_iri(r.iri).ok())
     else {
         return false;
     };
+    let target_iri = canonical_datatype_iri(&target_iri_raw);
+    let lit_iri = lit_iri.map(|s| canonical_datatype_iri(&s));
     if lit.datatype != target {
         let lit_iri_str = lit_iri.as_deref().unwrap_or("");
         let untyped = lit_iri_str == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Literal"
             || lit_iri_str == "http://www.w3.org/2000/01/rdf-schema#Literal";
         if !untyped && !datatype_subsumes(ont, lit.datatype, target) {
-            if plain_literal_datatype_iri(lit_iri_str)
-                && numeric_datatype_iri(&target_iri)
+            if lit_iri_str == target_iri.as_str() {
+                // Same logical datatype under a distinct entity id (e.g. owl%23 vs owl#).
+            } else if plain_literal_datatype_iri(lit_iri_str)
+                && numeric_datatype_iri(target_iri.as_str())
             {
                 return false;
-            }
-            if numeric_datatype_iri(lit_iri_str) && plain_literal_datatype_iri(&target_iri) {
+            } else if numeric_datatype_iri(lit_iri_str) && plain_literal_datatype_iri(target_iri.as_str())
+            {
                 return false;
-            }
-            if plain_literal_datatype_iri(lit_iri_str) && binary_datatype_iri(&target_iri) {
+            } else if plain_literal_datatype_iri(lit_iri_str) && binary_datatype_iri(target_iri.as_str())
+            {
+                return false;
+            } else if numeric_datatype_iri(lit_iri_str)
+                && matches!(
+                    target_iri.as_str(),
+                    "http://www.w3.org/2002/07/owl#real"
+                        | "http://www.w3.org/2002/07/owl#rational"
+                )
+            {
+                // Fall through to value-space rules (owl:real excludes non-finite floats).
+            } else {
                 return false;
             }
         }
@@ -335,14 +354,14 @@ pub(crate) fn literal_in_datatype_value_space(
     }
     if let Ok(value) = lit.lexical.parse::<i64>() {
         let value = if value == 0 { 0 } else { value };
-        if integer_value_space(target_iri, value) {
+        if integer_value_space(target_iri.as_str(), value) {
             return true;
         }
     }
     if lit.lexical.contains('.')
         && !lit.lexical.contains('/')
-        && matches!(
-            target_iri,
+        &&         matches!(
+            target_iri.as_str(),
             "http://www.w3.org/2001/XMLSchema#int"
                 | "http://www.w3.org/2001/XMLSchema#integer"
                 | "http://www.w3.org/2001/XMLSchema#short"
@@ -357,7 +376,7 @@ pub(crate) fn literal_in_datatype_value_space(
             && numeric >= i64::MIN as f64
             && numeric <= i64::MAX as f64
         {
-            return integer_value_space(target_iri, numeric as i64);
+            return integer_value_space(target_iri.as_str(), numeric as i64);
         }
     }
     if is_numeric_literal_type(ont, lit.datatype) {
@@ -367,12 +386,12 @@ pub(crate) fn literal_in_datatype_value_space(
             && numeric.fract() == 0.0
             && numeric >= i64::MIN as f64
             && numeric <= i64::MAX as f64
-            && integer_value_space(target_iri, numeric as i64)
+            && integer_value_space(target_iri.as_str(), numeric as i64)
         {
             return true;
         }
     }
-    match target_iri {
+    match target_iri.as_str() {
         "http://www.w3.org/2001/XMLSchema#decimal" => {
             if lit.lexical.contains('/') {
                 if let Some((num, den)) = rational_pair(&lit.lexical) {
@@ -832,7 +851,16 @@ fn numeric_values_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
         }
     }
     if a.datatype != b.datatype {
-        return cross_datatype_numeric_equal(a, b);
+        if cross_datatype_numeric_equal(a, b) {
+            return true;
+        }
+        if let (Some(va), Some(vb)) = (
+            whole_number_lexical(&a.lexical),
+            whole_number_lexical(&b.lexical),
+        ) {
+            return va == vb;
+        }
+        return false;
     }
     if let (Some(aq), Some(bq)) = (rational_pair(&a.lexical), rational_pair(&b.lexical)) {
         return aq.0 * bq.1 == bq.0 * aq.1;

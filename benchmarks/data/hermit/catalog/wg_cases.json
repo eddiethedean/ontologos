@@ -413,7 +413,7 @@
     "expected_entailment": null,
     "id": "owl_wg_tests.Minus-2Dinf-2Dnot-2Dowlreal",
     "ignore_reason": null,
-    "premise_ofn": "wg/Minus-2Dinf-2Dnot-2Dowlreal/premise.rdf",
+    "premise_ofn": "wg/Minus-2Dinf-2Dnot-2Dowlreal/premise.ofn",
     "status": "wg",
     "test_type": "inconsistency"
   },

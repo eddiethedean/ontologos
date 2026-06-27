@@ -1591,7 +1591,10 @@ fn is_bottom_data_property(ontology: &Ontology, property: EntityId) -> bool {
 
 fn entity_iri(ontology: &Ontology, id: EntityId) -> Option<String> {
     let record = ontology.entity(id).ok()?;
-    ontology.resolve_iri(record.iri).ok().map(str::to_owned)
+    ontology
+        .resolve_iri(record.iri)
+        .ok()
+        .map(|iri| super::canonical_datatype_iri(iri))
 }
 
 fn finite_datatype_value_count(ontology: &Ontology, datatype: EntityId) -> Option<u32> {
@@ -2422,6 +2425,33 @@ mod tests {
             "expected >= 3 complement witnesses, got {count}"
         );
         assert!(is_datatype_consistent(&ont));
+    }
+
+    #[test]
+    fn rational001_min_card_two_is_consistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/New-2DFeature-2DRational-2D001/premise.rdf");
+        let ont = load_ontology(&path).expect("load");
+        assert!(
+            is_datatype_consistent(&ont),
+            "minCardinality 2 on owl:rational with allValuesFrom owl:rational should admit two witnesses"
+        );
+    }
+
+    #[test]
+    fn owlreal_plus_oneof_is_consistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/Owlreal-2Dplus-2DoneOf/premise.ofn");
+        let ont = load_ontology(&path).expect("load");
+        assert!(is_datatype_consistent(&ont));
+    }
+
+    #[test]
+    fn minus_inf_not_owlreal_is_inconsistent() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/wg/Minus-2Dinf-2Dnot-2Dowlreal/premise.ofn");
+        let ont = load_ontology(&path).expect("load");
+        assert!(!is_datatype_consistent(&ont));
     }
 
     #[test]
