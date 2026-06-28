@@ -73,3 +73,27 @@ mod any_uri {
         assert_consistent_ofn("anyuritest_testlength_1", true);
     }
 }
+
+mod datatypes {
+    use super::*;
+
+    #[test]
+    fn datatype_union2_consistent() {
+        assert_consistent_ofn("datatypestest_testdatatypeunion2", true);
+    }
+
+    #[test]
+    fn real_not_decimal_2_inconsistent() {
+        assert_consistent_ofn("numericstest_testrealnotdecimal_2", false);
+    }
+
+    #[test]
+    fn decimals_consistent() {
+        assert_consistent_ofn("datatypestest_testdecimals", true);
+    }
+
+    #[test]
+    fn nominals_and_datatypes_from_alan_consistent() {
+        assert_consistent_ofn("datatypestest_testnominalsanddatatypesfromalan", true);
+    }
+}

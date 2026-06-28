@@ -40,6 +40,7 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
     for axiom in store.axioms() {
         if let DlAxiom::SubClassOf { sub, sup } = axiom {
             if let Some(class) = atomic_class_id(store, *sub) {
+                let class = canonical_class_restriction_key(ontology, class);
                 for (prop, restriction) in restrictions_from_ce(store, *sup) {
                     class_restrictions
                         .entry(class)
@@ -62,6 +63,7 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
                     .push((prop, restriction));
             }
             if let Some(class_id) = atomic_class_id(store, *class) {
+                let class_id = canonical_class_restriction_key(ontology, class_id);
                 if let Some(restrictions) = class_restrictions.get(&class_id) {
                     individual_restrictions
                         .entry(*individual)
@@ -352,7 +354,15 @@ fn property_requires_literal(
             && (witness_ranges.len() == 1
                 || satisfies_all_ranges(ontology, idx, lit, &witness_ranges))
         {
-            return true;
+            let without = distinct_values_satisfying_ranges(
+                ontology,
+                idx,
+                &witness_ranges,
+                std::slice::from_ref(lit),
+            );
+            if without < min_card {
+                return true;
+            }
         }
     }
 
@@ -1020,6 +1030,10 @@ fn property_restrictions_satisfiable(
         max_card = Some(max_card.map_or(1, |m| m.min(1)));
     }
 
+    if float_and_double_all_values_clash(ontology, store, &all_ranges) {
+        return false;
+    }
+
     if let Some(exact) = exact_card {
         min_card = min_card.max(exact);
         max_card = Some(max_card.map_or(exact, |m| m.min(exact)));
@@ -1183,9 +1197,9 @@ fn distinct_values_satisfying_ranges(
         }
         return count;
     }
-    let mut candidates = sample_literals(ontology, idx, ranges[0]);
+    let mut candidates = conjunctive_sample_literals(ontology, idx, ranges[0]);
     for &range in &ranges[1..] {
-        candidates.extend(sample_literals(ontology, idx, range));
+        candidates.extend(conjunctive_sample_literals(ontology, idx, range));
     }
     for &range in ranges {
         if let Some(DataExpr::Literal { lexical, datatype }) = ontology.dl().de(range) {
@@ -1215,6 +1229,67 @@ fn distinct_values_satisfying_ranges(
         }
     }
     count
+}
+
+fn float_and_double_all_values_clash(
+    ontology: &Ontology,
+    store: &ontologos_core::DlStore,
+    all_ranges: &[DeId],
+) -> bool {
+    let mut has_float = false;
+    let mut has_double = false;
+    for &range in all_ranges {
+        let Some(iri) = top_datatype_iri(ontology, store, range) else {
+            continue;
+        };
+        if iri == "http://www.w3.org/2001/XMLSchema#float" {
+            has_float = true;
+        }
+        if iri == "http://www.w3.org/2001/XMLSchema#double" {
+            has_double = true;
+        }
+    }
+    has_float && has_double
+}
+
+fn top_datatype_iri(
+    ontology: &Ontology,
+    store: &ontologos_core::DlStore,
+    mut range: DeId,
+) -> Option<String> {
+    for _ in 0..12 {
+        match store.de(range)? {
+            DataExpr::Datatype(dt) => return entity_iri(ontology, *dt),
+            DataExpr::Facet { base, .. } | DataExpr::Not(base) => range = *base,
+            _ => return None,
+        }
+    }
+    None
+}
+
+fn conjunctive_sample_literals(
+    ontology: &Ontology,
+    idx: &LiteralIndex,
+    range: DeId,
+) -> Vec<LiteralValue> {
+    let store = ontology.dl();
+    let bounds = collect_facet_bounds(store, range);
+    if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
+        if facet_base_iri(ontology, store, range)
+            == Some("http://www.w3.org/2001/XMLSchema#dateTime".to_string())
+        {
+            if let Some(dt) = facet_base_datatype(ontology, store, range) {
+                return datetime_seed_lexicals(min, max)
+                    .into_iter()
+                    .map(|lex| LiteralValue {
+                        lexical: lex,
+                        datatype: dt,
+                    })
+                    .collect();
+            }
+        }
+    }
+    sample_literals(ontology, idx, range)
 }
 
 fn distinct_literal_key(lit: &LiteralValue) -> String {
@@ -1267,6 +1342,12 @@ fn hermit_min_card_witness_boost(
         return 0;
     };
     if iri == "http://www.w3.org/2001/XMLSchema#double"
+        && min == max
+        && parse_numeric(min) == 0.0
+    {
+        return 2;
+    }
+    if iri == "http://www.w3.org/2001/XMLSchema#float"
         && min == max
         && parse_numeric(min) == 0.0
     {
@@ -1621,6 +1702,14 @@ fn owl_thing_id(ontology: &Ontology) -> Option<EntityId> {
     ontology
         .lookup_entity("http://www.w3.org/2002/07/owl#Thing")
         .or_else(|| ontology.lookup_entity("owl:Thing"))
+}
+
+fn canonical_class_restriction_key(ontology: &Ontology, class: EntityId) -> EntityId {
+    if entity_iri(ontology, class).as_deref() == Some("http://www.w3.org/2002/07/owl#Thing") {
+        owl_thing_id(ontology).unwrap_or(class)
+    } else {
+        class
+    }
 }
 
 fn is_bottom_data_property(ontology: &Ontology, property: EntityId) -> bool {
@@ -2190,6 +2279,85 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
+
+    #[test]
+    fn finite2_2_open_interval_facet_check() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_datetimetest_testfinite2_2.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        let store = ont.dl();
+        let idx = LiteralIndex::from_store(store);
+        let dt = store
+            .data_exprs()
+            .find_map(|(_, e)| {
+                if let DataExpr::Datatype(entity) = e {
+                    let iri = ont
+                        .entity(*entity)
+                        .ok()
+                        .and_then(|r| ont.resolve_iri(r.iri).ok())?;
+                    if iri == "http://www.w3.org/2001/XMLSchema#dateTime" {
+                        Some(*entity)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .expect("dateTime");
+        let open = store
+            .data_exprs()
+            .find_map(|(id, e)| {
+                if let DataExpr::Not(inner) = e {
+                    if matches!(store.de(*inner), Some(DataExpr::Facet { .. })) {
+                        Some(*inner)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .expect("open interval");
+        let interior = LiteralValue {
+            lexical: "1965-04-20T00:00:00".into(),
+            datatype: dt,
+        };
+        assert!(
+            idx.satisfies_with_ontology(&interior, &ont, open),
+            "interior date should fall in open interval"
+        );
+    }
+
+    #[test]
+    fn finite2_2_min_card_exceeds_endpoint_witnesses() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_datetimetest_testfinite2_2.ofn",
+        );
+        let ont = load_ontology(&path).expect("load");
+        let store = ont.dl();
+        let idx = LiteralIndex::from_store(store);
+        let mut all_ranges = Vec::new();
+        for axiom in store.axioms() {
+            if let DlAxiom::SubClassOf { sup, .. } = axiom {
+                for (_, r) in restrictions_from_ce(store, *sup) {
+                    if let DataRestriction::All(range) = r {
+                        all_ranges.push(range);
+                    }
+                }
+            }
+        }
+        let distinct = distinct_values_satisfying_ranges(&ont, &idx, &all_ranges, &[]);
+        assert!(
+            distinct < 5,
+            "expected fewer than 5 distinct witnesses, got {distinct}"
+        );
+        assert!(
+            !is_datatype_consistent(&ont),
+            "closed interval minus open interior leaves two dateTime points; minCard 5 is unsat"
+        );
+    }
 
     #[test]
     fn datatypes_unsat1_class_restrictions_propagate() {

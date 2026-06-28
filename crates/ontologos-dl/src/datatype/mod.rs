@@ -347,6 +347,17 @@ pub(crate) fn literal_in_datatype_value_space(
                 )
             {
                 // Fall through to value-space rules (owl:real excludes non-finite floats).
+            } else if datatype_subsumes(ont, target, lit.datatype) {
+                // Literal typed with a broader datatype (e.g. xsd:integer) checked against
+                // a narrower target (e.g. xsd:int): apply value-space rules below.
+            } else if lit_iri_str == "http://www.w3.org/2002/07/owl#rational"
+                && numeric_datatype_iri(target_iri.as_str())
+            {
+                // owl:rational literals may still fall in decimal/real value spaces.
+            } else if numeric_datatype_iri(lit_iri_str)
+                && numeric_datatype_iri(target_iri.as_str())
+            {
+                // Cross-check numeric value spaces (e.g. nonNegative ∩ nonPositive at 0).
             } else {
                 return false;
             }
@@ -1009,10 +1020,38 @@ fn normalize_datetime_lex(s: &str) -> String {
 
 /// True when no `xsd:dateTime` literal can satisfy both bounds (HermiT mixed-TZ/Z cases).
 pub(crate) fn datetime_facet_range_empty(min: &str, max: &str) -> bool {
-    max.ends_with('Z')
+    if max.ends_with('Z')
         && !min.ends_with('Z')
         && !min[min.find('T').unwrap_or(0)..].contains('+')
         && min[min.find('T').unwrap_or(0)..].find('-').is_none()
+    {
+        return true;
+    }
+    if datetime_lex_timezone_less(min) && datetime_lex_has_timezone(max) {
+        let min_norm = normalize_datetime_lex(strip_datetime_timezone(min));
+        let max_norm = normalize_datetime_lex(strip_datetime_timezone(max));
+        return min_norm == max_norm;
+    }
+    false
+}
+
+fn datetime_lex_timezone_less(s: &str) -> bool {
+    !s.ends_with('Z')
+        && s.find('T').is_some_and(|t| {
+            let tail = &s[t..];
+            !tail.contains('+') && !tail.contains('-')
+        })
+}
+
+fn datetime_lex_has_timezone(s: &str) -> bool {
+    if s.ends_with('Z') {
+        return true;
+    }
+    s.find('T').is_some_and(|t| {
+        let tail = &s[t..];
+        tail.contains('+')
+            || (tail.contains('-') && tail.matches('-').count() >= 1 && tail.contains(':'))
+    })
 }
 
 fn datetime_bounds_from_facet_chain(
@@ -1051,21 +1090,27 @@ fn facet_base_is_datetime(
     base: DeId,
     ontology: Option<&Ontology>,
 ) -> bool {
-    let base = normalize_range(store, defs, base);
-    let Some(DataExpr::Datatype(dt)) = store.de(base) else {
-        return false;
-    };
     let Some(ont) = ontology else {
         return false;
     };
-    let Some(iri) = ont
-        .entity(*dt)
-        .ok()
-        .and_then(|r| ont.resolve_iri(r.iri).ok())
-    else {
-        return false;
-    };
-    iri == "http://www.w3.org/2001/XMLSchema#dateTime"
+    let mut current = normalize_range(store, defs, base);
+    for _ in 0..12 {
+        match store.de(current) {
+            Some(DataExpr::Facet { base: inner, .. }) => current = *inner,
+            Some(DataExpr::Datatype(dt)) => {
+                let Some(iri) = ont
+                    .entity(*dt)
+                    .ok()
+                    .and_then(|r| ont.resolve_iri(r.iri).ok())
+                else {
+                    return false;
+                };
+                return iri == "http://www.w3.org/2001/XMLSchema#dateTime";
+            }
+            _ => return false,
+        }
+    }
+    false
 }
 
 fn datetime_facet_compare(lit_lex: &str, facet_val: &str) -> Option<i32> {

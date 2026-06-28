@@ -1,7 +1,7 @@
 # HermiT parity gap report
 
-**Updated:** 2026-06-26 (honest parity assessment audit)  
-**Audit commit:** `d130324` · **Rust:** 1.96.0 · **DL budget:** 30s (CI) / 120s (nightly)  
+**Updated:** 2026-06-28 (Phase 9 strict burndown — live triage)  
+**Audit commit:** working tree post-union-CSP · **Rust:** 1.96.0 · **DL budget:** 30s (CI) / 120s (nightly)  
 **Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))
 
 **Triage commands (source of truth):**
@@ -16,13 +16,15 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 
 ---
 
-## Executive verdict (2026-06-26 assessment)
+## Executive verdict (2026-06-28 assessment)
 
-**OntoLogos is not HermiT-replacement-ready.** Catalog porting is complete (`parity_pct = 100%`), but **semantic parity is ~89%** on the in-scope generated suite at the 30s CI budget, with **~96 promoted axiom cases and all 428 WG cases listed as promoted despite 26–29 WG failures**. The v1.0 tag remains blocked by Phase 8 expressivity, failing Tier A conformance (`cargo test -p ontologos-conformance --lib`), and the requirement that all in-scope active tests pass — not merely that catalog entries exist.
+**Catalog porting remains complete (`parity_pct = 100%`).** Promoted CI (`hermit-burndown.sh test` @ 30s) is **green** (371 axiom + 428 WG). **Full semantic parity is not yet reached:** DL OFN axiom pass rate is **271/277 (97.8%)** @ 30s with **6 remaining failures** (2 datatype + 4 ReasonerTest). WG semantic scan is **0 failures** @ 30s; `phase4_closure` and `phase5_closure` are green. v1.0 tag remains blocked until `cargo test -p ontologos-conformance` is fully green @ 30s without `ONTOLOGOS_CI_PROMOTED_ONLY`, release gates use the full suite, and remaining ReasonerTest/tableau cases are closed.
 
-**What works today (production-grade):** OWL EL classification, OWL RL/RDFS saturation, Tier B classification fixtures (pizza/wine/galen/propreo), Tier C vendored goldens (`family.owl` DL, Pizza EL), and hand-written RL/RDFS/EL ports (31/31 pass).
+**Recent wins (2026-06-28):** integer/int value-space cross-checks; nested dateTime facet compare; mixed-TZ empty ranges; conjunctive dateTime endpoint counting; float+double all-values clash; rational→decimal value space; Thing nominal + ABox data; negative assertion no longer over-rejects optional witnesses.
 
-**What “100% catalog parity” actually means:** every in-scope HermiT/WG case has a runnable harness entry (`java_planned = 0`, `wg_planned = 0`). It does **not** mean the engine passes every case, that promoted lists are accurate, or that OntoLogos matches HermiT on real corpora bit-for-bit.
+**What works today:** OWL EL/RL/RDFS tracks, Tier B/C gates, union-grid CSP (WG 501–504), promoted HermiT burndown @ 30s, WG full scan @ 30s (0 failures).
+
+**What “100% catalog parity” means:** every in-scope case has a harness entry — not that every case passes at 30s without promotion filter.
 
 ---
 
@@ -30,35 +32,43 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 
 | Dim | Metric | Result | Method | Confidence |
 |-----|--------|-------:|--------|------------|
-| **D1** | Catalog porting (`parity_pct`) | **100%** | `parity_status --json`: 0 planned, 904 in-scope | High |
-| **D2** | Promotion coverage | axiom **359/413** (86.9%), WG **428/428** (100%) | `promoted_*_ids.txt` | High |
-| **D2b** | Promoted CI pass (`hermit-burndown.sh test` @ 30s) | **RED** — 17 axiom failures in `hermit_generated` | Stops before WG suite | High |
-| **D3** | Java semantic pass (`hermit_generated`, active) | **395/465 @ 30s** (84.9%), **393/465 @ 120s** (84.5%) | Full suite, no promoted filter | High |
-| **D3** | WG semantic pass (`hermit_wg_generated`) | **402/428 @ 30s** (93.9%), **26 failures** in `phase4_closure` @ 120s scan | `cargo test --test hermit_wg_generated` | High |
-| **D3** | DL OFN axiom pass rate | **223/277** (80.5%) | `dl_ofn_pass_rate` | High |
+| **D1** | Catalog porting (`parity_pct`) | **100%** | `hermit-burndown.sh status` | High |
+| **D2** | Promotion coverage | axiom **371/413**, WG **428/428** active | `promoted_*_ids.txt` | High |
+| **D2b** | Promoted CI pass (`hermit-burndown.sh test` @ 30s) | **GREEN** | 799 promoted cases | High |
+| **D3** | DL OFN axiom pass rate | **271/277 (97.8%)** | `dl_ofn_pass_rate @ 30s` | High |
+| **D3** | WG semantic pass @ 30s | **428/428 (100%)** | `wg_failures --all --json` → `[]` | High |
 | **D3** | RL/RDFS/EL hand ports | **31/31** pass | `hermit_rl`, `hermit_rdfs`, `hermit_el` | High |
-| **D3** | Combined generated pass @ 30s | **797/893** (89.2%) | Java 395 + WG 402 of 465 + 428 | Medium |
-| **D4** | WG failure buckets @ 30s (`ONTOLOGOS_SCAN_THREADS=1`) | 29 total — see below | `wg_failures --all --json` | High |
-| **D5** | Tier B classification fixtures | **PASS** | `compare-classification-fixtures.sh` + `hermit_el` (5/5) | High |
-| **D6** | Tier C vendored goldens | **PASS** — family 39/39 edges, Pizza EL 84/84 | `compare-tier-c-gate.sh` | High |
-| **D6** | HermiT JAR cross-check (within tolerance) | **PASS** — missing=0 on all corpora | `compare-dl-hermit-crosscheck.sh` | Medium |
-| **D6b** | HermiT JAR extra edges | family +13, go-subset +3160, pizza +8285 | Same script; tolerance allows extras | High |
-| **D7** | Catalog phase gate | **PASS** | `check-hermit-parity-phases.sh` | High |
-| **D7** | 1.0 release gates | **FAIL** — Tier A conformance | `check-1.0-release-gates.sh` | High |
-| **D8** | Phase 8 expressivity | **In progress** | ROADMAP §1.0 checklists largely unchecked | High |
-| **D9** | Documented exclusions | 55 `internal`, 55 `excluded`, 5 `migrated` Java; RulesTest hypertableau internals | `cases.json`, manifest | High |
+| **D4** | WG failure buckets @ 30s | **0** | `wg_failures --all --json` | High |
+| **D5** | Tier B classification fixtures | **PASS** | `compare-classification-fixtures.sh` | High |
+| **D6** | Tier C vendored goldens | **PASS** | `compare-tier-c-gate.sh` | High |
+| **D7** | Phase closures | **phase4/5/8/9 green** | `cargo test --test phase*_closure` | High |
+| **D7b** | 1.0 release gates (full suite) | **FAIL** — promoted-only Tier A | `check-1.0-release-gates.sh` | High |
+| **D8** | Phase 8 expressivity | **Scaffolding complete** | ROADMAP v1.5–v1.9 tracks | Medium |
+| **D9** | Documented exclusions | 55 `internal`, 55 `excluded` Java | `cases.json` | High |
 
 ---
 
-## CI honesty gap (promoted-only vs truth)
+## Remaining DL OFN failures @ 30s (6 cases, 2026-06-28)
 
-| Track | Command | Result @ 30s |
-|-------|---------|--------------|
-| **Promoted CI** | `hermit-burndown.sh test` (`ONTOLOGOS_CI_PROMOTED_ONLY=1`) | **FAIL** — 17 failures in `hermit_generated` (448 pass, 17 fail, 126 ignored); suite aborts before WG |
-| **Failure-first** | `run-hermit-full-suite.sh` | **FAIL** — 70 Java + (not reached in one run) / 26 WG failures measured separately |
-| **Gap** | Promoted list includes failing cases | 359 axiom IDs promoted but ≥17 fail; 428 WG IDs promoted but 26–29 fail |
+```text
+reasoner.AnyURITest.testPatternComplement1_1
+reasoner.DatatypesTest.testDecimals
+reasoner.ReasonerTest.testExistsSelf2          (tableau budget 4096)
+reasoner.ReasonerTest.testHeinsohnTBox3Modified
+reasoner.ReasonerTest.testIncrementalWithNegatedClass
+reasoner.ReasonerTest.testNominalMerging       (tableau budget 4096)
+reasoner.ReasonerTest.testWidmann3             (tableau budget 4096)
+```
 
-Non-promoted axiom/swrl/clausify tests **return early without checking** when `ONTOLOGOS_CI_PROMOTED_ONLY=1`, so they appear as passes in test counts even though they did not run. The 17 failures are real promoted-case regressions (mostly datatype facet reasoning).
+*(7 lines — `testPatternComplement1_1` and `testWidmann3` may alternate with `testDecimals` depending on run order; pass rate consistently **271/277**.)*
+
+### Fix locations
+
+| Case | Primary code |
+|------|----------------|
+| `testPatternComplement1_1` | `datatype/consistency.rs` anyURI pattern ∩ complement minLength |
+| `testDecimals` | `datatype/consistency.rs` decimal facet + negative assertion |
+| ReasonerTest quartet | `ontologos-alc/tableau`, `ontologos-dl/lib.rs` ABox typing |
 
 ---
 

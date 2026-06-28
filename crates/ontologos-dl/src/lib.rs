@@ -2240,7 +2240,9 @@ fn thing_equivalent_finite_nominal(ontology: &Ontology) -> bool {
             _ => None,
         });
         if let Some(members) = nominals {
-            if members.iter().any(|n| individual_is_asserted(ontology, *n)) {
+            if members.iter().any(|n| {
+                individual_is_asserted(ontology, *n) || individual_has_abox_assertions(ontology, *n)
+            }) {
                 continue;
             }
         }
@@ -2255,6 +2257,23 @@ fn canonical_entity_iri(ontology: &Ontology, id: EntityId) -> Option<String> {
         .resolve_iri(record.iri)
         .ok()
         .map(|iri| iri.replace("%23", "#"))
+}
+
+fn individual_has_abox_assertions(ontology: &Ontology, individual: EntityId) -> bool {
+    let Some(target) = canonical_entity_iri(ontology, individual) else {
+        return false;
+    };
+    ontology.dl().axioms().any(|axiom| {
+        match axiom {
+            DlAxiom::DataPropertyAssertion { subject, .. }
+            | DlAxiom::ObjectPropertyAssertion { subject, .. }
+            | DlAxiom::NegativeDataPropertyAssertion { subject, .. }
+            | DlAxiom::NegativeObjectPropertyAssertion { subject, .. } => {
+                canonical_entity_iri(ontology, *subject).as_deref() == Some(target.as_str())
+            }
+            _ => false,
+        }
+    })
 }
 
 fn individual_is_asserted(ontology: &Ontology, individual: EntityId) -> bool {
