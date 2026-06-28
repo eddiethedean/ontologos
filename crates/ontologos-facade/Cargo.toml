@@ -21,4 +21,5 @@ ontologos-dl = { workspace = true }
 ontologos-swrl = { workspace = true }
 ontologos-profile = { workspace = true }
 ontologos-bridge = { workspace = true }
+ontologos-abox = { workspace = true }
 thiserror = { workspace = true }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::axiom::Axiom;
+use crate::axiom::{Axiom, DataLiteral};
 use crate::entity::{EntityId, EntityKind};
 use crate::error::{Error, Result};
 use crate::limits::Limits;
@@ -73,6 +73,21 @@ enum SnapshotAxiom {
         subject: String,
         property: String,
         object: String,
+    },
+    DataPropertyAssertion {
+        individual: String,
+        property: String,
+        value: DataLiteral,
+    },
+    NegativeObjectPropertyAssertion {
+        subject: String,
+        property: String,
+        object: String,
+    },
+    NegativeDataPropertyAssertion {
+        individual: String,
+        property: String,
+        value: DataLiteral,
     },
     SameIndividual(Vec<String>),
     DifferentIndividuals(Vec<String>),
@@ -324,6 +339,33 @@ fn axiom_to_snapshot(axiom: &Axiom, ontology: &Ontology) -> Result<SnapshotAxiom
             property: entity_iri(ontology, *property)?,
             object: entity_iri(ontology, *object)?,
         },
+        Axiom::DataPropertyAssertion {
+            individual,
+            property,
+            value,
+        } => SnapshotAxiom::DataPropertyAssertion {
+            individual: entity_iri(ontology, *individual)?,
+            property: entity_iri(ontology, *property)?,
+            value: value.clone(),
+        },
+        Axiom::NegativeObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => SnapshotAxiom::NegativeObjectPropertyAssertion {
+            subject: entity_iri(ontology, *subject)?,
+            property: entity_iri(ontology, *property)?,
+            object: entity_iri(ontology, *object)?,
+        },
+        Axiom::NegativeDataPropertyAssertion {
+            individual,
+            property,
+            value,
+        } => SnapshotAxiom::NegativeDataPropertyAssertion {
+            individual: entity_iri(ontology, *individual)?,
+            property: entity_iri(ontology, *property)?,
+            value: value.clone(),
+        },
         Axiom::SameIndividual(individuals) => SnapshotAxiom::SameIndividual(
             individuals
                 .iter()
@@ -427,6 +469,33 @@ fn snapshot_axiom_to_axiom(snapshot: &SnapshotAxiom, ontology: &Ontology) -> Res
             subject: resolve_entity(ontology, subject)?,
             property: resolve_entity(ontology, property)?,
             object: resolve_entity(ontology, object)?,
+        },
+        SnapshotAxiom::DataPropertyAssertion {
+            individual,
+            property,
+            value,
+        } => Axiom::DataPropertyAssertion {
+            individual: resolve_entity(ontology, individual)?,
+            property: resolve_entity(ontology, property)?,
+            value: value.clone(),
+        },
+        SnapshotAxiom::NegativeObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => Axiom::NegativeObjectPropertyAssertion {
+            subject: resolve_entity(ontology, subject)?,
+            property: resolve_entity(ontology, property)?,
+            object: resolve_entity(ontology, object)?,
+        },
+        SnapshotAxiom::NegativeDataPropertyAssertion {
+            individual,
+            property,
+            value,
+        } => Axiom::NegativeDataPropertyAssertion {
+            individual: resolve_entity(ontology, individual)?,
+            property: resolve_entity(ontology, property)?,
+            value: value.clone(),
         },
         SnapshotAxiom::SameIndividual(individuals) => Axiom::SameIndividual(
             individuals

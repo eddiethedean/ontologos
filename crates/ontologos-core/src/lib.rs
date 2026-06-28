@@ -53,7 +53,7 @@ mod swrl;
 mod taxonomy;
 mod trace;
 
-pub use axiom::{Axiom, AxiomId};
+pub use axiom::{Axiom, AxiomId, DataLiteral};
 pub use dirty::{axiom_signature, DirtySet, OntologyRevision};
 pub use dl::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, DlStore, RoleExpr};
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};

@@ -6,6 +6,7 @@ mod cardinality;
 mod cardinality_grid;
 mod classify;
 mod datatype;
+mod dependency_index;
 mod ria;
 mod ria_regularity;
 mod route;
@@ -18,6 +19,7 @@ use ontologos_core::{
 use thiserror::Error;
 
 pub use classify::DlClassifier;
+pub use dependency_index::DependencyIndex;
 pub use datatype::is_data_range_satisfiable;
 pub use datatype::{
     is_datatype_consistent, named_class_datatype_satisfiable, LiteralIndex, LiteralValue,

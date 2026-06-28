@@ -4,6 +4,7 @@
 
 mod parse;
 mod query;
+pub mod rewrite;
 
 use ontologos_core::{EntityId, Ontology, Taxonomy};
 use ontologos_query::QueryEngine;
@@ -11,6 +12,7 @@ use thiserror::Error;
 
 pub use parse::parse_conjunctive_query;
 pub use query::{ConjunctiveQuery, QueryAnswer, QueryAtom};
+pub use rewrite::{is_ql_shape, rewrite_query};
 
 /// Result type for QL operations.
 pub type Result<T> = std::result::Result<T, Error>;

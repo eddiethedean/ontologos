@@ -65,11 +65,11 @@ jobs:
       - name: 1.0 release gates (informational)
         run: |
           chmod +x benchmarks/scripts/check-1.0-release-gates.sh
-          ./benchmarks/scripts/check-1.0-release-gates.sh || true
-      - name: HermiT parity phases (informational until Phase 9)
+          ./benchmarks/scripts/check-1.0-release-gates.sh
+      - name: HermiT parity phases
         run: |
           chmod +x benchmarks/scripts/check-hermit-parity-phases.sh
-          ./benchmarks/scripts/check-hermit-parity-phases.sh || true
+          ./benchmarks/scripts/check-hermit-parity-phases.sh
       - name: HermiT catalog drift check
         run: |
           chmod +x benchmarks/scripts/check-hermit-catalog.sh

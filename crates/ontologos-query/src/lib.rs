@@ -37,6 +37,18 @@ impl<'a> QueryEngine<'a> {
         }
     }
 
+    /// Underlying ontology reference.
+    #[must_use]
+    pub fn ontology(&self) -> &'a Ontology {
+        self.ontology
+    }
+
+    /// Classified taxonomy reference.
+    #[must_use]
+    pub fn taxonomy(&self) -> &'a Taxonomy {
+        self.taxonomy
+    }
+
     pub fn direct_subclasses(&self, class: EntityId) -> Result<Vec<EntityId>> {
         self.ensure_class(class)?;
         Ok(self.graph.direct_subclasses(class))
@@ -72,6 +84,48 @@ impl<'a> QueryEngine<'a> {
 
     pub fn lookup(&self, iri: &str) -> Option<EntityId> {
         self.ontology.lookup_entity(iri)
+    }
+
+    /// Named individuals with an entailed `ClassAssertion` to `class` (direct or via subsumption).
+    pub fn instances_of(&self, class: EntityId) -> Result<Vec<EntityId>> {
+        self.ensure_class(class)?;
+        let mut out = Vec::new();
+        for (_, axiom) in self.ontology.axioms().iter() {
+            let ontologos_core::Axiom::ClassAssertion {
+                individual,
+                class: asserted,
+            } = axiom
+            else {
+                continue;
+            };
+            if *asserted == class || self.graph.is_subsumed(*asserted, class) {
+                out.push(*individual);
+            }
+        }
+        out.sort_by_key(|id| id.0);
+        out.dedup();
+        Ok(out)
+    }
+
+    /// Asserted classes for a named individual (no inference).
+    pub fn types_of(&self, individual: EntityId) -> Result<Vec<EntityId>> {
+        let record = self.ontology.entity(individual)?;
+        if record.kind != ontologos_core::EntityKind::Individual {
+            return Err(Error::UnknownEntity(individual));
+        }
+        let mut out = Vec::new();
+        for (_, axiom) in self.ontology.axioms().iter() {
+            if let ontologos_core::Axiom::ClassAssertion {
+                individual: subj,
+                class,
+            } = axiom
+            {
+                if *subj == individual {
+                    out.push(*class);
+                }
+            }
+        }
+        Ok(out)
     }
 
     fn ensure_class(&self, class: EntityId) -> Result<()> {
@@ -145,5 +199,33 @@ mod tests {
         };
         let engine = QueryEngine::new(&ontology, &taxonomy);
         assert!(engine.is_subsumed(a, c).expect("subsumed"));
+    }
+
+    #[test]
+    fn instances_of_entailed_typing() {
+        let mut ontology = Ontology::new();
+        let a = ontology
+            .entity_id("http://ex.org/A", EntityKind::Class)
+            .unwrap();
+        let b = ontology
+            .entity_id("http://ex.org/B", EntityKind::Class)
+            .unwrap();
+        let i = ontology
+            .entity_id("http://ex.org/i", EntityKind::Individual)
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::ClassAssertion {
+                individual: i,
+                class: a,
+            })
+            .unwrap();
+
+        let taxonomy = Taxonomy {
+            subsumptions: vec![(a, b)],
+            ..Taxonomy::default()
+        };
+        let engine = QueryEngine::new(&ontology, &taxonomy);
+        let instances = engine.instances_of(b).expect("instances");
+        assert_eq!(instances, vec![i]);
     }
 }

@@ -41,6 +41,18 @@ Public crate names (`ontologos-el`, `ontologos-rl`, `ontologos-rdfs`) remain sta
 | `reasonable`: domain on subproperty does not type superproperty assertions | HermiT test ignored |
 | `reasonable`: no rule-level explanation traces | Proof graphs from asserted axioms only |
 
+## OWL 2 RL/EL coverage matrix (v1.5)
+
+| Construct / rule family | `reasonable` RL | `ontologos-el` EL | Notes |
+|-------------------------|-----------------|-------------------|-------|
+| `subClassOf` / `equivalentClass` | Partial (no ∃ TBox) | Yes | EL for taxonomy |
+| Property characteristics | Yes (asserted) | N/A | No subProperty propagation |
+| Domain / range typing | Partial | Via EL domains | RL gaps in table above |
+| `sameAs` / `differentFrom` | Via `ontologos-abox` | N/A | RL saturation + closure |
+| Complex DL (¬, nominals, cardinality) | No | No | `ontologos-dl` |
+
+`whelk` is not a runtime dependency; EL uses in-house completion aligned with ELK semantics.
+
 ## Consequences
 
 - Dual native models: core axioms for EL; oxrdf + reasonable for RL/RDFS.

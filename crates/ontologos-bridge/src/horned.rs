@@ -211,6 +211,9 @@ fn map_axiom(
                 to: named_individual(ontology, b, *object)?,
             });
         }
+        Axiom::DataPropertyAssertion { .. }
+        | Axiom::NegativeObjectPropertyAssertion { .. }
+        | Axiom::NegativeDataPropertyAssertion { .. } => {}
         Axiom::SameIndividual(individuals) => {
             set.insert(SameIndividual(
                 individuals

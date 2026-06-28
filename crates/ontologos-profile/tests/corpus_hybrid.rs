@@ -54,3 +54,33 @@ fn family_dl_profile_detected_or_rl() {
         report.detected
     );
 }
+
+#[test]
+fn galen_hybrid_el_module() {
+    let Some(ontology) = load_corpus("benchmarks/data/galen.owl") else {
+        eprintln!("skip: galen.owl not present (run benchmarks/scripts/download.sh)");
+        return;
+    };
+    let hybrid = classify_hybrid(&ontology).expect("hybrid");
+    assert!(!hybrid.modules.is_empty(), "GALEN should partition into modules");
+    let el_modules: Vec<_> = hybrid
+        .modules
+        .iter()
+        .filter(|m| m.profile == OwlProfile::El || m.profile == OwlProfile::Ql)
+        .collect();
+    assert!(
+        !el_modules.is_empty(),
+        "GALEN should have at least one EL/QL module"
+    );
+    let total_axioms: usize = hybrid.modules.iter().map(|m| m.axiom_ids.len()).sum();
+    let dl_axiom_count: usize = hybrid
+        .modules
+        .iter()
+        .filter(|m| m.profile == OwlProfile::Dl)
+        .map(|m| m.axiom_ids.len())
+        .sum();
+    assert!(
+        dl_axiom_count < total_axioms,
+        "GALEN should not delegate entire ontology to DL when EL modules exist"
+    );
+}

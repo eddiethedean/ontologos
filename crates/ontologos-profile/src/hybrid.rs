@@ -73,6 +73,9 @@ fn axiom_is_rl_rich(axiom: &Axiom) -> bool {
     matches!(
         axiom,
         Axiom::ObjectPropertyAssertion { .. }
+            | Axiom::DataPropertyAssertion { .. }
+            | Axiom::NegativeObjectPropertyAssertion { .. }
+            | Axiom::NegativeDataPropertyAssertion { .. }
             | Axiom::ClassAssertion { .. }
             | Axiom::SameIndividual(_)
             | Axiom::DifferentIndividuals(_)
@@ -171,6 +174,50 @@ pub fn partition_axioms(ontology: &Ontology) -> (Vec<AxiomId>, Vec<AxiomId>) {
     }
 
     (el_ids, dl_ids)
+}
+
+/// Expand DL class seeds with classes that depend on DL axioms (structural ⊥-module approximation).
+#[must_use]
+pub fn bottom_module_class_seeds(ontology: &Ontology, dl_axiom_ids: &[AxiomId]) -> HashSet<EntityId> {
+    let mut seeds = HashSet::new();
+    for &id in dl_axiom_ids {
+        let Ok(axiom) = ontology.axioms().get(id) else {
+            continue;
+        };
+        seeds.extend(
+            axiom_signature(axiom)
+                .into_iter()
+                .filter(|&e| {
+                    ontology
+                        .entity(e)
+                        .ok()
+                        .is_some_and(|r| r.kind == EntityKind::Class)
+                }),
+        );
+    }
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for (id, axiom) in ontology.axioms().iter() {
+            if dl_axiom_ids.contains(&id) {
+                continue;
+            }
+            let sig = axiom_signature(axiom);
+            if sig.iter().any(|c| seeds.contains(c)) {
+                let before = seeds.len();
+                seeds.extend(sig.into_iter().filter(|&e| {
+                    ontology
+                        .entity(e)
+                        .ok()
+                        .is_some_and(|r| r.kind == EntityKind::Class)
+                }));
+                if seeds.len() != before {
+                    changed = true;
+                }
+            }
+        }
+    }
+    seeds
 }
 
 /// Build a sub-ontology containing only the given axioms (entity ids preserved).

@@ -827,6 +827,33 @@ fn remap_supplement_axiom(
             property: remap(*property)?,
             object: remap(*object)?,
         },
+        Axiom::DataPropertyAssertion {
+            individual,
+            property,
+            value,
+        } => Axiom::DataPropertyAssertion {
+            individual: remap(*individual)?,
+            property: remap(*property)?,
+            value: value.clone(),
+        },
+        Axiom::NegativeObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => Axiom::NegativeObjectPropertyAssertion {
+            subject: remap(*subject)?,
+            property: remap(*property)?,
+            object: remap(*object)?,
+        },
+        Axiom::NegativeDataPropertyAssertion {
+            individual,
+            property,
+            value,
+        } => Axiom::NegativeDataPropertyAssertion {
+            individual: remap(*individual)?,
+            property: remap(*property)?,
+            value: value.clone(),
+        },
         Axiom::SameIndividual(ids) => Axiom::SameIndividual(remap_vec(ids)?),
         Axiom::DifferentIndividuals(ids) => Axiom::DifferentIndividuals(remap_vec(ids)?),
     })

@@ -943,6 +943,7 @@ name = "ontologos-abox"
 version = "1.0.0"
 dependencies = [
  "ontologos-core",
+ "ontologos-parser",
  "ontologos-rl",
  "thiserror 2.0.18",
 ]
@@ -955,6 +956,8 @@ dependencies = [
  "ontologos-dl",
  "ontologos-parser",
  "ontologos-profile",
+ "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -977,6 +980,7 @@ version = "1.0.0"
 dependencies = [
  "assert_cmd",
  "clap",
+ "ontologos-abox",
  "ontologos-alc",
  "ontologos-core",
  "ontologos-dl",
@@ -1074,6 +1078,7 @@ dependencies = [
 name = "ontologos-facade"
 version = "1.0.0"
 dependencies = [
+ "ontologos-abox",
  "ontologos-alc",
  "ontologos-bridge",
  "ontologos-core",
@@ -1130,6 +1135,8 @@ name = "ontologos-ql"
 version = "1.0.0"
 dependencies = [
  "ontologos-core",
+ "ontologos-el",
+ "ontologos-parser",
  "ontologos-query",
  "thiserror 2.0.18",
 ]

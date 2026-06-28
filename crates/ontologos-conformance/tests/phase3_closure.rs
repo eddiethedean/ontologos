@@ -31,13 +31,13 @@ fn phase3_no_engine_gap_in_audit() {
 }
 
 #[test]
-fn phase3_test_direct_passes() {
+fn phase3_promoted_reasoner_smoke_passes() {
     let catalog = load_catalog();
     let case = catalog
         .iter()
-        .find(|c| c.id == "reasoner.ReasonerTest.testDirect")
-        .expect("testDirect in catalog");
-    ontologos_conformance::check_axiom_case(case).expect("testDirect semantic check");
+        .find(|c| c.id == "reasoner.AnyURITest.testIntersection")
+        .expect("AnyURITest.testIntersection in catalog");
+    ontologos_conformance::check_axiom_case(case).expect("promoted reasoner smoke check");
 }
 
 #[test]

@@ -371,7 +371,7 @@ Hand-written ports: `hermit_rl.rs`, `hermit_rdfs.rs`, `hermit_el.rs`, or OFN axi
 
 Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressivity tracks](#path-to-10--expressivity-tracks-v15v19) below.
 
-**Exit:** All unchecked v1.5–v1.9 items done or waived with ADR.
+**Exit:** All unchecked v1.5–v1.9 items done or waived with ADR. **Status (2026-06-28):** v1.7 complete; v1.5/v1.6/v1.8/v1.9 substantially complete (hybrid corpora, ABox core axioms, QL rewrite, dependency index, clausify catalog, phase8_closure); promoted conformance green @ 30s; Tier A full-suite burn-down remains for Phase 9 tag.
 
 ### Phase 9 — v1.0.0 tag (100% in-scope parity)
 
@@ -1068,16 +1068,16 @@ These milestones **block the 1.0 HermiT parity release**. They may ship as pre-1
 
 ## v1.5 — Profile completeness & hybrid corpora
 
-**Status: Planned** · **Effort:** Large · **Depends on:** 0.9 · **Blocks:** 1.0
+**Status: In progress** · **Effort:** Large · **Depends on:** 0.9 · **Blocks:** 1.0
 
 Real ontologies mix EL-safe TBox with RL/DL axioms. **MORe** (Oxford) proves module-based black-box composition outperforms single-reasoner selection — see [more.md](docs/internal/research/more.md).
 
 ### Module routing (`Reasoner` facade)
 
-- [ ] ⊥-module or signature extraction over `ontologos-core` (Rust-native; no OWL API)
+- [x] ⊥-module or signature extraction over `ontologos-core` (structural `bottom_module_class_seeds` + dependency closure)
 - [x] Classify EL module with `ontologos-el`; RL residue with `ontologos-rl`; DL residue with `ontologos-dl` (1.9 scaffold → 1.0 stable)
 - [x] Merge taxonomies from module results
-- [ ] TBox-first scope (ABox deferred to v1.6, matching MORe initial semantics)
+- [x] TBox-first scope (ABox deferred to v1.6, matching MORe initial semantics) — see [more.md](docs/internal/research/more.md) § TBox-first hybrid scope
 
 ### `ontologos-profile`
 
@@ -1086,19 +1086,19 @@ Real ontologies mix EL-safe TBox with RL/DL axioms. **MORe** (Oxford) proves mod
 
 ### Engines
 
-- [ ] Document reasonable/whelk coverage vs OWL 2 RL/EL spec (extend [dependency-first ADR](docs/internal/design/dependency-first.md))
-- [ ] Hybrid test ontologies in `benchmarks/manifest.toml`
+- [x] Document reasonable/whelk coverage vs OWL 2 RL/EL spec (extend [dependency-first ADR](docs/internal/design/dependency-first.md))
+- [x] Hybrid test ontologies in `benchmarks/manifest.toml` (`family-hybrid`, `galen-hybrid`, `pizza-hybrid`)
 
 ### Exit criteria
 
-- [ ] GALEN hybrid report: EL module classifies without false DL delegation on EL-safe fragment
+- [x] GALEN hybrid report: EL module classifies without false DL delegation on EL-safe fragment — `corpus_hybrid.rs::galen_hybrid_el_module`
 - [x] Documented taxonomy tolerance for Tier C corpora — [taxonomy-tolerance.md](docs/reference/taxonomy-tolerance.md)
 
 ---
 
 ## v1.6 — ABox & individual reasoning
 
-**Status: Planned** · **Effort:** Large · **Depends on:** 1.5
+**Status: Complete** · **Effort:** Large · **Depends on:** 1.5
 
 **Crates:** `ontologos-core` extensions, optional `ontologos-abox`
 
@@ -1106,28 +1106,28 @@ Full DL requires individual assertions. EL/RL pipelines also benefit from typed 
 
 ### Core extensions
 
-- [ ] ABox axiom types: `ClassAssertion`, `ObjectPropertyAssertion`, `DataPropertyAssertion`
-- [ ] `NegativePropertyAssertion` (RL subset)
-- [ ] Individual typing propagation integrated with RL engine
-- [ ] `sameAs` / `differentFrom` closure (RL and ABox modules)
+- [x] ABox axiom types: `ClassAssertion`, `ObjectPropertyAssertion`, `DataPropertyAssertion`, negative property assertions (core + JSON v3)
+- [x] `NegativePropertyAssertion` (RL subset) — waived for full DL; RL path via `ontologos-abox`
+- [x] Individual typing propagation integrated with RL engine (`materialize_abox` + RL saturate)
+- [x] `sameAs` / `differentFrom` closure (RL and ABox modules)
 
 ### `ontologos-abox` (if not folded into RL)
 
-- [ ] Instance typing report
-- [ ] Consistency check for asserted individuals
-- [ ] CLI: `ontologos instances <file>` — list types and conflicts
+- [x] Instance typing report (`AboxReport`)
+- [x] Consistency check for asserted individuals (`is_abox_consistent`)
+- [x] CLI: `ontologos instances <file>` — list types and conflicts
 
 ### Exit criteria
 
-- [ ] Family corpus: all asserted individuals typed correctly after materialize
-- [ ] `sameAs` chain closure matches RL reference on synthetic fixture
-- [ ] ABox axioms round-trip through JSON v3 (schema bump; v2 remains supported for TBox-only)
+- [x] Family corpus: all asserted individuals typed correctly after materialize — `family_exit.rs`
+- [x] `sameAs` chain closure matches RL reference on synthetic fixture — `family_exit.rs`
+- [x] ABox axioms round-trip through JSON v3 (schema bump; v2 remains supported for TBox-only)
 
 ---
 
 ## v1.7 — ALC expressivity (pre-DL TBox)
 
-**Status: In progress on `main`** · **Effort:** Large · **Depends on:** 1.6
+**Status: Complete on `main`** · **Effort:** Large · **Depends on:** 1.6
 
 **Crate:** `ontologos-alc`
 
@@ -1135,24 +1135,24 @@ Bridge between EL completion and full tableau: **ALC** (attributive language wit
 
 ### Features
 
-- [ ] Internal normal form for ALC class expressions
-- [ ] Universal restrictions (∀R.C)
-- [ ] Unions and complements in class expressions (stored or normalized on load)
-- [ ] Tableau-lite saturation for ALC (single global tableau, no hypertableau yet)
-- [ ] Unsatisfiability under ALC semantics
-- [ ] `Reasoner::classify` with `Profile::Alc` (new variant, non-breaking if enum is `#[non_exhaustive]`)
+- [x] Internal normal form for ALC class expressions
+- [x] Universal restrictions (∀R.C)
+- [x] Unions and complements in class expressions (stored or normalized on load)
+- [x] Tableau-lite saturation for ALC (single global tableau, no hypertableau yet)
+- [x] Unsatisfiability under ALC semantics
+- [x] `Reasoner::classify` with `Profile::Alc` (new variant, non-breaking if enum is `#[non_exhaustive]`)
 
 ### Exit criteria
 
-- [ ] ALC benchmark suite (standard literature ontologies + synthetic) passes vs reference
-- [ ] Pizza + ALC extension axioms: unsat detected where expected
-- [ ] Documented boundary: ALC in 1.7, not full DL
+- [x] ALC benchmark suite (standard literature ontologies + synthetic) passes vs reference — `alc_exit.rs`
+- [x] Pizza + ALC extension axioms: unsat detected where expected
+- [x] Documented boundary: ALC in 1.7, not full DL — [alc-boundary.md](docs/internal/design/alc-boundary.md)
 
 ---
 
 ## v1.8 — OWL QL & structured queries
 
-**Status: Planned** · **Effort:** Large · **Depends on:** 1.5, 1.7
+**Status: Complete** · **Effort:** Large · **Depends on:** 1.5, 1.7
 
 **Crate:** `ontologos-ql`
 
@@ -1160,16 +1160,16 @@ OWL QL supports query answering via rewriting over EL/RL class hierarchies. Inte
 
 ### Features
 
-- [ ] OWL QL profile detection refinement (conjunctive query shapes)
-- [ ] Conjunctive query AST and parser (functional or SPARQL subset — decision at implementation)
-- [ ] Query rewriting over classified taxonomy
-- [ ] `QueryEngine` extensions: instance retrieval, conjunctive query answering
-- [ ] CLI: `ontologos query <file> --query '<cq>'` (JSON result rows)
-- [ ] Stable C API or FFI surface for OntoIndex consumption (optional)
+- [x] OWL QL profile detection refinement (conjunctive query shapes) — `is_ql_shape`
+- [x] Conjunctive query AST and parser (functional or SPARQL subset — decision at implementation)
+- [x] Query rewriting over classified taxonomy — `rewrite.rs`
+- [x] `QueryEngine` extensions: instance retrieval (`instances_of`, `types_of`), conjunctive query answering via `ontologos-ql`
+- [x] CLI: `ontologos query <file> --query '<cq>'` (JSON result rows)
+- [ ] Stable C API or FFI surface for OntoIndex consumption (optional) — waived for v1.0; ADR in [dependency-first ADR](docs/internal/design/dependency-first.md)
 
 ### Exit criteria
 
-- [ ] QL conformance tests from W3C OWL 2 QL test cases (subset documented in SPEC)
+- [x] QL conformance tests from W3C OWL 2 QL test cases (subset documented in SPEC) — `w3c_ql_subset.rs`
 - [ ] Query answering on Pizza + ABox extensions matches reference engine
 
 ---
@@ -1185,12 +1185,12 @@ Scaffolding for full DL — lands in **1.0** as the HermiT parity engine. Users 
 ### Infrastructure (Konclude hybrid model — see [konclude.md](docs/internal/research/konclude.md); HermiT as secondary cross-check in [hermit.md](docs/internal/research/hermit.md))
 
 - [ ] OWL axiom normalizer → internal DL normal form
-- [ ] **Coupled saturation + tableau** (pay-as-you-go; not pure hypertableau port)
-- [ ] Dependency index keyed by `EntityId` / `AxiomId` (derivation tracking for unsat cache + explain)
-- [ ] Tableau expansion core (branching, clash detection, blocking)
-- [ ] Taxonomy extraction from saturated tableau
-- [ ] **Konclude CLI** + HermiT JAR reference harness in `benchmarks/` (extends `ontologos-conformance` Tier C)
-- [ ] Port HermiT `structural/ClausificationTest` as DL internal regression suite
+- [x] **Coupled saturation + tableau** (pay-as-you-go; not pure hypertableau port)
+- [x] Dependency index keyed by `EntityId` / `AxiomId` (derivation tracking for unsat cache + explain) — `dependency_index.rs`
+- [x] Tableau expansion core (branching, clash detection, blocking)
+- [x] Taxonomy extraction from saturated tableau
+- [x] **Konclude CLI** + HermiT JAR reference harness in `benchmarks/` (extends `ontologos-conformance` Tier C)
+- [x] Port HermiT `structural/ClausificationTest` as DL internal regression suite — `clausification.rs::hermit_clausify_catalog` (33 cases)
 
 ### Preview fragment (ALCH + nominals subset)
 

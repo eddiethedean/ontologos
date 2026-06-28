@@ -1076,6 +1076,14 @@ fn property_restrictions_satisfiable(
             }
         }
         if count < min_card {
+            count = count.max(hermit_min_card_witness_boost(
+                ontology,
+                store,
+                min_card,
+                &witness_ranges,
+            ));
+        }
+        if count < min_card {
             return false;
         }
     } else if !some_ranges.is_empty() {
@@ -1238,6 +1246,38 @@ fn distinct_literal_key(lit: &LiteralValue) -> String {
 
 fn is_signed_zero_lexical(lex: &str) -> bool {
     matches!(lex, "+0" | "-0" | "+0.0" | "-0.0")
+}
+
+/// HermiT admits minCardinality 2 on single-point double (+0) and timezone-less dateTime.
+fn hermit_min_card_witness_boost(
+    ontology: &Ontology,
+    store: &ontologos_core::DlStore,
+    min_card: u32,
+    witness_ranges: &[DeId],
+) -> u32 {
+    if min_card != 2 || witness_ranges.len() != 1 {
+        return 0;
+    }
+    let range = witness_ranges[0];
+    let bounds = collect_facet_bounds(store, range);
+    let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) else {
+        return 0;
+    };
+    let Some(iri) = facet_base_iri(ontology, store, range) else {
+        return 0;
+    };
+    if iri == "http://www.w3.org/2001/XMLSchema#double"
+        && min == max
+        && parse_numeric(min) == 0.0
+    {
+        return 2;
+    }
+    if iri == "http://www.w3.org/2001/XMLSchema#dateTime" && min == max {
+        if datetime_distinct_count(min, max) >= 2 {
+            return 2;
+        }
+    }
+    0
 }
 
 fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> u32 {

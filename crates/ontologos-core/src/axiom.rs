@@ -18,6 +18,15 @@ impl AxiomId {
     }
 }
 
+/// Typed literal value in a data property assertion (JSON snapshot v3).
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct DataLiteral {
+    /// Lexical form.
+    pub lexical: String,
+    /// Datatype IRI.
+    pub datatype: String,
+}
+
 /// Supported axiom types in the 1.x reasoner.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Axiom {
@@ -100,6 +109,33 @@ pub enum Axiom {
         property: EntityId,
         /// Object individual.
         object: EntityId,
+    },
+    /// `DataPropertyAssertion` with a typed literal (v1.6 / JSON v3).
+    DataPropertyAssertion {
+        /// The individual.
+        individual: EntityId,
+        /// The data property.
+        property: EntityId,
+        /// Literal value.
+        value: DataLiteral,
+    },
+    /// `NegativeObjectPropertyAssertion`.
+    NegativeObjectPropertyAssertion {
+        /// Subject individual.
+        subject: EntityId,
+        /// Object property.
+        property: EntityId,
+        /// Object individual.
+        object: EntityId,
+    },
+    /// `NegativeDataPropertyAssertion`.
+    NegativeDataPropertyAssertion {
+        /// The individual.
+        individual: EntityId,
+        /// The data property.
+        property: EntityId,
+        /// Literal value.
+        value: DataLiteral,
     },
     /// `owl:sameAs` cluster.
     SameIndividual(Vec<EntityId>),
@@ -188,6 +224,46 @@ impl Axiom {
                 require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
                 require_kind(registry, *object, EntityKind::Individual, "object")?;
             }
+            Self::DataPropertyAssertion {
+                individual,
+                property,
+                value,
+            } => {
+                require_kind(registry, *individual, EntityKind::Individual, "individual")?;
+                require_kind(registry, *property, EntityKind::DataProperty, "property")?;
+                if value.lexical.is_empty() {
+                    return Err(Error::InvalidAxiom(
+                        "data property assertion requires non-empty literal".into(),
+                    ));
+                }
+                if value.datatype.is_empty() {
+                    return Err(Error::InvalidAxiom(
+                        "data property assertion requires datatype IRI".into(),
+                    ));
+                }
+            }
+            Self::NegativeObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => {
+                require_kind(registry, *subject, EntityKind::Individual, "subject")?;
+                require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
+                require_kind(registry, *object, EntityKind::Individual, "object")?;
+            }
+            Self::NegativeDataPropertyAssertion {
+                individual,
+                property,
+                value,
+            } => {
+                require_kind(registry, *individual, EntityKind::Individual, "individual")?;
+                require_kind(registry, *property, EntityKind::DataProperty, "property")?;
+                if value.lexical.is_empty() || value.datatype.is_empty() {
+                    return Err(Error::InvalidAxiom(
+                        "negative data property assertion requires literal and datatype".into(),
+                    ));
+                }
+            }
             Self::ObjectPropertyDomain { property, domain } => {
                 require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;
                 require_kind(registry, *domain, EntityKind::Class, "domain")?;
@@ -271,6 +347,9 @@ impl Axiom {
             Self::EquivalentObjectProperties(_) => "EquivalentObjectProperties",
             Self::ClassAssertion { .. } => "ClassAssertion",
             Self::ObjectPropertyAssertion { .. } => "ObjectPropertyAssertion",
+            Self::DataPropertyAssertion { .. } => "DataPropertyAssertion",
+            Self::NegativeObjectPropertyAssertion { .. } => "NegativeObjectPropertyAssertion",
+            Self::NegativeDataPropertyAssertion { .. } => "NegativeDataPropertyAssertion",
             Self::SameIndividual(_) => "SameIndividual",
             Self::DifferentIndividuals(_) => "DifferentIndividuals",
         }

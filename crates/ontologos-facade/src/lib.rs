@@ -109,7 +109,12 @@ fn rl_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
     let report = ontologos_rl::RlEngine::new(1)
         .saturate(&mut working)
         .map_err(|e| Error::El(ontologos_el::Error::Profile(format!("rl saturate: {e}"))))?;
-    Ok(report.clashes.is_empty() && !ontologos_bridge::has_bottom_chain_violation(&working))
+    if !report.clashes.is_empty() || ontologos_bridge::has_bottom_chain_violation(&working) {
+        return Ok(false);
+    }
+    ontologos_abox::is_abox_consistent(&working).map_err(|e| {
+        Error::El(ontologos_el::Error::Profile(format!("abox consistent: {e}")))
+    })
 }
 
 fn rdfs_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {

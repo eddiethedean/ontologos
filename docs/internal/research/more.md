@@ -32,7 +32,19 @@ Given ontology O:
 4. **Benchmark strategy** — hybrid corpora (EL + few DL axioms) should be added to `benchmarks/manifest.toml` for v1.5 exit criteria.
 5. **No OWL API** — reimplement module extraction in Rust over `ontologos-core` (classic ⊥-module or structural splitting).
 
-## References
+## TBox-first hybrid scope (v1.5)
+
+MORe's initial classification mode is **TBox-only**: ABox assertions do not affect the class taxonomy until v1.6 (`ontologos-abox`).
+
+| Operation | TBox (v1.5) | ABox (v1.6+) |
+|-----------|-------------|--------------|
+| `classify_hybrid` / `Profile::Auto` | Module partition + taxonomy merge | Same; instance typing separate |
+| `ClassAssertion` in hybrid partition | Routed to RL module when RL-rich | Full `materialize_abox` |
+| `sameAs` / `differentFrom` | Ignored for classification | Closure in `ontologos-abox` |
+| Consistency of individuals | DL tableau when asserted | ABox + RL clash detection |
+
+The facade documents this limit in `classify_hybrid_auto` — hybrid routing classifies the TBox signature; ABox axioms may be materialized by RL but do not change EL/DL module assignment.
+
 
 - Armas Romero, A., Cuenca Grau, B., Horrocks, I. (2012). *MORe: Modular Combination of OWL Reasoners for Ontology Classification*. ISWC 2012.
 - CEUR Vol-1015 system description.

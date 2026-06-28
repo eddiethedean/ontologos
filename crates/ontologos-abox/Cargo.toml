@@ -15,3 +15,6 @@ publish = true
 ontologos-core = { workspace = true }
 ontologos-rl = { workspace = true }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+ontologos-parser = { workspace = true }

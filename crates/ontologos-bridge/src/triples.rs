@@ -291,6 +291,9 @@ fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
                 &entity_iri(ontology, *object)?,
             )?);
         }
+        Axiom::DataPropertyAssertion { .. }
+        | Axiom::NegativeObjectPropertyAssertion { .. }
+        | Axiom::NegativeDataPropertyAssertion { .. } => {}
         Axiom::SameIndividual(individuals) => {
             for pair in individuals.windows(2) {
                 out.push(triple(
@@ -720,6 +723,9 @@ fn axiom_triple_key(
             entity_iri(ontology, *property)?,
             entity_iri(ontology, *object)?,
         ))),
+        Axiom::DataPropertyAssertion { .. }
+        | Axiom::NegativeObjectPropertyAssertion { .. }
+        | Axiom::NegativeDataPropertyAssertion { .. } => Ok(None),
         Axiom::EquivalentClasses(classes) => classes
             .windows(2)
             .next()

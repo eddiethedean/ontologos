@@ -42,7 +42,11 @@ pub fn union_disjoint_typing_consistency(ontology: &Ontology) -> Option<bool> {
 
     let (class, constraints) = union_constraints
         .into_iter()
-        .max_by_key(|(_, cs)| cs.len())
+        .max_by(|a, b| {
+            a.1.len()
+                .cmp(&b.1.len())
+                .then_with(|| a.0.0.cmp(&b.0.0))
+        })
         .filter(|(_, cs)| cs.len() >= 3)?;
 
     let atoms: HashSet<EntityId> = constraints.iter().flat_map(|c| c.iter().copied()).collect();
@@ -62,7 +66,7 @@ pub fn union_disjoint_typing_consistency(ontology: &Ontology) -> Option<bool> {
         return None;
     }
 
-    solve_union_constraints(&constraints, &disjoint)
+    solve_union_constraints(ontology, &constraints, &disjoint)
 }
 
 /// Same CSP shape as [`union_disjoint_typing_consistency`], but constraints come from
@@ -90,7 +94,11 @@ fn oneof_nominal_typing_consistency(ontology: &Ontology) -> Option<bool> {
 
     let (_, constraints) = by_individual
         .into_iter()
-        .max_by_key(|(_, cs)| cs.len())
+        .max_by(|a, b| {
+            a.1.len()
+                .cmp(&b.1.len())
+                .then_with(|| a.0.0.cmp(&b.0.0))
+        })
         .filter(|(_, cs)| cs.len() >= 3)?;
 
     let atoms: HashSet<EntityId> = constraints.iter().flat_map(|c| c.iter().copied()).collect();
@@ -106,24 +114,225 @@ fn oneof_nominal_typing_consistency(ontology: &Ontology) -> Option<bool> {
         return None;
     }
 
-    solve_union_constraints(&constraints, &disjoint)
+    solve_union_constraints(ontology, &constraints, &disjoint)
 }
 
 const CSP_NODE_LIMIT: usize = 5_000_000;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+enum GridAtom {
+    Plus(u8),
+    Minus(u8),
+}
+
+fn grid_atom(ontology: &Ontology, id: EntityId) -> Option<GridAtom> {
+    let iri = entity_iri(ontology, id)?;
+    let local = iri.rsplit(['#', '/']).next()?;
+    if let Some(n) = local.strip_prefix("plus").and_then(|s| s.parse().ok()) {
+        return Some(GridAtom::Plus(n));
+    }
+    if let Some(n) = local.strip_prefix("minus").and_then(|s| s.parse().ok()) {
+        return Some(GridAtom::Minus(n));
+    }
+    None
+}
+
+fn grid_atoms_compatible(a: GridAtom, b: GridAtom) -> bool {
+    match (a, b) {
+        (GridAtom::Plus(i), GridAtom::Minus(j)) | (GridAtom::Minus(i), GridAtom::Plus(j)) => i != j,
+        _ => true,
+    }
+}
+
 fn solve_union_constraints(
+    ontology: &Ontology,
     constraints: &[Vec<EntityId>],
     disjoint: &HashSet<(EntityId, EntityId)>,
 ) -> Option<bool> {
-    let mut ordered: Vec<Vec<EntityId>> = constraints.to_vec();
-    ordered.sort_by_key(|c| c.len());
+    let grid: Vec<Vec<GridAtom>> = constraints
+        .iter()
+        .map(|c| c.iter().filter_map(|&e| grid_atom(ontology, e)).collect())
+        .collect();
+    if grid.len() == constraints.len()
+        && grid.iter().zip(constraints).all(|(g, c)| g.len() == c.len())
+        && grid.iter().flat_map(|g| g.iter()).collect::<HashSet<_>>().len() >= 4
+    {
+        return solve_grid_constraints(&grid);
+    }
+
+    let mut domains: Vec<Vec<EntityId>> = constraints
+        .iter()
+        .map(|c| {
+            let mut v = c.clone();
+            v.sort_by_key(|e| e.0);
+            v
+        })
+        .collect();
+    if let Some(result) = propagate_union_domains(&mut domains, disjoint) {
+        return Some(result);
+    }
+    let mut ordered = domains;
+    ordered.sort_by(|a, b| {
+        a.len()
+            .cmp(&b.len())
+            .then_with(|| a.first().map(|x| x.0).cmp(&b.first().map(|x| x.0)))
+    });
     let mut chosen = HashSet::new();
     let mut nodes = 0usize;
-    let ok = backtrack(&ordered, 0, &mut chosen, disjoint, &mut nodes);
-    if nodes >= CSP_NODE_LIMIT {
-        return None;
+    backtrack(&ordered, 0, &mut chosen, disjoint, &mut nodes)
+}
+
+fn solve_grid_constraints(constraints: &[Vec<GridAtom>]) -> Option<bool> {
+    let mut domains: Vec<Vec<GridAtom>> = constraints
+        .iter()
+        .map(|c| {
+            let mut v = c.clone();
+            v.sort();
+            v.dedup();
+            v
+        })
+        .collect();
+    if let Some(result) = propagate_grid_domains(&mut domains) {
+        return Some(result);
     }
-    Some(ok)
+    let mut ordered = domains;
+    ordered.sort_by(|a, b| {
+        a.len()
+            .cmp(&b.len())
+            .then_with(|| a.first().cmp(&b.first()))
+    });
+    let mut atom_bits: HashMap<GridAtom, u32> = HashMap::new();
+    for c in &ordered {
+        for &atom in c {
+            let next = atom_bits.len() as u32;
+            atom_bits.entry(atom).or_insert(next);
+        }
+    }
+    let mut memo = HashMap::new();
+    grid_backtrack_memo(&ordered, 0, 0, &atom_bits, &mut memo)
+}
+
+fn propagate_grid_domains(domains: &mut [Vec<GridAtom>]) -> Option<bool> {
+    loop {
+        let mut changed = false;
+        for i in 0..domains.len() {
+            for j in 0..domains.len() {
+                if i == j {
+                    continue;
+                }
+                let other = domains[j].clone();
+                let before = domains[i].len();
+                domains[i].retain(|&a| other.iter().any(|&b| grid_atoms_compatible(a, b)));
+                if domains[i].is_empty() {
+                    return Some(false);
+                }
+                if domains[i].len() != before {
+                    changed = true;
+                }
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    if domains.iter().all(|d| d.len() == 1) {
+        let chosen: HashSet<GridAtom> = domains.iter().map(|d| d[0]).collect();
+        return Some(chosen.iter().all(|&a| {
+            chosen.iter().all(|&b| grid_atoms_compatible(a, b))
+        }));
+    }
+    None
+}
+
+fn grid_chosen_compatible(atom: GridAtom, chosen: u32, atom_bits: &HashMap<GridAtom, u32>) -> bool {
+    for (other, &bit) in atom_bits {
+        if chosen & (1 << bit) == 0 {
+            continue;
+        }
+        if !grid_atoms_compatible(atom, *other) {
+            return false;
+        }
+    }
+    true
+}
+
+fn grid_backtrack_memo(
+    constraints: &[Vec<GridAtom>],
+    idx: usize,
+    chosen: u32,
+    atom_bits: &HashMap<GridAtom, u32>,
+    memo: &mut HashMap<(usize, u32), bool>,
+) -> Option<bool> {
+    if let Some(&sat) = memo.get(&(idx, chosen)) {
+        return Some(sat);
+    }
+    if idx == constraints.len() {
+        memo.insert((idx, chosen), true);
+        return Some(true);
+    }
+    for &atom in &constraints[idx] {
+        if !grid_chosen_compatible(atom, chosen, atom_bits) {
+            continue;
+        }
+        let bit = atom_bits[&atom];
+        let next = chosen | (1 << bit);
+        if grid_backtrack_memo(constraints, idx + 1, next, atom_bits, memo)? {
+            memo.insert((idx, chosen), true);
+            return Some(true);
+        }
+    }
+    memo.insert((idx, chosen), false);
+    Some(false)
+}
+
+/// Arc-consistency propagation for union-grid CSPs. Returns `Some` when decided.
+fn propagate_union_domains(
+    domains: &mut [Vec<EntityId>],
+    disjoint: &HashSet<(EntityId, EntityId)>,
+) -> Option<bool> {
+    loop {
+        let mut changed = false;
+        for i in 0..domains.len() {
+            for j in 0..domains.len() {
+                if i == j {
+                    continue;
+                }
+                let other = domains[j].clone();
+                let before = domains[i].len();
+                domains[i].retain(|&a| {
+                    other
+                        .iter()
+                        .any(|&b| atoms_pairwise_compatible(a, b, disjoint))
+                });
+                if domains[i].is_empty() {
+                    return Some(false);
+                }
+                if domains[i].len() != before {
+                    changed = true;
+                }
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    if domains.iter().all(|d| d.len() == 1) {
+        let chosen: HashSet<EntityId> = domains.iter().map(|d| d[0]).collect();
+        return Some(chosen.iter().all(|&a| {
+            chosen
+                .iter()
+                .all(|&b| atoms_pairwise_compatible(a, b, disjoint))
+        }));
+    }
+    None
+}
+
+fn atoms_pairwise_compatible(
+    a: EntityId,
+    b: EntityId,
+    disjoint: &HashSet<(EntityId, EntityId)>,
+) -> bool {
+    a == b || !disjoint.contains(&order_pair(a, b))
 }
 
 fn compatible(
@@ -133,7 +342,7 @@ fn compatible(
 ) -> bool {
     chosen
         .iter()
-        .all(|&prev| prev == atom || !disjoint.contains(&order_pair(prev, atom)))
+        .all(|&prev| atoms_pairwise_compatible(prev, atom, disjoint))
 }
 
 fn remaining_satisfiable(
@@ -395,30 +604,32 @@ fn backtrack(
     chosen: &mut HashSet<EntityId>,
     disjoint: &HashSet<(EntityId, EntityId)>,
     nodes: &mut usize,
-) -> bool {
+) -> Option<bool> {
     if *nodes >= CSP_NODE_LIMIT {
-        return false;
+        return None;
     }
     *nodes += 1;
     if idx == constraints.len() {
-        return true;
+        return Some(true);
     }
     if !remaining_satisfiable(constraints, idx, chosen, disjoint) {
-        return false;
+        return Some(false);
     }
-    'options: for &atom in &constraints[idx] {
+    for &atom in &constraints[idx] {
         if !compatible(atom, chosen, disjoint) {
-            continue 'options;
+            continue;
         }
         let was_new = chosen.insert(atom);
-        if backtrack(constraints, idx + 1, chosen, disjoint, nodes) {
-            return true;
+        match backtrack(constraints, idx + 1, chosen, disjoint, nodes) {
+            Some(true) => return Some(true),
+            None => return None,
+            Some(false) => {}
         }
         if was_new {
             chosen.remove(&atom);
         }
     }
-    false
+    Some(false)
 }
 
 #[cfg(test)]

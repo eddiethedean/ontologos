@@ -138,6 +138,31 @@ pub fn axiom_signature(axiom: &Axiom) -> HashSet<EntityId> {
             sig.insert(*property);
             sig.insert(*object);
         }
+        Axiom::DataPropertyAssertion {
+            individual,
+            property,
+            ..
+        } => {
+            sig.insert(*individual);
+            sig.insert(*property);
+        }
+        Axiom::NegativeObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => {
+            sig.insert(*subject);
+            sig.insert(*property);
+            sig.insert(*object);
+        }
+        Axiom::NegativeDataPropertyAssertion {
+            individual,
+            property,
+            ..
+        } => {
+            sig.insert(*individual);
+            sig.insert(*property);
+        }
         Axiom::SameIndividual(individuals) | Axiom::DifferentIndividuals(individuals) => {
             sig.extend(individuals.iter().copied());
         }

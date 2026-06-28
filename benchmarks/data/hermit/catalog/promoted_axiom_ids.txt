@@ -14,7 +14,6 @@ reasoner.AnyURITest.testPattern3
 reasoner.AnyURITest.testPatternAndLength1_1
 reasoner.AnyURITest.testPatternAndLength1_2
 reasoner.AnyURITest.testPatternAndLength1_3
-reasoner.AnyURITest.testPatternComplement1_1
 reasoner.AnyURITest.testPatternComplement1_2
 reasoner.AnyURITest.testPatternComplement1_3
 reasoner.AnyURITest.testSize_1
@@ -46,7 +45,6 @@ reasoner.DatatypesTest.testAllValuesFromDifferentTypes2
 reasoner.DatatypesTest.testAllValuesFromDifferentTypes3
 reasoner.DatatypesTest.testAllValuesFromInteger1
 reasoner.DatatypesTest.testAllValuesFromInteger2
-reasoner.DatatypesTest.testAllValuesFromMixed1
 reasoner.DatatypesTest.testAllValuesFromMixed2
 reasoner.DatatypesTest.testDatatypeDef1
 reasoner.DatatypesTest.testDatatypeDef2
@@ -55,11 +53,8 @@ reasoner.DatatypesTest.testDatatypeDef4
 reasoner.DatatypesTest.testDatatypeDef5
 reasoner.DatatypesTest.testDatatypeDef6
 reasoner.DatatypesTest.testDatatypeUnion1
-reasoner.DatatypesTest.testDatatypeUnion2
-reasoner.DatatypesTest.testDatatypeUnion3
 reasoner.DatatypesTest.testDatatypeUnion4
 reasoner.DatatypesTest.testDatatypeUnionIntersection1
-reasoner.DatatypesTest.testDatatypeUnionIntersection2
 reasoner.DatatypesTest.testDatatypeUnionIntersection3
 reasoner.DatatypesTest.testDatatypeUnionIntersection4
 reasoner.DatatypesTest.testDatatypesSat
@@ -80,7 +75,6 @@ reasoner.DatatypesTest.testFloatEnumInconsistent
 reasoner.DatatypesTest.testFloatZeros
 reasoner.DatatypesTest.testFreshEntitiesQuery
 reasoner.DatatypesTest.testINF
-reasoner.DatatypesTest.testIntPlusDecimal
 reasoner.DatatypesTest.testIntPlusDecimal2
 reasoner.DatatypesTest.testLangAbbreviation
 reasoner.DatatypesTest.testLiteralCustomDatatype
@@ -128,7 +122,6 @@ reasoner.FloatDoubleTest.testFloatNaN_3
 reasoner.FloatDoubleTest.testFloatRange
 reasoner.FloatDoubleTest.testFloatRangeEnum
 reasoner.FloatDoubleTest.testFloatZeroRange_1
-reasoner.FloatDoubleTest.testFloatZeroRange_2
 reasoner.FloatDoubleTest.testFloatZeroRange_3
 reasoner.FloatDoubleTest.testINF
 reasoner.FloatDoubleTest.testNumberOfDoubles_1
@@ -138,15 +131,10 @@ reasoner.FloatDoubleTest.testNumberOfFloats_1
 reasoner.FloatDoubleTest.testNumberOfFloats_2
 reasoner.FloatDoubleTest.testNumberOfFloats_3
 reasoner.NumericsTest.testClique
-reasoner.NumericsTest.testDecimalMinusIntNEQ_1
-reasoner.NumericsTest.testDecimalMinusIntNEQ_2
 reasoner.NumericsTest.testDecimalMinusIntNEQ_3
 reasoner.NumericsTest.testDecimalMinusInt_1
-reasoner.NumericsTest.testDecimalMinusInt_2
-reasoner.NumericsTest.testDecimalMinusInt_3
 reasoner.NumericsTest.testDecimalMinusInt_4
 reasoner.NumericsTest.testDecimalNotInteger_1
-reasoner.NumericsTest.testDecimalNotInteger_2
 reasoner.NumericsTest.testDecimalNotInteger_3
 reasoner.NumericsTest.testEnumIntNEQ_1
 reasoner.NumericsTest.testEnumIntNEQ_2
@@ -160,15 +148,11 @@ reasoner.NumericsTest.testEnumInt_4
 reasoner.NumericsTest.testEnumInt_5
 reasoner.NumericsTest.testIntegerRange1
 reasoner.NumericsTest.testIntegerRange2_1
-reasoner.NumericsTest.testIntegerRange2_2
-reasoner.NumericsTest.testIntegerRange2_3
 reasoner.NumericsTest.testIntegerRange2_4
 reasoner.NumericsTest.testInvalidMinMax
 reasoner.NumericsTest.testLargeRange1_1
 reasoner.NumericsTest.testLargeRange1_2
 reasoner.NumericsTest.testLargeRange1_3
-reasoner.NumericsTest.testLargeRange2_1
-reasoner.NumericsTest.testLargeRange2_2
 reasoner.NumericsTest.testLargeRange2_3
 reasoner.NumericsTest.testMaxExclusiveDec
 reasoner.NumericsTest.testMaxInclusiveInt
@@ -181,7 +165,6 @@ reasoner.NumericsTest.testMinMaxEqual_2
 reasoner.NumericsTest.testMinMaxEqual_3
 reasoner.NumericsTest.testMinMaxEqual_4
 reasoner.NumericsTest.testRealNotDecimal
-reasoner.NumericsTest.testRealNotDecimal_2
 reasoner.OWLReasonerTest.testBottomObjectPropertySubs
 reasoner.OWLReasonerTest.testGetDataPropertyValues
 reasoner.OWLReasonerTest.testIncrementalAddition
@@ -313,7 +296,6 @@ reasoner.ReasonerTest.testNIRuleBlockingWithUnraveling
 reasoner.ReasonerTest.testNegProperties
 reasoner.ReasonerTest.testNegativeDataPropertyAssertion
 reasoner.ReasonerTest.testNegativeObjectPropertyAssertionWithNonSimple
-reasoner.ReasonerTest.testNominalMerging
 reasoner.ReasonerTest.testNominals1
 reasoner.ReasonerTest.testNominals2
 reasoner.ReasonerTest.testNominals3

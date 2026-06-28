@@ -32,6 +32,26 @@ local_path = "benchmarks/data/family.owl"
 notes = "Classic Protégé family ontology (rexster example); vendored in-repo. RL profile via subproperties, domains/ranges, and property characteristics."
 
 [[ontology]]
+name = "family-hybrid"
+expected_profile = "RL"
+source_url = "https://github.com/martinhbramwell/Monetary-Ontology-Walkabout/raw/master/rexster/extension/example/src/main/resources/data/family.swrl.owl"
+license = "unspecified (tutorial example)"
+format = "rdf+xml"
+axiom_count_approx = 57
+local_path = "benchmarks/data/family.owl"
+notes = "MORe-style hybrid smoke: RL/ABox module on Family TBox."
+
+[[ontology]]
+name = "galen-hybrid"
+expected_profile = "EL"
+source_url = "https://www.co-ode.org/ontologies/galen/galen.owl"
+license = "GPL-2.0"
+format = "owl+xml"
+axiom_count_approx = 23000
+local_path = "benchmarks/data/galen.owl"
+notes = "MORe-style hybrid routing corpus: EL module must not false-delegate entire ontology to DL."
+
+[[ontology]]
 name = "galen"
 expected_profile = "EL"
 source_url = "https://www.co-ode.org/ontologies/galen/galen.owl"

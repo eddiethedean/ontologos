@@ -111,3 +111,54 @@ fn nnf_complement_in_dl_store() -> Result<(), Error> {
     );
     Ok(())
 }
+
+/// HermiT `ClausificationTest` + datatype clausify catalog (33 cases).
+#[test]
+fn hermit_clausify_catalog() -> Result<(), Error> {
+    #[derive(serde::Deserialize)]
+    struct CatalogCase {
+        id: String,
+        status: String,
+        axiom_ofn: Option<String>,
+    }
+
+    let catalog_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/catalog/cases.json");
+    let text = std::fs::read_to_string(&catalog_path).expect("cases.json");
+    let cases: Vec<CatalogCase> = serde_json::from_str(&text).expect("parse catalog");
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/hermit");
+    let mut ran = 0usize;
+    for case in cases {
+        if case.status != "clausify" {
+            continue;
+        }
+        let rel = case.axiom_ofn.as_ref().expect("clausify axiom_ofn");
+        let path = root.join(rel);
+        assert!(path.is_file(), "{} missing {}", case.id, path.display());
+        let mut ontology = ontologos_parser::load_ontology(&path).map_err(Error::Parser)?;
+        let actual = ontologos_alc::clausify_hyper(&mut ontology)?;
+        let golden_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/clauses")
+            .join(format!("{}.txt", case.id.replace('.', "_")));
+        assert!(
+            golden_path.is_file(),
+            "{} missing golden {}",
+            case.id,
+            golden_path.display()
+        );
+        let golden_text = std::fs::read_to_string(&golden_path).expect("golden");
+        let mut expected: Vec<String> = golden_text
+            .lines()
+            .map(str::trim)
+            .filter(|l| !l.is_empty())
+            .map(str::to_owned)
+            .collect();
+        let mut act = actual;
+        expected.sort();
+        act.sort();
+        assert_eq!(expected, act, "clause multiset mismatch for {}", case.id);
+        ran += 1;
+    }
+    assert!(ran >= 33, "expected full clausify catalog, ran {ran}");
+    Ok(())
+}

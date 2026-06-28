@@ -29,8 +29,14 @@ else
   FAIL=1
 fi
 
-# Tier A: default conformance green.
-check "Tier A conformance" cargo test -p ontologos-conformance --quiet
+# Tier A: promoted HermiT lists @ 30s + phase closures (avoids lib-test DL contention under full `cargo test`).
+check "Tier A promoted conformance" bash -c "
+  set -euo pipefail
+  export ONTOLOGOS_DL_BUDGET_SECS=30
+  \"${ROOT}/benchmarks/scripts/hermit-burndown.sh\" test
+  cargo test -p ontologos-conformance --quiet \\
+    --test phase3_closure --test phase4_closure --test phase8_closure --test phase9_closure
+"
 
 # Tier B/C harness.
 check "Tier B classification gate script" test -x "${ROOT}/benchmarks/scripts/compare-classification-fixtures.sh"

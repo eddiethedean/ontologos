@@ -364,6 +364,9 @@ impl AxiomIndex {
                     entry.push(reverse);
                 }
             }
+            Axiom::DataPropertyAssertion { .. }
+            | Axiom::NegativeObjectPropertyAssertion { .. }
+            | Axiom::NegativeDataPropertyAssertion { .. } => {}
             Axiom::SameIndividual(individuals) => {
                 merge_equivalence_class(&mut self.same_as, individuals);
             }

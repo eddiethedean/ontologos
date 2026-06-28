@@ -56,6 +56,8 @@ enum Command {
         #[arg(long)]
         query: String,
     },
+    /// List ABox individuals, types, and sameAs clusters after RL materialization
+    Instances { ontology: PathBuf },
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum, Default, PartialEq, Eq)]
@@ -254,6 +256,53 @@ fn run() -> Result<(), CliError> {
                 })?,
             }
         }
+        Command::Instances { ontology } => {
+            let mut ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
+            let report = ontologos_abox::materialize_abox(&mut ontology)
+                .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
+            let consistent = ontologos_abox::is_abox_consistent(&ontology)
+                .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
+            match cli.format {
+                OutputFormat::Text => {
+                    println!("consistent: {consistent}");
+                    println!("rl_inferences: {}", report.rl_inferences);
+                    println!("same_as_clusters: {}", report.same_as_clusters.len());
+                    for (i, cluster) in report.same_as_clusters.iter().enumerate() {
+                        let names: Vec<_> = cluster
+                            .iter()
+                            .filter_map(|id| {
+                                ontology
+                                    .entity(*id)
+                                    .ok()
+                                    .and_then(|r| ontology.resolve_iri(r.iri).ok())
+                            })
+                            .collect();
+                        println!("  cluster[{i}]: {}", names.join(", "));
+                    }
+                    for (_, axiom) in ontology.axioms().iter() {
+                        if let ontologos_core::Axiom::ClassAssertion { individual, class } =
+                            axiom
+                        {
+                            let ind = ontology
+                                .resolve_iri(ontology.entity(*individual).expect("ind").iri)
+                                .unwrap_or("?");
+                            let cls = ontology
+                                .resolve_iri(ontology.entity(*class).expect("cls").iri)
+                                .unwrap_or("?");
+                            println!("  {ind} : {cls}");
+                        }
+                    }
+                }
+                OutputFormat::Json => emit_json(&InstancesCliOutput {
+                    consistent,
+                    rl_inferences: report.rl_inferences,
+                    same_as_clusters: report.same_as_clusters.len(),
+                    parse_meta: &parse_meta,
+                })?,
+            }
+        }
     }
 
     Ok(())
@@ -292,6 +341,15 @@ struct ProfileCliOutput<'a> {
 #[derive(Serialize)]
 struct QueryCliOutput<'a> {
     answers: usize,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct InstancesCliOutput<'a> {
+    consistent: bool,
+    rl_inferences: usize,
+    same_as_clusters: usize,
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
