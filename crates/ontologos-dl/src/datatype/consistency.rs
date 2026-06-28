@@ -366,12 +366,6 @@ fn property_requires_literal(
         }
     }
 
-    if !some_ranges.is_empty() {
-        return some_ranges
-            .iter()
-            .any(|&r| idx.satisfies_with_ontology(lit, ontology, r));
-    }
-
     false
 }
 

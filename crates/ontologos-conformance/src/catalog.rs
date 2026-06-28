@@ -717,10 +717,11 @@ fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Re
             check_property_characteristics_result(&ontology, case)?;
         }
         if let Some(expected) = case.consistent {
+            let consistency_ontology = ontology_for_incremental_consistency(&ontology, case)?;
             let consistent = match budget {
-                Some(limit) => dl_is_consistent_with_budget(&ontology, limit)
+                Some(limit) => dl_is_consistent_with_budget(&consistency_ontology, limit)
                     .map_err(|e| format!("{}: {e}", case.id))?,
-                None => ontologos_dl::is_consistent(&ontology)
+                None => ontologos_dl::is_consistent(&consistency_ontology)
                     .map_err(|e| format!("{}: {e}", case.id))?,
             };
             if consistent != expected {
@@ -780,6 +781,25 @@ fn check_ontology_consistency(case: &HermitCase, ontology: &Ontology) -> Result<
 fn probe_ontology_axiom(axiom: &str) -> Result<Ontology, String> {
     let body = format!("{PROBE_OFN_PREFIX}Ontology(<file:/c/test.owl#>\n{axiom}\n)");
     ontologos_parser::load_ofn_from_str(&body).map_err(|e| format!("load probe: {e}"))
+}
+
+/// Final incremental axioms applied only for the post-increment consistency check (multi-step Java tests).
+fn incremental_consistency_final_axioms(case_id: &str) -> Option<&'static str> {
+    match case_id {
+        "reasoner.ReasonerTest.testIncrementalWithNegatedClass" => Some("ClassAssertion(:C :a)"),
+        _ => None,
+    }
+}
+
+fn ontology_for_incremental_consistency(
+    ontology: &Ontology,
+    case: &HermitCase,
+) -> Result<Ontology, String> {
+    let Some(extra) = incremental_consistency_final_axioms(&case.id) else {
+        return Ok(ontology.clone());
+    };
+    let probe = probe_ontology_axiom(extra)?;
+    merge_ontologies_for_entailment(ontology, &probe)
 }
 
 fn check_ce_instance_checks_result(

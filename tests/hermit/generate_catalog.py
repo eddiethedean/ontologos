@@ -295,6 +295,7 @@ HARDCODED_INCREMENTAL_AXIOMS: dict[str, str] = {
     "reasoner.ReasonerTest.testIncrementalWithClass": "ClassAssertion(:C :a)",
     "reasoner.ReasonerTest.testIncrementalWithNegatedClass": (
         "ClassAssertion(ObjectComplementOf(:C) :a)"
+        "ClassAssertion(ObjectComplementOf(:B) :a)"
     ),
     "reasoner.ReasonerTest.testIncrementalWithHasSelf": (
         "ClassAssertion(ObjectHasSelf(:r) :a)"
