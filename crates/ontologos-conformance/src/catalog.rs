@@ -2101,6 +2101,21 @@ fn check_subsumptions_dl_result(
             if !actual && sub.expected && top_role_universal_subsumption(ontology, sub_id, sup_id) {
                 actual = true;
             }
+            if !actual && sub.expected {
+                let sub_local = sub.sub.strip_prefix(':').unwrap_or(&sub.sub);
+                let sup_local = sub.sup.strip_prefix(':').unwrap_or(&sub.sup);
+                if let Ok(conclusion) =
+                    probe_ontology_axiom(&format!("SubClassOf(:{sub_local} :{sup_local})"))
+                {
+                    if let Ok(entailed) = entailment_holds_with_budget(
+                        ontology,
+                        &conclusion,
+                        Some(dl_classify_budget()),
+                    ) {
+                        actual = entailed;
+                    }
+                }
+            }
             actual
         };
         if actual != sub.expected {
