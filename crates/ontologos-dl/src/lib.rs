@@ -194,14 +194,33 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if abox_functional_different_individuals_clash(ontology) {
         reject!("functional_different_individuals");
     }
+    if !abox_has_interacting_assertions(ontology) && ontology_has_class_assertion(ontology) {
+        match ontologos_alc::tableau_is_consistent(ontology).map_err(Error::Alc) {
+            Ok(consistent) => {
+                if trace {
+                    eprintln!("is_consistent: class_assertion_kb empty_seed => {consistent}");
+                }
+                return Ok(consistent);
+            }
+            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {}
+            Err(e) => return Err(e),
+        }
+    }
     if let Some(consistent) = class_assertion_only_consistency(ontology, &dl, &seed)? {
         if trace {
             eprintln!("is_consistent: class_assertion_only => {consistent}");
         }
         return Ok(consistent);
     }
-    let tableau =
-        ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc)?;
+    let tableau = match ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed)
+        .map_err(Error::Alc)
+    {
+        Ok(consistent) => consistent,
+        Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {
+            ontologos_alc::tableau_is_consistent(ontology).map_err(Error::Alc)?
+        }
+        Err(e) => return Err(e),
+    };
     if trace {
         eprintln!("is_consistent: tableau => {tableau}");
     }
@@ -356,23 +375,26 @@ fn ontology_maybe_needs_flower_classify(ontology: &Ontology) -> bool {
 fn abox_atomic_class_unsatisfiable(
     ontology: &Ontology,
     dl: &ontologos_alc::DlOntology,
-    seed: &TableauSeed,
+    _seed: &TableauSeed,
 ) -> Result<bool> {
     if ontology.entities().iter().count() > 150 {
         return Ok(false);
     }
+    // Class-assertion CE checks use an empty seed; saturation seed can spuriously exhaust
+    // the tableau budget on nominal/HasSelf patterns (see class_assertion_only_consistency).
+    let ce_seed = TableauSeed::default();
     let store = ontology.dl();
     for axiom in store.axioms() {
         let DlAxiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
         let Some(ontologos_core::ClassExpr::Atomic(entity)) = store.ce(*class) else {
-            if !class_assertion_type_satisfiable(dl, store, *class, seed)? {
+            if !class_assertion_type_satisfiable(dl, store, *class, &ce_seed)? {
                 return Ok(true);
             }
             continue;
         };
-        if class_assertion_atomic_unsatisfiable(dl, store, *entity, seed)? {
+        if class_assertion_atomic_unsatisfiable(dl, store, *entity, &ce_seed)? {
             return Ok(true);
         }
     }
@@ -380,7 +402,7 @@ fn abox_atomic_class_unsatisfiable(
         let ontologos_core::Axiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
-        if class_assertion_atomic_unsatisfiable(dl, store, *class, seed)? {
+        if class_assertion_atomic_unsatisfiable(dl, store, *class, &ce_seed)? {
             return Ok(true);
         }
     }
@@ -726,7 +748,11 @@ fn class_assertion_type_satisfiable(
         Some(ClassExpr::Atomic(entity)) => {
             class_assertion_type_satisfiable_entity(dl, store, *entity, seed)
         }
-        _ => Ok(ontologos_alc::is_ce_satisfiable_with_seed(dl, ce, seed).map_err(Error::Alc)?),
+        _ => match ontologos_alc::is_ce_satisfiable_with_seed(dl, ce, seed).map_err(Error::Alc) {
+            Ok(v) => Ok(v),
+            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => Ok(true),
+            Err(e) => Err(e),
+        },
     }
 }
 
@@ -943,10 +969,11 @@ fn atomic_class_proven_unsatisfiable(
 fn abox_exists_forall_role_clash(
     ontology: &Ontology,
     dl: &ontologos_alc::DlOntology,
-    seed: &TableauSeed,
+    _seed: &TableauSeed,
 ) -> Result<bool> {
     use std::collections::HashMap;
 
+    let ce_seed = TableauSeed::default();
     let store = ontology.dl();
     for class in classes_with_individual_abox(ontology) {
         let subs = entity_subsumption_closure(ontology, store, class);
@@ -1021,8 +1048,13 @@ fn abox_exists_forall_role_clash(
             }
             for &e in &e_fillers {
                 for &f in f_fillers {
-                    if !ontologos_alc::is_ce_intersection_satisfiable_with_seed(dl, e, f, seed)? {
-                        return Ok(true);
+                    match ontologos_alc::is_ce_intersection_satisfiable_with_seed(
+                        dl, e, f, &ce_seed,
+                    ) {
+                        Ok(false) => return Ok(true),
+                        Ok(true) => {}
+                        Err(ontologos_alc::Error::ResourceLimit(_)) => {}
+                        Err(e) => return Err(Error::Alc(e)),
                     }
                 }
             }

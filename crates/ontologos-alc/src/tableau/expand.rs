@@ -501,6 +501,7 @@ fn has_universal_has_self_for_role(branch: &Branch<'_>, world: usize, role: &Rol
     let mut candidates: Vec<(RoleExpr, CeId)> = branch.worlds[world]
         .labels
         .iter()
+        .chain(branch.worlds[world].queue.iter())
         .filter_map(|&ce| match store.ce(ce)? {
             ClassExpr::All { property, filler } => Some((property.clone(), *filler)),
             _ => None,
@@ -610,6 +611,42 @@ fn ce_subsumes(branch: &Branch<'_>, sub: CeId, sup: CeId) -> bool {
         }
     }
     false
+}
+
+/// If a world is labelled (or queued) with `∀role.HasSelf(role)`, add the required reflexive edge
+/// before existential expansion so role cycles reuse the same world.
+pub(crate) fn materialize_forall_has_self_loops(branch: &mut Branch<'_>) {
+    let store = branch.dl.core().dl();
+    let world_count = branch.worlds.len();
+    for world in 0..world_count {
+        let universals: Vec<(RoleExpr, CeId)> = branch.worlds[world]
+            .labels
+            .iter()
+            .chain(branch.worlds[world].queue.iter())
+            .filter_map(|&ce| match store.ce(ce) {
+                Some(ClassExpr::All { property, filler }) => Some((property.clone(), *filler)),
+                _ => None,
+            })
+            .collect();
+        for (role, filler) in universals {
+            let Some(ClassExpr::HasSelf(has_role)) = store.ce(filler) else {
+                continue;
+            };
+            let has_role = RoleExpr::Atomic(*has_role);
+            if !role_subsumes(branch, &role, &has_role) {
+                continue;
+            }
+            if branch.edges.iter().any(|(from, edge_role, to)| {
+                *from == world && *to == world && role_subsumes(branch, &role, edge_role)
+            }) {
+                continue;
+            }
+            add_role_edge(branch, world, role, world);
+            if branch.clash {
+                return;
+            }
+        }
+    }
 }
 
 /// If a world has a reflexive role edge, assert matching `HasSelf` class expressions.

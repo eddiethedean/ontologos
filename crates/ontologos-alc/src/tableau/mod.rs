@@ -546,6 +546,11 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
 
     apply_reflexive_loops(&mut branch, &worlds, &reflexive_object_properties(dl));
 
+    expand::materialize_forall_has_self_loops(&mut branch);
+    if branch.clash {
+        kb_reject!("after_forall_has_self");
+    }
+
     expand::materialize_nested_abox_existentials(&mut branch);
     expand::recheck_inverse_functional_source_merge(&mut branch);
     if branch.clash {
@@ -1726,10 +1731,25 @@ impl<'a> Branch<'a> {
     }
 
     fn next_pending(&mut self) -> Option<(usize, CeId)> {
+        let store = self.dl.core().dl();
+        let mut fallback: Option<(usize, usize, CeId)> = None;
         for (idx, world) in self.worlds.iter_mut().enumerate() {
-            if let Some(ce) = world.queue.pop_front() {
-                return Some((idx, ce));
+            for (pos, &ce) in world.queue.iter().enumerate() {
+                if matches!(
+                    store.ce(ce),
+                    Some(ClassExpr::All { .. } | ClassExpr::HasSelf(_))
+                ) {
+                    world.queue.remove(pos);
+                    return Some((idx, ce));
+                }
+                if fallback.is_none() {
+                    fallback = Some((idx, pos, ce));
+                }
             }
+        }
+        if let Some((idx, pos, ce)) = fallback {
+            self.worlds[idx].queue.remove(pos);
+            return Some((idx, ce));
         }
         None
     }

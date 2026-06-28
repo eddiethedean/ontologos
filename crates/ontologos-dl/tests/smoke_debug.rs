@@ -41,6 +41,10 @@ fn smoke_kb_consistency() {
             "exists_self2",
             "hermit_reasoner_reasonertest_testexistsself2.ofn",
         ),
+        (
+            "nominal_merging",
+            "hermit_reasoner_reasonertest_testnominalmerging.ofn",
+        ),
     ] {
         let ont = load_ontology(&ax(ofn)).unwrap();
         let alc = alc_consistent(&ont);
