@@ -1041,8 +1041,6 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testIanRecursiveDefinitionTest1",
     "reasoner.ReasonerTest.testIanRecursiveDefinitionTest2",
     "reasoner.ReasonerTest.testIanRecursiveDefinitionTest3",
-    "reasoner.ReasonerTest.testIanT7c",
-    "reasoner.ReasonerTest.testIanT11",
     "reasoner.ReasonerTest.testIanT13",
     "reasoner.OWLLinkTest.testDisjointClasses",
     "reasoner.OWLLinkTest.testBobTests",

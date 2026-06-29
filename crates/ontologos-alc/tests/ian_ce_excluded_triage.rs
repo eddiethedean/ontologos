@@ -85,8 +85,7 @@ fn iant6_unsat_regression() {
 }
 
 #[test]
-#[ignore = "tableau gap: IanT7c functional inverse + nested exists"]
-fn iant7c_unsat() {
+fn iant7c_unsat_regression() {
     let ce = "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))) ObjectSomeValuesFrom(ObjectInverseOf(:f) :p1))";
     check(
         "hermit_reasoner_reasonertest_testiant7c.ofn",
@@ -117,8 +116,7 @@ fn iant9_unsat_regression() {
 }
 
 #[test]
-#[ignore = "tableau gap: IanT11 multi-functional pattern"]
-fn iant11_unsat() {
+fn iant11_unsat_regression() {
     let ce = "ObjectIntersectionOf(ObjectComplementOf(:p) ObjectSomeValuesFrom(:f ObjectIntersectionOf(ObjectAllValuesFrom(ObjectInverseOf(:s) :p) ObjectAllValuesFrom(ObjectInverseOf(:f) ObjectSomeValuesFrom(:s :p)))) ObjectSomeValuesFrom(:f1 ObjectIntersectionOf(ObjectAllValuesFrom(ObjectInverseOf(:s) :p) ObjectAllValuesFrom(ObjectInverseOf(:f1) ObjectSomeValuesFrom(:s :p)))))";
     check(
         "hermit_reasoner_reasonertest_testiant11.ofn",

@@ -91,7 +91,6 @@ fn ianbug1b_unsat() {
 }
 
 #[test]
-#[ignore = "functional+inverse CE unsat not yet detected by tableau (IanT7c)"]
 fn iant7c_ce_is_unsatisfiable() {
     let ce = "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))) ObjectSomeValuesFrom(ObjectInverseOf(:f) :p1))";
     assert!(

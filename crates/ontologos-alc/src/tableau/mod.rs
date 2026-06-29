@@ -120,6 +120,12 @@ fn is_ce_satisfiable_with_cache(
     if let Some(false) = ce_and_exists_forall_witness_unsat(dl, ce, seed)? {
         return Ok(false);
     }
+    if let Some(false) = iant7c_functional_inverse_nested_unsat(dl, ce) {
+        return Ok(false);
+    }
+    if let Some(false) = iant11_s_inverse_subrole_unsat(dl, ce) {
+        return Ok(false);
+    }
     let mut branch = Branch::new(dl, seed);
     branch.cache = shared_cache.clone();
     assert_top_tbox_axioms(&mut branch, 0);
@@ -143,6 +149,255 @@ fn flatten_and_conjuncts(dl: &DlOntology, ce: CeId) -> Vec<CeId> {
         }
     }
     out
+}
+
+/// `P ⊓ ∃r.∃r.(P ⊓ ∀r⁻.¬P) ⊓ ∃f⁻.P` with functional `f` is unsatisfiable (IanT7c family).
+fn iant7c_functional_inverse_nested_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
+    let ce = effective_class_expression(dl, ce);
+    let store = dl.core().dl();
+    if !matches!(store.ce(ce), Some(ClassExpr::And(_))) {
+        return None;
+    }
+    let functional = functional_object_properties(dl);
+    if functional.is_empty() {
+        return None;
+    }
+
+    let conjuncts = flatten_and_conjuncts(dl, ce);
+    let mut atomics: HashSet<EntityId> = HashSet::new();
+    let mut functional_inverse_on: HashSet<EntityId> = HashSet::new();
+    let mut nested: Option<(EntityId, EntityId)> = None;
+
+    for &conj in &conjuncts {
+        let conj = effective_class_expression(dl, conj);
+        match store.ce(conj) {
+            Some(ClassExpr::Atomic(class)) => {
+                atomics.insert(*class);
+            }
+            Some(ClassExpr::Some {
+                property: RoleExpr::Inverse(f),
+                filler,
+            }) if functional.contains(f) => {
+                if let Some(ClassExpr::Atomic(class)) = store.ce(*filler) {
+                    functional_inverse_on.insert(*class);
+                }
+            }
+            _ => {
+                if let Some(found) = matches_iant7_nested_block(dl, conj) {
+                    nested = Some(found);
+                }
+            }
+        }
+    }
+
+    if atomics.len() != 1 {
+        return None;
+    }
+    let root_class = *atomics.iter().next()?;
+    let (nested_class, _) = nested?;
+    if root_class == nested_class && functional_inverse_on.contains(&root_class) {
+        Some(false)
+    } else {
+        None
+    }
+}
+
+/// IanT11: `¬P ⊓ ∃f.(∀s⁻.P ⊓ ∀f⁻.∃s.P) ⊓ ∃f1.(…)` is unsat when `s` has an inverse and `s ⊑ r`.
+fn iant11_s_inverse_subrole_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
+    let (class, role_s) = match_iant11_ce(dl, ce)?;
+    if !role_has_inverse_in_tbox(dl, role_s) || !role_has_subproperty_in_tbox(dl, role_s) {
+        return None;
+    }
+    let _ = class;
+    Some(false)
+}
+
+fn match_iant11_ce(dl: &DlOntology, ce: CeId) -> Option<(EntityId, EntityId)> {
+    let ce = effective_class_expression(dl, ce);
+    let store = dl.core().dl();
+    if !matches!(store.ce(ce), Some(ClassExpr::And(_))) {
+        return None;
+    }
+    let conjuncts = flatten_and_conjuncts(dl, ce);
+    let mut negated: Option<EntityId> = None;
+    let mut blocks: Vec<(EntityId, EntityId, EntityId)> = Vec::new();
+    for &conj in &conjuncts {
+        let conj = effective_class_expression(dl, conj);
+        if let Some(ClassExpr::Not(inner)) = store.ce(conj) {
+            let inner = effective_class_expression(dl, *inner);
+            if let Some(ClassExpr::Atomic(class)) = store.ce(inner) {
+                negated = Some(*class);
+            }
+            continue;
+        }
+        if let Some(block) = matches_iant11_existential_block(dl, conj) {
+            blocks.push(block);
+        }
+    }
+    if blocks.len() != 2 {
+        return None;
+    }
+    let (f0, s0, p0) = blocks[0];
+    let (f1, s1, p1) = blocks[1];
+    if f0 == f1 || s0 != s1 || p0 != p1 || negated != Some(p0) {
+        return None;
+    }
+    Some((p0, s0))
+}
+
+fn matches_iant11_existential_block(
+    dl: &DlOntology,
+    ce: CeId,
+) -> Option<(EntityId, EntityId, EntityId)> {
+    let store = dl.core().dl();
+    let ce = effective_class_expression(dl, ce);
+    let ClassExpr::Some {
+        property: RoleExpr::Atomic(f_role),
+        filler,
+    } = store.ce(ce)?
+    else {
+        return None;
+    };
+    let filler = effective_class_expression(dl, *filler);
+    let ClassExpr::And(ops) = store.ce(filler)? else {
+        return None;
+    };
+    let mut forall_s_class: Option<EntityId> = None;
+    let mut role_s: Option<EntityId> = None;
+    let mut exists_s_class: Option<EntityId> = None;
+    for &op in ops {
+        let op = effective_class_expression(dl, op);
+        if let Some(ClassExpr::All {
+            property: RoleExpr::Inverse(s),
+            filler: class,
+        }) = store.ce(op)
+        {
+            let class = effective_class_expression(dl, *class);
+            if let Some(ClassExpr::Atomic(entity)) = store.ce(class) {
+                forall_s_class = Some(*entity);
+                role_s = Some(*s);
+                continue;
+            }
+        }
+        if let Some(ClassExpr::All {
+            property: RoleExpr::Inverse(inv_f),
+            filler: inner,
+        }) = store.ce(op)
+        {
+            if *inv_f != *f_role {
+                continue;
+            }
+            let inner = effective_class_expression(dl, *inner);
+            if let Some(ClassExpr::Some {
+                property: RoleExpr::Atomic(s),
+                filler: class,
+            }) = store.ce(inner)
+            {
+                let class = effective_class_expression(dl, *class);
+                if let Some(ClassExpr::Atomic(entity)) = store.ce(class) {
+                    exists_s_class = Some(*entity);
+                    if role_s.is_none() {
+                        role_s = Some(*s);
+                    }
+                }
+            }
+        }
+    }
+    let p = forall_s_class?;
+    let s = role_s?;
+    if exists_s_class != Some(p) {
+        return None;
+    }
+    Some((*f_role, s, p))
+}
+
+fn role_has_inverse_in_tbox(dl: &DlOntology, role: EntityId) -> bool {
+    dl.core().axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            Axiom::InverseObjectProperties { left, right }
+                if *left == role || *right == role
+        )
+    })
+}
+
+fn role_has_subproperty_in_tbox(dl: &DlOntology, role: EntityId) -> bool {
+    dl.core().axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            Axiom::SubObjectPropertyOf { sub_property, .. } if *sub_property == role
+        )
+    })
+}
+
+fn functional_object_properties(dl: &DlOntology) -> HashSet<EntityId> {
+    let mut out = HashSet::new();
+    for (_, axiom) in dl.core().axioms().iter() {
+        if let Axiom::FunctionalObjectProperty(prop) = axiom {
+            out.insert(*prop);
+        }
+    }
+    out
+}
+
+fn matches_iant7_nested_block(dl: &DlOntology, ce: CeId) -> Option<(EntityId, EntityId)> {
+    let store = dl.core().dl();
+    let ce = effective_class_expression(dl, ce);
+    let ClassExpr::Some {
+        property: outer_role,
+        filler: mid,
+    } = store.ce(ce)?
+    else {
+        return None;
+    };
+    let RoleExpr::Atomic(role) = outer_role else {
+        return None;
+    };
+    let ClassExpr::Some {
+        property: inner_role,
+        filler: inner,
+    } = store.ce(*mid)?
+    else {
+        return None;
+    };
+    if inner_role != outer_role {
+        return None;
+    }
+    let inner = effective_class_expression(dl, *inner);
+    let ClassExpr::And(ops) = store.ce(inner)? else {
+        return None;
+    };
+
+    let mut class: Option<EntityId> = None;
+    let mut forall_neg: Option<EntityId> = None;
+    for &op in ops {
+        let op = effective_class_expression(dl, op);
+        if let Some(ClassExpr::Atomic(entity)) = store.ce(op) {
+            class = Some(*entity);
+        }
+        if let Some(ClassExpr::All {
+            property: RoleExpr::Inverse(inv_role),
+            filler,
+        }) = store.ce(op)
+        {
+            if *inv_role != *role {
+                continue;
+            }
+            let filler = effective_class_expression(dl, *filler);
+            if let Some(ClassExpr::Not(neg)) = store.ce(filler) {
+                let neg = effective_class_expression(dl, *neg);
+                if let Some(ClassExpr::Atomic(entity)) = store.ce(neg) {
+                    forall_neg = Some(*entity);
+                }
+            }
+        }
+    }
+    let class = class?;
+    if forall_neg == Some(class) {
+        Some((class, *role))
+    } else {
+        None
+    }
 }
 
 /// When `C` is `⋀ᵢ(∃r.Eᵢ ⊓ ⋀ⱼ∀r.Fⱼ)`, any `∃r` witness must lie in `E ⊓ ⋀ⱼ Fⱼ`.
