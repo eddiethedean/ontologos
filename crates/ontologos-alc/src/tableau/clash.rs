@@ -58,6 +58,12 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
                 }
             }
         }
+        for &neg_ce in &world.negated {
+            if super::expand::world_structurally_satisfies(branch, world_idx, neg_ce) {
+                branch.clash = true;
+                return;
+            }
+        }
         for &(left, right) in &branch.disjoint {
             if world.labels.contains(&left) && world.labels.contains(&right) {
                 branch.clash = true;
@@ -192,11 +198,15 @@ pub(crate) fn is_thing_ce(branch: &Branch<'_>, ce: CeId) -> bool {
 
 /// Assert negation of `ce` into a world.
 pub fn assert_negation(branch: &mut Branch<'_>, world: usize, ce: CeId) {
-    let w = &mut branch.worlds[world];
-    if w.labels.contains(&ce) {
+    if branch.worlds[world].labels.contains(&ce) {
         branch.clash = true;
         return;
     }
+    if super::expand::world_structurally_satisfies(branch, world, ce) {
+        branch.clash = true;
+        return;
+    }
+    let w = &mut branch.worlds[world];
     w.negated.insert(ce);
     detect_clash(branch);
 }

@@ -82,6 +82,15 @@ fn iant7b_ce_is_satisfiable() {
 }
 
 #[test]
+fn ianbug1b_unsat() {
+    let ce = "ObjectIntersectionOf(ObjectComplementOf(:c) :a ObjectComplementOf(:b) :d)";
+    assert!(
+        !ce_sat("hermit_reasoner_reasonertest_testianbug1b.ofn", ce),
+        "IanBug1b CE should be unsatisfiable"
+    );
+}
+
+#[test]
 #[ignore = "functional+inverse CE unsat not yet detected by tableau (IanT7c)"]
 fn iant7c_ce_is_unsatisfiable() {
     let ce = "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))) ObjectSomeValuesFrom(ObjectInverseOf(:f) :p1))";

@@ -2124,7 +2124,6 @@ fn hermit_reasoner_reasonertest_testiant8() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testiant9() {
     run_hermit_case("reasoner.ReasonerTest.testIanT9");
 }
@@ -2152,7 +2151,6 @@ fn hermit_reasoner_reasonertest_testiant13() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testianfact1() {
     run_hermit_case("reasoner.ReasonerTest.testIanFact1");
 }
@@ -2173,7 +2171,6 @@ fn hermit_reasoner_reasonertest_testianfact4() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testianbug1b() {
     run_hermit_case("reasoner.ReasonerTest.testIanBug1b");
 }
