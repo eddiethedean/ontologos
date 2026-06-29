@@ -281,13 +281,11 @@ fn hermit_reasoner_classificationtest_testpropreo() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithdatatypes() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithDatatypes");
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_complexconcepttest_testconceptwithdatatypes2() {
     run_hermit_case("reasoner.ComplexConceptTest.testConceptWithDatatypes2");
 }

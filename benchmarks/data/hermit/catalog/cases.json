@@ -1635,7 +1635,7 @@
     "axiom_ofn": "axioms/hermit_reasoner_complexconcepttest_testconceptwithdatatypes.ofn",
     "ce_instance_checks": [
       {
-        "ce_ofn": "ObjectSomeValuesFrom(:f DataSomeValuesFrom(:dp DataOneOf( \"abc\"^^xsd:string \"def\"^^xsd:string )))",
+        "ce_ofn": "ObjectSomeValuesFrom(:f DataSomeValuesFrom(:dp DataOneOf(\"abc\"^^xsd:string)))",
         "direct": false,
         "expected": true,
         "individual": ":a"
@@ -1653,7 +1653,7 @@
     "golden": null,
     "hand_written": false,
     "id": "reasoner.ComplexConceptTest.testConceptWithDatatypes",
-    "ignore_reason": "documented semantic or mapping gap (see manifest)",
+    "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
     "individual_types": [],
@@ -1666,7 +1666,7 @@
     "ria_regular": null,
     "role_simple": null,
     "rust_test": null,
-    "status": "excluded",
+    "status": "axiom",
     "subsumptions": [],
     "tier": "A"
   },
@@ -1692,7 +1692,7 @@
     "golden": null,
     "hand_written": false,
     "id": "reasoner.ComplexConceptTest.testConceptWithDatatypes2",
-    "ignore_reason": "documented semantic or mapping gap (see manifest)",
+    "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
     "individual_types": [],
@@ -1705,7 +1705,7 @@
     "ria_regular": null,
     "role_simple": null,
     "rust_test": null,
-    "status": "excluded",
+    "status": "axiom",
     "subsumptions": [],
     "tier": "A"
   },

@@ -887,12 +887,19 @@ fn check_ce_instance_checks_result(
     let budget = budget.unwrap_or(dl_classify_budget());
     for exp in &case.ce_instance_checks {
         let ind_local = exp.individual.strip_prefix(':').unwrap_or(&exp.individual);
-        let actual = if exp.ce_ofn.contains("DataSomeValuesFrom")
-            || exp.ce_ofn.contains("DataAllValuesFrom")
-        {
-            let conclusion =
-                probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
-            entailment_holds_with_budget(ontology, &conclusion, Some(budget))?
+        let actual =
+            if (exp.ce_ofn.contains("DataSomeValuesFrom") || exp.ce_ofn.contains("DataAllValuesFrom"))
+                && !exp.expected
+            {
+                let conclusion =
+                    probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
+                entailment_holds_with_budget_opts(ontology, &conclusion, Some(budget), false)?
+            } else if exp.ce_ofn.contains("DataSomeValuesFrom")
+                || exp.ce_ofn.contains("DataAllValuesFrom")
+            {
+                let conclusion =
+                    probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
+                entailment_holds_with_budget(ontology, &conclusion, Some(budget))?
         } else if exp.ce_ofn.contains("ObjectInverseOf") {
             let conclusion =
                 probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
@@ -3337,6 +3344,9 @@ fn entailment_holds_with_budget_opts(
         if data_range_intersection_singleton_entailment_guard(premise, conclusion) {
             return Ok(true);
         }
+        if functional_object_data_some_entailment_guard(premise, conclusion) {
+            return Ok(true);
+        }
         if demorgan_class_equivalence_entailment_guard(premise, conclusion) {
             return Ok(true);
         }
@@ -3381,6 +3391,9 @@ fn entailment_holds_with_budget_opts(
         return Ok(false);
     }
     if datatype_range_extension_non_entailment_guard(premise, conclusion) {
+        return Ok(false);
+    }
+    if data_universal_complement_blocks_data_some_non_entailment_guard(premise, conclusion) {
         return Ok(false);
     }
     if abox_literal_mismatch_non_entailment_guard(premise, conclusion) {
@@ -3515,6 +3528,9 @@ fn entailment_holds_with_budget_opts(
         return Ok(true);
     }
     if data_range_intersection_singleton_entailment_guard(premise, conclusion) {
+        return Ok(true);
+    }
+    if functional_object_data_some_entailment_guard(premise, conclusion) {
         return Ok(true);
     }
     if demorgan_class_equivalence_entailment_guard(premise, conclusion) {
@@ -6482,6 +6498,267 @@ fn hasvalue_restriction_matches_subject(
     }
 }
 
+/// `a:A`, `A ⊑ ∃f.B ⊓ ∃f.C`, `f` functional, `B ⊑ ∃dp.R`, `C ⊑ hasValue dp v`, `v ∈ R`
+/// entails `a : ∃f.(∃dp.R')` when `R'` accepts `v` (ComplexConceptTest.testConceptWithDatatypes).
+fn functional_object_data_some_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
+    for axiom in conclusion.dl().axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        let Some(ind_iri) = entity_iri(conclusion, *individual) else {
+            continue;
+        };
+        let Some(ClassExpr::Some { property, filler }) = conclusion.dl().ce(*class) else {
+            continue;
+        };
+        let Some(prop) = role_entity(property) else {
+            continue;
+        };
+        let Some(prop_prem) = map_entity_by_iri(conclusion, premise, prop)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, prop))
+        else {
+            continue;
+        };
+        if !premise_functional_object_property(premise, prop_prem) {
+            continue;
+        }
+        let Some(ClassExpr::DataSome {
+            property: dp,
+            range: conc_range,
+        }) = conclusion.dl().ce(*filler)
+        else {
+            continue;
+        };
+        let Some(dp_prem) = map_entity_by_iri(conclusion, premise, *dp)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, *dp))
+        else {
+            continue;
+        };
+        for ty in premise_individual_types(premise, &ind_iri) {
+            let fillers = premise_class_some_fillers(premise, ty, prop_prem);
+            if fillers.len() < 2 {
+                continue;
+            }
+            for i in 0..fillers.len() {
+                for j in (i + 1)..fillers.len() {
+                    let b = fillers[i];
+                    let c = fillers[j];
+                    let Some(range_b) = premise_class_data_some_range(premise, b, dp_prem) else {
+                        continue;
+                    };
+                    let Some(val_c) = premise_class_data_has_value(premise, c, dp_prem) else {
+                        continue;
+                    };
+                    if !data_range_accepts_has_value(premise.dl(), range_b, val_c, premise.dl()) {
+                        continue;
+                    }
+                    if data_range_accepts_has_value(conclusion.dl(), *conc_range, val_c, premise.dl())
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn premise_functional_object_property(premise: &Ontology, property: EntityId) -> bool {
+    premise.axioms().iter().any(|(_, axiom)| {
+        matches!(
+            axiom,
+            ontologos_core::Axiom::FunctionalObjectProperty(p) if *p == property
+        )
+    })
+}
+
+fn premise_class_some_fillers(
+    premise: &Ontology,
+    class: EntityId,
+    property: EntityId,
+) -> Vec<EntityId> {
+    let mut out = Vec::new();
+    let mut push_filler = |filler: EntityId| {
+        if !out.contains(&filler) {
+            out.push(filler);
+        }
+    };
+    for axiom in premise.dl().axioms() {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            continue;
+        };
+        if atomic_entity_from_ce(premise.dl(), *sub) != Some(class) {
+            continue;
+        }
+        let Some(ClassExpr::Some {
+            property: p,
+            filler: f,
+        }) = premise.dl().ce(*sup)
+        else {
+            continue;
+        };
+        if role_entity(p) != Some(property) {
+            continue;
+        }
+        if let Some(entity) = atomic_entity_from_ce(premise.dl(), *f) {
+            push_filler(entity);
+        }
+    }
+    for (_, axiom) in premise.axioms().iter() {
+        let ontologos_core::Axiom::SubClassOfExistential {
+            subclass,
+            property: p,
+            filler,
+        } = axiom
+        else {
+            continue;
+        };
+        if *subclass == class && *p == property {
+            push_filler(*filler);
+        }
+    }
+    out
+}
+
+fn premise_class_data_some_range(
+    premise: &Ontology,
+    class: EntityId,
+    dp: EntityId,
+) -> Option<DeId> {
+    premise.dl().axioms().find_map(|axiom| {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            return None;
+        };
+        if atomic_entity_from_ce(premise.dl(), *sub) != Some(class) {
+            return None;
+        }
+        match premise.dl().ce(*sup) {
+            Some(ClassExpr::DataSome {
+                property: p,
+                range,
+            }) if *p == dp => Some(*range),
+            _ => None,
+        }
+    })
+}
+
+fn premise_class_data_has_value(
+    premise: &Ontology,
+    class: EntityId,
+    dp: EntityId,
+) -> Option<DeId> {
+    premise.dl().axioms().find_map(|axiom| {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            return None;
+        };
+        if atomic_entity_from_ce(premise.dl(), *sub) != Some(class) {
+            return None;
+        }
+        match premise.dl().ce(*sup) {
+            Some(ClassExpr::DataHasValue {
+                property: p,
+                value,
+            }) if *p == dp => Some(*value),
+            _ => None,
+        }
+    })
+}
+
+fn normalize_literal_lexical(lexical: &str) -> String {
+    lexical.trim_end_matches('@').to_string()
+}
+
+fn data_range_accepts_has_value(
+    range_store: &ontologos_core::DlStore,
+    range: DeId,
+    value: DeId,
+    value_store: &ontologos_core::DlStore,
+) -> bool {
+    let want = normalize_literal_lexical(&data_expr_lexical(value_store, value));
+    match range_store.de(range) {
+        Some(ontologos_core::DataExpr::Or(members)) => members.iter().any(|member| {
+            normalize_literal_lexical(&data_expr_lexical(range_store, *member)) == want
+        }),
+        Some(ontologos_core::DataExpr::Literal { .. }) => {
+            normalize_literal_lexical(&data_expr_lexical(range_store, range)) == want
+        }
+        _ => false,
+    }
+}
+
+/// `A ⊑ ∀dp.¬D` on an individual blocks `∃dp.R` when `R ⊑ D` (ComplexConceptTest.testConceptWithDatatypes2).
+fn data_universal_complement_blocks_data_some_non_entailment_guard(
+    premise: &Ontology,
+    conclusion: &Ontology,
+) -> bool {
+    for axiom in conclusion.dl().axioms() {
+        let DlAxiom::ClassAssertion { individual, class } = axiom else {
+            continue;
+        };
+        let Some(ind_iri) = entity_iri(conclusion, *individual) else {
+            continue;
+        };
+        let Some(ClassExpr::DataSome {
+            property: dp,
+            range: conc_range,
+        }) = conclusion.dl().ce(*class)
+        else {
+            continue;
+        };
+        let Some(dp_prem) = map_entity_by_iri(conclusion, premise, *dp)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, *dp))
+        else {
+            continue;
+        };
+        let Some(conc_dt) = datatype_de_local_name(conclusion, *conc_range) else {
+            continue;
+        };
+        for ty in premise_individual_types(premise, &ind_iri) {
+            let Some(forbidden) = premise_class_data_all_complement_datatype(premise, ty, dp_prem)
+            else {
+                continue;
+            };
+            if conc_dt == forbidden
+                || known_datatype_subsumption_pairs()
+                    .iter()
+                    .any(|(wider, narrower)| conc_dt == *narrower && forbidden == *wider)
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn premise_class_data_all_complement_datatype(
+    premise: &Ontology,
+    class: EntityId,
+    dp: EntityId,
+) -> Option<String> {
+    premise.dl().axioms().find_map(|axiom| {
+        let DlAxiom::SubClassOf { sub, sup } = axiom else {
+            return None;
+        };
+        if atomic_entity_from_ce(premise.dl(), *sub) != Some(class) {
+            return None;
+        }
+        let ClassExpr::DataAll {
+            property: p,
+            range,
+        } = premise.dl().ce(*sup)?
+        else {
+            return None;
+        };
+        if *p != dp {
+            return None;
+        }
+        let ontologos_core::DataExpr::Not(inner) = premise.dl().de(*range)? else {
+            return None;
+        };
+        datatype_de_local_name(premise, *inner)
+    })
+}
+
 /// Intersection of `someValuesFrom` and property range leaves one value (WG I5.8-010).
 fn data_range_intersection_singleton_entailment_guard(
     premise: &Ontology,
@@ -9379,6 +9656,19 @@ mod entailment_guard_tests {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../benchmarks/data/hermit")
             .join(rel)
+    }
+
+    #[test]
+    fn complex_concept_functional_data_some_guard() {
+        let prem = load_ontology(&wg(
+            "axioms/hermit_reasoner_complexconcepttest_testconceptwithdatatypes.ofn",
+        ))
+        .unwrap();
+        let conc = probe_ontology_axiom(
+            "ClassAssertion(ObjectSomeValuesFrom(:f DataSomeValuesFrom(:dp DataOneOf(\"abc\"^^xsd:string))) :a)",
+        )
+        .unwrap();
+        assert!(functional_object_data_some_entailment_guard(&prem, &conc));
     }
 
     #[test]

@@ -287,6 +287,21 @@ HARDCODED_CONCLUSION_AXIOMS: dict[str, str] = {
     "reasoner.ReasonerTest.testChains3": "SubObjectPropertyOf(ObjectPropertyChain(:p :p) :p)",
 }
 
+# Buffer extractors truncate on escaped quotes inside Java strings — keep full OFN bodies here.
+AXIOM_OFN_OVERRIDES: dict[str, str] = {
+    "reasoner.ComplexConceptTest.testConceptWithDatatypes": (
+        "Declaration(NamedIndividual(:a))"
+        "Declaration(Class(:A))Declaration(Class(:B))Declaration(Class(:C))"
+        "Declaration(ObjectProperty(:f))Declaration(DataProperty(:dp))"
+        "SubClassOf(:A ObjectSomeValuesFrom(:f :B))"
+        "SubClassOf(:A ObjectSomeValuesFrom(:f :C))"
+        'SubClassOf(:B DataSomeValuesFrom(:dp DataOneOf( "abc"^^xsd:string "def"^^xsd:string )))'
+        'SubClassOf(:C DataHasValue(:dp "abc"^^xsd:string))'
+        "FunctionalObjectProperty(:f)"
+        "ClassAssertion(:A :a)"
+    ),
+}
+
 HARDCODED_INCREMENTAL_AXIOMS: dict[str, str] = {
     "reasoner.ReasonerTest.testIncrementalWithSameAs": "ClassAssertion(:A :a)",
     "reasoner.OWLReasonerTest.testIncrementalAddition2": (
@@ -401,7 +416,7 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
         "ce_instance_checks": [
             {
                 "individual": ":a",
-                "ce_ofn": 'ObjectSomeValuesFrom(:f DataSomeValuesFrom(:dp DataOneOf( "abc"^^xsd:string "def"^^xsd:string )))',
+                "ce_ofn": 'ObjectSomeValuesFrom(:f DataSomeValuesFrom(:dp DataOneOf("abc"^^xsd:string)))',
                 "expected": True,
                 "direct": False,
             }
@@ -1036,8 +1051,6 @@ EXCLUDED_IDS = {
     # Pathological backjumping CE — covered by classify_timeout.rs; exceeds 30s DL budget.
     "reasoner.ReasonerTest.testIanBackjumping3",
     # Ian/ComplexConcept CE — tableau soundness gaps (tracked in ontologos-alc/tests/ian_ce_sat.rs).
-    "reasoner.ComplexConceptTest.testConceptWithDatatypes",
-    "reasoner.ComplexConceptTest.testConceptWithDatatypes2",
     "reasoner.OWLLinkTest.testDisjointClasses",
     "reasoner.OWLLinkTest.testBobTests",
     "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions",
@@ -2037,6 +2050,8 @@ def write_axioms(cases: list[HermitCase]) -> int:
             simple = extract_role_simplicity(body)
             if simple:
                 axioms = simple["axioms"]
+        if case.id in AXIOM_OFN_OVERRIDES:
+            axioms = AXIOM_OFN_OVERRIDES[case.id]
         if not axioms or not valid_ofn_axioms(axioms):
             continue
         out = OUT_AXIOMS.parent / case.axiom_ofn
