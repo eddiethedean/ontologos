@@ -145,6 +145,14 @@ fn print_text_header(metrics: &ontologos_conformance::ParityMetrics) {
             metrics.java_out_of_scope
         );
     }
+    println!(
+        "  taxonomy strict: {:.1}% (Tier C HermiT --max-extra 0)",
+        metrics.taxonomy_strict_pct
+    );
+    println!(
+        "  perf gate:       {:.1}% (ROADMAP DL targets)",
+        metrics.perf_gate_pct
+    );
 }
 
 fn print_audit_summary(title: &str, summary: &ontologos_conformance::PlannedBacklogSummary) {
@@ -176,6 +184,12 @@ fn print_next_steps(metrics: &ontologos_conformance::ParityMetrics) {
         println!(
             "  parity_status --audit-fast    # classify {} Java planned cases",
             metrics.java_planned
+        );
+    }
+    if metrics.conformance_ignored > 0 {
+        println!(
+            "  cargo test -p ontologos-conformance -- --ignored   # {} dormant B4 tests",
+            metrics.conformance_ignored
         );
     }
     if metrics.backlog == 0 && metrics.unpromoted_wg == 0 {

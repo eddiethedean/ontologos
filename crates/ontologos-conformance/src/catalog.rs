@@ -2741,6 +2741,10 @@ pub struct ParityMetrics {
     pub conformance_active: usize,
     /// `100 × conformance_active / literal_catalog_total` (harness coverage of full catalog).
     pub literal_catalog_pct: f64,
+    /// Tier C corpora passing strict HermiT cross-check (`--max-extra 0`), from snapshot file.
+    pub taxonomy_strict_pct: f64,
+    /// Tier D corpora meeting ROADMAP perf targets, from `dl-perf-snapshot.json`.
+    pub perf_gate_pct: f64,
 }
 
 const JAVA_OUT_OF_SCOPE: &[&str] = &["internal", "excluded", "migrated"];
@@ -2764,6 +2768,58 @@ fn count_conformance_test_inventory() -> (usize, usize) {
         ignored += content.matches("#[ignore").count();
     }
     (total, ignored)
+}
+
+fn read_gate_snapshot_metrics() -> (f64, f64) {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data");
+    let strict_path = root.join("tier-c-strict-status.json");
+    let perf_path = root.join("dl-perf-snapshot.json");
+
+    let taxonomy_strict_pct = strict_path
+        .is_file()
+        .then(|| std::fs::read_to_string(&strict_path).ok())
+        .flatten()
+        .and_then(|text| {
+            #[derive(serde::Deserialize)]
+            struct StrictDoc {
+                tier_c_strict_pct: Option<f64>,
+            }
+            serde_json::from_str::<StrictDoc>(&text)
+                .ok()
+                .and_then(|d| d.tier_c_strict_pct)
+        })
+        .unwrap_or(0.0);
+
+    let perf_gate_pct = perf_path
+        .is_file()
+        .then(|| std::fs::read_to_string(&perf_path).ok())
+        .flatten()
+        .and_then(|text| {
+            #[derive(serde::Deserialize)]
+            struct PerfResult {
+                meets_target: bool,
+                target_s: Option<f64>,
+            }
+            #[derive(serde::Deserialize)]
+            struct PerfDoc {
+                results: Vec<PerfResult>,
+            }
+            let doc: PerfDoc = serde_json::from_str(&text).ok()?;
+            let gated: Vec<_> = doc
+                .results
+                .into_iter()
+                .filter(|r| r.target_s.is_some())
+                .collect();
+            if gated.is_empty() {
+                return None;
+            }
+            let pass = gated.iter().filter(|r| r.meets_target).count();
+            Some(100.0 * pass as f64 / gated.len() as f64)
+        })
+        .unwrap_or(0.0);
+
+    (taxonomy_strict_pct, perf_gate_pct)
 }
 
 fn count_by_status<T, F>(items: &[T], status: F) -> std::collections::BTreeMap<String, usize>
@@ -2817,6 +2873,7 @@ pub fn parity_metrics() -> ParityMetrics {
     } else {
         100.0 * conformance_active as f64 / literal_catalog_total as f64
     };
+    let (taxonomy_strict_pct, perf_gate_pct) = read_gate_snapshot_metrics();
     ParityMetrics {
         java_total: cases.len(),
         java_by_status,
@@ -2837,6 +2894,8 @@ pub fn parity_metrics() -> ParityMetrics {
         conformance_ignored,
         conformance_active,
         literal_catalog_pct,
+        taxonomy_strict_pct,
+        perf_gate_pct,
     }
 }
 

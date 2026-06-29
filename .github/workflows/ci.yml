@@ -101,6 +101,10 @@ jobs:
         run: cargo test -p ontologos-conformance --test phase7_closure --release --locked
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
+      - name: Tier D perf gate (Family DL)
+        run: |
+          chmod +x benchmarks/scripts/compare-tier-d-perf-gate.sh
+          ./benchmarks/scripts/compare-tier-d-perf-gate.sh
 
   python-windows:
     runs-on: windows-latest

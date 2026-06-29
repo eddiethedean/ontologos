@@ -1086,6 +1086,7 @@ dependencies = [
  "ontologos-dl",
  "ontologos-el",
  "ontologos-profile",
+ "ontologos-query",
  "ontologos-rdfs",
  "ontologos-rl",
  "ontologos-swrl",

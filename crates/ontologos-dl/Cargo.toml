@@ -29,3 +29,7 @@ criterion = "0.5"
 [[bench]]
 name = "classify"
 harness = false
+
+[[bench]]
+name = "saturation"
+harness = false

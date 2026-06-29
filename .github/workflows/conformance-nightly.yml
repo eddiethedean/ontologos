@@ -61,6 +61,12 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/benchmark-dl-perf.sh
           ./benchmarks/scripts/benchmark-dl-perf.sh || true
+      - name: Tier C strict family cross-check (informational)
+        env:
+          HERMIT_JAR: benchmarks/data/hermit.jar
+        run: |
+          chmod +x benchmarks/scripts/compare-tier-c-strict-family.sh
+          ./benchmarks/scripts/compare-tier-c-strict-family.sh || true
 
   full-hermit-suite:
     runs-on: ubuntu-latest

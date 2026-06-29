@@ -186,6 +186,19 @@ pub fn is_subsumption_entailed(
     Ok(taxonomy.is_subsumed(sub, sup))
 }
 
+/// OWLReasoner-style class subsumption entailment (`isEntailed` for `SubClassOf`).
+pub fn is_entailed(reasoner: &mut Reasoner, sub_iri: &str, sup_iri: &str) -> Result<bool> {
+    is_subsumption_entailed(reasoner, sub_iri, sup_iri)
+}
+
+/// Query handle over a classified ontology (call after [`classify`]).
+pub fn query_engine<'a>(
+    ontology: &'a ontologos_core::Ontology,
+    taxonomy: &'a Taxonomy,
+) -> ontologos_query::QueryEngine<'a> {
+    ontologos_query::QueryEngine::new(ontology, taxonomy)
+}
+
 #[cfg(test)]
 mod tests {
     use ontologos_core::{Axiom, EntityKind, Ontology, Profile, Reasoner};
@@ -436,6 +449,33 @@ mod tests {
             "http://example.org/A"
         )
         .unwrap());
+        assert!(super::is_entailed(
+            &mut reasoner,
+            "http://example.org/A",
+            "http://example.org/C"
+        )
+        .unwrap());
+    }
+
+    #[test]
+    fn query_engine_direct_subclasses() {
+        let ontology = el_chain_ontology();
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::El)
+            .build(ontology)
+            .unwrap();
+        let outcome = super::classify(&mut reasoner).unwrap();
+        let tax = super::taxonomy_from_outcome(&outcome).expect("taxonomy");
+        let q = super::query_engine(reasoner.ontology(), tax);
+        let a = reasoner
+            .ontology()
+            .lookup_entity("http://example.org/A")
+            .unwrap();
+        let c = reasoner
+            .ontology()
+            .lookup_entity("http://example.org/C")
+            .unwrap();
+        assert!(q.is_subsumed(a, c).unwrap());
     }
 
     #[test]

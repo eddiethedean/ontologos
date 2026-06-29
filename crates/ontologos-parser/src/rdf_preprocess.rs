@@ -1667,6 +1667,7 @@ fn expression_subclasses_from_owl_class_block(
     out
 }
 
+#[allow(dead_code)]
 fn restriction_subclass_from_owl_class_block(
     block: &str,
     base: &str,

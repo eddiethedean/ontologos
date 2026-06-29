@@ -24,8 +24,8 @@ notes = "23 internal cases — inventory test; MergeTest/NIRuleTest need extensi
 
 [[suite]]
 hermit_class = "graph.GraphTest"
-rust_tests = []
-notes = "3 internal graph cases — HermiT DescriptionGraph; defer to tableau/graph module"
+rust_tests = ["crates/ontologos-alc/tests/graph_internals.rs"]
+notes = "3 internal DescriptionGraph cases — inventory until tableau extension-manager port"
 
 [[port]]
 hermit_id = "structural.ClausificationTest.testAsymmetry"

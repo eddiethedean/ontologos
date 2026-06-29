@@ -58,6 +58,18 @@ enum Command {
     },
     /// List ABox individuals, types, and sameAs clusters after RL materialization
     Instances { ontology: PathBuf },
+    /// Check ontology consistency (OWLReasoner-style)
+    Consistent { ontology: PathBuf },
+    /// Check class subsumption entailment: sub ⊑ sup
+    Entail {
+        ontology: PathBuf,
+        /// Subclass IRI
+        #[arg(long)]
+        sub: String,
+        /// Superclass IRI
+        #[arg(long)]
+        sup: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum, Default, PartialEq, Eq)]
@@ -301,6 +313,45 @@ fn run() -> Result<(), CliError> {
                 })?,
             }
         }
+        Command::Consistent { ontology } => {
+            let ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
+            let reasoner = Reasoner::builder()
+                .profile(cli.profile.into())
+                .build(ontology)?;
+            let consistent = ontologos_facade::is_consistent(&reasoner).map_err(map_facade_error)?;
+            match cli.format {
+                OutputFormat::Text => println!("consistent: {consistent}"),
+                OutputFormat::Json => emit_json(&ConsistentCliOutput {
+                    consistent,
+                    parse_meta: &parse_meta,
+                })?,
+            }
+        }
+        Command::Entail { ontology, sub, sup } => {
+            let ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
+            let mut reasoner = Reasoner::builder()
+                .profile(cli.profile.into())
+                .build(ontology)?;
+            let entailed =
+                ontologos_facade::is_entailed(&mut reasoner, &sub, &sup).map_err(map_facade_error)?;
+            match cli.format {
+                OutputFormat::Text => {
+                    println!("entailed: {entailed}");
+                    println!("sub: {sub}");
+                    println!("sup: {sup}");
+                }
+                OutputFormat::Json => emit_json(&EntailCliOutput {
+                    entailed,
+                    sub: &sub,
+                    sup: &sup,
+                    parse_meta: &parse_meta,
+                })?,
+            }
+        }
     }
 
     Ok(())
@@ -348,6 +399,22 @@ struct InstancesCliOutput<'a> {
     consistent: bool,
     rl_inferences: usize,
     same_as_clusters: usize,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct ConsistentCliOutput<'a> {
+    consistent: bool,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct EntailCliOutput<'a> {
+    entailed: bool,
+    sub: &'a str,
+    sup: &'a str,
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
