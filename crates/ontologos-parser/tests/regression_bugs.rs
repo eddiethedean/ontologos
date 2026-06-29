@@ -29,38 +29,48 @@ fn assert_kind_mismatch_without_misleading_skip(meta: &ParseMeta, misleading: &[
     }
 }
 
-/// Parser should report entity kind mismatch, not "complex operands" skip.
+/// Class/individual punning should map the assertion without kind-mismatch warnings.
 #[test]
-fn class_assertion_kind_clash_surfaces_entity_kind_mismatch() {
+fn class_individual_punning_maps_class_assertion() {
     let ontology = load_ontology(&fixture("class_individual_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
-    assert_kind_mismatch_without_misleading_skip(meta, &["complex operands"]);
+    assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
+    assert_eq!(entity_kind(&ontology, "alice"), EntityKind::ClassIndividual);
 }
 
-/// SubClassOf with individual IRI used as subclass should surface kind mismatch.
+/// SubClassOf with a punned class/individual IRI should map without kind mismatch.
 #[test]
-fn subclass_individual_kind_clash_surfaces_entity_kind_mismatch() {
+fn subclass_individual_punning_maps_subclass_of() {
     let ontology = load_ontology(&fixture("subclass_individual_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
-    assert_kind_mismatch_without_misleading_skip(meta, &["complex class expression"]);
+    assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
+    assert_eq!(entity_kind(&ontology, "alice"), EntityKind::ClassIndividual);
 }
 
-/// ObjectPropertyAssertion with class IRI used as property should surface kind mismatch.
+/// ObjectPropertyAssertion with a punned class/property IRI should map without kind mismatch.
 #[test]
-fn property_assertion_class_kind_clash_surfaces_entity_kind_mismatch() {
+fn property_class_punning_maps_object_property_assertion() {
     let ontology =
         load_ontology(&fixture("property_assertion_class_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
-    assert_kind_mismatch_without_misleading_skip(meta, &["complex operands"]);
+    assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
+    assert_eq!(
+        entity_kind(&ontology, "knows"),
+        EntityKind::ClassObjectProperty
+    );
 }
 
-/// InverseObjectProperties with class IRI used as property should surface kind mismatch.
+/// InverseObjectProperties with a punned class/property IRI should map without kind mismatch.
 #[test]
-fn inverse_properties_class_kind_clash_surfaces_entity_kind_mismatch() {
+fn inverse_properties_class_punning_maps_inverse_axiom() {
     let ontology =
         load_ontology(&fixture("inverse_properties_class_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
-    assert_kind_mismatch_without_misleading_skip(meta, &["unmapped operands"]);
+    assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
+    assert_eq!(
+        entity_kind(&ontology, "parent"),
+        EntityKind::ClassObjectProperty
+    );
 }
 
 const NS: &str = "http://example.org/test";

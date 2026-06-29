@@ -46,7 +46,10 @@ impl EntityKind {
     /// Whether this kind can appear as a class reference.
     #[must_use]
     pub fn is_class(self) -> bool {
-        matches!(self, Self::Class | Self::ClassIndividual | Self::ClassObjectProperty)
+        matches!(
+            self,
+            Self::Class | Self::ClassIndividual | Self::ClassObjectProperty
+        )
     }
 
     /// Whether this kind can appear as a named individual reference.

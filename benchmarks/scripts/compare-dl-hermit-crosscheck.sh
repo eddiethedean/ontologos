@@ -62,9 +62,11 @@ while read -r corpus profile optional crosscheck; do
     python3 - "${GOLDEN}" "${corpus}" "${TMP_HERMIT_JSON}" "${TMP_ONTO}" <<'PY'
 import json
 import math
+import os
 import sys
 
 golden_path, corpus, hermit_path, onto_path = sys.argv[1:5]
+strict = os.environ.get("ONTOLOGOS_STRICT_TAXONOMY", "0") == "1"
 doc = json.load(open(golden_path))
 prefix = doc["corpora"].get(corpus, {}).get("namespace_prefix", "")
 hermit = json.load(open(hermit_path))
@@ -79,10 +81,12 @@ hermit_pairs = filter_ns(hermit.get("subsumptions", []), prefix)
 onto_pairs = filter_ns(onto.get("subsumptions", []), prefix)
 hermit_count = len(hermit_pairs)
 onto_count = len(onto_pairs)
-max_extra = max(5, math.ceil(hermit_count * 0.01))
-# OntoLogos may emit additional direct edges (union expansions, etc.).
-if onto_count > hermit_count:
-    max_extra = max(max_extra, onto_count - hermit_count)
+if strict:
+    max_extra = 0
+else:
+    max_extra = max(5, math.ceil(hermit_count * 0.01))
+    if onto_count > hermit_count:
+        max_extra = max(max_extra, onto_count - hermit_count)
 print(prefix, max_extra)
 PY
   )

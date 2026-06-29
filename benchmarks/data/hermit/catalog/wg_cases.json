@@ -154,24 +154,24 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/Disjoint_Props_via_Disjoint_Domains/conclusion.rdf",
+    "conclusion_ofn": "wg/Disjoint_Props_via_Disjoint_Domains/conclusion.ofn",
     "engine": "dl",
     "expected_consistent": null,
     "expected_entailment": true,
     "id": "owl_wg_tests.Disjoint_Props_via_Disjoint_Domains",
     "ignore_reason": null,
-    "premise_ofn": "wg/Disjoint_Props_via_Disjoint_Domains/premise.rdf",
+    "premise_ofn": "wg/Disjoint_Props_via_Disjoint_Domains/premise.ofn",
     "status": "wg",
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/Disjoint_Props_via_Disjoint_Ranges/conclusion.rdf",
+    "conclusion_ofn": "wg/Disjoint_Props_via_Disjoint_Ranges/conclusion.ofn",
     "engine": "dl",
     "expected_consistent": null,
     "expected_entailment": true,
     "id": "owl_wg_tests.Disjoint_Props_via_Disjoint_Ranges",
     "ignore_reason": null,
-    "premise_ofn": "wg/Disjoint_Props_via_Disjoint_Ranges/premise.rdf",
+    "premise_ofn": "wg/Disjoint_Props_via_Disjoint_Ranges/premise.ofn",
     "status": "wg",
     "test_type": "positive_entailment"
   },
@@ -187,7 +187,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/DisjointClasses-2D002/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -451,7 +451,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DBottomDataProperty-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -462,7 +462,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DBottomObjectProperty-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -484,7 +484,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DDisjointDataProperties-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -539,7 +539,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DIrreflexiveProperty-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -561,7 +561,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DKeys-2D002/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -627,7 +627,7 @@
     "test_type": "negative_entailment"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DNegativeDataPropertyAssertion-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -638,7 +638,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DNegativeObjectPropertyAssertion-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -660,13 +660,13 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DObjectPropertyChain-2DBJP-2D002/conclusion.rdf",
+    "conclusion_ofn": "wg/New-2DFeature-2DObjectPropertyChain-2DBJP-2D002/conclusion.ofn",
     "engine": "dl",
     "expected_consistent": null,
     "expected_entailment": true,
     "id": "owl_wg_tests.New-2DFeature-2DObjectPropertyChain-2DBJP-2D002",
     "ignore_reason": null,
-    "premise_ofn": "wg/New-2DFeature-2DObjectPropertyChain-2DBJP-2D002/premise.rdf",
+    "premise_ofn": "wg/New-2DFeature-2DObjectPropertyChain-2DBJP-2D002/premise.ofn",
     "status": "wg",
     "test_type": "positive_entailment"
   },
@@ -737,7 +737,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/New-2DFeature-2DRational-2D003/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -869,7 +869,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/Owl2-2Drl-2Dinvalid-2Drightside-2Dunionof/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -880,7 +880,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/Owl2-2Drl-2Dinvalid-2Dunionof/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -1001,7 +1001,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Dbool-2Dcomplement-2Dinst/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1078,7 +1078,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Dchar-2Dasymmetric-2Dinst/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1089,7 +1089,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Dchar-2Dasymmetric-2Dterm/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1133,7 +1133,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Dchar-2Dirreflexive-2Dinst/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1166,7 +1166,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Dclass-2Dnothing-2Dext/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1298,7 +1298,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dinst/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1309,7 +1309,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Deqdis-2Ddisprop-2Dirrflxv/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1584,7 +1584,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Dnpa-2Ddat-2Dfw/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1595,7 +1595,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Dnpa-2Dind-2Dfw/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1892,7 +1892,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Drestrict-2Dmaxcard-2Dinst-2Dobj-2Dzero/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1914,7 +1914,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/Rdfbased-2Dsem-2Drestrict-2Dmaxqcr-2Dinst-2Dobj-2Dzero/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -1969,7 +1969,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/String-2Dinteger-2Dclash/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -2002,7 +2002,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DAnnotationProperty-2D003/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2013,7 +2013,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DAnnotationProperty-2D004/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2134,7 +2134,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.2-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2156,7 +2156,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.2-2D003/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2332,7 +2332,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.26-2D006/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2343,7 +2343,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.26-2D007/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2431,7 +2431,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.3-2D010/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2442,7 +2442,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.3-2D011/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2475,7 +2475,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.5-2D003/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -2486,7 +2486,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.5-2D004/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -2585,7 +2585,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI5.8-2D016/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2607,7 +2607,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DI6.1-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2651,7 +2651,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DNothing-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -2794,7 +2794,7 @@
     "test_type": "inconsistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DThing-2D004/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2805,7 +2805,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DThing-2D005/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -2860,7 +2860,7 @@
     "test_type": "negative_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DbackwardCompatibleWith-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -2871,7 +2871,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DbackwardCompatibleWith-2D002/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4037,7 +4037,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -4158,7 +4158,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DdisjointWith-2D009/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4169,7 +4169,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DdisjointWith-2D010/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": false,
     "expected_entailment": null,
@@ -4290,7 +4290,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DequivalentClass-2D009/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4345,7 +4345,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2Dimports-2D007/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4356,7 +4356,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/WebOnt-2Dimports-2D007-2Dimport-2Dimports007/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4367,7 +4367,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2Dimports-2D008/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4378,7 +4378,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/WebOnt-2Dimports-2D008-2Dimport-2Dimports008/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4411,7 +4411,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/WebOnt-2Dimports-2D014-2Dimport-2Dimports014/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4565,7 +4565,7 @@
     "test_type": "positive_entailment"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D303/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,
@@ -4576,7 +4576,7 @@
     "test_type": "consistency"
   },
   {
-    "conclusion_ofn": "wg/TestCase-3AWebOnt-2DoneOf-2D001/conclusion.rdf",
+    "conclusion_ofn": null,
     "engine": "dl",
     "expected_consistent": true,
     "expected_entailment": null,

@@ -100,8 +100,9 @@ print("EL OK:", tax["subsumption_count"], "subsumptions")
 Read these before filing "missing feature" issues:
 
 1. [Supported constructs](../reference/supported-constructs.md)
-2. [Comparison](../comparison.md) — not HermiT replacement
-3. [Protégé axiom counts](protege-axiom-counts.md) — count mismatches are expected
+2. [Comparison](../comparison.md) — not HermiT replacement on arbitrary ontologies
+3. [HermiT parity assessment](../internal/hermit-parity-honest-assessment.md) — what `parity_pct = 100%` measures
+4. [Protégé axiom counts](protege-axiom-counts.md) — count mismatches are expected
 
 ## Pass / fail criteria
 

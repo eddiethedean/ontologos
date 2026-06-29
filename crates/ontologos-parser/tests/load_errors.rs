@@ -103,3 +103,9 @@ fn legacy_wine_fixture_loads_after_duplicate_rdf_id_dedup() {
         "expected mapped axioms from wine.xml"
     );
 }
+
+#[test]
+fn parse_limits_merge_imports_defaults_true() {
+    let limits = ParseLimits::default();
+    assert!(limits.merge_imports);
+}

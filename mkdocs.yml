@@ -16,6 +16,7 @@ exclude_docs: |
   internal/research/
   internal/upstream-reasonable-gaps.md
   internal/hermit-parity-gap-report.md
+  internal/hermit-parity-honest-assessment.md
   internal/planned-backlog-triage.md
   internal/v0.5-docs-plan.md
   README.md

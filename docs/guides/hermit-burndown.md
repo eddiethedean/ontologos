@@ -258,6 +258,7 @@ Built to `target/release/parity_status` via `benchmarks/scripts/build-conformanc
 | `crates/ontologos-conformance/src/catalog.rs` | Test runner, checks, scan tools |
 | `ROADMAP.md` § HermiT parity phases | Phase checklist and exit criteria |
 | `docs/internal/hermit-parity-gap-report.md` | Maintainer failure buckets (internal) |
+| `docs/internal/hermit-parity-honest-assessment.md` | What 100% catalog parity does and does not mean |
 
 Heavy steps (`triage`, `promote`, `test`, `test-full`) acquire an exclusive lock and **auto-clear stale processes** from prior interrupted runs. On Ctrl+C, child `cargo test` / scan binaries are terminated.
 

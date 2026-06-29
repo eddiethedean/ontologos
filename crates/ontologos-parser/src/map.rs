@@ -1216,11 +1216,11 @@ mod tests {
     }
 
     #[test]
-    fn class_assertion_kind_mismatch_warns_without_complex_operands_skip() {
+    fn class_assertion_incompatible_kind_mismatch_warns_without_complex_operands_skip() {
         use std::path::Path;
 
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/fixtures/class_individual_kind_clash.ttl");
+            .join("../ontologos-parser/tests/fixtures/subclass_data_property_decl_first.ttl");
         let ontology = crate::load_ontology(&path).expect("load");
         let meta = ontology.parse_meta().expect("parse_meta");
 

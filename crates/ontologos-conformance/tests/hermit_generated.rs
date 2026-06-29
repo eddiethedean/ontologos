@@ -1394,7 +1394,6 @@ fn hermit_reasoner_riaregularitytest_testriaregularity3() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity4() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity4");
 }
@@ -1410,19 +1409,16 @@ fn hermit_reasoner_riaregularitytest_testriaregularity6() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity7() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity7");
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity8() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity8");
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_riaregularitytest_testriaregularity9() {
     run_hermit_case("reasoner.RIARegularityTest.testRIARegularity9");
 }
@@ -1605,7 +1601,6 @@ fn hermit_reasoner_reasonertest_testpropertyenailmentfromalan() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testsubproperties() {
     run_hermit_case("reasoner.ReasonerTest.testSubProperties");
 }

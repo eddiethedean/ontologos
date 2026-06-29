@@ -105,7 +105,7 @@ flowchart TB
 
 The **v1.0.0 git tag** ships when **in-scope HermiT catalog parity reaches 100%**, [Phase 8–9](#phase-8--expressivity-prerequisites-v15v19) expressivity gates are met, and **`check-1.0-release-gates.sh`** is green on the full suite @ 30s (blocking in CI since Phase 9).
 
-Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-report.md) · `bash benchmarks/scripts/hermit-burndown.sh status` · [Burndown guide](docs/guides/hermit-burndown.md) (contributors)
+Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-report.md) · [honest parity assessment](docs/internal/hermit-parity-honest-assessment.md) (what 100% does *not* mean) · `bash benchmarks/scripts/hermit-burndown.sh status` · [Burndown guide](docs/guides/hermit-burndown.md) (contributors)
 
 ### Scope
 
@@ -382,7 +382,7 @@ Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressiv
 - [x] `check-1.0-release-gates.sh` **blocking** in CI (full suite, no `ONTOLOGOS_CI_PROMOTED_ONLY`)
 - [x] `check-hermit-parity-phases.sh` **blocking** in CI
 - [x] FAQ updated for production OWL DL on gated corpora
-- [ ] `ontologos-dl` on crates.io stable; annotated git tag **v1.0.0**
+- [ ] `ontologos-dl` on crates.io stable; annotated git tag **v1.0.0** — see [release-1.0-checklist.md](docs/project/release-1.0-checklist.md)
 
 ### Tensions resolved by phases
 

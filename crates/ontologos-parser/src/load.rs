@@ -64,7 +64,7 @@ pub fn load_ontology_with_limits_and_base(
     limits: ParseLimits,
     base: Option<&Path>,
 ) -> Result<Ontology> {
-    load_ontology_with_limits_and_base_inner(path, limits, base, true)
+    load_ontology_with_limits_and_base_inner(path, limits, base, limits.merge_imports)
 }
 
 fn load_ontology_with_limits_and_base_inner(

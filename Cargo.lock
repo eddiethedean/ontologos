@@ -1033,6 +1033,7 @@ dependencies = [
 name = "ontologos-dl"
 version = "1.0.0"
 dependencies = [
+ "criterion",
  "horned-owl",
  "ontologos-alc",
  "ontologos-bridge",

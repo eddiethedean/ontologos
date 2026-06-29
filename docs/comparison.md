@@ -1,6 +1,6 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. **Published v0.9.0** covers stable EL/RL/RDFS. **`main` (1.0.0 workspace)** reaches **`parity_pct = 100%`** catalog porting and passes **450** Java axiom + **428** OWL WG HermiT conformance tests @ 30s on blocking CI — not yet a drop-in HermiT replacement on arbitrary ontologies (see [FAQ](project/faq.md)).
+Honest positioning for evaluators. **Published v0.9.0** covers stable EL/RL/RDFS. **`main` (1.0.0 workspace)** reaches **`parity_pct = 100%`** on the **in-scope** HermiT catalog gate and passes **450** Java axiom + **428** OWL WG tests @ 30s on blocking CI — not yet a drop-in HermiT replacement on arbitrary ontologies (see [FAQ](project/faq.md) and [honest parity assessment](internal/hermit-parity-honest-assessment.md)).
 
 See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
 

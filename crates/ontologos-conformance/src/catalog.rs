@@ -2044,9 +2044,15 @@ fn property_subsumption_holds(ontology: &Ontology, sub_iri: &str, sup_iri: &str)
         return true;
     }
     let top_op = "http://www.w3.org/2002/07/owl#topObjectProperty";
-    if sup_iri == top_op {
-        if let Some(sub_id) = ontology.lookup_entity(sub_iri) {
-            return is_universal_object_property(ontology, sub_id);
+    let sup_is_top = sup_iri == top_op || sup_iri.strip_prefix(':').is_some_and(|iri| iri == top_op);
+    if sup_is_top && lookup_entity_flexible(ontology, sub_iri).is_some() {
+        return true;
+    }
+    if sup_is_top {
+        if let Some(sub_id) = lookup_entity_flexible(ontology, sub_iri) {
+            if is_universal_object_property(ontology, sub_id) {
+                return true;
+            }
         }
     }
     if sub_iri == top_op {
@@ -2713,9 +2719,40 @@ pub struct ParityMetrics {
     pub active_wg: usize,
     pub unpromoted_wg: usize,
     pub runnable_java: usize,
+    /// Full HermiT+WG catalog size (591 Java + 428 WG).
+    pub literal_catalog_total: usize,
+    /// Java cases with documented out-of-scope status.
+    pub java_out_of_scope: usize,
+    /// `#[ignore]` conformance tests (dormant in default CI).
+    pub conformance_ignored: usize,
+    /// Active conformance tests in default CI (`total - ignored`).
+    pub conformance_active: usize,
+    /// `100 × conformance_active / literal_catalog_total` (harness coverage of full catalog).
+    pub literal_catalog_pct: f64,
 }
 
 const JAVA_OUT_OF_SCOPE: &[&str] = &["internal", "excluded", "migrated"];
+
+fn count_conformance_test_inventory() -> (usize, usize) {
+    let tests_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
+    let mut total = 0usize;
+    let mut ignored = 0usize;
+    let Ok(entries) = std::fs::read_dir(&tests_dir) else {
+        return (0, 0);
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().is_none_or(|e| e != "rs") {
+            continue;
+        }
+        let Ok(content) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        total += content.matches("#[test]").count();
+        ignored += content.matches("#[ignore").count();
+    }
+    (total, ignored)
+}
 
 fn count_by_status<T, F>(items: &[T], status: F) -> std::collections::BTreeMap<String, usize>
 where
@@ -2759,6 +2796,15 @@ pub fn parity_metrics() -> ParityMetrics {
         .iter()
         .filter(|c| matches!(c.status.as_str(), "axiom" | "clausify" | "swrl" | "fixture"))
         .count();
+    let literal_catalog_total = cases.len() + wg.len();
+    let java_out_of_scope = java_out;
+    let (conformance_total, conformance_ignored) = count_conformance_test_inventory();
+    let conformance_active = conformance_total.saturating_sub(conformance_ignored);
+    let literal_catalog_pct = if literal_catalog_total == 0 {
+        0.0
+    } else {
+        100.0 * conformance_active as f64 / literal_catalog_total as f64
+    };
     ParityMetrics {
         java_total: cases.len(),
         java_by_status,
@@ -2774,6 +2820,11 @@ pub fn parity_metrics() -> ParityMetrics {
         active_wg,
         unpromoted_wg,
         runnable_java,
+        literal_catalog_total,
+        java_out_of_scope,
+        conformance_ignored,
+        conformance_active,
+        literal_catalog_pct,
     }
 }
 

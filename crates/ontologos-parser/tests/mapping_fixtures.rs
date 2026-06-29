@@ -67,7 +67,9 @@ fn assert_minimal_subclass_mapping(ontology: &Ontology, format_label: &str, expe
         .collect();
     if format_label == "rdf/xml" {
         assert!(
-            existentials.iter().any(|&(s, p, f)| (s, p, f) == (c, has_part, b)),
+            existentials
+                .iter()
+                .any(|&(s, p, f)| (s, p, f) == (c, has_part, b)),
             "{format_label}: expected SubClassOfExistential(C, hasPart, B), got {existentials:?}"
         );
     } else {

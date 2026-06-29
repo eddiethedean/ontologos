@@ -9,6 +9,10 @@ fn fixture(name: &str) -> std::path::PathBuf {
         .join(name)
 }
 
+fn kind_clash_fixture() -> std::path::PathBuf {
+    fixture("subclass_data_property_decl_first.ttl")
+}
+
 fn repo_root() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
@@ -218,7 +222,7 @@ fn explain_family_rdfs_json_has_proof_nodes() {
 
 #[test]
 fn profile_surfaces_parse_meta_warnings_on_stderr() {
-    let path = fixture("class_individual_kind_clash.ttl");
+    let path = kind_clash_fixture();
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args(["profile", path.to_str().expect("path")])
@@ -237,7 +241,7 @@ fn profile_surfaces_parse_meta_warnings_on_stderr() {
 
 #[test]
 fn profile_json_includes_parse_meta() {
-    let path = fixture("class_individual_kind_clash.ttl");
+    let path = kind_clash_fixture();
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args(["--format", "json", "profile", path.to_str().expect("path")])
@@ -252,7 +256,7 @@ fn profile_json_includes_parse_meta() {
 
 #[test]
 fn classify_json_includes_parse_meta() {
-    let path = fixture("class_individual_kind_clash.ttl");
+    let path = kind_clash_fixture();
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args([
@@ -272,7 +276,7 @@ fn classify_json_includes_parse_meta() {
 
 #[test]
 fn materialize_surfaces_parse_meta_warnings_on_stderr() {
-    let path = fixture("class_individual_kind_clash.ttl");
+    let path = kind_clash_fixture();
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args(["materialize", path.to_str().expect("path")])
@@ -291,7 +295,7 @@ fn materialize_surfaces_parse_meta_warnings_on_stderr() {
 
 #[test]
 fn materialize_json_includes_parse_meta() {
-    let path = fixture("class_individual_kind_clash.ttl");
+    let path = kind_clash_fixture();
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args([
@@ -324,7 +328,7 @@ fn profile_json_omits_parse_meta_for_clean_fixture() {
 
 #[test]
 fn explain_surfaces_parse_meta_warnings_on_stderr() {
-    let path = fixture("class_individual_kind_clash.ttl");
+    let path = kind_clash_fixture();
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
         .args(["--profile", "rdfs", "explain", path.to_str().expect("path")])

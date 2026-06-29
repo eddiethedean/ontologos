@@ -52,6 +52,7 @@ impl DlClassifier {
             None => tab_tax,
         };
         enrich_taxonomy(ontology, &mut taxonomy);
+        taxonomy.reduce_transitive_redundancy();
         Ok(taxonomy)
     }
 }

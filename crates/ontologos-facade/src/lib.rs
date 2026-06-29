@@ -160,6 +160,32 @@ pub fn taxonomy_from_outcome(outcome: &ClassifyOutcome) -> Option<&Taxonomy> {
     }
 }
 
+/// Whether named class `sub_iri` is entailed to be subsumed by `sup_iri` after classification.
+pub fn is_subsumption_entailed(
+    reasoner: &mut Reasoner,
+    sub_iri: &str,
+    sup_iri: &str,
+) -> Result<bool> {
+    let outcome = classify(reasoner)?;
+    let taxonomy = taxonomy_from_outcome(&outcome).ok_or_else(|| {
+        Error::El(ontologos_el::Error::Profile(
+            "profile did not produce a taxonomy".into(),
+        ))
+    })?;
+    let ontology = reasoner.ontology();
+    let sub = ontology.lookup_entity(sub_iri).ok_or_else(|| {
+        Error::El(ontologos_el::Error::Profile(format!(
+            "unknown class IRI: {sub_iri}"
+        )))
+    })?;
+    let sup = ontology.lookup_entity(sup_iri).ok_or_else(|| {
+        Error::El(ontologos_el::Error::Profile(format!(
+            "unknown class IRI: {sup_iri}"
+        )))
+    })?;
+    Ok(taxonomy.is_subsumed(sub, sup))
+}
+
 #[cfg(test)]
 mod tests {
     use ontologos_core::{Axiom, EntityKind, Ontology, Profile, Reasoner};
@@ -389,6 +415,27 @@ mod tests {
             .build(ontology)
             .unwrap();
         assert!(super::is_consistent(&reasoner).unwrap());
+    }
+
+    #[test]
+    fn is_subsumption_entailed_after_classify() {
+        let ontology = el_chain_ontology();
+        let mut reasoner = Reasoner::builder()
+            .profile(Profile::El)
+            .build(ontology)
+            .unwrap();
+        assert!(super::is_subsumption_entailed(
+            &mut reasoner,
+            "http://example.org/A",
+            "http://example.org/C"
+        )
+        .unwrap());
+        assert!(!super::is_subsumption_entailed(
+            &mut reasoner,
+            "http://example.org/C",
+            "http://example.org/A"
+        )
+        .unwrap());
     }
 
     #[test]

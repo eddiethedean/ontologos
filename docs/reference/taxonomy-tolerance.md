@@ -29,6 +29,8 @@ For vendored OntoLogos goldens, `benchmarks/scripts/compare-taxonomy.py` require
 
 When comparing against Konclude or HermiT output (manual/nightly, not default PR CI):
 
+Set `ONTOLOGOS_STRICT_TAXONOMY=1` when running `compare-dl-hermit-crosscheck.sh` to require **zero** extra edges (Tier C strict mode). Default uses superset tolerance below.
+
 | Rule | Allowed |
 |------|---------|
 | Missing direct `⊑ owl:Thing` | Ignored |

@@ -12,9 +12,9 @@ OntoLogos solves: *"We want OWL reasoning embedded in Rust or Python services—
 
 Library-first orchestration: **load → detect profile → classify/materialize**, not a Protégé replacement.
 
-> **Release channels:** Latest tagged release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
-> The `main` branch is **1.0.0** (pre-release): **`parity_pct = 100%`** catalog porting; **450** Java axiom + **428** OWL WG tests pass @ 30s on blocking CI. **v1.0.0 tag** pending crates.io + PyPI publish.
-> Use `ontologos-* = "0.9.0"` for production today unless you build from git. See [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status.html).
+> **Release channels:** Latest **published** release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
+> The `main` branch is **1.0.0** workspace: **`parity_pct = 100%`** in-scope gate; **v1.0.0 tag** pending — see [release checklist](docs/project/release-1.0-checklist.md).
+> Use `ontologos-* = "0.9.0"` on crates.io today; use **`1.0.0`** after tag or build from git for DL.
 
 **In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "0.9.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
 

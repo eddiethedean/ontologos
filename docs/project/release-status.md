@@ -35,7 +35,7 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Documented CE exclusions | **13** Ian/ComplexConcept + `testIanBackjumping3` (**70** `excluded` catalog cases) |
 | `check-1.0-release-gates.sh` | **Green** (blocking in CI) |
 
-**Remaining for v1.0.0 tag:** publish workspace crates to crates.io, PyPI **1.0.0** wheel, annotated git tag **v1.0.0**.
+**Remaining for v1.0.0 tag:** follow [release-1.0-checklist.md](release-1.0-checklist.md) (push tag `v1.0.0` → crates.io + PyPI). Post-1.0 literal catalog work: [parity-roadmap.md](../internal/parity-roadmap.md).
 
 ## Profile stability
 
@@ -44,7 +44,7 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 | Area | Status |
 |------|--------|
 | OWL EL, RL, RDFS | **Stable** on published **v0.9.0** |
-| OWL DL (`--profile dl`) on **`main`** | **Pre-release** — gated HermiT conformance green @ 30s; not on crates.io until tag |
+| OWL DL (`--profile dl`) on **`main`** | **Stable** (workspace) — publish pending; see [release checklist](release-1.0-checklist.md) |
 | ALC / `dl-preview` / SWRL | **Preview** |
 | Python bindings, explain (EL) | **Stable** on v0.9.0 |
 

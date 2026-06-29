@@ -46,15 +46,17 @@ pub fn is_property_hierarchy_regular(ontology: &Ontology) -> Result<bool> {
             _ => {}
         }
     }
+    let equiv = build_role_equivalences(ontology);
     for axiom in store.axioms() {
         if let DlAxiom::TransitiveObjectProperty(RoleExpr::Atomic(prop)) = axiom {
             transitive.insert(*prop);
         }
     }
 
+    let subprops = extend_subprops_from_chains(&subprops, &chains, &inverses, &equiv);
     let closure = saturate_subproperties(&subprops);
     if chains.iter().any(|(chain, _)| chain.len() >= 2)
-        && subproperty_cycle_intersects_chain(&subprops, &chains)
+        && subproperty_cycle_intersects_chain(&subprops, &chains, &equiv)
     {
         return Ok(false);
     }
@@ -67,6 +69,7 @@ pub fn is_property_hierarchy_regular(ontology: &Ontology) -> Result<bool> {
             &inverses,
             &reflexive,
             &transitive,
+            &equiv,
         ) {
             return Ok(false);
         }
@@ -87,13 +90,180 @@ pub fn is_property_hierarchy_simple(ontology: &Ontology) -> Result<bool> {
     Ok(true)
 }
 
+fn build_role_equivalences(ontology: &Ontology) -> HashMap<EntityId, EntityId> {
+    let mut parent: HashMap<EntityId, EntityId> = HashMap::new();
+    fn find(parent: &mut HashMap<EntityId, EntityId>, x: EntityId) -> EntityId {
+        let p = parent.get(&x).copied().unwrap_or(x);
+        if p != x {
+            let root = find(parent, p);
+            parent.insert(x, root);
+            root
+        } else {
+            x
+        }
+    }
+    fn unite(parent: &mut HashMap<EntityId, EntityId>, a: EntityId, b: EntityId) {
+        let ra = find(parent, a);
+        let rb = find(parent, b);
+        if ra != rb {
+            parent.insert(ra, rb);
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::EquivalentObjectProperties(props) = axiom {
+            for pair in props.windows(2) {
+                unite(&mut parent, pair[0], pair[1]);
+            }
+            if let (Some(&first), Some(&last)) = (props.first(), props.last()) {
+                unite(&mut parent, first, last);
+            }
+        }
+    }
+    parent
+}
+
+fn roles_equivalent(
+    a: &RoleExpr,
+    b: &RoleExpr,
+    inverses: &HashMap<EntityId, EntityId>,
+    equiv: &HashMap<EntityId, EntityId>,
+) -> bool {
+    if roles_equal(a, b, inverses) {
+        return true;
+    }
+    let atomic = |r: &RoleExpr| -> Option<EntityId> {
+        match r {
+            RoleExpr::Atomic(id) => Some(*id),
+            RoleExpr::Inverse(id) => inverses.get(id).copied(),
+        }
+    };
+    match (atomic(a), atomic(b)) {
+        (Some(x), Some(y)) => {
+            let mut parent = equiv.clone();
+            find_equiv(&mut parent, x) == find_equiv(&mut parent, y)
+        }
+        _ => false,
+    }
+}
+
+fn find_equiv(parent: &mut HashMap<EntityId, EntityId>, x: EntityId) -> EntityId {
+    let p = parent.get(&x).copied().unwrap_or(x);
+    if p != x {
+        let root = find_equiv(parent, p);
+        parent.insert(x, root);
+        root
+    } else {
+        x
+    }
+}
+
+/// Derive atomic subproperty edges used by RIA cycle detection (chain endpoints).
+fn extend_subprops_from_chains(
+    subprops: &HashSet<(EntityId, EntityId)>,
+    chains: &[(Vec<RoleExpr>, RoleExpr)],
+    inverses: &HashMap<EntityId, EntityId>,
+    equiv: &HashMap<EntityId, EntityId>,
+) -> HashSet<(EntityId, EntityId)> {
+    let mut out = subprops.clone();
+    for (chain, sup) in chains {
+        let Some(first) = chain.first() else {
+            continue;
+        };
+        if let (RoleExpr::Atomic(a), RoleExpr::Atomic(b)) = (first, sup) {
+            out.insert((*a, *b));
+        }
+        if chain.len() >= 2 {
+            if let Some(RoleExpr::Atomic(last)) = chain.last() {
+                if let RoleExpr::Atomic(b) = sup {
+                    if !roles_equivalent(
+                        &RoleExpr::Atomic(*last),
+                        sup,
+                        inverses,
+                        equiv,
+                    ) {
+                        out.insert((*last, *b));
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+fn chain_roles_share_equivalence_class(
+    chain: &[RoleExpr],
+    sup: &RoleExpr,
+    equiv: &HashMap<EntityId, EntityId>,
+) -> bool {
+    let mut rep: Option<EntityId> = None;
+    for role in chain {
+        let RoleExpr::Atomic(id) = role else {
+            return false;
+        };
+        let mut parent = equiv.clone();
+        let r = find_equiv(&mut parent, *id);
+        rep = Some(match rep {
+            None => r,
+            Some(prev) if prev == r => prev,
+            _ => return false,
+        });
+    }
+    let RoleExpr::Atomic(sup_id) = sup else {
+        return false;
+    };
+    let mut parent = equiv.clone();
+    rep == Some(find_equiv(&mut parent, *sup_id))
+}
+
+fn roles_are_inverse_adjacent(
+    left: &RoleExpr,
+    right: &RoleExpr,
+    inverses: &HashMap<EntityId, EntityId>,
+) -> bool {
+    if let (RoleExpr::Atomic(a), RoleExpr::Atomic(b)) = (left, right) {
+        if inverses.get(a) == Some(b) {
+            return true;
+        }
+    }
+    if let RoleExpr::Inverse(inner) = right {
+        if let RoleExpr::Atomic(a) = left {
+            return *inner == *a;
+        }
+    }
+    if let RoleExpr::Inverse(inner) = left {
+        if let RoleExpr::Atomic(b) = right {
+            return *inner == *b;
+        }
+    }
+    false
+}
+
+fn normalize_subprops_by_equiv(
+    subprops: &HashSet<(EntityId, EntityId)>,
+    equiv: &HashMap<EntityId, EntityId>,
+) -> HashSet<(EntityId, EntityId)> {
+    let mut out = HashSet::new();
+    for (a, b) in subprops {
+        let mut parent = equiv.clone();
+        let ra = find_equiv(&mut parent, *a);
+        let mut parent = equiv.clone();
+        let rb = find_equiv(&mut parent, *b);
+        if ra != rb {
+            out.insert((ra, rb));
+        }
+    }
+    out
+}
+
 fn subproperty_cycle_intersects_chain(
     subprops: &HashSet<(EntityId, EntityId)>,
     chains: &[(Vec<RoleExpr>, RoleExpr)],
+    equiv: &HashMap<EntityId, EntityId>,
 ) -> bool {
+    let subprops = normalize_subprops_by_equiv(subprops, equiv);
     let mut graph: HashMap<EntityId, Vec<EntityId>> = HashMap::new();
     for (a, b) in subprops {
-        graph.entry(*a).or_default().push(*b);
+        graph.entry(a).or_default().push(b);
     }
     let mut visiting = HashSet::new();
     let mut visited = HashSet::new();
@@ -201,28 +371,36 @@ fn chain_regularity_ok(
     inverses: &HashMap<EntityId, EntityId>,
     reflexive: &HashSet<EntityId>,
     transitive: &HashSet<EntityId>,
+    equiv: &HashMap<EntityId, EntityId>,
 ) -> bool {
+    if chain_roles_share_equivalence_class(chain, sup, equiv) {
+        return true;
+    }
     if chain.len() >= 3 {
         for i in 0..chain.len().saturating_sub(1) {
-            if roles_equal(&chain[i], &chain[i + 1], inverses) {
+            if roles_are_inverse_adjacent(&chain[i], &chain[i + 1], inverses) {
                 return false;
             }
-            if let (RoleExpr::Atomic(a), RoleExpr::Atomic(b)) = (&chain[i], &chain[i + 1]) {
-                if inverses.get(a) == Some(b) {
-                    return false;
-                }
+        }
+    }
+    if chain.len() >= 2 && !chain_roles_share_equivalence_class(chain, sup, equiv)
+    {
+        let last = chain.len() - 1;
+        for (i, role) in chain.iter().enumerate().take(last) {
+            if roles_equivalent(role, sup, inverses, equiv) {
+                return false;
+            }
+            if i + 1 < last && roles_equivalent(sup, &chain[i + 1], inverses, equiv) {
+                return false;
             }
         }
     }
     if chain.len() == 2 {
         let right = &chain[1];
-        if roles_equal(sup, right, inverses) {
+        if roles_equivalent(sup, right, inverses, equiv)
+            && !chain_roles_share_equivalence_class(chain, sup, equiv)
+        {
             return false;
-        }
-        if let RoleExpr::Inverse(inner) = right {
-            if roles_equal(sup, &RoleExpr::Atomic(*inner), inverses) {
-                return false;
-            }
         }
     }
     if chain.len() < 2 {
@@ -442,6 +620,16 @@ mod tests {
         let ont = load_axioms(
             "SubObjectPropertyOf(:A :B) SubObjectPropertyOf(:B :C) \
              SubObjectPropertyOf(:C :D) SubObjectPropertyOf(:D :A)",
+        );
+        assert!(is_property_hierarchy_regular(&ont).unwrap());
+    }
+
+    #[test]
+    fn ria5_equivalent_cycle_regular() {
+        let ont = load_axioms(
+            "SubObjectPropertyOf(ObjectPropertyChain(:R :Q :P) :P) \
+             SubObjectPropertyOf(ObjectPropertyChain(:P :S) :L) \
+             SubObjectPropertyOf(:L :R) SubObjectPropertyOf(:R :L)",
         );
         assert!(is_property_hierarchy_regular(&ont).unwrap());
     }

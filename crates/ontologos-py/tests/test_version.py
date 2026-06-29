@@ -87,7 +87,7 @@ def test_parse_meta_exposes_warnings_for_kind_clash() -> None:
         / "ontologos-parser"
         / "tests"
         / "fixtures"
-        / "class_individual_kind_clash.ttl"
+        / "subclass_data_property_decl_first.ttl"
     )
     assert clash.is_file(), f"missing fixture: {clash}"
     reasoner = Reasoner(path=str(clash), profile="rdfs")

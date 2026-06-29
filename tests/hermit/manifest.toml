@@ -352,3 +352,10 @@ milestone = "2.0"
 engine = "dl"
 status = "planned"
 notes = "Internal DL clause shape — port when ontologos-dl clausifier exists"
+
+# --- Internal HermiT suites (Tier B3): ported to crate unit tests, not conformance axiom ports ---
+# structural.ClausificationTest  → crates/ontologos-alc/tests/clausification.rs
+# structural.NormalizationTest   → crates/ontologos-alc/tests/normalization.rs
+# tableau.*                      → ontologos-alc engine internals (partial)
+# Ian/ComplexConcept CE          → crates/ontologos-alc/tests/ian_ce_sat.rs
+# See docs/internal/parity-roadmap.md

@@ -13,6 +13,8 @@ pub struct ParseLimits {
     pub max_expanded_bytes: usize,
     /// When true, return an error if axioms or entities are skipped due to limits.
     pub strict: bool,
+    /// When true, resolve and merge `owl:imports` for RDF/XML ontologies (default).
+    pub merge_imports: bool,
 }
 
 impl Default for ParseLimits {
@@ -24,6 +26,7 @@ impl Default for ParseLimits {
             max_entities: 1_000_000,
             max_expanded_bytes: max_file_bytes.saturating_mul(4),
             strict: false,
+            merge_imports: true,
         }
     }
 }

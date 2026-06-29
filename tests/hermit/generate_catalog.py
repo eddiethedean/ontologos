@@ -983,7 +983,6 @@ IMPLEMENTED: dict[str, str] = {
     "reasoner.ReasonerTest.testIndividualRetrievalBug": "individual_property_retrieval",
     "reasoner.ReasonerTest.testIsFunctionalObject": "functional_property_characteristic_propagates_to_subproperty",
     "reasoner.ReasonerTest.testIsAsymmetricObject": "asymmetric_property_characteristic_propagates_to_subproperty",
-    "reasoner.ReasonerTest.testSubProperties": "excluded_subproperties",
     "reasoner.ReasonerTest.testObjectPropertyHierarchy": "excluded_object_property_hierarchy",
     "reasoner.ReasonerTest.testIsSymmetricObject": "excluded_symmetric_subproperty",
     "reasoner.ReasonerTest.testIsTransitiveObject": "excluded_transitive_subproperty",
@@ -996,7 +995,6 @@ IMPLEMENTED: dict[str, str] = {
 }
 
 EXCLUDED_IDS = {
-    "reasoner.ReasonerTest.testSubProperties",
     "reasoner.ReasonerTest.testObjectPropertyHierarchy",
     "reasoner.ReasonerTest.testIsSymmetricObject",
     "reasoner.ReasonerTest.testIsTransitiveObject",
@@ -1066,11 +1064,6 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testHeinsohnTBox4a",
     "reasoner.ReasonerTest.testHeinsohnTBox7",
     "reasoner.ReasonerTest.testIanBug3",
-    # Phase 5 — partial RIA regularity (complex chain cycles; full OWL 2 algorithm deferred)
-    "reasoner.RIARegularityTest.testRIARegularity4",
-    "reasoner.RIARegularityTest.testRIARegularity7",
-    "reasoner.RIARegularityTest.testRIARegularity8",
-    "reasoner.RIARegularityTest.testRIARegularity9",
 }
 
 # OFN extracts that fail load_ontology (punning / inverse CE) — keep out of axioms/.

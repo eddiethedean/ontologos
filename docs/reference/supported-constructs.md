@@ -48,7 +48,7 @@ Still skipped or partial for **core-only** workflows (EL/RL without DL):
 
 Skipped flat axioms increment `parse_meta.skipped_axiom_count` and append to `parse_meta.warnings`.
 
-`owl:imports` declarations are scanned but **not resolved** — imported ontologies are not loaded.
+`owl:imports` declarations are merged when loading RDF/XML by default (`ParseLimits::merge_imports`, default **true**). Disable with `ParseLimits { merge_imports: false, .. }` for single-document loads only.
 
 ## RDFS materialization scope
 

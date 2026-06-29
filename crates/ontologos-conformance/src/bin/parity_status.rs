@@ -132,6 +132,19 @@ fn print_text_header(metrics: &ontologos_conformance::ParityMetrics) {
         );
     }
     println!("  runnable Java:   {}", metrics.runnable_java);
+    println!(
+        "  literal catalog: {:.1}% harness ({}/{} tests active, {} ignored)",
+        metrics.literal_catalog_pct,
+        metrics.conformance_active,
+        metrics.literal_catalog_total,
+        metrics.conformance_ignored
+    );
+    if metrics.java_out_of_scope > 0 {
+        println!(
+            "  java out-scope:  {} (excluded/internal/migrated)",
+            metrics.java_out_of_scope
+        );
+    }
 }
 
 fn print_audit_summary(title: &str, summary: &ontologos_conformance::PlannedBacklogSummary) {

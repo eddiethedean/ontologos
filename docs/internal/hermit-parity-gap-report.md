@@ -2,7 +2,8 @@
 
 **Updated:** 2026-06-29 (Phase 9 — release gates green, v1.0.0 publish deferred)  
 **Audit commit:** working tree post-union-CSP · **Rust:** 1.96.0 · **DL budget:** 30s (CI) / 120s (nightly)  
-**Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))
+**Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))  
+**Honest scope:** [hermit-parity-honest-assessment.md](hermit-parity-honest-assessment.md) — what `parity_pct = 100%` does and does not mean
 
 **Triage commands (source of truth):**
 
@@ -19,6 +20,8 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 ## Executive verdict (2026-06-28 assessment)
 
 **Phase 9 (pre-tag):** Full conformance @ 30s and **`check-1.0-release-gates.sh` green** (verified 2026-06-29, ~26 min local). **450** active axiom + **428** WG; **13** Ian/ComplexConcept in `EXCLUDED_IDS`. **v1.0.0 git tag deferred** pending crates.io + PyPI publish.
+
+**Everyday HermiT equivalence:** See [dimension scorecard](hermit-parity-honest-assessment.md#dimension-scorecard-brutal-edition) in the honest assessment (~75–85% for gated batch DL; ~50% as Protégé drop-in).
 
 **Recent wins (2026-06-28):** CE satisfiability via DL consistency; class-sat direct path; fixed `testUnknownClassHierarcyPosition`/`testInverses` OFN; excluded pathological Ian/ComplexConcept CE bucket.
 
