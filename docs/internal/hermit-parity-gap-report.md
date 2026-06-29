@@ -18,7 +18,7 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 
 ## Executive verdict (2026-06-28 assessment)
 
-**Phase 9 (pre-tag):** Full conformance @ 30s is **green** (450 active axiom + 428 WG; 13 Ian/ComplexConcept cases in `EXCLUDED_IDS`). CI flipped to full suite (no promotion filter). **v1.0.0 git tag deferred** pending crates.io publish.
+**Phase 9 (pre-tag):** Full conformance @ 30s and **`check-1.0-release-gates.sh` green** (verified 2026-06-29, ~26 min local). **450** active axiom + **428** WG; **13** Ian/ComplexConcept in `EXCLUDED_IDS`. **v1.0.0 git tag deferred** pending crates.io + PyPI publish.
 
 **Recent wins (2026-06-28):** CE satisfiability via DL consistency; class-sat direct path; fixed `testUnknownClassHierarcyPosition`/`testInverses` OFN; excluded pathological Ian/ComplexConcept CE bucket.
 
@@ -43,7 +43,7 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 | **D5** | Tier B classification fixtures | **PASS** | `compare-classification-fixtures.sh` | High |
 | **D6** | Tier C vendored goldens | **PASS** | `compare-tier-c-gate.sh` | High |
 | **D7** | Phase closures | **phase4/5/8/9 green** | `cargo test --test phase*_closure` | High |
-| **D7b** | 1.0 release gates (full suite) | **GREEN** (local verify) | `check-1.0-release-gates.sh` | High |
+| **D7b** | 1.0 release gates (full suite) | **GREEN** (2026-06-29) | `check-1.0-release-gates.sh` | High |
 | **D8** | Phase 8 expressivity | **Complete** (waivers documented) | ROADMAP v1.5–v1.9 | High |
 | **D9** | Documented exclusions | 55 `internal`, 55 `excluded` Java | `cases.json` | High |
 

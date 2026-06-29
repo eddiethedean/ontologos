@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds profi
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-28 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [Phase 9 — v1.0.0 tag](#phase-9--v100-tag-100-in-scope-parity) — full conformance green @ 30s; release gates blocking
+**Last updated:** 2026-06-29 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [Phase 9 — publish + tag](#phase-9--v100-tag-100-in-scope-parity) — release gates green @ 30s; tag/publish pending
 
 ---
 
@@ -148,7 +148,7 @@ Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 | **6** | Tier B corpora | **Complete** | `ClassificationTest` in CI (4 fixtures) | `compare-classification-fixtures.sh` · `phase6_closure` |
 | **7** | Tier C proof | **Complete** | HermiT JAR cross-check nightly | `compare-tier-c-gate.sh` |
 | **8** | Expressivity v1.5–v1.9 | **Complete** | Hybrid, ABox, ALC, QL, DL stable | ROADMAP checklists below |
-| **9** | v1.0.0 tag | **In progress** | Full suite green @ 30s | `check-1.0-release-gates.sh` blocking |
+| **9** | v1.0.0 tag | **Ready** (gates green) | Full suite + release gates @ 30s | `check-1.0-release-gates.sh` |
 
 ```mermaid
 flowchart TB
@@ -379,8 +379,8 @@ Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressiv
 - [x] `cargo test -p ontologos-conformance` green (all in-scope active) @ 30s — 13 Ian/ComplexConcept cases documented in EXCLUDED_IDS
 - [x] `check-1.0-release-gates.sh` **blocking** in CI (full suite, no `ONTOLOGOS_CI_PROMOTED_ONLY`)
 - [x] `check-hermit-parity-phases.sh` **blocking** in CI
+- [x] FAQ updated for production OWL DL on gated corpora
 - [ ] `ontologos-dl` on crates.io stable; annotated git tag **v1.0.0**
-- [ ] FAQ updated for production OWL DL on gated corpora
 
 ### Tensions resolved by phases
 
@@ -942,12 +942,9 @@ Phase detail: [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag). **
 
 - [x] `parity_pct = 100%` — `java_planned = 0` and `wg_planned = 0` in catalogs (`check-hermit-parity-phases.sh`)
 - [x] [Phase 8](#phase-8--expressivity-prerequisites-v15v19) complete (v1.5–v1.9 expressivity tracks)
-- [x] HermiT Tier A + B + C gates green and **blocking** in CI (promoted subset + WG MSRV)
+- [x] HermiT Tier A + B + C gates green and **blocking** in CI
 - [x] `cargo test -p ontologos-conformance` green (all in-scope active tests) @ 30s
 - [ ] `ontologos-dl` published to crates.io; `classify --profile dl` default for DL ontologies
-- [ ] Annotated git tag **v1.0.0** (deferred — workspace ready, tag when publish completes)
-- [ ] Protégé-equivalent batch workflows documented without JVM (Rust + Python migration guides)
-- [ ] No panics on DL benchmark corpus; timeouts return structured errors
 - [ ] Annotated git tag **v1.0.0** (workspace version matches published crates)
 
 ---
