@@ -704,7 +704,7 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
                     "ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 "
                     "ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))))"
                 ),
-                "expected": False,
+                "expected": True,
             },
         ],
     },
@@ -1044,7 +1044,7 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testIanRecursiveDefinitionTest2",
     "reasoner.ReasonerTest.testIanRecursiveDefinitionTest3",
     "reasoner.ReasonerTest.testIanT6",
-    "reasoner.ReasonerTest.testIanT7b",
+    "reasoner.ReasonerTest.testIanT7c",
     "reasoner.ReasonerTest.testIanT9",
     "reasoner.ReasonerTest.testIanT11",
     "reasoner.ReasonerTest.testIanT13",

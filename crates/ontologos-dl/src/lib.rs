@@ -227,6 +227,31 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     Ok(tableau)
 }
 
+/// Returns whether a class expression is satisfiable under the ontology TBox.
+///
+/// Uses the tableau with an empty seed, matching HermiT CE probes in an otherwise
+/// empty ABox (no role assertions or equality axioms on the probe individual).
+pub fn is_class_expression_satisfiable(ontology: &Ontology, ce: CeId) -> Result<bool> {
+    let dl = DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
+    class_assertion_type_satisfiable(&dl, ontology.dl(), ce, &TableauSeed::default())
+}
+
+/// Returns whether the ontology's class-assertion probe CE is satisfiable.
+pub fn is_class_assertion_probe_satisfiable(ontology: &Ontology) -> Result<bool> {
+    let ce = ontology
+        .dl()
+        .axioms()
+        .filter_map(|axiom| {
+            let DlAxiom::ClassAssertion { class, .. } = axiom else {
+                return None;
+            };
+            Some(*class)
+        })
+        .last()
+        .ok_or_else(|| Error::Message("ontology has no DL class assertion probe".into()))?;
+    is_class_expression_satisfiable(ontology, ce)
+}
+
 /// Returns true when every listed named class is unsatisfiable in the ontology TBox.
 pub fn named_classes_unsatisfiable(ontology: &Ontology, classes: &[EntityId]) -> Result<bool> {
     // Do not mutate global tableau budgets here. This function can be called

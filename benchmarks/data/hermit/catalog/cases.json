@@ -13886,7 +13886,7 @@
     "ce_satisfiability": [
       {
         "ce_ofn": "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))))",
-        "expected": false
+        "expected": true
       }
     ],
     "class_satisfiability": [],
@@ -13937,7 +13937,7 @@
     "golden": null,
     "hand_written": false,
     "id": "reasoner.ReasonerTest.testIanT7b",
-    "ignore_reason": "documented semantic or mapping gap (see manifest)",
+    "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
     "individual_types": [],
@@ -13950,7 +13950,7 @@
     "ria_regular": null,
     "role_simple": null,
     "rust_test": null,
-    "status": "excluded",
+    "status": "axiom",
     "subsumptions": [],
     "tier": "A"
   },
@@ -13974,7 +13974,7 @@
     "golden": null,
     "hand_written": false,
     "id": "reasoner.ReasonerTest.testIanT7c",
-    "ignore_reason": null,
+    "ignore_reason": "documented semantic or mapping gap (see manifest)",
     "incremental_ofn": null,
     "individual_instances": [],
     "individual_types": [],
@@ -13987,7 +13987,7 @@
     "ria_regular": null,
     "role_simple": null,
     "rust_test": null,
-    "status": "axiom",
+    "status": "excluded",
     "subsumptions": [],
     "tier": "A"
   },

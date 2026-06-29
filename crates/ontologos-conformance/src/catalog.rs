@@ -987,7 +987,11 @@ fn ce_expression_satisfiable_bounded(
 ) -> Result<bool, String> {
     let probe = probe_ontology_axiom(&format!("ClassAssertion({ce_ofn} :__probe__)"))?;
     let merged = merge_ontologies_for_entailment(ontology, &probe)?;
-    dl_is_consistent_with_budget(&merged, budget)
+    let merged = Arc::new(merged);
+    run_dl_bounded(budget, move || {
+        ontologos_dl::is_class_assertion_probe_satisfiable(merged.as_ref())
+            .map_err(|e| e.to_string())
+    })?
 }
 
 fn ce_instance_entailed(
