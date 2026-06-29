@@ -319,8 +319,8 @@ pub(crate) fn literal_in_datatype_value_space(
     else {
         return false;
     };
-    let target_iri = canonical_datatype_iri(&target_iri_raw);
-    let lit_iri = lit_iri.map(|s| canonical_datatype_iri(&s));
+    let target_iri = canonical_datatype_iri(target_iri_raw);
+    let lit_iri = lit_iri.map(canonical_datatype_iri);
     if lit.datatype != target {
         let lit_iri_str = lit_iri.as_deref().unwrap_or("");
         let untyped = lit_iri_str == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Literal"
@@ -328,16 +328,12 @@ pub(crate) fn literal_in_datatype_value_space(
         if !untyped && !datatype_subsumes(ont, lit.datatype, target) {
             if lit_iri_str == target_iri.as_str() {
                 // Same logical datatype under a distinct entity id (e.g. owl%23 vs owl#).
-            } else if plain_literal_datatype_iri(lit_iri_str)
-                && numeric_datatype_iri(target_iri.as_str())
-            {
-                return false;
-            } else if numeric_datatype_iri(lit_iri_str)
-                && plain_literal_datatype_iri(target_iri.as_str())
-            {
-                return false;
-            } else if plain_literal_datatype_iri(lit_iri_str)
-                && binary_datatype_iri(target_iri.as_str())
+            } else if (plain_literal_datatype_iri(lit_iri_str)
+                && numeric_datatype_iri(target_iri.as_str()))
+                || (numeric_datatype_iri(lit_iri_str)
+                    && plain_literal_datatype_iri(target_iri.as_str()))
+                || (plain_literal_datatype_iri(lit_iri_str)
+                    && binary_datatype_iri(target_iri.as_str()))
             {
                 return false;
             } else if numeric_datatype_iri(lit_iri_str)
@@ -354,8 +350,7 @@ pub(crate) fn literal_in_datatype_value_space(
                 && numeric_datatype_iri(target_iri.as_str())
             {
                 // owl:rational literals may still fall in decimal/real value spaces.
-            } else if numeric_datatype_iri(lit_iri_str)
-                && numeric_datatype_iri(target_iri.as_str())
+            } else if numeric_datatype_iri(lit_iri_str) && numeric_datatype_iri(target_iri.as_str())
             {
                 // Cross-check numeric value spaces (e.g. nonNegative ∩ nonPositive at 0).
             } else {
@@ -970,20 +965,6 @@ pub(crate) fn lexical_looks_numeric(lex: &str) -> bool {
         || rational_pair(lex).is_some()
 }
 
-fn facet_value_compare(
-    lit_lex: &str,
-    facet_val: &str,
-    store: &DlStore,
-    base: DeId,
-    ontology: Option<&Ontology>,
-    defs: &HashMap<EntityId, DeId>,
-) -> i32 {
-    if facet_base_is_datetime(store, defs, base, ontology) {
-        return datetime_compare(lit_lex, facet_val);
-    }
-    numeric_compare(lit_lex, facet_val)
-}
-
 fn datetime_compare(a: &str, b: &str) -> i32 {
     let na = normalize_datetime_lex(strip_datetime_timezone(a));
     let nb = normalize_datetime_lex(strip_datetime_timezone(b));
@@ -993,7 +974,7 @@ fn datetime_compare(a: &str, b: &str) -> i32 {
 fn strip_datetime_timezone(s: &str) -> &str {
     let s = s.strip_suffix('Z').unwrap_or(s);
     if let Some(t_pos) = s.find('T') {
-        if let Some(off_pos) = s[t_pos..].rfind(|c| c == '+' || c == '-') {
+        if let Some(off_pos) = s[t_pos..].rfind(['+', '-']) {
             if s[t_pos + off_pos..].contains(':') {
                 return &s[..t_pos + off_pos];
             }
@@ -1137,9 +1118,7 @@ fn facet_base_datatype_iri(
         match store.de(current)? {
             DataExpr::Facet { base, .. } => current = *base,
             DataExpr::Datatype(dt) => {
-                let Some(ont) = ontology else {
-                    return None;
-                };
+                let ont = ontology?;
                 let iri = ont
                     .entity(*dt)
                     .ok()
@@ -1231,10 +1210,6 @@ fn literal_in_data_range_value_space(
         }
     }
     true
-}
-
-fn numeric_compare(a: &str, b: &str) -> i32 {
-    numeric_facet_compare(a, b).unwrap_or(0)
 }
 
 fn parse_numeric(s: &str) -> f64 {

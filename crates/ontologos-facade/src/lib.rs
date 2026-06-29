@@ -113,7 +113,9 @@ fn rl_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
         return Ok(false);
     }
     ontologos_abox::is_abox_consistent(&working).map_err(|e| {
-        Error::El(ontologos_el::Error::Profile(format!("abox consistent: {e}")))
+        Error::El(ontologos_el::Error::Profile(format!(
+            "abox consistent: {e}"
+        )))
     })
 }
 

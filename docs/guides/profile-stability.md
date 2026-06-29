@@ -3,7 +3,7 @@
 Single source of truth for `--profile` / `profile=` behavior. See [Release status](../project/release-status.md) for crates.io vs `main` channel details.
 
 !!! info "Production OWL DL"
-    **Published v0.9.0:** use Protégé + HermiT or Konclude for production OWL DL. **`main` (1.0.0 workspace):** gated HermiT conformance is green @ 30s (`parity_pct = 100%` catalog; **450+428** active tests); validate on your corpus before replacing HermiT. See [FAQ](../../FAQ.md).
+    **Published v0.9.0:** use Protégé + HermiT or Konclude for production OWL DL. **`main` (1.0.0 workspace):** gated HermiT conformance is green @ 30s (`parity_pct = 100%` catalog; **450+428** active tests); validate on your corpus before replacing HermiT. See [FAQ](../project/faq.md).
 
 | Profile | User-facing status | Engine | HermiT parity | Production recommendation |
 |---------|-------------------|--------|---------------|---------------------------|

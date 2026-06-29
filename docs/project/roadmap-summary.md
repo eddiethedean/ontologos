@@ -2,7 +2,7 @@
 
 OntoLogos follows [semantic versioning](https://semver.org/). **Workspace version:** **1.0.0** · **Latest tagged release:** **v0.9.0** · See [Release status](release-status.md) for crates.io, PyPI, and parity metrics.
 
-## HermiT parity progress (100% catalog; tag pending)
+## HermiT parity progress (100% catalog; publish pending)
 
 **`parity_pct = 100%`** on `main` (`java_planned = 0`, `wg_planned = 0`). Blocking CI runs **450** Java axiom + **428** OWL WG tests @ 30s; `check-1.0-release-gates.sh` is green. **v1.0.0 git tag** remains blocked on crates.io + PyPI publish only.
 

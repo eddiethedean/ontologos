@@ -1,7 +1,7 @@
 # Upgrade to the latest release
 
 **Published today (crates.io / PyPI):** v0.9.0  
-**In development on `main`:** 1.0.0 (HermiT parity **complete** on gated corpora; tag pending publish)
+**In development on `main`:** 1.0.0 (HermiT parity **complete** on gated corpora; crates.io/PyPI not yet published)
 
 | Your situation | Guide |
 |----------------|-------|

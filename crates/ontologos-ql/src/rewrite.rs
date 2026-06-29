@@ -57,9 +57,10 @@ fn rewrite_atom(
 /// True when every class named in the query is known in the ontology.
 pub fn is_ql_shape(ontology: &ontologos_core::Ontology, query: &ConjunctiveQuery) -> bool {
     query.atoms.iter().all(|atom| match atom {
-        QueryAtom::Type { class, .. } | QueryAtom::Subsumed { superclass: class, .. } => {
-            ontology.lookup_entity(class).is_some()
-        }
+        QueryAtom::Type { class, .. }
+        | QueryAtom::Subsumed {
+            superclass: class, ..
+        } => ontology.lookup_entity(class).is_some(),
     })
 }
 

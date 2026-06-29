@@ -967,9 +967,7 @@ impl Mapper<'_> {
             Axiom::ClassAssertion { .. } => OwlConstruct::ClassAssertion,
             Axiom::ObjectPropertyAssertion { .. } => OwlConstruct::ObjectPropertyAssertion,
             Axiom::DataPropertyAssertion { .. } => OwlConstruct::DataPropertyAssertion,
-            Axiom::NegativeObjectPropertyAssertion { .. } => {
-                OwlConstruct::ObjectPropertyAssertion
-            }
+            Axiom::NegativeObjectPropertyAssertion { .. } => OwlConstruct::ObjectPropertyAssertion,
             Axiom::NegativeDataPropertyAssertion { .. } => OwlConstruct::DataPropertyAssertion,
             Axiom::SameIndividual(_) | Axiom::DifferentIndividuals(_) => {
                 OwlConstruct::IndividualEquality

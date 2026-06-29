@@ -1376,22 +1376,17 @@ fn hermit_min_card_witness_boost(
     let Some(iri) = facet_base_iri(ontology, store, range) else {
         return 0;
     };
-    if iri == "http://www.w3.org/2001/XMLSchema#double"
-        && min == max
-        && parse_numeric(min) == 0.0
-    {
+    if iri == "http://www.w3.org/2001/XMLSchema#double" && min == max && parse_numeric(min) == 0.0 {
         return 2;
     }
-    if iri == "http://www.w3.org/2001/XMLSchema#float"
-        && min == max
-        && parse_numeric(min) == 0.0
-    {
+    if iri == "http://www.w3.org/2001/XMLSchema#float" && min == max && parse_numeric(min) == 0.0 {
         return 2;
     }
-    if iri == "http://www.w3.org/2001/XMLSchema#dateTime" && min == max {
-        if datetime_distinct_count(min, max) >= 2 {
-            return 2;
-        }
+    if iri == "http://www.w3.org/2001/XMLSchema#dateTime"
+        && min == max
+        && datetime_distinct_count(min, max) >= 2
+    {
+        return 2;
     }
     0
 }
@@ -1681,7 +1676,7 @@ fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<
                             let lex = match iri.as_str() {
                                 "http://www.w3.org/2001/XMLSchema#hexBinary" => "00".repeat(n),
                                 "http://www.w3.org/2001/XMLSchema#base64Binary" => {
-                                    "A".repeat((n * 4 + 2) / 3)
+                                    "A".repeat((n * 4).div_ceil(3))
                                 }
                                 _ => "a".repeat(n),
                             };
@@ -1757,7 +1752,7 @@ fn entity_iri(ontology: &Ontology, id: EntityId) -> Option<String> {
     ontology
         .resolve_iri(record.iri)
         .ok()
-        .map(|iri| super::canonical_datatype_iri(iri))
+        .map(super::canonical_datatype_iri)
 }
 
 fn finite_datatype_value_count(ontology: &Ontology, datatype: EntityId) -> Option<u32> {
@@ -2276,7 +2271,7 @@ fn increment_datetime_ms(p: &mut DateTimeParts) {
 fn strip_datetime_timezone(s: &str) -> &str {
     let s = s.strip_suffix('Z').unwrap_or(s);
     if let Some(t_pos) = s.find('T') {
-        if let Some(off_pos) = s[t_pos..].rfind(|c| c == '+' || c == '-') {
+        if let Some(off_pos) = s[t_pos..].rfind(['+', '-']) {
             return &s[..t_pos + off_pos];
         }
     }
@@ -2343,7 +2338,7 @@ mod tests {
             .expect("dateTime");
         let open = store
             .data_exprs()
-            .find_map(|(id, e)| {
+            .find_map(|(_id, e)| {
                 if let DataExpr::Not(inner) = e {
                     if matches!(store.de(*inner), Some(DataExpr::Facet { .. })) {
                         Some(*inner)

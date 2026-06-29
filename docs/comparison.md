@@ -1,6 +1,6 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. **Published v0.9.0** covers stable EL/RL/RDFS. **`main` (1.0.0 workspace)** reaches **`parity_pct = 100%`** catalog porting and passes **450** Java axiom + **428** OWL WG HermiT conformance tests @ 30s on blocking CI — not yet a drop-in HermiT replacement on arbitrary ontologies (see [FAQ](../FAQ.md)).
+Honest positioning for evaluators. **Published v0.9.0** covers stable EL/RL/RDFS. **`main` (1.0.0 workspace)** reaches **`parity_pct = 100%`** catalog porting and passes **450** Java axiom + **428** OWL WG HermiT conformance tests @ 30s on blocking CI — not yet a drop-in HermiT replacement on arbitrary ontologies (see [FAQ](project/faq.md)).
 
 See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
 
@@ -62,7 +62,7 @@ OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid ro
 
 ## OntoLogos target (1.0 vs 2.0)
 
-**1.0** delivers stable OWL DL HermiT parity on gated corpora (**green on `main`**, tag pending publish). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
+**1.0** delivers stable OWL DL HermiT parity on gated corpora (**green on `main`**, crates.io/PyPI publish not yet shipped). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
 
 Replace JVM-bound **batch** reasoning in Rust/Python pipelines via stable facade APIs, with CLI, Python, and Ontocode integration.
 

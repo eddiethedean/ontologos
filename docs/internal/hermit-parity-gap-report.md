@@ -1,6 +1,6 @@
 # HermiT parity gap report
 
-**Updated:** 2026-06-29 (Phase 9 — release gates green, tag pending)  
+**Updated:** 2026-06-29 (Phase 9 — release gates green, v1.0.0 publish deferred)  
 **Audit commit:** working tree post-union-CSP · **Rust:** 1.96.0 · **DL budget:** 30s (CI) / 120s (nightly)  
 **Target release:** **1.0** — functional HermiT replacement ([ROADMAP.md](../../ROADMAP.md) § [HermiT parity phases](../../ROADMAP.md#hermit-parity-phases-path-to-v100-tag))
 

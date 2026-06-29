@@ -1,6 +1,8 @@
 //! v1.7 ALC exit criteria — synthetic subsumption + WG unsat + corpus consistency.
 
-use ontologos_alc::{classify, is_consistent, is_ce_satisfiable_with_seed, DlOntology, Error, TableauSeed};
+use ontologos_alc::{
+    classify, is_ce_satisfiable_with_seed, is_consistent, DlOntology, Error, TableauSeed,
+};
 use ontologos_core::{Axiom, DlAxiom, Ontology};
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;

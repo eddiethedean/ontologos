@@ -48,7 +48,7 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 | ALC / `dl-preview` / SWRL | **Preview** |
 | Python bindings, explain (EL) | **Stable** on v0.9.0 |
 
-**Production OWL DL today:** use **v0.9.0** pins for stable EL/RL/RDFS, or build **`main`** for gated-corpus DL (`profile="dl"`). See [FAQ](../../FAQ.md).
+**Production OWL DL today:** use **v0.9.0** pins for stable EL/RL/RDFS, or build **`main`** for gated-corpus DL (`profile="dl"`). See [FAQ](faq.md).
 
 ## Conformance snapshot (live)
 

@@ -2452,7 +2452,7 @@ pub fn scan_promoted_wg_failures() -> Vec<WgFailure> {
     }
     let active: Vec<WgCase> = read_wg_catalog_file()
         .into_iter()
-        .filter(|case| case.status == "wg" && wg_case_runnable(&case))
+        .filter(|case| case.status == "wg" && wg_case_runnable(case))
         .filter(|case| promoted.contains(wg_case_short_id(&case.id)))
         .collect();
     let mut failures: Vec<WgFailure> = active
@@ -3091,7 +3091,7 @@ fn conclusion_only_class_assertions(conclusion: &Ontology) -> bool {
 fn consistent_but_all_unsat_fast_entailment(
     premise: &Ontology,
     conclusion: &Ontology,
-    budget: Duration,
+    _budget: Duration,
 ) -> Result<Option<bool>, String> {
     let Some(targets_conc) = conclusion_nothing_subclass_entailment_targets(conclusion) else {
         return Ok(None);
@@ -3269,7 +3269,8 @@ fn entailment_holds_with_budget_opts(
             return Ok(true);
         }
     }
-    if allow_positive_guards && conclusion_nothing_subclass_entailment_targets(conclusion).is_some() {
+    if allow_positive_guards && conclusion_nothing_subclass_entailment_targets(conclusion).is_some()
+    {
         if let Some(entailed) = entailment_via_subclass_nothing(premise, conclusion, budget)? {
             return Ok(entailed);
         }

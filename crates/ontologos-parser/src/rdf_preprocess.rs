@@ -2243,7 +2243,7 @@ fn boolean_operator_ofn(
     if members.is_empty() {
         return None;
     }
-    if members.len() == 1 {
+    if members.len() == 1 && ofn_ctor != "ObjectUnionOf" {
         return Some(members[0].clone());
     }
     Some(format!("{ofn_ctor}({})", members.join(" ")))

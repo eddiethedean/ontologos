@@ -62,7 +62,10 @@ fn galen_hybrid_el_module() {
         return;
     };
     let hybrid = classify_hybrid(&ontology).expect("hybrid");
-    assert!(!hybrid.modules.is_empty(), "GALEN should partition into modules");
+    assert!(
+        !hybrid.modules.is_empty(),
+        "GALEN should partition into modules"
+    );
     let el_modules: Vec<_> = hybrid
         .modules
         .iter()

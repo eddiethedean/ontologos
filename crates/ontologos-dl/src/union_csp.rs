@@ -42,11 +42,7 @@ pub fn union_disjoint_typing_consistency(ontology: &Ontology) -> Option<bool> {
 
     let (class, constraints) = union_constraints
         .into_iter()
-        .max_by(|a, b| {
-            a.1.len()
-                .cmp(&b.1.len())
-                .then_with(|| a.0.0.cmp(&b.0.0))
-        })
+        .max_by(|a, b| a.1.len().cmp(&b.1.len()).then_with(|| a.0 .0.cmp(&b.0 .0)))
         .filter(|(_, cs)| cs.len() >= 3)?;
 
     let atoms: HashSet<EntityId> = constraints.iter().flat_map(|c| c.iter().copied()).collect();
@@ -94,11 +90,7 @@ fn oneof_nominal_typing_consistency(ontology: &Ontology) -> Option<bool> {
 
     let (_, constraints) = by_individual
         .into_iter()
-        .max_by(|a, b| {
-            a.1.len()
-                .cmp(&b.1.len())
-                .then_with(|| a.0.0.cmp(&b.0.0))
-        })
+        .max_by(|a, b| a.1.len().cmp(&b.1.len()).then_with(|| a.0 .0.cmp(&b.0 .0)))
         .filter(|(_, cs)| cs.len() >= 3)?;
 
     let atoms: HashSet<EntityId> = constraints.iter().flat_map(|c| c.iter().copied()).collect();
@@ -154,8 +146,16 @@ fn solve_union_constraints(
         .map(|c| c.iter().filter_map(|&e| grid_atom(ontology, e)).collect())
         .collect();
     if grid.len() == constraints.len()
-        && grid.iter().zip(constraints).all(|(g, c)| g.len() == c.len())
-        && grid.iter().flat_map(|g| g.iter()).collect::<HashSet<_>>().len() >= 4
+        && grid
+            .iter()
+            .zip(constraints)
+            .all(|(g, c)| g.len() == c.len())
+        && grid
+            .iter()
+            .flat_map(|g| g.iter())
+            .collect::<HashSet<_>>()
+            .len()
+            >= 4
     {
         return solve_grid_constraints(&grid);
     }
@@ -237,9 +237,11 @@ fn propagate_grid_domains(domains: &mut [Vec<GridAtom>]) -> Option<bool> {
     }
     if domains.iter().all(|d| d.len() == 1) {
         let chosen: HashSet<GridAtom> = domains.iter().map(|d| d[0]).collect();
-        return Some(chosen.iter().all(|&a| {
-            chosen.iter().all(|&b| grid_atoms_compatible(a, b))
-        }));
+        return Some(
+            chosen
+                .iter()
+                .all(|&a| chosen.iter().all(|&b| grid_atoms_compatible(a, b))),
+        );
     }
     None
 }

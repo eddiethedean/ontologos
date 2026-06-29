@@ -282,9 +282,7 @@ fn run() -> Result<(), CliError> {
                         println!("  cluster[{i}]: {}", names.join(", "));
                     }
                     for (_, axiom) in ontology.axioms().iter() {
-                        if let ontologos_core::Axiom::ClassAssertion { individual, class } =
-                            axiom
-                        {
+                        if let ontologos_core::Axiom::ClassAssertion { individual, class } = axiom {
                             let ind = ontology
                                 .resolve_iri(ontology.entity(*individual).expect("ind").iri)
                                 .unwrap_or("?");

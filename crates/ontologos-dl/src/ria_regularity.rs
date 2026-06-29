@@ -251,12 +251,14 @@ fn pair_chain_in_closure(
     transitive: &HashSet<EntityId>,
 ) -> bool {
     for (chain, sup) in all_chains {
-        if chain.len() == 2 && chain[0] == pair[0] && chain[1] == pair[1] {
-            if roles_equal(sup, target, inverses) {
-                let exempt = pair_exempt_from_regularity(&pair[0], &pair[1], reflexive, transitive);
-                if !exempt {
-                    return true;
-                }
+        if chain.len() == 2
+            && chain[0] == pair[0]
+            && chain[1] == pair[1]
+            && roles_equal(sup, target, inverses)
+        {
+            let exempt = pair_exempt_from_regularity(&pair[0], &pair[1], reflexive, transitive);
+            if !exempt {
+                return true;
             }
         }
     }
@@ -363,15 +365,10 @@ fn compute_non_simple_roles(ontology: &Ontology) -> Result<HashSet<EntityId>> {
             if non_simple.contains(sub) && non_simple.insert(*sup) {
                 changed = true;
             }
-            if transitive.contains(sup) || reflexive.contains(sup) {
-                if non_simple.insert(*sub) {
-                    changed = true;
-                }
-            }
-            if inverses.contains_key(sup) {
-                if non_simple.insert(*sub) {
-                    changed = true;
-                }
+            if (transitive.contains(sup) || reflexive.contains(sup) || inverses.contains_key(sup))
+                && non_simple.insert(*sub)
+            {
+                changed = true;
             }
         }
         for (left, right) in &inverses {
