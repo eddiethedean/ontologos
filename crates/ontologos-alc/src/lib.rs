@@ -23,6 +23,11 @@ pub use object_property_classify::{
     classify_object_property_expressions, equivalent_object_property_expressions,
     inverse_object_property_expressions, sub_object_property_expressions,
 };
+#[doc(hidden)]
+pub use object_property_classify::{
+    augment_for_role_classification, classify_object_property_on_augmented,
+    equivalent_object_property_on_augmented, sub_object_property_on_augmented,
+};
 pub use tableau::cache::UnsatCache;
 pub use tableau::AlcClassifier;
 pub use tableau::{

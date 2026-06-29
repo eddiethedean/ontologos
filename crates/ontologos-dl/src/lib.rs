@@ -2,6 +2,7 @@
 
 #![warn(missing_docs)]
 
+mod object_property_query;
 mod cardinality;
 mod cardinality_grid;
 mod classify;
@@ -26,9 +27,11 @@ pub use datatype::{
 pub use dependency_index::DependencyIndex;
 pub use ontologos_alc::{classify as alc_classify, clausify, Clause, ClauseSet, DlOntology};
 pub use ontologos_alc::{
-    classify_with_seed, equivalent_object_property_expressions,
-    inverse_object_property_expressions, role_expression_subsumes,
-    sub_object_property_expressions, TableauSeed,
+    classify_with_seed, role_expression_subsumes, TableauSeed,
+};
+pub use object_property_query::{
+    classify_object_property_expressions, equivalent_object_property_expressions,
+    inverse_object_property_expressions, sub_object_property_expressions,
 };
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};

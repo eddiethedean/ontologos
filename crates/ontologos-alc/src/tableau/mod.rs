@@ -1785,15 +1785,34 @@ fn infer_named_subsumptions(
         .filter(|(_, r)| r.kind == EntityKind::Class)
         .map(|(id, _)| id)
         .collect();
+    infer_named_subsumptions_for(dl, &classes, seed)
+}
+
+/// Pairwise named-class subsumption for a selected class set (HermiT role-surrogate classification).
+pub(crate) fn infer_named_subsumptions_for(
+    dl: &DlOntology,
+    classes: &[EntityId],
+    seed: &TableauSeed,
+) -> Result<Vec<(EntityId, EntityId)>, Error> {
     let mut out = Vec::new();
-    for &sub in &classes {
-        for &sup in &classes {
+    for &sub in classes {
+        for &sup in classes {
             if sub != sup && entails(dl, sub, sup, seed)? {
                 out.push((sub, sup));
             }
         }
     }
     Ok(out)
+}
+
+/// Whether named class `sub` is subsumed by named class `sup` (tableau entailment test).
+pub(crate) fn named_class_entails(
+    dl: &DlOntology,
+    sub: EntityId,
+    sup: EntityId,
+    seed: &TableauSeed,
+) -> Result<bool, Error> {
+    entails(dl, sub, sup, seed)
 }
 
 fn entails(
