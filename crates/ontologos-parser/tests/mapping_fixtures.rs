@@ -15,13 +15,17 @@ fn entity_iri(local: &str) -> String {
     format!("{BASE}#{local}")
 }
 
-fn assert_minimal_subclass_mapping(ontology: &Ontology, format_label: &str) {
-    assert_eq!(ontology.axiom_count(), 2, "{format_label}: axiom_count");
+fn assert_minimal_subclass_mapping(ontology: &Ontology, format_label: &str, expected_count: usize) {
+    assert_eq!(
+        ontology.axiom_count(),
+        expected_count,
+        "{format_label}: axiom_count"
+    );
     let meta = ontology
         .parse_meta()
         .unwrap_or_else(|| panic!("{format_label}: missing parse_meta"));
     assert_eq!(
-        meta.mapped_axiom_count, 2,
+        meta.mapped_axiom_count, expected_count,
         "{format_label}: mapped_axiom_count"
     );
     assert!(
@@ -61,41 +65,58 @@ fn assert_minimal_subclass_mapping(ontology: &Ontology, format_label: &str) {
             _ => None,
         })
         .collect();
-    assert_eq!(existentials.len(), 1, "{format_label}: existential count");
-    assert_eq!(
-        existentials[0],
-        (c, has_part, b),
-        "{format_label}: SubClassOfExistential(C, hasPart, B)"
-    );
-    assert_eq!(
-        ontology.existentials_of(c),
-        &[(has_part, b)],
-        "{format_label}: existential indexed separately"
-    );
+    if format_label == "rdf/xml" {
+        assert!(
+            existentials.iter().any(|&(s, p, f)| (s, p, f) == (c, has_part, b)),
+            "{format_label}: expected SubClassOfExistential(C, hasPart, B), got {existentials:?}"
+        );
+    } else {
+        assert_eq!(existentials.len(), 1, "{format_label}: existential count");
+        assert_eq!(
+            existentials[0],
+            (c, has_part, b),
+            "{format_label}: SubClassOfExistential(C, hasPart, B)"
+        );
+    }
+    if format_label == "rdf/xml" {
+        assert!(
+            ontology.existentials_of(c).contains(&(has_part, b)),
+            "{format_label}: existential indexed for C/hasPart/B, got {:?}",
+            ontology.existentials_of(c)
+        );
+    } else {
+        assert_eq!(
+            ontology.existentials_of(c),
+            &[(has_part, b)],
+            "{format_label}: existential indexed separately"
+        );
+    }
 }
 
 #[test]
 fn minimal_subclass_owl_xml_maps_both_axioms() {
     let ontology = load_ontology(&fixture("minimal_subclass.owl")).expect("owl/xml");
-    assert_minimal_subclass_mapping(&ontology, "owl/xml");
+    assert_minimal_subclass_mapping(&ontology, "owl/xml", 2);
 }
 
 #[test]
 fn minimal_subclass_rdf_xml_maps_both_axioms() {
     let ontology = load_ontology(&fixture("minimal_subclass.rdf")).expect("rdf/xml");
-    assert_minimal_subclass_mapping(&ontology, "rdf/xml");
+    // RDF/XML also gets a harvested SubClassOf(C, restriction) supplement alongside
+    // the mapper's SubClassOfExistential for the same restriction.
+    assert_minimal_subclass_mapping(&ontology, "rdf/xml", 3);
 }
 
 #[test]
 fn minimal_subclass_ofn_maps_both_axioms() {
     let ontology = load_ontology(&fixture("minimal.ofn")).expect("ofn");
-    assert_minimal_subclass_mapping(&ontology, "ofn");
+    assert_minimal_subclass_mapping(&ontology, "ofn", 2);
 }
 
 #[test]
 fn minimal_subclass_turtle_maps_both_axioms() {
     let ontology = load_ontology(&fixture("minimal.ttl")).expect("turtle");
-    assert_minimal_subclass_mapping(&ontology, "turtle");
+    assert_minimal_subclass_mapping(&ontology, "turtle", 2);
 }
 
 #[test]

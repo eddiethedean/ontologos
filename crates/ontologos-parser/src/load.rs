@@ -155,6 +155,8 @@ fn load_ontology_with_limits_and_base_inner(
                 base,
             )?;
         }
+        report.meta.logical_axiom_count =
+            report.meta.mapped_axiom_count + report.meta.skipped_axiom_count;
         if limits.strict && report.meta.skipped_axiom_count > 0 {
             return Err(Error::Parse(format!(
                 "strict parse: skipped {} axioms due to limits or mapping failures",
@@ -217,8 +219,7 @@ fn merge_datatype_sameas_supplement(
          )"
     );
     let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-    merge_supplement_ontology(ontology, &supplement)?;
-    report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    merge_supplement_with_accounting(ontology, report, &supplement)?;
     Ok(true)
 }
 
@@ -267,8 +268,7 @@ fn merge_property_sameas_supplement(
          )"
     );
     let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-    merge_supplement_ontology(ontology, &supplement)?;
-    report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+    merge_supplement_with_accounting(ontology, report, &supplement)?;
     Ok(true)
 }
 
@@ -294,8 +294,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (individual_iri, ce_ofn) in
         crate::rdf_preprocess::collect_object_class_assertions(preprocessed_rdf)
@@ -308,8 +307,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (class_iri, ce_ofn) in
         crate::rdf_preprocess::collect_restriction_subclasses(preprocessed_rdf)
@@ -322,8 +320,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (class_iri, ce_ofn) in
         crate::rdf_preprocess::collect_complement_subclasses(preprocessed_rdf)
@@ -336,8 +333,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (class_iri, ce_ofn) in
         crate::rdf_preprocess::collect_boolean_class_equivalences(preprocessed_rdf)
@@ -353,8 +349,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (left_ofn, right_ofn) in
         crate::rdf_preprocess::collect_boolean_binary_equivalences(preprocessed_rdf)
@@ -372,8 +367,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (subject, property, object) in
         crate::rdf_preprocess::collect_object_property_assertions(preprocessed_rdf)
@@ -388,8 +382,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (property, range) in
         crate::rdf_preprocess::collect_datatype_property_ranges(preprocessed_rdf)
@@ -404,8 +397,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (left, right) in crate::rdf_preprocess::collect_owl_same_as_pairs(preprocessed_rdf) {
         if merge_datatype_sameas_supplement(ontology, report, limits, &left, &right)? {
@@ -430,8 +422,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (left, right) in crate::rdf_preprocess::collect_property_disjoint_pairs(preprocessed_rdf) {
         let ofn = format!(
@@ -443,8 +434,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (property, domain) in
         crate::rdf_preprocess::collect_rdfs_object_property_domains(preprocessed_rdf)
@@ -458,8 +448,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (property, range) in
         crate::rdf_preprocess::collect_rdfs_object_property_ranges(preprocessed_rdf)
@@ -473,8 +462,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for property in crate::rdf_preprocess::collect_functional_object_properties(preprocessed_rdf) {
         let datatype_props =
@@ -497,8 +485,7 @@ fn supplement_rdf_dl_axioms(
             )
         };
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for body in crate::rdf_preprocess::collect_disjoint_union_axioms(preprocessed_rdf) {
         let ofn = format!(
@@ -506,8 +493,7 @@ fn supplement_rdf_dl_axioms(
              Ontology(<http://example.org/disjoint-union-supplement>\n{body}\n)"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for npa in crate::rdf_preprocess::collect_reified_data_npas(preprocessed_rdf) {
         let lit = npa.value_literal.replace('"', "\\\"");
@@ -533,8 +519,7 @@ fn supplement_rdf_dl_axioms(
              Ontology(<http://example.org/data-npa-supplement>\n{body}\n)"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for dpa in crate::rdf_preprocess::collect_direct_data_literal_assertions(preprocessed_rdf) {
         let (lexical, datatype_iri) = if dpa.value_literal.contains("^^") {
@@ -580,8 +565,7 @@ fn supplement_rdf_dl_axioms(
              Ontology(<http://example.org/thing-data-literal-supplement>\n{body}\n)"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for (left, right) in crate::rdf_preprocess::collect_owl_same_as_pairs(preprocessed_rdf) {
         if merge_datatype_sameas_supplement(ontology, report, limits, &left, &right)? {
@@ -606,8 +590,7 @@ fn supplement_rdf_dl_axioms(
              )"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for body in crate::rdf_preprocess::collect_anonymous_intersection_subclasses(preprocessed_rdf) {
         let ofn = format!(
@@ -615,8 +598,7 @@ fn supplement_rdf_dl_axioms(
              Ontology(<http://example.org/anon-intersection-supplement>\n{body}\n)"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     for body in crate::rdf_preprocess::collect_anonymous_intersection_subclasses(preprocessed_rdf) {
         let ofn = format!(
@@ -624,8 +606,7 @@ fn supplement_rdf_dl_axioms(
              Ontology(<http://example.org/anon-intersection-supplement>\n{body}\n)"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     if ill_founded_list {
         let thing = ontology
@@ -642,7 +623,7 @@ fn supplement_rdf_dl_axioms(
         ontology
             .dl_mut()
             .push_axiom(DlAxiom::EquivalentClasses(vec![thing_ce, nothing_ce]));
-        report.meta.mapped_axiom_count += 2;
+        report.meta.mapped_axiom_count += 1;
     }
     for npa in crate::rdf_preprocess::collect_reified_npas(preprocessed_rdf) {
         let mut body = format!(
@@ -663,8 +644,7 @@ fn supplement_rdf_dl_axioms(
              Ontology(<http://example.org/npa-supplement>\n{body}\n)"
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_ontology(ontology, &supplement)?;
-        report.meta.mapped_axiom_count += supplement.dl().axiom_count();
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
     Ok(())
 }
@@ -687,8 +667,9 @@ fn merge_rdf_owl_imports(
             continue;
         }
         let imported = load_ontology_with_limits_and_base_inner(&import_path, limits, base, false)?;
+        let before = ontology.axiom_count();
         merge_full_ontology(ontology, &imported)?;
-        report.meta.mapped_axiom_count += imported.dl().axiom_count();
+        report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
     }
     Ok(())
 }
@@ -712,6 +693,17 @@ fn resolve_wg_import_path(current: &Path, import_iri: &str) -> Option<PathBuf> {
 
 fn merge_full_ontology(target: &mut Ontology, source: &Ontology) -> Result<()> {
     merge_supplement_ontology(target, source)
+}
+
+fn merge_supplement_with_accounting(
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    supplement: &Ontology,
+) -> Result<()> {
+    let before = ontology.axiom_count();
+    merge_supplement_ontology(ontology, supplement)?;
+    report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
+    Ok(())
 }
 
 fn merge_supplement_ontology(target: &mut Ontology, source: &Ontology) -> Result<()> {
