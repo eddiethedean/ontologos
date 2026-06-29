@@ -322,6 +322,16 @@ fn supplement_rdf_dl_axioms(
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
         merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
+    for body in
+        crate::rdf_preprocess::collect_anonymous_restriction_subclass_axioms(preprocessed_rdf)
+    {
+        let ofn = format!(
+            "{SUPPLEMENT_STANDARD_PREFIXES}\
+             Ontology(<http://example.org/anon-restriction-supplement>\n{body}\n)"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
+    }
     for (class_iri, ce_ofn) in
         crate::rdf_preprocess::collect_complement_subclasses(preprocessed_rdf)
     {

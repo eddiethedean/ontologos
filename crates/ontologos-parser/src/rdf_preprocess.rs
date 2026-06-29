@@ -1550,6 +1550,58 @@ pub(crate) fn collect_restriction_subclasses(rdf: &str) -> Vec<(String, String)>
     out
 }
 
+/// Collect `SubClassOf(restriction super)` from top-level anonymous `owl:Restriction` (OWL API general axioms).
+pub(crate) fn collect_anonymous_restriction_subclass_axioms(rdf: &str) -> Vec<String> {
+    let base = parse_xml_base(rdf);
+    let dt_props = declared_datatype_property_iris(rdf);
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find("<owl:Restriction") else {
+            break;
+        };
+        let start = pos + rel;
+        if start > 0 && !rdf.as_bytes()[start - 1].is_ascii_whitespace() && rdf.as_bytes()[start - 1] != b'>' {
+            pos = start + 1;
+            continue;
+        }
+        let Some(end) = tagged_element_end(rdf, start, "owl:Restriction") else {
+            break;
+        };
+        let block = &rdf[start..end];
+        let open_end = block.find('>').unwrap_or(0);
+        let open = &block[..=open_end];
+        if extract_attribute(open, "rdf:about").is_some()
+            || extract_attribute(open, "rdf:ID").is_some()
+            || extract_attribute(open, "rdf:nodeID").is_some()
+            || block.contains("owl:disjointWith")
+        {
+            pos = end;
+            continue;
+        }
+        let close_start = block.rfind("</owl:Restriction>").unwrap_or(block.len());
+        let inner = &block[open_end + 1..close_start];
+        let Some((_, _, sub_block)) = find_top_level_element_bounds(inner, "rdfs:subClassOf") else {
+            pos = end;
+            continue;
+        };
+        let sub_open_end = sub_block.find('>').unwrap_or(0);
+        let sub_open = &sub_block[..=sub_open_end];
+        let Some(resource) = extract_attribute(sub_open, "rdf:resource") else {
+            pos = end;
+            continue;
+        };
+        let super_iri = resolve_relative_iri(&resource, &base);
+        let Some(sub_ce) = restriction_ce_to_ofn(block, &base, &dt_props) else {
+            pos = end;
+            continue;
+        };
+        out.push(format!("SubClassOf({sub_ce} <{super_iri}>)"));
+        pos = end;
+    }
+    out
+}
+
 fn restriction_subclass_from_description_block(
     block: &str,
     base: &str,
@@ -5538,6 +5590,34 @@ mod tests {
                 .any(|(_, ce)| ce.contains("DataMinCardinality")),
             "{collected:?}"
         );
+    }
+
+    #[test]
+    fn anonymous_restriction_subclass_axiom_ofn() {
+        let rdf = r#"<rdf:RDF xml:base="file:/c:/temp/test.owl"
+ xmlns:owl="http://www.w3.org/2002/07/owl#"
+ xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<owl:Class rdf:about="file:/c:/temp/test.owl#d"/>
+<owl:ObjectProperty rdf:about="file:/c:/temp/test.owl#r"/>
+<owl:ObjectProperty rdf:about="file:/c:/temp/test.owl#s"/>
+<owl:Class rdf:about="file:/c:/temp/test.owl#c"/>
+<owl:Restriction>
+  <rdfs:subClassOf rdf:resource="file:/c:/temp/test.owl#d"/>
+  <owl:onProperty rdf:resource="file:/c:/temp/test.owl#r"/>
+  <owl:someValuesFrom>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="file:/c:/temp/test.owl#s"/>
+      <owl:someValuesFrom rdf:resource="file:/c:/temp/test.owl#c"/>
+    </owl:Restriction>
+  </owl:someValuesFrom>
+</owl:Restriction>
+</rdf:RDF>"#;
+        let axioms = collect_anonymous_restriction_subclass_axioms(rdf);
+        assert_eq!(axioms.len(), 1);
+        assert!(axioms[0].contains("SubClassOf("));
+        assert!(axioms[0].contains("ObjectSomeValuesFrom"));
+        assert!(axioms[0].contains("file:/c:/temp/test.owl#d"));
     }
 
     #[test]

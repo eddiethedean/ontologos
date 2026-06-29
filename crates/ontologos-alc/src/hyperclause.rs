@@ -62,6 +62,13 @@ pub enum HyperAtom {
         range: DataRangeFmt,
         term: Term,
     },
+    /// `atLeast(n role concept)(X)` for object restrictions.
+    AtLeastObject {
+        n: u32,
+        role: String,
+        concept: String,
+        term: Term,
+    },
     /// Object/data role `:dp(X,Y)`.
     Role {
         role: String,
@@ -150,6 +157,12 @@ fn format_hyper_atom(atom: &HyperAtom) -> String {
             format_data_range(range),
             term.fmt()
         ),
+        HyperAtom::AtLeastObject {
+            n,
+            role,
+            concept,
+            term,
+        } => format!("atLeast({n} {role} {concept})({})", term.fmt()),
         HyperAtom::Role {
             role,
             subject,
@@ -200,8 +213,15 @@ impl Ord for HyperAtom {
 
 /// Build a HermiT abbreviation for an entity IRI.
 pub fn abbrev_entity_iri(iri: &str) -> String {
+    let iri = iri.replace("%23", "#");
     if let Some(local) = iri.strip_prefix(HERMIT_NS) {
         return format!(":{local}");
+    }
+    if let Some(idx) = iri.rfind('#') {
+        let local = &iri[idx + 1..];
+        if !local.is_empty() {
+            return format!(":{local}");
+        }
     }
     if iri == OWL_THING {
         return "owl:Thing".into();
@@ -212,7 +232,13 @@ pub fn abbrev_entity_iri(iri: &str) -> String {
     if let Some(n) = iri.strip_prefix("internal:defdata#") {
         return format!("defdata:{n}");
     }
-    datatype_shorthand(iri).unwrap_or_else(|| format!("<{iri}>"))
+    if let Some(n) = iri.strip_prefix("internal:all#") {
+        return format!("all:{n}");
+    }
+    if let Some(n) = iri.strip_prefix("internal:nom#") {
+        return format!("nom:{n}");
+    }
+    datatype_shorthand(&iri).unwrap_or_else(|| format!("<{iri}>"))
 }
 
 /// Map XSD / RDFS datatype IRIs to HermiT prefixes.
@@ -288,6 +314,16 @@ pub(crate) fn sort_oneof_literals(lits: &mut [LiteralFmt]) {
             _ => 1,
         });
     }
+}
+
+/// Canonical IRI for signature dedupe (percent-encoded `#` normalized).
+pub(crate) fn entity_canonical_iri(ontology: &Ontology, id: EntityId) -> String {
+    ontology
+        .entity(id)
+        .ok()
+        .and_then(|r| ontology.iris().resolve(r.iri).ok())
+        .map(|iri| iri.replace("%23", "#"))
+        .unwrap_or_default()
 }
 
 /// Entity abbreviation from ontology registry.

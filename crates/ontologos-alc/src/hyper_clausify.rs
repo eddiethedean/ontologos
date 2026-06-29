@@ -11,6 +11,8 @@ use crate::hyperclause::{
     HyperAtom, HyperClause, HyperClauseSet, Term,
 };
 use crate::Error;
+use crate::hyper_nominals::{clausify_nominal_subclass_axioms, NominalHyperContext};
+use crate::hyper_object::{clausify_object_subclass_axioms, ObjectHyperContext};
 
 const VAR_X: &str = "X";
 const OWL_THING: &str = "http://www.w3.org/2002/07/owl#Thing";
@@ -27,6 +29,8 @@ struct HyperClausifier {
     def_index: u32,
     defdata_index: u32,
     defdata_names: HashMap<DeId, String>,
+    object_ctx: ObjectHyperContext,
+    nominal_ctx: NominalHyperContext,
 }
 
 impl HyperClausifier {
@@ -36,12 +40,37 @@ impl HyperClausifier {
             def_index: 0,
             defdata_index: 0,
             defdata_names: HashMap::new(),
+            object_ctx: ObjectHyperContext::empty(),
+            nominal_ctx: NominalHyperContext::empty(),
         }
     }
 
     fn run(&mut self, ontology: &mut Ontology) -> Result<(), Error> {
         let _ = ontology.dl_mut().intern_ce(ClassExpr::Top);
         let _ = ontology.dl_mut().intern_ce(ClassExpr::Bottom);
+
+        self.object_ctx = ObjectHyperContext::new(ontology);
+        let mut def_index = 0u32;
+        clausify_object_subclass_axioms(ontology, &mut self.object_ctx, &mut def_index, &mut |c| {
+            self.set.push_clause(c);
+        });
+        self.nominal_ctx = NominalHyperContext::empty();
+        let mut nominal_clauses = Vec::new();
+        let mut nominal_facts = Vec::new();
+        clausify_nominal_subclass_axioms(
+            ontology,
+            &mut self.nominal_ctx,
+            &mut def_index,
+            &mut |c| nominal_clauses.push(c),
+            &mut |f| nominal_facts.push(f),
+        );
+        for c in nominal_clauses {
+            self.set.push_clause(c);
+        }
+        for f in nominal_facts {
+            self.set.push_fact(f);
+        }
+        self.def_index = def_index;
 
         let flat_axioms: Vec<Axiom> = ontology.axioms().iter().map(|(_, a)| a.clone()).collect();
         let dl_axioms: Vec<DlAxiom> = ontology.dl().axioms().cloned().collect();
@@ -110,8 +139,15 @@ impl HyperClausifier {
         sub: CeId,
         sup: CeId,
     ) -> Result<(), Error> {
+        if self.object_ctx.handled_subclass(sub, sup) || self.nominal_ctx.handled_subclass(sub, sup) {
+            return Ok(());
+        }
         let sub_expr = ontology.dl().ce(sub).cloned();
         let sup_expr = ontology.dl().ce(sup).cloned();
+
+        if matches!(sub_expr, Some(ClassExpr::Some { .. })) {
+            return Ok(());
+        }
 
         if let (Some(ClassExpr::Atomic(sub_id)), Some(ClassExpr::DataAll { property, range })) =
             (&sub_expr, &sup_expr)

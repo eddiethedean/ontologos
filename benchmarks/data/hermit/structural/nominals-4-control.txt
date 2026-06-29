@@ -1,2 +1,2 @@
-:hasSugar(X,Z) :- :Chianti(X), nom:Dry(Z)
+:hasSugar(X,Y) :- :Chianti(X), nom:Dry(Y)
 nom:Dry(:Dry)

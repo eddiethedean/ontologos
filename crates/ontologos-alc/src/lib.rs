@@ -5,6 +5,8 @@
 mod clause;
 mod dl_ontology;
 mod hyper_clausify;
+mod hyper_nominals;
+mod hyper_object;
 mod hyperclause;
 mod normalize;
 mod object_property_classify;

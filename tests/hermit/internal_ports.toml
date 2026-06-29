@@ -5,7 +5,7 @@
 [[suite]]
 hermit_class = "structural.ClausificationTest"
 rust_tests = ["crates/ontologos-alc/tests/clausification.rs"]
-notes = "33 clausify OFN catalog + asymmetry; 7 RDF/XML goldens vendored under benchmarks/data/hermit/structural/"
+notes = "33 clausify OFN catalog + asymmetry; 7 RDF/XML goldens vendored under benchmarks/data/hermit/structural/ (2/7 hyper goldens green: basic, nominals-1)"
 
 [[suite]]
 hermit_class = "structural.ClausificationDatatypesTest"
@@ -39,39 +39,41 @@ catalog_status = "migrated"
 
 [[port]]
 hermit_id = "structural.ClausificationTest.testBasic"
-rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+rust_test = "clausification::hermit_clausification_structural_fixtures"
 catalog_status = "migrated"
-notes = "Hyper golden in hermit_clausification_structural_fixtures (#[ignore] until RDF/XML chain)"
+notes = "Transitive nested ∃ via hyper_object; duplicate GCI deduped by canonical IRI"
 
 [[port]]
 hermit_id = "structural.ClausificationTest.testNominals1"
-rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+rust_test = "clausification::hermit_clausification_structural_fixtures"
 catalog_status = "migrated"
 
 [[port]]
 hermit_id = "structural.ClausificationTest.testNominals2"
-rust_test = "clausification::hermit_clausification_structural_fixtures_load"
-catalog_status = "migrated"
+rust_test = "clausification::hermit_clausification_structural_fixtures_pending"
+catalog_status = "internal"
+notes = "atMost/cardinality + complement defs — hyper_nominals subset only"
 
 [[port]]
 hermit_id = "structural.ClausificationTest.testNominals3"
-rust_test = "clausification::hermit_clausification_structural_fixtures_load"
-catalog_status = "migrated"
+rust_test = "clausification::hermit_clausification_structural_fixtures_pending"
+catalog_status = "internal"
+notes = "Inverse in onProperty + union/maxQualifiedCardinality — RDF supplement deferred"
 
 [[port]]
 hermit_id = "structural.ClausificationTest.testNominals4"
-rust_test = "clausification::hermit_clausification_structural_fixtures_load"
-catalog_status = "migrated"
+rust_test = "clausification::hermit_clausification_structural_fixtures_pending"
+catalog_status = "internal"
+notes = "Nominal class assertion — RDF supplement deferred"
 
 [[port]]
 hermit_id = "structural.ClausificationTest.testExistsSelf1"
-rust_test = "clausification::hermit_clausification_structural_fixtures_load"
-catalog_status = "migrated"
+rust_test = "clausification::hermit_clausification_structural_fixtures_pending"
+catalog_status = "internal"
 
 [[port]]
 hermit_id = "structural.ClausificationTest.testExistsSelf2"
-rust_test = "clausification::hermit_clausification_structural_fixtures_load"
-catalog_status = "migrated"
+rust_test = "clausification::hermit_clausification_structural_fixtures_pending"
 
 [[port]]
 hermit_id = "reasoner.ReasonerTest.testDependencyDisjunctionMergingBug"
