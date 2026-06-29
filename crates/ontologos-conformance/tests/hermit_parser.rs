@@ -1,13 +1,7 @@
-//! Tier-B HermiT fixture loads (parser smoke). Skipped when `HermiT/` is absent.
+//! Tier-B HermiT fixture loads (parser smoke).
 
-use ontologos_conformance::hermit_test_path;
+use ontologos_conformance::vendored_hermit_test_path;
 use ontologos_parser::load_ontology;
-
-fn require_hermit() -> std::path::PathBuf {
-    ontologos_conformance::hermit_root().expect(
-        "HermiT source not found — clone to HermiT/ or set ONTOLOGOS_HERMIT_ROOT (see tests/hermit/README.md)",
-    )
-}
 
 /// HermiT OWLLink eval files often use `encoding='ISO-8859-1'`; horned-owl RDF/XML is UTF-8 only.
 fn is_utf8_owl_fixture(path: &std::path::Path) -> bool {
@@ -21,12 +15,11 @@ fn is_utf8_owl_fixture(path: &std::path::Path) -> bool {
     !text.contains("ISO-8859-1") && !text.contains("iso-8859-1")
 }
 
-/// Survey UTF-8 OWLLink fixtures; reports load/skip stats (parser gaps are non-fatal).
+/// Survey vendored UTF-8 OWLLink fixtures; reports load/skip stats (parser gaps are non-fatal).
 #[test]
-#[ignore = "requires local HermiT/ checkout"]
 fn hermit_owllink_owl_fixtures_load() {
-    let _root = require_hermit();
-    let dir = hermit_test_path("reasoner/res/OWLLink").expect("owllink dir");
+    let dir = vendored_hermit_test_path("reasoner/res/OWLLink")
+        .expect("vendored OWLLink directory");
     let mut loaded = 0_usize;
     let mut latin1_skipped = 0_usize;
     let mut parse_failed: Vec<String> = Vec::new();
@@ -59,17 +52,15 @@ fn hermit_owllink_owl_fixtures_load() {
         eprintln!("  parse gap: {fail}");
     }
     assert!(
-        loaded > 0 || latin1_skipped > 0,
-        "no OWLLink fixtures found in {}",
+        loaded > 0,
+        "expected at least one vendored UTF-8 OWLLink fixture to load in {}",
         dir.display()
     );
 }
 
 #[test]
-#[ignore = "requires local HermiT/ checkout"]
 fn hermit_families_owl_loads() {
-    let _root = require_hermit();
-    let path = hermit_test_path("reasoner/res/families.owl").expect("families.owl");
+    let path = vendored_hermit_test_path("reasoner/res/families.owl").expect("families.owl");
     let ontology = load_ontology(&path).expect("load families.owl");
     assert!(ontology.axiom_count() > 0);
 }
