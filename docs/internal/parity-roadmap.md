@@ -7,7 +7,7 @@ Tracks progress beyond the in-scope catalog gate (`parity_pct = 100%` on **915**
 | Field | Meaning |
 |-------|---------|
 | `parity_pct` | In-scope catalog harness (**915** cases; `java_planned + wg_planned = 0`) |
-| `literal_catalog_pct` | Active harness tests / full catalog (**1019** entries) — **planned** field for B4 |
+| `literal_catalog_pct` | Active harness tests / full catalog (**1019** entries) — on `hermit-burndown.sh status` |
 | `java_out_of_scope` | `excluded` + `internal` + `migrated` (**104** as of 2026-06-29) |
 
 ```bash
@@ -28,7 +28,7 @@ bash benchmarks/scripts/hermit-burndown.sh status
 | ID | Workstream | Verify |
 |----|------------|--------|
 | **B3** | Port `ClausificationTest` / `NormalizationTest` / remaining `tableau/*` to `ontologos-alc` unit tests; document in manifest | `cargo test -p ontologos-alc` · [manifest.toml](../../tests/hermit/manifest.toml) |
-| **B4** | Burn down **122** `#[ignore]` tests; add `literal_catalog_pct` to burndown; promote OWLLink Bob A/B | `hermit-burndown.sh status` · `owllink_bob_knows_subproperties` |
+| **B4** | Burn down **122** `#[ignore]` tests; promote OWLLink cases | Bob A/B **ported**; `literal_catalog_pct` live |
 | **C** | Strict taxonomy CI (`ONTOLOGOS_STRICT_TAXONOMY=1`, `--max-extra 0`) | `compare-tier-c-gate.sh` |
 | **D1** | Criterion saturation/tableau benches; Pizza DL **< 30 s** PR gate | `cargo bench -p ontologos-dl` |
 | **D2–D4** | Default `owl:imports`; SWRL / `RulesTest` or waiver; `isConsistent` / `isEntailed` / `query` facade | [hermit-replacement.md](research/hermit-replacement.md) |
@@ -37,7 +37,7 @@ bash benchmarks/scripts/hermit-burndown.sh status
 
 - **Ian / ComplexConcept CE** — instance-check cluster promoted; `IanBackjumping3` only exclusion
 - **Object-property classification** — HermiT-style surrogate taxonomy; `getSubObjectProperties`, equivalent/inverse queries; `RolePropertyQueryContext::prepare()`
-- **OWLLink Bob A/B** — **20** direct / **101** all subproperties of `knows` on IYOUIT `agent.owl` (`owllink_bob_knows_subproperties`, ~23–52s `--release`)
+- **OWLLink Bob A/B** — catalog-promoted (`testBobTestAandB` → `owllink_bob_knows_subproperties`)
 - **Bob C** — still blocked (`getObjectPropertyValues` on `agent-inst.owl`)
 
 ## Internal test ports (Tier B3)
@@ -57,5 +57,5 @@ Documented in `tests/hermit/generate_catalog.py` `EXCLUDED_IDS`. Re-include only
 
 - **Ian/ComplexConcept CE** — `IanBackjumping3` + `iant6_unsat_regression` (inverse-universal CE gap)
 - **4** RIA regularity — full OWL 2 algorithm
-- **OWLLink** — `testBobTestAandB` (hand test green; promotion pending), `testBobTestC` (ABox), buffered API cases
+- **OWLLink** — `testBobTestC` (ABox), `testBobTests`, buffered API cases
 - **20** datatype manager — JVM literal validation vs OWL entailment

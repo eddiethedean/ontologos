@@ -1101,8 +1101,9 @@ fn hermit_reasoner_numericstest_testclique() {
     run_hermit_case("reasoner.NumericsTest.testClique");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
+#[ignore = "implemented in hand-written module: owllink_bob_knows_subproperties"]
 fn hermit_reasoner_owllinktest_testbobtestaandb() {
     run_hermit_case("reasoner.OWLLinkTest.testBobTestAandB");
 }

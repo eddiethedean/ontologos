@@ -135,7 +135,7 @@ parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 
 **Current (Phase 9, 2026-06-29):** **`parity_pct = 100%`** — **`java_planned = 0`**, **`wg_planned = 0`** (`in_scope_total` **915**). Full conformance **green @ 30s** — **470** runnable Java + **428** WG active tests (**1040** harness tests / **1019** catalog entries, **122** `#[ignore]`). **401** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)); **428/428** WG ([promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt)). Blocking CI: full suite + `check-1.0-release-gates.sh` (no `ONTOLOGOS_CI_PROMOTED_ONLY`). **v1.0.0 git tag + crates.io/PyPI publish pending.**
 
-**Current (post–Phase 9 burndown, 2026-06-29):** In-scope catalog gate met; work shifts to **literal catalog** coverage and **everyday HermiT equivalence** (see [honest assessment](docs/internal/hermit-parity-honest-assessment.md)). Recent engine wins: Ian/ComplexConcept CE cluster promoted; HermiT-style **surrogate object-property classification** (`getSubObjectProperties`, inverse/equivalent queries); **OWLLink Bob test A/B** parity (**20** direct / **101** all subproperties of `knows` on IYOUIT `agent.owl`, hand test `owllink_bob_knows_subproperties` @ ~23–52s `--release`). Catalog case `testBobTestAandB` still in `EXCLUDED_IDS` until `testBobTestC` (`getObjectPropertyValues`) is unblocked. Metrics: `bash benchmarks/scripts/hermit-burndown.sh status`.
+**Current (post–Phase 9 burndown, 2026-06-29):** In-scope catalog gate met; work shifts to **literal catalog** coverage and **everyday HermiT equivalence** (see [honest assessment](docs/internal/hermit-parity-honest-assessment.md)). Recent engine wins: Ian/ComplexConcept CE cluster promoted; HermiT-style **surrogate object-property classification**; **OWLLink Bob test A/B** catalog-promoted (**20** / **101** on `knows`). **`literal_catalog_pct`** on `hermit-burndown.sh status`. Metrics: `bash benchmarks/scripts/hermit-burndown.sh status`.
 
 Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 
@@ -395,7 +395,7 @@ The **in-scope catalog gate** (`parity_pct = 100%` on **915** cases) is met. Rem
 | **In-scope gate** | **Complete** | `java_planned = 0`, `wg_planned = 0`; full suite green @ 30s |
 | **Ian / ComplexConcept CE** | **Complete** | CE instance-check cluster promoted; `IanBackjumping3` only exclusion; `iant6_unsat_regression` still `#[ignore]` |
 | **Object-property queries** | **Complete** | Surrogate classification; `getEquivalentObjectProperties` / `getInverseObjectProperties` promoted; `RolePropertyQueryContext::prepare()` for reuse |
-| **OWLLink Bob A/B** | **Complete** (hand test) | `owllink_bob_knows_subproperties`: **20** direct / **101** all on `knows`; strict super-role filter; catalog promotion pending |
+| **OWLLink Bob A/B** | **Complete** | Catalog `ported` → `owllink_bob_knows_subproperties` (**20** / **101** on `knows`); hand test in `hermit_owllink.rs` |
 | **OWLLink Bob C** | **Blocked** | `getObjectPropertyValues` on `agent-inst.owl` — needs ABox + multi-ontology load |
 | **Literal catalog** | **In progress** | **122** `#[ignore]` conformance tests; **104** Java cases out-of-scope (`excluded` / `internal` / `migrated`) |
 | **Strict taxonomy (Tier C)** | **In progress** | `Taxonomy::reduce_transitive_redundancy` landed; `--max-extra 0` CI gate not yet blocking |
@@ -406,7 +406,7 @@ The **in-scope catalog gate** (`parity_pct = 100%` on **915** cases) is met. Rem
 These are the active burndown items after the in-scope gate; each maps to a tier in [parity-roadmap.md](docs/internal/parity-roadmap.md).
 
 - [ ] **B3 — Internal test ports** — Port HermiT `structural/ClausificationTest`, `NormalizationTest`, and remaining `tableau/*` cases into `ontologos-alc` unit tests; document mappings in [tests/hermit/manifest.toml](tests/hermit/manifest.toml) and [parity-roadmap.md](docs/internal/parity-roadmap.md) § Internal test ports
-- [ ] **B4 — Literal catalog burn-down** — Promote or fix **122** `#[ignore]` conformance tests; extend `hermit-burndown.sh status` / gap report with **`literal_catalog_pct`** (active harness tests vs full **1019**-case catalog); re-include OWLLink Bob A/B from `EXCLUDED_IDS` once Bob C path is clear or waived
+- [ ] **B4 — Literal catalog burn-down** — Promote or fix **122** `#[ignore]` conformance tests; **`literal_catalog_pct`** on `hermit-burndown.sh status` (done); next: burn down ignores, promote remaining OWLLink cases
 - [ ] **C — Strict taxonomy gates** — Make `ONTOLOGOS_STRICT_TAXONOMY=1` / `--max-extra 0` a blocking CI check on Tier B/C goldens (OntoLogos taxonomy must match HermiT, not merely sound superset)
 - [ ] **D1 — Performance gates** — Criterion benches for saturation + tableau; optimize hot paths; enforce Pizza DL **< 30 s** classify in PR CI ([konclude.md](docs/internal/research/konclude.md) reference)
 - [ ] **D2–D4 — Parser + OWL API surface** — Default `owl:imports` merge (`ParseLimits::merge_imports`); full JVM `RulesTest` / SWRL semantics (or documented permanent waiver); stable facade for `isConsistent`, `isEntailed`, and DL `query` operations (see [hermit-replacement.md](docs/internal/research/hermit-replacement.md))
@@ -492,7 +492,7 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Hand-w
 - [x] `owl_wg_tests` approved entailment subset — **428/428** WG promoted (Phase 4)
 - [ ] `structural/ClausificationTest` — **B3** DL internal (partial: [clausification.rs](crates/ontologos-alc/tests/clausification.rs))
 - [ ] `structural/NormalizationTest` — **B3** DL internal (partial: [normalization.rs](crates/ontologos-alc/tests/normalization.rs))
-- [x] OWLLink Bob test A/B (`knows` subproperties **20** / **101**) — hand test `owllink_bob_knows_subproperties`; catalog promotion pending
+- [x] OWLLink Bob test A/B (`knows` subproperties **20** / **101**) — catalog `ported`, hand test `owllink_bob_knows_subproperties`
 - [ ] OWLLink Bob test C (`getObjectPropertyValues`) — blocked on ABox + multi-ontology load
 - [ ] SWRL `RulesTest` — **deferred** (out of scope 1.x; **D2–D4**)
 

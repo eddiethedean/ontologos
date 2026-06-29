@@ -214,6 +214,17 @@ rust_test = "owllink_update_hierarchy_non_buffered"
 notes = "Same axioms as buffered test; OntoLogos has no buffered reasoner yet — RDFS only"
 
 [[case]]
+id = "OWLLinkTest.testBobTestAandB"
+tier = "A"
+milestone = "1.0"
+engine = "dl"
+status = "ported"
+source_class = "org.semanticweb.HermiT.reasoner.OWLLinkTest"
+source_method = "testBobTestAandB"
+rust_test = "owllink_bob_knows_subproperties"
+notes = "IYOUIT agent.owl — getSubObjectProperties(knows): 20 direct / 101 all subproperties (HermiT Bob paper tests A & B)"
+
+[[case]]
 id = "ReasonerTest.testSubAndSuperConcepts"
 tier = "A"
 milestone = "0.3"

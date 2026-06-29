@@ -1005,6 +1005,7 @@ IMPLEMENTED: dict[str, str] = {
     "reasoner.OWLLinkTest.testDisjointClasses": "owllink_disjoint_classes_father_mother",
     "reasoner.OWLLinkTest.testUpdatesBuffered": "owllink_update_hierarchy_buffered",
     "reasoner.OWLLinkTest.testUpdatesNonBuffered": "owllink_update_hierarchy_non_buffered",
+    "reasoner.OWLLinkTest.testBobTestAandB": "owllink_bob_knows_subproperties",
     "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions":
         "owlreasoner_inverse_object_property_expressions_cycle",
     "reasoner.ClassificationTest.testPizza": "hermit_classification_pizza_taxonomy",
@@ -1043,7 +1044,6 @@ EXCLUDED_IDS = {
     "reasoner.DateTimeTest.testExactIntervalsWithTZ3",
     # Phase 5 — OWL API / external fixture tests (Tier B / OWLLink corpus)
     "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored",
-    "reasoner.OWLLinkTest.testBobTestAandB",
     "reasoner.OWLLinkTest.testBobTestC",
     # Pathological backjumping CE — covered by classify_timeout.rs; exceeds 30s DL budget.
     "reasoner.ReasonerTest.testIanBackjumping3",
