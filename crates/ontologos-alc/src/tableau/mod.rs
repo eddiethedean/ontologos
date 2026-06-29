@@ -915,6 +915,9 @@ pub fn is_named_class_satisfiable_with_cache(
     seed: &TableauSeed,
     shared_cache: &mut cache::UnsatCache,
 ) -> Result<bool, Error> {
+    if named_existential_cycle_sat(dl, class) {
+        return Ok(true);
+    }
     let ce = dl
         .core()
         .dl()
@@ -1900,6 +1903,107 @@ fn atomic_entity(dl: &DlOntology, ce: CeId) -> Option<EntityId> {
         ClassExpr::Atomic(id) => Some(*id),
         _ => None,
     }
+}
+
+/// `A ⊑ ⋀ᵢ ∃Rᵢ.B`, `B ⊑ ⋀ᵢ ∃Rᵢ.A` (and longer ∃-only cycles) are satisfiable in ALC.
+fn named_existential_cycle_sat(dl: &DlOntology, start: EntityId) -> bool {
+    let graph = build_existential_named_graph(dl);
+    let Some(successors) = graph.get(&start) else {
+        return false;
+    };
+    if successors.is_empty() {
+        return false;
+    }
+    existential_cycle_reaches_start(start, start, &graph, &mut HashSet::new(), 0)
+}
+
+fn build_existential_named_graph(dl: &DlOntology) -> HashMap<EntityId, Vec<EntityId>> {
+    let mut graph: HashMap<EntityId, Vec<EntityId>> = HashMap::new();
+    for clause in dl.clauses().clauses() {
+        let Clause::Subsumption { sub, sup } = clause else {
+            continue;
+        };
+        let Some(sub_entity) = atomic_entity(dl, *sub) else {
+            continue;
+        };
+        let fillers = single_existential_atomic_filler(dl, *sup)
+            .or_else(|| existential_atomic_fillers(dl, *sup));
+        let Some(fillers) = fillers else {
+            continue;
+        };
+        graph.entry(sub_entity).or_default().extend(fillers);
+    }
+    graph
+}
+
+fn single_existential_atomic_filler(dl: &DlOntology, ce: CeId) -> Option<Vec<EntityId>> {
+    let store = dl.core().dl();
+    let ClassExpr::Some { filler, .. } = store.ce(ce)? else {
+        return None;
+    };
+    let ClassExpr::Atomic(entity) = store.ce(*filler)? else {
+        return None;
+    };
+    Some(vec![*entity])
+}
+
+fn existential_atomic_fillers(dl: &DlOntology, ce: CeId) -> Option<Vec<EntityId>> {
+    let store = dl.core().dl();
+    match store.ce(ce)? {
+        ClassExpr::And(ops) if !ops.is_empty() => {
+            let mut out = Vec::new();
+            for op in ops {
+                let mut part = Vec::new();
+                if !collect_existential_atomic_fillers(store, *op, &mut part) {
+                    return None;
+                }
+                out.extend(part);
+            }
+            Some(out)
+        }
+        _ => None,
+    }
+}
+
+fn collect_existential_atomic_fillers(
+    store: &ontologos_core::DlStore,
+    ce: CeId,
+    out: &mut Vec<EntityId>,
+) -> bool {
+    match store.ce(ce) {
+        Some(ClassExpr::Some { filler, .. }) => match store.ce(*filler) {
+            Some(ClassExpr::Atomic(entity)) => {
+                out.push(*entity);
+                true
+            }
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
+fn existential_cycle_reaches_start(
+    node: EntityId,
+    start: EntityId,
+    graph: &HashMap<EntityId, Vec<EntityId>>,
+    visiting: &mut HashSet<EntityId>,
+    depth: usize,
+) -> bool {
+    if depth > 0 && node == start {
+        return true;
+    }
+    if !visiting.insert(node) {
+        return false;
+    }
+    let Some(nexts) = graph.get(&node) else {
+        visiting.remove(&node);
+        return false;
+    };
+    let found = nexts
+        .iter()
+        .any(|&next| existential_cycle_reaches_start(next, start, graph, visiting, depth + 1));
+    visiting.remove(&node);
+    found
 }
 
 fn filler_atomic_entity(dl: &DlOntology, ce: CeId) -> Option<EntityId> {

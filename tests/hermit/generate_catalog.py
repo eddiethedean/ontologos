@@ -1038,9 +1038,6 @@ EXCLUDED_IDS = {
     # Ian/ComplexConcept CE — tableau soundness gaps (tracked in ontologos-alc/tests/ian_ce_sat.rs).
     "reasoner.ComplexConceptTest.testConceptWithDatatypes",
     "reasoner.ComplexConceptTest.testConceptWithDatatypes2",
-    "reasoner.ReasonerTest.testIanRecursiveDefinitionTest1",
-    "reasoner.ReasonerTest.testIanRecursiveDefinitionTest2",
-    "reasoner.ReasonerTest.testIanRecursiveDefinitionTest3",
     "reasoner.OWLLinkTest.testDisjointClasses",
     "reasoner.OWLLinkTest.testBobTests",
     "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions",

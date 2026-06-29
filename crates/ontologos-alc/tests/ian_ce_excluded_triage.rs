@@ -144,3 +144,25 @@ fn ianfact1_unsat_regression() {
         false,
     );
 }
+
+fn class_sat(ofn: &str, local_name: &str) -> bool {
+    let base = load_ontology(&ax(ofn)).unwrap();
+    let dl = DlOntology::from_ontology(&base).unwrap();
+    let class = base
+        .lookup_entity(&format!("file:/c/test.owl#{local_name}"))
+        .expect("class entity");
+    ontologos_alc::is_named_class_satisfiable_with_seed(&dl, class, &TableauSeed::default())
+        .unwrap()
+}
+
+#[test]
+fn ian_recursive_definition_class_sat() {
+    for (ofn, n) in [
+        ("hermit_reasoner_reasonertest_testianrecursivedefinitiontest1.ofn", 1),
+        ("hermit_reasoner_reasonertest_testianrecursivedefinitiontest2.ofn", 2),
+        ("hermit_reasoner_reasonertest_testianrecursivedefinitiontest3.ofn", 3),
+    ] {
+        let sat = class_sat(ofn, "A");
+        assert!(sat, "recursive definition test {n} :A should be satisfiable");
+    }
+}

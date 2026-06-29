@@ -2218,19 +2218,16 @@ fn hermit_reasoner_reasonertest_testianqnrtest() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testianrecursivedefinitiontest1() {
     run_hermit_case("reasoner.ReasonerTest.testIanRecursiveDefinitionTest1");
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testianrecursivedefinitiontest2() {
     run_hermit_case("reasoner.ReasonerTest.testIanRecursiveDefinitionTest2");
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testianrecursivedefinitiontest3() {
     run_hermit_case("reasoner.ReasonerTest.testIanRecursiveDefinitionTest3");
 }
