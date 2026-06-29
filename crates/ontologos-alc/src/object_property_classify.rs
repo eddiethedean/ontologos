@@ -424,6 +424,37 @@ impl RoleSurrogateContext {
         out
     }
 
+    fn is_strict_super_role(
+        &self,
+        query_surrogate: EntityId,
+        candidate_surrogate: EntityId,
+        query_equiv: &HashSet<EntityId>,
+    ) -> Result<bool, Error> {
+        if query_equiv.contains(&candidate_surrogate) {
+            return Ok(false);
+        }
+        Ok(self.entails_named(query_surrogate, candidate_surrogate)?)
+    }
+
+    fn filter_strict_super_roles(
+        &self,
+        query_surrogate: EntityId,
+        query_equiv: &HashSet<EntityId>,
+        roles: HashSet<RoleExpr>,
+    ) -> Result<HashSet<RoleExpr>, Error> {
+        Ok(roles
+            .into_iter()
+            .filter(|role| {
+                let Some(candidate_surrogate) = self.role_to_surrogate.get(role) else {
+                    return true;
+                };
+                self.is_strict_super_role(query_surrogate, *candidate_surrogate, query_equiv)
+                    .map(|is_super| !is_super)
+                    .unwrap_or(true)
+            })
+            .collect())
+    }
+
     fn compute_sub_roles_for_query(
         &self,
         query_surrogate: EntityId,
@@ -456,8 +487,18 @@ impl RoleSurrogateContext {
                 .cloned()
                 .collect()
         };
-        let all = self.expand_equivalent_role_expressions(out);
-        let direct = self.expand_equivalent_role_expressions(direct_base);
+        let out = self.filter_strict_super_roles(query_surrogate, &query_equiv, out)?;
+        let direct_base = self.filter_strict_super_roles(query_surrogate, &query_equiv, direct_base)?;
+        let all = self.filter_strict_super_roles(
+            query_surrogate,
+            &query_equiv,
+            self.expand_equivalent_role_expressions(out),
+        )?;
+        let direct = self.filter_strict_super_roles(
+            query_surrogate,
+            &query_equiv,
+            self.expand_equivalent_role_expressions(direct_base),
+        )?;
         Ok(QuerySubCache { all, direct })
     }
 
@@ -666,5 +707,39 @@ mod tests {
         let inv_r_inverses =
             inverse_object_property_expressions(&ontology, &inv_r).expect("inverses of inv(r)");
         assert_eq!(inv_r_inverses, HashSet::from([inv_s, r, t]));
+    }
+
+    #[test]
+    #[ignore = "diagnostic: Bob knows subproperty counts"]
+    fn bob_knows_subproperty_diag() {
+        use crate::augment_for_role_classification;
+        use crate::tableau::named_class_entails;
+        use crate::DlOntology;
+        use crate::TableauSeed;
+
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/reasoner/res/OWLLink/agent.owl");
+        let ontology = load_ontology(&path).expect("load agent.owl");
+        const NS: &str = "http://www.iyouit.eu/agent.owl#";
+        let knows = RoleExpr::Atomic(ontology.lookup_entity(&format!("{NS}knows")).expect("knows"));
+        let all = sub_object_property_expressions(&ontology, &knows, false).expect("all");
+        let direct = sub_object_property_expressions(&ontology, &knows, true).expect("direct");
+        eprintln!("direct={} all={}", direct.len(), all.len());
+        let relation = RoleExpr::Atomic(ontology.lookup_entity(&format!("{NS}relation")).expect("relation"));
+        eprintln!("relation in all: {}", all.contains(&relation));
+
+        let (augmented, role_map) = augment_for_role_classification(&ontology).expect("augment");
+        let dl = DlOntology::from_ontology(&augmented).expect("dl");
+        let seed = TableauSeed::default();
+        let knows_s = role_map.get(&knows).copied().expect("knows s");
+        let relation_s = role_map.get(&relation).copied().expect("relation s");
+        eprintln!(
+            "knows ⊑ relation: {}",
+            named_class_entails(&dl, knows_s, relation_s, &seed).expect("entails")
+        );
+        eprintln!(
+            "relation ⊑ knows: {}",
+            named_class_entails(&dl, relation_s, knows_s, &seed).expect("entails")
+        );
     }
 }

@@ -140,7 +140,7 @@ const IYOUIT_AGENT_NS: &str = "http://www.iyouit.eu/agent.owl#";
 
 /// `OWLLinkTest.testBobTestAandB` — direct/all subproperties of `knows` in IYOUIT agent.owl.
 #[test]
-#[ignore = "diagnostic: dump knows subproperty IRIs"]
+#[ignore = "diagnostic: dump knows subproperty IRIs and entailment checks"]
 fn owllink_bob_knows_subproperties_diag() {
     use ontologos_dl::RolePropertyQueryContext;
     use ontologos_core::RoleExpr;
@@ -175,6 +175,28 @@ fn owllink_bob_knows_subproperties_diag() {
     for iri in &all_iris {
         eprintln!("  {iri}");
     }
+
+    let relation_id = ontology
+        .lookup_entity(&format!("{IYOUIT_AGENT_NS}relation"))
+        .expect("relation");
+    let relation = RoleExpr::Atomic(relation_id);
+    let registered = RoleExpr::Atomic(
+        ontology
+            .lookup_entity(&format!("{IYOUIT_AGENT_NS}registered"))
+            .expect("registered"),
+    );
+    let wants = RoleExpr::Atomic(
+        ontology
+            .lookup_entity(&format!("{IYOUIT_AGENT_NS}wants_to_know"))
+            .expect("wants_to_know"),
+    );
+    eprintln!("relation in all: {}", all.contains(&relation));
+    eprintln!(
+        "inv(relation) in all: {}",
+        all.contains(&RoleExpr::Inverse(relation_id))
+    );
+    eprintln!("registered in all: {}", all.contains(&registered));
+    eprintln!("wants_to_know in all: {}", all.contains(&wants));
 }
 
 fn role_iri(ontology: &ontologos_core::Ontology, role: &ontologos_core::RoleExpr) -> Option<String> {
