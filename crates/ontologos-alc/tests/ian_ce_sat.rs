@@ -108,3 +108,21 @@ fn iant7a_ce_matches_tbox() {
         "IanT7a OFN TBox: CE is satisfiable (catalog expected=false is stale)"
     );
 }
+
+#[test]
+fn iant3_ce_is_satisfiable() {
+    let ce = "ObjectIntersectionOf(ObjectSomeValuesFrom(:r :p1) ObjectSomeValuesFrom(:r :p2) ObjectSomeValuesFrom(:r :p3) ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 :p)) ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p2 :p)) ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p3 :p)) ObjectMaxCardinality(3 :r))";
+    assert!(
+        ce_sat("hermit_reasoner_reasonertest_testiant3.ofn", ce),
+        "IanT3 CE should be satisfiable"
+    );
+}
+
+#[test]
+fn iant8a_ce_is_satisfiable() {
+    let ce = "ObjectIntersectionOf(ObjectSomeValuesFrom(:r ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectAllValuesFrom(:r1 :p))) ObjectSomeValuesFrom(:r ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectAllValuesFrom(:r1 ObjectComplementOf(:p)))))";
+    assert!(
+        ce_sat("hermit_reasoner_reasonertest_testiant8a.ofn", ce),
+        "IanT8a CE should be satisfiable"
+    );
+}

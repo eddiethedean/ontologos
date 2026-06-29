@@ -346,12 +346,12 @@ fn role_has_subproperty_in_tbox(dl: &DlOntology, role: EntityId) -> bool {
 fn iant13_dual_exists_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
     let conjuncts = immediate_and_conjuncts(dl, ce);
     let store = dl.core().dl();
-    let mut neg = false;
-    let mut pos = false;
+    let mut atomic_neg = false;
+    let mut pos_exists = false;
     for &conj in &conjuncts {
         if let Some(ClassExpr::Atomic(class)) = store.ce(conj) {
             if atomic_iant13_neg_equiv(dl, *class) {
-                neg = true;
+                atomic_neg = true;
             }
             continue;
         }
@@ -361,15 +361,12 @@ fn iant13_dual_exists_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
             filler,
         }) = store.ce(conj)
         {
-            if iant13_neg_exists_filler(dl, *filler) {
-                neg = true;
-            }
             if iant13_pos_exists_filler(dl, *filler) {
-                pos = true;
+                pos_exists = true;
             }
         }
     }
-    if neg && pos {
+    if atomic_neg && pos_exists {
         Some(false)
     } else {
         None
@@ -410,30 +407,6 @@ fn equiv_ce_tree_has_negation(dl: &DlOntology, ce: CeId) -> bool {
     }
 }
 
-fn iant13_neg_exists_filler(dl: &DlOntology, filler: CeId) -> bool {
-    let store = dl.core().dl();
-    let filler = effective_class_expression(dl, filler);
-    let Some(ClassExpr::All {
-        property: RoleExpr::Inverse(_),
-        filler: inner,
-    }) = store.ce(filler)
-    else {
-        return false;
-    };
-    let inner = effective_class_expression(dl, *inner);
-    let Some(ClassExpr::All {
-        property: RoleExpr::Atomic(_),
-        filler: inner2,
-    }) = store.ce(inner)
-    else {
-        return false;
-    };
-    matches!(
-        store.ce(effective_class_expression(dl, *inner2)),
-        Some(ClassExpr::Not(_))
-    )
-}
-
 fn iant13_pos_exists_filler(dl: &DlOntology, filler: CeId) -> bool {
     let store = dl.core().dl();
     let filler = effective_class_expression(dl, filler);
@@ -471,6 +444,37 @@ fn functional_object_properties(dl: &DlOntology) -> HashSet<EntityId> {
         }
     }
     out
+}
+
+/// When the CE caps `role` to a single successor (functional or `≤1`/`=1` cardinality),
+/// every `∃role` conjunct must be witnessed on the same edge; otherwise they may use
+/// distinct successors.
+fn role_ce_single_successor_required(
+    dl: &DlOntology,
+    conjuncts: &[CeId],
+    role: &RoleExpr,
+) -> bool {
+    let store = dl.core().dl();
+    for &conj in conjuncts {
+        let conj = effective_class_expression(dl, conj);
+        match store.ce(conj) {
+            Some(ClassExpr::MaxCardinality {
+                n: 1,
+                property,
+                filler: None,
+            })
+            | Some(ClassExpr::ExactCardinality {
+                n: 1,
+                property,
+                filler: None,
+            }) if property == role => return true,
+            _ => {}
+        }
+    }
+    if let RoleExpr::Atomic(prop) = role {
+        return functional_object_properties(dl).contains(prop);
+    }
+    false
 }
 
 fn matches_iant7_nested_block(dl: &DlOntology, ce: CeId) -> Option<(EntityId, EntityId)> {
@@ -576,7 +580,7 @@ fn ce_and_exists_forall_witness_unsat(
     }
 
     for (role, e_fillers) in exists {
-        if e_fillers.len() >= 2 {
+        if e_fillers.len() >= 2 && role_ce_single_successor_required(dl, &conjuncts, &role) {
             if forall_fillers_pairwise_unsat(dl, &e_fillers) {
                 return Ok(Some(false));
             }
