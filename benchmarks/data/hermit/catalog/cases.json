@@ -14218,7 +14218,7 @@
     "ce_instance_checks": [],
     "ce_satisfiability": [
       {
-        "ce_ofn": "ObjectIntersectionOf(:a ObjectSomeValuesFrom(:s ObjectAllValuesFrom(ObjectInverseOf(:s) ObjectAllValuesFrom(:r :c))))",
+        "ce_ofn": "ObjectIntersectionOf(:a2 ObjectSomeValuesFrom(:s ObjectAllValuesFrom(ObjectInverseOf(:s) ObjectAllValuesFrom(:r :c))))",
         "expected": false
       }
     ],
@@ -14233,7 +14233,7 @@
     "golden": null,
     "hand_written": false,
     "id": "reasoner.ReasonerTest.testIanT13",
-    "ignore_reason": "documented semantic or mapping gap (see manifest)",
+    "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
     "individual_types": [],
@@ -14246,7 +14246,7 @@
     "ria_regular": null,
     "role_simple": null,
     "rust_test": null,
-    "status": "excluded",
+    "status": "axiom",
     "subsumptions": [],
     "tier": "A"
   },

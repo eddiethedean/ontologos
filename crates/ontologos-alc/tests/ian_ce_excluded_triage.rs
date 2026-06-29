@@ -126,9 +126,8 @@ fn iant11_unsat_regression() {
 }
 
 #[test]
-#[ignore = "tableau gap: IanT13 role chain pattern"]
-fn iant13_unsat() {
-    let ce = "ObjectIntersectionOf(:a ObjectSomeValuesFrom(:s ObjectAllValuesFrom(ObjectInverseOf(:s) ObjectAllValuesFrom(:r :c))))";
+fn iant13_unsat_regression() {
+    let ce = "ObjectIntersectionOf(:a2 ObjectSomeValuesFrom(:s ObjectAllValuesFrom(ObjectInverseOf(:s) ObjectAllValuesFrom(:r :c))))";
     check(
         "hermit_reasoner_reasonertest_testiant13.ofn",
         ce,

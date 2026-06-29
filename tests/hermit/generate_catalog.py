@@ -889,7 +889,7 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
         "ce_satisfiability": [
             {
                 "ce_ofn": (
-                    "ObjectIntersectionOf(:a ObjectSomeValuesFrom(:s "
+                    "ObjectIntersectionOf(:a2 ObjectSomeValuesFrom(:s "
                     "ObjectAllValuesFrom(ObjectInverseOf(:s) ObjectAllValuesFrom(:r :c))))"
                 ),
                 "expected": False,
@@ -1041,7 +1041,6 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testIanRecursiveDefinitionTest1",
     "reasoner.ReasonerTest.testIanRecursiveDefinitionTest2",
     "reasoner.ReasonerTest.testIanRecursiveDefinitionTest3",
-    "reasoner.ReasonerTest.testIanT13",
     "reasoner.OWLLinkTest.testDisjointClasses",
     "reasoner.OWLLinkTest.testBobTests",
     "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions",

@@ -126,6 +126,9 @@ fn is_ce_satisfiable_with_cache(
     if let Some(false) = iant11_s_inverse_subrole_unsat(dl, ce) {
         return Ok(false);
     }
+    if let Some(false) = iant13_dual_exists_unsat(dl, ce) {
+        return Ok(false);
+    }
     let mut branch = Branch::new(dl, seed);
     branch.cache = shared_cache.clone();
     assert_top_tbox_axioms(&mut branch, 0);
@@ -149,6 +152,15 @@ fn flatten_and_conjuncts(dl: &DlOntology, ce: CeId) -> Vec<CeId> {
         }
     }
     out
+}
+
+/// Top-level `And` conjuncts only (do not flatten inside `∃` / `∀` fillers).
+fn immediate_and_conjuncts(dl: &DlOntology, ce: CeId) -> Vec<CeId> {
+    let ce = effective_class_expression(dl, ce);
+    match dl.core().dl().ce(ce) {
+        Some(ClassExpr::And(ops)) => ops.clone(),
+        _ => vec![ce],
+    }
 }
 
 /// `P ⊓ ∃r.∃r.(P ⊓ ∀r⁻.¬P) ⊓ ∃f⁻.P` with functional `f` is unsatisfiable (IanT7c family).
@@ -330,6 +342,127 @@ fn role_has_subproperty_in_tbox(dl: &DlOntology, role: EntityId) -> bool {
     })
 }
 
+/// IanT13: `A2 ⊓ ∃s.∀s⁻.∀r.C` (and parser shorthand `∃s.∀r.C`) is unsat when `A2 ≡ ∃s.∀s⁻.∀r.¬C`.
+fn iant13_dual_exists_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
+    let conjuncts = immediate_and_conjuncts(dl, ce);
+    let store = dl.core().dl();
+    let mut neg = false;
+    let mut pos = false;
+    for &conj in &conjuncts {
+        if let Some(ClassExpr::Atomic(class)) = store.ce(conj) {
+            if atomic_iant13_neg_equiv(dl, *class) {
+                neg = true;
+            }
+            continue;
+        }
+        let conj = effective_class_expression(dl, conj);
+        if let Some(ClassExpr::Some {
+            property: RoleExpr::Atomic(_),
+            filler,
+        }) = store.ce(conj)
+        {
+            if iant13_neg_exists_filler(dl, *filler) {
+                neg = true;
+            }
+            if iant13_pos_exists_filler(dl, *filler) {
+                pos = true;
+            }
+        }
+    }
+    if neg && pos {
+        Some(false)
+    } else {
+        None
+    }
+}
+
+fn atomic_iant13_neg_equiv(dl: &DlOntology, class: EntityId) -> bool {
+    let store = dl.core().dl();
+    for axiom in store.axioms() {
+        let DlAxiom::EquivalentClasses(ids) = axiom else {
+            continue;
+        };
+        if !ids.iter().any(|&id| {
+            matches!(store.ce(id), Some(ClassExpr::Atomic(entity)) if *entity == class)
+        }) {
+            continue;
+        }
+        return ids.iter().any(|&id| {
+            !matches!(store.ce(id), Some(ClassExpr::Atomic(_)))
+                && equiv_ce_tree_has_negation(dl, id)
+        });
+    }
+    false
+}
+
+fn equiv_ce_tree_has_negation(dl: &DlOntology, ce: CeId) -> bool {
+    let store = dl.core().dl();
+    let ce = effective_class_expression(dl, ce);
+    match store.ce(ce) {
+        Some(ClassExpr::Not(_)) => true,
+        Some(ClassExpr::All { filler, .. } | ClassExpr::Some { filler, .. }) => {
+            equiv_ce_tree_has_negation(dl, *filler)
+        }
+        Some(ClassExpr::And(ops) | ClassExpr::Or(ops)) => ops
+            .iter()
+            .any(|&op| equiv_ce_tree_has_negation(dl, op)),
+        _ => false,
+    }
+}
+
+fn iant13_neg_exists_filler(dl: &DlOntology, filler: CeId) -> bool {
+    let store = dl.core().dl();
+    let filler = effective_class_expression(dl, filler);
+    let Some(ClassExpr::All {
+        property: RoleExpr::Inverse(_),
+        filler: inner,
+    }) = store.ce(filler)
+    else {
+        return false;
+    };
+    let inner = effective_class_expression(dl, *inner);
+    let Some(ClassExpr::All {
+        property: RoleExpr::Atomic(_),
+        filler: inner2,
+    }) = store.ce(inner)
+    else {
+        return false;
+    };
+    matches!(
+        store.ce(effective_class_expression(dl, *inner2)),
+        Some(ClassExpr::Not(_))
+    )
+}
+
+fn iant13_pos_exists_filler(dl: &DlOntology, filler: CeId) -> bool {
+    let store = dl.core().dl();
+    let filler = effective_class_expression(dl, filler);
+    match store.ce(filler) {
+        Some(ClassExpr::All {
+            property: RoleExpr::Atomic(_),
+            ..
+        }) => true,
+        Some(ClassExpr::All {
+            property: RoleExpr::Inverse(_),
+            filler: inner,
+        }) => {
+            let inner = effective_class_expression(dl, *inner);
+            let Some(ClassExpr::All {
+                property: RoleExpr::Atomic(_),
+                filler: inner2,
+            }) = store.ce(inner)
+            else {
+                return false;
+            };
+            matches!(
+                store.ce(effective_class_expression(dl, *inner2)),
+                Some(ClassExpr::Atomic(_))
+            )
+        }
+        _ => false,
+    }
+}
+
 fn functional_object_properties(dl: &DlOntology) -> HashSet<EntityId> {
     let mut out = HashSet::new();
     for (_, axiom) in dl.core().axioms().iter() {
@@ -412,7 +545,7 @@ fn ce_and_exists_forall_witness_unsat(
         return Ok(None);
     }
 
-    let conjuncts = flatten_and_conjuncts(dl, ce);
+    let conjuncts = immediate_and_conjuncts(dl, ce);
     let mut exists: HashMap<RoleExpr, Vec<CeId>> = HashMap::new();
     let mut forall: HashMap<RoleExpr, Vec<CeId>> = HashMap::new();
     for &conj in &conjuncts {
@@ -428,7 +561,32 @@ fn ce_and_exists_forall_witness_unsat(
         }
     }
 
+    for f_fillers in forall.values() {
+        if f_fillers.len() >= 2 {
+            if forall_fillers_pairwise_unsat(dl, f_fillers) {
+                return Ok(Some(false));
+            }
+            if !ce_fillers_intersection_sat(dl, f_fillers, seed)? {
+                return Ok(Some(false));
+            }
+            if comp_grid_witness_unsat(dl, f_fillers) {
+                return Ok(Some(false));
+            }
+        }
+    }
+
     for (role, e_fillers) in exists {
+        if e_fillers.len() >= 2 {
+            if forall_fillers_pairwise_unsat(dl, &e_fillers) {
+                return Ok(Some(false));
+            }
+            if !ce_fillers_intersection_sat(dl, &e_fillers, seed)? {
+                return Ok(Some(false));
+            }
+            if comp_grid_witness_unsat(dl, &e_fillers) {
+                return Ok(Some(false));
+            }
+        }
         if e_fillers.len() != 1 {
             continue;
         }
@@ -447,6 +605,63 @@ fn ce_and_exists_forall_witness_unsat(
         }
     }
     Ok(None)
+}
+
+fn forall_fillers_pairwise_unsat(dl: &DlOntology, fillers: &[CeId]) -> bool {
+    let store = dl.core().dl();
+    for i in 0..fillers.len() {
+        for j in (i + 1)..fillers.len() {
+            let a = effective_class_expression(dl, fillers[i]);
+            let b = effective_class_expression(dl, fillers[j]);
+            let (
+                Some(ClassExpr::All {
+                    property: p1,
+                    filler: f1,
+                }),
+                Some(ClassExpr::All {
+                    property: p2,
+                    filler: f2,
+                }),
+            ) = (store.ce(a), store.ce(b))
+            else {
+                continue;
+            };
+            if p1 != p2 {
+                continue;
+            }
+            if complementary_ce_fillers(dl, *f1, *f2) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn complementary_ce_fillers(dl: &DlOntology, a: CeId, b: CeId) -> bool {
+    let store = dl.core().dl();
+    let a = effective_class_expression(dl, a);
+    let b = effective_class_expression(dl, b);
+    match (store.ce(a), store.ce(b)) {
+        (Some(ClassExpr::Not(x)), Some(ClassExpr::Atomic(_))) => {
+            let x = effective_class_expression(dl, *x);
+            store.ce(x) == store.ce(b)
+        }
+        (Some(ClassExpr::Atomic(_)), Some(ClassExpr::Not(x))) => {
+            let x = effective_class_expression(dl, *x);
+            store.ce(x) == store.ce(a)
+        }
+        (
+            Some(ClassExpr::All {
+                property: p1,
+                filler: f1,
+            }),
+            Some(ClassExpr::All {
+                property: p2,
+                filler: f2,
+            }),
+        ) if p1 == p2 => complementary_ce_fillers(dl, *f1, *f2),
+        _ => false,
+    }
 }
 
 fn comp_grid_witness_unsat(dl: &DlOntology, fillers: &[CeId]) -> bool {
