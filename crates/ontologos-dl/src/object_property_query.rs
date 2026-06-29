@@ -4,8 +4,7 @@ use std::collections::HashSet;
 
 use ontologos_alc::{
     augment_for_role_classification, classify_object_property_on_augmented,
-    equivalent_object_property_on_augmented, sub_object_property_on_augmented, DlOntology,
-    TableauSeed,
+    PreparedRoleSurrogateContext, DlOntology, TableauSeed,
 };
 use ontologos_core::{Ontology, RoleExpr};
 
@@ -13,6 +12,42 @@ use crate::classify::build_tableau_seed;
 use crate::ria::RoleHierarchy;
 use crate::saturation::saturate;
 use crate::Error;
+
+/// Reusable prepared state for object-property queries (avoids repeated augmentation).
+pub struct RolePropertyQueryContext {
+    ctx: PreparedRoleSurrogateContext,
+}
+
+impl RolePropertyQueryContext {
+    /// Build augmented surrogate ontology, saturation seed, and query context once.
+    pub fn prepare(ontology: &Ontology) -> Result<Self, Error> {
+        let (dl, role_map, seed) = build_augmented_role_query(ontology)?;
+        let ctx = PreparedRoleSurrogateContext::from_augmented(dl, role_map, &seed)
+            .map_err(Error::Alc)?;
+        Ok(Self { ctx })
+    }
+
+    /// OWL API `getSubObjectProperties`.
+    pub fn sub_object_property_expressions(
+        &self,
+        property: &RoleExpr,
+        direct: bool,
+    ) -> Result<HashSet<RoleExpr>, Error> {
+        self.ctx
+            .sub_object_property_expressions(property, direct)
+            .map_err(Error::Alc)
+    }
+
+    /// OWL API `getEquivalentObjectProperties`.
+    pub fn equivalent_object_property_expressions(
+        &self,
+        property: &RoleExpr,
+    ) -> Result<HashSet<RoleExpr>, Error> {
+        self.ctx
+            .equivalent_object_property_expressions(property)
+            .map_err(Error::Alc)
+    }
+}
 
 fn build_augmented_role_query(
     ontology: &Ontology,
@@ -39,8 +74,8 @@ pub fn equivalent_object_property_expressions(
     ontology: &Ontology,
     property: &RoleExpr,
 ) -> Result<HashSet<RoleExpr>, Error> {
-    let (dl, role_map, seed) = build_augmented_role_query(ontology)?;
-    equivalent_object_property_on_augmented(dl, role_map, property, &seed).map_err(Error::Alc)
+    RolePropertyQueryContext::prepare(ontology)?
+        .equivalent_object_property_expressions(property)
 }
 
 /// OWL API `getSubObjectProperties`.
@@ -49,8 +84,8 @@ pub fn sub_object_property_expressions(
     property: &RoleExpr,
     direct: bool,
 ) -> Result<HashSet<RoleExpr>, Error> {
-    let (dl, role_map, seed) = build_augmented_role_query(ontology)?;
-    sub_object_property_on_augmented(dl, role_map, property, direct, &seed).map_err(Error::Alc)
+    RolePropertyQueryContext::prepare(ontology)?
+        .sub_object_property_expressions(property, direct)
 }
 
 /// OWL API `getInverseObjectProperties`.
@@ -58,10 +93,9 @@ pub fn inverse_object_property_expressions(
     ontology: &Ontology,
     property: &RoleExpr,
 ) -> Result<HashSet<RoleExpr>, Error> {
-    let (dl, role_map, seed) = build_augmented_role_query(ontology)?;
     let inverse = match property {
         RoleExpr::Atomic(id) => RoleExpr::Inverse(*id),
         RoleExpr::Inverse(id) => RoleExpr::Atomic(*id),
     };
-    equivalent_object_property_on_augmented(dl, role_map, &inverse, &seed).map_err(Error::Alc)
+    RolePropertyQueryContext::prepare(ontology)?.equivalent_object_property_expressions(&inverse)
 }

@@ -32,6 +32,7 @@ pub use ontologos_alc::{
 pub use object_property_query::{
     classify_object_property_expressions, equivalent_object_property_expressions,
     inverse_object_property_expressions, sub_object_property_expressions,
+    RolePropertyQueryContext,
 };
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};

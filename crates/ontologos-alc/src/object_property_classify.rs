@@ -1,5 +1,6 @@
 //! Object-property taxonomy via concept surrogates (HermiT `classifyObjectProperties`).
 
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{
@@ -7,7 +8,10 @@ use ontologos_core::{
 };
 
 use crate::dl_ontology::DlOntology;
-use crate::tableau::{infer_named_subsumptions_for, named_class_entails, TableauSeed};
+use crate::tableau::{
+    infer_named_subsumptions_for, named_class_entails, role_equivalent_in_hierarchy,
+    role_hierarchy_branch, TableauSeed,
+};
 use crate::Error;
 
 const FRESH_CLASS: &str = "urn:ontologos:internal:fresh-concept";
@@ -93,6 +97,52 @@ struct RoleSurrogateContext {
     role_to_surrogate: HashMap<RoleExpr, EntityId>,
     taxonomy: Option<Taxonomy>,
     seed: TableauSeed,
+    role_equiv_classes: Vec<HashSet<RoleExpr>>,
+    query_cache: RefCell<HashMap<EntityId, QuerySubCache>>,
+    entails_cache: RefCell<HashMap<(EntityId, EntityId), bool>>,
+}
+
+#[derive(Clone)]
+struct QuerySubCache {
+    all: HashSet<RoleExpr>,
+    direct: HashSet<RoleExpr>,
+}
+
+fn build_role_equivalence_classes(
+    roles: &[RoleExpr],
+    dl: &DlOntology,
+    seed: &TableauSeed,
+) -> Vec<HashSet<RoleExpr>> {
+    if roles.is_empty() {
+        return Vec::new();
+    }
+    let branch = role_hierarchy_branch(dl, seed);
+    let mut parent: Vec<usize> = (0..roles.len()).collect();
+    let find = |i: usize, parent: &mut [usize]| -> usize {
+        let mut i = i;
+        while parent[i] != i {
+            let p = parent[i];
+            parent[i] = parent[p];
+            i = p;
+        }
+        i
+    };
+    for i in 0..roles.len() {
+        for j in (i + 1)..roles.len() {
+            if role_equivalent_in_hierarchy(&branch, &roles[i], &roles[j]) {
+                let ri = find(i, &mut parent);
+                let rj = find(j, &mut parent);
+                if ri != rj {
+                    parent[ri] = rj;
+                }
+            }
+        }
+    }
+    let mut buckets: HashMap<usize, HashSet<RoleExpr>> = HashMap::new();
+    for (idx, role) in roles.iter().enumerate() {
+        buckets.entry(find(idx, &mut parent)).or_default().insert(role.clone());
+    }
+    buckets.into_values().filter(|c| c.len() > 1).collect()
 }
 
 fn collect_relevant_role_expressions(ontology: &Ontology) -> HashSet<RoleExpr> {
@@ -198,20 +248,29 @@ impl RoleSurrogateContext {
         } else {
             None
         };
+        let role_keys: Vec<RoleExpr> = role_to_surrogate.keys().cloned().collect();
+        let role_equiv_classes = build_role_equivalence_classes(&role_keys, &dl, seed);
         Ok(Self {
             dl,
             role_to_surrogate,
             taxonomy,
             seed: seed.clone(),
+            role_equiv_classes,
+            query_cache: RefCell::new(HashMap::new()),
+            entails_cache: RefCell::new(HashMap::new()),
         })
     }
 
-    fn query_surrogate(&self, property: &RoleExpr) -> Option<EntityId> {
-        self.role_to_surrogate.get(property).copied()
-    }
-
     fn entails_named(&self, sub: EntityId, sup: EntityId) -> Result<bool, Error> {
-        named_class_entails(&self.dl, sub, sup, &self.seed)
+        if sub == sup {
+            return Ok(true);
+        }
+        if let Some(&cached) = self.entails_cache.borrow().get(&(sub, sup)) {
+            return Ok(cached);
+        }
+        let result = named_class_entails(&self.dl, sub, sup, &self.seed)?;
+        self.entails_cache.borrow_mut().insert((sub, sup), result);
+        Ok(result)
     }
 
     fn surrogates_equivalent(&self, left: EntityId, right: EntityId) -> Result<bool, Error> {
@@ -327,13 +386,15 @@ impl RoleSurrogateContext {
         Ok(false)
     }
 
-    fn direct_sub_roles(
+    fn query_surrogate(&self, property: &RoleExpr) -> Option<EntityId> {
+        self.role_to_surrogate.get(property).copied()
+    }
+
+    fn direct_sub_roles_with_taxonomy(
         &self,
+        taxonomy: &Taxonomy,
         query_equiv: &HashSet<EntityId>,
     ) -> HashSet<RoleExpr> {
-        let Some(taxonomy) = &self.taxonomy else {
-            return HashSet::new();
-        };
         let mut out = HashSet::new();
         for &query_sup in query_equiv {
             for sub in taxonomy.direct_subclasses(query_sup) {
@@ -350,10 +411,23 @@ impl RoleSurrogateContext {
         out
     }
 
-    fn sub_roles(&self, property: &RoleExpr, direct: bool) -> Result<HashSet<RoleExpr>, Error> {
-        let Some(query_surrogate) = self.query_surrogate(property) else {
-            return Ok(HashSet::new());
-        };
+    fn expand_equivalent_role_expressions(&self, roles: HashSet<RoleExpr>) -> HashSet<RoleExpr> {
+        if roles.is_empty() {
+            return roles;
+        }
+        let mut out = roles;
+        for class in &self.role_equiv_classes {
+            if class.iter().any(|role| out.contains(role)) {
+                out.extend(class.iter().cloned());
+            }
+        }
+        out
+    }
+
+    fn compute_sub_roles_for_query(
+        &self,
+        query_surrogate: EntityId,
+    ) -> Result<QuerySubCache, Error> {
         let query_equiv = self.query_equiv_surrogates(query_surrogate)?;
         let mut sub_surrogates = HashSet::new();
         let mut out = HashSet::new();
@@ -367,23 +441,41 @@ impl RoleSurrogateContext {
             sub_surrogates.insert(*candidate_surrogate);
             out.insert(role.clone());
         }
-        if !direct {
-            return Ok(out);
+        let direct_base = if let Some(taxonomy) = &self.taxonomy {
+            self.direct_sub_roles_with_taxonomy(taxonomy, &query_equiv)
+        } else {
+            out.iter()
+                .filter(|role| {
+                    let Some(candidate_surrogate) = self.role_to_surrogate.get(*role) else {
+                        return false;
+                    };
+                    self.has_strict_intermediate(*candidate_surrogate, &query_equiv, &sub_surrogates)
+                        .map(|has| !has)
+                        .unwrap_or(false)
+                })
+                .cloned()
+                .collect()
+        };
+        let all = self.expand_equivalent_role_expressions(out);
+        let direct = self.expand_equivalent_role_expressions(direct_base);
+        Ok(QuerySubCache { all, direct })
+    }
+
+    fn sub_roles(&self, property: &RoleExpr, direct: bool) -> Result<HashSet<RoleExpr>, Error> {
+        let Some(query_surrogate) = self.query_surrogate(property) else {
+            return Ok(HashSet::new());
+        };
+        let mut cache = self.query_cache.borrow_mut();
+        if !cache.contains_key(&query_surrogate) {
+            let computed = self.compute_sub_roles_for_query(query_surrogate)?;
+            cache.insert(query_surrogate, computed);
         }
-        if self.taxonomy.is_some() {
-            return Ok(self.direct_sub_roles(&query_equiv));
-        }
-        Ok(out
-            .into_iter()
-            .filter(|role| {
-                let Some(candidate_surrogate) = self.role_to_surrogate.get(role) else {
-                    return false;
-                };
-                self.has_strict_intermediate(*candidate_surrogate, &query_equiv, &sub_surrogates)
-                    .map(|has| !has)
-                    .unwrap_or(false)
-            })
-            .collect())
+        let entry = cache.get(&query_surrogate).expect("query cache populated");
+        Ok(if direct {
+            entry.direct.clone()
+        } else {
+            entry.all.clone()
+        })
     }
 }
 
@@ -473,6 +565,38 @@ fn inverse_role(role: &RoleExpr) -> RoleExpr {
     }
 }
 
+/// Prepared surrogate context for repeated object-property queries.
+#[doc(hidden)]
+pub struct PreparedRoleSurrogateContext(RoleSurrogateContext);
+
+impl PreparedRoleSurrogateContext {
+    #[doc(hidden)]
+    pub fn from_augmented(
+        dl: DlOntology,
+        role_to_surrogate: HashMap<RoleExpr, EntityId>,
+        seed: &TableauSeed,
+    ) -> Result<Self, Error> {
+        RoleSurrogateContext::from_augmented(dl, role_to_surrogate, seed).map(Self)
+    }
+
+    #[doc(hidden)]
+    pub fn sub_object_property_expressions(
+        &self,
+        property: &RoleExpr,
+        direct: bool,
+    ) -> Result<HashSet<RoleExpr>, Error> {
+        self.0.sub_roles(property, direct)
+    }
+
+    #[doc(hidden)]
+    pub fn equivalent_object_property_expressions(
+        &self,
+        property: &RoleExpr,
+    ) -> Result<HashSet<RoleExpr>, Error> {
+        self.0.equivalent_roles(property)
+    }
+}
+
 #[doc(hidden)]
 pub fn sub_object_property_on_augmented(
     dl: DlOntology,
@@ -481,7 +605,8 @@ pub fn sub_object_property_on_augmented(
     direct: bool,
     seed: &TableauSeed,
 ) -> Result<HashSet<RoleExpr>, Error> {
-    RoleSurrogateContext::from_augmented(dl, role_to_surrogate, seed)?.sub_roles(property, direct)
+    PreparedRoleSurrogateContext::from_augmented(dl, role_to_surrogate, seed)?
+        .sub_object_property_expressions(property, direct)
 }
 
 #[doc(hidden)]
@@ -491,7 +616,8 @@ pub fn equivalent_object_property_on_augmented(
     property: &RoleExpr,
     seed: &TableauSeed,
 ) -> Result<HashSet<RoleExpr>, Error> {
-    RoleSurrogateContext::from_augmented(dl, role_to_surrogate, seed)?.equivalent_roles(property)
+    PreparedRoleSurrogateContext::from_augmented(dl, role_to_surrogate, seed)?
+        .equivalent_object_property_expressions(property)
 }
 
 #[doc(hidden)]

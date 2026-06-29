@@ -1815,6 +1815,33 @@ pub(crate) fn named_class_entails(
     entails(dl, sub, sup, seed)
 }
 
+/// Whether two role expressions are equivalent in the saturated role hierarchy.
+pub(crate) fn role_expressions_equivalent(
+    dl: &DlOntology,
+    seed: &TableauSeed,
+    left: &RoleExpr,
+    right: &RoleExpr,
+) -> bool {
+    let branch = Branch::new(dl, seed);
+    expand::role_equivalent(&branch, left, right)
+}
+
+/// Saturated role hierarchy for repeated equivalence checks.
+pub(crate) fn role_hierarchy_branch<'a>(
+    dl: &'a DlOntology,
+    seed: &TableauSeed,
+) -> Branch<'a> {
+    Branch::new(dl, seed)
+}
+
+pub(crate) fn role_equivalent_in_hierarchy(
+    branch: &Branch<'_>,
+    left: &RoleExpr,
+    right: &RoleExpr,
+) -> bool {
+    expand::role_equivalent(branch, left, right)
+}
+
 fn entails(
     dl: &DlOntology,
     sub: EntityId,

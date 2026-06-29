@@ -26,7 +26,8 @@ pub use object_property_classify::{
 #[doc(hidden)]
 pub use object_property_classify::{
     augment_for_role_classification, classify_object_property_on_augmented,
-    equivalent_object_property_on_augmented, sub_object_property_on_augmented,
+    equivalent_object_property_on_augmented, PreparedRoleSurrogateContext,
+    sub_object_property_on_augmented,
 };
 pub use tableau::cache::UnsatCache;
 pub use tableau::AlcClassifier;

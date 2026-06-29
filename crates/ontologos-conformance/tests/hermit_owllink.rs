@@ -140,8 +140,9 @@ const IYOUIT_AGENT_NS: &str = "http://www.iyouit.eu/agent.owl#";
 
 /// `OWLLinkTest.testBobTestAandB` — direct/all subproperties of `knows` in IYOUIT agent.owl.
 #[test]
-fn owllink_bob_knows_subproperties() {
-    use ontologos_dl::sub_object_property_expressions;
+#[ignore = "diagnostic: dump knows subproperty IRIs"]
+fn owllink_bob_knows_subproperties_diag() {
+    use ontologos_dl::RolePropertyQueryContext;
     use ontologos_core::RoleExpr;
 
     let path = fixture_path("OWLLink/agent.owl");
@@ -151,8 +152,65 @@ fn owllink_bob_knows_subproperties() {
             .lookup_entity(&format!("{IYOUIT_AGENT_NS}knows"))
             .expect("knows property"),
     );
-    let direct = sub_object_property_expressions(&ontology, &knows, true).expect("direct");
-    let all = sub_object_property_expressions(&ontology, &knows, false).expect("all");
+    let query = RolePropertyQueryContext::prepare(&ontology).expect("prepare");
+    let direct = query
+        .sub_object_property_expressions(&knows, true)
+        .expect("direct");
+    let all = query.sub_object_property_expressions(&knows, false).expect("all");
+    let mut direct_iris: Vec<_> = direct
+        .iter()
+        .filter_map(|r| role_iri(&ontology, r))
+        .collect();
+    direct_iris.sort();
+    let mut all_iris: Vec<_> = all
+        .iter()
+        .filter_map(|r| role_iri(&ontology, r))
+        .collect();
+    all_iris.sort();
+    eprintln!("direct ({}):", direct_iris.len());
+    for iri in &direct_iris {
+        eprintln!("  {iri}");
+    }
+    eprintln!("all ({}):", all_iris.len());
+    for iri in &all_iris {
+        eprintln!("  {iri}");
+    }
+}
+
+fn role_iri(ontology: &ontologos_core::Ontology, role: &ontologos_core::RoleExpr) -> Option<String> {
+    use ontologos_core::RoleExpr;
+    match role {
+        RoleExpr::Atomic(id) => ontology
+            .entity(*id)
+            .ok()
+            .and_then(|r| ontology.resolve_iri(r.iri).ok().map(str::to_string)),
+        RoleExpr::Inverse(id) => ontology.entity(*id).ok().and_then(|r| {
+            ontology
+                .resolve_iri(r.iri)
+                .ok()
+                .map(|iri| format!("inv({iri})"))
+        }),
+    }
+}
+
+/// `OWLLinkTest.testBobTestAandB` — direct/all subproperties of `knows` in IYOUIT agent.owl.
+#[test]
+fn owllink_bob_knows_subproperties() {
+    use ontologos_dl::RolePropertyQueryContext;
+    use ontologos_core::RoleExpr;
+
+    let path = fixture_path("OWLLink/agent.owl");
+    let ontology = load_ontology(&path).expect("load agent.owl");
+    let knows = RoleExpr::Atomic(
+        ontology
+            .lookup_entity(&format!("{IYOUIT_AGENT_NS}knows"))
+            .expect("knows property"),
+    );
+    let query = RolePropertyQueryContext::prepare(&ontology).expect("prepare");
+    let direct = query
+        .sub_object_property_expressions(&knows, true)
+        .expect("direct");
+    let all = query.sub_object_property_expressions(&knows, false).expect("all");
     assert_eq!(
         direct.len(),
         20,

@@ -1893,10 +1893,15 @@ pub(crate) fn role_equivalent(branch: &Branch<'_>, left: &RoleExpr, right: &Role
     }
     match (left, right) {
         (RoleExpr::Atomic(prop), RoleExpr::Inverse(inv))
-        | (RoleExpr::Inverse(inv), RoleExpr::Atomic(prop)) => branch
-            .role_inverses
-            .get(prop)
-            .is_some_and(|partner| *partner == *inv),
+        | (RoleExpr::Inverse(inv), RoleExpr::Atomic(prop)) => {
+            if prop == inv && is_symmetric_role(branch, &RoleExpr::Atomic(*prop)) {
+                return true;
+            }
+            branch
+                .role_inverses
+                .get(prop)
+                .is_some_and(|partner| *partner == *inv)
+        }
         _ => false,
     }
 }
