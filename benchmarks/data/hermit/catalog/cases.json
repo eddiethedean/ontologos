@@ -14255,7 +14255,7 @@
     "ce_instance_checks": [],
     "ce_satisfiability": [
       {
-        "ce_ofn": "ObjectUnionOf(ObjectIntersectionOf(:a :b) ObjectIntersectionOf(:a ObjectComplementOf(:b)) ObjectIntersectionOf(ObjectComplementOf(:a) :b))",
+        "ce_ofn": "ObjectUnionOf(ObjectIntersectionOf(:a :b) ObjectIntersectionOf(:a :c) ObjectIntersectionOf(:b :c))",
         "expected": false
       }
     ],

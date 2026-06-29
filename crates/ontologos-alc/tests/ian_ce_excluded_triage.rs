@@ -136,9 +136,8 @@ fn iant13_unsat_regression() {
 }
 
 #[test]
-#[ignore = "catalog/HermiT mismatch: union CE is SAT under extracted DisjointClasses OFN"]
-fn ianfact1_unsat() {
-    let ce = "ObjectUnionOf(ObjectIntersectionOf(:a :b) ObjectIntersectionOf(:a ObjectComplementOf(:b)) ObjectIntersectionOf(ObjectComplementOf(:a) :b))";
+fn ianfact1_unsat_regression() {
+    let ce = "ObjectUnionOf(ObjectIntersectionOf(:a :b) ObjectIntersectionOf(:a :c) ObjectIntersectionOf(:b :c))";
     check(
         "hermit_reasoner_reasonertest_testianfact1.ofn",
         ce,

@@ -1078,9 +1078,7 @@ pub(crate) fn recheck_functional_constraints(branch: &mut Branch<'_>) {
         let fp = RoleExpr::Atomic(f);
         let mut by_source: HashMap<usize, HashSet<usize>> = HashMap::new();
         for (from, prop, to) in &branch.edges {
-            // Count only edges on the declared functional role itself. Subproperty
-            // edges inherit their own functional declarations (dl-005 family).
-            if role_exprs_equal(prop, &fp) {
+            if role_exprs_equal(prop, &fp) || role_subsumes(branch, &fp, prop) {
                 by_source.entry(*from).or_default().insert(*to);
             }
         }

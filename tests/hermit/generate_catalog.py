@@ -902,8 +902,8 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
             {
                 "ce_ofn": (
                     "ObjectUnionOf(ObjectIntersectionOf(:a :b) "
-                    "ObjectIntersectionOf(:a ObjectComplementOf(:b)) "
-                    "ObjectIntersectionOf(ObjectComplementOf(:a) :b))"
+                    "ObjectIntersectionOf(:a :c) "
+                    "ObjectIntersectionOf(:b :c))"
                 ),
                 "expected": False,
             },
