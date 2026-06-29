@@ -229,9 +229,12 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
 
 /// Returns whether a class expression is satisfiable under the ontology TBox.
 ///
-/// Uses the tableau with an empty seed, matching HermiT CE probes in an otherwise
-/// empty ABox (no role assertions or equality axioms on the probe individual).
+/// When the ontology includes a contextual ABox (assertions beyond the `__probe__`
+/// individual), satisfiability matches KB consistency. Otherwise uses TBox-only tableau.
 pub fn is_class_expression_satisfiable(ontology: &Ontology, ce: CeId) -> Result<bool> {
+    if ontology_has_contextual_abox(ontology) {
+        return is_consistent(ontology);
+    }
     let dl = DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
     class_assertion_type_satisfiable(&dl, ontology.dl(), ce, &TableauSeed::default())
 }
@@ -2079,6 +2082,33 @@ fn ontology_has_class_assertion(ontology: &Ontology) -> bool {
         .dl()
         .axioms()
         .any(|ax| matches!(ax, DlAxiom::ClassAssertion { .. }))
+}
+
+fn is_probe_individual(ontology: &Ontology, individual: EntityId) -> bool {
+    entity_iri(ontology, individual).is_some_and(|iri| {
+        iri.ends_with("#__probe__") || iri.ends_with("/__probe__")
+    })
+}
+
+/// True when the ontology has ABox facts beyond the ephemeral CE probe individual.
+fn ontology_has_contextual_abox(ontology: &Ontology) -> bool {
+    if abox_has_interacting_assertions(ontology) {
+        return true;
+    }
+    if ontology.dl().axioms().any(|axiom| {
+        let DlAxiom::ClassAssertion { individual, .. } = axiom else {
+            return false;
+        };
+        !is_probe_individual(ontology, *individual)
+    }) {
+        return true;
+    }
+    ontology.axioms().iter().any(|(_, axiom)| {
+        let Axiom::ClassAssertion { individual, .. } = axiom else {
+            return false;
+        };
+        !is_probe_individual(ontology, *individual)
+    })
 }
 
 fn thing_equivalent_nothing(ontology: &Ontology) -> bool {
