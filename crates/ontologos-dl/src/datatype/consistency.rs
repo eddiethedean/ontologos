@@ -1222,7 +1222,48 @@ fn distinct_values_satisfying_ranges(
             count += 1;
         }
     }
+    if let Some(explicit) = pattern_all_ranges_witness_count(ontology, idx, ranges, forbidden) {
+        count = count.max(explicit);
+    }
     count
+}
+
+fn pattern_all_ranges_witness_count(
+    ontology: &Ontology,
+    idx: &LiteralIndex,
+    ranges: &[DeId],
+    forbidden: &[LiteralValue],
+) -> Option<u32> {
+    let store = ontology.dl();
+    let mut pattern: Option<String> = None;
+    let mut dt = None;
+    for &range in ranges {
+        let bounds = collect_facet_bounds(store, range);
+        if bounds.pattern.is_some() {
+            pattern = bounds.pattern;
+            dt = facet_base_datatype(ontology, store, range);
+            break;
+        }
+    }
+    let (pattern, dt) = (pattern?, dt?);
+    let mut seen = HashSet::new();
+    let mut count = 0_u32;
+    for lex in pattern_witness_lexicals(&pattern) {
+        let lit = LiteralValue {
+            lexical: lex,
+            datatype: dt,
+        };
+        let key = distinct_literal_key(&lit);
+        if !seen.insert(key) {
+            continue;
+        }
+        if satisfies_all_ranges(ontology, idx, &lit, ranges)
+            && !literal_forbidden_by_disjoint(&lit, forbidden)
+        {
+            count += 1;
+        }
+    }
+    Some(count)
 }
 
 fn float_and_double_all_values_clash(

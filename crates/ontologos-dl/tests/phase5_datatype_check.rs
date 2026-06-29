@@ -72,6 +72,11 @@ mod any_uri {
     fn length_1_consistent() {
         assert_consistent_ofn("anyuritest_testlength_1", true);
     }
+
+    #[test]
+    fn pattern_complement1_1_consistent() {
+        assert_consistent_ofn("anyuritest_testpatterncomplement1_1", true);
+    }
 }
 
 mod datatypes {

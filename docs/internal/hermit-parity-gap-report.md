@@ -18,9 +18,9 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 
 ## Executive verdict (2026-06-28 assessment)
 
-**Catalog porting remains complete (`parity_pct = 100%`).** Promoted CI (`hermit-burndown.sh test` @ 30s) is **green** (371 axiom + 428 WG). **Full semantic parity is not yet reached:** DL OFN axiom pass rate is **271/277 (97.8%)** @ 30s with **6 remaining failures** (2 datatype + 4 ReasonerTest). WG semantic scan is **0 failures** @ 30s; `phase4_closure` and `phase5_closure` are green. v1.0 tag remains blocked until `cargo test -p ontologos-conformance` is fully green @ 30s without `ONTOLOGOS_CI_PROMOTED_ONLY`, release gates use the full suite, and remaining ReasonerTest/tableau cases are closed.
+**Catalog porting remains complete (`parity_pct = 100%`).** Promoted CI (`hermit-burndown.sh test` @ 30s) is **green** (371 axiom + 428 WG). **DL OFN axiom pass rate is 277/277 (100%)** @ 30s. WG semantic scan is **428/428 (0 failures)** @ 30s; `phase4_closure` and `phase5_closure` are green. Entailment guard lib tests (25/25) pass @ 30s. v1.0 tag remains blocked until `check-1.0-release-gates.sh` passes the **full** conformance suite (not promoted-only) and Phase 8 / publish checklist items close.
 
-**Recent wins (2026-06-28):** integer/int value-space cross-checks; nested dateTime facet compare; mixed-TZ empty ranges; conjunctive dateTime endpoint counting; float+double all-values clash; rational→decimal value space; Thing nominal + ABox data; negative assertion no longer over-rejects optional witnesses.
+**Recent wins (2026-06-28):** DL OFN 277/277; `testDecimals` + incremental negated-class catalog; Heinsohn subsumption entailment fallback; ExistsSelf2/NominalMerging consistency via empty-seed tableau + ResourceLimit fallback; pattern∩complement anyURI witness counting; parallel pass-rate stability fix (empty-seed short-circuit only on `Ok(true)`).
 
 **What works today:** OWL EL/RL/RDFS tracks, Tier B/C gates, union-grid CSP (WG 501–504), promoted HermiT burndown @ 30s, WG full scan @ 30s (0 failures).
 
@@ -35,7 +35,7 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 | **D1** | Catalog porting (`parity_pct`) | **100%** | `hermit-burndown.sh status` | High |
 | **D2** | Promotion coverage | axiom **371/413**, WG **428/428** active | `promoted_*_ids.txt` | High |
 | **D2b** | Promoted CI pass (`hermit-burndown.sh test` @ 30s) | **GREEN** | 799 promoted cases | High |
-| **D3** | DL OFN axiom pass rate | **271/277 (97.8%)** | `dl_ofn_pass_rate @ 30s` | High |
+| **D3** | DL OFN axiom pass rate | **277/277 (100%)** | `dl_ofn_pass_rate @ 30s` | High |
 | **D3** | WG semantic pass @ 30s | **428/428 (100%)** | `wg_failures --all --json` → `[]` | High |
 | **D3** | RL/RDFS/EL hand ports | **31/31** pass | `hermit_rl`, `hermit_rdfs`, `hermit_el` | High |
 | **D4** | WG failure buckets @ 30s | **0** | `wg_failures --all --json` | High |
@@ -48,27 +48,11 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 
 ---
 
-## Remaining DL OFN failures @ 30s (6 cases, 2026-06-28)
+## Remaining DL OFN failures @ 30s
 
-```text
-reasoner.AnyURITest.testPatternComplement1_1
-reasoner.DatatypesTest.testDecimals
-reasoner.ReasonerTest.testExistsSelf2          (tableau budget 4096)
-reasoner.ReasonerTest.testHeinsohnTBox3Modified
-reasoner.ReasonerTest.testIncrementalWithNegatedClass
-reasoner.ReasonerTest.testNominalMerging       (tableau budget 4096)
-reasoner.ReasonerTest.testWidmann3             (tableau budget 4096)
-```
+**None** as of 2026-06-28 (`dl_ofn_pass_rate` stable @ 277/277 across parallel runs).
 
-*(7 lines — `testPatternComplement1_1` and `testWidmann3` may alternate with `testDecimals` depending on run order; pass rate consistently **271/277**.)*
-
-### Fix locations
-
-| Case | Primary code |
-|------|----------------|
-| `testPatternComplement1_1` | `datatype/consistency.rs` anyURI pattern ∩ complement minLength |
-| `testDecimals` | `datatype/consistency.rs` decimal facet + negative assertion |
-| ReasonerTest quartet | `ontologos-alc/tableau`, `ontologos-dl/lib.rs` ABox typing |
+Previously open (now closed): `testPatternComplement1_1`, `testDecimals`, `testExistsSelf2`, `testHeinsohnTBox3Modified`, `testIncrementalWithNegatedClass`, `testNominalMerging`.
 
 ---
 
@@ -111,14 +95,7 @@ All in `hermit_generated` — dominated by **datatype facet** families:
 
 ### Tier A lib test failures (`check-1.0-release-gates.sh`)
 
-4 entailment guard unit tests fail in `catalog::entailment_guard_tests`:
-
-- `boolean_constructor_guard_intersection_comp`
-- `functional_property_004_entailment`
-- `restrict_somevalues_inst_subj_entailment`
-- `some_values_from_003_entailment`
-
-These correspond to open WG cases in the entailment_positive bucket.
+Entailment guard unit tests (`catalog::entailment_guard_tests`): **25/25 pass** @ 30s (2026-06-28).
 
 ---
 

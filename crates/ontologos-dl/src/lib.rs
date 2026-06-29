@@ -196,12 +196,13 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     }
     if !abox_has_interacting_assertions(ontology) && ontology_has_class_assertion(ontology) {
         match ontologos_alc::tableau_is_consistent(ontology).map_err(Error::Alc) {
-            Ok(consistent) => {
+            Ok(true) => {
                 if trace {
-                    eprintln!("is_consistent: class_assertion_kb empty_seed => {consistent}");
+                    eprintln!("is_consistent: class_assertion_kb empty_seed => true");
                 }
-                return Ok(consistent);
+                return Ok(true);
             }
+            Ok(false) => {}
             Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {}
             Err(e) => return Err(e),
         }
