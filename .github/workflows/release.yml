@@ -54,20 +54,19 @@ jobs:
       - name: EL Pizza golden conformance
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
 
-      - name: HermiT conformance (Tier A)
+      - name: HermiT conformance (Tier A — full catalog @ 30s)
         env:
-          ONTOLOGOS_CI_PROMOTED_ONLY: "1"
           ONTOLOGOS_DL_BUDGET_SECS: "30"
         run: cargo test -p ontologos-conformance --release --locked
 
-      - name: Conformance coverage and 1.0 gates (informational)
+      - name: Conformance coverage and 1.0 gates
         run: |
           chmod +x benchmarks/scripts/report-conformance-coverage.sh
           chmod +x benchmarks/scripts/check-1.0-release-gates.sh
           chmod +x benchmarks/scripts/check-hermit-parity-phases.sh
           ./benchmarks/scripts/report-conformance-coverage.sh
-          ./benchmarks/scripts/check-1.0-release-gates.sh || true
-          ./benchmarks/scripts/check-hermit-parity-phases.sh || true
+          ./benchmarks/scripts/check-1.0-release-gates.sh
+          ./benchmarks/scripts/check-hermit-parity-phases.sh
 
       - name: Reasonable RL adapter conformance
         run: ./benchmarks/scripts/compare-reasonable.sh

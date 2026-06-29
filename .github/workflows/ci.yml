@@ -11,8 +11,7 @@ env:
   CARGO_INCREMENTAL: "0"
   # Cap per-operation DL wall time in conformance (entailment may run classify twice).
   ONTOLOGOS_DL_BUDGET_SECS: "30"
-  # Blocking CI runs promoted passing cases; unpromoted axiom gaps remain (17 @ 2026-06-28).
-  ONTOLOGOS_CI_PROMOTED_ONLY: "1"
+  # Phase 9: blocking CI runs the full in-scope HermiT + OWL WG catalog @ 30s.
 
 jobs:
   check:
@@ -41,13 +40,15 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/compare-classification-fixtures.sh
           ./benchmarks/scripts/compare-classification-fixtures.sh
-      - name: HermiT conformance (Tier A — Java catalog)
+      - name: HermiT conformance (Tier A — full catalog @ 30s)
         run: >-
           cargo test -p ontologos-conformance --release --locked
           --test hermit_generated
           --test hermit_rdfs
           --test hermit_rl
+          --test hermit_el
           --test hermit_parser
+          --test hermit_wg_generated
           --test dl_subsumption_cases
           --test explain_benchmarks
           --
@@ -62,7 +63,7 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/report-dl-ofn-pass-rate.sh
           ./benchmarks/scripts/report-dl-ofn-pass-rate.sh || true
-      - name: 1.0 release gates (informational)
+      - name: 1.0 release gates
         run: |
           chmod +x benchmarks/scripts/check-1.0-release-gates.sh
           ./benchmarks/scripts/check-1.0-release-gates.sh
@@ -136,7 +137,6 @@ jobs:
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
       - name: HermiT conformance Tier A (MSRV — OWL WG catalog)
         env:
-          ONTOLOGOS_CI_PROMOTED_ONLY: "1"
           ONTOLOGOS_DL_BUDGET_SECS: "30"
         run: >-
           cargo test -p ontologos-conformance --release --locked

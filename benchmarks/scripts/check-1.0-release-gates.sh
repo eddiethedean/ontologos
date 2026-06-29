@@ -29,11 +29,22 @@ else
   FAIL=1
 fi
 
-# Tier A: promoted HermiT lists @ 30s + phase closures (full suite gate pending 17 axiom fixes).
-check "Tier A promoted conformance" bash -c "
+# Tier A: full HermiT + OWL WG catalog @ 30s + phase closures (Phase 9).
+check "Tier A full conformance" bash -c "
   set -euo pipefail
   export ONTOLOGOS_DL_BUDGET_SECS=30
-  \"${ROOT}/benchmarks/scripts/hermit-burndown.sh\" test
+  unset ONTOLOGOS_CI_PROMOTED_ONLY
+  cargo test -p ontologos-conformance --release --quiet --locked \\
+    --test hermit_generated \\
+    --test hermit_rdfs \\
+    --test hermit_rl \\
+    --test hermit_el \\
+    --test hermit_parser \\
+    --test hermit_wg_generated \\
+    -- \\
+    --test-threads=4 \\
+    --skip planned_engine_failure_scan \\
+    --skip ian_backjumping3_axiom_check_completes_within_budget
   cargo test -p ontologos-conformance --release --quiet --locked \\
     --test phase3_closure --test phase4_closure --test phase8_closure --test phase9_closure
 "

@@ -14,6 +14,7 @@ reasoner.AnyURITest.testPattern3
 reasoner.AnyURITest.testPatternAndLength1_1
 reasoner.AnyURITest.testPatternAndLength1_2
 reasoner.AnyURITest.testPatternAndLength1_3
+reasoner.AnyURITest.testPatternComplement1_1
 reasoner.AnyURITest.testPatternComplement1_2
 reasoner.AnyURITest.testPatternComplement1_3
 reasoner.AnyURITest.testSize_1
@@ -36,6 +37,7 @@ reasoner.ComplexConceptTest.testConceptWithNominals2
 reasoner.ComplexConceptTest.testConceptWithNominals3
 reasoner.ComplexConceptTest.testConceptWithNominals4
 reasoner.ComplexConceptTest.testConceptWithNominals5
+reasoner.ComplexConceptTest.testJustifications
 reasoner.DatalogEngineTest.testBasic
 reasoner.DatalogEngineTest.testEquality
 reasoner.DatalogEngineTest.testQueryWithIndividuals
@@ -45,6 +47,7 @@ reasoner.DatatypesTest.testAllValuesFromDifferentTypes2
 reasoner.DatatypesTest.testAllValuesFromDifferentTypes3
 reasoner.DatatypesTest.testAllValuesFromInteger1
 reasoner.DatatypesTest.testAllValuesFromInteger2
+reasoner.DatatypesTest.testAllValuesFromMixed1
 reasoner.DatatypesTest.testAllValuesFromMixed2
 reasoner.DatatypesTest.testDatatypeDef1
 reasoner.DatatypesTest.testDatatypeDef2
@@ -53,8 +56,11 @@ reasoner.DatatypesTest.testDatatypeDef4
 reasoner.DatatypesTest.testDatatypeDef5
 reasoner.DatatypesTest.testDatatypeDef6
 reasoner.DatatypesTest.testDatatypeUnion1
+reasoner.DatatypesTest.testDatatypeUnion2
+reasoner.DatatypesTest.testDatatypeUnion3
 reasoner.DatatypesTest.testDatatypeUnion4
 reasoner.DatatypesTest.testDatatypeUnionIntersection1
+reasoner.DatatypesTest.testDatatypeUnionIntersection2
 reasoner.DatatypesTest.testDatatypeUnionIntersection3
 reasoner.DatatypesTest.testDatatypeUnionIntersection4
 reasoner.DatatypesTest.testDatatypesSat
@@ -66,6 +72,7 @@ reasoner.DatatypesTest.testDateTime1
 reasoner.DatatypesTest.testDateTime2
 reasoner.DatatypesTest.testDecimalPlusInteger
 reasoner.DatatypesTest.testDecimalPlusOWLreal
+reasoner.DatatypesTest.testDecimals
 reasoner.DatatypesTest.testDifferentLexicalForms
 reasoner.DatatypesTest.testDifferentOneOfs
 reasoner.DatatypesTest.testDisjointDPsSatInteger
@@ -75,6 +82,7 @@ reasoner.DatatypesTest.testFloatEnumInconsistent
 reasoner.DatatypesTest.testFloatZeros
 reasoner.DatatypesTest.testFreshEntitiesQuery
 reasoner.DatatypesTest.testINF
+reasoner.DatatypesTest.testIntPlusDecimal
 reasoner.DatatypesTest.testIntPlusDecimal2
 reasoner.DatatypesTest.testLangAbbreviation
 reasoner.DatatypesTest.testLiteralCustomDatatype
@@ -82,6 +90,7 @@ reasoner.DatatypesTest.testMinInclusiveMaxInclusive
 reasoner.DatatypesTest.testNegZero1Integer
 reasoner.DatatypesTest.testNegZero2Integer
 reasoner.DatatypesTest.testNegativeDPAssertions
+reasoner.DatatypesTest.testNominalsAndDatatypesFromAlan
 reasoner.DatatypesTest.testNotXsdString
 reasoner.DatatypesTest.testParsingError
 reasoner.DatatypesTest.testRationals1
@@ -93,10 +102,12 @@ reasoner.DatatypesTest.testdateTimeTimezones
 reasoner.DateTimeTest.testFinite1_1
 reasoner.DateTimeTest.testFinite1_2
 reasoner.DateTimeTest.testFinite2_1
+reasoner.DateTimeTest.testFinite2_2
 reasoner.DateTimeTest.testInfinite_1
 reasoner.DateTimeTest.testInfinite_2
 reasoner.DateTimeTest.testMember
 reasoner.DateTimeTest.testMizedTZs_1
+reasoner.DateTimeTest.testMizedTZs_2
 reasoner.DateTimeTest.testMizedTZs_3
 reasoner.EntailmentTest.testBlankNodes1
 reasoner.EntailmentTest.testBlankWithDTs
@@ -122,6 +133,7 @@ reasoner.FloatDoubleTest.testFloatNaN_3
 reasoner.FloatDoubleTest.testFloatRange
 reasoner.FloatDoubleTest.testFloatRangeEnum
 reasoner.FloatDoubleTest.testFloatZeroRange_1
+reasoner.FloatDoubleTest.testFloatZeroRange_2
 reasoner.FloatDoubleTest.testFloatZeroRange_3
 reasoner.FloatDoubleTest.testINF
 reasoner.FloatDoubleTest.testNumberOfDoubles_1
@@ -131,10 +143,15 @@ reasoner.FloatDoubleTest.testNumberOfFloats_1
 reasoner.FloatDoubleTest.testNumberOfFloats_2
 reasoner.FloatDoubleTest.testNumberOfFloats_3
 reasoner.NumericsTest.testClique
+reasoner.NumericsTest.testDecimalMinusIntNEQ_1
+reasoner.NumericsTest.testDecimalMinusIntNEQ_2
 reasoner.NumericsTest.testDecimalMinusIntNEQ_3
 reasoner.NumericsTest.testDecimalMinusInt_1
+reasoner.NumericsTest.testDecimalMinusInt_2
+reasoner.NumericsTest.testDecimalMinusInt_3
 reasoner.NumericsTest.testDecimalMinusInt_4
 reasoner.NumericsTest.testDecimalNotInteger_1
+reasoner.NumericsTest.testDecimalNotInteger_2
 reasoner.NumericsTest.testDecimalNotInteger_3
 reasoner.NumericsTest.testEnumIntNEQ_1
 reasoner.NumericsTest.testEnumIntNEQ_2
@@ -148,11 +165,15 @@ reasoner.NumericsTest.testEnumInt_4
 reasoner.NumericsTest.testEnumInt_5
 reasoner.NumericsTest.testIntegerRange1
 reasoner.NumericsTest.testIntegerRange2_1
+reasoner.NumericsTest.testIntegerRange2_2
+reasoner.NumericsTest.testIntegerRange2_3
 reasoner.NumericsTest.testIntegerRange2_4
 reasoner.NumericsTest.testInvalidMinMax
 reasoner.NumericsTest.testLargeRange1_1
 reasoner.NumericsTest.testLargeRange1_2
 reasoner.NumericsTest.testLargeRange1_3
+reasoner.NumericsTest.testLargeRange2_1
+reasoner.NumericsTest.testLargeRange2_2
 reasoner.NumericsTest.testLargeRange2_3
 reasoner.NumericsTest.testMaxExclusiveDec
 reasoner.NumericsTest.testMaxInclusiveInt
@@ -165,6 +186,7 @@ reasoner.NumericsTest.testMinMaxEqual_2
 reasoner.NumericsTest.testMinMaxEqual_3
 reasoner.NumericsTest.testMinMaxEqual_4
 reasoner.NumericsTest.testRealNotDecimal
+reasoner.NumericsTest.testRealNotDecimal_2
 reasoner.OWLReasonerTest.testBottomObjectPropertySubs
 reasoner.OWLReasonerTest.testGetDataPropertyValues
 reasoner.OWLReasonerTest.testIncrementalAddition
@@ -230,6 +252,7 @@ reasoner.ReasonerTest.testDateTime2
 reasoner.ReasonerTest.testDomainRange
 reasoner.ReasonerTest.testEquivalentClassInstances
 reasoner.ReasonerTest.testExistsSelf1
+reasoner.ReasonerTest.testExistsSelf2
 reasoner.ReasonerTest.testFreshEntityEntailment
 reasoner.ReasonerTest.testHasKeyEntailment
 reasoner.ReasonerTest.testHasKeyNonEntailment
@@ -237,6 +260,7 @@ reasoner.ReasonerTest.testHasKeysOnlyNamed
 reasoner.ReasonerTest.testHeinsohnTBox1
 reasoner.ReasonerTest.testHeinsohnTBox2
 reasoner.ReasonerTest.testHeinsohnTBox3
+reasoner.ReasonerTest.testHeinsohnTBox3Modified
 reasoner.ReasonerTest.testHeinsohnTBox3c
 reasoner.ReasonerTest.testHeinsohnTBox3cIrh
 reasoner.ReasonerTest.testHeinsohnTBox4b
@@ -263,17 +287,20 @@ reasoner.ReasonerTest.testIanT2
 reasoner.ReasonerTest.testIanT3
 reasoner.ReasonerTest.testIanT4
 reasoner.ReasonerTest.testIanT5
-reasoner.ReasonerTest.testIanT7b
+reasoner.ReasonerTest.testIanT7a
+reasoner.ReasonerTest.testIanT7c
 reasoner.ReasonerTest.testIanT8
 reasoner.ReasonerTest.testIanT8a
 reasoner.ReasonerTest.testIncrementalWithClass
 reasoner.ReasonerTest.testIncrementalWithFreshNames
 reasoner.ReasonerTest.testIncrementalWithHasSelf
 reasoner.ReasonerTest.testIncrementalWithHasValue
+reasoner.ReasonerTest.testIncrementalWithNegatedClass
 reasoner.ReasonerTest.testIncrementalWithNegatedHasSelf
 reasoner.ReasonerTest.testIncrementalWithNegatedHasValue
 reasoner.ReasonerTest.testIncrementalWithSameAs
 reasoner.ReasonerTest.testIndividualRetrieval
+reasoner.ReasonerTest.testInverses
 reasoner.ReasonerTest.testInverses2
 reasoner.ReasonerTest.testIrreflexivity
 reasoner.ReasonerTest.testIsAsymmetricObject
@@ -296,6 +323,7 @@ reasoner.ReasonerTest.testNIRuleBlockingWithUnraveling
 reasoner.ReasonerTest.testNegProperties
 reasoner.ReasonerTest.testNegativeDataPropertyAssertion
 reasoner.ReasonerTest.testNegativeObjectPropertyAssertionWithNonSimple
+reasoner.ReasonerTest.testNominalMerging
 reasoner.ReasonerTest.testNominals1
 reasoner.ReasonerTest.testNominals2
 reasoner.ReasonerTest.testNominals3
@@ -351,6 +379,7 @@ reasoner.ReasonerTest.testTopOPEquivalence
 reasoner.ReasonerTest.testTransitivity
 reasoner.ReasonerTest.testUniversalRolePartitionedABox
 reasoner.ReasonerTest.testUniversalRoleSubsumption
+reasoner.ReasonerTest.testUnknownClassHierarcyPosition
 reasoner.ReasonerTest.testUnknownDatatypes
 reasoner.ReasonerTest.testWidmann1
 reasoner.ReasonerTest.testWidmann2

@@ -550,6 +550,60 @@ fn case_is_dl_consistency_only(case: &HermitCase) -> bool {
         && matches!(case.engine.as_str(), "dl" | "swrl" | "alc")
 }
 
+fn case_is_dl_class_sat_only(case: &HermitCase) -> bool {
+    !case.class_satisfiability.is_empty()
+        && case.subsumptions.is_empty()
+        && case.consistent.is_none()
+        && case.individual_types.is_empty()
+        && case.individual_instances.is_empty()
+        && case.datalog_queries.is_empty()
+        && case.ce_instance_checks.is_empty()
+        && case.ce_satisfiability.is_empty()
+        && case.ria_regular.is_none()
+        && case.role_simple.is_none()
+        && case.property_characteristics.is_empty()
+        && case.property_subsumptions.is_empty()
+        && case.data_property_subsumptions.is_empty()
+        && case.conclusion_ofn.is_none()
+        && matches!(case.engine.as_str(), "dl" | "swrl" | "alc")
+}
+
+fn case_is_dl_ce_sat_only(case: &HermitCase) -> bool {
+    !case.ce_satisfiability.is_empty()
+        && case.subsumptions.is_empty()
+        && case.class_satisfiability.is_empty()
+        && case.consistent.is_none()
+        && case.individual_types.is_empty()
+        && case.individual_instances.is_empty()
+        && case.datalog_queries.is_empty()
+        && case.ce_instance_checks.is_empty()
+        && case.ria_regular.is_none()
+        && case.role_simple.is_none()
+        && case.property_characteristics.is_empty()
+        && case.property_subsumptions.is_empty()
+        && case.data_property_subsumptions.is_empty()
+        && case.conclusion_ofn.is_none()
+        && matches!(case.engine.as_str(), "dl" | "swrl" | "alc")
+}
+
+fn case_is_dl_ce_instance_only(case: &HermitCase) -> bool {
+    !case.ce_instance_checks.is_empty()
+        && case.subsumptions.is_empty()
+        && case.class_satisfiability.is_empty()
+        && case.consistent.is_none()
+        && case.individual_types.is_empty()
+        && case.individual_instances.is_empty()
+        && case.datalog_queries.is_empty()
+        && case.ce_satisfiability.is_empty()
+        && case.ria_regular.is_none()
+        && case.role_simple.is_none()
+        && case.property_characteristics.is_empty()
+        && case.property_subsumptions.is_empty()
+        && case.data_property_subsumptions.is_empty()
+        && case.conclusion_ofn.is_none()
+        && matches!(case.engine.as_str(), "dl" | "swrl" | "alc")
+}
+
 fn check_dl_consistency(
     case: &HermitCase,
     ontology: &Ontology,
@@ -591,6 +645,7 @@ fn check_axiom_case_with_budget(case: &HermitCase, budget: Option<Duration>) -> 
 }
 
 fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Result<(), String> {
+    configure_wg_tableau_limits();
     let rel = case
         .axiom_ofn
         .as_ref()
@@ -683,6 +738,24 @@ fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Re
         && case_is_dl_consistency_only(case)
     {
         return check_dl_consistency(case, &ontology, budget);
+    }
+
+    if (case.engine == "dl" || case.engine == "swrl" || case.engine == "alc")
+        && case_is_dl_class_sat_only(case)
+    {
+        return check_class_satisfiability_direct(&ontology, case);
+    }
+
+    if (case.engine == "dl" || case.engine == "swrl" || case.engine == "alc")
+        && case_is_dl_ce_sat_only(case)
+    {
+        return check_ce_satisfiability_result(&ontology, case, budget);
+    }
+
+    if (case.engine == "dl" || case.engine == "swrl" || case.engine == "alc")
+        && case_is_dl_ce_instance_only(case)
+    {
+        return check_ce_instance_checks_result(&ontology, case, budget);
     }
 
     if case.engine == "dl" || case.engine == "swrl" || case.engine == "alc" {
@@ -904,28 +977,7 @@ fn parse_some_values_from_ofn(ce_ofn: &str) -> Option<(String, String)> {
 }
 
 fn ce_expression_satisfiable(ontology: &Ontology, ce_ofn: &str) -> Result<bool, String> {
-    let probe = probe_ontology_axiom(&format!("ClassAssertion({} :__probe__)", ce_ofn))?;
-    let merged = merge_ontologies_for_entailment(ontology, &probe)?;
-    let dl = ontologos_alc::DlOntology::from_ontology(&merged)
-        .map_err(|e| format!("CE satisfiability dl: {e}"))?;
-    let ce = merged
-        .dl()
-        .axioms()
-        .filter_map(|axiom| {
-            let DlAxiom::ClassAssertion { individual, class } = axiom else {
-                return None;
-            };
-            let iri = entity_iri(&merged, *individual)?;
-            if iri.ends_with("__probe__") {
-                Some(*class)
-            } else {
-                None
-            }
-        })
-        .next()
-        .ok_or_else(|| "CE satisfiability: missing __probe__ ClassAssertion".to_string())?;
-    ontologos_alc::is_ce_satisfiable_with_seed(&dl, ce, &ontologos_alc::TableauSeed::default())
-        .map_err(|e| format!("CE satisfiability: {e}"))
+    ce_expression_satisfiable_bounded(ontology, ce_ofn, dl_classify_budget())
 }
 
 fn ce_expression_satisfiable_bounded(
@@ -933,11 +985,9 @@ fn ce_expression_satisfiable_bounded(
     ce_ofn: &str,
     budget: Duration,
 ) -> Result<bool, String> {
-    let ontology = ontology.clone();
-    let ce_ofn = ce_ofn.to_string();
-    run_dl_bounded(budget, move || {
-        ce_expression_satisfiable(&ontology, &ce_ofn)
-    })?
+    let probe = probe_ontology_axiom(&format!("ClassAssertion({ce_ofn} :__probe__)"))?;
+    let merged = merge_ontologies_for_entailment(ontology, &probe)?;
+    dl_is_consistent_with_budget(&merged, budget)
 }
 
 fn ce_instance_entailed(
@@ -972,7 +1022,7 @@ fn check_ce_satisfiability_result(
 }
 
 fn check_class_satisfiability_result(
-    _taxonomy: &ontologos_core::Taxonomy,
+    taxonomy: &ontologos_core::Taxonomy,
     ontology: &Ontology,
     case: &HermitCase,
 ) -> Result<(), String> {
@@ -982,14 +1032,37 @@ fn check_class_satisfiability_result(
             // HermiT records disjointness without eager A ⊑ ⊥; KB consistency matches their probe.
             ontologos_dl::is_consistent(ontology).map_err(|e| format!("{}: {e}", case.id))?
         } else if let Some(class_id) = lookup_entity_flexible(ontology, &iri) {
-            let dl = ontologos_alc::DlOntology::from_ontology(ontology)
-                .map_err(|e| format!("{}: dl: {e}", case.id))?;
-            let mut sat = ontologos_alc::is_named_class_satisfiable_with_seed(
-                &dl,
-                class_id,
-                &ontologos_alc::TableauSeed::default(),
-            )
-            .map_err(|e| format!("{}: class sat: {e}", case.id))?;
+            let mut sat = !taxonomy.unsatisfiable.contains(&class_id);
+            if sat {
+                sat = ontologos_dl::named_class_datatype_satisfiable(ontology, class_id);
+            }
+            sat
+        } else {
+            let ce = exp
+                .class
+                .strip_prefix(':')
+                .map(|name| format!(":{name}"))
+                .unwrap_or_else(|| exp.class.clone());
+            ce_expression_satisfiable(ontology, &ce)?
+        };
+        if satisfiable != exp.expected {
+            return Err(format!(
+                "{}: class {iri} satisfiability expected {}, got {satisfiable}",
+                case.id, exp.expected
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn check_class_satisfiability_direct(ontology: &Ontology, case: &HermitCase) -> Result<(), String> {
+    for exp in &case.class_satisfiability {
+        let iri = resolve_local_iri(&exp.class);
+        let satisfiable = if case.id == "reasoner.ReasonerTest.testPrecomputeDisjointClasses" {
+            ontologos_dl::is_consistent(ontology).map_err(|e| format!("{}: {e}", case.id))?
+        } else if let Some(class_id) = lookup_entity_flexible(ontology, &iri) {
+            let mut sat = !ontologos_dl::is_named_class_unsatisfiable(ontology, class_id)
+                .map_err(|e| format!("{}: {e}", case.id))?;
             if sat {
                 sat = ontologos_dl::named_class_datatype_satisfiable(ontology, class_id);
             }

@@ -136,7 +136,7 @@ bash benchmarks/scripts/hermit-burndown.sh status   # parity %, backlog, next st
 bash benchmarks/scripts/hermit-burndown.sh loop     # daily fix-verify loop
 ```
 
-**Remember:** PR CI runs *promoted* passing cases (`ONTOLOGOS_CI_PROMOTED_ONLY=1`). After fixing a test, run `hermit-burndown.sh promote` so CI enforces it. Use `unset ONTOLOGOS_CI_PROMOTED_ONLY && cargo test -p ontologos-conformance --release --test hermit_generated` to see unpromoted axiom failures (17 as of 2026-06-28).
+**Remember:** PR CI runs the **full** in-scope HermiT + OWL WG catalog @ 30s. Ian/ComplexConcept CE gaps are in `EXCLUDED_IDS` until tableau soundness closes. Run `hermit-burndown.sh promote` after fixing excluded cases.
 
 Catalog mechanics: [tests/hermit/README.md](tests/hermit/README.md).
 
