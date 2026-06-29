@@ -1859,7 +1859,7 @@ pub(crate) fn role_subsumes(
     }
 }
 
-fn role_exprs_equal(left: &RoleExpr, right: &RoleExpr) -> bool {
+pub(crate) fn role_exprs_equal(left: &RoleExpr, right: &RoleExpr) -> bool {
     left == right
 }
 
@@ -1877,7 +1877,7 @@ fn is_top_object_property(branch: &Branch<'_>, property: &RoleExpr) -> bool {
         .is_some_and(|iri| iri == TOP)
 }
 
-fn role_equivalent(branch: &Branch<'_>, left: &RoleExpr, right: &RoleExpr) -> bool {
+pub(crate) fn role_equivalent(branch: &Branch<'_>, left: &RoleExpr, right: &RoleExpr) -> bool {
     if left == right {
         return true;
     }

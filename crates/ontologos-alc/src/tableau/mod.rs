@@ -87,6 +87,121 @@ pub fn is_consistent_with_seed(ontology: &Ontology, seed: &TableauSeed) -> Resul
     kb_consistent(&dl, seed)
 }
 
+/// Whether `sub_role ⊑ super_role` in the role hierarchy (atomic and inverse expressions).
+pub fn role_expression_subsumes(
+    ontology: &Ontology,
+    super_role: &RoleExpr,
+    sub_role: &RoleExpr,
+) -> Result<bool, Error> {
+    let dl = DlOntology::from_ontology(ontology)?;
+    let branch = Branch::new(&dl, &TableauSeed::default());
+    Ok(expand::role_subsumes(&branch, super_role, sub_role))
+}
+
+/// OWL API `getEquivalentObjectProperties`: expressions in the same role-hierarchy node.
+pub fn equivalent_object_property_expressions(
+    ontology: &Ontology,
+    property: &RoleExpr,
+) -> Result<HashSet<RoleExpr>, Error> {
+    let dl = DlOntology::from_ontology(ontology)?;
+    let branch = Branch::new(&dl, &TableauSeed::default());
+    let role_chains = query_role_chains(&branch);
+    let mut out = HashSet::new();
+    for (id, record) in ontology.entities().iter() {
+        if record.kind != EntityKind::ObjectProperty {
+            continue;
+        }
+        for candidate in [RoleExpr::Atomic(id), RoleExpr::Inverse(id)] {
+            if role_expression_equivalent_for_query(&branch, &role_chains, property, &candidate) {
+                out.insert(candidate);
+            }
+        }
+    }
+    Ok(out)
+}
+
+fn query_role_chains(branch: &Branch<'_>) -> Vec<(Vec<RoleExpr>, RoleExpr)> {
+    let mut chains = branch.role_chains.clone();
+    for (chain, sup) in &branch.role_chains {
+        if chain.len() != 1 {
+            continue;
+        }
+        if let RoleExpr::Inverse(id) = sup {
+            let reciprocal = (vec![RoleExpr::Atomic(*id)], expand::inverse_role(&chain[0]));
+            if !chains.contains(&reciprocal) {
+                chains.push(reciprocal);
+            }
+        }
+        if let (RoleExpr::Atomic(sub_id), RoleExpr::Atomic(sup_id)) = (&chain[0], sup) {
+            let inv_edge = (
+                vec![RoleExpr::Inverse(*sup_id)],
+                RoleExpr::Inverse(*sub_id),
+            );
+            if !chains.contains(&inv_edge) {
+                chains.push(inv_edge);
+            }
+        }
+    }
+    chains
+}
+
+/// Query-time role equivalence (HermiT `getEquivalentObjectProperties` / classified node).
+fn role_expression_equivalent_for_query(
+    branch: &Branch<'_>,
+    role_chains: &[(Vec<RoleExpr>, RoleExpr)],
+    left: &RoleExpr,
+    right: &RoleExpr,
+) -> bool {
+    role_expression_subsumes_for_query(branch, role_chains, left, right)
+        && role_expression_subsumes_for_query(branch, role_chains, right, left)
+}
+
+/// Query-time `sub ⊑ sup` without tableau expansion inverse shortcuts that equate every `R` with `Inv(R)`.
+fn role_expression_subsumes_for_query(
+    branch: &Branch<'_>,
+    role_chains: &[(Vec<RoleExpr>, RoleExpr)],
+    super_role: &RoleExpr,
+    sub_role: &RoleExpr,
+) -> bool {
+    if expand::role_exprs_equal(super_role, sub_role) {
+        return true;
+    }
+    if expand::role_equivalent(branch, super_role, sub_role) {
+        return true;
+    }
+    if role_chains.iter().any(|(chain, sup)| {
+        chain.len() == 1
+            && expand::role_exprs_equal(&chain[0], sub_role)
+            && (expand::role_exprs_equal(sup, super_role)
+                || role_expression_subsumes_for_query(branch, role_chains, super_role, sup))
+    }) {
+        return true;
+    }
+    match (super_role, sub_role) {
+        (RoleExpr::Atomic(sup), RoleExpr::Atomic(sub)) => branch
+            .role_hierarchy
+            .get(sub)
+            .is_some_and(|supers| supers.contains(sup)),
+        (RoleExpr::Inverse(sup), RoleExpr::Inverse(sub)) => {
+            role_expression_subsumes_for_query(
+                branch,
+                role_chains,
+                &RoleExpr::Atomic(*sub),
+                &RoleExpr::Atomic(*sup),
+            )
+        }
+        _ => false,
+    }
+}
+
+/// OWL API `getInverseObjectProperties` (HermiT: `getEquivalentObjectProperties(inverse(pe))`).
+pub fn inverse_object_property_expressions(
+    ontology: &Ontology,
+    property: &RoleExpr,
+) -> Result<HashSet<RoleExpr>, Error> {
+    equivalent_object_property_expressions(ontology, &expand::inverse_role(property))
+}
+
 /// Test whether `C ⊓ D` is satisfiable in the TBox.
 pub fn is_ce_intersection_satisfiable_with_seed(
     dl: &DlOntology,

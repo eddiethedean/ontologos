@@ -25,7 +25,10 @@ pub use datatype::{
 };
 pub use dependency_index::DependencyIndex;
 pub use ontologos_alc::{classify as alc_classify, clausify, Clause, ClauseSet, DlOntology};
-pub use ontologos_alc::{classify_with_seed, TableauSeed};
+pub use ontologos_alc::{
+    classify_with_seed, equivalent_object_property_expressions,
+    inverse_object_property_expressions, role_expression_subsumes, TableauSeed,
+};
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};
 pub use route::{classify_reasoner, classify_with_profile, DlReport};

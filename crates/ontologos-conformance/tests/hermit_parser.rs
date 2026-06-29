@@ -59,6 +59,29 @@ fn hermit_owllink_owl_fixtures_load() {
 }
 
 #[test]
+fn hermit_owllink_bob_corpus_loads() {
+    for name in [
+        "agent.owl",
+        "test.owl",
+        "agent-inst.owl",
+        "situation.owl",
+        "situation-inst.owl",
+        "space.owl",
+        "time.owl",
+    ] {
+        let path = vendored_hermit_test_path(&format!("reasoner/res/OWLLink/{name}"))
+            .unwrap_or_else(|| panic!("missing vendored Bob fixture {name}"));
+        let ontology = load_ontology(&path).unwrap_or_else(|e| {
+            panic!("load {name}: {e}");
+        });
+        assert!(
+            ontology.entity_count() > 0 || ontology.axiom_count() > 0,
+            "{name} should not be empty"
+        );
+    }
+}
+
+#[test]
 fn hermit_families_owl_loads() {
     let path = vendored_hermit_test_path("reasoner/res/families.owl").expect("families.owl");
     let ontology = load_ontology(&path).expect("load families.owl");
