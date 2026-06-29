@@ -660,7 +660,7 @@ fn merge_rdf_owl_imports(
     use std::collections::HashSet;
     let mut visited = HashSet::from([path.to_path_buf()]);
     for import_iri in crate::rdf_preprocess::collect_owl_imports(preprocessed_rdf) {
-        let Some(import_path) = resolve_wg_import_path(path, &import_iri) else {
+        let Some(import_path) = resolve_owl_import_path(path, &import_iri) else {
             continue;
         };
         if !visited.insert(import_path.clone()) {
@@ -672,6 +672,16 @@ fn merge_rdf_owl_imports(
         report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
     }
     Ok(())
+}
+
+fn resolve_owl_import_path(current: &Path, import_iri: &str) -> Option<PathBuf> {
+    if import_iri == "http://www.owllink.org/ontologies/families" {
+        let candidate = current.parent()?.join("families.owl");
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    resolve_wg_import_path(current, import_iri)
 }
 
 fn resolve_wg_import_path(current: &Path, import_iri: &str) -> Option<PathBuf> {

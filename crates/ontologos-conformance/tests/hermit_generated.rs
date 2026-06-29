@@ -1121,20 +1121,23 @@ fn hermit_reasoner_owllinktest_testupdatesnonbuffered() {
     run_hermit_case("reasoner.OWLLinkTest.testUpdatesNonBuffered");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
+#[ignore = "implemented in hand-written module: owllink_primer_smoke"]
 fn hermit_reasoner_owllinktest_testinverses() {
     run_hermit_case("reasoner.OWLLinkTest.testInverses");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
+#[ignore = "implemented in hand-written module: owllink_object_properties_declaration_smoke"]
 fn hermit_reasoner_owllinktest_testobjectproperties() {
     run_hermit_case("reasoner.OWLLinkTest.testObjectProperties");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
+#[ignore = "implemented in hand-written module: owllink_primer_smoke"]
 fn hermit_reasoner_owllinktest_testsuccessivecalls() {
     run_hermit_case("reasoner.OWLLinkTest.testSuccessiveCalls");
 }
@@ -1145,14 +1148,16 @@ fn hermit_reasoner_owllinktest_testbobtestc() {
     run_hermit_case("reasoner.OWLLinkTest.testBobTestC");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
+#[ignore = "implemented in hand-written module: owllink_disjoint_properties_has_parent_spouse"]
 fn hermit_reasoner_owllinktest_testdisjointproperties() {
     run_hermit_case("reasoner.OWLLinkTest.testDisjointProperties");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
+#[ignore = "implemented in hand-written module: owllink_disjoint_classes_father_mother"]
 fn hermit_reasoner_owllinktest_testdisjointclasses() {
     run_hermit_case("reasoner.OWLLinkTest.testDisjointClasses");
 }

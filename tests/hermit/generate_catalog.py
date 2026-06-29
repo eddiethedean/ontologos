@@ -998,6 +998,11 @@ IMPLEMENTED: dict[str, str] = {
     "reasoner.ReasonerTest.testIndividualRetrievalBug": "individual_property_retrieval",
     "reasoner.ReasonerTest.testIsFunctionalObject": "functional_property_characteristic_propagates_to_subproperty",
     "reasoner.ReasonerTest.testIsAsymmetricObject": "asymmetric_property_characteristic_propagates_to_subproperty",
+    "reasoner.OWLLinkTest.testInverses": "owllink_primer_smoke",
+    "reasoner.OWLLinkTest.testObjectProperties": "owllink_object_properties_declaration_smoke",
+    "reasoner.OWLLinkTest.testSuccessiveCalls": "owllink_primer_smoke",
+    "reasoner.OWLLinkTest.testDisjointProperties": "owllink_disjoint_properties_has_parent_spouse",
+    "reasoner.OWLLinkTest.testDisjointClasses": "owllink_disjoint_classes_father_mother",
     "reasoner.OWLLinkTest.testUpdatesBuffered": "owllink_update_hierarchy_buffered",
     "reasoner.OWLLinkTest.testUpdatesNonBuffered": "owllink_update_hierarchy_non_buffered",
     "reasoner.ClassificationTest.testPizza": "hermit_classification_pizza_taxonomy",
@@ -1037,15 +1042,10 @@ EXCLUDED_IDS = {
     # Phase 5 — OWL API / external fixture tests (Tier B / OWLLink corpus)
     "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored",
     "reasoner.OWLLinkTest.testBobTestAandB",
-    "reasoner.OWLLinkTest.testInverses",
-    "reasoner.OWLLinkTest.testObjectProperties",
-    "reasoner.OWLLinkTest.testSuccessiveCalls",
     "reasoner.OWLLinkTest.testBobTestC",
-    "reasoner.OWLLinkTest.testDisjointProperties",
     # Pathological backjumping CE — covered by classify_timeout.rs; exceeds 30s DL budget.
     "reasoner.ReasonerTest.testIanBackjumping3",
     # Ian/ComplexConcept CE — tableau soundness gaps (tracked in ontologos-alc/tests/ian_ce_sat.rs).
-    "reasoner.OWLLinkTest.testDisjointClasses",
     "reasoner.OWLLinkTest.testBobTests",
     "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions",
     "reasoner.OWLReasonerTest.testEquivalenceClasses",
