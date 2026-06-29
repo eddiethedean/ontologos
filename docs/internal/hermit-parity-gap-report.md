@@ -18,9 +18,9 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 
 ## Executive verdict (2026-06-28 assessment)
 
-**Catalog porting remains complete (`parity_pct = 100%`).** Promoted CI (`hermit-burndown.sh test` @ 30s) is **green** (371 axiom + 428 WG). **DL OFN axiom pass rate is 277/277 (100%)** @ 30s. WG semantic scan is **428/428 (0 failures)** @ 30s; `phase4_closure` and `phase5_closure` are green. Entailment guard lib tests (25/25) pass @ 30s. v1.0 tag remains blocked until `check-1.0-release-gates.sh` passes the **full** conformance suite (not promoted-only) and Phase 8 / publish checklist items close.
+**Catalog porting remains complete (`parity_pct = 100%`).** Promoted CI @ 30s is **green** (371 axiom + 428 WG). **DL OFN: 277/277**; **WG: 428/428**. **Phase 8 expressivity complete** (v1.5–v1.9 with documented waivers). **Phase 9 blocker:** **17 unpromoted axiom cases** fail when `ONTOLOGOS_CI_PROMOTED_ONLY` is unset (Ian tableau stress + ComplexConcept CE checks + `testUnknownClassHierarcyPosition` harvest gap). Full-suite CI flip and v1.0 tag remain blocked.
 
-**Recent wins (2026-06-28):** DL OFN 277/277; `testDecimals` + incremental negated-class catalog; Heinsohn subsumption entailment fallback; ExistsSelf2/NominalMerging consistency via empty-seed tableau + ResourceLimit fallback; pattern∩complement anyURI witness counting; parallel pass-rate stability fix (empty-seed short-circuit only on `Ok(true)`).
+**Recent wins (2026-06-28):** Promoted final WG case (`description-logic-502`); ROADMAP Phase 8 signed off; RL consistency-only path fix for `testInverses`.
 
 **What works today:** OWL EL/RL/RDFS tracks, Tier B/C gates, union-grid CSP (WG 501–504), promoted HermiT burndown @ 30s, WG full scan @ 30s (0 failures).
 
@@ -34,7 +34,8 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 |-----|--------|-------:|--------|------------|
 | **D1** | Catalog porting (`parity_pct`) | **100%** | `hermit-burndown.sh status` | High |
 | **D2** | Promotion coverage | axiom **371/413**, WG **428/428** active | `promoted_*_ids.txt` | High |
-| **D2b** | Promoted CI pass (`hermit-burndown.sh test` @ 30s) | **GREEN** | 799 promoted cases | High |
+| **D2b** | Promoted CI pass @ 30s | **GREEN** | `hermit-burndown.sh test` | High |
+| **D2c** | Full axiom suite (no promotion filter) | **17 failures** | `unset ONTOLOGOS_CI_PROMOTED_ONLY` | High |
 | **D3** | DL OFN axiom pass rate | **277/277 (100%)** | `dl_ofn_pass_rate @ 30s` | High |
 | **D3** | WG semantic pass @ 30s | **428/428 (100%)** | `wg_failures --all --json` → `[]` | High |
 | **D3** | RL/RDFS/EL hand ports | **31/31** pass | `hermit_rl`, `hermit_rdfs`, `hermit_el` | High |
@@ -42,8 +43,8 @@ bash benchmarks/scripts/check-1.0-release-gates.sh
 | **D5** | Tier B classification fixtures | **PASS** | `compare-classification-fixtures.sh` | High |
 | **D6** | Tier C vendored goldens | **PASS** | `compare-tier-c-gate.sh` | High |
 | **D7** | Phase closures | **phase4/5/8/9 green** | `cargo test --test phase*_closure` | High |
-| **D7b** | 1.0 release gates (full suite) | **FAIL** — promoted-only Tier A | `check-1.0-release-gates.sh` | High |
-| **D8** | Phase 8 expressivity | **Scaffolding complete** | ROADMAP v1.5–v1.9 tracks | Medium |
+| **D7b** | 1.0 release gates (promoted Tier A) | **GREEN** | `check-1.0-release-gates.sh` | High |
+| **D8** | Phase 8 expressivity | **Complete** (waivers documented) | ROADMAP v1.5–v1.9 | High |
 | **D9** | Documented exclusions | 55 `internal`, 55 `excluded` Java | `cases.json` | High |
 
 ---
@@ -56,42 +57,30 @@ Previously open (now closed): `testPatternComplement1_1`, `testDecimals`, `testE
 
 ---
 
+## Unpromoted axiom failures @ 30s (Phase 9 blocker)
+
+**17 cases** fail when `ONTOLOGOS_CI_PROMOTED_ONLY` is unset (`cargo test --test hermit_generated`):
+
+| Bucket | Count | Cases |
+|--------|------:|-------|
+| Ian tableau (CE unsat) | 10 | `testIanBug1b`, `testIanFact1`, `testIanT6`, `testIanT7a`, `testIanT7c`, `testIanT9`, `testIanT11`, `testIanT13` |
+| Ian recursive / backjump | 4 | `testIanRecursiveDefinitionTest{1,2,3}`, `testIanBackjumping3` (budget/timeout) |
+| ComplexConcept CE | 3 | `testConceptWithDatatypes`, `testConceptWithDatatypes2`, `testJustifications` |
+| RL / RDFS | 2 | `testInverses` (RL negative + inverse), `testUnknownClassHierarcyPosition` (incomplete OFN harvest) |
+
+Promoted CI remains green; full-suite flip waits on these.
+
+---
+
 ## Semantic gap summary
 
-### WG failures @ 30s (`wg_failures --all`, `ONTOLOGOS_SCAN_THREADS=1`)
+### WG failures @ 30s
 
-| Bucket | Count | Top examples |
-|--------|------:|--------------|
-| `consistency` | 15 | `Contradicting-datatype-restrictions`, `Minus-inf-not-owlreal`, `description-logic-035`, `maxCardinality-001`, `Thing-004` |
-| `entailment_positive` | 10 | `Qualified-cardinality-restricted-int`, `someValuesFrom-003`, `equivalentProperty-001`, `I5.8-010` |
-| `timeout` | 2 | `Consistent-but-all-unsat`, `description-logic-504` |
-| `load_error` | 2 | `equivalentClass-007` (RDF/XML `owl:` prefix), `Rdfbased-sem-eqdis-sameas-subst` (entity kind clash) |
+**None** — `wg_failures --all --json` → `[]` @ 30s (2026-06-28).
 
-### Java axiom failures (promoted CI, 17 cases)
+### Java axiom failures (promoted CI)
 
-All in `hermit_generated` — dominated by **datatype facet** families:
-
-| Family | Failures in promoted CI |
-|--------|------------------------:|
-| `DateTimeTest` | 4 |
-| `RDFPlainLiteralTest` | 4 |
-| `AnyURITest` | 3 |
-| `FloatDoubleTest` | 3 |
-| `BinaryDataTest` | 1 |
-| `DatatypesTest` | 1 |
-| `XMLLiteralTest` | 1 |
-
-### DL OFN pass rate by family (`dl_ofn_pass_rate`)
-
-| Family | Pass rate |
-|--------|----------:|
-| `DateTimeTest` | 2/10 (20%) |
-| `AnyURITest` | 11/20 (55%) |
-| `BinaryDataTest` | 7/12 (58%) |
-| `FloatDoubleTest` | 14/24 (58%) |
-| `RDFPlainLiteralTest` | 13/21 (62%) |
-| `ReasonerTest` | 70/74 (95%) |
-| **Overall** | **223/277 (80.5%)** |
+**None** — promoted subset passes @ 30s.
 
 ### Tier A lib test failures (`check-1.0-release-gates.sh`)
 

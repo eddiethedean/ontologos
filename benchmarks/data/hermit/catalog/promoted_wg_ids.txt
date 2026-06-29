@@ -321,6 +321,7 @@ TestCase-3AWebOnt-2Ddescription-2Dlogic-2D207
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D208
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D209
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D501
+TestCase-3AWebOnt-2Ddescription-2Dlogic-2D502
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D503
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D504
 TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601

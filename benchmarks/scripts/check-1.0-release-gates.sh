@@ -29,12 +29,12 @@ else
   FAIL=1
 fi
 
-# Tier A: promoted HermiT lists @ 30s + phase closures (avoids lib-test DL contention under full `cargo test`).
+# Tier A: promoted HermiT lists @ 30s + phase closures (full suite gate pending 17 axiom fixes).
 check "Tier A promoted conformance" bash -c "
   set -euo pipefail
   export ONTOLOGOS_DL_BUDGET_SECS=30
   \"${ROOT}/benchmarks/scripts/hermit-burndown.sh\" test
-  cargo test -p ontologos-conformance --quiet \\
+  cargo test -p ontologos-conformance --release --quiet --locked \\
     --test phase3_closure --test phase4_closure --test phase8_closure --test phase9_closure
 "
 

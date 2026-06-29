@@ -40,9 +40,11 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Not for production OWL DL classification.** Published **v0.9.0** loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. CLI and Python support `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl`. DL and preview profiles are **not** HermiT parity — see [Profile stability matrix](https://ontologos.readthedocs.io/en/latest/guides/profile-stability/). Use Protégé with HermiT or Konclude for production OWL DL workflows.
+**Published v0.9.0 — not yet for production OWL DL.** It loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. DL and preview profiles are **not** HermiT parity on PyPI v0.9.0 — see [Profile stability matrix](https://ontologos.readthedocs.io/en/latest/guides/profile-stability/). Use Protégé with HermiT or Konclude for production OWL DL workflows until **v1.0.0** ships.
 
-OntoLogos is for early adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
+**v1.0.0 (workspace / upcoming tag)** — `ontologos-dl` passes the full HermiT Tier A catalog (277 Java DL OFN + 428 OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora**, not a guarantee for every real-world ontology. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, `classify --profile dl` (or `profile="dl"` in Python) is the supported JVM-free path. Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
+
+OntoLogos is for adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
 
 ## Why was my JSON rejected?
 

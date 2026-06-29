@@ -11,7 +11,7 @@ env:
   CARGO_INCREMENTAL: "0"
   # Cap per-operation DL wall time in conformance (entailment may run classify twice).
   ONTOLOGOS_DL_BUDGET_SECS: "30"
-  # Blocking CI runs only promoted passing cases; full suite is in conformance-nightly.
+  # Blocking CI runs promoted passing cases; unpromoted axiom gaps remain (17 @ 2026-06-28).
   ONTOLOGOS_CI_PROMOTED_ONLY: "1"
 
 jobs:

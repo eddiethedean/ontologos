@@ -763,6 +763,10 @@ fn case_uses_rl_materialization_checks(case: &HermitCase) -> bool {
 
 fn check_ontology_consistency(case: &HermitCase, ontology: &Ontology) -> Result<bool, String> {
     if !case_uses_rl_materialization_checks(case) {
+        if matches!(case.engine.as_str(), "rl" | "rdfs") {
+            let mut saturated = ontology.clone();
+            return Ok(saturate_for_consistency(case, &mut saturated));
+        }
         return dl_is_consistent_bounded(ontology).map_err(|e| format!("{}: {e}", case.id));
     }
     let mut saturated = ontology.clone();
