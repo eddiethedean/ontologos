@@ -1168,8 +1168,9 @@ fn hermit_reasoner_owllinktest_testbobtests() {
     run_hermit_case("reasoner.OWLLinkTest.testBobTests");
 }
 
+// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
+#[ignore = "implemented in hand-written module: owlreasoner_inverse_object_property_expressions_cycle"]
 fn hermit_reasoner_owlreasonertest_testgetinverseobjectpropertyexpressions() {
     run_hermit_case("reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions");
 }

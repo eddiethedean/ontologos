@@ -7,6 +7,7 @@ mod dl_ontology;
 mod hyper_clausify;
 mod hyperclause;
 mod normalize;
+mod object_property_classify;
 mod tableau;
 
 use ontologos_core::{Ontology, Taxonomy};
@@ -18,12 +19,15 @@ pub use dl_ontology::DlOntology;
 pub use hyper_clausify::clausify_hyper;
 pub use hyperclause::{format_hyper_clauses, HyperClauseSet};
 pub use normalize::clausify;
+pub use object_property_classify::{
+    classify_object_property_expressions, equivalent_object_property_expressions,
+    inverse_object_property_expressions,
+};
 pub use tableau::cache::UnsatCache;
 pub use tableau::AlcClassifier;
 pub use tableau::{
     classify as tableau_classify, classify_with_seed as tableau_classify_with_seed,
     classify_with_seed_options as tableau_classify_with_seed_options,
-    equivalent_object_property_expressions, inverse_object_property_expressions,
     is_ce_intersection_satisfiable_with_seed, is_ce_satisfiable_with_seed,
     is_consistent as tableau_is_consistent,
     is_consistent_with_seed as tableau_is_consistent_with_seed,

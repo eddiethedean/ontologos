@@ -1850,11 +1850,21 @@ pub(crate) fn role_subsumes(
         (RoleExpr::Inverse(is), RoleExpr::Inverse(it)) => {
             role_subsumes(branch, &RoleExpr::Atomic(*it), &RoleExpr::Atomic(*is))
         }
-        (RoleExpr::Inverse(is), RoleExpr::Atomic(sub)) => {
-            role_subsumes(branch, &RoleExpr::Atomic(*sub), &RoleExpr::Atomic(*is))
+        (RoleExpr::Atomic(sup), RoleExpr::Inverse(sub_id)) => {
+            if role_equivalent(branch, super_role, sub_role) {
+                return true;
+            }
+            branch.role_chains.iter().any(|(chain, chain_sup)| {
+                chain.len() == 1
+                    && matches!(&chain[0], RoleExpr::Atomic(a) if *a == *sub_id)
+                    && matches!(chain_sup, RoleExpr::Inverse(inv_sup) if *inv_sup == *sup)
+            })
         }
-        (RoleExpr::Atomic(sup), RoleExpr::Inverse(it)) => {
-            role_subsumes(branch, &RoleExpr::Inverse(*it), &RoleExpr::Atomic(*sup))
+        (RoleExpr::Inverse(sub_id), RoleExpr::Atomic(sup)) => {
+            if role_equivalent(branch, super_role, sub_role) {
+                return true;
+            }
+            role_subsumes(branch, &RoleExpr::Atomic(*sup), &RoleExpr::Inverse(*sub_id))
         }
     }
 }

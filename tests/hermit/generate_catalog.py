@@ -1005,6 +1005,8 @@ IMPLEMENTED: dict[str, str] = {
     "reasoner.OWLLinkTest.testDisjointClasses": "owllink_disjoint_classes_father_mother",
     "reasoner.OWLLinkTest.testUpdatesBuffered": "owllink_update_hierarchy_buffered",
     "reasoner.OWLLinkTest.testUpdatesNonBuffered": "owllink_update_hierarchy_non_buffered",
+    "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions":
+        "owlreasoner_inverse_object_property_expressions_cycle",
     "reasoner.ClassificationTest.testPizza": "hermit_classification_pizza_taxonomy",
     "reasoner.ClassificationTest.testWine": "hermit_classification_wine_taxonomy",
     "reasoner.ClassificationTest.testGalenIansFullUndoctored": "hermit_classification_galen_taxonomy",
@@ -1047,7 +1049,6 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testIanBackjumping3",
     # Ian/ComplexConcept CE — tableau soundness gaps (tracked in ontologos-alc/tests/ian_ce_sat.rs).
     "reasoner.OWLLinkTest.testBobTests",
-    "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions",
     "reasoner.OWLReasonerTest.testEquivalenceClasses",
     "reasoner.OWLReasonerTest.testNonEquivalenceClasses",
     # Phase 5 — engine-internal / OWL API error paths
