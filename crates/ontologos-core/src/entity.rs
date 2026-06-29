@@ -36,26 +36,76 @@ pub enum EntityKind {
     Datatype,
     /// OWL class/individual punning (same IRI used as both).
     ClassIndividual,
+    /// OWL class/object-property punning (same IRI used as both).
+    ClassObjectProperty,
+    /// OWL object-property/individual punning (same IRI used as both).
+    ObjectPropertyIndividual,
 }
 
 impl EntityKind {
     /// Whether this kind can appear as a class reference.
     #[must_use]
     pub fn is_class(self) -> bool {
-        matches!(self, Self::Class | Self::ClassIndividual)
+        matches!(self, Self::Class | Self::ClassIndividual | Self::ClassObjectProperty)
     }
 
     /// Whether this kind can appear as a named individual reference.
     #[must_use]
     pub fn is_individual(self) -> bool {
-        matches!(self, Self::Individual | Self::ClassIndividual)
+        matches!(
+            self,
+            Self::Individual | Self::ClassIndividual | Self::ObjectPropertyIndividual
+        )
+    }
+
+    /// Whether this kind can appear as an object-property reference.
+    #[must_use]
+    pub fn is_object_property(self) -> bool {
+        matches!(
+            self,
+            Self::ObjectProperty | Self::ClassObjectProperty | Self::ObjectPropertyIndividual
+        )
+    }
+
+    /// Merge two kinds when OWL 2 punning allows the same IRI in both roles.
+    #[must_use]
+    pub fn merge_punning(stored: Self, requested: Self) -> Option<Self> {
+        if stored.satisfies(requested) {
+            return Some(stored);
+        }
+        if requested.satisfies(stored) {
+            return Some(requested);
+        }
+        match (stored, requested) {
+            (Self::Class, Self::Individual) | (Self::Individual, Self::Class) => {
+                Some(Self::ClassIndividual)
+            }
+            (Self::Class, Self::ObjectProperty) | (Self::ObjectProperty, Self::Class) => {
+                Some(Self::ClassObjectProperty)
+            }
+            (Self::ObjectProperty, Self::Individual) | (Self::Individual, Self::ObjectProperty) => {
+                Some(Self::ObjectPropertyIndividual)
+            }
+            _ => None,
+        }
     }
 
     /// Whether `stored` satisfies a reference that expects `expected`.
     #[must_use]
     pub fn satisfies(self, expected: Self) -> bool {
-        self == expected
-            || (self == Self::ClassIndividual && matches!(expected, Self::Class | Self::Individual))
+        if self == expected {
+            return true;
+        }
+        match self {
+            Self::ClassIndividual => matches!(expected, Self::Class | Self::Individual),
+            Self::ClassObjectProperty => {
+                matches!(expected, Self::Class | Self::ObjectProperty)
+            }
+            Self::ObjectPropertyIndividual => {
+                matches!(expected, Self::ObjectProperty | Self::Individual)
+            }
+            _ => false,
+        }
     }
 }
 
@@ -115,13 +165,16 @@ impl EntityRegistry {
         kind: EntityKind,
     ) -> Result<EntityId> {
         if let Some(&existing) = self.by_iri.get(&iri) {
-            let record = &self.entities[existing.0 as usize];
+            let record = &mut self.entities[existing.0 as usize];
             if !record.kind.satisfies(kind) {
-                return Err(Error::EntityKindMismatch {
-                    iri: iri_str.to_owned(),
-                    expected: kind,
-                    found: record.kind,
-                });
+                let Some(merged) = EntityKind::merge_punning(record.kind, kind) else {
+                    return Err(Error::EntityKindMismatch {
+                        iri: iri_str.to_owned(),
+                        expected: kind,
+                        found: record.kind,
+                    });
+                };
+                record.kind = merged;
             }
             return Ok(existing);
         }
@@ -162,25 +215,24 @@ mod tests {
     }
 
     #[test]
-    fn kind_mismatch_includes_iri_string() {
+    fn class_individual_punning_upgrades_kind() {
         let mut pool = InternPool::new();
         let iri = pool.intern("http://example.org/A").expect("intern");
         let mut registry = EntityRegistry::new();
         registry
             .get_or_register(iri, "http://example.org/A", EntityKind::Class)
             .expect("register");
-        let err = registry
+        let id = registry
             .get_or_register(iri, "http://example.org/A", EntityKind::Individual)
-            .expect_err("mismatch");
-        if let Error::EntityKindMismatch { iri, .. } = err {
-            assert_eq!(iri, "http://example.org/A");
-        } else {
-            panic!("expected EntityKindMismatch");
-        }
+            .expect("punning upgrade");
+        assert_eq!(
+            registry.entity(id).expect("entity").kind,
+            EntityKind::ClassIndividual
+        );
     }
 
     #[test]
-    fn kind_mismatch_errors() {
+    fn incompatible_kind_mismatch_errors() {
         let mut pool = InternPool::new();
         let iri = pool.intern("http://example.org/A").expect("intern");
         let mut registry = EntityRegistry::new();
@@ -188,16 +240,19 @@ mod tests {
             .get_or_register(iri, "http://example.org/A", EntityKind::Class)
             .expect("register");
         let err = registry
-            .get_or_register(iri, "http://example.org/A", EntityKind::Individual)
+            .get_or_register(iri, "http://example.org/A", EntityKind::DataProperty)
             .expect_err("mismatch");
         assert!(matches!(
             err,
             Error::EntityKindMismatch {
-                expected: EntityKind::Individual,
+                expected: EntityKind::DataProperty,
                 found: EntityKind::Class,
                 ..
             }
         ));
+        if let Error::EntityKindMismatch { iri: err_iri, .. } = err {
+            assert_eq!(err_iri, "http://example.org/A");
+        }
     }
 
     #[test]
