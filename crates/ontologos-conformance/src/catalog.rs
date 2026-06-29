@@ -1917,6 +1917,7 @@ fn materialize_ontology(case: &HermitCase, ontology: &mut Ontology) {
             RdfsEngine::new()
                 .materialize(ontology)
                 .expect("rdfs materialize");
+            let _ = ontologos_bridge::apply_inverse_subproperty_materialization(ontology);
             let _ = ontologos_bridge::apply_transitive_subproperties(ontology);
             let _ = ontologos_bridge::apply_equivalent_property_subproperties(ontology);
         }

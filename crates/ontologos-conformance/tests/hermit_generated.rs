@@ -1659,7 +1659,6 @@ fn hermit_reasoner_reasonertest_testisirreflexiveobject() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testissymmetricobject() {
     run_hermit_case("reasoner.ReasonerTest.testIsSymmetricObject");
 }
@@ -1670,7 +1669,6 @@ fn hermit_reasoner_reasonertest_testisasymmetricobject() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testistransitiveobject() {
     run_hermit_case("reasoner.ReasonerTest.testIsTransitiveObject");
 }
@@ -1877,7 +1875,6 @@ fn hermit_reasoner_reasonertest_testhierarchyprinting3() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testobjectpropertyhierarchy() {
     run_hermit_case("reasoner.ReasonerTest.testObjectPropertyHierarchy");
 }

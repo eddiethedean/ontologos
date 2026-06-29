@@ -16,7 +16,8 @@ pub use reasonable_session::{
 pub use rl_postprocess::{
     apply_characteristic_propagation, apply_domain_range_inheritance,
     apply_equivalent_property_subproperties, apply_existential_subclass_subsumption,
-    apply_reasonable_fallbacks, apply_transitive_subproperties, has_bottom_chain_violation,
+    apply_inverse_subproperty_materialization, apply_reasonable_fallbacks,
+    apply_transitive_subproperties, has_bottom_chain_violation,
 };
 pub use taxonomy::{equivalence_clusters, reduce_subsumptions};
 pub use triples::{

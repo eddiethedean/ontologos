@@ -998,9 +998,6 @@ IMPLEMENTED: dict[str, str] = {
     "reasoner.ReasonerTest.testIndividualRetrievalBug": "individual_property_retrieval",
     "reasoner.ReasonerTest.testIsFunctionalObject": "functional_property_characteristic_propagates_to_subproperty",
     "reasoner.ReasonerTest.testIsAsymmetricObject": "asymmetric_property_characteristic_propagates_to_subproperty",
-    "reasoner.ReasonerTest.testObjectPropertyHierarchy": "excluded_object_property_hierarchy",
-    "reasoner.ReasonerTest.testIsSymmetricObject": "excluded_symmetric_subproperty",
-    "reasoner.ReasonerTest.testIsTransitiveObject": "excluded_transitive_subproperty",
     "reasoner.OWLLinkTest.testUpdatesBuffered": "owllink_update_hierarchy_buffered",
     "reasoner.OWLLinkTest.testUpdatesNonBuffered": "owllink_update_hierarchy_non_buffered",
     "reasoner.ClassificationTest.testPizza": "hermit_classification_pizza_taxonomy",
@@ -1010,9 +1007,6 @@ IMPLEMENTED: dict[str, str] = {
 }
 
 EXCLUDED_IDS = {
-    "reasoner.ReasonerTest.testObjectPropertyHierarchy",
-    "reasoner.ReasonerTest.testIsSymmetricObject",
-    "reasoner.ReasonerTest.testIsTransitiveObject",
     # Phase 5 — datatype manager / parser internals (not OWL DL reasoning)
     "reasoner.AnyURITest.testInvalidAnyURILiterals",
     "reasoner.AnyURITest.testPatternAndLength2",

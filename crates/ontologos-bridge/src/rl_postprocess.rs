@@ -51,6 +51,31 @@ pub fn apply_domain_range_inheritance(ontology: &mut Ontology) -> Result<usize> 
     Ok(added)
 }
 
+/// Materialize named `P ⊑ Q` when DL stores `Inv(P) ⊑ Inv(Q)`.
+pub fn apply_inverse_subproperty_materialization(ontology: &mut Ontology) -> Result<usize> {
+    let pairs: Vec<(EntityId, EntityId)> = ontology
+        .dl()
+        .axioms()
+        .filter_map(|axiom| {
+            let DlAxiom::SubObjectPropertyOf { sub, sup } = axiom else {
+                return None;
+            };
+            match (sub, sup) {
+                (RoleExpr::Inverse(sub), RoleExpr::Inverse(sup)) => Some((*sub, *sup)),
+                _ => None,
+            }
+        })
+        .collect();
+
+    let mut added = 0_usize;
+    for (sub, sup) in pairs {
+        if push_subproperty_if_missing(ontology, sub, sup)? {
+            added += 1;
+        }
+    }
+    Ok(added)
+}
+
 /// Materialize transitive `subPropertyOf` closure (RDFS 5 fallback).
 pub fn apply_transitive_subproperties(ontology: &mut Ontology) -> Result<usize> {
     let direct = superproperty_edges(ontology);
@@ -432,7 +457,8 @@ fn push_subclass_if_missing(
 
 /// Run all reasonable semantic fallbacks after materialization.
 pub fn apply_reasonable_fallbacks(ontology: &mut Ontology) -> Result<usize> {
-    let mut total = apply_equivalent_property_subproperties(ontology)?;
+    let mut total = apply_inverse_subproperty_materialization(ontology)?;
+    total += apply_equivalent_property_subproperties(ontology)?;
     total += apply_transitive_subproperties(ontology)?;
     total += apply_transitive_data_subproperties(ontology)?;
     total += apply_characteristic_propagation(ontology)?;
@@ -1203,6 +1229,19 @@ mod tests {
         assert!(added >= 1, "expected functional OP to propagate to SOP");
         let sop = ontology.lookup_entity("file:/c/test.owl#SOP").expect("SOP");
         assert!(ontology.index().functional_properties().contains(&sop));
+    }
+
+    #[test]
+    fn inverse_subproperty_materialization() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testobjectpropertyhierarchy.ofn",
+        );
+        let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
+        let added = apply_inverse_subproperty_materialization(&mut ontology).expect("postprocess");
+        assert!(added >= 2, "expected inv(r3) ⊑ inv(r1) and inv(r2) ⊑ inv(r1) to materialize");
+        let r1 = ontology.lookup_entity("file:/c/test.owl#r1").expect("r1");
+        let r3 = ontology.lookup_entity("file:/c/test.owl#r3").expect("r3");
+        assert!(ontology.direct_superproperties(r3).contains(&r1));
     }
 
     #[test]
