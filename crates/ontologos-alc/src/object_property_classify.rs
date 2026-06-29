@@ -6,7 +6,7 @@ use ontologos_core::{
     ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy,
 };
 
-use crate::tableau::classify;
+use crate::tableau::{classify, role_expression_subsumes};
 use crate::Error;
 
 const FRESH_CLASS: &str = "urn:ontologos:internal:fresh-concept";
@@ -145,6 +145,51 @@ pub fn equivalent_object_property_expressions(
         &role_to_surrogate,
         surrogate,
     ))
+}
+
+/// OWL API `getSubObjectProperties` via saturated role hierarchy (+ surrogate equivalence).
+pub fn sub_object_property_expressions(
+    ontology: &Ontology,
+    property: &RoleExpr,
+    direct: bool,
+) -> Result<HashSet<RoleExpr>, Error> {
+    let equiv = equivalent_object_property_expressions(ontology, property)?;
+    let roles = collect_relevant_role_expressions(ontology);
+    let mut out = HashSet::new();
+    for candidate in &roles {
+        if equiv.contains(&candidate) {
+            continue;
+        }
+        if !role_expression_subsumes(ontology, property, &candidate)? {
+            continue;
+        }
+        if direct && has_strict_role_intermediate(ontology, property, &candidate, &equiv, &roles)? {
+            continue;
+        }
+        out.insert(candidate.clone());
+    }
+    Ok(out)
+}
+
+fn has_strict_role_intermediate(
+    ontology: &Ontology,
+    property: &RoleExpr,
+    candidate: &RoleExpr,
+    equiv: &HashSet<RoleExpr>,
+    roles: &HashSet<RoleExpr>,
+) -> Result<bool, Error> {
+    for mid in roles {
+        if mid == candidate || equiv.contains(mid) {
+            continue;
+        }
+        if role_expression_subsumes(ontology, property, mid)?
+            && role_expression_subsumes(ontology, mid, candidate)?
+            && !role_expression_subsumes(ontology, candidate, mid)?
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 /// OWL API `getInverseObjectProperties` (HermiT: `getEquivalentObjectProperties(inverse(pe))`).

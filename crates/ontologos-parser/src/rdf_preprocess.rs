@@ -3066,6 +3066,65 @@ fn collect_properties_with_rdf_type(rdf: &str, type_iri: &str, base: &str) -> Ve
     out
 }
 
+/// Collect `SubObjectPropertyOf` from `rdfs:subPropertyOf` on OWL property resources (RDF/XML).
+pub(crate) fn collect_rdfs_sub_object_properties(rdf: &str) -> Vec<(String, String)> {
+    let base = parse_xml_base(rdf);
+    let mut out = Vec::new();
+    for tag in OWL_PROPERTY_RANGE_TAGS {
+        out.extend(collect_owl_property_subproperties_for_tag(rdf, tag, &base));
+    }
+    out.sort();
+    out.dedup();
+    out
+}
+
+fn collect_owl_property_subproperties_for_tag(
+    rdf: &str,
+    tag: &str,
+    base: &str,
+) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    let open = format!("<{tag}");
+    let mut pos = 0usize;
+    while pos < rdf.len() {
+        let Some(rel) = rdf[pos..].find(&open) else {
+            break;
+        };
+        let start = pos + rel;
+        let Some(end) = tagged_element_end(rdf, start, tag).or_else(|| {
+            let close = format!("</{tag}>");
+            element_block_end(rdf, start, tag, &close)
+                .map(|e| e - start)
+                .map(|len| start + len)
+        }) else {
+            break;
+        };
+        let block = &rdf[start..end];
+        if let Some(pair) = owl_property_subproperty_from_block(block, base) {
+            out.push(pair);
+        }
+        pos = end;
+    }
+    out
+}
+
+fn owl_property_subproperty_from_block(block: &str, base: &str) -> Option<(String, String)> {
+    let open_end = block.find('>')?;
+    let open = &block[..=open_end];
+    let sub_iri = extract_attribute(open, "rdf:about")
+        .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+        .map(|iri| resolve_relative_iri(&iri, base))?;
+    let close_start = block
+        .rfind("</owl:ObjectProperty>")
+        .or_else(|| block.rfind("</owl:SymmetricProperty>"))
+        .or_else(|| block.rfind("</owl:FunctionalProperty>"))
+        .or_else(|| block.rfind("</owl:TransitiveProperty>"))
+        .unwrap_or(block.len());
+    let inner = &block[open_end + 1..close_start];
+    let super_iri = extract_property_resource(inner, "rdfs:subPropertyOf", base)?;
+    Some((sub_iri, super_iri))
+}
+
 fn collect_owl_property_ranges_for_tag(rdf: &str, tag: &str, base: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     let open = format!("<{tag}");
@@ -3825,7 +3884,17 @@ fn extract_property_resource(block: &str, tag: &str, base: &str) -> Option<Strin
     let close = format!("</{tag}>");
     let close_start = rest.find(&close)?;
     let inner = rest[gt + 1..close_start].trim();
-    for prop_tag in ["owl:ObjectProperty", "owl:DatatypeProperty"] {
+    for prop_tag in [
+        "owl:ObjectProperty",
+        "owl:DatatypeProperty",
+        "owl:SymmetricProperty",
+        "owl:FunctionalProperty",
+        "owl:InverseFunctionalProperty",
+        "owl:TransitiveProperty",
+        "owl:ReflexiveProperty",
+        "owl:IrreflexiveProperty",
+        "owl:AsymmetricProperty",
+    ] {
         if inner.contains(prop_tag) {
             if let Some(about) = extract_attribute(inner, "rdf:about") {
                 return Some(resolve_relative_iri(&about, base));

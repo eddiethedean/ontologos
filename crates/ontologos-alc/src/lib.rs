@@ -21,7 +21,7 @@ pub use hyperclause::{format_hyper_clauses, HyperClauseSet};
 pub use normalize::clausify;
 pub use object_property_classify::{
     classify_object_property_expressions, equivalent_object_property_expressions,
-    inverse_object_property_expressions,
+    inverse_object_property_expressions, sub_object_property_expressions,
 };
 pub use tableau::cache::UnsatCache;
 pub use tableau::AlcClassifier;

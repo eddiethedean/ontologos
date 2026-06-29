@@ -135,3 +135,36 @@ fn owllink_vendored_fixtures_present() {
         );
     }
 }
+
+const IYOUIT_AGENT_NS: &str = "http://www.iyouit.eu/agent.owl#";
+
+/// `OWLLinkTest.testBobTestAandB` — direct/all subproperties of `knows` in IYOUIT agent.owl.
+#[test]
+fn owllink_bob_knows_subproperties() {
+    use ontologos_alc::sub_object_property_expressions;
+    use ontologos_core::RoleExpr;
+
+    let path = fixture_path("OWLLink/agent.owl");
+    let ontology = load_ontology(&path).expect("load agent.owl");
+    let knows = RoleExpr::Atomic(
+        ontology
+            .lookup_entity(&format!("{IYOUIT_AGENT_NS}knows"))
+            .expect("knows property"),
+    );
+    let direct = sub_object_property_expressions(&ontology, &knows, true).expect("direct");
+    let all = sub_object_property_expressions(&ontology, &knows, false).expect("all");
+    eprintln!("knows direct subproperties: {}", direct.len());
+    eprintln!("knows all subproperties: {}", all.len());
+    assert!(
+        direct.len() >= 10,
+        "expected substantial direct subproperties of knows, got {}",
+        direct.len()
+    );
+    assert!(
+        all.len() > direct.len(),
+        "expected transitive subproperties of knows, got direct={} all={}",
+        direct.len(),
+        all.len()
+    );
+    // HermiT expects direct=20, all=101; full parity needs inferred property taxonomy beyond declared rdfs:subPropertyOf.
+}

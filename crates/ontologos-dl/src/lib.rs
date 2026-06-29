@@ -27,7 +27,8 @@ pub use dependency_index::DependencyIndex;
 pub use ontologos_alc::{classify as alc_classify, clausify, Clause, ClauseSet, DlOntology};
 pub use ontologos_alc::{
     classify_with_seed, equivalent_object_property_expressions,
-    inverse_object_property_expressions, role_expression_subsumes, TableauSeed,
+    inverse_object_property_expressions, role_expression_subsumes,
+    sub_object_property_expressions, TableauSeed,
 };
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};

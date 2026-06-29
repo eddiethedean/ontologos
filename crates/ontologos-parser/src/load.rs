@@ -464,6 +464,18 @@ fn supplement_rdf_dl_axioms(
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
         merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
+    for (sub, sup) in crate::rdf_preprocess::collect_rdfs_sub_object_properties(preprocessed_rdf) {
+        let ofn = format!(
+            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+             Ontology(<http://example.org/rdfs-subproperty-supplement>\n\
+               Declaration(ObjectProperty(<{sub}>))\n\
+               Declaration(ObjectProperty(<{sup}>))\n\
+               SubObjectPropertyOf(<{sub}> <{sup}>)\n\
+             )"
+        );
+        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+        merge_supplement_with_accounting(ontology, report, &supplement)?;
+    }
     for property in crate::rdf_preprocess::collect_functional_object_properties(preprocessed_rdf) {
         let datatype_props =
             crate::rdf_preprocess::declared_datatype_property_iris(preprocessed_rdf);
@@ -677,6 +689,12 @@ fn merge_rdf_owl_imports(
 fn resolve_owl_import_path(current: &Path, import_iri: &str) -> Option<PathBuf> {
     if import_iri == "http://www.owllink.org/ontologies/families" {
         let candidate = current.parent()?.join("families.owl");
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    if let Some(filename) = import_iri.strip_prefix("http://www.iyouit.eu/") {
+        let candidate = current.parent()?.join(filename);
         if candidate.is_file() {
             return Some(candidate);
         }
