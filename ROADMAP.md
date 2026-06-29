@@ -6,7 +6,7 @@ Releases follow [semantic versioning](https://semver.org/). **0.x** builds profi
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-29 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [Phase 9 — publish + tag](#phase-9--v100-tag-100-in-scope-parity) — release gates green @ 30s; tag/publish pending
+**Last updated:** 2026-06-29 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [Post–Phase 9 literal parity burndown](#postphase-9--literal-parity-burndown-tiers-bd) — in-scope gate **100%** green @ 30s; OWLLink Bob **20/101** landed; tag/publish + five workstreams below
 
 ---
 
@@ -133,9 +133,9 @@ parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 
 **Current (Phase 4, 2026-06-24):** **Failure-first workflow** — all runnable cases active in generated tests (`hermit_wg_generated`: **0** `#[ignore]`; `hermit_generated`: **272** `#[ignore]`). **428/428** WG (`status=wg`, `wg_planned = 0`); **363/428** pass at 30s DL budget (**65** semantic failures; [promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt) has **331** IDs). Triage: `cargo run --release -p ontologos-conformance --bin wg_failures`. Java: **268** `axiom` + **33** `clausify` + **19** `swrl` + **2** `fixture` = **322** runnable; **202** `planned` (no harvested assertions). **202** backlog → **~79% parity** (`parity_pct` ≈ 78.9). Blocking CI: `ONTOLOGOS_CI_PROMOTED_ONLY=1`; full suite: [run-hermit-full-suite.sh](benchmarks/scripts/run-hermit-full-suite.sh) (nightly, non-blocking). **252** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)).
 
-**Current (Phase 9, 2026-06-29):** **`parity_pct = 100%`** — **`java_planned = 0`**, **`wg_planned = 0`** (`in_scope_total` **889**). Full conformance **green @ 30s** — **450** runnable Java + **428** WG active tests (**1009** active / **1152** defined, **143** `#[ignore]`). **400** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)); **428/428** WG ([promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt)). Blocking CI: full suite + `check-1.0-release-gates.sh` (no `ONTOLOGOS_CI_PROMOTED_ONLY`). **v1.0.0 git tag + crates.io/PyPI publish pending.**
+**Current (Phase 9, 2026-06-29):** **`parity_pct = 100%`** — **`java_planned = 0`**, **`wg_planned = 0`** (`in_scope_total` **915**). Full conformance **green @ 30s** — **470** runnable Java + **428** WG active tests (**1040** harness tests / **1019** catalog entries, **122** `#[ignore]`). **401** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)); **428/428** WG ([promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt)). Blocking CI: full suite + `check-1.0-release-gates.sh` (no `ONTOLOGOS_CI_PROMOTED_ONLY`). **v1.0.0 git tag + crates.io/PyPI publish pending.**
 
-**Current (post–Phase 7, 2026-06-26):** **`parity_pct = 100%`** — catalog porting complete (`in_scope_total` **904** before Ian/ComplexConcept exclusions). **Next:** Phase 8 expressivity, Phase 9 CI flip + tag.
+**Current (post–Phase 9 burndown, 2026-06-29):** In-scope catalog gate met; work shifts to **literal catalog** coverage and **everyday HermiT equivalence** (see [honest assessment](docs/internal/hermit-parity-honest-assessment.md)). Recent engine wins: Ian/ComplexConcept CE cluster promoted; HermiT-style **surrogate object-property classification** (`getSubObjectProperties`, inverse/equivalent queries); **OWLLink Bob test A/B** parity (**20** direct / **101** all subproperties of `knows` on IYOUIT `agent.owl`, hand test `owllink_bob_knows_subproperties` @ ~23–52s `--release`). Catalog case `testBobTestAandB` still in `EXCLUDED_IDS` until `testBobTestC` (`getObjectPropertyValues`) is unblocked. Metrics: `bash benchmarks/scripts/hermit-burndown.sh status`.
 
 Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 
@@ -384,6 +384,41 @@ Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressiv
 - [x] FAQ updated for production OWL DL on gated corpora
 - [ ] `ontologos-dl` on crates.io stable; annotated git tag **v1.0.0** — see [release-1.0-checklist.md](docs/project/release-1.0-checklist.md)
 
+### Post–Phase 9 — literal parity burndown (Tiers B–D)
+
+The **in-scope catalog gate** (`parity_pct = 100%` on **915** cases) is met. Remaining work toward **literal catalog parity** (all **1019** HermiT-derived entries active and green) and **everyday HermiT replacement** is tracked in [parity-roadmap.md](docs/internal/parity-roadmap.md). Live status: `bash benchmarks/scripts/hermit-burndown.sh status`.
+
+#### Progress since Phase 9 (2026-06-29)
+
+| Area | Status | Notes |
+|------|--------|-------|
+| **In-scope gate** | **Complete** | `java_planned = 0`, `wg_planned = 0`; full suite green @ 30s |
+| **Ian / ComplexConcept CE** | **Complete** | CE instance-check cluster promoted; `IanBackjumping3` only exclusion; `iant6_unsat_regression` still `#[ignore]` |
+| **Object-property queries** | **Complete** | Surrogate classification; `getEquivalentObjectProperties` / `getInverseObjectProperties` promoted; `RolePropertyQueryContext::prepare()` for reuse |
+| **OWLLink Bob A/B** | **Complete** (hand test) | `owllink_bob_knows_subproperties`: **20** direct / **101** all on `knows`; strict super-role filter; catalog promotion pending |
+| **OWLLink Bob C** | **Blocked** | `getObjectPropertyValues` on `agent-inst.owl` — needs ABox + multi-ontology load |
+| **Literal catalog** | **In progress** | **122** `#[ignore]` conformance tests; **104** Java cases out-of-scope (`excluded` / `internal` / `migrated`) |
+| **Strict taxonomy (Tier C)** | **In progress** | `Taxonomy::reduce_transitive_redundancy` landed; `--max-extra 0` CI gate not yet blocking |
+| **Perf (Tier D)** | **In progress** | `ontologos-dl` Criterion bench scaffold; Pizza DL **< 30 s** PR gate not yet enforced |
+
+#### Remaining workstreams (5)
+
+These are the active burndown items after the in-scope gate; each maps to a tier in [parity-roadmap.md](docs/internal/parity-roadmap.md).
+
+- [ ] **B3 — Internal test ports** — Port HermiT `structural/ClausificationTest`, `NormalizationTest`, and remaining `tableau/*` cases into `ontologos-alc` unit tests; document mappings in [tests/hermit/manifest.toml](tests/hermit/manifest.toml) and [parity-roadmap.md](docs/internal/parity-roadmap.md) § Internal test ports
+- [ ] **B4 — Literal catalog burn-down** — Promote or fix **122** `#[ignore]` conformance tests; extend `hermit-burndown.sh status` / gap report with **`literal_catalog_pct`** (active harness tests vs full **1019**-case catalog); re-include OWLLink Bob A/B from `EXCLUDED_IDS` once Bob C path is clear or waived
+- [ ] **C — Strict taxonomy gates** — Make `ONTOLOGOS_STRICT_TAXONOMY=1` / `--max-extra 0` a blocking CI check on Tier B/C goldens (OntoLogos taxonomy must match HermiT, not merely sound superset)
+- [ ] **D1 — Performance gates** — Criterion benches for saturation + tableau; optimize hot paths; enforce Pizza DL **< 30 s** classify in PR CI ([konclude.md](docs/internal/research/konclude.md) reference)
+- [ ] **D2–D4 — Parser + OWL API surface** — Default `owl:imports` merge (`ParseLimits::merge_imports`); full JVM `RulesTest` / SWRL semantics (or documented permanent waiver); stable facade for `isConsistent`, `isEntailed`, and DL `query` operations (see [hermit-replacement.md](docs/internal/research/hermit-replacement.md))
+
+```bash
+# Quick status
+bash benchmarks/scripts/hermit-burndown.sh status
+
+# Bob parity smoke (release; ~30–60s)
+cargo test -p ontologos-conformance --release --test hermit_owllink owllink_bob_knows_subproperties
+```
+
 ### Tensions resolved by phases
 
 | Tension | Resolution |
@@ -420,7 +455,7 @@ These run alongside version milestones and are not tied to a single release.
 | Corpus download script | **Complete** | `benchmarks/scripts/download.sh` |
 | Manifest-driven integration tests | **Complete** | Skip when `local_path` missing |
 | RDFS corpus conformance (Family, Pizza) | **Complete** (v0.3) | Extend per engine |
-| HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A; Phases 4–6) | **591** Java + **428** WG cataloged; **1014** active tests; **100%** catalog parity — see [parity phases](#hermit-parity-phases-path-to-v100-tag) |
+| HermiT test port harness (`ontologos-conformance`) | **Complete** (v0.4 Tier A; Phases 4–9) | **591** Java + **428** WG cataloged; **100%** in-scope `parity_pct`; **122** `#[ignore]` literal burn-down — see [parity phases](#hermit-parity-phases-path-to-v100-tag) · [post–Phase 9 burndown](#postphase-9--literal-parity-burndown-tiers-bd) |
 | HermiT replacement matrix | **Complete** | [hermit-replacement.md](docs/internal/research/hermit-replacement.md) |
 | Pizza EL golden regression (`compare-pizza-el-golden.sh`) | **Complete** (v0.6.1) | CI gate on `main` |
 | Tier B classification fixtures (`compare-classification-fixtures.sh`) | **Complete** (Phase 6) | pizza/wine/galen/propreo HermiT XML goldens in CI |
@@ -455,8 +490,11 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Hand-w
 - [x] `ClassificationTest` pizza taxonomy golden — **0.5** EL (CI via `compare-pizza-el-golden.sh`)
 - [x] `ClassificationTest` wine / galen / propreo taxonomy goldens — CI via `compare-classification-fixtures.sh`
 - [x] `owl_wg_tests` approved entailment subset — **428/428** WG promoted (Phase 4)
-- [ ] `structural/ClausificationTest` — **1.0** DL internal
-- [ ] SWRL `RulesTest` — **deferred** (out of scope 1.x)
+- [ ] `structural/ClausificationTest` — **B3** DL internal (partial: [clausification.rs](crates/ontologos-alc/tests/clausification.rs))
+- [ ] `structural/NormalizationTest` — **B3** DL internal (partial: [normalization.rs](crates/ontologos-alc/tests/normalization.rs))
+- [x] OWLLink Bob test A/B (`knows` subproperties **20** / **101**) — hand test `owllink_bob_knows_subproperties`; catalog promotion pending
+- [ ] OWLLink Bob test C (`getObjectPropertyValues`) — blocked on ABox + multi-ontology load
+- [ ] SWRL `RulesTest` — **deferred** (out of scope 1.x; **D2–D4**)
 
 **Known gaps from HermiT fixture survey:**
 
