@@ -398,14 +398,14 @@ The **in-scope catalog gate** (`parity_pct = 100%` on **915** cases) is met. Rem
 | **OWLLink Bob A/B** | **Complete** | Catalog `ported` → `owllink_bob_knows_subproperties` (**20** / **101** on `knows`); hand test in `hermit_owllink.rs` |
 | **OWLLink Bob C** | **Blocked** | `getObjectPropertyValues` on `agent-inst.owl` — needs ABox + multi-ontology load |
 | **Literal catalog** | **In progress** | **122** `#[ignore]` conformance tests; **103** Java out-of-scope; **34** `migrated` internal (B3) |
-| **Internal test ports (B3)** | **Partial** | 34 `migrated` (Normalization + Clausification OFN); **2/7** structural hyper goldens green (`basic`, `nominals-1`); 23 `tableau.*` + 3 `graph.*` deferred |
+| **Internal test ports (B3)** | **Partial** | 34 `migrated` (Normalization + Clausification OFN); **7/7** structural hyper goldens green; 23 `tableau.*` + 3 `graph.*` deferred |
 | **Perf (Tier D)** | **In progress** | `ontologos-dl` Criterion bench scaffold; Pizza DL **< 30 s** PR gate not yet enforced |
 
 #### Remaining workstreams (5)
 
 These are the active burndown items after the in-scope gate; each maps to a tier in [parity-roadmap.md](docs/internal/parity-roadmap.md).
 
-- [ ] **B3 — Internal test ports** — **Partial (2026-06-29):** 24/24 `NormalizationTest` + 8/8 internal `ClausificationTest` → `migrated`; 33 clausify OFN catalog; 7 structural XML fixtures vendored (goldens refreshed to upstream HermiT `def:N` / `all:N_M` format). **Hyper clausify:** `hyper_object` (nested ∃ + transitive `all:` automaton), `hyper_nominals` (OneOf / `¬OneOf` + `atLeast`), IRI-canonical dedupe for duplicate GCIs; **2/7** RDF/XML goldens green in `hermit_clausification_structural_fixtures` (`basic-input`, `nominals-1`); remaining 5 in `hermit_clausification_structural_fixtures_pending` (`#[ignore]`). Parser: `collect_anonymous_restriction_subclass_axioms` for top-level anonymous `owl:Restriction` GCIs. Mapping: [internal_ports.toml](tests/hermit/internal_ports.toml)
+- [ ] **B3 — Internal test ports** — **Partial (2026-06-29):** 24/24 `NormalizationTest` + 8/8 internal `ClausificationTest` → `migrated`; 33 clausify OFN catalog; 7 structural XML/OWL fixtures vendored (goldens refreshed to upstream HermiT `def:N` / `all:N_M` format). **Hyper clausify:** `hyper_object` (nested ∃ + transitive `all:` automaton + simple `atLeast` from `SubClassOfExistential`), `hyper_nominals` (OneOf / `¬OneOf` / `HasValue` + inverse roles), `hyper_cardinality` (union + max-cardinality `atMost` pigeonhole), `hyper_abox` (HasSelf ABox: `∀r.⊥` + `∀r.HasSelf` patterns), IRI-canonical dedupe for duplicate GCIs; **7/7** RDF/XML hyper goldens green in `hermit_clausification_structural_fixtures`. Parser: `expression_subclasses_from_owl_class_block`, `restriction_inner_body` for nested maxCardinality, union-of supplement via `collect_restriction_subclasses`. Mapping: [internal_ports.toml](tests/hermit/internal_ports.toml)
 - [ ] **B4 — Literal catalog burn-down** — Promote or fix **122** `#[ignore]` conformance tests; **`literal_catalog_pct`** on `hermit-burndown.sh status` (done); next: burn down ignores, promote remaining OWLLink cases
 - [ ] **C — Strict taxonomy gates** — Make `ONTOLOGOS_STRICT_TAXONOMY=1` / `--max-extra 0` a blocking CI check on Tier B/C goldens (OntoLogos taxonomy must match HermiT, not merely sound superset)
 - [ ] **D1 — Performance gates** — Criterion benches for saturation + tableau; optimize hot paths; enforce Pizza DL **< 30 s** classify in PR CI ([konclude.md](docs/internal/research/konclude.md) reference)
@@ -490,7 +490,7 @@ Local HermiT source at `HermiT/` (gitignored) or `ONTOLOGOS_HERMIT_ROOT`. Hand-w
 - [x] `ClassificationTest` pizza taxonomy golden — **0.5** EL (CI via `compare-pizza-el-golden.sh`)
 - [x] `ClassificationTest` wine / galen / propreo taxonomy goldens — CI via `compare-classification-fixtures.sh`
 - [x] `owl_wg_tests` approved entailment subset — **428/428** WG promoted (Phase 4)
-- [ ] `structural/ClausificationTest` — **B3** DL internal (partial: 33 OFN catalog + **2/7** RDF/XML hyper goldens — [clausification.rs](crates/ontologos-alc/tests/clausification.rs); pending: nominals-2+, has-self)
+- [ ] `structural/ClausificationTest` — **B3** DL internal (**7/7** RDF/XML hyper goldens — [clausification.rs](crates/ontologos-alc/tests/clausification.rs))
 - [ ] `structural/NormalizationTest` — **B3** DL internal (partial: [normalization.rs](crates/ontologos-alc/tests/normalization.rs))
 - [x] OWLLink Bob test A/B (`knows` subproperties **20** / **101**) — catalog `ported`, hand test `owllink_bob_knows_subproperties`
 - [ ] OWLLink Bob test C (`getObjectPropertyValues`) — blocked on ABox + multi-ontology load
@@ -933,7 +933,7 @@ See [hermit-replacement.md](docs/internal/research/hermit-replacement.md) and [h
 
 - [x] `ontologos-conformance` Tier B enabled in CI (`compare-classification-fixtures.sh` + `hermit_el.rs`)
 - [x] OWL WG **428**-case catalog promoted at 30s DL budget (`promoted_wg_ids.txt`)
-- [ ] Port HermiT `structural/ClausificationTest` as DL internal regression suite — 33 OFN catalog green; **2/7** RDF/XML hyper goldens (`basic`, `nominals-1`)
+- [x] Port HermiT `structural/ClausificationTest` as DL internal regression suite — 33 OFN catalog green; **7/7** RDF/XML hyper goldens
 - [x] HermiT JAR / Konclude CLI reference harness in `benchmarks/` (Tier C; optional external cross-check)
 - [ ] Comparison guide: OntoLogos 1.0 vs HermiT on standard corpora (honest gaps documented)
 
@@ -1228,7 +1228,7 @@ Scaffolding for full DL — lands in **1.0** as the HermiT parity engine. Users 
 - [x] Tableau expansion core (branching, clash detection, blocking)
 - [x] Taxonomy extraction from saturated tableau
 - [x] **Konclude CLI** + HermiT JAR reference harness in `benchmarks/` (extends `ontologos-conformance` Tier C)
-- [x] Port HermiT `structural/ClausificationTest` as DL internal regression suite — `clausification.rs::hermit_clausify_catalog` (33 OFN cases); structural RDF/XML hyper goldens **2/7** green (`basic`, `nominals-1`) via `hyper_object` + `hyper_nominals`
+- [x] Port HermiT `structural/ClausificationTest` as DL internal regression suite — `clausification.rs::hermit_clausify_catalog` (33 OFN cases); structural RDF/XML hyper goldens **7/7** green via `hyper_object`, `hyper_nominals`, `hyper_cardinality`, `hyper_abox`
 
 ### Preview fragment (ALCH + nominals subset)
 

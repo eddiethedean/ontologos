@@ -77,6 +77,21 @@ pub enum HyperAtom {
     },
     /// Equality `Y1 == Y2`.
     Equality { left: Term, right: Term },
+    /// `atMost(n role concept)(X)` with equality annotation in head.
+    AtMostAnnotated {
+        n: u32,
+        role: String,
+        concept: String,
+        term: Term,
+        eq_left: Term,
+        eq_right: Term,
+    },
+    /// Node ordering `Y1 <= Y2`.
+    NodeLe { left: Term, right: Term },
+    /// `NodeIDsAscendingOrEqual(Y1,Y2,…)`.
+    NodeIDsAscendingOrEqual { vars: Vec<Term> },
+    /// Negated concept fact `not def:1(:a)`.
+    NotConcept { name: String, term: Term },
 }
 
 /// Hyperresolution clause (`head v … :- body, …`).
@@ -131,8 +146,17 @@ pub fn format_hyper_clauses(ontology: &Ontology, set: &HyperClauseSet) -> Vec<St
 fn format_hyper_clause(clause: &HyperClause) -> String {
     let mut head: Vec<String> = clause.head.iter().map(format_hyper_atom).collect();
     head.sort();
-    let mut body: Vec<String> = clause.body.iter().map(format_hyper_atom).collect();
-    body.sort();
+    let body: Vec<String> = if clause
+        .body
+        .iter()
+        .any(|a| matches!(a, HyperAtom::NodeIDsAscendingOrEqual { .. }))
+    {
+        clause.body.iter().map(format_hyper_atom).collect()
+    } else {
+        let mut body: Vec<String> = clause.body.iter().map(format_hyper_atom).collect();
+        body.sort();
+        body
+    };
     let body_s = body.join(", ");
     if head.is_empty() {
         return format!(":- {body_s}");
@@ -171,6 +195,25 @@ fn format_hyper_atom(atom: &HyperAtom) -> String {
             format!("{role}({},{})", subject.fmt(), object.fmt())
         }
         HyperAtom::Equality { left, right } => format!("{} == {}", left.fmt(), right.fmt()),
+        HyperAtom::AtMostAnnotated {
+            n,
+            role,
+            concept,
+            term,
+            eq_left,
+            eq_right,
+        } => format!(
+            "[{} == {}]@atMost({n} {role} {concept})({})",
+            eq_left.fmt(),
+            eq_right.fmt(),
+            term.fmt()
+        ),
+        HyperAtom::NodeLe { left, right } => format!("{} <= {}", left.fmt(), right.fmt()),
+        HyperAtom::NodeIDsAscendingOrEqual { vars } => {
+            let args: Vec<String> = vars.iter().map(Term::fmt).collect();
+            format!("NodeIDsAscendingOrEqual({})", args.join(","))
+        }
+        HyperAtom::NotConcept { name, term } => format!("not {name}({})", term.fmt()),
     }
 }
 
@@ -435,4 +478,25 @@ pub fn negate_data_range(range: &DataRangeFmt) -> DataRangeFmt {
 /// Role abbreviation.
 pub fn abbrev_role(ontology: &Ontology, property: EntityId) -> String {
     abbrev_entity(ontology, property)
+}
+
+/// Build a role atom, swapping arguments for inverse roles.
+pub fn role_atom(
+    ontology: &Ontology,
+    property: &ontologos_core::RoleExpr,
+    subject: Term,
+    object: Term,
+) -> HyperAtom {
+    match property {
+        ontologos_core::RoleExpr::Atomic(id) => HyperAtom::Role {
+            role: abbrev_role(ontology, *id),
+            subject,
+            object,
+        },
+        ontologos_core::RoleExpr::Inverse(id) => HyperAtom::Role {
+            role: abbrev_role(ontology, *id),
+            subject: object,
+            object: subject,
+        },
+    }
 }

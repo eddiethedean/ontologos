@@ -62,8 +62,91 @@ pub(crate) fn clausify_object_subclass_axioms(
         let DlAxiom::SubClassOf { sub, sup } = axiom else {
             continue;
         };
-        let _ = try_object_subclass(ontology, ctx, sub, sup, def_index, push);
+        if try_object_subclass(ontology, ctx, sub, sup, def_index, push) {
+            continue;
+        }
+        let _ = try_simple_some_superclass(ontology, ctx, sub, sup, push);
     }
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        } = axiom
+        else {
+            continue;
+        };
+        let _ = try_simple_some_existential(ontology, *subclass, *property, *filler, push);
+    }
+}
+
+fn try_simple_some_superclass(
+    ontology: &Ontology,
+    ctx: &mut ObjectHyperContext,
+    sub: CeId,
+    sup: CeId,
+    push: &mut dyn FnMut(HyperClause),
+) -> bool {
+    if ctx.processed_ce_pairs.contains(&(sub, sup)) {
+        return true;
+    }
+    let Some(sub_name) = concept_name(ontology, sub) else {
+        return false;
+    };
+    let Some(ClassExpr::Some {
+        property: RoleExpr::Atomic(prop),
+        filler,
+    }) = ontology.dl().ce(sup).cloned()
+    else {
+        return false;
+    };
+    let Some(filler_name) = concept_name(ontology, filler) else {
+        return false;
+    };
+    let role = abbrev_role(ontology, prop);
+    push(HyperClause {
+        head: vec![HyperAtom::AtLeastObject {
+            n: 1,
+            role,
+            concept: filler_name,
+            term: Term::Var(VAR_X.into()),
+        }],
+        body: vec![HyperAtom::Concept {
+            name: sub_name,
+            term: Term::Var(VAR_X.into()),
+        }],
+    });
+    ctx.processed_ce_pairs.insert((sub, sup));
+    true
+}
+
+fn try_simple_some_existential(
+    ontology: &Ontology,
+    subclass: EntityId,
+    property: EntityId,
+    filler: EntityId,
+    push: &mut dyn FnMut(HyperClause),
+) -> bool {
+    let sub_name = abbrev_entity(ontology, subclass);
+    let filler_name = abbrev_entity(ontology, filler);
+    let role = abbrev_role(ontology, property);
+    push(HyperClause {
+        head: vec![HyperAtom::AtLeastObject {
+            n: 1,
+            role,
+            concept: filler_name,
+            term: Term::Var(VAR_X.into()),
+        }],
+        body: vec![HyperAtom::Concept {
+            name: sub_name,
+            term: Term::Var(VAR_X.into()),
+        }],
+    });
+    true
+}
+
+fn abbrev_entity(ontology: &Ontology, id: EntityId) -> String {
+    crate::hyperclause::abbrev_entity(ontology, id)
 }
 
 fn try_object_subclass(

@@ -11,6 +11,8 @@ use crate::hyperclause::{
     HyperAtom, HyperClause, HyperClauseSet, Term,
 };
 use crate::Error;
+use crate::hyper_abox::clausify_abox_class_assertions;
+use crate::hyper_cardinality::{clausify_cardinality_subclass_axioms, CardinalityHyperContext};
 use crate::hyper_nominals::{clausify_nominal_subclass_axioms, NominalHyperContext};
 use crate::hyper_object::{clausify_object_subclass_axioms, ObjectHyperContext};
 
@@ -31,6 +33,7 @@ struct HyperClausifier {
     defdata_names: HashMap<DeId, String>,
     object_ctx: ObjectHyperContext,
     nominal_ctx: NominalHyperContext,
+    cardinality_ctx: CardinalityHyperContext,
 }
 
 impl HyperClausifier {
@@ -42,6 +45,7 @@ impl HyperClausifier {
             defdata_names: HashMap::new(),
             object_ctx: ObjectHyperContext::empty(),
             nominal_ctx: NominalHyperContext::empty(),
+            cardinality_ctx: CardinalityHyperContext::empty(),
         }
     }
 
@@ -68,6 +72,30 @@ impl HyperClausifier {
             self.set.push_clause(c);
         }
         for f in nominal_facts {
+            self.set.push_fact(f);
+        }
+        self.cardinality_ctx = CardinalityHyperContext::empty();
+        let mut cardinality_clauses = Vec::new();
+        clausify_cardinality_subclass_axioms(
+            ontology,
+            &mut self.cardinality_ctx,
+            &mut |c| cardinality_clauses.push(c),
+        );
+        for c in cardinality_clauses {
+            self.set.push_clause(c);
+        }
+        let mut abox_clauses = Vec::new();
+        let mut abox_facts = Vec::new();
+        clausify_abox_class_assertions(
+            ontology,
+            &mut def_index,
+            &mut |c| abox_clauses.push(c),
+            &mut |f| abox_facts.push(f),
+        );
+        for c in abox_clauses {
+            self.set.push_clause(c);
+        }
+        for f in abox_facts {
             self.set.push_fact(f);
         }
         self.def_index = def_index;
@@ -139,13 +167,24 @@ impl HyperClausifier {
         sub: CeId,
         sup: CeId,
     ) -> Result<(), Error> {
-        if self.object_ctx.handled_subclass(sub, sup) || self.nominal_ctx.handled_subclass(sub, sup) {
+        if self.object_ctx.handled_subclass(sub, sup)
+            || self.nominal_ctx.handled_subclass(sub, sup)
+            || self.cardinality_ctx.handled_subclass(sub, sup)
+        {
             return Ok(());
         }
         let sub_expr = ontology.dl().ce(sub).cloned();
         let sup_expr = ontology.dl().ce(sup).cloned();
 
-        if matches!(sub_expr, Some(ClassExpr::Some { .. })) {
+        if matches!(
+            sup_expr,
+            Some(
+                ClassExpr::Some { .. }
+                    | ClassExpr::All { .. }
+                    | ClassExpr::HasValue { .. }
+                    | ClassExpr::Or(_)
+            )
+        ) {
             return Ok(());
         }
 

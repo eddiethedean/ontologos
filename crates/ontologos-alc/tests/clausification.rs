@@ -29,9 +29,6 @@ fn assert_hyper_clauses_match(input: &Path, golden: &Path) -> Result<(), Error> 
 const STRUCTURAL_CLAUSIFICATION_FIXTURES: &[(&str, &str)] = &[
     ("basic-input.xml", "basic-control.txt"),
     ("nominals-1-input.xml", "nominals-1-control.txt"),
-];
-
-const STRUCTURAL_CLAUSIFICATION_PENDING: &[(&str, &str)] = &[
     ("nominals-2-input.xml", "nominals-2-control.txt"),
     ("nominals-3-input.xml", "nominals-3-control.txt"),
     ("nominals-4-input.xml", "nominals-4-control.txt"),
@@ -39,8 +36,36 @@ const STRUCTURAL_CLAUSIFICATION_PENDING: &[(&str, &str)] = &[
     ("has-self-2-input.owl", "has-self-2-control.txt"),
 ];
 
+const STRUCTURAL_CLAUSIFICATION_PENDING: &[(&str, &str)] = &[];
+
 #[test]
-#[ignore = "pending hyper clausify ports (nominals-2+, has-self)"]
+#[ignore]
+fn debug_pending_structural() {
+    let base = structural_dir();
+    for (input, _) in STRUCTURAL_CLAUSIFICATION_PENDING {
+        let path = base.join(input);
+        println!("\n=== {} ===", input);
+        let ontology = ontologos_parser::load_ontology(&path).unwrap();
+        for ax in ontology.dl().axioms() {
+            println!("  DL: {:?}", ax);
+        }
+        for (id, ce) in ontology.dl().expressions() {
+            println!("  CE {:?}: {:?}", id, ce);
+        }
+    }
+}
+
+#[test]
+fn hermit_clausification_structural_fixtures() -> Result<(), Error> {
+    let base = structural_dir();
+    for (input, golden) in STRUCTURAL_CLAUSIFICATION_FIXTURES {
+        assert_hyper_clauses_match(&base.join(input), &base.join(golden))?;
+    }
+    Ok(())
+}
+
+#[test]
+#[ignore = "no pending structural hyper clausify ports"]
 fn hermit_clausification_structural_fixtures_pending() -> Result<(), Error> {
     let base = structural_dir();
     for (input, golden) in STRUCTURAL_CLAUSIFICATION_PENDING {
@@ -203,16 +228,6 @@ fn hermit_clausify_catalog() -> Result<(), Error> {
         ran += 1;
     }
     assert!(ran >= 33, "expected full clausify catalog, ran {ran}");
-    Ok(())
-}
-
-/// HermiT `ClausificationTest` XML/OWL hyper clausify goldens (vendored structural/res).
-#[test]
-fn hermit_clausification_structural_fixtures() -> Result<(), Error> {
-    let base = structural_dir();
-    for (input, golden) in STRUCTURAL_CLAUSIFICATION_FIXTURES {
-        assert_hyper_clauses_match(&base.join(input), &base.join(golden))?;
-    }
     Ok(())
 }
 

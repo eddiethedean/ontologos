@@ -18,7 +18,8 @@ const ENTRIES: &[ManifestEntry] = &[
         local_path: "benchmarks/data/pizza.owl",
         expected_profile: OwlProfile::Dl,
         // Mapper output count; see benchmarks/manifest.toml and benchmarks/README.md.
-        axiom_count_approx: 658,
+        // Increased after RDF restriction subclass harvest (union/maxCardinality supplement).
+        axiom_count_approx: 900,
     },
     ManifestEntry {
         name: "family",

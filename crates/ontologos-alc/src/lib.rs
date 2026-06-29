@@ -4,6 +4,8 @@
 
 mod clause;
 mod dl_ontology;
+mod hyper_abox;
+mod hyper_cardinality;
 mod hyper_clausify;
 mod hyper_nominals;
 mod hyper_object;

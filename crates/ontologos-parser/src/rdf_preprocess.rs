@@ -1515,6 +1515,7 @@ pub(crate) fn collect_self_disjoint_restriction_assertions(
 pub(crate) fn collect_restriction_subclasses(rdf: &str) -> Vec<(String, String)> {
     let base = parse_xml_base(rdf);
     let dt_props = declared_datatype_property_iris(rdf);
+    let node_lists = build_rdf_collection_node_map(rdf, &base, &dt_props);
     let mut out = Vec::new();
     let mut pos = 0usize;
     while pos < rdf.len() {
@@ -1527,7 +1528,12 @@ pub(crate) fn collect_restriction_subclasses(rdf: &str) -> Vec<(String, String)>
             break;
         };
         let block = &rdf[start..end];
-        if let Some(pair) = restriction_subclass_from_description_block(block, &base, &dt_props) {
+        if let Some(pair) = restriction_subclass_from_description_block(
+            block,
+            &base,
+            &dt_props,
+            &node_lists,
+        ) {
             out.push(pair);
         }
         pos = end;
@@ -1542,9 +1548,9 @@ pub(crate) fn collect_restriction_subclasses(rdf: &str) -> Vec<(String, String)>
             break;
         };
         let block = &rdf[start..end];
-        if let Some(pair) = restriction_subclass_from_owl_class_block(block, &base, &dt_props) {
-            out.push(pair);
-        }
+        out.extend(expression_subclasses_from_owl_class_block(
+            block, &base, &dt_props, &node_lists,
+        ));
         pos = end;
     }
     out
@@ -1606,6 +1612,7 @@ fn restriction_subclass_from_description_block(
     block: &str,
     base: &str,
     dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
 ) -> Option<(String, String)> {
     let open_end = block.find('>')?;
     let open = &block[..=open_end];
@@ -1617,26 +1624,71 @@ fn restriction_subclass_from_description_block(
     if !is_class_restriction_description(inner) {
         return None;
     }
-    let ce_ofn = inline_restriction_ce_to_ofn(inner, base, dt_props)?;
+    let ce_ofn = inline_restriction_ce_to_ofn(inner, base, dt_props).or_else(|| {
+        superclass_ce_ofn_from_subclass_inner(inner.trim(), base, dt_props, node_lists)
+    })?;
     Some((class_iri, ce_ofn))
+}
+
+fn expression_subclasses_from_owl_class_block(
+    block: &str,
+    base: &str,
+    dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
+) -> Vec<(String, String)> {
+    let gt = match block.find('>') {
+        Some(i) => i,
+        None => return Vec::new(),
+    };
+    let open = &block[..=gt];
+    let Some(class_iri) = extract_attribute(open, "rdf:about")
+        .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
+        .map(|iri| resolve_relative_iri(&iri, base))
+    else {
+        return Vec::new();
+    };
+    let close_start = match block.rfind("</owl:Class>") {
+        Some(i) => i,
+        None => return Vec::new(),
+    };
+    let inner = &block[gt + 1..close_start];
+    let mut out = Vec::new();
+    let mut pos = 0usize;
+    while let Some((_, end, sub_block)) = find_top_level_element_from(inner, pos, "rdfs:subClassOf")
+    {
+        let sub_inner = element_inner(sub_block, "rdfs:subClassOf");
+        if let Some(ce_ofn) =
+            superclass_ce_ofn_from_subclass_inner(sub_inner.trim(), base, dt_props, node_lists)
+        {
+            out.push((class_iri.clone(), ce_ofn));
+        }
+        pos = end;
+    }
+    out
 }
 
 fn restriction_subclass_from_owl_class_block(
     block: &str,
     base: &str,
     dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
 ) -> Option<(String, String)> {
-    let open_end = block.find('>')?;
-    let open = &block[..=open_end];
-    let class_iri = extract_attribute(open, "rdf:about")
-        .or_else(|| extract_attribute(open, "rdf:ID").map(|id| format!("{base}#{id}")))
-        .map(|iri| resolve_relative_iri(&iri, base))?;
-    let close_start = block.rfind("</owl:Class>")?;
-    let inner = &block[open_end + 1..close_start];
-    let (_, _, sub_block) = find_top_level_element_bounds(inner, "rdfs:subClassOf")?;
-    let sub_inner = element_inner(sub_block, "rdfs:subClassOf");
-    let ce_ofn = restriction_ce_to_ofn(sub_inner.trim(), base, dt_props)?;
-    Some((class_iri, ce_ofn))
+    expression_subclasses_from_owl_class_block(block, base, dt_props, node_lists)
+        .into_iter()
+        .next()
+}
+
+fn superclass_ce_ofn_from_subclass_inner(
+    sub_inner: &str,
+    base: &str,
+    dt_props: &std::collections::HashSet<String>,
+    node_lists: &std::collections::HashMap<String, Vec<String>>,
+) -> Option<String> {
+    member_block_to_ofn(sub_inner, base, dt_props, node_lists).or_else(|| {
+        restriction_ce_to_ofn(sub_inner, base, dt_props).or_else(|| {
+            inline_restriction_ce_to_ofn(sub_inner, base, dt_props)
+        })
+    })
 }
 
 /// Reified RDF negative property assertions (`owl:sourceIndividual` / `owl:assertionProperty` / `owl:targetIndividual`).
@@ -2564,11 +2616,15 @@ fn member_block_to_ofn(
     if let Some(ofn) = complement_block_to_ofn(block, base, dt_props, node_lists) {
         return Some(ofn);
     }
-    if block.contains("<owl:Restriction") {
+    if block.trim_start().starts_with("<owl:Restriction") {
         return restriction_ce_to_ofn(block, base, dt_props);
     }
     if block.trim_start().starts_with("<owl:Class") {
-        let inner = element_inner(block, "owl:Class");
+        let trimmed = block.trim();
+        let inner = element_inner(trimmed, "owl:Class");
+        if let Some(ofn) = member_block_to_ofn(inner.trim(), base, dt_props, node_lists) {
+            return Some(ofn);
+        }
         if let Some(ofn) = inline_restriction_ce_to_ofn(inner.trim(), base, dt_props) {
             return Some(ofn);
         }
@@ -3846,7 +3902,11 @@ fn inline_restriction_ce_to_ofn(
         return Some(format!("ObjectHasValue(<{on_prop}> {value})"));
     }
     if let Some(n) = element_text_content(inner, "owl:maxCardinality") {
-        return Some(format!("ObjectMaxCardinality({} <{on_prop}>)", n.trim()));
+        let filler = extract_property_resource(inner, "owl:onClass", base)
+            .map(|c| format!("<{c}>"))
+            .or_else(|| extract_filler_ofn(inner, "owl:someValuesFrom", base))
+            .unwrap_or_else(|| "owl:Thing".to_owned());
+        return Some(format!("ObjectMaxCardinality({} <{on_prop}> {filler})", n.trim()));
     }
     if let Some(n) = element_text_content(inner, "owl:maxQualifiedCardinality") {
         let filler = extract_property_resource(inner, "owl:onClass", base)
@@ -3871,51 +3931,54 @@ fn restriction_ce_to_ofn(
     base: &str,
     dt_props: &std::collections::HashSet<String>,
 ) -> Option<String> {
-    if !ce_block.contains("<owl:Restriction") {
+    if !ce_block.contains("<owl:Restriction") && !ce_block.contains("owl:onProperty") {
         return None;
     }
-    if ce_block.contains("rdfs:Datatype") || ce_block.contains("owl:onDatatype") {
+    let body = restriction_inner_body(ce_block);
+    if body.contains("rdfs:Datatype") || body.contains("owl:onDatatype") {
         return None;
     }
-    let on_prop = extract_property_resource(ce_block, "owl:onProperty", base)?;
+    let on_prop = extract_property_resource(&body, "owl:onProperty", base)?;
     if dt_props.contains(&on_prop) {
         return None;
     }
-    if let Some(filler) = extract_filler_ofn(ce_block, "owl:someValuesFrom", base) {
+    if let Some(filler) = extract_filler_ofn(&body, "owl:someValuesFrom", base) {
         return Some(format!("ObjectSomeValuesFrom(<{on_prop}> {filler})"));
     }
-    if let Some(filler) = extract_filler_ofn(ce_block, "owl:allValuesFrom", base) {
+    if let Some(filler) = extract_filler_ofn(&body, "owl:allValuesFrom", base) {
         return Some(format!("ObjectAllValuesFrom(<{on_prop}> {filler})"));
     }
-    if let Some(n) = element_text_content(ce_block, "owl:maxCardinality") {
-        let filler = extract_filler_ofn(ce_block, "owl:someValuesFrom", base)
+    if let Some(n) = element_text_content(&body, "owl:maxCardinality") {
+        let filler = extract_property_resource(&body, "owl:onClass", base)
+            .map(|c| ofn_entity_ref(&c))
+            .or_else(|| extract_filler_ofn(&body, "owl:someValuesFrom", base))
             .unwrap_or_else(|| "owl:Thing".to_owned());
         return Some(format!(
             "ObjectMaxCardinality({} <{on_prop}> {filler})",
             n.trim()
         ));
     }
-    if let Some(n) = element_text_content(ce_block, "owl:maxQualifiedCardinality") {
-        let filler = extract_property_resource(ce_block, "owl:onClass", base)
-            .map(|c| format!("<{c}>"))
+    if let Some(n) = element_text_content(&body, "owl:maxQualifiedCardinality") {
+        let filler = extract_property_resource(&body, "owl:onClass", base)
+            .map(|c| ofn_entity_ref(&c))
             .unwrap_or_else(|| "owl:Thing".to_owned());
         return Some(format!(
             "ObjectMaxCardinality({} <{on_prop}> {filler})",
             n.trim()
         ));
     }
-    if let Some(n) = element_text_content(ce_block, "owl:minCardinality") {
-        let filler = extract_filler_ofn(ce_block, "owl:someValuesFrom", base)
+    if let Some(n) = element_text_content(&body, "owl:minCardinality") {
+        let filler = extract_filler_ofn(&body, "owl:someValuesFrom", base)
             .unwrap_or_else(|| "owl:Thing".to_owned());
         return Some(format!(
             "ObjectMinCardinality({} <{on_prop}> {filler})",
             n.trim()
         ));
     }
-    if ce_block.contains("owl:hasSelf") {
+    if body.contains("owl:hasSelf") {
         return Some(format!("ObjectHasSelf(<{on_prop}>)"));
     }
-    if let Some(value) = extract_filler_ofn(ce_block, "owl:hasValue", base) {
+    if let Some(value) = extract_filler_ofn(&body, "owl:hasValue", base) {
         return Some(format!("ObjectHasValue(<{on_prop}> {value})"));
     }
     None
@@ -4076,7 +4139,8 @@ fn ofn_entity_ref(iri: &str) -> String {
     } else if iri == "http://www.w3.org/2002/07/owl#Nothing" {
         "owl:Nothing".to_owned()
     } else {
-        let escaped = iri.replace('#', "%23");
+        let normalized = iri.replace("%23", "#");
+        let escaped = normalized.replace('#', "%23");
         format!("<{escaped}>")
     }
 }
@@ -5645,6 +5709,103 @@ mod tests {
         dt.insert("http://example.org/dp".to_string());
         let ofn = data_restriction_ce_to_ofn(avf, base, &dt);
         assert!(ofn.is_some_and(|s| s.contains("DataAllValuesFrom")));
+    }
+
+    #[test]
+    fn minimal_subclass_restriction_harvest_preprocessed() {
+        let rdf = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/minimal_subclass.rdf"),
+        )
+        .expect("read");
+        let deduped = dedupe_rdf_xml_ids(&rdf);
+        let normalized_ids = normalize_invalid_rdf_ids(&deduped);
+        let expanded = expand_xml_entities_with_limit(&normalized_ids, 50 * 1024 * 1024).unwrap();
+        let relative_uris = normalize_relative_owl_uris(&expanded);
+        let rdfs_classes = normalize_rdfs_class_elements(&relative_uris);
+        let injected = inject_rdf_based_punning_declarations(&rdfs_classes);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let intersections = normalize_class_intersection_definitions(&typed_nodes);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let individuals = materialize_anonymous_individual_descriptions(&named);
+        let normalized = normalize_all_different_members(&individuals);
+        let disjoint = expand_all_disjoint_collections(&normalized);
+        let property_usage =
+            inject_object_property_declarations_from_usage(&disjoint);
+        let preprocessed = normalize_property_same_as(&property_usage);
+        let collected = collect_restriction_subclasses(&preprocessed);
+        assert!(
+            collected.iter().any(|(_, ce)| ce.contains("ObjectSomeValuesFrom")),
+            "expected someValuesFrom supplement on preprocessed RDF, got {collected:?}"
+        );
+    }
+
+    #[test]
+    fn nominals2_max_cardinality_restriction_ofn() {
+        let block = r#"<owl:Restriction>
+                        <owl:onProperty rdf:resource="file:/c:/temp/test.owl#r"/>
+                        <owl:onClass rdf:resource="file:/c:/temp/test.owl#d"/>
+                        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">2</owl:maxCardinality>
+                    </owl:Restriction>"#;
+        let base = "file:/c:/temp/test.owl";
+        let dt = std::collections::HashSet::new();
+        let ofn = restriction_ce_to_ofn(block.trim(), base, &dt);
+        assert!(ofn.is_some_and(|s| s.contains("ObjectMaxCardinality")));
+    }
+
+    #[test]
+    fn nominals2_union_subclass_ofn_direct() {
+        let sub_inner = r#"<owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="file:/c:/temp/test.owl#e"/>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="file:/c:/temp/test.owl#r"/>
+                        <owl:onClass rdf:resource="file:/c:/temp/test.owl#d"/>
+                        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">2</owl:maxCardinality>
+                    </owl:Restriction>
+                </owl:unionOf>
+            </owl:Class>"#;
+        let base = "file:/c:/temp/test.owl";
+        let dt = std::collections::HashSet::new();
+        let nl = std::collections::HashMap::new();
+        let ofn = superclass_ce_ofn_from_subclass_inner(sub_inner.trim(), base, &dt, &nl);
+        assert!(
+            ofn.as_ref()
+                .is_some_and(|s| s.contains("ObjectUnionOf") && s.contains("ObjectMaxCardinality")),
+            "got {ofn:?}"
+        );
+    }
+
+    #[test]
+    fn nominals2_union_subclass_loads() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../benchmarks/data/hermit/structural/nominals-2-input.xml");
+        let rdf = std::fs::read_to_string(&path).expect("read");
+        let deduped = dedupe_rdf_xml_ids(&rdf);
+        let normalized_ids = normalize_invalid_rdf_ids(&deduped);
+        let expanded = expand_xml_entities_with_limit(&normalized_ids, 50 * 1024 * 1024).unwrap();
+        let relative_uris = normalize_relative_owl_uris(&expanded);
+        let rdfs_classes = normalize_rdfs_class_elements(&relative_uris);
+        let injected = inject_rdf_based_punning_declarations(&rdfs_classes);
+        let typed_about = materialize_typed_about_elements(&injected);
+        let typed_nodes = materialize_typed_node_elements(&typed_about);
+        let intersections = normalize_class_intersection_definitions(&typed_nodes);
+        let same_as = normalize_class_same_as(&intersections);
+        let named = materialize_named_individual_descriptions(&same_as);
+        let individuals = materialize_anonymous_individual_descriptions(&named);
+        let normalized = normalize_all_different_members(&individuals);
+        let disjoint = expand_all_disjoint_collections(&normalized);
+        let property_usage =
+            inject_object_property_declarations_from_usage(&disjoint);
+        let preprocessed = normalize_property_same_as(&property_usage);
+        let collected = collect_restriction_subclasses(&preprocessed);
+        assert!(
+            collected
+                .iter()
+                .any(|(_, ce)| ce.contains("ObjectUnionOf") && ce.contains("ObjectMaxCardinality")),
+            "expected union supplement, got {collected:?}"
+        );
     }
 
     #[test]
