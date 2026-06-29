@@ -75,11 +75,21 @@ fn check(ofn: &str, ce: &str, expected: bool) {
 }
 
 #[test]
-#[ignore = "tableau gap: IanT6 inverse functional pattern"]
-fn iant6_unsat() {
+fn iant6_unsat_regression() {
     let ce = "ObjectIntersectionOf(ObjectComplementOf(:c) ObjectSomeValuesFrom(ObjectInverseOf(:f) :d) ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectSomeValuesFrom(ObjectInverseOf(:f) :d)))";
     check(
         "hermit_reasoner_reasonertest_testiant6.ofn",
+        ce,
+        false,
+    );
+}
+
+#[test]
+#[ignore = "tableau gap: IanT7c functional inverse + nested exists"]
+fn iant7c_unsat() {
+    let ce = "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))) ObjectSomeValuesFrom(ObjectInverseOf(:f) :p1))";
+    check(
+        "hermit_reasoner_reasonertest_testiant7c.ofn",
         ce,
         false,
     );

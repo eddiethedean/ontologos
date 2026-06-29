@@ -969,6 +969,7 @@ fn push_saturated_role_edge(branch: &mut Branch<'_>, from: usize, property: Role
     recheck_cardinality_on_world(branch, from);
     recheck_cardinality_on_world(branch, to);
     recheck_functional_constraints(branch);
+    recheck_functional_inverse_constraints(branch);
     recheck_inverse_functional_source_merge(branch);
 }
 
@@ -997,8 +998,47 @@ pub(crate) fn add_role_edge(branch: &mut Branch<'_>, from: usize, property: Role
     propagate_structural_existential_subsumptions(branch);
     check_role_disjoint_on_edge(branch, from, &property, to);
     recheck_functional_constraints(branch);
+    recheck_functional_inverse_constraints(branch);
     recheck_inverse_functional_source_merge(branch);
     clash::check_existential_bottom_subsumptions(branch);
+}
+
+/// Functional object properties act as inverse-functional on their inverse role.
+pub(crate) fn recheck_functional_inverse_constraints(branch: &mut Branch<'_>) {
+    if branch.clash || branch.functional_roles.is_empty() {
+        return;
+    }
+    for f in branch.functional_roles.clone() {
+        let inv = RoleExpr::Inverse(f);
+        let mut by_object: HashMap<usize, Vec<usize>> = HashMap::new();
+        for (from, prop, to) in &branch.edges {
+            if role_subsumes(branch, &inv, prop) {
+                by_object.entry(*to).or_default().push(*from);
+            }
+        }
+        for sources in by_object.values() {
+            if sources.len() <= 1 {
+                continue;
+            }
+            let mut unique = sources.clone();
+            unique.sort_unstable();
+            unique.dedup();
+            if unique.len() <= 1 {
+                continue;
+            }
+            let keep = unique[0];
+            for &drop in &unique[1..] {
+                if worlds_marked_different(branch, keep, drop) {
+                    branch.clash = true;
+                    return;
+                }
+                branch.merge_worlds(keep, drop);
+                if branch.clash {
+                    return;
+                }
+            }
+        }
+    }
 }
 
 fn worlds_marked_different(branch: &Branch<'_>, w1: usize, w2: usize) -> bool {

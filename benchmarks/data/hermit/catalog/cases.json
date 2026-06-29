@@ -13863,7 +13863,7 @@
     "golden": null,
     "hand_written": false,
     "id": "reasoner.ReasonerTest.testIanT6",
-    "ignore_reason": "documented semantic or mapping gap (see manifest)",
+    "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
     "individual_types": [],
@@ -13876,7 +13876,7 @@
     "ria_regular": null,
     "role_simple": null,
     "rust_test": null,
-    "status": "excluded",
+    "status": "axiom",
     "subsumptions": [],
     "tier": "A"
   },
