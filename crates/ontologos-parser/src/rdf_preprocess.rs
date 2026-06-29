@@ -349,6 +349,11 @@ pub fn inject_rdf_based_punning_declarations(input: &str) -> String {
     collect_punned_class_iris(input, &xmlns, &mut classes);
     collect_punned_property_iris(input, &xmlns, &mut object_props, &mut datatype_props);
 
+    for peer in collect_datatype_property_equivalent_peers(input) {
+        object_props.remove(&peer);
+        datatype_props.insert(peer);
+    }
+
     classes.retain(|iri| !declared_classes.contains(iri));
     object_props.retain(|iri| !declared_object.contains(iri) && !declared_datatype.contains(iri));
     datatype_props.retain(|iri| !declared_object.contains(iri) && !declared_datatype.contains(iri));
@@ -559,6 +564,26 @@ fn collect_property_axiom_iris(input: &str, out: &mut HashSet<String>) {
     for tag in ["owl:equivalentProperty", "owl:propertyDisjointWith"] {
         collect_axiom_endpoint_iris(input, tag, out);
     }
+}
+
+/// Peers of `owl:equivalentProperty` on declared datatype properties (imported or local).
+fn collect_datatype_property_equivalent_peers(input: &str) -> HashSet<String> {
+    let base = parse_xml_base(input);
+    let mut out = HashSet::new();
+    let mut pos = 0usize;
+    while let Some(rel) = input[pos..].find("<owl:DatatypeProperty") {
+        let start = pos + rel;
+        let Some(end) = tagged_element_end(input, start, "owl:DatatypeProperty") else {
+            pos = start + 1;
+            continue;
+        };
+        let block = &input[start..end];
+        if let Some(peer) = extract_property_resource(block, "owl:equivalentProperty", &base) {
+            out.insert(peer);
+        }
+        pos = end;
+    }
+    out
 }
 
 fn collect_axiom_endpoint_iris(input: &str, tag: &str, out: &mut HashSet<String>) {
@@ -5666,6 +5691,31 @@ mod tests {
         let out = inject_rdf_based_punning_declarations(input);
         assert!(out.contains("<owl:DatatypeProperty rdf:about=\"http://www.example.org#dp\"/>"));
         assert!(out.contains("<owl:ObjectProperty rdf:about=\"http://www.example.org#op\"/>"));
+    }
+
+    #[test]
+    fn injects_datatype_peer_for_equivalent_property_target() {
+        let input = r#"<rdf:RDF xml:base="http://example.com/owl/families/"
+  xmlns="http://example.com/owl/families/"
+  xmlns:owl="http://www.w3.org/2002/07/owl#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <owl:DatatypeProperty rdf:about="hasAge">
+    <owl:equivalentProperty rdf:resource="http://example.org/otherOntologies/families/age"/>
+  </owl:DatatypeProperty>
+</rdf:RDF>"#;
+        let out = inject_rdf_based_punning_declarations(input);
+        assert!(
+            out.contains(
+                "<owl:DatatypeProperty rdf:about=\"http://example.org/otherOntologies/families/age\"/>"
+            ),
+            "expected imported age peer as datatype property, got:\n{out}"
+        );
+        assert!(
+            !out.contains(
+                "<owl:ObjectProperty rdf:about=\"http://example.org/otherOntologies/families/age\"/>"
+            ),
+            "must not inject object property for datatype equivalent peer:\n{out}"
+        );
     }
 
     #[test]

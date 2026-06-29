@@ -1,9 +1,6 @@
 //! Hand-written ports for HermiT `OWLLinkTest` smoke and entailment checks.
 //!
 //! Source: `HermiT/project/test/org/semanticweb/HermiT/reasoner/OWLLinkTest.java`
-//!
-//! Full `primer.owl` import is blocked by `hasAge` / `otherOnt:age` datatype punning in horned-owl;
-//! these tests use a minimal OFN fragment with the disjointness axioms the Java tests exercise.
 
 use ontologos_conformance::{hermit_test_path, vendored_hermit_test_path};
 use ontologos_core::{Axiom, DlAxiom, Ontology};
@@ -28,6 +25,10 @@ fn primer_fragment_ofn() -> PathBuf {
 
 fn families_iri(local: &str) -> String {
     format!("{FAMILIES_NS}{local}")
+}
+
+fn load_owllink_primer() -> Ontology {
+    load_ontology(&fixture_path("primer.owl")).expect("primer.owl with families import")
 }
 
 fn load_owllink_primer_fragment() -> Ontology {
@@ -65,12 +66,53 @@ fn has_disjoint_classes(ontology: &Ontology, left: &str, right: &str) -> bool {
     })
 }
 
-/// `OWLLinkTest.testInverses` / `testSuccessiveCalls` — primer fragment is consistent.
+/// `OWLLinkTest.testInverses` / `testSuccessiveCalls` — primer corpus loads (Java smoke only).
 #[test]
 fn owllink_primer_smoke() {
-    let ontology = load_owllink_primer_fragment();
+    let ontology = load_owllink_primer();
     assert!(ontology.entity_count() > 0);
-    assert!(is_consistent(&ontology).expect("consistent"));
+    assert!(
+        ontology.lookup_entity(&families_iri("hasParent")).is_some(),
+        "expected hasParent from primer corpus"
+    );
+}
+
+/// `OWLLinkTest.testDisjointProperties` — hasParent and hasSpouse are disjoint in primer.
+#[test]
+fn owllink_disjoint_properties_has_parent_spouse() {
+    let ontology = load_owllink_primer();
+    assert!(has_disjoint_object_properties(
+        &ontology,
+        &families_iri("hasParent"),
+        &families_iri("hasSpouse"),
+    ));
+}
+
+/// `OWLLinkTest.testDisjointClasses` — Father is disjoint with Mother in primer.
+#[test]
+fn owllink_disjoint_classes_father_mother() {
+    let ontology = load_owllink_primer();
+    assert!(has_disjoint_classes(
+        &ontology,
+        &families_iri("Father"),
+        &families_iri("Mother"),
+    ));
+}
+
+/// Minimal OFN fragment remains a fast regression when primer RDF changes.
+#[test]
+fn owllink_primer_fragment_disjoint_axioms() {
+    let ontology = load_owllink_primer_fragment();
+    assert!(has_disjoint_object_properties(
+        &ontology,
+        &families_iri("hasParent"),
+        &families_iri("hasSpouse"),
+    ));
+    assert!(has_disjoint_classes(
+        &ontology,
+        &families_iri("Father"),
+        &families_iri("Mother"),
+    ));
 }
 
 /// `OWLLinkTest.testObjectProperties` — declared property does not crash consistency check.
@@ -82,28 +124,6 @@ fn owllink_object_properties_declaration_smoke() {
         .build()
         .expect("build");
     assert!(is_consistent(&ontology).expect("consistent"));
-}
-
-/// `OWLLinkTest.testDisjointProperties` — hasParent and hasSpouse are disjoint in primer.
-#[test]
-fn owllink_disjoint_properties_has_parent_spouse() {
-    let ontology = load_owllink_primer_fragment();
-    assert!(has_disjoint_object_properties(
-        &ontology,
-        &families_iri("hasParent"),
-        &families_iri("hasSpouse"),
-    ));
-}
-
-/// `OWLLinkTest.testDisjointClasses` — Father is disjoint with Mother in primer.
-#[test]
-fn owllink_disjoint_classes_father_mother() {
-    let ontology = load_owllink_primer_fragment();
-    assert!(has_disjoint_classes(
-        &ontology,
-        &families_iri("Father"),
-        &families_iri("Mother"),
-    ));
 }
 
 #[test]

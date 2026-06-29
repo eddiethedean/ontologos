@@ -1,5 +1,5 @@
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use ontologos_parser::{load_ontology, load_ontology_with_limits, Error, ParseLimits};
 
@@ -101,6 +101,22 @@ fn legacy_wine_fixture_loads_after_duplicate_rdf_id_dedup() {
     assert!(
         ontology.axiom_count() > 0,
         "expected mapped axioms from wine.xml"
+    );
+}
+
+#[test]
+fn owllink_primer_loads_with_families_import() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/reasoner/res/primer.owl");
+    assert!(path.is_file(), "missing vendored primer.owl at {}", path.display());
+
+    let ontology = load_ontology(&path).expect("primer.owl should load with families import");
+    assert!(ontology.axiom_count() > 0, "expected axioms from primer.owl");
+    assert!(
+        ontology
+            .lookup_entity("http://example.com/owl/families/hasParent")
+            .is_some(),
+        "expected hasParent from primer corpus"
     );
 }
 
