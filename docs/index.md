@@ -17,7 +17,7 @@
 </div>
 
 > **Release channels:** Latest tagged release is **v0.9.0** on crates.io and PyPI.
-> The `main` branch is **1.0.0** (pre-release): HermiT parity in progress (~58%).
+> The `main` branch is **1.0.0** (pre-release): **`parity_pct = 100%`**; **1009** active conformance tests; blocking CI runs full HermiT + WG suite @ 30s. Tag pending publish.
 > Use `ontologos-* = "0.9.0"` for production today unless you build from git. See [Release status](project/release-status.md).
 
 Pick the path that matches how you work:
@@ -74,7 +74,7 @@ Pick the path that matches how you work:
     **DON'T** call `ontologos_core::Reasoner::classify()` directly — it is a stub. See [Choosing an API](guides/choosing-an-api.md).
 
 !!! note "OWL DL / HermiT parity"
-    `--profile dl` is **pre-release** (~58% in-scope catalog parity on `main`). Not suitable for production DL workflows yet. See [Profile stability matrix](guides/profile-stability.md) and [Release status](project/release-status.md).
+    On `main`, **`parity_pct = 100%`** (catalog porting) and **450+428** active conformance tests pass @ 30s on the gated HermiT suite. **13** Ian/ComplexConcept CE cases are documented exclusions. Published **v0.9.0** on PyPI/crates.io is still EL/RL/RDFS-stable only. See [Profile stability matrix](guides/profile-stability.md), [FAQ](../../FAQ.md), and [Release status](project/release-status.md).
 
 ## What you need
 

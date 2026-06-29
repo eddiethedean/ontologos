@@ -1,7 +1,7 @@
 # Upgrade to the latest release
 
 **Published today (crates.io / PyPI):** v0.9.0  
-**In development on `main`:** 1.0.0 (HermiT parity in progress)
+**In development on `main`:** 1.0.0 (HermiT parity **complete** on gated corpora; tag pending publish)
 
 | Your situation | Guide |
 |----------------|-------|
@@ -20,7 +20,7 @@
 
 ## v1.0.0 (when tagged)
 
-The **v1.0.0** tag ships when [ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) completes (100% in-scope HermiT catalog parity). Until then, `main` uses workspace **1.0.0** semver without a matching crates.io/PyPI release.
+[ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) engineering gates are **green** on `main` (`parity_pct = 100%`, full suite @ 30s). The **v1.0.0** git tag ships after crates.io + PyPI **1.0.0** publish. Until then, `main` uses workspace **1.0.0** semver without a matching installable release.
 
 ## Historical migrations
 

@@ -9,11 +9,33 @@ Single source of truth for version and distribution channels. Update this page w
 | **crates.io** (library crates) | **0.9.0** (published) | Latest installable release |
 | **PyPI** | **0.9.0** (published) | `pip install ontologos` |
 | **Latest git tag** | **v0.9.0** | Annotated semver tags on `main` |
-| **`main` branch** | **1.0.0** workspace (pre-release) | Tag **v1.0.0** pending [ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) (~**58%** in-scope catalog parity) |
+| **`main` branch** | **1.0.0** workspace (pre-release) | Engineering gates green; **v1.0.0 tag** pending crates.io + PyPI publish |
 
 Published crates: `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, `ontologos-facade`.
 
 CLI (`ontologos-cli`) and conformance crates are **source-build only** — not on crates.io.
+
+## HermiT parity snapshot (`main`, 2026-06-29)
+
+```bash
+bash benchmarks/scripts/hermit-burndown.sh status
+bash benchmarks/scripts/report-conformance-coverage.sh
+bash benchmarks/scripts/check-1.0-release-gates.sh
+bash benchmarks/scripts/check-hermit-parity-phases.sh
+```
+
+| Metric | Value |
+|--------|------:|
+| Catalog `parity_pct` | **100%** (`java_planned = 0`, `wg_planned = 0`) |
+| `in_scope_total` | **889** |
+| Active conformance tests | **1009** / **1152** total (**143** `#[ignore]`) |
+| Runnable Java axiom + WG @ 30s | **450** + **428** (blocking CI, full suite) |
+| Promoted IDs (`phase9_closure`) | **400** axiom + **428** WG |
+| DL OFN pass rate @ 30s | **277/277** |
+| Documented CE exclusions | **13** Ian/ComplexConcept + `testIanBackjumping3` (**70** `excluded` catalog cases) |
+| `check-1.0-release-gates.sh` | **Green** (blocking in CI) |
+
+**Remaining for v1.0.0 tag:** publish workspace crates to crates.io, PyPI **1.0.0** wheel, annotated git tag **v1.0.0**.
 
 ## Profile stability
 
@@ -21,13 +43,12 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 
 | Area | Status |
 |------|--------|
-| OWL EL, RL, RDFS | **Stable** for shipped profiles |
-| OWL DL (`--profile dl`) | **Pre-release** — not production HermiT replacement |
+| OWL EL, RL, RDFS | **Stable** on published **v0.9.0** |
+| OWL DL (`--profile dl`) on **`main`** | **Pre-release** — gated HermiT conformance green @ 30s; not on crates.io until tag |
 | ALC / `dl-preview` / SWRL | **Preview** |
 | Python bindings, explain (EL) | **Stable** on v0.9.0 |
-| Incremental EL/RL/RDFS | **Stable** (0.8+) |
 
-**Production OWL DL:** use Protégé + HermiT or Konclude ([FAQ](../../FAQ.md)).
+**Production OWL DL today:** use **v0.9.0** pins for stable EL/RL/RDFS, or build **`main`** for gated-corpus DL (`profile="dl"`). See [FAQ](../../FAQ.md).
 
 ## Conformance snapshot (live)
 
@@ -35,10 +56,8 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 bash benchmarks/scripts/report-ci-gate-status.sh
 bash benchmarks/scripts/report-conformance-coverage.sh
 bash benchmarks/scripts/check-1.0-release-gates.sh
-bash benchmarks/scripts/check-hermit-parity-phases.sh   # fails until Phase 9 (100% catalog parity)
+bash benchmarks/scripts/check-hermit-parity-phases.sh
 ```
-
-Current inventory: **593** active / **1063** total conformance tests; **~58%** in-scope catalog parity (`parity_pct`). CI runs release gates on every PR (informational); **v1.0.0 tag** requires Phase 9 + blocking CI.
 
 ## Install pins
 
@@ -74,7 +93,7 @@ Requires **Rust 1.88+**.
 
 | Tag | Theme |
 |-----|-------|
-| v1.0.0 (pending) | HermiT parity milestone |
+| v1.0.0 (pending) | HermiT parity milestone — publish + tag |
 | [v0.9.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.9.0) | Python ecosystem |
 | [v0.8.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.8.0) | Incremental reasoning |
 | [v0.7.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.7.0) | Bridge adapters |

@@ -103,7 +103,7 @@ flowchart TB
 
 ## HermiT parity phases (path to v1.0.0 tag)
 
-The **v1.0.0 git tag** ships only when **in-scope HermiT catalog parity reaches 100%** and [Phase 8–9](#phase-8--expressivity-prerequisites-v15v19) expressivity gates are met. The automated script `check-1.0-release-gates.sh` (≥400 active tests, Tier A + C) is **necessary but not sufficient** — it can pass while catalog backlog remains (`java_planned` + semantic failures in the full suite).
+The **v1.0.0 git tag** ships when **in-scope HermiT catalog parity reaches 100%**, [Phase 8–9](#phase-8--expressivity-prerequisites-v15v19) expressivity gates are met, and **`check-1.0-release-gates.sh`** is green on the full suite @ 30s (blocking in CI since Phase 9).
 
 Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-report.md) · `bash benchmarks/scripts/hermit-burndown.sh status` · [Burndown guide](docs/guides/hermit-burndown.md) (contributors)
 
@@ -119,9 +119,11 @@ Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-repo
 ### Progress formula
 
 ```text
-in_scope_total = (591 − internal − excluded − migrated) + 428 WG = 904
+in_scope_total = (591 − internal − excluded − migrated) + 428 WG = 889
 parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 ```
+
+(`excluded` grew from 55 → 70 when 13 Ian/ComplexConcept CE cases moved to `EXCLUDED_IDS` in Phase 9.)
 
 **Baseline (2026-06-22, pre–Phase 2):** 330 Java `planned` + 67 WG `planned` = 397 backlog → **~58% parity**. **593** active conformance tests (56% of 1063 defined).
 
@@ -131,7 +133,9 @@ parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 
 **Current (Phase 4, 2026-06-24):** **Failure-first workflow** — all runnable cases active in generated tests (`hermit_wg_generated`: **0** `#[ignore]`; `hermit_generated`: **272** `#[ignore]`). **428/428** WG (`status=wg`, `wg_planned = 0`); **363/428** pass at 30s DL budget (**65** semantic failures; [promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt) has **331** IDs). Triage: `cargo run --release -p ontologos-conformance --bin wg_failures`. Java: **268** `axiom` + **33** `clausify` + **19** `swrl` + **2** `fixture` = **322** runnable; **202** `planned` (no harvested assertions). **202** backlog → **~79% parity** (`parity_pct` ≈ 78.9). Blocking CI: `ONTOLOGOS_CI_PROMOTED_ONLY=1`; full suite: [run-hermit-full-suite.sh](benchmarks/scripts/run-hermit-full-suite.sh) (nightly, non-blocking). **252** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)).
 
-**Current (post–Phase 7, 2026-06-26):** **`parity_pct = 100%`** — **`java_planned = 0`**, **`wg_planned = 0`** (`in_scope_total` **904**). **428/428** WG promoted ([promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt)); **359/413** axiom cases promoted ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)); **465** runnable Java cases. **1014** active conformance tests (**1142** defined, **128** `#[ignore]`). Tier B: [`compare-classification-fixtures.sh`](benchmarks/scripts/compare-classification-fixtures.sh) gates pizza/wine/galen/propreo in CI. Tier C: [`compare-tier-c-gate.sh`](benchmarks/scripts/compare-tier-c-gate.sh) + nightly HermiT JAR cross-check. **Next:** Phase 8 expressivity, Phase 9 tag.
+**Current (Phase 9, 2026-06-29):** **`parity_pct = 100%`** — **`java_planned = 0`**, **`wg_planned = 0`** (`in_scope_total` **889**). Full conformance **green @ 30s** — **450** runnable Java + **428** WG active tests (**1009** active / **1152** defined, **143** `#[ignore]`). **400** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)); **428/428** WG ([promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt)). Blocking CI: full suite + `check-1.0-release-gates.sh` (no `ONTOLOGOS_CI_PROMOTED_ONLY`). **v1.0.0 git tag + crates.io/PyPI publish pending.**
+
+**Current (post–Phase 7, 2026-06-26):** **`parity_pct = 100%`** — catalog porting complete (`in_scope_total` **904** before Ian/ComplexConcept exclusions). **Next:** Phase 8 expressivity, Phase 9 CI flip + tag.
 
 Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 
@@ -144,7 +148,7 @@ Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 | **2** | Assertion harvest | **Complete** | `missing_assertions → 0`; 176 promoted axiom IDs | `audit-planned-backlog.sh` |
 | **3** | DL engine gaps | **Complete** | `engine_gap` **72 → 0**; **40** promotion candidates | `engine_failures` · `parity-scan.sh` · `promote_catalog` |
 | **4** | WG fixtures | **Complete** | `wg_planned = 0`; **428/428** promoted at 30s | `wg_phase4_check` · `phase4_closure` · `run-hermit-full-suite.sh` |
-| **5** | Manual ports | **Complete** | `java_planned = 0`; **359/413** axiom promoted | `phase5_closure` · `generate_catalog.py` |
+| **5** | Manual ports | **Complete** | `java_planned = 0`; **400** axiom promoted | `phase5_closure` · `generate_catalog.py` |
 | **6** | Tier B corpora | **Complete** | `ClassificationTest` in CI (4 fixtures) | `compare-classification-fixtures.sh` · `phase6_closure` |
 | **7** | Tier C proof | **Complete** | HermiT JAR cross-check nightly | `compare-tier-c-gate.sh` |
 | **8** | Expressivity v1.5–v1.9 | **Complete** | Hybrid, ABox, ALC, QL, DL stable | ROADMAP checklists below |
@@ -291,15 +295,13 @@ All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-fi
 
 | Mode | Command | Purpose |
 |------|---------|---------|
-| **Local (failure-first)** | `bash benchmarks/scripts/run-hermit-full-suite.sh` | Run every active test; fix reds |
+| **Local (full suite)** | `bash benchmarks/scripts/hermit-burndown.sh test-full` | Same as blocking CI @ 30s |
 | **Regen catalog** | `python3 tests/hermit/generate_catalog.py --activate-all-from-disk` | Refresh JSON + `hermit_*_generated.rs` |
-| **Blocking CI** | `ONTOLOGOS_CI_PROMOTED_ONLY=1` + `promoted_wg_ids.txt` | Green gate on passing subset |
-| **Refresh CI gate** | `ONTOLOGOS_DL_BUDGET_SECS=30 cargo run --release -p ontologos-conformance --bin promote_wg` | After fixing failures |
-| **Legacy promotion** | `--promoted-only` on `generate_catalog.py` | Promotion-gated artifacts |
+| **Blocking CI** | `ci.yml` — full active catalog @ 30s | No promotion filter (Phase 9+) |
+| **Promoted-list hygiene** | `bash benchmarks/scripts/hermit-burndown.sh promote` | Refresh `promoted_*_ids.txt` for `phase9_closure` |
+| **Legacy promotion** | `--promoted-only` on `generate_catalog.py` | Promotion-gated artifacts only |
 
-**Verify (local):** `bash benchmarks/scripts/run-hermit-full-suite.sh` · `cargo test -p ontologos-conformance --test hermit_wg_generated --release` · `cargo test -p ontologos-conformance --test wg_phase4_check --release`
-
-**Verify (blocking CI):** `ONTOLOGOS_CI_PROMOTED_ONLY=1 ONTOLOGOS_DL_BUDGET_SECS=30 cargo test -p ontologos-conformance --test hermit_wg_generated --release -- --test-threads=1`
+**Verify (blocking CI):** `ONTOLOGOS_DL_BUDGET_SECS=30 cargo test -p ontologos-conformance --test hermit_wg_generated --release -- --test-threads=1` (plus `hermit_generated`, release gates)
 
 #### WS1 — Catalog extraction & harness (complete)
 
@@ -307,7 +309,7 @@ All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-fi
 - [x] `write_wg_fixture` — `NonConclusion` / `FS` tags and negative-entailment write path
 - [x] Python unit tests for WG extraction helpers ([test_wg_extraction.py](tests/hermit/test_wg_extraction.py))
 - [x] **Failure-first activation** — default `ALL_WG_ACTIVE` / `ALL_JAVA_ACTIVE`; `--activate-all-from-disk` regen without HermiT checkout; `--promoted-only` restores legacy promotion gate
-- [x] `ONTOLOGOS_CI_PROMOTED_ONLY=1` in [catalog.rs](crates/ontologos-conformance/src/catalog.rs) — blocking CI runs promoted subset only
+- [x] `ONTOLOGOS_CI_PROMOTED_ONLY` removed from blocking CI (Phase 9) — full active catalog @ 30s; env var retained for legacy/local subset runs
 
 #### WS2 — Fixture vendoring (complete)
 
@@ -337,7 +339,7 @@ All runnable OWL WG cases are **active** in `hermit_wg_generated.rs` (failure-fi
 
 ### Phase 5 — Manual port backlog (**complete** — catalog `planned = 0`)
 
-**Exit:** `cases.json` has **0 `planned`** (Java catalog complete). **Done** (2026-06): `assertDRSatisfiable` / `assertRegular` / `assertSimple` harvesters, datatype engine tranches, RIA regularity + role simplicity, `phase5_closure.rs`, **359/413** axiom cases promoted at 30s budget.
+**Exit:** `cases.json` has **0 `planned`** (Java catalog complete). **Done** (2026-06): `assertDRSatisfiable` / `assertRegular` / `assertSimple` harvesters, datatype engine tranches, RIA regularity + role simplicity, `phase5_closure.rs`, **400** axiom cases promoted @ 30s budget.
 
 | Sub-phase | Engine | Status | Primary crate |
 |-----------|--------|--------|---------------|

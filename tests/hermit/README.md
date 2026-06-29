@@ -68,7 +68,7 @@ bash benchmarks/scripts/hermit-burndown.sh test      # blocking CI subset
 bash benchmarks/scripts/hermit-burndown.sh test-full # failure-first truth
 ```
 
-**Coverage honesty:** Blocking CI runs `ONTOLOGOS_CI_PROMOTED_ONLY=1` so only cases in `promoted_wg_ids.txt` / `promoted_axiom_ids.txt` execute semantic checks. The full suite is the source of truth for parity progress.
+**Coverage:** Blocking CI runs the **full** active HermiT + OWL WG catalog @ 30s (`ONTOLOGOS_DL_BUDGET_SECS=30`; no `ONTOLOGOS_CI_PROMOTED_ONLY`). `promoted_*_ids.txt` feeds `phase9_closure` hygiene — run `hermit-burndown.sh promote` after fixes so promoted lists stay aligned with passing cases.
 
 ## Add a hand-written port
 

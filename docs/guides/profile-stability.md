@@ -3,7 +3,7 @@
 Single source of truth for `--profile` / `profile=` behavior. See [Release status](../project/release-status.md) for crates.io vs `main` channel details.
 
 !!! info "Production OWL DL"
-    Use **Protégé + HermiT** or **Konclude** for production OWL DL today. OntoLogos DL is improving (~58% in-scope HermiT catalog parity on `main`) but is **not** a drop-in HermiT replacement.
+    **Published v0.9.0:** use Protégé + HermiT or Konclude for production OWL DL. **`main` (1.0.0 workspace):** gated HermiT conformance is green @ 30s (`parity_pct = 100%` catalog; **450+428** active tests); validate on your corpus before replacing HermiT. See [FAQ](../../FAQ.md).
 
 | Profile | User-facing status | Engine | HermiT parity | Production recommendation |
 |---------|-------------------|--------|---------------|---------------------------|
@@ -11,7 +11,7 @@ Single source of truth for `--profile` / `profile=` behavior. See [Release statu
 | `rl` | **Stable** | `ontologos-rl` → reasonable | N/A (RL) | Yes — OWL RL saturation |
 | `el` | **Stable** | `ontologos-el` (in-house) | EL-shaped corpora | Yes — OWL EL taxonomy |
 | `auto` | **Stable** | Detect → EL, RL, or DL | Depends on ontology | Yes — prefer explicit profile when known |
-| `dl` | **Pre-release** | `ontologos-dl` | ~58% in-scope (growing) | No — evaluation / early adopters only |
+| `dl` | **Pre-release** | `ontologos-dl` | **100%** catalog; **450+428** gated @ 30s | Gated corpora on `main`; PyPI still 0.9.0 |
 | `dl-preview` | **Preview** | `ontologos-dl` (gated) | Same as `dl` + extra checks | No |
 | `alc` | **Preview** | `ontologos-alc` | Subset | No |
 | `swrl` | **Preview** | `ontologos-swrl` | Minimal | No |

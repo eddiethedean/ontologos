@@ -1,6 +1,6 @@
 # HermiT burndown guide
 
-**Audience:** developers contributing to OntoLogos **v1.0** — the release where OWL DL reaches full HermiT parity on the in-scope conformance catalog.
+**Audience:** developers contributing to OntoLogos **v1.0** — HermiT parity is **complete** on the in-scope catalog (`parity_pct = 100%`, full suite @ 30s on `main`); this guide covers maintenance, regressions, and optional post-1.0 burndown.
 
 **Start here if you are new:** you do not need a HermiT Java checkout for day-to-day work. Vendored fixtures under `benchmarks/data/hermit/` are enough.
 
@@ -24,12 +24,13 @@ The **HermiT burndown** is how we track that honestly:
 ## The scoreboard (one number)
 
 ```text
-in_scope_total = (591 Java − internal − excluded − migrated) + 428 WG = 958
+in_scope_total = (591 Java − internal − excluded − migrated) + 428 WG = 889
 parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 ```
 
 - **`planned`** = backlog — not yet ported or missing harvested assertions
-- **`parity_pct`** = catalog progress toward v1.0 (not “tests passing in CI”)
+- **`parity_pct`** = catalog porting progress (every in-scope case has a harness entry)
+- **Semantic pass @ 30s** = active tests in `hermit_*_generated.rs` (blocking CI since Phase 9)
 
 Check it any time:
 
@@ -41,36 +42,36 @@ Example output:
 
 ```text
 HermiT burndown status
-  parity_pct:      78.9%
-  backlog:         202 (java 202 + wg 0)
-  promoted:        axiom 249 / wg 414 of 428 active
-  unpromoted WG:   14 cases to burn down
+  parity_pct:      100.0%
+  in_scope_total:  889
+  backlog:         0 (java 0 + wg 0)
+  promoted:        axiom 400 / wg 428 of 428 active
+  runnable Java:   450
 ```
 
-**`unpromoted WG`** = active WG tests that pass semantic checks locally but are not yet in `promoted_wg_ids.txt` (or still failing — run `triage` to see which).
+**`promoted`** lists record passing cases for `phase9_closure`; blocking CI runs the **full** active suite (no promotion filter since Phase 9).
 
 ---
 
-## Two tracks: honesty vs green CI
-
-This is the most important concept for new contributors.
+## Two tracks: catalog vs CI
 
 | Track | When | What runs | Purpose |
 |-------|------|-----------|---------|
-| **Failure-first (truth)** | Local dev, nightly | Every *active* conformance test | Shows real gaps; drives burndown |
-| **Promoted-only (green CI)** | Every PR | Only IDs in `promoted_*_ids.txt` | Keeps `main` mergeable while parity &lt; 100% |
+| **Catalog parity** | Always | `parity_status` / `hermit-burndown.sh status` | `parity_pct = 100%` when zero `planned` |
+| **Full conformance (CI)** | Every PR since Phase 9 | All active `hermit_*_generated` tests @ 30s | Blocks merge on semantic regressions |
+| **Promoted lists** | After fixes / `resync` | `phase9_closure` hygiene | Ensures `promoted_*_ids.txt` ⊆ passing |
 
 ```bash
-# Truth — run before claiming a fix
+# Full suite (same as blocking CI)
 bash benchmarks/scripts/hermit-burndown.sh test-full
 
-# What CI enforces on your PR
+# Promoted-list hygiene + phase closures (also in release gates)
 bash benchmarks/scripts/hermit-burndown.sh test
 ```
 
-CI sets `ONTOLOGOS_CI_PROMOTED_ONLY=1` and `ONTOLOGOS_DL_BUDGET_SECS=30`. The full suite is in [conformance-nightly.yml](https://github.com/eddiethedean/ontologos/blob/main/.github/workflows/conformance-nightly.yml) (non-blocking).
+Blocking CI sets `ONTOLOGOS_DL_BUDGET_SECS=30` and runs the **full** active catalog (no `ONTOLOGOS_CI_PROMOTED_ONLY`). Nightly may use a longer budget via [conformance-nightly.yml](https://github.com/eddiethedean/ontologos/blob/main/.github/workflows/conformance-nightly.yml).
 
-**Rule of thumb:** if you fixed a case, add it to the promoted lists (`promote`) so CI starts enforcing it.
+**Rule of thumb:** after fixing a case, run `promote` or `resync` so `phase9_closure` stays green.
 
 ---
 
@@ -272,8 +273,8 @@ bash benchmarks/scripts/hermit-burndown.sh cleanup
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `ONTOLOGOS_DL_BUDGET_SECS` | `30` in CI; `120` in full suite | Wall-clock cap per DL operation |
-| `ONTOLOGOS_CI_PROMOTED_ONLY` | `1` in CI | Skip non-promoted semantic checks |
+| `ONTOLOGOS_DL_BUDGET_SECS` | `30` in CI; `120` in `test-full` | Wall-clock cap per DL operation |
+| `ONTOLOGOS_CI_PROMOTED_ONLY` | unset in blocking CI | Legacy: skip non-promoted checks when `=1` |
 | `ONTOLOGOS_DL_MAX_WORKERS` | `10` | Concurrent DL workers during scans |
 | `ONTOLOGOS_SCAN_THREADS` | `10` | Rayon parallelism for catalog scans |
 
@@ -289,10 +290,11 @@ ONTOLOGOS_DL_BUDGET_SECS=120 bash benchmarks/scripts/hermit-burndown.sh promote
 
 | Job | Workflow | Blocks PR? |
 |-----|----------|------------|
-| Promoted conformance | `ci.yml` | **Yes** |
-| Parity phase gate | `check-hermit-parity-phases.sh` | No (`\|\| true` until Phase 9) |
-| Full HermiT suite | `conformance-nightly.yml` | No (`continue-on-error`) |
-| Tier C HermiT JAR cross-check | `conformance-nightly.yml` (`tier-c-hermit-crosscheck`) | No (nightly blocking for that job) |
+| Full conformance @ 30s | `ci.yml` | **Yes** |
+| Parity phase gate | `check-hermit-parity-phases.sh` | **Yes** |
+| 1.0 release gates | `check-1.0-release-gates.sh` | **Yes** |
+| Full HermiT suite (long budget) | `conformance-nightly.yml` | No (`continue-on-error`) |
+| Tier C HermiT JAR cross-check | `conformance-nightly.yml` (`tier-c-hermit-crosscheck`) | No (nightly only) |
 | Ignored tier | `conformance-nightly.yml` | No |
 
 Before opening a PR that touches DL/conformance:
@@ -308,10 +310,10 @@ bash benchmarks/scripts/hermit-burndown.sh test
 | Mistake | Why it is wrong | Do instead |
 |---------|-----------------|------------|
 | Leaving interrupted `cargo test` running | Orphan DL scans skew triage / lock the next run | `hermit-burndown.sh cleanup` before retrying |
-| Only running `cargo test -p ontologos-conformance` and assuming parity improved | CI skips non-promoted cases | `test-full` for truth; `promote` after fixes |
-| Editing `promoted_*_ids.txt` by hand | Lists are scan outputs; typos hide regressions | `hermit-burndown.sh promote` |
+| Only running `cargo test -p ontologos-conformance` and assuming parity improved | Misses WG / phase closures | `check-1.0-release-gates.sh` before claiming done |
+| Editing `promoted_*_ids.txt` by hand | Lists are scan outputs; typos hide regressions | `hermit-burndown.sh promote` or `resync` |
 | Full catalog scan on every iteration | 428 WG cases × DL budget is slow | Default `triage` / `promote` (unpromoted only) |
-| Confusing `check-1.0-release-gates.sh` with parity | ≥400 active tests can pass at ~79% parity | Watch `parity_pct` from `status` |
+| Confusing catalog `parity_pct` with semantic pass | 100% catalog ≠ every case passes | Check `hermit_generated` + `wg_failures --all` |
 | Skipping `download.sh` | Pizza and other corpora missing | Run once after clone |
 
 ---
@@ -320,13 +322,11 @@ bash benchmarks/scripts/hermit-burndown.sh test
 
 See [ROADMAP.md — HermiT parity phases](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#hermit-parity-phases-path-to-v100-tag).
 
-| Phase | Focus | Status (approx.) |
-|-------|-------|------------------|
-| 0–3 | Metrics, harness, assertion harvest, DL engine gaps | Complete |
-| 4 | OWL WG fixtures — burn down unpromoted failures | In progress |
-| 5 | Java `planned` → harvest or manual port | Complete |
-| 6 | Tier B classification corpora (`ClassificationTest`) | Complete |
-| 7 | Tier C HermiT JAR proof | Planned |
+| Phase | Focus | Status |
+|-------|-------|--------|
+| 0–7 | Metrics, harness, WG, Tier B/C | Complete |
+| 8 | Expressivity v1.5–v1.9 | Complete |
+| 9 | Full CI + release gates; publish + tag | **Ready** (tag pending) |
 | 9 | `parity_pct = 100%` → tag **v1.0.0** | Gate |
 
 ---

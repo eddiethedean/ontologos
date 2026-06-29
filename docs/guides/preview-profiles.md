@@ -13,7 +13,7 @@ OntoLogos ships **stable** EL, RL, and RDFS classification on published **v0.9.0
 | `el` | Stable | `ontologos-el` | Taxonomy |
 | `rl` | Stable | `ontologos-rl` | Materialization report |
 | `rdfs` | Stable | `ontologos-rdfs` | Materialization report |
-| `dl` | Pre-release | `ontologos-dl` | Taxonomy (~58% in-scope HermiT parity on `main`) |
+| `dl` | Pre-release | `ontologos-dl` | Taxonomy — **100%** catalog parity; gated suite @ 30s on `main` |
 | `dl-preview` | Preview | `ontologos-dl` (gated) | Taxonomy + explicit preview checks |
 | `alc` | Preview | `ontologos-alc` | Taxonomy |
 | `swrl` | Preview | `ontologos-swrl` | Rules + DL consistency |

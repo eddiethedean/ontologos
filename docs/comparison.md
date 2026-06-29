@@ -1,6 +1,6 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. OntoLogos is **not** yet a drop-in HermiT replacement. **Published v0.9.0** covers stable EL/RL/RDFS; **`main` (1.0.0 workspace)** adds a growing DL engine behind a unified API (~58% in-scope HermiT parity).
+Honest positioning for evaluators. **Published v0.9.0** covers stable EL/RL/RDFS. **`main` (1.0.0 workspace)** reaches **`parity_pct = 100%`** catalog porting and passes **450** Java axiom + **428** OWL WG HermiT conformance tests @ 30s on blocking CI — not yet a drop-in HermiT replacement on arbitrary ontologies (see [FAQ](../FAQ.md)).
 
 See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
 
@@ -13,7 +13,7 @@ See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs
 | OWL EL classification | **Yes** (in-house) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
 | OWL RL reasoning | **Yes** (via reasonable) | No | Partial | Partial | **Yes** | No | Via plugin |
 | RDFS materialization | **Yes** (via reasonable) | No | Yes | Yes | Partial | No | Yes |
-| OWL DL (pre-release) | **Partial** (`ontologos-dl` on `main`) | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| OWL DL (pre-release) | **Gated suite green** (`ontologos-dl` on `main`; 450+428 @ 30s) | No | Yes (stagnant) | Yes | No | No | Via plugin |
 | OWL DL (production parity) | Planned **v1.0.0 tag** | No | Yes (stagnant) | Yes | No | No | Via plugin |
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
 | Unified multi-profile CLI/Python | **Yes** | No | No | No | RL only | EL only | Via plugins |
@@ -62,7 +62,7 @@ OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid ro
 
 ## OntoLogos target (1.0 vs 2.0)
 
-**1.0** delivers stable OWL DL HermiT parity (preview DL on `main` today). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
+**1.0** delivers stable OWL DL HermiT parity on gated corpora (**green on `main`**, tag pending publish). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
 
 Replace JVM-bound **batch** reasoning in Rust/Python pipelines via stable facade APIs, with CLI, Python, and Ontocode integration.
 

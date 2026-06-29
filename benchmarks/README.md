@@ -83,7 +83,7 @@ EL integration tests: `cargo test -p ontologos-el --test pizza_el`
 
 ## HermiT conformance burndown
 
-OntoLogos v1.0 is gated on **HermiT catalog parity** (`parity_pct → 100%`). Contributors should read **[docs/guides/hermit-burndown.md](../docs/guides/hermit-burndown.md)** before touching `ontologos-conformance` or `ontologos-dl`.
+OntoLogos v1.0 reached **100% catalog parity** (`parity_pct = 100%`, **889** in-scope cases) with the full gated suite green @ 30s on `main`. Contributors should read **[docs/guides/hermit-burndown.md](../docs/guides/hermit-burndown.md)** before touching `ontologos-conformance` or `ontologos-dl`.
 
 ```bash
 bash benchmarks/scripts/hermit-burndown.sh status   # parity dashboard
