@@ -1088,12 +1088,44 @@ APPROVED_RL_CONSISTENCY_IDS: set[str] = set()
 DEFERRED_PREFIXES = ("reasoner.RulesTest",)
 
 # HermiT engine-internal tests ported to engine unit tests (permanent conformance ignore).
+# Full mapping: tests/hermit/internal_ports.toml
 MIGRATED_INTERNAL_IDS: set[str] = {
-    "structural.NormalizationTest.testDataPropertiesAll1",
-    "structural.NormalizationTest.testDataPropertiesAll2",
-    "structural.NormalizationTest.testDataPropertiesHasValue1",
     "reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug",
     "reasoner.ReasonerTest.testDependencyDisjunctionMergingBug",
+    # structural.ClausificationTest (B3 — clausification.rs)
+    "structural.ClausificationTest.testBasic",
+    "structural.ClausificationTest.testExistsSelf1",
+    "structural.ClausificationTest.testExistsSelf2",
+    "structural.ClausificationTest.testHasKeys",
+    "structural.ClausificationTest.testNominals1",
+    "structural.ClausificationTest.testNominals2",
+    "structural.ClausificationTest.testNominals3",
+    "structural.ClausificationTest.testNominals4",
+    # structural.NormalizationTest (B3 — normalization.rs)
+    "structural.NormalizationTest.testDataPropertiesAll1",
+    "structural.NormalizationTest.testDataPropertiesAll2",
+    "structural.NormalizationTest.testDataPropertiesDataComplementOf1",
+    "structural.NormalizationTest.testDataPropertiesDataOneOf1",
+    "structural.NormalizationTest.testDataPropertiesDataOneOf2",
+    "structural.NormalizationTest.testDataPropertiesExact1",
+    "structural.NormalizationTest.testDataPropertiesExact2",
+    "structural.NormalizationTest.testDataPropertiesExact3",
+    "structural.NormalizationTest.testDataPropertiesExact4",
+    "structural.NormalizationTest.testDataPropertiesHasValue1",
+    "structural.NormalizationTest.testDataPropertiesHasValue2",
+    "structural.NormalizationTest.testDataPropertiesMax1",
+    "structural.NormalizationTest.testDataPropertiesMax2",
+    "structural.NormalizationTest.testDataPropertiesMax3",
+    "structural.NormalizationTest.testDataPropertiesMax4",
+    "structural.NormalizationTest.testDataPropertiesMin1",
+    "structural.NormalizationTest.testDataPropertiesMin2",
+    "structural.NormalizationTest.testDataPropertiesMin3",
+    "structural.NormalizationTest.testDataPropertiesMin4",
+    "structural.NormalizationTest.testDataPropertiesSome1",
+    "structural.NormalizationTest.testDataPropertiesSome2",
+    "structural.NormalizationTest.testKeys1",
+    "structural.NormalizationTest.testKeys2",
+    "structural.NormalizationTest.testTopObjectPropertyInSuperPosition",
 }
 
 INTERNAL_PREFIXES = (

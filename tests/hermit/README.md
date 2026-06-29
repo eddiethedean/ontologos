@@ -57,6 +57,8 @@ This writes:
 
 Hand-written ports are listed in [manifest.toml](manifest.toml) and implemented in dedicated test modules.
 
+Engine-internal HermiT suites (`structural.*`, `tableau.*`) map to `ontologos-alc` unit tests via [internal_ports.toml](internal_ports.toml) (Tier B3).
+
 ## Tests and CI
 
 See [HermiT burndown guide](../../docs/guides/hermit-burndown.md) for the full workflow. Short version:

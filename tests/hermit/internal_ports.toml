@@ -1,0 +1,84 @@
+# HermiT engine-internal → OntoLogos unit test port manifest (Tier B3).
+# Conformance catalog marks these `internal` or `migrated`; they do not run via run_hermit_case.
+# See docs/internal/parity-roadmap.md and ROADMAP.md § B3.
+
+[[suite]]
+hermit_class = "structural.ClausificationTest"
+rust_tests = ["crates/ontologos-alc/tests/clausification.rs"]
+notes = "33 clausify OFN catalog + asymmetry; 7 RDF/XML goldens vendored under benchmarks/data/hermit/structural/"
+
+[[suite]]
+hermit_class = "structural.ClausificationDatatypesTest"
+rust_tests = ["crates/ontologos-alc/tests/clausification.rs::hermit_clausify_catalog"]
+notes = "Datatype clausify goldens in benchmarks/data/hermit/clauses/"
+
+[[suite]]
+hermit_class = "structural.NormalizationTest"
+rust_tests = ["crates/ontologos-alc/tests/normalization.rs::hermit_normalization_smoke_catalog"]
+notes = "24 methods — smoke clausify on HermiT input axioms (full OWLNormalization strings deferred)"
+
+[[suite]]
+hermit_class = "tableau"
+rust_tests = ["crates/ontologos-alc/tests/tableau_internals.rs"]
+notes = "23 internal cases — inventory test; MergeTest/NIRuleTest need extension-manager port"
+
+[[suite]]
+hermit_class = "graph.GraphTest"
+rust_tests = []
+notes = "3 internal graph cases — HermiT DescriptionGraph; defer to tableau/graph module"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testAsymmetry"
+rust_test = "clausification::clausify_asymmetry_fixture"
+catalog_status = "clausify"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testHasKeys"
+rust_test = "clausification::clausify_has_key_axiom"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testBasic"
+rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+catalog_status = "migrated"
+notes = "Hyper golden in hermit_clausification_structural_fixtures (#[ignore] until RDF/XML chain)"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testNominals1"
+rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testNominals2"
+rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testNominals3"
+rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testNominals4"
+rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testExistsSelf1"
+rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "structural.ClausificationTest.testExistsSelf2"
+rust_test = "clausification::hermit_clausification_structural_fixtures_load"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "reasoner.ReasonerTest.testDependencyDisjunctionMergingBug"
+rust_test = "ontologos-alc unit (blocking)"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug"
+rust_test = "ontologos-alc unit (blocking)"
+catalog_status = "migrated"

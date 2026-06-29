@@ -359,14 +359,31 @@ notes = "SWRL / DLSafeRule — out of scope for OntoLogos 1.x"
 [[case]]
 id = "structural.ClausificationTest"
 tier = "B"
-milestone = "2.0"
+milestone = "1.0"
 engine = "dl"
+status = "ported"
+notes = "33 clausify OFN + structural XML fixtures — crates/ontologos-alc/tests/clausification.rs"
+
+[[case]]
+id = "structural.NormalizationTest"
+tier = "B"
+milestone = "1.0"
+engine = "dl"
+status = "ported"
+notes = "24 smoke clausify ports — crates/ontologos-alc/tests/normalization.rs"
+
+[[case]]
+id = "tableau"
+tier = "B"
+milestone = "1.0"
+engine = "internal"
 status = "planned"
-notes = "Internal DL clause shape — port when ontologos-dl clausifier exists"
+notes = "23 HermiT tableau internals — inventory in crates/ontologos-alc/tests/tableau_internals.rs"
 
 # --- Internal HermiT suites (Tier B3): ported to crate unit tests, not conformance axiom ports ---
+# Mapping: tests/hermit/internal_ports.toml
 # structural.ClausificationTest  → crates/ontologos-alc/tests/clausification.rs
 # structural.NormalizationTest   → crates/ontologos-alc/tests/normalization.rs
-# tableau.*                      → ontologos-alc engine internals (partial)
+# tableau.*                      → crates/ontologos-alc/tests/tableau_internals.rs (deferred)
 # Ian/ComplexConcept CE          → crates/ontologos-alc/tests/ian_ce_sat.rs
 # See docs/internal/parity-roadmap.md

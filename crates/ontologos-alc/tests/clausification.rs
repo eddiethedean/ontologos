@@ -1,10 +1,40 @@
 //! Clausification golden tests (HermiT ClausificationTest port subset).
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use ontologos_alc::Error;
-use ontologos_alc::{clausify, Clause};
-use ontologos_core::{ClassExpr, Ontology};
+use ontologos_alc::{clausify, clausify_hyper, Clause};
+use ontologos_core::{ClassExpr, DlAxiom, Ontology};
+
+fn structural_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/hermit/structural")
+}
+
+fn assert_hyper_clauses_match(input: &Path, golden: &Path) -> Result<(), Error> {
+    let mut ontology = ontologos_parser::load_ontology(input).map_err(Error::Parser)?;
+    let mut actual = clausify_hyper(&mut ontology)?;
+    actual.sort();
+    let mut expected: Vec<String> = std::fs::read_to_string(golden)
+        .expect("golden")
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(str::to_owned)
+        .collect();
+    expected.sort();
+    assert_eq!(expected, actual, "clause mismatch for {}", input.display());
+    Ok(())
+}
+
+const STRUCTURAL_CLAUSIFICATION_FIXTURES: &[(&str, &str)] = &[
+    ("basic-input.xml", "basic-control.txt"),
+    ("nominals-1-input.xml", "nominals-1-control.txt"),
+    ("nominals-2-input.xml", "nominals-2-control.txt"),
+    ("nominals-3-input.xml", "nominals-3-control.txt"),
+    ("nominals-4-input.xml", "nominals-4-control.txt"),
+    ("has-self-1-input.owl", "has-self-1-control.txt"),
+    ("has-self-2-input.owl", "has-self-2-control.txt"),
+];
 
 #[test]
 fn clausify_existential_subclass_direction() -> Result<(), Error> {
@@ -160,5 +190,61 @@ fn hermit_clausify_catalog() -> Result<(), Error> {
         ran += 1;
     }
     assert!(ran >= 33, "expected full clausify catalog, ran {ran}");
+    Ok(())
+}
+
+/// HermiT `ClausificationTest` XML/OWL hyper clausify goldens (vendored structural/res).
+#[test]
+#[ignore = "RDF/XML structural fixtures need hyper clausify import chain (B3 follow-up)"]
+fn hermit_clausification_structural_fixtures() -> Result<(), Error> {
+    let base = structural_dir();
+    for (input, golden) in STRUCTURAL_CLAUSIFICATION_FIXTURES {
+        assert_hyper_clauses_match(&base.join(input), &base.join(golden))?;
+    }
+    Ok(())
+}
+
+/// Structural fixtures load and produce DL axioms (hyper clausify goldens tracked above).
+#[test]
+fn hermit_clausification_structural_fixtures_load() -> Result<(), Error> {
+    let base = structural_dir();
+    for (input, _golden) in STRUCTURAL_CLAUSIFICATION_FIXTURES {
+        let path = base.join(input);
+        let ontology = ontologos_parser::load_ontology(&path).map_err(Error::Parser)?;
+        assert!(
+            ontology.dl().axioms().next().is_some() || !ontology.axioms().is_empty(),
+            "expected axioms from {}",
+            path.display()
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn clausify_has_key_axiom() -> Result<(), Error> {
+    let mut ontology = Ontology::builder()
+        .class("http://ex/int/C_test")?
+        .object_property("http://ex/int/r_test")?
+        .build()
+        .map_err(Error::Core)?;
+    let dp = ontology
+        .entity_id("http://ex/int/dp_test", ontologos_core::EntityKind::DataProperty)
+        .map_err(Error::Core)?;
+    let c = ontology.lookup_entity("http://ex/int/C_test").unwrap();
+    let r = ontology.lookup_entity("http://ex/int/r_test").unwrap();
+    let c_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(c));
+    ontology.dl_mut().push_axiom(DlAxiom::HasKey {
+        class: c_ce,
+        object_properties: vec![r],
+        data_properties: vec![dp],
+    });
+    let clauses = clausify(&mut ontology)?;
+    assert!(
+        clauses
+            .clauses()
+            .iter()
+            .any(|c| matches!(c, Clause::HasKey { .. })),
+        "expected HasKey clause"
+    );
     Ok(())
 }

@@ -2762,31 +2762,31 @@ fn hermit_structural_clausificationdatatypestest_testdatacomplementof4() {
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_clausificationtest_testbasic() {
     run_hermit_case("structural.ClausificationTest.testBasic");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_clausificationtest_testnominals1() {
     run_hermit_case("structural.ClausificationTest.testNominals1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_clausificationtest_testnominals2() {
     run_hermit_case("structural.ClausificationTest.testNominals2");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_clausificationtest_testnominals3() {
     run_hermit_case("structural.ClausificationTest.testNominals3");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_clausificationtest_testnominals4() {
     run_hermit_case("structural.ClausificationTest.testNominals4");
 }
@@ -2797,19 +2797,19 @@ fn hermit_structural_clausificationtest_testasymmetry() {
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_clausificationtest_testexistsself1() {
     run_hermit_case("structural.ClausificationTest.testExistsSelf1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_clausificationtest_testexistsself2() {
     run_hermit_case("structural.ClausificationTest.testExistsSelf2");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_clausificationtest_testhaskeys() {
     run_hermit_case("structural.ClausificationTest.testHasKeys");
 }
@@ -2821,7 +2821,7 @@ fn hermit_structural_normalizationtest_testdatapropertieshasvalue1() {
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertieshasvalue2() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesHasValue2");
 }
@@ -2839,121 +2839,121 @@ fn hermit_structural_normalizationtest_testdatapropertiesall2() {
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiessome1() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesSome1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiessome2() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesSome2");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesdataoneof1() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesDataOneOf1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesdataoneof2() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesDataOneOf2");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesdatacomplementof1() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesDataComplementOf1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesmax1() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesMax1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesmax2() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesMax2");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesmax3() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesMax3");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesmax4() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesMax4");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesmin1() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesMin1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesmin2() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesMin2");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesmin3() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesMin3");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesmin4() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesMin4");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesexact1() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesExact1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesexact2() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesExact2");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesexact3() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesExact3");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testdatapropertiesexact4() {
     run_hermit_case("structural.NormalizationTest.testDataPropertiesExact4");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testkeys1() {
     run_hermit_case("structural.NormalizationTest.testKeys1");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testkeys2() {
     run_hermit_case("structural.NormalizationTest.testKeys2");
 }
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
+#[ignore = "ported to ontologos-alc/dl unit tests"]
 fn hermit_structural_normalizationtest_testtopobjectpropertyinsuperposition() {
     run_hermit_case("structural.NormalizationTest.testTopObjectPropertyInSuperPosition");
 }

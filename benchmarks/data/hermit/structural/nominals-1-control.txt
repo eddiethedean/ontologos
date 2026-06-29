@@ -1,0 +1,6 @@
+atLeast(1 :s not(def:a0))(X) :- :d(X)
+:r(X,Z) v :r(X,Z1) :- :c(X), nom:i1(Z), nom:i2(Z1)
+def:a0(:i2)
+def:a0(:i1)
+nom:i2(:i2)
+nom:i1(:i1)

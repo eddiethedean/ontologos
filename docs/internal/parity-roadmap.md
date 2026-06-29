@@ -27,7 +27,7 @@ bash benchmarks/scripts/hermit-burndown.sh status
 
 | ID | Workstream | Verify |
 |----|------------|--------|
-| **B3** | Port `ClausificationTest` / `NormalizationTest` / remaining `tableau/*` to `ontologos-alc` unit tests; document in manifest | `cargo test -p ontologos-alc` · [manifest.toml](../../tests/hermit/manifest.toml) |
+| **B3** | Port `ClausificationTest` / `NormalizationTest` / `tableau/*` | **Partial** — 34 `migrated`; 26 `internal` remain ([internal_ports.toml](../../tests/hermit/internal_ports.toml)) |
 | **B4** | Burn down **122** `#[ignore]` tests; promote OWLLink cases | Bob A/B **ported**; `literal_catalog_pct` live |
 | **C** | Strict taxonomy CI (`ONTOLOGOS_STRICT_TAXONOMY=1`, `--max-extra 0`) | `compare-tier-c-gate.sh` |
 | **D1** | Criterion saturation/tableau benches; Pizza DL **< 30 s** PR gate | `cargo bench -p ontologos-dl` |
@@ -38,18 +38,20 @@ bash benchmarks/scripts/hermit-burndown.sh status
 - **Ian / ComplexConcept CE** — instance-check cluster promoted; `IanBackjumping3` only exclusion
 - **Object-property classification** — HermiT-style surrogate taxonomy; `getSubObjectProperties`, equivalent/inverse queries; `RolePropertyQueryContext::prepare()`
 - **OWLLink Bob A/B** — catalog-promoted (`testBobTestAandB` → `owllink_bob_knows_subproperties`)
+- **B3 internal ports** — 24/24 `NormalizationTest` + 8 internal `ClausificationTest` → `migrated`; structural XML fixtures vendored; `tableau.*` inventory test
 - **Bob C** — still blocked (`getObjectPropertyValues` on `agent-inst.owl`)
 
 ## Internal test ports (Tier B3)
 
-HermiT `internal` cases map to crate unit tests (not conformance axiom ports):
+Manifest: [tests/hermit/internal_ports.toml](../../tests/hermit/internal_ports.toml)
 
-| HermiT suite | OntoLogos tests |
-|--------------|-----------------|
-| `structural/ClausificationTest` | [crates/ontologos-alc/tests/clausification.rs](../../crates/ontologos-alc/tests/clausification.rs) |
-| `structural/NormalizationTest` | [crates/ontologos-alc/tests/normalization.rs](../../crates/ontologos-alc/tests/normalization.rs) |
-| Ian/ComplexConcept CE | [crates/ontologos-alc/tests/ian_ce_sat.rs](../../crates/ontologos-alc/tests/ian_ce_sat.rs) · [ian_ce_excluded_triage.rs](../../crates/ontologos-alc/tests/ian_ce_excluded_triage.rs) |
-| `tableau/*` | `ontologos-alc` engine unit tests (partial) |
+| HermiT suite | OntoLogos tests | Status |
+|--------------|-----------------|--------|
+| `structural/ClausificationTest` | [clausification.rs](../../crates/ontologos-alc/tests/clausification.rs) | 33 OFN clausify + 7 XML load; hyper goldens `#[ignore]` |
+| `structural/ClausificationDatatypesTest` | [clausification.rs](../../crates/ontologos-alc/tests/clausification.rs) | Via `hermit_clausify_catalog` |
+| `structural/NormalizationTest` | [normalization.rs](../../crates/ontologos-alc/tests/normalization.rs) | 24/24 smoke clausify (`migrated`) |
+| `tableau/*` (23 cases) | [tableau_internals.rs](../../crates/ontologos-alc/tests/tableau_internals.rs) | Inventory only — extension-manager port deferred |
+| Ian/ComplexConcept CE | [ian_ce_sat.rs](../../crates/ontologos-alc/tests/ian_ce_sat.rs) · [ian_ce_excluded_triage.rs](../../crates/ontologos-alc/tests/ian_ce_excluded_triage.rs) | Conformance ports |
 
 ## Excluded case triage (Tier B1)
 

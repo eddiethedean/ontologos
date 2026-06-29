@@ -397,15 +397,15 @@ The **in-scope catalog gate** (`parity_pct = 100%` on **915** cases) is met. Rem
 | **Object-property queries** | **Complete** | Surrogate classification; `getEquivalentObjectProperties` / `getInverseObjectProperties` promoted; `RolePropertyQueryContext::prepare()` for reuse |
 | **OWLLink Bob A/B** | **Complete** | Catalog `ported` → `owllink_bob_knows_subproperties` (**20** / **101** on `knows`); hand test in `hermit_owllink.rs` |
 | **OWLLink Bob C** | **Blocked** | `getObjectPropertyValues` on `agent-inst.owl` — needs ABox + multi-ontology load |
-| **Literal catalog** | **In progress** | **122** `#[ignore]` conformance tests; **104** Java cases out-of-scope (`excluded` / `internal` / `migrated`) |
-| **Strict taxonomy (Tier C)** | **In progress** | `Taxonomy::reduce_transitive_redundancy` landed; `--max-extra 0` CI gate not yet blocking |
+| **Literal catalog** | **In progress** | **122** `#[ignore]` conformance tests; **103** Java out-of-scope; **34** `migrated` internal (B3) |
+| **Internal test ports (B3)** | **Partial** | 34 `migrated` (Normalization + Clausification); 23 `tableau.*` + 3 `graph.*` deferred |
 | **Perf (Tier D)** | **In progress** | `ontologos-dl` Criterion bench scaffold; Pizza DL **< 30 s** PR gate not yet enforced |
 
 #### Remaining workstreams (5)
 
 These are the active burndown items after the in-scope gate; each maps to a tier in [parity-roadmap.md](docs/internal/parity-roadmap.md).
 
-- [ ] **B3 — Internal test ports** — Port HermiT `structural/ClausificationTest`, `NormalizationTest`, and remaining `tableau/*` cases into `ontologos-alc` unit tests; document mappings in [tests/hermit/manifest.toml](tests/hermit/manifest.toml) and [parity-roadmap.md](docs/internal/parity-roadmap.md) § Internal test ports
+- [ ] **B3 — Internal test ports** — **Partial (2026-06-29):** 24/24 `NormalizationTest` + 8/8 internal `ClausificationTest` → `migrated`; 33 clausify OFN catalog; 7 structural XML fixtures vendored; `tableau.*` inventory (23 deferred). Mapping: [internal_ports.toml](tests/hermit/internal_ports.toml)
 - [ ] **B4 — Literal catalog burn-down** — Promote or fix **122** `#[ignore]` conformance tests; **`literal_catalog_pct`** on `hermit-burndown.sh status` (done); next: burn down ignores, promote remaining OWLLink cases
 - [ ] **C — Strict taxonomy gates** — Make `ONTOLOGOS_STRICT_TAXONOMY=1` / `--max-extra 0` a blocking CI check on Tier B/C goldens (OntoLogos taxonomy must match HermiT, not merely sound superset)
 - [ ] **D1 — Performance gates** — Criterion benches for saturation + tableau; optimize hot paths; enforce Pizza DL **< 30 s** classify in PR CI ([konclude.md](docs/internal/research/konclude.md) reference)
