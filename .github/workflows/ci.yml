@@ -34,10 +34,6 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/check-hermit-ignore-budget.sh
           ./benchmarks/scripts/check-hermit-ignore-budget.sh
-      - name: True parity gate (Phase 8 final — blocking @ 100%)
-        run: |
-          chmod +x benchmarks/scripts/check-true-parity-gate.sh
-          ./benchmarks/scripts/check-true-parity-gate.sh
       - name: EL Pizza golden conformance
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
       - name: HermiT Tier B classification fixtures
@@ -124,6 +120,10 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/compare-tier-d-perf-gate.sh
           ./benchmarks/scripts/compare-tier-d-perf-gate.sh
+      - name: True parity gate (Phase 8 final — blocking @ 100%)
+        run: |
+          chmod +x benchmarks/scripts/check-true-parity-gate.sh
+          ./benchmarks/scripts/check-true-parity-gate.sh
 
   python-windows:
     runs-on: windows-latest

@@ -247,7 +247,7 @@ impl Node {
 
     /// Follow merge chain to canonical representative.
     #[must_use]
-    pub fn canonical_node(&self, store: &NodeStore) -> Node {
+    pub(crate) fn canonical_node(&self, store: &NodeStore) -> Node {
         let mut current = self.id();
         while let Some(into) = store.get(current).and_then(|n| n.merged_into) {
             current = into;
@@ -606,7 +606,7 @@ impl ExtensionTable {
     }
 }
 
-struct TableauState {
+pub(crate) struct TableauState {
     nodes: Rc<RefCell<NodeStore>>,
     binary_table: ExtensionTable,
     ternary_table: ExtensionTable,
@@ -1612,7 +1612,7 @@ pub mod test_helpers {
     }
 
     /// Assert node label (positive/negated atomic and at-least concepts).
-    pub fn assert_label(state: &TableauState, node: &Node, expected: &[DlPredicate]) {
+    pub(crate) fn assert_label(state: &TableauState, node: &Node, expected: &[DlPredicate]) {
         let mut retrieval = state
             .binary_table
             .create_retrieval(&[false, true], ExtensionView::Total);

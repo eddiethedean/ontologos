@@ -303,7 +303,9 @@ pub fn named_classes_unsatisfiable(ontology: &Ontology, classes: &[EntityId]) ->
 
 fn named_classes_unsatisfiable_inner(ontology: &Ontology, classes: &[EntityId]) -> Result<bool> {
     let dl = DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
-    let seed = TableauSeed::default();
+    let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
+    let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
+    let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
     let mut atomic_subs = Vec::new();
     for clause in dl.clauses().clauses() {
         if let ontologos_alc::Clause::Subsumption { sub, sup } = clause {

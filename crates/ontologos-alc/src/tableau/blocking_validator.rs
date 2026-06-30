@@ -170,6 +170,7 @@ impl BlockingValidator {
 
 /// HermiT `AnywhereValidatedBlocking` direct blocking computation.
 pub struct BlockingStrategy {
+    #[allow(dead_code)]
     has_inverses: bool,
 }
 
@@ -248,6 +249,7 @@ pub fn blocking_test_annotated_equalities_clauses() -> Vec<DlClauseInfo> {
 
 /// Build clause info from generic DL atoms (test helper).
 #[must_use]
+#[allow(dead_code)]
 pub fn clause_info_from_atoms(head: &[DlAtom], body: &[DlAtom]) -> DlClauseInfo {
     let mut x_concepts = Vec::new();
     let mut x_to_y_roles = Vec::new();
@@ -286,6 +288,7 @@ pub enum RoleRef {
 
 /// At-least concept for blocking tests.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[allow(dead_code)]
 pub struct AtLeastConcept {
     /// Minimum cardinality.
     pub n: u32,

@@ -804,6 +804,7 @@ fn world_structurally_satisfies_inner(
                     targets.push(*from);
                 }
             }
+            targets.sort_unstable();
             targets.dedup();
             !targets.is_empty()
                 && targets
@@ -1360,7 +1361,7 @@ fn is_symmetric_role(branch: &Branch<'_>, role: &RoleExpr) -> bool {
     branch
         .symmetric_roles
         .iter()
-        .any(|sym| role_subsumes_inner(branch, sym, role, &mut seen))
+        .any(|sym| role_subsumes_inner(branch, sym, role, &mut seen, 0))
 }
 
 fn role_declared_symmetric(branch: &Branch<'_>, role: &RoleExpr) -> bool {
@@ -1508,6 +1509,8 @@ fn chain_targets(
         if next.is_empty() {
             return vec![];
         }
+        next.sort_unstable();
+        next.dedup();
         frontier = next;
     }
     frontier
@@ -1848,7 +1851,7 @@ pub(crate) fn role_subsumes(
     sub_role: &RoleExpr,
 ) -> bool {
     let mut seen = std::collections::HashSet::new();
-    role_subsumes_inner(branch, super_role, sub_role, &mut seen)
+    role_subsumes_inner(branch, super_role, sub_role, &mut seen, 0)
 }
 
 fn role_subsumes_key(super_role: &RoleExpr, sub_role: &RoleExpr) -> (u8, u32, u8, u32) {
@@ -1868,8 +1871,9 @@ fn role_subsumes_inner(
     super_role: &RoleExpr,
     sub_role: &RoleExpr,
     seen: &mut std::collections::HashSet<(u8, u32, u8, u32)>,
+    depth: u8,
 ) -> bool {
-    if !seen.insert(role_subsumes_key(super_role, sub_role)) {
+    if depth > 64 || !seen.insert(role_subsumes_key(super_role, sub_role)) {
         return false;
     }
     if role_equivalent(branch, super_role, sub_role) {
@@ -1879,7 +1883,7 @@ fn role_subsumes_inner(
         chain.len() == 1
             && role_exprs_equal(&chain[0], sub_role)
             && (role_exprs_equal(sup, super_role)
-                || role_subsumes_inner(branch, super_role, sup, seen))
+                || role_subsumes_inner(branch, super_role, sup, seen, depth + 1))
     }) {
         return true;
     }
@@ -1894,7 +1898,7 @@ fn role_subsumes_inner(
                 .is_some_and(|supers| supers.contains(sup))
         }
         (RoleExpr::Inverse(is), RoleExpr::Inverse(it)) => {
-            role_subsumes_inner(branch, &RoleExpr::Atomic(*it), &RoleExpr::Atomic(*is), seen)
+            role_subsumes_inner(branch, &RoleExpr::Atomic(*it), &RoleExpr::Atomic(*is), seen, depth + 1)
         }
         (RoleExpr::Atomic(sup), RoleExpr::Inverse(sub_id)) => {
             if role_equivalent(branch, super_role, sub_role) {
@@ -1912,6 +1916,11 @@ fn role_subsumes_inner(
                 return true;
             }
             atomic_subsumes_inverse_role(branch, *sub_id, *sup)
+                || branch.role_chains.iter().any(|(chain, chain_sup)| {
+                    chain.len() == 1
+                        && matches!(&chain[0], RoleExpr::Inverse(a) if *a == *sup)
+                        && matches!(chain_sup, RoleExpr::Atomic(chain_s) if *chain_s == *sub_id)
+                })
         }
     }
 }

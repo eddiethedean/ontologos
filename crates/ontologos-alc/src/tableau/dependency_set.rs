@@ -26,9 +26,11 @@ pub struct UnionDependencySet {
 pub struct PermanentDependencySet {
     pub(crate) rest: Option<Rc<PermanentDependencySet>>,
     pub(crate) branching_point: i32,
+    #[allow(dead_code)]
     next_entry: RefCell<Option<Weak<PermanentDependencySet>>>,
 }
 
+#[allow(dead_code)]
 impl PermanentDependencySet {
     /// Whether this set is empty (no branching points).
     #[must_use]

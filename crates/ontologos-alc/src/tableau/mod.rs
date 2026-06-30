@@ -2072,9 +2072,23 @@ fn equivalent_partner_preference(store: &ontologos_core::DlStore, ce: CeId) -> u
 
 /// Resolve atomic class labels to their `EquivalentClasses` definition when present.
 pub(crate) fn effective_class_expression(dl: &DlOntology, ce: CeId) -> CeId {
+    let mut seen = std::collections::HashSet::new();
+    effective_class_expression_inner(dl, ce, &mut seen)
+}
+
+fn effective_class_expression_inner(
+    dl: &DlOntology,
+    ce: CeId,
+    seen: &mut std::collections::HashSet<CeId>,
+) -> CeId {
+    if !seen.insert(ce) {
+        return ce;
+    }
     let store = dl.core().dl();
     match store.ce(ce) {
-        Some(ClassExpr::Atomic(entity)) => equivalent_definition_ce(dl, *entity).unwrap_or(ce),
+        Some(ClassExpr::Atomic(entity)) => equivalent_definition_ce(dl, *entity)
+            .map(|def| effective_class_expression_inner(dl, def, seen))
+            .unwrap_or(ce),
         _ => ce,
     }
 }

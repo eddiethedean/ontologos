@@ -1,6 +1,83 @@
+use std::collections::{HashMap, HashSet};
+
 use serde::{Deserialize, Serialize};
 
 use crate::entity::EntityId;
+
+/// Adjacency index for subsumption reachability queries.
+#[derive(Debug, Clone, Default)]
+struct SubsumptionGraph {
+    direct_supers: HashMap<EntityId, HashSet<EntityId>>,
+    edges: HashSet<(EntityId, EntityId)>,
+}
+
+/// Cached subsumption reachability for batch taxonomy queries.
+#[derive(Debug, Clone)]
+pub struct ReachabilityIndex(SubsumptionGraph);
+
+impl ReachabilityIndex {
+    /// Build an index from the current subsumption edges.
+    #[must_use]
+    pub fn new(taxonomy: &Taxonomy) -> Self {
+        Self(SubsumptionGraph::from_edges(&taxonomy.subsumptions))
+    }
+
+    /// Whether `sub` is subsumed by `sup` (direct or indirect).
+    #[must_use]
+    pub fn is_subsumed(&self, sub: EntityId, sup: EntityId) -> bool {
+        self.0.reachable(sub, sup)
+    }
+
+    /// Record a new direct edge for incremental enrichment passes.
+    pub fn insert_edge(&mut self, sub: EntityId, sup: EntityId) -> bool {
+        if sub == sup {
+            return false;
+        }
+        if !self.0.edges.insert((sub, sup)) {
+            return false;
+        }
+        self.0.direct_supers.entry(sub).or_default().insert(sup);
+        true
+    }
+}
+
+impl SubsumptionGraph {
+    fn from_edges(edges: &[(EntityId, EntityId)]) -> Self {
+        let mut graph = Self::default();
+        for &(sub, sup) in edges {
+            graph.insert(sub, sup);
+        }
+        graph
+    }
+
+    fn insert(&mut self, sub: EntityId, sup: EntityId) {
+        self.edges.insert((sub, sup));
+        self.direct_supers.entry(sub).or_default().insert(sup);
+    }
+
+    fn reachable(&self, from: EntityId, to: EntityId) -> bool {
+        if from == to {
+            return true;
+        }
+        let Some(supers) = self.direct_supers.get(&from) else {
+            return false;
+        };
+        let mut stack: Vec<EntityId> = supers.iter().copied().collect();
+        let mut seen = HashSet::new();
+        while let Some(current) = stack.pop() {
+            if current == to {
+                return true;
+            }
+            if !seen.insert(current) {
+                continue;
+            }
+            if let Some(next) = self.direct_supers.get(&current) {
+                stack.extend(next.iter().copied());
+            }
+        }
+        false
+    }
+}
 
 /// Extracted class taxonomy from a classification run.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -20,22 +97,54 @@ impl Taxonomy {
         self.subsumptions.len()
     }
 
+    fn graph(&self) -> SubsumptionGraph {
+        SubsumptionGraph::from_edges(&self.subsumptions)
+    }
+
+    /// Whether a direct subsumption edge `(sub, sup)` is present.
+    #[must_use]
+    pub fn contains_edge(&self, sub: EntityId, sup: EntityId) -> bool {
+        self.subsumptions.iter().any(|&(a, b)| a == sub && b == sup)
+    }
+
+    /// Insert a subsumption edge if absent; returns whether a new edge was added.
+    pub fn add_subsumption(&mut self, sub: EntityId, sup: EntityId) -> bool {
+        if sub == sup || self.contains_edge(sub, sup) {
+            return false;
+        }
+        self.subsumptions.push((sub, sup));
+        true
+    }
+
+    /// Retain subsumption edges matching `predicate`.
+    pub fn retain_subsumptions<F>(&mut self, mut predicate: F)
+    where
+        F: FnMut(&(EntityId, EntityId)) -> bool,
+    {
+        self.subsumptions.retain(|edge| predicate(edge));
+    }
+
     /// Direct superclasses of `class` in the reduced taxonomy.
     #[must_use]
     pub fn direct_superclasses(&self, class: EntityId) -> Vec<EntityId> {
-        self.subsumptions
-            .iter()
-            .filter_map(|&(sub, sup)| (sub == class).then_some(sup))
-            .collect()
+        self.graph()
+            .direct_supers
+            .get(&class)
+            .map(|s| s.iter().copied().collect())
+            .unwrap_or_default()
     }
 
     /// Direct subclasses of `class` in the reduced taxonomy.
     #[must_use]
     pub fn direct_subclasses(&self, class: EntityId) -> Vec<EntityId> {
-        self.subsumptions
-            .iter()
-            .filter_map(|&(sub, sup)| (sup == class).then_some(sub))
-            .collect()
+        let graph = self.graph();
+        let mut out = Vec::new();
+        for (&sub, supers) in &graph.direct_supers {
+            if supers.contains(&class) {
+                out.push(sub);
+            }
+        }
+        out
     }
 
     /// Whether `sub` is subsumed by `sup` (direct or indirect) in this taxonomy.
@@ -44,18 +153,20 @@ impl Taxonomy {
         if sub == sup {
             return true;
         }
-        let mut stack: Vec<EntityId> = self.direct_superclasses(sub);
-        let mut seen = std::collections::HashSet::new();
-        while let Some(current) = stack.pop() {
-            if current == sup {
-                return true;
-            }
-            if !seen.insert(current) {
-                continue;
-            }
-            stack.extend(self.direct_superclasses(current));
+        if self
+            .equivalences
+            .iter()
+            .any(|cluster| cluster.contains(&sub) && cluster.contains(&sup))
+        {
+            return true;
         }
-        false
+        ReachabilityIndex::new(self).is_subsumed(sub, sup)
+    }
+
+    /// Build a reachability index for repeated subsumption queries.
+    #[must_use]
+    pub fn reachability(&self) -> ReachabilityIndex {
+        ReachabilityIndex::new(self)
     }
 
     /// Equivalence cluster containing `class`, if any.
@@ -75,20 +186,13 @@ impl Taxonomy {
         if edges.is_empty() {
             return;
         }
-        let edge_count = edges.len();
-        let mut direct_supers: std::collections::HashMap<
-            EntityId,
-            std::collections::HashSet<EntityId>,
-        > = std::collections::HashMap::new();
-        for (sub, sup) in &edges {
-            direct_supers.entry(*sub).or_default().insert(*sup);
-        }
-        let mut reduced = Vec::with_capacity(edge_count);
+        let graph = SubsumptionGraph::from_edges(&edges);
+        let mut reduced = Vec::with_capacity(edges.len());
         for (sub, sup) in edges {
-            let redundant = direct_supers.get(&sub).is_some_and(|supers| {
+            let redundant = graph.direct_supers.get(&sub).is_some_and(|supers| {
                 supers
                     .iter()
-                    .any(|mid| *mid != sup && self.is_subsumed(*mid, sup))
+                    .any(|mid| *mid != sup && graph.reachable(*mid, sup))
             });
             if !redundant {
                 reduced.push((sub, sup));
@@ -101,8 +205,7 @@ impl Taxonomy {
 
     /// Collapse `#` vs `%23` duplicate entity ids (RDF/XML encoding artifact).
     pub fn canonicalize_entity_aliases(&mut self, ontology: &crate::Ontology) {
-        let mut by_canon: std::collections::HashMap<String, EntityId> =
-            std::collections::HashMap::new();
+        let mut by_canon: HashMap<String, EntityId> = HashMap::new();
         for (id, record) in ontology.entities().iter() {
             let iri_str = ontology.resolve_iri(record.iri).unwrap_or("");
             let canon = iri_str.replace("%23", "#");
@@ -141,7 +244,7 @@ impl Taxonomy {
             .unsatisfiable
             .iter()
             .map(|&id| remap(id))
-            .collect::<std::collections::HashSet<_>>()
+            .collect::<HashSet<_>>()
             .into_iter()
             .collect();
     }
@@ -150,6 +253,18 @@ impl Taxonomy {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn is_subsumed_via_equivalence_cluster() {
+        let a = EntityId(1);
+        let b = EntityId(2);
+        let tax = Taxonomy {
+            equivalences: vec![vec![a, b]],
+            ..Taxonomy::default()
+        };
+        assert!(tax.is_subsumed(a, b));
+        assert!(tax.is_subsumed(b, a));
+    }
 
     #[test]
     fn reduce_transitive_redundancy_removes_implied_edges() {
@@ -164,7 +279,6 @@ mod tests {
         assert_eq!(tax.subsumptions, vec![(a, b), (b, c)]);
     }
 
-    /// family.owl pattern: redundant `X ⊑ Person` when `X ⊑ Relative ⊑ Person` (etc.) exists.
     #[test]
     fn reduce_transitive_redundancy_family_person_shortcuts() {
         let person = EntityId(1);
@@ -188,5 +302,16 @@ mod tests {
         assert!(!tax.subsumptions.contains(&(brother, person)));
         assert!(tax.subsumptions.contains(&(relative, person)));
         assert!(tax.subsumptions.contains(&(man, person)));
+    }
+
+    #[test]
+    fn add_subsumption_and_contains_edge() {
+        let a = EntityId(1);
+        let b = EntityId(2);
+        let mut tax = Taxonomy::default();
+        assert!(tax.add_subsumption(a, b));
+        assert!(!tax.add_subsumption(a, b));
+        assert!(tax.contains_edge(a, b));
+        assert!(tax.is_subsumed(a, b));
     }
 }

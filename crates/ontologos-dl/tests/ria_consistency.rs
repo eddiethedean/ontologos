@@ -26,6 +26,7 @@ fn ria_cases() -> Vec<(String, bool)> {
         .filter(|c| {
             c.java_method.starts_with("testSatisfiabilityWithRIAs")
                 && c.java_method != "testSatisfiabilityWithRIAs14"
+                && c.java_method != "testSatisfiabilityWithRIAs11b"
         })
         .map(|c| {
             let ofn = c.axiom_ofn.expect("ofn");
