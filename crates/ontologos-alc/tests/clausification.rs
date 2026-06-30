@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use ontologos_alc::Error;
-use ontologos_alc::{clausify, clausify_hyper, Clause};
+use ontologos_alc::{Clause, clausify, clausify_hyper};
 use ontologos_core::{ClassExpr, DlAxiom, Ontology};
 
 fn structural_dir() -> PathBuf {
@@ -128,10 +128,12 @@ fn clausify_named_subclass() -> Result<(), Error> {
     let mut ont = ontology;
     let clauses = clausify(&mut ont)?;
     assert!(!clauses.is_empty());
-    assert!(clauses
-        .clauses()
-        .iter()
-        .any(|c| matches!(c, Clause::Subsumption { .. })));
+    assert!(
+        clauses
+            .clauses()
+            .iter()
+            .any(|c| matches!(c, Clause::Subsumption { .. }))
+    );
     Ok(())
 }
 

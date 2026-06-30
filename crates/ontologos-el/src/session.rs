@@ -5,7 +5,7 @@ use ontologos_core::{Ontology, OntologyRevision, Profile, Reasoner, ReasonerSess
 use crate::graph::CompletionGraph;
 use crate::partition::PartitionIndex;
 use crate::trace::ElReport;
-use crate::{normal_form, taxonomy_extract, ElClassifier};
+use crate::{ElClassifier, normal_form, taxonomy_extract};
 
 const PARTITION_FALLBACK_FRACTION: f64 = 0.5;
 

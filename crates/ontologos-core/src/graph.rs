@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
 
 use crate::axiom::{Axiom, AxiomId};
 use crate::entity::{EntityId, EntityRegistry};
@@ -10,6 +11,13 @@ pub struct AxiomStore {
     axioms: Vec<Axiom>,
     removed: HashSet<AxiomId>,
     inferred: HashSet<AxiomId>,
+    dedup_index: HashMap<u64, AxiomId>,
+}
+
+fn axiom_fingerprint(axiom: &Axiom) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    axiom.hash(&mut hasher);
+    hasher.finish()
 }
 
 impl AxiomStore {
@@ -82,10 +90,22 @@ impl AxiomStore {
     ) -> Result<AxiomId> {
         let axiom = normalize_class_operands(axiom);
         axiom.validate(registry)?;
+        let fp = axiom_fingerprint(&axiom);
+        if let Some(&id) = self.dedup_index.get(&fp) {
+            if !self.removed.contains(&id)
+                && self.axioms.get(id.0 as usize).is_some_and(|e| e == &axiom)
+            {
+                if !inferred {
+                    self.inferred.remove(&id);
+                }
+                return Ok(id);
+            }
+        }
         if let Some((index, _)) = self.axioms.iter().enumerate().find(|(i, existing)| {
             !self.removed.contains(&AxiomId(*i as u32)) && **existing == axiom
         }) {
             let id = AxiomId(index as u32);
+            self.dedup_index.insert(fp, id);
             if !inferred {
                 self.inferred.remove(&id);
             }
@@ -96,6 +116,7 @@ impl AxiomStore {
                 .map_err(|_| Error::InvalidAxiom("axiom store capacity exceeded".into()))?,
         );
         self.axioms.push(axiom);
+        self.dedup_index.insert(fp, id);
         if inferred {
             self.inferred.insert(id);
         }
@@ -181,8 +202,105 @@ fn normalize_class_operands(axiom: Axiom) -> Axiom {
 }
 
 fn push_unique(vec: &mut Vec<EntityId>, value: EntityId) {
-    if !vec.contains(&value) {
-        vec.push(value);
+    match vec.binary_search(&value) {
+        Ok(_) => {}
+        Err(pos) => vec.insert(pos, value),
+    }
+}
+
+/// Dense `EntityId` → sorted neighbor list (indexed by `EntityId.0`).
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+struct DenseAdjacency {
+    edges: Vec<Vec<EntityId>>,
+}
+
+impl DenseAdjacency {
+    fn get(&self, id: EntityId) -> &[EntityId] {
+        self.edges.get(id.0 as usize).map_or(&[], Vec::as_slice)
+    }
+
+    fn push_unique(&mut self, from: EntityId, to: EntityId) {
+        let idx = from.0 as usize;
+        if self.edges.len() <= idx {
+            self.edges.resize(idx + 1, Vec::new());
+        }
+        push_unique(&mut self.edges[idx], to);
+    }
+
+    fn remove(&mut self, from: EntityId, to: EntityId) {
+        if let Some(vec) = self.edges.get_mut(from.0 as usize) {
+            if let Ok(pos) = vec.binary_search(&to) {
+                vec.remove(pos);
+            }
+        }
+    }
+}
+
+/// Union-find backed equivalence clusters (one representative map per relation).
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+struct EquivalenceClusters {
+    parent: HashMap<u32, u32>,
+    clusters: HashMap<u32, HashSet<EntityId>>,
+}
+
+impl EquivalenceClusters {
+    fn find(&self, id: EntityId) -> u32 {
+        let mut root = id.0;
+        while let Some(&p) = self.parent.get(&root) {
+            if p == root {
+                break;
+            }
+            root = p;
+        }
+        root
+    }
+
+    fn merge(&mut self, ids: &[EntityId]) {
+        if ids.is_empty() {
+            return;
+        }
+        let mut combined = HashSet::new();
+        for &id in ids {
+            combined.insert(id);
+            let r = self.find(id);
+            if let Some(existing) = self.clusters.get(&r) {
+                combined.extend(existing.iter().copied());
+            }
+        }
+        let root = combined
+            .iter()
+            .min_by_key(|id| id.0)
+            .copied()
+            .expect("non-empty cluster");
+        for &id in &combined {
+            self.parent.insert(id.0, root.0);
+        }
+        for key in combined.iter().map(|id| id.0).collect::<Vec<_>>() {
+            if key != root.0 {
+                self.clusters.remove(&key);
+            }
+        }
+        self.clusters.insert(root.0, combined);
+    }
+
+    fn get(&self, class: EntityId) -> Option<&HashSet<EntityId>> {
+        let root = self.find(class);
+        self.clusters
+            .get(&root)
+            .filter(|set| set.len() > 1 && set.contains(&class))
+    }
+}
+
+fn remove_pair_from_vec_map(
+    map: &mut HashMap<EntityId, Vec<(EntityId, EntityId)>>,
+    key: EntityId,
+    value: (EntityId, EntityId),
+) {
+    if let Some(vec) = map.get_mut(&key) {
+        vec.retain(|&v| v != value);
+        if vec.is_empty() {
+            map.remove(&key);
+        }
     }
 }
 
@@ -191,30 +309,15 @@ fn link_symmetric(map: &mut HashMap<EntityId, HashSet<EntityId>>, a: EntityId, b
     map.entry(b).or_default().insert(a);
 }
 
-fn merge_equivalence_class(map: &mut HashMap<EntityId, HashSet<EntityId>>, classes: &[EntityId]) {
-    let mut component: HashSet<EntityId> = classes.iter().copied().collect();
-    for id in classes {
-        if let Some(existing) = map.get(id) {
-            component.extend(existing.iter().copied());
-        }
-    }
-    let members: Vec<EntityId> = component.into_iter().collect();
-    for i in 0..members.len() {
-        for j in (i + 1)..members.len() {
-            link_symmetric(map, members[i], members[j]);
-        }
-    }
-}
-
 /// Secondary indexes over axioms for fast engine lookups.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct AxiomIndex {
-    subclass_of: HashMap<EntityId, Vec<EntityId>>,
-    superclass_of: HashMap<EntityId, Vec<EntityId>>,
-    subproperty_of: HashMap<EntityId, Vec<EntityId>>,
-    superproperty_of: HashMap<EntityId, Vec<EntityId>>,
-    property_domains: HashMap<EntityId, Vec<EntityId>>,
-    property_ranges: HashMap<EntityId, Vec<EntityId>>,
+    subclass_of: DenseAdjacency,
+    superclass_of: DenseAdjacency,
+    subproperty_of: DenseAdjacency,
+    superproperty_of: DenseAdjacency,
+    property_domains: DenseAdjacency,
+    property_ranges: DenseAdjacency,
     subclass_existentials: HashMap<EntityId, Vec<(EntityId, EntityId)>>,
     transitive_properties: HashSet<EntityId>,
     symmetric_properties: HashSet<EntityId>,
@@ -223,15 +326,15 @@ pub struct AxiomIndex {
     inverse_functional_properties: HashSet<EntityId>,
     irreflexive_properties: HashSet<EntityId>,
     asymmetric_properties: HashSet<EntityId>,
-    equivalent_classes: HashMap<EntityId, HashSet<EntityId>>,
-    equivalent_properties: HashMap<EntityId, HashSet<EntityId>>,
+    equivalent_classes: EquivalenceClusters,
+    equivalent_properties: EquivalenceClusters,
     disjoint_with: HashMap<EntityId, HashSet<EntityId>>,
     inverse_of: HashMap<EntityId, EntityId>,
-    classes_of: HashMap<EntityId, Vec<EntityId>>,
-    individuals_of: HashMap<EntityId, Vec<EntityId>>,
+    classes_of: DenseAdjacency,
+    individuals_of: DenseAdjacency,
     object_assertions_by_subject: HashMap<EntityId, Vec<(EntityId, EntityId)>>,
     object_assertions_by_object: HashMap<EntityId, Vec<(EntityId, EntityId)>>,
-    same_as: HashMap<EntityId, HashSet<EntityId>>,
+    same_as: EquivalenceClusters,
     different_from: HashMap<EntityId, HashSet<EntityId>>,
     by_kind: HashMap<&'static str, Vec<AxiomId>>,
 }
@@ -251,6 +354,103 @@ impl AxiomIndex {
         }
     }
 
+    /// Whether removing this axiom shape requires a full index rebuild.
+    #[must_use]
+    pub fn removal_needs_rebuild(axiom: &Axiom) -> bool {
+        matches!(
+            axiom,
+            Axiom::EquivalentClasses(_)
+                | Axiom::EquivalentObjectProperties(_)
+                | Axiom::DisjointClasses(_)
+                | Axiom::SameIndividual(_)
+                | Axiom::DifferentIndividuals(_)
+        )
+    }
+
+    /// Remove one axiom from secondary indexes (simple shapes only).
+    pub fn remove(&mut self, id: AxiomId, axiom: &Axiom) {
+        if let Some(ids) = self.by_kind.get_mut(axiom.kind_tag()) {
+            ids.retain(|&aid| aid != id);
+        }
+        match axiom {
+            Axiom::SubClassOf {
+                subclass,
+                superclass,
+            } => {
+                self.subclass_of.remove(*subclass, *superclass);
+                self.superclass_of.remove(*superclass, *subclass);
+            }
+            Axiom::SubObjectPropertyOf {
+                sub_property,
+                super_property,
+            } => {
+                self.subproperty_of.remove(*sub_property, *super_property);
+                self.superproperty_of.remove(*super_property, *sub_property);
+            }
+            Axiom::ObjectPropertyDomain { property, domain } => {
+                self.property_domains.remove(*property, *domain);
+            }
+            Axiom::ObjectPropertyRange { property, range } => {
+                self.property_ranges.remove(*property, *range);
+            }
+            Axiom::TransitiveObjectProperty(property) => {
+                self.transitive_properties.remove(property);
+            }
+            Axiom::SubClassOfExistential {
+                subclass,
+                property,
+                filler,
+            } => {
+                if let Some(entry) = self.subclass_existentials.get_mut(subclass) {
+                    entry.retain(|&(p, f)| !(p == *property && f == *filler));
+                }
+            }
+            Axiom::SymmetricObjectProperty(property) => {
+                self.symmetric_properties.remove(property);
+            }
+            Axiom::ReflexiveObjectProperty(property) => {
+                self.reflexive_properties.remove(property);
+            }
+            Axiom::FunctionalObjectProperty(property) => {
+                self.functional_properties.remove(property);
+            }
+            Axiom::InverseFunctionalObjectProperty(property) => {
+                self.inverse_functional_properties.remove(property);
+            }
+            Axiom::IrreflexiveObjectProperty(property) => {
+                self.irreflexive_properties.remove(property);
+            }
+            Axiom::AsymmetricObjectProperty(property) => {
+                self.asymmetric_properties.remove(property);
+            }
+            Axiom::InverseObjectProperties { left, right } => {
+                self.inverse_of.remove(left);
+                self.inverse_of.remove(right);
+            }
+            Axiom::ClassAssertion { individual, class } => {
+                self.classes_of.remove(*individual, *class);
+                self.individuals_of.remove(*class, *individual);
+            }
+            Axiom::ObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => {
+                remove_pair_from_vec_map(
+                    &mut self.object_assertions_by_subject,
+                    *subject,
+                    (*property, *object),
+                );
+                remove_pair_from_vec_map(
+                    &mut self.object_assertions_by_object,
+                    *object,
+                    (*property, *subject),
+                );
+            }
+            _ => {}
+        }
+    }
+
     /// Update indexes after inserting an axiom.
     pub fn insert(&mut self, id: AxiomId, axiom: &Axiom) {
         if !self
@@ -267,30 +467,23 @@ impl AxiomIndex {
                 subclass,
                 superclass,
             } => {
-                push_unique(self.subclass_of.entry(*subclass).or_default(), *superclass);
-                push_unique(
-                    self.superclass_of.entry(*superclass).or_default(),
-                    *subclass,
-                );
+                self.subclass_of.push_unique(*subclass, *superclass);
+                self.superclass_of.push_unique(*superclass, *subclass);
             }
             Axiom::SubObjectPropertyOf {
                 sub_property,
                 super_property,
             } => {
-                push_unique(
-                    self.subproperty_of.entry(*sub_property).or_default(),
-                    *super_property,
-                );
-                push_unique(
-                    self.superproperty_of.entry(*super_property).or_default(),
-                    *sub_property,
-                );
+                self.subproperty_of
+                    .push_unique(*sub_property, *super_property);
+                self.superproperty_of
+                    .push_unique(*super_property, *sub_property);
             }
             Axiom::ObjectPropertyDomain { property, domain } => {
-                push_unique(self.property_domains.entry(*property).or_default(), *domain);
+                self.property_domains.push_unique(*property, *domain);
             }
             Axiom::ObjectPropertyRange { property, range } => {
-                push_unique(self.property_ranges.entry(*property).or_default(), *range);
+                self.property_ranges.push_unique(*property, *range);
             }
             Axiom::TransitiveObjectProperty(property) => {
                 self.transitive_properties.insert(*property);
@@ -325,10 +518,10 @@ impl AxiomIndex {
                 self.asymmetric_properties.insert(*property);
             }
             Axiom::EquivalentClasses(classes) => {
-                merge_equivalence_class(&mut self.equivalent_classes, classes);
+                self.equivalent_classes.merge(classes);
             }
             Axiom::EquivalentObjectProperties(properties) => {
-                merge_equivalence_class(&mut self.equivalent_properties, properties);
+                self.equivalent_properties.merge(properties);
             }
             Axiom::DisjointClasses(classes) => {
                 for i in 0..classes.len() {
@@ -342,8 +535,8 @@ impl AxiomIndex {
                 self.inverse_of.insert(*right, *left);
             }
             Axiom::ClassAssertion { individual, class } => {
-                push_unique(self.classes_of.entry(*individual).or_default(), *class);
-                push_unique(self.individuals_of.entry(*class).or_default(), *individual);
+                self.classes_of.push_unique(*individual, *class);
+                self.individuals_of.push_unique(*class, *individual);
             }
             Axiom::ObjectPropertyAssertion {
                 subject,
@@ -368,7 +561,7 @@ impl AxiomIndex {
             | Axiom::NegativeObjectPropertyAssertion { .. }
             | Axiom::NegativeDataPropertyAssertion { .. } => {}
             Axiom::SameIndividual(individuals) => {
-                merge_equivalence_class(&mut self.same_as, individuals);
+                self.same_as.merge(individuals);
             }
             Axiom::DifferentIndividuals(individuals) => {
                 for i in 0..individuals.len() {
@@ -383,13 +576,13 @@ impl AxiomIndex {
     /// Direct superclasses declared for a class.
     #[must_use]
     pub fn direct_superclasses(&self, class: EntityId) -> &[EntityId] {
-        self.subclass_of.get(&class).map_or(&[], Vec::as_slice)
+        self.subclass_of.get(class)
     }
 
     /// Direct subclasses declared for a class.
     #[must_use]
     pub fn direct_subclasses(&self, class: EntityId) -> &[EntityId] {
-        self.superclass_of.get(&class).map_or(&[], Vec::as_slice)
+        self.superclass_of.get(class)
     }
 
     /// Existential restrictions declared for a subclass (`property`, `filler` pairs).
@@ -403,39 +596,31 @@ impl AxiomIndex {
     /// Direct super-properties declared for a property.
     #[must_use]
     pub fn direct_superproperties(&self, property: EntityId) -> &[EntityId] {
-        self.subproperty_of
-            .get(&property)
-            .map_or(&[], Vec::as_slice)
+        self.subproperty_of.get(property)
     }
 
     /// Direct sub-properties declared for a property.
     #[must_use]
     pub fn direct_subproperties(&self, property: EntityId) -> &[EntityId] {
-        self.superproperty_of
-            .get(&property)
-            .map_or(&[], Vec::as_slice)
+        self.superproperty_of.get(property)
     }
 
     /// Domain classes declared for a property.
     #[must_use]
     pub fn domains_of(&self, property: EntityId) -> &[EntityId] {
-        self.property_domains
-            .get(&property)
-            .map_or(&[], Vec::as_slice)
+        self.property_domains.get(property)
     }
 
     /// Range classes declared for a property.
     #[must_use]
     pub fn ranges_of(&self, property: EntityId) -> &[EntityId] {
-        self.property_ranges
-            .get(&property)
-            .map_or(&[], Vec::as_slice)
+        self.property_ranges.get(property)
     }
 
     /// Classes declared equivalent to the given class.
     #[must_use]
     pub fn equivalents_of(&self, class: EntityId) -> Option<&HashSet<EntityId>> {
-        self.equivalent_classes.get(&class)
+        self.equivalent_classes.get(class)
     }
 
     /// Classes declared disjoint with the given class.
@@ -495,13 +680,13 @@ impl AxiomIndex {
     /// Classes asserted for an individual.
     #[must_use]
     pub fn classes_of(&self, individual: EntityId) -> &[EntityId] {
-        self.classes_of.get(&individual).map_or(&[], Vec::as_slice)
+        self.classes_of.get(individual)
     }
 
     /// Individuals asserted for a class.
     #[must_use]
     pub fn individuals_of(&self, class: EntityId) -> &[EntityId] {
-        self.individuals_of.get(&class).map_or(&[], Vec::as_slice)
+        self.individuals_of.get(class)
     }
 
     /// Object property assertions with the given subject (`property`, `object` pairs).
@@ -523,13 +708,13 @@ impl AxiomIndex {
     /// Properties declared equivalent to the given property.
     #[must_use]
     pub fn equivalent_properties_of(&self, property: EntityId) -> Option<&HashSet<EntityId>> {
-        self.equivalent_properties.get(&property)
+        self.equivalent_properties.get(property)
     }
 
     /// Individuals declared same-as the given individual.
     #[must_use]
     pub fn same_as(&self, individual: EntityId) -> Option<&HashSet<EntityId>> {
-        self.same_as.get(&individual)
+        self.same_as.get(individual)
     }
 
     /// Individuals declared different-from the given individual.

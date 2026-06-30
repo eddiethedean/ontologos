@@ -1,8 +1,8 @@
 //! Phase 3 exit gate — engine_gap cleared, promotion candidates absorbed.
 
 use ontologos_conformance::{
-    audit_planned_backlog, load_catalog, scan_planned_engine_failures, scan_promotable_axiom_cases,
-    PlannedJavaCategory,
+    PlannedJavaCategory, audit_planned_backlog, load_catalog, scan_planned_engine_failures,
+    scan_promotable_axiom_cases,
 };
 
 #[test]

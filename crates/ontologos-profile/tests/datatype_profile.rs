@@ -1,5 +1,5 @@
 use ontologos_parser::load_ontology;
-use ontologos_profile::{detect_profile, scanner::scan_constructs, OwlProfile};
+use ontologos_profile::{OwlProfile, detect_profile, scanner::scan_constructs};
 use std::path::PathBuf;
 
 #[test]

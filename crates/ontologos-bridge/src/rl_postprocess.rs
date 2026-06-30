@@ -455,6 +455,14 @@ fn push_subclass_if_missing(
     Ok(true)
 }
 
+/// Run RDFS-oriented fallbacks (subset of full RL post-processing).
+pub fn apply_rdfs_fallbacks(ontology: &mut Ontology) -> Result<usize> {
+    let mut total = apply_transitive_subproperties(ontology)?;
+    total += propagate_domain_range_along_subproperties(ontology)?;
+    total += apply_domain_range_inheritance(ontology)?;
+    Ok(total)
+}
+
 /// Run all reasonable semantic fallbacks after materialization.
 pub fn apply_reasonable_fallbacks(ontology: &mut Ontology) -> Result<usize> {
     let mut total = apply_inverse_subproperty_materialization(ontology)?;

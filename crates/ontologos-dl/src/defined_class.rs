@@ -287,7 +287,7 @@ fn is_intersection_conjunct_super(
     pattern
         .atomics
         .iter()
-        .any(|&atomic| sub == atomic || (sub != atomic && taxonomy.is_subsumed(atomic, sub)))
+        .any(|&atomic| sub == atomic || taxonomy.is_subsumed(atomic, sub))
 }
 
 fn derive_asserted_direct_superclasses(ontology: &Ontology) -> Vec<(EntityId, EntityId)> {

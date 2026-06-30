@@ -45,8 +45,8 @@ fn diagnose_misc203_axioms() {
 #[test]
 fn diagnose_dl650_unsatisfiable() {
     use ontologos_alc::{
-        is_ce_intersection_satisfiable_with_seed, is_ce_satisfiable_with_seed, DlOntology,
-        TableauSeed,
+        DlOntology, TableauSeed, is_ce_intersection_satisfiable_with_seed,
+        is_ce_satisfiable_with_seed,
     };
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf";

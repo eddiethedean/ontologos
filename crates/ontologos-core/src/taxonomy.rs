@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
@@ -80,7 +81,7 @@ impl SubsumptionGraph {
 }
 
 /// Extracted class taxonomy from a classification run.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Taxonomy {
     /// Direct subsumptions `(subclass, superclass)` after transitive reduction.
     pub subsumptions: Vec<(EntityId, EntityId)>,
@@ -88,23 +89,81 @@ pub struct Taxonomy {
     pub equivalences: Vec<Vec<EntityId>>,
     /// Classes inferred equivalent to `owl:Nothing` / ⊥.
     pub unsatisfiable: Vec<EntityId>,
+    #[serde(skip)]
+    graph_cache: RefCell<Option<SubsumptionGraph>>,
+}
+
+impl Default for Taxonomy {
+    fn default() -> Self {
+        Self {
+            subsumptions: Vec::new(),
+            equivalences: Vec::new(),
+            unsatisfiable: Vec::new(),
+            graph_cache: RefCell::new(None),
+        }
+    }
+}
+
+impl PartialEq for Taxonomy {
+    fn eq(&self, other: &Self) -> bool {
+        self.subsumptions == other.subsumptions
+            && self.equivalences == other.equivalences
+            && self.unsatisfiable == other.unsatisfiable
+    }
+}
+
+impl Eq for Taxonomy {}
+
+impl Clone for Taxonomy {
+    fn clone(&self) -> Self {
+        Self {
+            subsumptions: self.subsumptions.clone(),
+            equivalences: self.equivalences.clone(),
+            unsatisfiable: self.unsatisfiable.clone(),
+            graph_cache: RefCell::new(None),
+        }
+    }
 }
 
 impl Taxonomy {
+    /// Build a taxonomy from classification outputs.
+    #[must_use]
+    pub fn from_parts(
+        subsumptions: Vec<(EntityId, EntityId)>,
+        equivalences: Vec<Vec<EntityId>>,
+        unsatisfiable: Vec<EntityId>,
+    ) -> Self {
+        Self {
+            subsumptions,
+            equivalences,
+            unsatisfiable,
+            ..Self::default()
+        }
+    }
+
     /// Number of direct subsumption edges.
     #[must_use]
     pub fn subsumption_count(&self) -> usize {
         self.subsumptions.len()
     }
 
-    fn graph(&self) -> SubsumptionGraph {
-        SubsumptionGraph::from_edges(&self.subsumptions)
+    fn invalidate_graph_cache(&self) {
+        *self.graph_cache.borrow_mut() = None;
+    }
+
+    fn graph(&self) -> std::cell::Ref<'_, SubsumptionGraph> {
+        if self.graph_cache.borrow().is_none() {
+            *self.graph_cache.borrow_mut() = Some(SubsumptionGraph::from_edges(&self.subsumptions));
+        }
+        std::cell::Ref::map(self.graph_cache.borrow(), |c: &Option<SubsumptionGraph>| {
+            c.as_ref().expect("graph cache")
+        })
     }
 
     /// Whether a direct subsumption edge `(sub, sup)` is present.
     #[must_use]
     pub fn contains_edge(&self, sub: EntityId, sup: EntityId) -> bool {
-        self.subsumptions.iter().any(|&(a, b)| a == sub && b == sup)
+        self.graph().edges.contains(&(sub, sup))
     }
 
     /// Insert a subsumption edge if absent; returns whether a new edge was added.
@@ -113,6 +172,7 @@ impl Taxonomy {
             return false;
         }
         self.subsumptions.push((sub, sup));
+        self.invalidate_graph_cache();
         true
     }
 
@@ -122,6 +182,7 @@ impl Taxonomy {
         F: FnMut(&(EntityId, EntityId)) -> bool,
     {
         self.subsumptions.retain(|edge| predicate(edge));
+        self.invalidate_graph_cache();
     }
 
     /// Direct superclasses of `class` in the reduced taxonomy.
@@ -201,6 +262,7 @@ impl Taxonomy {
         reduced.sort_by_key(|(a, b)| (a.0, b.0));
         reduced.dedup();
         self.subsumptions = reduced;
+        self.invalidate_graph_cache();
     }
 
     /// Collapse `#` vs `%23` duplicate entity ids (RDF/XML encoding artifact).
@@ -229,6 +291,7 @@ impl Taxonomy {
             .collect();
         self.subsumptions.sort_by_key(|(a, b)| (a.0, b.0));
         self.subsumptions.dedup();
+        self.invalidate_graph_cache();
         self.equivalences = self
             .equivalences
             .iter()

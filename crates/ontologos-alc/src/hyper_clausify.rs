@@ -6,15 +6,15 @@ use ontologos_core::{
     Axiom, CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, EntityKind, Ontology,
 };
 
-use crate::hyper_abox::clausify_abox_class_assertions;
-use crate::hyper_cardinality::{clausify_cardinality_subclass_axioms, CardinalityHyperContext};
-use crate::hyper_nominals::{clausify_nominal_subclass_axioms, NominalHyperContext};
-use crate::hyper_object::{clausify_object_subclass_axioms, ObjectHyperContext};
-use crate::hyperclause::{
-    abbrev_entity, abbrev_role, concept_name, data_range_fmt, negate_data_range, DataRangeFmt,
-    HyperAtom, HyperClause, HyperClauseSet, Term,
-};
 use crate::Error;
+use crate::hyper_abox::clausify_abox_class_assertions;
+use crate::hyper_cardinality::{CardinalityHyperContext, clausify_cardinality_subclass_axioms};
+use crate::hyper_nominals::{NominalHyperContext, clausify_nominal_subclass_axioms};
+use crate::hyper_object::{ObjectHyperContext, clausify_object_subclass_axioms};
+use crate::hyperclause::{
+    DataRangeFmt, HyperAtom, HyperClause, HyperClauseSet, Term, abbrev_entity, abbrev_role,
+    concept_name, data_range_fmt, negate_data_range,
+};
 
 const VAR_X: &str = "X";
 const OWL_THING: &str = "http://www.w3.org/2002/07/owl#Thing";

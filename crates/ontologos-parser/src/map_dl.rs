@@ -860,12 +860,12 @@ mod tests {
     use horned_owl::model::RcStr;
     use horned_owl::ontology::set::SetOntology;
     use ontologos_core::{CeId, DataExpr};
-    use ontologos_dl::{is_datatype_consistent, LiteralIndex, LiteralValue};
+    use ontologos_dl::{LiteralIndex, LiteralValue, is_datatype_consistent};
 
+    use crate::Format;
     use crate::limits::ParseLimits;
     use crate::map::map_to_core;
     use crate::read::read_horned_owl_from_reader;
-    use crate::Format;
 
     #[test]
     fn maps_datatype_union_intersection_axioms() {
@@ -936,12 +936,16 @@ mod tests {
         }
         assert_eq!(all_ranges.len(), 2);
         assert_eq!(some_ranges.len(), 1);
-        assert!(all_ranges
-            .iter()
-            .any(|&r| matches!(store.de(r), Some(DataExpr::Or(_)))));
-        assert!(all_ranges
-            .iter()
-            .any(|&r| matches!(store.de(r), Some(DataExpr::Literal { .. }))));
+        assert!(
+            all_ranges
+                .iter()
+                .any(|&r| matches!(store.de(r), Some(DataExpr::Or(_))))
+        );
+        assert!(
+            all_ranges
+                .iter()
+                .any(|&r| matches!(store.de(r), Some(DataExpr::Literal { .. })))
+        );
         assert!(matches!(
             store.de(some_ranges[0]),
             Some(DataExpr::Facet { .. })

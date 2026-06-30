@@ -1156,7 +1156,7 @@ fn hex_binary_octet_length(lex: &str) -> usize {
     if lex.is_empty() {
         return 0;
     }
-    if !lex.len().is_multiple_of(2) || !lex.chars().all(|c| c.is_ascii_hexdigit()) {
+    if lex.len() % 2 != 0 || !lex.chars().all(|c| c.is_ascii_hexdigit()) {
         return usize::MAX;
     }
     lex.len() / 2

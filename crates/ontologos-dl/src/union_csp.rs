@@ -42,7 +42,7 @@ pub fn union_disjoint_typing_consistency(ontology: &Ontology) -> Option<bool> {
 
     let (class, constraints) = union_constraints
         .into_iter()
-        .max_by(|a, b| a.1.len().cmp(&b.1.len()).then_with(|| a.0 .0.cmp(&b.0 .0)))
+        .max_by(|a, b| a.1.len().cmp(&b.1.len()).then_with(|| a.0.0.cmp(&b.0.0)))
         .filter(|(_, cs)| cs.len() >= 3)?;
 
     let atoms: HashSet<EntityId> = constraints.iter().flat_map(|c| c.iter().copied()).collect();
@@ -90,7 +90,7 @@ fn oneof_nominal_typing_consistency(ontology: &Ontology) -> Option<bool> {
 
     let (_, constraints) = by_individual
         .into_iter()
-        .max_by(|a, b| a.1.len().cmp(&b.1.len()).then_with(|| a.0 .0.cmp(&b.0 .0)))
+        .max_by(|a, b| a.1.len().cmp(&b.1.len()).then_with(|| a.0.0.cmp(&b.0.0)))
         .filter(|(_, cs)| cs.len() >= 3)?;
 
     let atoms: HashSet<EntityId> = constraints.iter().flat_map(|c| c.iter().copied()).collect();
@@ -543,11 +543,7 @@ fn collect_nominal_grid_disjoint_pairs(
 }
 
 fn order_pair(a: EntityId, b: EntityId) -> (EntityId, EntityId) {
-    if a.0 <= b.0 {
-        (a, b)
-    } else {
-        (b, a)
-    }
+    if a.0 <= b.0 { (a, b) } else { (b, a) }
 }
 
 fn atomic_entity(store: &ontologos_core::DlStore, ce: CeId) -> Option<EntityId> {

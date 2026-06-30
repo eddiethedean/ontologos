@@ -2,7 +2,7 @@
 use std::env;
 use std::path::PathBuf;
 
-use ontologos_conformance::{audit_planned_backlog, audit_planned_backlog_with, AuditOptions};
+use ontologos_conformance::{AuditOptions, audit_planned_backlog, audit_planned_backlog_with};
 
 fn main() {
     let fast = std::env::args().any(|a| a == "--fast");

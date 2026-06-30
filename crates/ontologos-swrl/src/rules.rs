@@ -2,8 +2,8 @@
 
 use ontologos_core::Ontology;
 
-use crate::engine::materialize_swrl_rules;
 use crate::Result;
+use crate::engine::materialize_swrl_rules;
 
 /// Report from SWRL rule application.
 #[derive(Debug, Clone, Default)]

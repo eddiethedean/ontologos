@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{axiom_signature, AxiomId, EntityId, Ontology};
+use ontologos_core::{AxiomId, EntityId, Ontology, axiom_signature};
 
 /// Maps entities to syntactic partitions for incremental EL updates.
 #[derive(Debug, Clone, Default)]

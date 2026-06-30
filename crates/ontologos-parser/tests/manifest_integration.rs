@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use ontologos_core::OwlConstruct;
 use ontologos_parser::load_ontology;
-use ontologos_profile::{detect_profile, OwlProfile};
+use ontologos_profile::{OwlProfile, detect_profile};
 
 struct ManifestEntry {
     name: &'static str,

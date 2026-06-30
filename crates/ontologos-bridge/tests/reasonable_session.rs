@@ -1,6 +1,6 @@
 //! Bridge incremental session correctness tests.
 
-use ontologos_bridge::{materialize_with_session, MergeLimits, ReasonableSession};
+use ontologos_bridge::{MergeLimits, ReasonableSession, materialize_with_session};
 use ontologos_core::{Axiom, AxiomId, EntityKind, Ontology, Profile};
 
 fn class_chain() -> (

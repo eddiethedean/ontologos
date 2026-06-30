@@ -1,4 +1,4 @@
-use ontologos_alc::{tableau_is_consistent_with_seed, TableauSeed};
+use ontologos_alc::{TableauSeed, tableau_is_consistent_with_seed};
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;
 #[test]

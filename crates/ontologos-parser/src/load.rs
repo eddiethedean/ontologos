@@ -10,8 +10,8 @@ use crate::map::map_to_core;
 use crate::read::{read_horned_owl_from_reader, sniff_and_rewind};
 use crate::report::ParseReport;
 use crate::{
-    detect_format, detect_format_from_bytes, detect_functional_from_bytes,
-    detect_turtle_from_bytes, validate_loaded_ontology, Error, Format, Result,
+    Error, Format, Result, detect_format, detect_format_from_bytes, detect_functional_from_bytes,
+    detect_turtle_from_bytes, validate_loaded_ontology,
 };
 
 const SUPPLEMENT_STANDARD_PREFIXES: &str = "\

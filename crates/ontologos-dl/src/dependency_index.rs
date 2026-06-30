@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{axiom_signature, AxiomId, EntityId, Ontology};
+use ontologos_core::{AxiomId, EntityId, Ontology, axiom_signature};
 
 /// Tracks which axioms mention each entity (forward index).
 #[derive(Debug, Clone, Default)]

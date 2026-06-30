@@ -331,6 +331,24 @@ pub struct DlStore {
     expressions: Vec<ClassExpr>,
     data_exprs: Vec<DataExpr>,
     axioms: Vec<DlAxiom>,
+    #[serde(skip, default)]
+    ce_dedup: std::collections::HashMap<u64, CeId>,
+    #[serde(skip, default)]
+    de_dedup: std::collections::HashMap<u64, DeId>,
+}
+
+fn ce_fingerprint(expr: &ClassExpr) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    expr.hash(&mut hasher);
+    hasher.finish()
+}
+
+fn de_fingerprint(expr: &DataExpr) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    expr.hash(&mut hasher);
+    hasher.finish()
 }
 
 impl DlStore {
@@ -355,33 +373,59 @@ impl DlStore {
     /// Intern a class expression (structural dedup).
     #[must_use]
     pub fn intern_ce(&mut self, expr: ClassExpr) -> CeId {
+        let fp = ce_fingerprint(&expr);
+        if let Some(&id) = self.ce_dedup.get(&fp) {
+            if self
+                .expressions
+                .get(id.index() as usize)
+                .is_some_and(|e| e == &expr)
+            {
+                return id;
+            }
+        }
         if let Some((i, _)) = self
             .expressions
             .iter()
             .enumerate()
             .find(|(_, e)| *e == &expr)
         {
-            return CeId(i as u32);
+            let id = CeId(i as u32);
+            self.ce_dedup.insert(fp, id);
+            return id;
         }
-        let id = self.expressions.len() as u32;
+        let id = CeId(self.expressions.len() as u32);
         self.expressions.push(expr);
-        CeId(id)
+        self.ce_dedup.insert(fp, id);
+        id
     }
 
     /// Intern a data expression.
     #[must_use]
     pub fn intern_de(&mut self, expr: DataExpr) -> DeId {
+        let fp = de_fingerprint(&expr);
+        if let Some(&id) = self.de_dedup.get(&fp) {
+            if self
+                .data_exprs
+                .get(id.0 as usize)
+                .is_some_and(|e| e == &expr)
+            {
+                return id;
+            }
+        }
         if let Some((i, _)) = self
             .data_exprs
             .iter()
             .enumerate()
             .find(|(_, e)| *e == &expr)
         {
-            return DeId(i as u32);
+            let id = DeId(i as u32);
+            self.de_dedup.insert(fp, id);
+            return id;
         }
-        let id = self.data_exprs.len() as u32;
+        let id = DeId(self.data_exprs.len() as u32);
         self.data_exprs.push(expr);
-        DeId(id)
+        self.de_dedup.insert(fp, id);
+        id
     }
 
     /// Push a DL axiom.

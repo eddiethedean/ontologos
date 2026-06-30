@@ -1,7 +1,7 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use ontologos_parser::{load_ontology, load_ontology_with_limits, Error, ParseLimits};
+use ontologos_parser::{Error, ParseLimits, load_ontology, load_ontology_with_limits};
 
 fn fixture(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

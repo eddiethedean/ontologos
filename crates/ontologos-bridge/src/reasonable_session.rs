@@ -4,8 +4,8 @@ use ontologos_core::{Ontology, OntologyRevision, Profile, Reasoner, ReasonerSess
 use reasonable::reasoner::Reasoner as ReasonableReasoner;
 
 use crate::{
-    apply_reasonable_fallbacks, core_to_triples, core_to_triples_for_axioms,
-    merge_triples_into_ontology_with_limits, Error, MergeLimits, MergeReport,
+    Error, MergeLimits, MergeReport, apply_rdfs_fallbacks, apply_reasonable_fallbacks,
+    core_to_triples, core_to_triples_for_axioms, merge_triples_into_ontology_with_limits, perf,
 };
 
 /// Persistent reasonable state for incremental RL/RDFS materialization.
@@ -100,6 +100,10 @@ pub fn materialize_with_session(
     incremental: bool,
     limits: MergeLimits,
 ) -> MaterializeSessionResult {
+    let perf = perf::perf_enabled();
+    let mut timings = perf::BridgePerfTimings::default();
+    let started = perf.then(std::time::Instant::now);
+
     let dirty = ontology.dirty().clone();
     let stale = session_stale(&session, ontology);
 
@@ -114,19 +118,25 @@ pub fn materialize_with_session(
         !incremental || !session.warmed || dirty.has_removals() || stale || !use_incremental;
 
     if full_rebuild {
+        let triples_timer = perf.then(|| perf::PhaseTimer::start(&mut timings.core_to_triples_s));
         let triples = match core_to_triples(ontology) {
             Ok(t) => t,
             Err(e) => return Err(Box::new((e, session))),
         };
+        drop(triples_timer);
         session.reasoner = ReasonableReasoner::new();
         session.reasoner.load_triples(triples);
+        let reason_timer = perf.then(|| perf::PhaseTimer::start(&mut timings.reasonable_reason_s));
         session.reasoner.reason();
+        drop(reason_timer);
         session.warmed = true;
     } else if use_incremental {
+        let triples_timer = perf.then(|| perf::PhaseTimer::start(&mut timings.core_to_triples_s));
         let delta = match core_to_triples_for_axioms(ontology, dirty.added()) {
             Ok(d) => d,
             Err(e) => return Err(Box::new((e, session))),
         };
+        drop(triples_timer);
         if delta.is_empty() {
             ontology.clear_dirty();
             session.last_revision = ontology.revision();
@@ -139,7 +149,9 @@ pub fn materialize_with_session(
             ));
         }
         session.reasoner.load_triples(delta);
+        let reason_timer = perf.then(|| perf::PhaseTimer::start(&mut timings.reasonable_reason_s));
         session.reasoner.reason();
+        drop(reason_timer);
     } else {
         ontology.clear_dirty();
         session.last_revision = ontology.revision();
@@ -154,14 +166,30 @@ pub fn materialize_with_session(
 
     let output = session.reasoner.view_output().to_vec();
     let diagnostics = session.reasoner.diagnostics();
+    let merge_timer = perf.then(|| perf::PhaseTimer::start(&mut timings.merge_s));
     let merge =
         match merge_triples_into_ontology_with_limits(ontology, &output, diagnostics, limits) {
             Ok(m) => m,
             Err(e) => return Err(Box::new((e, session))),
         };
+    drop(merge_timer);
 
-    if let Err(e) = apply_reasonable_fallbacks(ontology) {
+    let post_timer = perf.then(|| perf::PhaseTimer::start(&mut timings.postprocess_s));
+    let post = if session.profile == Profile::Rdfs {
+        apply_rdfs_fallbacks(ontology)
+    } else {
+        apply_reasonable_fallbacks(ontology)
+    };
+    drop(post_timer);
+    if let Err(e) = post {
         return Err(Box::new((e, session)));
+    }
+
+    if let Some(start) = started {
+        timings.total_s = start.elapsed().as_secs_f64();
+    }
+    if perf {
+        eprintln!("{}", serde_json::to_string(&timings).unwrap_or_default());
     }
 
     session.last_revision = ontology.revision();

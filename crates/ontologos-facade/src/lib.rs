@@ -5,9 +5,9 @@
 use std::collections::HashSet;
 
 use ontologos_core::{Axiom, EntityId, EntityKind, Profile, Reasoner, RoleExpr, Taxonomy};
-use ontologos_el::{classify_with_profile as el_classify, ClassifyOutcome, ElClassifier};
+use ontologos_el::{ClassifyOutcome, ElClassifier, classify_with_profile as el_classify};
 use ontologos_profile::{
-    classify_hybrid, detect_profile, merge_taxonomies, subontology_with_axioms, OwlProfile,
+    OwlProfile, classify_hybrid, detect_profile, merge_taxonomies, subontology_with_axioms,
 };
 use serde::Serialize;
 use thiserror::Error;
@@ -66,7 +66,7 @@ pub enum EntailmentCheck {
 
 /// Classify using any supported profile (EL, RL, RDFS, ALC, DL, SWRL, Auto).
 pub fn classify(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
-    match reasoner.profile() {
+    let outcome = match reasoner.profile() {
         Profile::Alc => Ok(ClassifyOutcome::Taxonomy(ontologos_alc::classify(
             reasoner.ontology(),
         )?)),
@@ -78,7 +78,13 @@ pub fn classify(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
         )),
         Profile::Auto => classify_auto(reasoner),
         _ => el_classify(reasoner).map_err(Error::El),
+    }?;
+    if let Some(taxonomy) = taxonomy_from_outcome(&outcome) {
+        reasoner.set_cached_taxonomy(taxonomy.clone());
+    } else {
+        reasoner.invalidate_classify_cache();
     }
+    Ok(outcome)
 }
 
 fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
@@ -106,20 +112,18 @@ fn classify_hybrid_auto(ontology: &ontologos_core::Ontology) -> Result<ClassifyO
 
     let mut parts = Vec::with_capacity(hybrid.modules.len());
     for module in &hybrid.modules {
-        let view = subontology_with_axioms(ontology, &module.axiom_ids)
+        let mut view = subontology_with_axioms(ontology, &module.axiom_ids)
             .map_err(|e| Error::El(ontologos_el::Error::Profile(e.to_string())))?;
         let tax = match module.profile {
             OwlProfile::El | OwlProfile::Ql => ElClassifier::new().classify(&view)?,
             OwlProfile::Dl => ontologos_dl::classify(&view)?,
             OwlProfile::Rl => {
-                let mut materialized = subontology_with_axioms(ontology, &module.axiom_ids)
-                    .map_err(|e| Error::El(ontologos_el::Error::Profile(e.to_string())))?;
                 ontologos_rl::RlEngine::new(1)
-                    .saturate(&mut materialized)
+                    .saturate(&mut view)
                     .map_err(|e| {
                         Error::El(ontologos_el::Error::Profile(format!("rl saturate: {e}")))
                     })?;
-                ElClassifier::new().classify(&materialized)?
+                ElClassifier::new().classify(&view)?
             }
         };
         parts.push(tax);
@@ -201,12 +205,6 @@ pub fn is_subsumption_entailed(
     sub_iri: &str,
     sup_iri: &str,
 ) -> Result<bool> {
-    let outcome = classify(reasoner)?;
-    let taxonomy = taxonomy_from_outcome(&outcome).ok_or_else(|| {
-        Error::El(ontologos_el::Error::Profile(
-            "profile did not produce a taxonomy".into(),
-        ))
-    })?;
     let ontology = reasoner.ontology();
     let sub = ontology.lookup_entity(sub_iri).ok_or_else(|| {
         Error::El(ontologos_el::Error::Profile(format!(
@@ -217,6 +215,15 @@ pub fn is_subsumption_entailed(
         Error::El(ontologos_el::Error::Profile(format!(
             "unknown class IRI: {sup_iri}"
         )))
+    })?;
+    if let Some(taxonomy) = reasoner.cached_taxonomy() {
+        return Ok(taxonomy.is_subsumed(sub, sup));
+    }
+    let outcome = classify(reasoner)?;
+    let taxonomy = taxonomy_from_outcome(&outcome).ok_or_else(|| {
+        Error::El(ontologos_el::Error::Profile(
+            "profile did not produce a taxonomy".into(),
+        ))
     })?;
     Ok(taxonomy.is_subsumed(sub, sup))
 }
@@ -283,6 +290,15 @@ fn taxonomy_entails_class_assertion(
         ontologos_abox::materialize_abox(&mut working)?;
         return Ok(individual_entails_named_class(
             &working, individual, class, None,
+        ));
+    }
+
+    if let Some(taxonomy) = reasoner.cached_taxonomy() {
+        return Ok(individual_entails_named_class(
+            reasoner.ontology(),
+            individual,
+            class,
+            Some(taxonomy),
         ));
     }
 
@@ -797,24 +813,30 @@ mod tests {
             .profile(Profile::El)
             .build(ontology)
             .unwrap();
-        assert!(super::is_subsumption_entailed(
-            &mut reasoner,
-            "http://example.org/A",
-            "http://example.org/C"
-        )
-        .unwrap());
-        assert!(!super::is_subsumption_entailed(
-            &mut reasoner,
-            "http://example.org/C",
-            "http://example.org/A"
-        )
-        .unwrap());
-        assert!(super::is_entailed(
-            &mut reasoner,
-            "http://example.org/A",
-            "http://example.org/C"
-        )
-        .unwrap());
+        assert!(
+            super::is_subsumption_entailed(
+                &mut reasoner,
+                "http://example.org/A",
+                "http://example.org/C"
+            )
+            .unwrap()
+        );
+        assert!(
+            !super::is_subsumption_entailed(
+                &mut reasoner,
+                "http://example.org/C",
+                "http://example.org/A"
+            )
+            .unwrap()
+        );
+        assert!(
+            super::is_entailed(
+                &mut reasoner,
+                "http://example.org/A",
+                "http://example.org/C"
+            )
+            .unwrap()
+        );
     }
 
     #[test]
@@ -869,14 +891,16 @@ mod tests {
             .profile(Profile::El)
             .build(ontology)
             .unwrap();
-        assert!(super::is_entailed_axiom(
-            &mut reasoner,
-            super::EntailmentCheck::ClassAssertion {
-                individual: "http://example.org/x".into(),
-                class: "http://example.org/B".into(),
-            }
-        )
-        .unwrap());
+        assert!(
+            super::is_entailed_axiom(
+                &mut reasoner,
+                super::EntailmentCheck::ClassAssertion {
+                    individual: "http://example.org/x".into(),
+                    class: "http://example.org/B".into(),
+                }
+            )
+            .unwrap()
+        );
     }
 
     #[test]
@@ -900,15 +924,17 @@ mod tests {
             .profile(Profile::Rl)
             .build(ontology)
             .unwrap();
-        assert!(super::is_entailed_axiom(
-            &mut reasoner,
-            super::EntailmentCheck::ObjectPropertyAssertion {
-                subject: "http://example.org/c".into(),
-                property: "http://example.org/r".into(),
-                object: "http://example.org/d".into(),
-            }
-        )
-        .unwrap());
+        assert!(
+            super::is_entailed_axiom(
+                &mut reasoner,
+                super::EntailmentCheck::ObjectPropertyAssertion {
+                    subject: "http://example.org/c".into(),
+                    property: "http://example.org/r".into(),
+                    object: "http://example.org/d".into(),
+                }
+            )
+            .unwrap()
+        );
     }
 
     #[test]

@@ -1,13 +1,13 @@
 //! Coupled EL-style saturation feeding the tableau.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{CeId, ClassExpr, EntityId, Ontology, RoleExpr};
 
 use ontologos_alc::{Clause, ClauseSet};
 
-use crate::ria::RoleHierarchy;
 use crate::Error;
+use crate::ria::RoleHierarchy;
 
 /// Facts produced by saturation pass.
 #[derive(Debug, Default, Clone)]
@@ -57,6 +57,13 @@ pub fn saturate(
         }
     }
 
+    let mut ce_forward: HashMap<CeId, Vec<CeId>> = HashMap::new();
+    for &(mid, top) in &all_pairs {
+        if mid != top {
+            ce_forward.entry(mid).or_default().push(top);
+        }
+    }
+
     while let Some((sub, sup)) = worklist.pop() {
         if !seen_pairs.insert((sub, sup)) {
             continue;
@@ -66,22 +73,23 @@ pub fn saturate(
         }
         propagate_intersection(ontology, sub, sup, &mut worklist, roles);
         propagate_existential_role(ontology, sub, sup, &mut worklist, &facts.role_subsumptions);
-        propagate_through(ontology, sub, sup, &mut worklist, &all_pairs);
+        propagate_through(sub, sup, &mut worklist, &ce_forward);
     }
 
     Ok(facts)
 }
 
 fn propagate_through(
-    _ontology: &Ontology,
     sub: CeId,
     sup: CeId,
     worklist: &mut Vec<(CeId, CeId)>,
-    all_pairs: &[(CeId, CeId)],
+    ce_forward: &HashMap<CeId, Vec<CeId>>,
 ) {
-    for &(mid, top) in all_pairs {
-        if mid == sup && mid != top && sub != top {
-            worklist.push((sub, top));
+    if let Some(tops) = ce_forward.get(&sup) {
+        for &top in tops {
+            if sub != top {
+                worklist.push((sub, top));
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ use ontologos_profile::scanner::scan_constructs;
 use thiserror::Error;
 
 pub use engine::materialize_swrl_rules;
-pub use rules::{apply_swrl_rules, SwrlReport};
+pub use rules::{SwrlReport, apply_swrl_rules};
 
 /// Result type for SWRL operations.
 pub type Result<T> = std::result::Result<T, Error>;

@@ -1,29 +1,62 @@
 use std::path::Path;
+use std::sync::Arc;
 
 use crate::axiom::{Axiom, AxiomId};
-use crate::dirty::{axiom_signature, DirtySet, OntologyRevision};
+use crate::dirty::{DirtySet, OntologyRevision, axiom_signature};
 use crate::dl::DlStore;
 use crate::entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 use crate::error::{Error, Result};
 use crate::graph::{AxiomIndex, AxiomStore};
-use crate::iri::{validate_iri, InternPool, IriId};
+use crate::iri::{InternPool, IriId, validate_iri};
 use crate::parse_meta::ParseMeta;
 use crate::swrl::SwrlRule;
 
 /// In-memory ontology with interned IRIs, typed entities, and indexed axioms.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct Ontology {
-    pub(crate) iris: InternPool,
-    pub(crate) entities: EntityRegistry,
-    pub(crate) axioms: AxiomStore,
+    pub(crate) iris: Arc<InternPool>,
+    pub(crate) entities: Arc<EntityRegistry>,
+    pub(crate) axioms: Arc<AxiomStore>,
     pub(crate) index: AxiomIndex,
     pub(crate) revision: OntologyRevision,
     pub(crate) dirty: DirtySet,
-    pub(crate) dl: DlStore,
+    pub(crate) dl: Arc<DlStore>,
     pub(crate) swrl_rules: Vec<SwrlRule>,
     #[doc(hidden)]
     pub parse_meta: Option<ParseMeta>,
 }
+
+impl Clone for Ontology {
+    fn clone(&self) -> Self {
+        Self {
+            iris: Arc::clone(&self.iris),
+            entities: Arc::clone(&self.entities),
+            axioms: Arc::clone(&self.axioms),
+            index: self.index.clone(),
+            revision: self.revision,
+            dirty: self.dirty.clone(),
+            dl: Arc::clone(&self.dl),
+            swrl_rules: self.swrl_rules.clone(),
+            parse_meta: self.parse_meta.clone(),
+        }
+    }
+}
+
+impl PartialEq for Ontology {
+    fn eq(&self, other: &Self) -> bool {
+        *self.iris == *other.iris
+            && *self.entities == *other.entities
+            && *self.axioms == *other.axioms
+            && self.index == other.index
+            && self.revision == other.revision
+            && self.dirty == other.dirty
+            && *self.dl == *other.dl
+            && self.swrl_rules == other.swrl_rules
+            && self.parse_meta == other.parse_meta
+    }
+}
+
+impl Eq for Ontology {}
 
 impl Default for Ontology {
     fn default() -> Self {
@@ -36,16 +69,23 @@ impl Ontology {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            iris: InternPool::new(),
-            entities: EntityRegistry::new(),
-            axioms: AxiomStore::new(),
+            iris: Arc::new(InternPool::new()),
+            entities: Arc::new(EntityRegistry::new()),
+            axioms: Arc::new(AxiomStore::new()),
             index: AxiomIndex::new(),
             revision: OntologyRevision::default(),
             dirty: DirtySet::default(),
-            dl: DlStore::new(),
+            dl: Arc::new(DlStore::new()),
             swrl_rules: Vec::new(),
             parse_meta: None,
         }
+    }
+
+    fn uniquify_shared(&mut self) {
+        Arc::make_mut(&mut self.iris);
+        Arc::make_mut(&mut self.entities);
+        Arc::make_mut(&mut self.axioms);
+        Arc::make_mut(&mut self.dl);
     }
 
     /// Create a builder for programmatic ontology construction.
@@ -92,7 +132,7 @@ impl Ontology {
 
     /// Mutable DL store (parser / reasoner ingestion).
     pub fn dl_mut(&mut self) -> &mut DlStore {
-        &mut self.dl
+        Arc::make_mut(&mut self.dl)
     }
 
     /// DLSafe SWRL rules parsed from the ontology.
@@ -130,7 +170,8 @@ impl Ontology {
     /// Remove all inferred axioms (from RL/RDFS materialization) and rebuild indexes.
     #[must_use]
     pub fn strip_inferred_axioms(&mut self) -> usize {
-        let removed = self.axioms.strip_inferred();
+        self.uniquify_shared();
+        let removed = Arc::make_mut(&mut self.axioms).strip_inferred();
         if !removed.is_empty() {
             self.index.rebuild_from_store(&self.axioms);
             self.revision.bump();
@@ -140,8 +181,9 @@ impl Ontology {
 
     /// Add an inferred axiom from materialization (does not mark dirty).
     pub fn add_inferred_axiom(&mut self, axiom: Axiom) -> Result<AxiomId> {
+        self.uniquify_shared();
         self.validate_inverse_pair(&axiom)?;
-        let id = self.axioms.push_inferred(axiom, &self.entities)?;
+        let id = Arc::make_mut(&mut self.axioms).push_inferred(axiom, &self.entities)?;
         let stored = self.axioms.get(id)?;
         self.index.insert(id, stored);
         self.revision.bump();
@@ -208,9 +250,10 @@ impl Ontology {
 
     /// Look up an entity by IRI string, registering it if absent.
     pub fn entity_id(&mut self, iri: &str, kind: EntityKind) -> Result<EntityId> {
-        let iri_id = self.iris.intern(iri)?;
+        self.uniquify_shared();
+        let iri_id = Arc::make_mut(&mut self.iris).intern(iri)?;
         let iri_str = self.iris.resolve(iri_id)?;
-        self.entities.get_or_register(iri_id, iri_str, kind)
+        Arc::make_mut(&mut self.entities).get_or_register(iri_id, iri_str, kind)
     }
 
     /// Look up an entity id by IRI string, validating the IRI format.
@@ -341,8 +384,9 @@ impl Ontology {
 
     /// Add a validated axiom, updating indexes.
     pub fn add_axiom(&mut self, axiom: Axiom) -> Result<AxiomId> {
+        self.uniquify_shared();
         self.validate_inverse_pair(&axiom)?;
-        let id = self.axioms.push(axiom, &self.entities)?;
+        let id = Arc::make_mut(&mut self.axioms).push(axiom, &self.entities)?;
         let stored = self.axioms.get(id)?;
         self.index.insert(id, stored);
         self.revision.bump();
@@ -350,11 +394,16 @@ impl Ontology {
         Ok(id)
     }
 
-    /// Remove an axiom by id (tombstone). Rebuilds indexes.
+    /// Remove an axiom by id (tombstone). Updates indexes incrementally when possible.
     pub fn remove_axiom(&mut self, id: AxiomId) -> Result<()> {
-        self.axioms.get(id)?;
-        self.axioms.remove(id)?;
-        self.index.rebuild_from_store(&self.axioms);
+        self.uniquify_shared();
+        let axiom = self.axioms.get(id)?.clone();
+        Arc::make_mut(&mut self.axioms).remove(id)?;
+        if AxiomIndex::removal_needs_rebuild(&axiom) {
+            self.index.rebuild_from_store(&self.axioms);
+        } else {
+            self.index.remove(id, &axiom);
+        }
         self.revision.bump();
         self.dirty.record_remove(id);
         Ok(())
@@ -362,7 +411,7 @@ impl Ontology {
 
     /// Intern an IRI without registering an entity.
     pub fn intern_iri(&mut self, iri: &str) -> Result<IriId> {
-        self.iris.intern(iri)
+        Arc::make_mut(&mut self.iris).intern(iri)
     }
 
     fn validate_inverse_pair(&self, axiom: &Axiom) -> Result<()> {

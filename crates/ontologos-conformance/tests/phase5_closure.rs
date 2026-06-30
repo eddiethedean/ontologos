@@ -1,8 +1,8 @@
 //! Phase 5 exit gate — Java planned backlog cleared, promotion candidates absorbed.
 
 use ontologos_conformance::{
-    audit_planned_backlog, load_catalog, parity_metrics, scan_promotable_axiom_cases,
-    PlannedJavaCategory,
+    PlannedJavaCategory, audit_planned_backlog, load_catalog, parity_metrics,
+    scan_promotable_axiom_cases,
 };
 
 #[test]

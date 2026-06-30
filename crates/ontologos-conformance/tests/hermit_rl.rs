@@ -1,8 +1,8 @@
 //! Tier-A ports from HermiT `ReasonerTest` (OWL RL fragment).
 
 use ontologos_conformance::{
-    assert_object_property_assertion, assert_subproperty, assert_subsumed, assert_typed,
-    has_property_characteristic, PropertyCharacteristic, PORT_NS,
+    PORT_NS, PropertyCharacteristic, assert_object_property_assertion, assert_subproperty,
+    assert_subsumed, assert_typed, has_property_characteristic,
 };
 use ontologos_core::{Axiom, Ontology};
 use ontologos_rl::RlEngine;

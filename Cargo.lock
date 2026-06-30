@@ -956,6 +956,7 @@ dependencies = [
  "ontologos-dl",
  "ontologos-parser",
  "ontologos-profile",
+ "rayon",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -971,6 +972,8 @@ dependencies = [
  "oxrdf",
  "petgraph",
  "reasonable",
+ "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -1050,6 +1053,7 @@ dependencies = [
 name = "ontologos-el"
 version = "1.0.0"
 dependencies = [
+ "criterion",
  "ontologos-alc",
  "ontologos-core",
  "ontologos-parser",
@@ -1079,12 +1083,14 @@ dependencies = [
 name = "ontologos-facade"
 version = "1.0.0"
 dependencies = [
+ "criterion",
  "ontologos-abox",
  "ontologos-alc",
  "ontologos-bridge",
  "ontologos-core",
  "ontologos-dl",
  "ontologos-el",
+ "ontologos-parser",
  "ontologos-profile",
  "ontologos-query",
  "ontologos-rdfs",
@@ -1098,6 +1104,7 @@ dependencies = [
 name = "ontologos-parser"
 version = "1.0.0"
 dependencies = [
+ "criterion",
  "horned-owl",
  "libc",
  "ontologos-core",
@@ -1170,6 +1177,7 @@ dependencies = [
 name = "ontologos-rl"
 version = "1.0.0"
 dependencies = [
+ "criterion",
  "ontologos-bridge",
  "ontologos-core",
  "ontologos-parser",

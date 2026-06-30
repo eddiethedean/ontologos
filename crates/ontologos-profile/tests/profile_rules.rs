@@ -1,5 +1,5 @@
 use ontologos_core::{Ontology, OwlConstruct, ParseMeta};
-use ontologos_profile::{detect_profile, OwlProfile};
+use ontologos_profile::{OwlProfile, detect_profile};
 
 fn ontology_with_profile_constructs(constructs: &[OwlConstruct]) -> Ontology {
     let mut meta = ParseMeta::default();

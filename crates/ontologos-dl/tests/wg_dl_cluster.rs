@@ -1,4 +1,4 @@
-use ontologos_alc::{is_named_class_satisfiable_with_seed, DlOntology, TableauSeed};
+use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
 use ontologos_dl::is_consistent;
 use ontologos_parser::load_ontology;
 use std::path::Path;

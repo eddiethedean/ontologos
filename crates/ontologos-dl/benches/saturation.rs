@@ -1,8 +1,8 @@
 //! EL + DL saturation wall-time benchmarks (Tier D perf tracking).
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use ontologos_alc::DlOntology;
-use ontologos_dl::{saturate, RoleHierarchy};
+use ontologos_dl::{RoleHierarchy, saturate};
 use ontologos_el::ElClassifier;
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;

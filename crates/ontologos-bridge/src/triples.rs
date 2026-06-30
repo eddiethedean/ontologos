@@ -39,6 +39,19 @@ fn entity_iri(ontology: &Ontology, id: EntityId) -> Result<String> {
     Ok(ontology.resolve_iri(record.iri)?.to_owned())
 }
 
+fn entity_iri_cached(
+    cache: &mut HashMap<EntityId, String>,
+    ontology: &Ontology,
+    id: EntityId,
+) -> Result<String> {
+    if let Some(iri) = cache.get(&id) {
+        return Ok(iri.clone());
+    }
+    let iri = entity_iri(ontology, id)?;
+    cache.insert(id, iri.clone());
+    Ok(iri)
+}
+
 fn triple(s: &str, p: &str, o: &str) -> Result<Triple> {
     Ok(Triple {
         subject: nn(s)?.into(),
@@ -99,8 +112,9 @@ pub fn core_to_triples(ontology: &Ontology) -> Result<Vec<Triple>> {
         let _ = id;
     }
 
+    let mut iri_cache = HashMap::new();
     for (_, axiom) in ontology.axioms().iter_asserted() {
-        out.extend(axiom_to_triples(ontology, axiom)?);
+        out.extend(axiom_to_triples(ontology, axiom, &mut iri_cache)?);
     }
 
     Ok(out)
@@ -127,8 +141,9 @@ pub fn core_to_triples_all(ontology: &Ontology) -> Result<Vec<Triple>> {
         let _ = id;
     }
 
+    let mut iri_cache = HashMap::new();
     for (_, axiom) in ontology.axioms().iter() {
-        out.extend(axiom_to_triples(ontology, axiom)?);
+        out.extend(axiom_to_triples(ontology, axiom, &mut iri_cache)?);
     }
 
     Ok(out)
@@ -142,10 +157,11 @@ pub fn core_to_triples_for_axioms(ontology: &Ontology, ids: &[AxiomId]) -> Resul
     let mut entities: HashSet<EntityId> = HashSet::new();
     let mut out = Vec::new();
 
+    let mut iri_cache = HashMap::new();
     for id in ids {
         let axiom = ontology.axioms().get(*id)?;
         entities.extend(axiom_signature(axiom));
-        out.extend(axiom_to_triples(ontology, axiom)?);
+        out.extend(axiom_to_triples(ontology, axiom, &mut iri_cache)?);
     }
 
     for entity in entities {
@@ -162,7 +178,11 @@ pub fn core_to_triples_for_axioms(ontology: &Ontology, ids: &[AxiomId]) -> Resul
     Ok(out)
 }
 
-fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
+fn axiom_to_triples(
+    ontology: &Ontology,
+    axiom: &Axiom,
+    iri_cache: &mut HashMap<EntityId, String>,
+) -> Result<Vec<Triple>> {
     let mut out = Vec::new();
     match axiom {
         Axiom::SubClassOf {
@@ -170,17 +190,17 @@ fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
             superclass,
         } => {
             out.push(triple(
-                &entity_iri(ontology, *subclass)?,
+                &entity_iri_cached(iri_cache, ontology, *subclass)?,
                 RDFS_SUBCLASS,
-                &entity_iri(ontology, *superclass)?,
+                &entity_iri_cached(iri_cache, ontology, *superclass)?,
             )?);
         }
         Axiom::EquivalentClasses(classes) => {
             for pair in classes.windows(2) {
                 out.push(triple(
-                    &entity_iri(ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
                     OWL_EQUIV_CLASS,
-                    &entity_iri(ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
                 )?);
             }
         }
@@ -189,77 +209,77 @@ fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
             super_property,
         } => {
             out.push(triple(
-                &entity_iri(ontology, *sub_property)?,
+                &entity_iri_cached(iri_cache, ontology, *sub_property)?,
                 RDFS_SUBPROPERTY,
-                &entity_iri(ontology, *super_property)?,
+                &entity_iri_cached(iri_cache, ontology, *super_property)?,
             )?);
         }
         Axiom::ObjectPropertyDomain { property, domain } => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDFS_DOMAIN,
-                &entity_iri(ontology, *domain)?,
+                &entity_iri_cached(iri_cache, ontology, *domain)?,
             )?);
         }
         Axiom::ObjectPropertyRange { property, range } => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDFS_RANGE,
-                &entity_iri(ontology, *range)?,
+                &entity_iri_cached(iri_cache, ontology, *range)?,
             )?);
         }
         Axiom::InverseObjectProperties { left, right } => {
             out.push(triple(
-                &entity_iri(ontology, *left)?,
+                &entity_iri_cached(iri_cache, ontology, *left)?,
                 OWL_INVERSE,
-                &entity_iri(ontology, *right)?,
+                &entity_iri_cached(iri_cache, ontology, *right)?,
             )?);
         }
         Axiom::TransitiveObjectProperty(property) => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDF_TYPE,
                 OWL_TRANSITIVE,
             )?);
         }
         Axiom::SymmetricObjectProperty(property) => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDF_TYPE,
                 OWL_SYMMETRIC,
             )?);
         }
         Axiom::ReflexiveObjectProperty(property) => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDF_TYPE,
                 OWL_REFLEXIVE,
             )?);
         }
         Axiom::FunctionalObjectProperty(property) => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDF_TYPE,
                 OWL_FUNCTIONAL,
             )?);
         }
         Axiom::InverseFunctionalObjectProperty(property) => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDF_TYPE,
                 OWL_INVERSE_FUNCTIONAL,
             )?);
         }
         Axiom::IrreflexiveObjectProperty(property) => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDF_TYPE,
                 OWL_IRREFLEXIVE,
             )?);
         }
         Axiom::AsymmetricObjectProperty(property) => {
             out.push(triple(
-                &entity_iri(ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
                 RDF_TYPE,
                 OWL_ASYMMETRIC,
             )?);
@@ -267,17 +287,17 @@ fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
         Axiom::EquivalentObjectProperties(properties) => {
             for pair in properties.windows(2) {
                 out.push(triple(
-                    &entity_iri(ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
                     OWL_EQUIV_PROP,
-                    &entity_iri(ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
                 )?);
             }
         }
         Axiom::ClassAssertion { individual, class } => {
             out.push(triple(
-                &entity_iri(ontology, *individual)?,
+                &entity_iri_cached(iri_cache, ontology, *individual)?,
                 RDF_TYPE,
-                &entity_iri(ontology, *class)?,
+                &entity_iri_cached(iri_cache, ontology, *class)?,
             )?);
         }
         Axiom::ObjectPropertyAssertion {
@@ -286,9 +306,9 @@ fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
             object,
         } => {
             out.push(triple(
-                &entity_iri(ontology, *subject)?,
-                &entity_iri(ontology, *property)?,
-                &entity_iri(ontology, *object)?,
+                &entity_iri_cached(iri_cache, ontology, *subject)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
+                &entity_iri_cached(iri_cache, ontology, *object)?,
             )?);
         }
         Axiom::DataPropertyAssertion { .. }
@@ -297,9 +317,9 @@ fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
         Axiom::SameIndividual(individuals) => {
             for pair in individuals.windows(2) {
                 out.push(triple(
-                    &entity_iri(ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
                     OWL_SAME_AS,
-                    &entity_iri(ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
                 )?);
             }
         }
@@ -315,18 +335,18 @@ fn axiom_to_triples(ontology: &Ontology, axiom: &Axiom) -> Result<Vec<Triple>> {
         Axiom::DisjointClasses(classes) => {
             for pair in classes.windows(2) {
                 out.push(triple(
-                    &entity_iri(ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
                     OWL_DISJOINT_WITH,
-                    &entity_iri(ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
                 )?);
             }
         }
         Axiom::DifferentIndividuals(individuals) => {
             for pair in individuals.windows(2) {
                 out.push(triple(
-                    &entity_iri(ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
                     OWL_DIFFERENT_FROM,
-                    &entity_iri(ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
                 )?);
             }
         }
@@ -374,8 +394,12 @@ pub fn merge_triples_into_ontology_with_limits(
 ) -> Result<MergeReport> {
     let before = ontology.axiom_count();
     let mut seen: HashSet<(String, String, String)> = HashSet::new();
+    let mut seen_entity: HashSet<u64> = HashSet::new();
 
     for (_, axiom) in ontology.axioms().iter() {
+        if let Some(key) = axiom_entity_key(axiom) {
+            seen_entity.insert(key);
+        }
         if let Some(key) = axiom_triple_key(ontology, axiom)? {
             seen.insert(key);
         }
@@ -383,19 +407,23 @@ pub fn merge_triples_into_ontology_with_limits(
 
     let mut to_add: Vec<Axiom> = Vec::new();
     for axiom in collect_existential_axioms(ontology, triples)? {
-        if let Some(key) = axiom_triple_key(ontology, &axiom)? {
-            if seen.insert(key) {
-                to_add.push(axiom);
-            }
+        let entity_key = axiom_entity_key(&axiom);
+        let triple_key = axiom_triple_key(ontology, &axiom)?;
+        let is_new = entity_key.map(|k| seen_entity.insert(k)).unwrap_or(true)
+            && triple_key.map(|k| seen.insert(k)).unwrap_or(true);
+        if is_new {
+            to_add.push(axiom);
         }
     }
 
     for t in triples {
         if let Some(axiom) = triple_to_axiom(ontology, t)? {
-            if let Some(key) = axiom_triple_key(ontology, &axiom)? {
-                if seen.insert(key) {
-                    to_add.push(axiom);
-                }
+            let entity_key = axiom_entity_key(&axiom);
+            let triple_key = axiom_triple_key(ontology, &axiom)?;
+            let is_new = entity_key.map(|k| seen_entity.insert(k)).unwrap_or(true)
+                && triple_key.map(|k| seen.insert(k)).unwrap_or(true);
+            if is_new {
+                to_add.push(axiom);
             }
         }
     }
@@ -678,6 +706,56 @@ fn lookup_or_insert(
     Ok(Some(ontology.entity_id(iri, kind)?))
 }
 
+fn axiom_entity_key(axiom: &Axiom) -> Option<u64> {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    match axiom {
+        Axiom::SubClassOf {
+            subclass,
+            superclass,
+        } => {
+            0u8.hash(&mut hasher);
+            subclass.hash(&mut hasher);
+            superclass.hash(&mut hasher);
+        }
+        Axiom::SubObjectPropertyOf {
+            sub_property,
+            super_property,
+        } => {
+            1u8.hash(&mut hasher);
+            sub_property.hash(&mut hasher);
+            super_property.hash(&mut hasher);
+        }
+        Axiom::ObjectPropertyDomain { property, domain } => {
+            2u8.hash(&mut hasher);
+            property.hash(&mut hasher);
+            domain.hash(&mut hasher);
+        }
+        Axiom::ObjectPropertyRange { property, range } => {
+            3u8.hash(&mut hasher);
+            property.hash(&mut hasher);
+            range.hash(&mut hasher);
+        }
+        Axiom::ClassAssertion { individual, class } => {
+            4u8.hash(&mut hasher);
+            individual.hash(&mut hasher);
+            class.hash(&mut hasher);
+        }
+        Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        } => {
+            5u8.hash(&mut hasher);
+            subject.hash(&mut hasher);
+            property.hash(&mut hasher);
+            object.hash(&mut hasher);
+        }
+        _ => return None,
+    }
+    Some(hasher.finish())
+}
+
 fn axiom_triple_key(
     ontology: &Ontology,
     axiom: &Axiom,
@@ -867,20 +945,23 @@ mod adapter_tests {
         ];
         merge_triples_into_ontology(&mut ontology, &triples, &[]).unwrap();
 
-        assert!(ontology
-            .axioms()
-            .iter()
-            .any(|(_, axiom)| matches!(axiom, Axiom::SameIndividual(ids) if ids == &vec![a, b])));
+        assert!(
+            ontology.axioms().iter().any(
+                |(_, axiom)| matches!(axiom, Axiom::SameIndividual(ids) if ids == &vec![a, b])
+            )
+        );
         assert!(ontology.axioms().iter().any(
             |(_, axiom)| matches!(axiom, Axiom::DisjointClasses(ids) if ids == &vec![c1, c2])
         ));
         assert!(ontology.axioms().iter().any(
             |(_, axiom)| matches!(axiom, Axiom::DifferentIndividuals(ids) if ids == &vec![a, b])
         ));
-        assert!(!ontology
-            .axioms()
-            .iter()
-            .any(|(_, axiom)| matches!(axiom, Axiom::ObjectPropertyAssertion { .. })));
+        assert!(
+            !ontology
+                .axioms()
+                .iter()
+                .any(|(_, axiom)| matches!(axiom, Axiom::ObjectPropertyAssertion { .. }))
+        );
     }
 
     #[test]

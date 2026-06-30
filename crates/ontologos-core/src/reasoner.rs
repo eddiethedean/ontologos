@@ -1,5 +1,7 @@
+use crate::dirty::OntologyRevision;
 use crate::error::{Error, Result};
 use crate::ontology::Ontology;
+use crate::taxonomy::Taxonomy;
 
 const MAX_PARALLELISM: usize = 64;
 
@@ -85,8 +87,16 @@ impl ReasonerBuilder {
             profile: self.profile,
             config: self.config,
             session: None,
+            classify_cache: None,
         })
     }
+}
+
+/// Cached classification result keyed by ontology revision.
+#[derive(Debug, Clone)]
+pub struct ReasonerCache {
+    revision: OntologyRevision,
+    taxonomy: Taxonomy,
 }
 
 /// Main reasoner facade over profile-specific engines.
@@ -96,6 +106,7 @@ pub struct Reasoner {
     profile: Profile,
     config: ReasonerConfig,
     session: Option<Box<dyn crate::session::ReasonerSession>>,
+    classify_cache: Option<ReasonerCache>,
 }
 
 impl Reasoner {
@@ -125,6 +136,7 @@ impl Reasoner {
 
     /// Mutably borrow the loaded ontology (e.g. for RDFS materialization).
     pub fn ontology_mut(&mut self) -> &mut Ontology {
+        self.invalidate_classify_cache();
         &mut self.ontology
     }
 
@@ -155,6 +167,30 @@ impl Reasoner {
             session.clear();
         }
         self.session = None;
+    }
+
+    /// Borrow cached taxonomy when revision matches the loaded ontology.
+    #[must_use]
+    pub fn cached_taxonomy(&self) -> Option<&Taxonomy> {
+        let cache = self.classify_cache.as_ref()?;
+        if cache.revision == self.ontology.revision() {
+            Some(&cache.taxonomy)
+        } else {
+            None
+        }
+    }
+
+    /// Store a taxonomy from the latest classification for entailment reuse.
+    pub fn set_cached_taxonomy(&mut self, taxonomy: Taxonomy) {
+        self.classify_cache = Some(ReasonerCache {
+            revision: self.ontology.revision(),
+            taxonomy,
+        });
+    }
+
+    /// Drop cached classification results.
+    pub fn invalidate_classify_cache(&mut self) {
+        self.classify_cache = None;
     }
 
     /// Check ontology consistency (profile engines implement semantics).

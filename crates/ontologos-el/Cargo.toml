@@ -21,3 +21,8 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 ontologos-parser = { workspace = true }
+criterion = "0.5"
+
+[[bench]]
+name = "classify"
+harness = false

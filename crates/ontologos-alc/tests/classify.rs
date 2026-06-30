@@ -1,6 +1,6 @@
 //! ALC/DL tableau classification integration tests.
 
-use ontologos_alc::{classify, Error};
+use ontologos_alc::{Error, classify};
 use ontologos_core::{Axiom, Ontology};
 
 #[test]

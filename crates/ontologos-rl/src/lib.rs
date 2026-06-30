@@ -15,10 +15,12 @@
 //! ```
 
 mod engine;
+mod native_eval;
 mod reasoner;
 mod report;
 
 pub use engine::RlEngine;
+pub use native_eval::transitive_subclass_closure;
 pub use reasoner::{classify_reasoner, materialize_reasoner};
 pub use report::{InferenceRecord, MaterializationReport, RlRule};
 

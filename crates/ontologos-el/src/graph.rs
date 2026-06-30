@@ -3,8 +3,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use ontologos_core::{Axiom, EntityId, InferenceTrace, Ontology, TracePremise};
 
 use crate::trace::{
-    existential_premise, push_existential, push_subproperty, push_subsumption, subproperty_premise,
-    subsumption_premise, ElRule,
+    ElRule, existential_premise, push_existential, push_subproperty, push_subsumption,
+    subproperty_premise, subsumption_premise,
 };
 
 /// In-memory EL completion graph (inference overlay; does not mutate asserted axioms).

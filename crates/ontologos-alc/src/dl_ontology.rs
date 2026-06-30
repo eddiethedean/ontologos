@@ -2,9 +2,9 @@
 
 use ontologos_core::Ontology;
 
+use crate::Error;
 use crate::clause::ClauseSet;
 use crate::normalize::clausify;
-use crate::Error;
 
 /// OWL 2 DL internal ontology (core entities + CE store + clauses).
 #[derive(Debug, Clone)]

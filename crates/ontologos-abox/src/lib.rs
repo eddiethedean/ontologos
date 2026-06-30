@@ -8,7 +8,7 @@ mod report;
 use ontologos_core::{EntityId, Ontology};
 use thiserror::Error;
 
-pub use closure::{same_as_closure, SameAsClosure};
+pub use closure::{SameAsClosure, same_as_closure};
 pub use report::AboxReport;
 
 /// Result type for ABox operations.

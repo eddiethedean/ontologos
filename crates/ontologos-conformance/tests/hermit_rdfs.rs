@@ -4,7 +4,7 @@
 //!         `HermiT/project/test/org/semanticweb/HermiT/reasoner/OWLLinkTest.java`
 
 use ontologos_conformance::{
-    assert_direct_subproperty, assert_subproperty, assert_subsumed, assert_typed, PORT_NS,
+    PORT_NS, assert_direct_subproperty, assert_subproperty, assert_subsumed, assert_typed,
 };
 use ontologos_core::Ontology;
 use ontologos_rdfs::RdfsEngine;

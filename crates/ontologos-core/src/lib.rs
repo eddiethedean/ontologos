@@ -54,7 +54,7 @@ mod taxonomy;
 mod trace;
 
 pub use axiom::{Axiom, AxiomId, DataLiteral};
-pub use dirty::{axiom_signature, DirtySet, OntologyRevision};
+pub use dirty::{DirtySet, OntologyRevision, axiom_signature};
 pub use dl::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, DlStore, RoleExpr};
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 pub use error::{Error, Result};
@@ -63,7 +63,7 @@ pub use iri::{InternPool, IriId};
 pub use limits::Limits;
 pub use ontology::{Ontology, OntologyBuilder};
 pub use parse_meta::{OwlConstruct, ParseMeta, ParseMetaSummary};
-pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
+pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerCache, ReasonerConfig};
 pub use session::ReasonerSession;
 pub use swrl::{SwrlAtom, SwrlDArg, SwrlIArg, SwrlRule};
 pub use taxonomy::Taxonomy;

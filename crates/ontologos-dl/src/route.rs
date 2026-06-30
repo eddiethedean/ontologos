@@ -2,7 +2,7 @@
 
 use ontologos_core::{Profile, Reasoner, Taxonomy};
 
-use crate::{classify, DlClassifier, Error};
+use crate::{DlClassifier, Error, classify};
 
 /// DL classification report.
 #[derive(Debug)]

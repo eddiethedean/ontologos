@@ -28,6 +28,11 @@ thiserror = { workspace = true }
 ontologos-parser = { workspace = true }
 ontologos-rdfs = { workspace = true }
 oxrdf = { workspace = true }
+criterion = "0.5"
+
+[[bench]]
+name = "saturate"
+harness = false
 
 [[example]]
 name = "rl_saturation"

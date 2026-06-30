@@ -4,9 +4,9 @@ use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, RoleExpr};
 
+use super::Branch;
 use super::block;
 use super::clash::{self, assert_label, assert_negation};
-use super::Branch;
 
 /// Order `And` operands so cardinality restrictions are asserted before `∃`/`∀`.
 pub(crate) fn and_conjuncts_cardinality_first(dl: &crate::DlOntology, ops: Vec<CeId>) -> Vec<CeId> {

@@ -1,5 +1,5 @@
 use ontologos_core::{Axiom, Ontology, Profile, Reasoner};
-use ontologos_rdfs::{classify_reasoner, materialize_reasoner, MaterializationReport, RdfsEngine};
+use ontologos_rdfs::{MaterializationReport, RdfsEngine, classify_reasoner, materialize_reasoner};
 
 const NS: &str = "http://example.org/";
 

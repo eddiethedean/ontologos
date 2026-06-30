@@ -5,7 +5,7 @@
 use std::path::{Path, PathBuf};
 
 use ontologos_parser::load_ontology;
-use ontologos_profile::{detect_profile, OwlProfile};
+use ontologos_profile::{OwlProfile, detect_profile};
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, Ontology, RoleExpr};
 
-use crate::hyperclause::{abbrev_entity, abbrev_role, HyperAtom, HyperClause, Term};
+use crate::hyperclause::{HyperAtom, HyperClause, Term, abbrev_entity, abbrev_role};
 
 pub(crate) fn clausify_abox_class_assertions(
     ontology: &Ontology,

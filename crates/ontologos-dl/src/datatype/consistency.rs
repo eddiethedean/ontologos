@@ -5,10 +5,10 @@ use std::collections::{HashMap, HashSet};
 use ontologos_core::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology};
 
 use super::{
-    canonical_plain_literal, canonical_xml_literal, datatype_definitions,
-    datetime_facet_range_empty, lexical_looks_numeric, literals_equal, normalize_range,
-    pattern_witness_lexicals, rational_pair, simplify_double_complement, trailing_xml_text_suffix,
-    LiteralIndex, LiteralValue,
+    LiteralIndex, LiteralValue, canonical_plain_literal, canonical_xml_literal,
+    datatype_definitions, datetime_facet_range_empty, lexical_looks_numeric, literals_equal,
+    normalize_range, pattern_witness_lexicals, rational_pair, simplify_double_complement,
+    trailing_xml_text_suffix,
 };
 
 #[derive(Debug, Clone)]
@@ -530,11 +530,7 @@ fn required_witness_keys(
             keys.insert(distinct_literal_key(&lit));
         }
     }
-    if keys.len() == 1 {
-        Some(keys)
-    } else {
-        None
-    }
+    if keys.len() == 1 { Some(keys) } else { None }
 }
 
 fn oneof_literal_keys(
@@ -1416,11 +1412,7 @@ fn max_distinct_values(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> 
                     count += 1;
                 }
             }
-            if count == 0 {
-                0
-            } else {
-                count.min(100)
-            }
+            if count == 0 { 0 } else { count.min(100) }
         }
         DataExpr::And(ops) => {
             let Some(first) = ops.first().copied() else {

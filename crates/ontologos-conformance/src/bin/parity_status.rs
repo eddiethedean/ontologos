@@ -2,8 +2,8 @@
 use std::collections::BTreeMap;
 
 use ontologos_conformance::{
-    audit_planned_backlog_with, ensure_concurrent_scan_defaults, parity_metrics,
-    scan_planned_engine_failures, scan_wg_failures, AuditOptions, WgFailureBucket,
+    AuditOptions, WgFailureBucket, audit_planned_backlog_with, ensure_concurrent_scan_defaults,
+    parity_metrics, scan_planned_engine_failures, scan_wg_failures,
 };
 
 fn usage() -> &'static str {

@@ -181,10 +181,12 @@ fn add_axiom_symmetric_reflexive_functional_property_axioms() {
     );
     assert!(ontology.index().symmetric_properties().contains(&symmetric));
     assert!(ontology.index().reflexive_properties().contains(&reflexive));
-    assert!(ontology
-        .index()
-        .functional_properties()
-        .contains(&functional));
+    assert!(
+        ontology
+            .index()
+            .functional_properties()
+            .contains(&functional)
+    );
 }
 
 #[test]

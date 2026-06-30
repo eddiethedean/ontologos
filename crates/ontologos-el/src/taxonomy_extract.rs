@@ -105,11 +105,7 @@ pub fn extract_taxonomy(ontology: &Ontology, graph: &CompletionGraph) -> Taxonom
 
     direct_subsumptions.sort_by_key(|(a, b)| (a.0, b.0));
 
-    Taxonomy {
-        subsumptions: direct_subsumptions,
-        equivalences: equiv_vec,
-        unsatisfiable,
-    }
+    Taxonomy::from_parts(direct_subsumptions, equiv_vec, unsatisfiable)
 }
 
 fn find_bottom_class(ontology: &Ontology) -> Option<EntityId> {

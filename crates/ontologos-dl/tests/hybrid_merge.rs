@@ -1,7 +1,7 @@
 //! DL hybrid merge and domain/range integration tests.
 
 use ontologos_core::{Axiom, Ontology};
-use ontologos_dl::{classify, DlClassifier};
+use ontologos_dl::{DlClassifier, classify};
 
 #[test]
 fn merge_preserves_el_equivalences() {

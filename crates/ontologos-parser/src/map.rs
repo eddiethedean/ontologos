@@ -912,12 +912,12 @@ impl Mapper<'_> {
             self.report.meta.skipped_axiom_count += 1;
             return;
         }
-        match self.ontology.add_axiom(axiom.clone()) {
+        self.note_profile_axiom(&axiom);
+        match self.ontology.add_axiom(axiom) {
             Ok(_) => {
                 if self.ontology.axiom_count() > self.report.meta.mapped_axiom_count {
                     self.report.meta.mapped_axiom_count += 1;
                 }
-                self.note_profile_axiom(&axiom);
             }
             Err(err) => {
                 self.report.meta.skipped_axiom_count += 1;

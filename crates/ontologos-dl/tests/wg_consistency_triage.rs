@@ -200,8 +200,8 @@ fn diagnose_dl005_is_consistent_steps() {
 #[test]
 fn diagnose_dl018_tableau() {
     use ontologos_alc::{
-        is_named_class_satisfiable_with_seed, tableau_is_consistent_with_seed, DlOntology,
-        TableauSeed,
+        DlOntology, TableauSeed, is_named_class_satisfiable_with_seed,
+        tableau_is_consistent_with_seed,
     };
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf";
@@ -275,7 +275,7 @@ fn diagnose_dl018_tableau() {
 
 #[test]
 fn dl601_unsatisfiable_class_sat() {
-    use ontologos_alc::{is_named_class_satisfiable_with_seed, DlOntology, TableauSeed};
+    use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf";
     let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -369,7 +369,7 @@ fn spot_check_consistency_fixes() {
 #[test]
 fn diagnose_dl608_unsatisfiable() {
     use ontologos_alc::{
-        is_ce_satisfiable_with_seed, is_named_class_satisfiable_with_seed, DlOntology, TableauSeed,
+        DlOntology, TableauSeed, is_ce_satisfiable_with_seed, is_named_class_satisfiable_with_seed,
     };
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf";
@@ -497,7 +497,7 @@ fn dl650_and_dl910_should_be_inconsistent() {
 
 #[test]
 fn dl608_equiv_and_should_be_unsatisfiable() {
-    use ontologos_alc::{is_ce_satisfiable_with_seed, DlOntology, TableauSeed};
+    use ontologos_alc::{DlOntology, TableauSeed, is_ce_satisfiable_with_seed};
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf";
     let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -558,7 +558,7 @@ fn diagnose_flower_and_one_equals_two() {
 
 #[test]
 fn diagnose_satisfiable_class_sat() {
-    use ontologos_alc::{is_named_class_satisfiable_with_seed, DlOntology, TableauSeed};
+    use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
     use ontologos_core::EntityKind;
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf";

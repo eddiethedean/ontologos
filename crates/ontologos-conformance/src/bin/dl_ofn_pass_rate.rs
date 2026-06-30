@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use ontologos_conformance::{check_axiom_case_bounded, load_catalog, HermitCase};
+use ontologos_conformance::{HermitCase, check_axiom_case_bounded, load_catalog};
 use rayon::prelude::*;
 
 fn family(java_class: &str) -> String {

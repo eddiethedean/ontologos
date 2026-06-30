@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use ontologos_core::EntityId;
 use ontologos_core::Taxonomy;
+use petgraph::Direction;
 use petgraph::graph::{DiGraph, NodeIndex};
 use petgraph::visit::EdgeRef;
-use petgraph::Direction;
 
 /// Directed hierarchy graph built from a classified taxonomy.
 #[derive(Debug, Default)]
@@ -83,11 +83,7 @@ mod tests {
         let a = EntityId(1);
         let b = EntityId(2);
         let c = EntityId(3);
-        let taxonomy = Taxonomy {
-            subsumptions: vec![(a, b), (b, c)],
-            equivalences: vec![],
-            unsatisfiable: vec![],
-        };
+        let taxonomy = Taxonomy::from_parts(vec![(a, b), (b, c)], vec![], vec![]);
         let g = TaxonomyGraph::from_taxonomy(&taxonomy);
         assert!(g.is_subsumed(a, c));
     }

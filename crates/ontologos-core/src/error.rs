@@ -36,7 +36,9 @@ pub enum Error {
     ///
     /// Use [`Ontology::from_json`](crate::Ontology::from_json), the builder API, or
     /// `ontologos_parser::load_ontology`.
-    #[error("ontology file parsing is not available on ontologos-core; use ontologos_parser::load_ontology")]
+    #[error(
+        "ontology file parsing is not available on ontologos-core; use ontologos_parser::load_ontology"
+    )]
     ParseNotAvailable,
     /// OWL file parse error from `ontologos-parser`.
     #[error("parse error: {0}")]

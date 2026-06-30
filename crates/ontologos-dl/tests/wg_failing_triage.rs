@@ -1,6 +1,6 @@
 //! Triage harness for promoted WG cases that should be consistent but fail today.
 
-use ontologos_alc::{is_named_class_satisfiable_with_seed, DlOntology, TableauSeed};
+use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
 use ontologos_dl::{classify, is_consistent, is_datatype_consistent};
 use ontologos_parser::load_ontology;
 use std::path::Path;

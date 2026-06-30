@@ -1,5 +1,5 @@
 use ontologos_bridge::{
-    materialize_with_session, take_reasonable_session, MaterializeOutcome, MergeLimits,
+    MaterializeOutcome, MergeLimits, materialize_with_session, take_reasonable_session,
 };
 use ontologos_core::{Ontology, Profile, Reasoner};
 

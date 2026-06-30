@@ -14,8 +14,8 @@ use ontologos_rdfs::RdfsEngine;
 use serde::Deserialize;
 
 use crate::{
-    assert_subproperty, assert_subsumed, classification_fixture_path, has_property_characteristic,
-    PropertyCharacteristic, HERMIT_DEFAULT_NS,
+    HERMIT_DEFAULT_NS, PropertyCharacteristic, assert_subproperty, assert_subsumed,
+    classification_fixture_path, has_property_characteristic,
 };
 
 static CATALOG: RwLock<Option<Vec<HermitCase>>> = RwLock::new(None);
@@ -8358,11 +8358,7 @@ fn one_of_nominals_equal(premise: &Ontology, left: EntityId, right: EntityId) ->
 }
 
 fn unordered_pair(a: EntityId, b: EntityId) -> (EntityId, EntityId) {
-    if a.0 <= b.0 {
-        (a, b)
-    } else {
-        (b, a)
-    }
+    if a.0 <= b.0 { (a, b) } else { (b, a) }
 }
 
 fn intersection_members_equal(premise: &Ontology, left: EntityId, right: EntityId) -> bool {
@@ -10091,13 +10087,10 @@ mod entailment_guard_tests {
             &prem, &conc
         ));
         assert!(conclusion_only_unasserted_object_property(&prem, &conc));
-        assert!(!entailment_holds_with_budget_opts(
-            &prem,
-            &conc,
-            Some(dl_classify_budget()),
-            false,
-        )
-        .unwrap());
+        assert!(
+            !entailment_holds_with_budget_opts(&prem, &conc, Some(dl_classify_budget()), false,)
+                .unwrap()
+        );
     }
 
     #[test]
@@ -10141,13 +10134,10 @@ mod entailment_guard_tests {
         assert!(cardinality_datatype_assertion_non_entailment_guard(
             &prem, &conc
         ));
-        assert!(!entailment_holds_with_budget_opts(
-            &prem,
-            &conc,
-            Some(dl_classify_budget()),
-            false,
-        )
-        .unwrap());
+        assert!(
+            !entailment_holds_with_budget_opts(&prem, &conc, Some(dl_classify_budget()), false,)
+                .unwrap()
+        );
     }
 
     #[test]

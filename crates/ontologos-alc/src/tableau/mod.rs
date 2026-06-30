@@ -11,6 +11,7 @@ mod expand;
 pub mod extension_manager;
 pub mod graph_merge;
 pub mod ni_rules;
+mod perf;
 pub mod tuple_index;
 pub mod tuple_table;
 
@@ -21,9 +22,9 @@ use ontologos_core::{
     Taxonomy,
 };
 
+use crate::Error;
 use crate::clause::Clause;
 use crate::dl_ontology::DlOntology;
-use crate::Error;
 
 /// Skip pairwise entailment inference when the ontology has too many named classes.
 /// Pizza tutorial corpus (~142 named classes) needs full pairwise inference for HermiT parity.
@@ -84,6 +85,15 @@ pub fn classify_with_seed_options(
 ) -> Result<Taxonomy, Error> {
     let dl = DlOntology::from_ontology(ontology)?;
     run_tableau(&dl, seed, infer_pairwise_subsumptions)
+}
+
+/// Classify using a pre-built clausified ontology (avoids duplicate clausification).
+pub fn classify_with_dl_and_seed(
+    dl: &DlOntology,
+    seed: &TableauSeed,
+    infer_pairwise_subsumptions: bool,
+) -> Result<Taxonomy, Error> {
+    run_tableau(dl, seed, infer_pairwise_subsumptions)
 }
 
 /// Tableau consistency test (ABox + TBox when individuals are present).
@@ -1667,7 +1677,7 @@ fn individual_key_tuple(
         let object = target.and_then(|to_world| {
             worlds
                 .iter()
-                .find(|(_, &w)| w == to_world)
+                .find(|&(_, w)| *w == to_world)
                 .map(|(&id, _)| id)
         });
         objects.push(object);
@@ -1805,6 +1815,10 @@ fn run_tableau(
     seed: &TableauSeed,
     infer_pairwise_subsumptions: bool,
 ) -> Result<Taxonomy, Error> {
+    let perf = perf::perf_enabled();
+    let mut timings = perf::TableauPerfTimings::default();
+    let started = perf.then(std::time::Instant::now);
+
     let mut subsumptions = Vec::new();
     for clause in dl.clauses().clauses() {
         if let Clause::Subsumption { sub, sup } = clause {
@@ -1831,6 +1845,7 @@ fn run_tableau(
     let mut unsatisfiable: Vec<EntityId> = known_unsat.iter().copied().collect();
     let mut shared_cache = cache::UnsatCache::new();
     let class_count = classes.len();
+    let class_sat = perf.then(|| perf::PhaseTimer::start(&mut timings.class_sat_s));
     for class in classes {
         if known_unsat.contains(&class) {
             continue;
@@ -1845,18 +1860,26 @@ fn run_tableau(
             Err(e) => return Err(e),
         }
     }
+    drop(class_sat);
 
     if infer_pairwise_subsumptions && class_count <= MAX_CLASSES_FOR_ENTAILMENT_INFER {
+        let pairwise = perf.then(|| perf::PhaseTimer::start(&mut timings.pairwise_entail_s));
         subsumptions.extend(infer_named_subsumptions(dl, seed)?);
+        drop(pairwise);
     }
     subsumptions.sort_unstable_by_key(|(a, b)| (a.0, b.0));
     subsumptions.dedup();
 
-    Ok(Taxonomy {
+    if perf {
+        timings.total_s = started.expect("perf start").elapsed().as_secs_f64();
+        eprintln!("{}", serde_json::to_string(&timings).unwrap_or_default());
+    }
+
+    Ok(Taxonomy::from_parts(
         subsumptions,
-        equivalences: Vec::new(),
+        Vec::new(),
         unsatisfiable,
-    })
+    ))
 }
 
 /// Propagate obvious atomic class unsatisfiability without tableau expansion.
@@ -1948,14 +1971,19 @@ pub(crate) fn infer_named_subsumptions_for(
     classes: &[EntityId],
     seed: &TableauSeed,
 ) -> Result<Vec<(EntityId, EntityId)>, Error> {
+    let pairs: Vec<(EntityId, EntityId)> = classes
+        .iter()
+        .flat_map(|&sub| classes.iter().map(move |&sup| (sub, sup)))
+        .filter(|&(sub, sup)| sub != sup)
+        .collect();
     let mut out = Vec::new();
-    for &sub in classes {
-        for &sup in classes {
-            if sub != sup && entails(dl, sub, sup, seed)? {
-                out.push((sub, sup));
-            }
+    for &(sub, sup) in &pairs {
+        let mut working = dl.clone();
+        if entails(&mut working, sub, sup, seed)? {
+            out.push((sub, sup));
         }
     }
+    out.sort_unstable_by_key(|(a, b)| (a.0, b.0));
     Ok(out)
 }
 
@@ -1966,7 +1994,8 @@ pub(crate) fn named_class_entails(
     sup: EntityId,
     seed: &TableauSeed,
 ) -> Result<bool, Error> {
-    entails(dl, sub, sup, seed)
+    let mut working = dl.clone();
+    entails(&mut working, sub, sup, seed)
 }
 
 /// Saturated role hierarchy for repeated equivalence checks.
@@ -1983,12 +2012,11 @@ pub(crate) fn role_equivalent_in_hierarchy(
 }
 
 fn entails(
-    dl: &DlOntology,
+    working: &mut DlOntology,
     sub: EntityId,
     sup: EntityId,
     seed: &TableauSeed,
 ) -> Result<bool, Error> {
-    let mut working = dl.clone();
     let store = working.core().dl();
     let sub_ce = store
         .expressions()
@@ -2004,7 +2032,7 @@ fn entails(
             _ => None,
         })
         .ok_or_else(|| Error::Message("missing sup CE".into()))?;
-    let sup_def = equivalent_definition_ce(&working, sup).unwrap_or(sup_ce);
+    let sup_def = equivalent_definition_ce(working, sup).unwrap_or(sup_ce);
     let neg_target = match working.core().dl().ce(sup_def) {
         Some(
             ClassExpr::And(_)
@@ -2015,7 +2043,7 @@ fn entails(
         _ => sup_ce,
     };
     let neg_sup = crate::normalize::negate_ce(working.core_mut(), neg_target);
-    let mut branch = Branch::new(&working, seed);
+    let mut branch = Branch::new(working, seed);
     branch.assert(0, sub_ce);
     branch.assert(0, neg_sup);
     Ok(!branch.expand()?)

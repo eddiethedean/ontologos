@@ -38,13 +38,11 @@ pub fn perf_enabled() -> bool {
 }
 
 /// RAII timer that accumulates into a phase field when dropped.
-#[allow(dead_code)]
 pub struct PhaseTimer<'a> {
     start: Instant,
     target: &'a mut f64,
 }
 
-#[allow(dead_code)]
 impl<'a> PhaseTimer<'a> {
     /// Start timing into `target` (seconds).
     pub fn start(target: &'a mut f64) -> Self {

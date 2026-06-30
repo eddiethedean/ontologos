@@ -16,6 +16,9 @@ ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }
 ontologos-profile = { workspace = true }
 thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+rayon = { workspace = true }
 
 [dev-dependencies]
 ontologos-dl = { workspace = true }

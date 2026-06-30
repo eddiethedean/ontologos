@@ -3,23 +3,29 @@
 #[test]
 fn phase8_alc_exit_tests_exist() {
     // Compiled via `cargo test -p ontologos-alc --test alc_exit`
-    assert!(std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../ontologos-alc/tests/alc_exit.rs")
-        .is_file());
+    assert!(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../ontologos-alc/tests/alc_exit.rs")
+            .is_file()
+    );
 }
 
 #[test]
 fn phase8_abox_family_exit_exists() {
-    assert!(std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../ontologos-abox/tests/family_exit.rs")
-        .is_file());
+    assert!(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../ontologos-abox/tests/family_exit.rs")
+            .is_file()
+    );
 }
 
 #[test]
 fn phase8_ql_w3c_subset_exists() {
-    assert!(std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../ontologos-ql/tests/w3c_ql_subset.rs")
-        .is_file());
+    assert!(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../ontologos-ql/tests/w3c_ql_subset.rs")
+            .is_file()
+    );
 }
 
 #[test]

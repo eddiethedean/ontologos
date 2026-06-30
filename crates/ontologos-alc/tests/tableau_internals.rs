@@ -1,11 +1,11 @@
 //! HermiT `tableau.*` engine-internal tests — ported units + deferred inventory (Tier B3).
 
 use ontologos_alc::{
+    AnnotatedEquality, BlockingValidator, BranchingPoint, DependencySetFactory, DependencySetRef,
+    DescriptionGraph, DescriptionGraphId, DlClauseEvaluator, DlObject, DlPredicate, Node,
+    PermanentDependencySet, RoleRef, Tableau, TupleIndex, TupleIndexRetrieval, UnionDependencySet,
     blocking_test_annotated_equalities_clauses, blocking_test_one_invalid_block_clauses,
-    do_iteration, graph_merge, run_calculus, test_helpers, AnnotatedEquality, BlockingValidator,
-    BranchingPoint, DependencySetFactory, DependencySetRef, DescriptionGraph, DescriptionGraphId,
-    DlClauseEvaluator, DlObject, DlPredicate, Node, PermanentDependencySet, RoleRef, Tableau,
-    TupleIndex, TupleIndexRetrieval, UnionDependencySet,
+    do_iteration, graph_merge, run_calculus, test_helpers,
 };
 use std::rc::Rc;
 

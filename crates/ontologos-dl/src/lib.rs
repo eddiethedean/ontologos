@@ -9,6 +9,7 @@ mod datatype;
 mod defined_class;
 mod dependency_index;
 mod object_property_query;
+mod perf;
 mod ria;
 mod ria_regularity;
 mod route;
@@ -23,19 +24,21 @@ use thiserror::Error;
 pub use classify::DlClassifier;
 pub use datatype::is_data_range_satisfiable;
 pub use datatype::{
-    is_datatype_consistent, named_class_datatype_satisfiable, LiteralIndex, LiteralValue,
+    LiteralIndex, LiteralValue, is_datatype_consistent, named_class_datatype_satisfiable,
 };
 pub use dependency_index::DependencyIndex;
 pub use object_property_query::{
-    classify_object_property_expressions, equivalent_object_property_expressions,
-    inverse_object_property_expressions, sub_object_property_expressions, RolePropertyQueryContext,
+    RolePropertyQueryContext, classify_object_property_expressions,
+    equivalent_object_property_expressions, inverse_object_property_expressions,
+    sub_object_property_expressions,
 };
-pub use ontologos_alc::{classify as alc_classify, clausify, Clause, ClauseSet, DlOntology};
-pub use ontologos_alc::{classify_with_seed, role_expression_subsumes, TableauSeed};
+pub use ontologos_alc::{Clause, ClauseSet, DlOntology, classify as alc_classify, clausify};
+pub use ontologos_alc::{TableauSeed, classify_with_seed, role_expression_subsumes};
+pub use perf::{DlPerfTimings, perf_enabled};
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};
-pub use route::{classify_reasoner, classify_with_profile, DlReport};
-pub use saturation::{saturate, SaturatedFacts};
+pub use route::{DlReport, classify_reasoner, classify_with_profile};
+pub use saturation::{SaturatedFacts, saturate};
 
 /// Result type for DL operations.
 pub type Result<T> = std::result::Result<T, Error>;

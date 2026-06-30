@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 use crate::axiom::{Axiom, DataLiteral};
@@ -220,13 +222,10 @@ impl Ontology {
                     entity.iri
                 )));
             }
-            let iri_id = ontology
-                .iris
+            let iri_id = Arc::make_mut(&mut ontology.iris)
                 .intern_with_limit(&entity.iri, limits.max_iri_len)?;
             let iri_str = ontology.iris.resolve(iri_id)?;
-            ontology
-                .entities
-                .get_or_register(iri_id, iri_str, entity.kind)?;
+            Arc::make_mut(&mut ontology.entities).get_or_register(iri_id, iri_str, entity.kind)?;
         }
 
         for axiom in snapshot.axioms {

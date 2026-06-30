@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::num::NonZeroU32;
 
 use serde::{Deserialize, Serialize};
@@ -35,11 +36,20 @@ impl IriId {
     }
 }
 
+fn hash_iri(s: &str) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    s.hash(&mut hasher);
+    hasher.finish()
+}
+
 /// Deduplicating pool of absolute IRI strings.
+///
+/// Each IRI is stored once in `strings`; `index` maps hash buckets to string indices
+/// (collision chains compare full string equality).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct InternPool {
     strings: Vec<Box<str>>,
-    index: HashMap<Box<str>, IriId>,
+    index: HashMap<u64, Vec<usize>>,
 }
 
 impl InternPool {
@@ -64,7 +74,16 @@ impl InternPool {
     /// Look up an already-interned IRI without inserting.
     #[must_use]
     pub fn get(&self, iri: &str) -> Option<IriId> {
-        self.index.get(iri).copied()
+        self.lookup(iri)
+            .map(|idx| IriId::from_index((idx + 1) as u32))
+    }
+
+    fn lookup(&self, iri: &str) -> Option<usize> {
+        let bucket = self.index.get(&hash_iri(iri))?;
+        bucket
+            .iter()
+            .copied()
+            .find(|&idx| self.strings[idx].as_ref() == iri)
     }
 
     /// Intern an absolute IRI, returning an existing id if already present.
@@ -76,8 +95,8 @@ impl InternPool {
     pub fn intern_with_limit(&mut self, iri: &str, max_len: usize) -> Result<IriId> {
         validate_iri_with_max_len(iri, max_len)?;
 
-        if let Some(&id) = self.index.get(iri) {
-            return Ok(id);
+        if let Some(idx) = self.lookup(iri) {
+            return Ok(IriId::from_index((idx + 1) as u32));
         }
 
         let index = u32::try_from(self.strings.len())
@@ -85,8 +104,9 @@ impl InternPool {
             + 1;
         let id = IriId(NonZeroU32::new(index).expect("index is non-zero"));
         let owned: Box<str> = iri.into();
-        self.index.insert(owned.clone(), id);
+        let idx = self.strings.len();
         self.strings.push(owned);
+        self.index.entry(hash_iri(iri)).or_default().push(idx);
         Ok(id)
     }
 
@@ -236,5 +256,14 @@ mod tests {
         let pool = InternPool::new();
         let err = pool.resolve(IriId::from_index(1)).expect_err("unknown id");
         assert!(matches!(err, Error::InvalidIri(_)));
+    }
+
+    #[test]
+    fn single_storage_no_duplicate_bytes() {
+        let mut pool = InternPool::new();
+        pool.intern("http://example.org/A").expect("intern");
+        // One string in vec; index holds only usize indices, not duplicate strings.
+        assert_eq!(pool.strings.len(), 1);
+        assert_eq!(pool.index.values().map(|v| v.len()).sum::<usize>(), 1);
     }
 }

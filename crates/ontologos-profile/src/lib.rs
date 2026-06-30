@@ -34,9 +34,9 @@ use thiserror::Error;
 pub use construct::OwlConstruct;
 pub use detect::detect_profile;
 pub use hybrid::{
-    bottom_module_class_seeds, classify_hybrid, engine_for_profile, extract_signature,
-    merge_taxonomies, partition_axioms, signature_for_axioms, subontology_with_axioms,
-    ClassifiedModule, HybridReport,
+    ClassifiedModule, HybridReport, bottom_module_class_seeds, classify_hybrid, engine_for_profile,
+    extract_signature, merge_taxonomies, partition_axioms, signature_for_axioms,
+    subontology_with_axioms,
 };
 pub use rules::{el_classification_forbidden_in, el_diagnostics, el_forbidden_in, satisfies_el};
 

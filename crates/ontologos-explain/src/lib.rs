@@ -8,7 +8,7 @@ use ontologos_core::{
     EntityId, Error as CoreError, InferenceTrace, Ontology, Profile, Reasoner, ReasonerConfig,
 };
 use ontologos_el::ElClassifier;
-use ontologos_profile::{detect_profile, OwlProfile};
+use ontologos_profile::{OwlProfile, detect_profile};
 use ontologos_rl::RlEngine;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

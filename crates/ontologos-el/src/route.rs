@@ -1,6 +1,6 @@
 use ontologos_core::{Profile, Reasoner, Taxonomy};
-use ontologos_profile::{detect_profile, OwlProfile};
-use ontologos_rdfs::{materialize_reasoner, MaterializationReport as RdfsReport};
+use ontologos_profile::{OwlProfile, detect_profile};
+use ontologos_rdfs::{MaterializationReport as RdfsReport, materialize_reasoner};
 use ontologos_rl::{MaterializationReport as RlReport, RlEngine};
 
 use crate::{ElClassifier, Error};

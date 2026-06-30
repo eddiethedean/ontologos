@@ -3,15 +3,15 @@
 use std::collections::HashSet;
 
 use ontologos_alc::{
-    augment_for_role_classification, classify_object_property_on_augmented, DlOntology,
-    PreparedRoleSurrogateContext, TableauSeed,
+    DlOntology, PreparedRoleSurrogateContext, TableauSeed, augment_for_role_classification,
+    classify_object_property_on_augmented,
 };
 use ontologos_core::{Ontology, RoleExpr};
 
+use crate::Error;
 use crate::classify::build_tableau_seed;
 use crate::ria::RoleHierarchy;
 use crate::saturation::saturate;
-use crate::Error;
 
 /// Reusable prepared state for object-property queries (avoids repeated augmentation).
 pub struct RolePropertyQueryContext {

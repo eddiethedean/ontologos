@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, Ontology, RoleExpr};
 
 use crate::hyperclause::{
-    abbrev_entity, concept_name, entity_canonical_iri, role_atom, HyperAtom, HyperClause, Term,
+    HyperAtom, HyperClause, Term, abbrev_entity, concept_name, entity_canonical_iri, role_atom,
 };
 
 const VAR_X: &str = "X";

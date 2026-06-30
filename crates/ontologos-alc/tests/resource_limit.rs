@@ -1,6 +1,6 @@
 //! Regression: resource limits must not be reported as satisfiable.
 
-use ontologos_alc::{tableau_is_consistent_with_seed, Error, TableauSeed};
+use ontologos_alc::{Error, TableauSeed, tableau_is_consistent_with_seed};
 use ontologos_core::{ClassExpr, DlAxiom, EntityKind, Ontology, RoleExpr};
 
 fn long_existential_chain_ontology() -> Ontology {

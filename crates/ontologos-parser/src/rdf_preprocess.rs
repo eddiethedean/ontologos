@@ -3783,11 +3783,7 @@ fn data_one_of_literals(inner: &str, base: &str) -> Option<Vec<String>> {
     let list_inner = element_inner(one_block, "owl:oneOf");
     let mut out = Vec::new();
     collect_data_list_literals(&list_inner, base, &mut out);
-    if out.is_empty() {
-        None
-    } else {
-        Some(out)
-    }
+    if out.is_empty() { None } else { Some(out) }
 }
 
 fn rdf_rest_is_nil(rest_block: &str) -> bool {
@@ -5135,10 +5131,10 @@ mod tests {
 
     #[test]
     fn float_discrete_horned_emits_class_assertion() {
+        use crate::Format;
         use crate::limits::ParseLimits;
         use crate::map::map_to_core;
         use crate::read::read_horned_owl_from_reader;
-        use crate::Format;
         use std::io::Cursor;
 
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -5281,10 +5277,11 @@ mod tests {
         );
         eprintln!("{ofn}");
         let ont = crate::load_ofn_from_str(&ofn).expect("supplement ofn");
-        assert!(ont
-            .dl()
-            .axioms()
-            .any(|a| { matches!(a, ontologos_core::DlAxiom::DataPropertyAssertion { .. }) }));
+        assert!(
+            ont.dl()
+                .axioms()
+                .any(|a| { matches!(a, ontologos_core::DlAxiom::DataPropertyAssertion { .. }) })
+        );
     }
 
     #[test]
@@ -5457,9 +5454,9 @@ mod tests {
 
     #[test]
     fn horned_parses_object_restriction_via_equivalent_class() {
+        use crate::Format;
         use crate::limits::ParseLimits;
         use crate::read::read_horned_owl_from_reader;
-        use crate::Format;
         use std::io::Cursor;
 
         let mini = r#"<?xml version="1.0"?>
@@ -5487,9 +5484,9 @@ mod tests {
 
     #[test]
     fn horned_components_bottom_vs_float() {
+        use crate::Format;
         use crate::limits::ParseLimits;
         use crate::read::read_horned_owl_from_reader;
-        use crate::Format;
         use std::io::Cursor;
 
         for case in [
@@ -6395,9 +6392,9 @@ mod tests {
                 );
             }
         }
+        use crate::Format;
         use crate::limits::ParseLimits;
         use crate::read::read_horned_owl_from_reader;
-        use crate::Format;
         read_horned_owl_from_reader(
             &mut std::io::Cursor::new(final_out.into_bytes()),
             Format::RdfXml,

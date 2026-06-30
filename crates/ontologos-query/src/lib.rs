@@ -159,10 +159,7 @@ mod tests {
             })
             .unwrap();
 
-        let taxonomy = Taxonomy {
-            subsumptions: vec![(a, b)],
-            ..Taxonomy::default()
-        };
+        let taxonomy = Taxonomy::from_parts(vec![(a, b)], vec![], vec![]);
         let engine = QueryEngine::new(&ontology, &taxonomy);
         let subs = engine.direct_subclasses(b).expect("subs");
         assert!(subs.contains(&a));
@@ -193,10 +190,7 @@ mod tests {
             })
             .unwrap();
 
-        let taxonomy = Taxonomy {
-            subsumptions: vec![(a, b), (b, c)],
-            ..Taxonomy::default()
-        };
+        let taxonomy = Taxonomy::from_parts(vec![(a, b), (b, c)], vec![], vec![]);
         let engine = QueryEngine::new(&ontology, &taxonomy);
         assert!(engine.is_subsumed(a, c).expect("subsumed"));
     }
@@ -220,10 +214,7 @@ mod tests {
             })
             .unwrap();
 
-        let taxonomy = Taxonomy {
-            subsumptions: vec![(a, b)],
-            ..Taxonomy::default()
-        };
+        let taxonomy = Taxonomy::from_parts(vec![(a, b)], vec![], vec![]);
         let engine = QueryEngine::new(&ontology, &taxonomy);
         let instances = engine.instances_of(b).expect("instances");
         assert_eq!(instances, vec![i]);

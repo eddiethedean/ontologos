@@ -1,5 +1,5 @@
 use ontologos_core::{Ontology, OwlConstruct, ParseMeta};
-use ontologos_profile::{detect_profile, OwlProfile};
+use ontologos_profile::{OwlProfile, detect_profile};
 
 #[test]
 fn source_only_dl_construct_reported_in_diagnostics_while_detected_el() {

@@ -4,16 +4,17 @@ use ontologos_alc::{DlOntology, TableauSeed};
 use ontologos_core::{ClassExpr, DlAxiom, EntityId, Ontology, Taxonomy};
 use ontologos_el::ElClassifier;
 use ontologos_profile::{
-    detect_profile, el_classification_forbidden_in, merge_taxonomies, scanner::scan_constructs,
-    OwlConstruct,
+    OwlConstruct, detect_profile, el_classification_forbidden_in, merge_taxonomies,
+    scanner::scan_constructs,
 };
 use std::collections::BTreeSet;
 
+use crate::Error;
 use crate::cardinality::derive_cardinality_subsumptions;
 use crate::defined_class;
+use crate::perf::{DlPerfTimings, PhaseTimer, perf_enabled};
 use crate::ria::RoleHierarchy;
-use crate::saturation::{saturate, SaturatedFacts};
-use crate::Error;
+use crate::saturation::{SaturatedFacts, saturate};
 
 /// OWL 2 DL classifier facade.
 #[derive(Debug, Default)]
@@ -37,8 +38,23 @@ impl DlClassifier {
 
     /// Classify the ontology (EL saturation + tableau merge for hybrid ontologies).
     pub fn classify(&self, ontology: &Ontology) -> Result<Taxonomy, Error> {
-        detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
-        let constructs = scan_constructs(ontology);
+        let perf = perf_enabled();
+        let mut timings = DlPerfTimings::default();
+        let started = perf.then(std::time::Instant::now);
+
+        if perf {
+            let _t = PhaseTimer::start(&mut timings.detect_profile_s);
+            detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+        } else {
+            detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+        }
+
+        let constructs = if perf {
+            let _t = PhaseTimer::start(&mut timings.scan_constructs_s);
+            scan_constructs(ontology)
+        } else {
+            scan_constructs(ontology)
+        };
 
         if self.preview {
             let forbidden = el_classification_forbidden_in(&constructs);
@@ -50,14 +66,25 @@ impl DlClassifier {
             }
         }
 
-        let tab_tax = tableau_classify(ontology, &constructs)?;
-        let mut taxonomy = match try_el_classify(ontology, &constructs)? {
+        let tab_tax = tableau_classify(
+            ontology,
+            &constructs,
+            if perf { Some(&mut timings) } else { None },
+        )?;
+        let mut taxonomy = match try_el_classify(
+            ontology,
+            &constructs,
+            if perf { Some(&mut timings) } else { None },
+        )? {
             Some(el_tax) => merge_taxonomies(vec![el_tax, tab_tax]),
             None => tab_tax,
         };
-        enrich_taxonomy(ontology, &mut taxonomy);
+
+        let taxonomy_post = perf.then(|| PhaseTimer::start(&mut timings.taxonomy_post_s));
         if defined_class::is_pizza_defined_class_corpus(ontology) {
+            let defined = perf.then(|| PhaseTimer::start(&mut timings.defined_class_s));
             defined_class::refine_defined_class_taxonomy(ontology, &mut taxonomy);
+            drop(defined);
         }
         taxonomy.canonicalize_entity_aliases(ontology);
         if defined_class::is_pizza_defined_class_corpus(ontology) {
@@ -67,6 +94,14 @@ impl DlClassifier {
         if defined_class::is_pizza_defined_class_corpus(ontology) {
             defined_class::finalize_pizza_strict_taxonomy(ontology, &mut taxonomy);
         }
+        drop(taxonomy_post);
+
+        if let Some(start) = started {
+            timings.total_s = start.elapsed().as_secs_f64();
+        }
+        if perf {
+            eprintln!("{}", serde_json::to_string(&timings).unwrap_or_default());
+        }
         Ok(taxonomy)
     }
 }
@@ -74,10 +109,14 @@ impl DlClassifier {
 fn try_el_classify(
     ontology: &Ontology,
     constructs: &BTreeSet<OwlConstruct>,
+    mut timings: Option<&mut DlPerfTimings>,
 ) -> Result<Option<Taxonomy>, Error> {
     if !el_classification_forbidden_in(constructs).is_empty() {
         return Ok(None);
     }
+    let _t = timings
+        .as_mut()
+        .map(|t| PhaseTimer::start(&mut t.el_classify_s));
     Ok(Some(
         ElClassifier::new().classify(ontology).map_err(Error::El)?,
     ))
@@ -86,16 +125,39 @@ fn try_el_classify(
 fn tableau_classify(
     ontology: &Ontology,
     constructs: &BTreeSet<OwlConstruct>,
+    mut timings: Option<&mut DlPerfTimings>,
 ) -> Result<Taxonomy, Error> {
-    let dl = DlOntology::from_ontology(ontology)?;
+    let dl = {
+        let _t = timings
+            .as_mut()
+            .map(|t| PhaseTimer::start(&mut t.clausify_s));
+        DlOntology::from_ontology(ontology)?
+    };
     let roles = RoleHierarchy::from_clauses(dl.clauses());
-    let facts = saturate(ontology, dl.clauses(), &roles)?;
+    let facts = {
+        let _t = timings
+            .as_mut()
+            .map(|t| PhaseTimer::start(&mut t.saturation_s));
+        saturate(dl.core(), dl.clauses(), &roles)?
+    };
     if el_may_skip_tableau_taxonomy(ontology, constructs) {
-        return Ok(taxonomy_from_saturated_facts(&facts));
+        let mut taxonomy = taxonomy_from_saturated_facts(&facts);
+        enrich_taxonomy(dl.core(), &mut taxonomy);
+        return Ok(taxonomy);
     }
     let seed = build_tableau_seed(ontology, &dl, &facts, &roles)?;
-    let mut taxonomy = ontologos_alc::classify_with_seed(ontology, &seed).map_err(Error::Alc)?;
-    let derived = derive_cardinality_subsumptions(ontology);
+    let mut taxonomy = {
+        let _t = timings
+            .as_mut()
+            .map(|t| PhaseTimer::start(&mut t.tableau_s));
+        ontologos_alc::classify_with_dl_and_seed(&dl, &seed, true).map_err(Error::Alc)?
+    };
+    let derived = {
+        let _t = timings
+            .as_mut()
+            .map(|t| PhaseTimer::start(&mut t.cardinality_derive_s));
+        derive_cardinality_subsumptions(ontology)
+    };
     for (sub, sup) in derived {
         if !taxonomy
             .subsumptions
@@ -105,12 +167,16 @@ fn tableau_classify(
             taxonomy.subsumptions.push((sub, sup));
         }
     }
+    enrich_taxonomy(dl.core(), &mut taxonomy);
     Ok(taxonomy)
 }
 
 fn el_may_skip_tableau_taxonomy(ontology: &Ontology, constructs: &BTreeSet<OwlConstruct>) -> bool {
+    if el_blocked_only_by_unions(constructs) {
+        return false;
+    }
     if !el_classification_forbidden_in(constructs).is_empty() {
-        return el_blocked_only_by_unions(constructs);
+        return false;
     }
     if constructs.contains(&OwlConstruct::DisjointClasses) {
         let class_count = ontology
@@ -141,10 +207,7 @@ fn taxonomy_from_saturated_facts(facts: &SaturatedFacts) -> Taxonomy {
     let mut subsumptions = facts.subsumptions.clone();
     subsumptions.sort_by_key(|(a, b)| (a.0, b.0));
     subsumptions.dedup();
-    Taxonomy {
-        subsumptions,
-        ..Taxonomy::default()
-    }
+    Taxonomy::from_parts(subsumptions, Vec::new(), Vec::new())
 }
 
 /// Union equivalence: `A ≡ C₁ ⊔ … ⊔ Cₙ` implies each `Cᵢ ⊑ A`.
@@ -214,6 +277,22 @@ fn push_subsumption_if_missing(taxonomy: &mut Taxonomy, sub: EntityId, sup: Enti
         taxonomy.subsumptions.push((sub, sup));
     }
 }
+
+/// Build atomic-entity to class-expression id index from the DL store.
+pub fn atomic_ce_index(store: &ontologos_core::DlStore) -> Vec<Option<ontologos_core::CeId>> {
+    let mut index = vec![None; store.ce_count().max(1)];
+    for (id, expr) in store.expressions() {
+        if let ClassExpr::Atomic(entity) = expr {
+            let slot = entity.0 as usize;
+            if slot >= index.len() {
+                index.resize(slot + 1, None);
+            }
+            index[slot] = Some(id);
+        }
+    }
+    index
+}
+
 /// Build tableau seed from saturation (used by consistency checking).
 pub fn build_tableau_seed(
     _ontology: &Ontology,
@@ -222,18 +301,13 @@ pub fn build_tableau_seed(
     roles: &RoleHierarchy,
 ) -> Result<TableauSeed, Error> {
     let store = dl.core().dl();
+    let ce_by_entity = atomic_ce_index(store);
     let mut seed = TableauSeed::default();
 
+    let lookup_ce = |entity: EntityId| ce_by_entity.get(entity.0 as usize).and_then(|opt| *opt);
+
     for &(sub, sup) in &facts.subsumptions {
-        let sub_ce = store.expressions().find_map(|(id, e)| match e {
-            ClassExpr::Atomic(c) if *c == sub => Some(id),
-            _ => None,
-        });
-        let sup_ce = store.expressions().find_map(|(id, e)| match e {
-            ClassExpr::Atomic(c) if *c == sup => Some(id),
-            _ => None,
-        });
-        if let (Some(sub_ce), Some(sup_ce)) = (sub_ce, sup_ce) {
+        if let (Some(sub_ce), Some(sup_ce)) = (lookup_ce(sub), lookup_ce(sup)) {
             seed.subsumptions.push((sub_ce, sup_ce));
         }
     }

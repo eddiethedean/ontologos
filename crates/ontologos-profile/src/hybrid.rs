@@ -7,7 +7,7 @@ use ontologos_core::{Axiom, AxiomId, EntityId, EntityKind, Ontology, Taxonomy};
 
 use crate::rules::el_classification_forbidden_in;
 use crate::scanner::axiom_constructs;
-use crate::{detect_profile, OwlProfile, Result};
+use crate::{OwlProfile, Result, detect_profile};
 
 /// One classified module in a hybrid ontology.
 #[derive(Debug, Clone)]
@@ -300,11 +300,7 @@ pub fn merge_taxonomies(mut parts: Vec<Taxonomy>) -> Taxonomy {
     equivalences.dedup();
     unsatisfiable.sort_unstable_by_key(|id| id.0);
     unsatisfiable.dedup();
-    Taxonomy {
-        subsumptions,
-        equivalences,
-        unsatisfiable,
-    }
+    Taxonomy::from_parts(subsumptions, equivalences, unsatisfiable)
 }
 
 /// Route module to engine name for conformance / CLI.

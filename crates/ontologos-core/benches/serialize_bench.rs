@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use ontologos_core::{Axiom, EntityKind, Ontology};
 
 fn build_medium_ontology(axiom_count: usize) -> Ontology {

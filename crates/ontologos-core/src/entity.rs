@@ -6,7 +6,7 @@ use crate::error::{Error, Result};
 use crate::iri::IriId;
 
 /// Stable identifier for an ontology entity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 /// Opaque entity identifier (index into the entity registry).
 pub struct EntityId(pub u32);
 

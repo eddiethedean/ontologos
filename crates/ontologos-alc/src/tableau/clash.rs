@@ -3,7 +3,7 @@
 use ontologos_core::{CeId, ClassExpr, DlAxiom, EntityId, RoleExpr};
 
 use super::expand::{count_role_successors, effective_cardinality_filler};
-use super::{effective_class_expression, Branch};
+use super::{Branch, effective_class_expression};
 
 /// Check direct label/negation clashes and disjointness constraints.
 pub fn detect_clash(branch: &mut Branch<'_>) {

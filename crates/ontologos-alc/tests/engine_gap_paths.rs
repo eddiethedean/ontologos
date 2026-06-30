@@ -1,4 +1,4 @@
-use ontologos_alc::{is_consistent, DlOntology, TableauSeed};
+use ontologos_alc::{DlOntology, TableauSeed, is_consistent};
 use ontologos_core::ClassExpr;
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;

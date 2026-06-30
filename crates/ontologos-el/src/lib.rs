@@ -29,8 +29,8 @@ use ontologos_core::{Ontology, Taxonomy};
 use thiserror::Error;
 
 pub use reasoner::{classify_reasoner, classify_with_report, try_classify_reasoner};
-pub use route::{classify_with_profile, resolve_profile_flag, ClassifyOutcome, ProfileFlag};
-pub use session::{take_el_session, ElSession};
+pub use route::{ClassifyOutcome, ProfileFlag, classify_with_profile, resolve_profile_flag};
+pub use session::{ElSession, take_el_session};
 pub use trace::ElReport;
 
 /// Result type for EL operations.
@@ -214,11 +214,13 @@ mod tests {
         let report = ElClassifier::new()
             .classify_with_options(&ontology, true)
             .unwrap();
-        assert!(report
-            .trace
-            .steps
-            .iter()
-            .any(|s| s.rule == "sub_trans_forward"));
+        assert!(
+            report
+                .trace
+                .steps
+                .iter()
+                .any(|s| s.rule == "sub_trans_forward")
+        );
     }
 
     #[test]

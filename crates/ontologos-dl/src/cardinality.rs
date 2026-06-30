@@ -52,7 +52,7 @@ pub fn derive_cardinality_subsumptions(ontology: &Ontology) -> Vec<(EntityId, En
             }
         }
 
-        if let Some((n, ref prop)) = parts.min_unqualified {
+        if let Some((n, prop)) = parts.min_unqualified.as_ref() {
             let some_entities: Vec<EntityId> = parts
                 .some_restrictions
                 .iter()
@@ -75,7 +75,7 @@ pub fn derive_cardinality_subsumptions(ontology: &Ontology) -> Vec<(EntityId, En
         }
 
         // complex2: MaxCard(n,r) ⊓ ∃r.C ⊓ ∃r.D with disjoint C,D  =>  ⊑ MaxCard(1,r,C) ⊓ MaxCard(1,r,D)
-        if let Some((_, ref prop)) = parts.max_unqualified {
+        if let Some((_, prop)) = parts.max_unqualified.as_ref() {
             let some_entities: Vec<EntityId> = parts
                 .some_restrictions
                 .iter()
@@ -96,7 +96,7 @@ pub fn derive_cardinality_subsumptions(ontology: &Ontology) -> Vec<(EntityId, En
         }
 
         // complex3: ∀r.A ⊓ MinCard(n,r) ⊓ MaxCard(m,r,C) with A ⊑ C ⊔ D  =>  ⊑ MinCard(n-m,r,D)
-        if let (Some((min_n, ref prop)), Some((max_m, ref max_prop, max_filler))) =
+        if let (Some((min_n, prop)), Some((max_m, max_prop, max_filler))) =
             (parts.min_unqualified.as_ref(), parts.max_qualified.first())
         {
             if prop == max_prop && *min_n > *max_m {

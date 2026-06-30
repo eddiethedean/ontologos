@@ -5,12 +5,12 @@ use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy};
 
+use crate::Error;
 use crate::dl_ontology::DlOntology;
 use crate::tableau::{
-    infer_named_subsumptions_for, named_class_entails, role_equivalent_in_hierarchy,
-    role_hierarchy_branch, TableauSeed,
+    TableauSeed, infer_named_subsumptions_for, named_class_entails, role_equivalent_in_hierarchy,
+    role_hierarchy_branch,
 };
-use crate::Error;
 
 const FRESH_CLASS: &str = "urn:ontologos:internal:fresh-concept";
 const FRESH_INDIVIDUAL: &str = "urn:ontologos:internal:fresh-individual";
@@ -36,11 +36,7 @@ fn build_surrogate_taxonomy(
         .collect();
     subsumptions.sort_by_key(|(a, b)| (a.0, b.0));
     subsumptions.dedup();
-    let mut taxonomy = Taxonomy {
-        subsumptions,
-        equivalences: equiv.classes(surrogates),
-        unsatisfiable: Vec::new(),
-    };
+    let mut taxonomy = Taxonomy::from_parts(subsumptions, equiv.classes(surrogates), Vec::new());
     taxonomy.reduce_transitive_redundancy();
     Ok(taxonomy)
 }
@@ -714,10 +710,10 @@ mod tests {
     #[test]
     #[ignore = "diagnostic: Bob knows subproperty counts"]
     fn bob_knows_subproperty_diag() {
-        use crate::augment_for_role_classification;
-        use crate::tableau::named_class_entails;
         use crate::DlOntology;
         use crate::TableauSeed;
+        use crate::augment_for_role_classification;
+        use crate::tableau::named_class_entails;
 
         let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../benchmarks/data/hermit/reasoner/res/OWLLink/agent.owl");

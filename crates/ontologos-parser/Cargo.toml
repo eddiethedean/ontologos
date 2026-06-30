@@ -26,4 +26,9 @@ libc = "0.2"
 [dev-dependencies]
 ontologos-profile = { workspace = true }
 ontologos-dl = { workspace = true }
+criterion = "0.5"
+
+[[bench]]
+name = "load"
+harness = false
 

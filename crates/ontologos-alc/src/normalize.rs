@@ -2,8 +2,8 @@
 
 use ontologos_core::{Axiom, CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr};
 
-use crate::clause::{Clause, ClauseSet};
 use crate::Error;
+use crate::clause::{Clause, ClauseSet};
 
 /// Convert ontology axioms + DL store into clausal form.
 pub fn clausify(ontology: &mut Ontology) -> Result<ClauseSet, Error> {

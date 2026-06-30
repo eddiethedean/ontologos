@@ -1,6 +1,6 @@
 //! DL classification wall-time benchmarks (Tier D perf tracking).
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use ontologos_dl::classify;
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;
