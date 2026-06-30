@@ -1,7 +1,7 @@
 //! HermiT-style trie + hash index for tuples (`TupleIndex`).
 
-use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 const LOAD_FACTOR: f32 = 0.7;
 const BUCKET_OFFSET: i32 = 1;
@@ -47,15 +47,8 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
     pub fn clear(&mut self) {
         self.trie_node_manager.clear();
         self.root = self.trie_node_manager.new_trie_node();
-        self.trie_node_manager.initialize_trie_node(
-            self.root,
-            -1,
-            -1,
-            -1,
-            -1,
-            -1,
-            None,
-        );
+        self.trie_node_manager
+            .initialize_trie_node(self.root, -1, -1, -1, -1, -1, None);
         self.buckets = vec![0; 16];
         self.buckets_length_minus_one = (self.buckets.len() as i32) - 1;
         self.resize_threshold = (self.buckets.len() as f32 * LOAD_FACTOR) as i32;
@@ -75,8 +68,11 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
             .get_trie_node_component(trie_node, TRIE_NODE_TUPLE_INDEX)
             == -1
         {
-            self.trie_node_manager
-                .set_trie_node_component(trie_node, TRIE_NODE_TUPLE_INDEX, potential_tuple_index);
+            self.trie_node_manager.set_trie_node_component(
+                trie_node,
+                TRIE_NODE_TUPLE_INDEX,
+                potential_tuple_index,
+            );
             potential_tuple_index
         } else {
             self.trie_node_manager
@@ -150,16 +146,18 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
                 .get_trie_node_component(child, TRIE_NODE_NEXT_ENTRY);
             if child == trie_node {
                 self.number_of_nodes -= 1;
-                let previous_sibling = self.trie_node_manager.get_trie_node_component(
-                    trie_node,
-                    TRIE_NODE_PREVIOUS_SIBLING,
-                );
+                let previous_sibling = self
+                    .trie_node_manager
+                    .get_trie_node_component(trie_node, TRIE_NODE_PREVIOUS_SIBLING);
                 let next_sibling = self
                     .trie_node_manager
                     .get_trie_node_component(trie_node, TRIE_NODE_NEXT_SIBLING);
                 if previous_sibling == -1 {
-                    self.trie_node_manager
-                        .set_trie_node_component(parent, TRIE_NODE_FIRST_CHILD, next_sibling);
+                    self.trie_node_manager.set_trie_node_component(
+                        parent,
+                        TRIE_NODE_FIRST_CHILD,
+                        next_sibling,
+                    );
                 } else {
                     self.trie_node_manager.set_trie_node_component(
                         previous_sibling,
@@ -285,8 +283,7 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
                 let parent = self
                     .trie_node_manager
                     .get_trie_node_component(trie_node, TRIE_NODE_PARENT);
-                let new_bucket =
-                    get_index_for(hash_key(&obj, parent), new_len_minus_one) as usize;
+                let new_bucket = get_index_for(hash_key(&obj, parent), new_len_minus_one) as usize;
                 self.trie_node_manager.set_trie_node_component(
                     trie_node,
                     TRIE_NODE_NEXT_ENTRY,
@@ -359,6 +356,7 @@ impl<T: Clone> TrieNodeManager<T> {
         self.object_pages[page].as_ref().unwrap()[index].clone()
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn initialize_trie_node(
         &mut self,
         trie_node: i32,
@@ -401,8 +399,7 @@ impl<T: Clone> TrieNodeManager<T> {
                     self.index_pages.resize(new_len, None);
                     self.object_pages.resize(new_len, None);
                 }
-                self.index_pages[page_index] =
-                    Some(vec![0; TRIE_NODE_SIZE * TRIE_NODE_PAGE_SIZE]);
+                self.index_pages[page_index] = Some(vec![0; TRIE_NODE_SIZE * TRIE_NODE_PAGE_SIZE]);
                 self.object_pages[page_index] = Some(vec![None; TRIE_NODE_PAGE_SIZE]);
                 self.number_of_pages += 1;
             }
@@ -412,11 +409,7 @@ impl<T: Clone> TrieNodeManager<T> {
     }
 
     fn delete_trie_node(&mut self, trie_node: i32) {
-        self.set_trie_node_component(
-            trie_node,
-            TRIE_NODE_NEXT_SIBLING,
-            self.first_free_trie_node,
-        );
+        self.set_trie_node_component(trie_node, TRIE_NODE_NEXT_SIBLING, self.first_free_trie_node);
         let page = trie_node as usize / TRIE_NODE_PAGE_SIZE;
         let index = trie_node as usize % TRIE_NODE_PAGE_SIZE;
         self.object_pages[page].as_mut().unwrap()[index] = None;
@@ -459,7 +452,9 @@ impl<'a, T: Hash + Eq + Clone> TupleIndexRetrieval<'a, T> {
         self.current_trie_node = self.tuple_index.root;
         for &position in self.selection_indices {
             let object = &self.bindings_buffer[position];
-            self.current_trie_node = self.tuple_index.get_child_node(self.current_trie_node, object);
+            self.current_trie_node = self
+                .tuple_index
+                .get_child_node(self.current_trie_node, object);
             if self.current_trie_node == -1 {
                 return;
             }
@@ -474,10 +469,10 @@ impl<'a, T: Hash + Eq + Clone> TupleIndexRetrieval<'a, T> {
             self.current_trie_node = -1;
         } else {
             for _ in self.selection_indices_length..self.indexing_sequence_length {
-                self.current_trie_node = self.tuple_index.trie_node_manager.get_trie_node_component(
-                    self.current_trie_node,
-                    TRIE_NODE_FIRST_CHILD,
-                );
+                self.current_trie_node = self
+                    .tuple_index
+                    .trie_node_manager
+                    .get_trie_node_component(self.current_trie_node, TRIE_NODE_FIRST_CHILD);
             }
         }
     }
@@ -500,29 +495,30 @@ impl<'a, T: Hash + Eq + Clone> TupleIndexRetrieval<'a, T> {
     pub fn next(&mut self) {
         let mut trie_node_depth = self.indexing_sequence_length;
         while trie_node_depth != self.selection_indices_length
-            && self.tuple_index.trie_node_manager.get_trie_node_component(
-                self.current_trie_node,
-                TRIE_NODE_NEXT_SIBLING,
-            ) == -1
+            && self
+                .tuple_index
+                .trie_node_manager
+                .get_trie_node_component(self.current_trie_node, TRIE_NODE_NEXT_SIBLING)
+                == -1
         {
-            self.current_trie_node = self.tuple_index.trie_node_manager.get_trie_node_component(
-                self.current_trie_node,
-                TRIE_NODE_PARENT,
-            );
+            self.current_trie_node = self
+                .tuple_index
+                .trie_node_manager
+                .get_trie_node_component(self.current_trie_node, TRIE_NODE_PARENT);
             trie_node_depth -= 1;
         }
         if trie_node_depth == self.selection_indices_length {
             self.current_trie_node = -1;
         } else {
-            self.current_trie_node = self.tuple_index.trie_node_manager.get_trie_node_component(
-                self.current_trie_node,
-                TRIE_NODE_NEXT_SIBLING,
-            );
+            self.current_trie_node = self
+                .tuple_index
+                .trie_node_manager
+                .get_trie_node_component(self.current_trie_node, TRIE_NODE_NEXT_SIBLING);
             for _ in trie_node_depth..self.indexing_sequence_length {
-                self.current_trie_node = self.tuple_index.trie_node_manager.get_trie_node_component(
-                    self.current_trie_node,
-                    TRIE_NODE_FIRST_CHILD,
-                );
+                self.current_trie_node = self
+                    .tuple_index
+                    .trie_node_manager
+                    .get_trie_node_component(self.current_trie_node, TRIE_NODE_FIRST_CHILD);
             }
         }
     }
@@ -610,12 +606,8 @@ mod hermit_ports {
         let mut tuple_indexes = Vec::with_capacity(10_000);
 
         for i in 0..10_000 {
-            tuples.push([
-                (i % 300).to_string(),
-                (i % 3000).to_string(),
-                i.to_string(),
-            ]);
-            tuple_indexes.push(i as i32);
+            tuples.push([(i % 300).to_string(), (i % 3000).to_string(), i.to_string()]);
+            tuple_indexes.push(i);
         }
 
         for (i, tuple) in tuples.iter().enumerate() {

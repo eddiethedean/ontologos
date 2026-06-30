@@ -117,7 +117,11 @@ impl NominalIntroductionManager {
         if idx == -1 {
             return None;
         }
-        let node_id = self.new_root_nodes.borrow().tuple_table().get_tuple_object(idx, 3);
+        let node_id = self
+            .new_root_nodes
+            .borrow()
+            .tuple_table()
+            .get_tuple_object(idx, 3);
         Some(self.tableau.node_by_id(node_id))
     }
 
@@ -140,13 +144,15 @@ impl NominalIntroductionManager {
         if equality.cardinality == 1 {
             return self.apply_ni_rule(equality, node0, node1, node2, dependency);
         }
-        self.annotated_equalities.borrow_mut().push(AnnotatedEqualityEntry {
-            equality,
-            node0: node0.id(),
-            node1: node1.id(),
-            node2: node2.id(),
-            dependency,
-        });
+        self.annotated_equalities
+            .borrow_mut()
+            .push(AnnotatedEqualityEntry {
+                equality,
+                node0: node0.id(),
+                node1: node1.id(),
+                node2: node2.id(),
+                dependency,
+            });
         true
     }
 
@@ -238,7 +244,11 @@ impl NominalIntroductionManager {
         ];
         let tuple_index = self.new_root_nodes.borrow().get_tuple_index(&lookup);
         if tuple_index != -1 {
-            let node_id = self.new_root_nodes.borrow().tuple_table().get_tuple_object(tuple_index, 3);
+            let node_id = self
+                .new_root_nodes
+                .borrow()
+                .tuple_table()
+                .get_tuple_object(tuple_index, 3);
             return self.tableau.node_by_id(node_id);
         }
         let new_root = self.tableau.create_new_ni_node(dependency);
@@ -269,10 +279,8 @@ impl NominalIntroductionManager {
         let factory = DependencySetFactory::new();
         let mut dependency_set = clash_dependency;
         if state.current_root == state.equality.cardinality {
-            dependency_set = factory.remove_branching_point(
-                &DependencySetRef::Permanent(dependency_set),
-                state.level,
-            );
+            dependency_set = factory
+                .remove_branching_point(&DependencySetRef::Permanent(dependency_set), state.level);
         }
         let root = self.tableau.node_by_id(state.root);
         let ni_target = self.tableau.node_by_id(state.ni_target);

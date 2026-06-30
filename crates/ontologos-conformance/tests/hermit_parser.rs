@@ -18,8 +18,8 @@ fn is_utf8_owl_fixture(path: &std::path::Path) -> bool {
 /// Survey vendored UTF-8 OWLLink fixtures; reports load/skip stats (parser gaps are non-fatal).
 #[test]
 fn hermit_owllink_owl_fixtures_load() {
-    let dir = vendored_hermit_test_path("reasoner/res/OWLLink")
-        .expect("vendored OWLLink directory");
+    let dir =
+        vendored_hermit_test_path("reasoner/res/OWLLink").expect("vendored OWLLink directory");
     let mut loaded = 0_usize;
     let mut latin1_skipped = 0_usize;
     let mut parse_failed: Vec<String> = Vec::new();

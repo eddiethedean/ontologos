@@ -1,12 +1,11 @@
 //! HermiT `tableau.*` engine-internal tests — ported units + deferred inventory (Tier B3).
 
 use ontologos_alc::{
-    test_helpers, AnnotatedEquality, BranchingPoint, DependencySetFactory, DependencySetRef,
-    DescriptionGraph, DescriptionGraphId, DlClauseEvaluator, DlObject, DlPredicate, do_iteration,
-    derive_at_most_equalities, graph_merge, blocking_test_annotated_equalities_clauses,
-    blocking_test_one_invalid_block_clauses, blocking_concepts, BlockingStrategy, BlockingValidator,
-    Node, PermanentDependencySet, RoleRef,
-    run_calculus, TupleIndex, TupleIndexRetrieval, UnionDependencySet, Tableau,
+    blocking_test_annotated_equalities_clauses, blocking_test_one_invalid_block_clauses,
+    do_iteration, graph_merge, run_calculus, test_helpers, AnnotatedEquality, BlockingValidator,
+    BranchingPoint, DependencySetFactory, DependencySetRef, DescriptionGraph, DescriptionGraphId,
+    DlClauseEvaluator, DlObject, DlPredicate, Node, PermanentDependencySet, RoleRef, Tableau,
+    TupleIndex, TupleIndexRetrieval, UnionDependencySet,
 };
 use std::rc::Rc;
 
@@ -100,10 +99,7 @@ fn hermit_tableau_migrated_catalog_status() {
             .iter()
             .find(|c| c.id == *id)
             .unwrap_or_else(|| panic!("missing catalog entry {id}"));
-        assert_eq!(
-            case.status, "covered",
-            "{id} should be covered after port"
-        );
+        assert_eq!(case.status, "covered", "{id} should be covered after port");
     }
 }
 
@@ -173,13 +169,7 @@ fn hermit_merge_test_merge_and_backtrack() {
     let bp = BranchingPoint::new(&tableau);
     tableau.push_branching_point(&bp);
 
-    ext.add_assertion(
-        DlPredicate::Equality,
-        &a1,
-        Some(&a2),
-        empty.clone(),
-        false,
-    );
+    ext.add_assertion(DlPredicate::Equality, &a1, Some(&a2), empty.clone(), false);
 
     assert!(ext.contains_clash());
     tableau.assert_label(
@@ -201,11 +191,7 @@ fn hermit_merge_test_merge_and_backtrack() {
 
     test_helpers::assert_retrieval(
         &ext.ternary_extension_table(),
-        &[
-            Some(role_obj("R")),
-            None,
-            None,
-        ],
+        &[Some(role_obj("R")), None, None],
         &[
             vec![role_obj("R"), node_obj(&a), node_obj(&a2)],
             vec![role_obj("R"), node_obj(&a2), node_obj(&b)],
@@ -243,11 +229,7 @@ fn hermit_merge_test_merge_and_backtrack() {
 
     test_helpers::assert_retrieval(
         &ext.ternary_extension_table(),
-        &[
-            Some(role_obj("R")),
-            None,
-            None,
-        ],
+        &[Some(role_obj("R")), None, None],
         &[
             vec![role_obj("R"), node_obj(&a), node_obj(&a1)],
             vec![role_obj("R"), node_obj(&a1), node_obj(&a11)],
@@ -504,12 +486,8 @@ fn hermit_tuple_index_test_2() {
     let mut tuple_indexes = Vec::with_capacity(10_000);
 
     for i in 0..10_000 {
-        tuples.push([
-            (i % 300).to_string(),
-            (i % 3000).to_string(),
-            i.to_string(),
-        ]);
-        tuple_indexes.push(i as i32);
+        tuples.push([(i % 300).to_string(), (i % 3000).to_string(), i.to_string()]);
+        tuple_indexes.push(i);
     }
 
     for (i, tuple) in tuples.iter().enumerate() {
@@ -549,8 +527,7 @@ fn hermit_tuple_table_full_index_test_1() {
         }
 
         fn get(&self, a: &str, b: &str) -> i32 {
-            self.index
-                .get_tuple_index(&[a.to_string(), b.to_string()])
+            self.index.get_tuple_index(&[a.to_string(), b.to_string()])
         }
     }
 
@@ -587,10 +564,7 @@ fn hermit_tuple_table_full_index_test_2() {
     for (i, tuple) in tuples.iter().enumerate() {
         assert_eq!(index.get_tuple_index(tuple), i as i32);
     }
-    assert_eq!(
-        index.get_tuple_index(&["e".into(), "f".into()]),
-        -1
-    );
+    assert_eq!(index.get_tuple_index(&["e".into(), "f".into()]), -1);
 }
 
 fn empty() -> Rc<PermanentDependencySet> {
@@ -619,10 +593,34 @@ fn ni_fixture_chain(
     let b1 = tableau.create_new_tree_node(empty.clone(), &b);
     let b11 = tableau.create_new_tree_node(empty.clone(), &b1);
     let b111 = tableau.create_new_tree_node(empty.clone(), &b11);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b, Some(&b1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b1, Some(&b11), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b11, Some(&b111), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a, Some(&b11), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b1,
+        Some(&b11),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b11,
+        Some(&b111),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a,
+        Some(&b11),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &b11, empty.clone(), false);
     (a, b, b1, b11, b111)
 }
@@ -640,7 +638,10 @@ fn hermit_ni_rule_test_deterministic() {
     let new_root = ni.root_node_for(&a, eq_one_r_a(), 1).expect("new root");
     assert!(new_root.is_active());
     assert!(!b11.is_active());
-    assert_eq!(tableau.canonical_node(&b11), tableau.canonical_node(&new_root));
+    assert_eq!(
+        tableau.canonical_node(&b11),
+        tableau.canonical_node(&new_root)
+    );
     assert!(!b111.is_active());
     assert!(!ext.contains_assertion("S", &b11, &b111));
     assert!(ext.contains_assertion("S", &b1, &new_root));
@@ -654,11 +655,20 @@ fn hermit_ni_rule_test_ni_prunes_one_node() {
     let empty = empty();
     let ni = tableau.ni_manager();
     let (a, _b, b1, b11, b111) = ni_fixture_chain(&tableau, &ext, &empty);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a, Some(&b1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
     ni.add_annotated_equality(eq_one_r_a(), &b1, &b11, &a, empty.clone());
     let new_root = ni.root_node_for(&a, eq_one_r_a(), 1).expect("new root");
     assert!(b1.is_merged());
-    assert_eq!(tableau.canonical_node(&b1), tableau.canonical_node(&new_root));
+    assert_eq!(
+        tableau.canonical_node(&b1),
+        tableau.canonical_node(&new_root)
+    );
     assert!(b11.is_pruned());
     assert!(b111.is_pruned());
     assert!(!ext.has_concept("A", &new_root));
@@ -678,14 +688,50 @@ fn hermit_ni_rule_test_ni_does_not_prune() {
     let c = tableau.create_new_ni_node(empty.clone());
     let c1 = tableau.create_new_tree_node(empty.clone(), &c);
     let c11 = tableau.create_new_tree_node(empty.clone(), &c1);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b, Some(&b1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b1, Some(&b11), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b1,
+        Some(&b11),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &b1, empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a, Some(&b1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("T"), &c, Some(&c1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("T"), &c1, Some(&c11), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("T"),
+        &c,
+        Some(&c1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("T"),
+        &c1,
+        Some(&c11),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("B"), &c1, empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a, Some(&c1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a,
+        Some(&c1),
+        empty.clone(),
+        false,
+    );
     ni.add_annotated_equality(eq_one_r_a(), &b1, &c1, &a, empty.clone());
     let new_root = ni.root_node_for(&a, eq_one_r_a(), 1).expect("new root");
     assert!(b1.is_merged());
@@ -704,13 +750,42 @@ fn hermit_ni_rule_test_deterministic_rule_application() {
     let b = tableau.create_new_ni_node(empty.clone());
     let b1 = tableau.create_new_tree_node(empty.clone(), &b);
     let c = tableau.create_new_ni_node(empty.clone());
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &a, Some(&a1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &c, Some(&a1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &a,
+        Some(&a1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &c,
+        Some(&a1),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &a1, empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b, Some(&b1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &c, Some(&b1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &c,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &b1, empty.clone(), false);
-    ext.add_concept_assertion(DlPredicate::AtomicConcept("AT_MOST_ONE_R_A"), &c, empty.clone(), false);
+    ext.add_concept_assertion(
+        DlPredicate::AtomicConcept("AT_MOST_ONE_R_A"),
+        &c,
+        empty.clone(),
+        false,
+    );
     let ni = tableau.ni_manager();
     assert!(ni.add_annotated_equality(eq_one_r_a(), &a1, &b1, &c, empty.clone()));
     let c_n1 = ni.root_node_for(&c, eq_one_r_a(), 1).expect("c_n1");
@@ -730,11 +805,41 @@ fn hermit_ni_rule_test_ni_and_pruning() {
     let b1 = tableau.create_new_tree_node(empty.clone(), &b);
     let b11 = tableau.create_new_tree_node(empty.clone(), &b1);
     let c = tableau.create_new_ni_node(empty.clone());
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &a, Some(&a1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &c, Some(&a1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("T"), &b, Some(&b1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("T"), &b1, Some(&b11), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &c, Some(&b11), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &a,
+        Some(&a1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &c,
+        Some(&a1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("T"),
+        &b,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("T"),
+        &b1,
+        Some(&b11),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &c,
+        Some(&b11),
+        empty.clone(),
+        false,
+    );
     ni.add_annotated_equality(eq_two_r_a(), &a1, &b11, &c, empty.clone());
     ext.add_assertion(DlPredicate::Equality, &b1, Some(&c), empty.clone(), false);
     assert!(b11.is_pruned());
@@ -753,12 +858,44 @@ fn hermit_dl_clause_evaluation_test_evaluator() {
     let c = tableau.create_new_ni_node(empty.clone());
     let d = tableau.create_new_ni_node(empty.clone());
     let e = tableau.create_new_ni_node(empty.clone());
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a, Some(&b), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a, Some(&c), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b, Some(&d), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("T"), &e, Some(&e), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("T"), &c, Some(&d), empty.clone(), false);
-    let evaluators = [DlClauseEvaluator::new(ontologos_alc::dl_clause_evaluation_test_clause())];
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a,
+        Some(&b),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a,
+        Some(&c),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b,
+        Some(&d),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("T"),
+        &e,
+        Some(&e),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("T"),
+        &c,
+        Some(&d),
+        empty.clone(),
+        false,
+    );
+    let evaluators = [DlClauseEvaluator::new(
+        ontologos_alc::dl_clause_evaluation_test_clause(),
+    )];
     assert!(run_calculus(&tableau, &evaluators));
     test_helpers::assert_retrieval(
         &ext.ternary_extension_table(),
@@ -828,13 +965,16 @@ fn hermit_ni_rule_test_nondeterministic_equality() {
     let ext = tableau.extension_manager();
     let empty = empty();
     let ni = tableau.ni_manager();
-    let (a, _b, b1, b11, b111) = ni_fixture_chain(&tableau, &ext, &empty);
+    let (a, _b, _b1, b11, _b111) = ni_fixture_chain(&tableau, &ext, &empty);
     ni.add_annotated_equality(eq_two_r_a(), &b11, &b11, &a, empty.clone());
     assert_eq!(ni.pending_annotated_equalities(), 1);
     assert!(ni.process_annotated_equalities());
     let new_root1 = ni.root_node_for(&a, eq_two_r_a(), 1).expect("root1");
     assert!(!b11.is_active());
-    assert_eq!(tableau.canonical_node(&b11), tableau.canonical_node(&new_root1));
+    assert_eq!(
+        tableau.canonical_node(&b11),
+        tableau.canonical_node(&new_root1)
+    );
 }
 
 #[test]
@@ -846,8 +986,20 @@ fn hermit_ni_rule_test_repeated_ni_applications() {
     let a = tableau.create_new_ni_node(empty.clone());
     let b = tableau.create_new_ni_node(empty.clone());
     let b1 = tableau.create_new_tree_node(empty.clone(), &b);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b, Some(&b1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a, Some(&b1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &b1, empty.clone(), false);
     ni.add_annotated_equality(eq_two_r_a(), &b1, &b1, &a, empty.clone());
     assert!(ni.process_annotated_equalities());
@@ -867,14 +1019,50 @@ fn hermit_ni_rule_test_contenting_nis() {
     let c1 = tableau.create_new_tree_node(empty.clone(), &c);
     let d = tableau.create_new_ni_node(empty.clone());
     let d1 = tableau.create_new_tree_node(empty.clone(), &d);
-    ext.add_assertion(DlPredicate::AtomicRole("T"), &c, Some(&c1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("T"),
+        &c,
+        Some(&c1),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &c1, empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &c1, Some(&a), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &c1, Some(&b), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("T"), &d, Some(&d1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &c1,
+        Some(&a),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &c1,
+        Some(&b),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("T"),
+        &d,
+        Some(&d1),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("B"), &d1, empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &d1, Some(&a), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &d1, Some(&b), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &d1,
+        Some(&a),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &d1,
+        Some(&b),
+        empty.clone(),
+        false,
+    );
     ni.add_annotated_equality(eq_two_r_a(), &c1, &d1, &a, empty.clone());
     assert_eq!(ni.pending_annotated_equalities(), 1);
     ni.add_annotated_equality(eq_one_s_a(), &d1, &d1, &b, empty.clone());
@@ -895,13 +1083,42 @@ fn hermit_ni_rule_test_disjunction_derivation() {
     let b = tableau.create_new_ni_node(empty.clone());
     let b1 = tableau.create_new_tree_node(empty.clone(), &b);
     let c = tableau.create_new_ni_node(empty.clone());
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &a, Some(&a1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &c, Some(&a1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &a,
+        Some(&a1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &c,
+        Some(&a1),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &a1, empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("S"), &b, Some(&b1), empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &c, Some(&b1), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("S"),
+        &b,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &c,
+        Some(&b1),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &b1, empty.clone(), false);
-    ext.add_concept_assertion(DlPredicate::AtomicConcept("AT_MOST_TWO_R_A"), &c, empty.clone(), false);
+    ext.add_concept_assertion(
+        DlPredicate::AtomicConcept("AT_MOST_TWO_R_A"),
+        &c,
+        empty.clone(),
+        false,
+    );
     ni.add_annotated_equality(eq_two_r_a(), &a1, &b1, &c, empty.clone());
     assert!(ni.process_annotated_equalities());
     let c_n1 = ni.root_node_for(&c, eq_two_r_a(), 1).expect("c_n1");
@@ -917,11 +1134,28 @@ fn hermit_ni_rule_test_disjunctions_in_tree_part() {
     let a1 = tableau.create_new_tree_node(empty.clone(), &a);
     let a11 = tableau.create_new_tree_node(empty.clone(), &a1);
     let a12 = tableau.create_new_tree_node(empty.clone(), &a1);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a1, Some(&a11), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a1,
+        Some(&a11),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &a11, empty.clone(), false);
-    ext.add_assertion(DlPredicate::AtomicRole("R"), &a1, Some(&a12), empty.clone(), false);
+    ext.add_assertion(
+        DlPredicate::AtomicRole("R"),
+        &a1,
+        Some(&a12),
+        empty.clone(),
+        false,
+    );
     ext.add_concept_assertion(DlPredicate::AtomicConcept("A"), &a12, empty.clone(), false);
-    ext.add_concept_assertion(DlPredicate::AtomicConcept("AT_MOST_TWO_R_A"), &a1, empty.clone(), false);
+    ext.add_concept_assertion(
+        DlPredicate::AtomicConcept("AT_MOST_TWO_R_A"),
+        &a1,
+        empty.clone(),
+        false,
+    );
     assert!(do_iteration(&tableau, &[]));
     assert_eq!(tableau.ni_manager().pending_annotated_equalities(), 0);
 }

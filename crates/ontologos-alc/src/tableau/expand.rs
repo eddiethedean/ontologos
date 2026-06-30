@@ -754,7 +754,19 @@ pub(crate) fn propagate_structural_existential_subsumptions(branch: &mut Branch<
 }
 
 pub(crate) fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce: CeId) -> bool {
+    world_structurally_satisfies_inner(branch, world, ce, &mut HashSet::new())
+}
+
+fn world_structurally_satisfies_inner(
+    branch: &Branch<'_>,
+    world: usize,
+    ce: CeId,
+    seen: &mut HashSet<(usize, CeId)>,
+) -> bool {
     let ce = super::effective_class_expression(branch.dl, ce);
+    if !seen.insert((world, ce)) {
+        return false;
+    }
     if branch.worlds[world].labels.contains(&ce) {
         return true;
     }
@@ -768,7 +780,7 @@ pub(crate) fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce
         ClassExpr::Some { property, filler } => branch.edges.iter().any(|(from, role, to)| {
             *from == world
                 && role_subsumes(branch, &property, role)
-                && world_structurally_satisfies(branch, *to, filler)
+                && world_structurally_satisfies_inner(branch, *to, filler, seen)
         }),
         ClassExpr::HasSelf(property) => branch.edges.iter().any(|(from, role, to)| {
             *from == world
@@ -777,7 +789,7 @@ pub(crate) fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce
         }),
         ClassExpr::And(ops) => ops
             .iter()
-            .all(|op| world_structurally_satisfies(branch, world, *op)),
+            .all(|op| world_structurally_satisfies_inner(branch, world, *op, seen)),
         ClassExpr::Not(inner) => branch.worlds[world].negated.contains(&inner),
         ClassExpr::All { property, filler } => {
             let mut targets: Vec<usize> = branch
@@ -796,7 +808,7 @@ pub(crate) fn world_structurally_satisfies(branch: &Branch<'_>, world: usize, ce
             !targets.is_empty()
                 && targets
                     .iter()
-                    .all(|&target| world_structurally_satisfies(branch, target, filler))
+                    .all(|&target| world_structurally_satisfies_inner(branch, target, filler, seen))
         }
         _ => false,
     }
@@ -1344,10 +1356,18 @@ fn apply_domain_on_edge(branch: &mut Branch<'_>, from: usize, property: &RoleExp
 }
 
 fn is_symmetric_role(branch: &Branch<'_>, role: &RoleExpr) -> bool {
+    let mut seen = HashSet::new();
     branch
         .symmetric_roles
         .iter()
-        .any(|sym| role_subsumes(branch, sym, role))
+        .any(|sym| role_subsumes_inner(branch, sym, role, &mut seen))
+}
+
+fn role_declared_symmetric(branch: &Branch<'_>, role: &RoleExpr) -> bool {
+    branch
+        .symmetric_roles
+        .iter()
+        .any(|sym| role_exprs_equal(sym, role))
 }
 
 pub(crate) fn inverse_partner(branch: &Branch<'_>, role: &RoleExpr) -> Option<RoleExpr> {
@@ -1827,13 +1847,39 @@ pub(crate) fn role_subsumes(
     super_role: &RoleExpr,
     sub_role: &RoleExpr,
 ) -> bool {
+    let mut seen = std::collections::HashSet::new();
+    role_subsumes_inner(branch, super_role, sub_role, &mut seen)
+}
+
+fn role_subsumes_key(super_role: &RoleExpr, sub_role: &RoleExpr) -> (u8, u32, u8, u32) {
+    fn enc(role: &RoleExpr) -> (u8, u32) {
+        match role {
+            RoleExpr::Atomic(id) => (0, id.0),
+            RoleExpr::Inverse(id) => (1, id.0),
+        }
+    }
+    let (a, b) = enc(super_role);
+    let (c, d) = enc(sub_role);
+    (a, b, c, d)
+}
+
+fn role_subsumes_inner(
+    branch: &Branch<'_>,
+    super_role: &RoleExpr,
+    sub_role: &RoleExpr,
+    seen: &mut std::collections::HashSet<(u8, u32, u8, u32)>,
+) -> bool {
+    if !seen.insert(role_subsumes_key(super_role, sub_role)) {
+        return false;
+    }
     if role_equivalent(branch, super_role, sub_role) {
         return true;
     }
     if branch.role_chains.iter().any(|(chain, sup)| {
         chain.len() == 1
             && role_exprs_equal(&chain[0], sub_role)
-            && (role_exprs_equal(sup, super_role) || role_subsumes(branch, super_role, sup))
+            && (role_exprs_equal(sup, super_role)
+                || role_subsumes_inner(branch, super_role, sup, seen))
     }) {
         return true;
     }
@@ -1848,25 +1894,43 @@ pub(crate) fn role_subsumes(
                 .is_some_and(|supers| supers.contains(sup))
         }
         (RoleExpr::Inverse(is), RoleExpr::Inverse(it)) => {
-            role_subsumes(branch, &RoleExpr::Atomic(*it), &RoleExpr::Atomic(*is))
+            role_subsumes_inner(branch, &RoleExpr::Atomic(*it), &RoleExpr::Atomic(*is), seen)
         }
         (RoleExpr::Atomic(sup), RoleExpr::Inverse(sub_id)) => {
             if role_equivalent(branch, super_role, sub_role) {
                 return true;
             }
-            branch.role_chains.iter().any(|(chain, chain_sup)| {
-                chain.len() == 1
-                    && matches!(&chain[0], RoleExpr::Atomic(a) if *a == *sub_id)
-                    && matches!(chain_sup, RoleExpr::Inverse(inv_sup) if *inv_sup == *sup)
-            })
+            atomic_subsumes_inverse_role(branch, *sub_id, *sup)
+                || branch.role_chains.iter().any(|(chain, chain_sup)| {
+                    chain.len() == 1
+                        && matches!(&chain[0], RoleExpr::Atomic(a) if *a == *sub_id)
+                        && matches!(chain_sup, RoleExpr::Inverse(inv_sup) if *inv_sup == *sup)
+                })
         }
         (RoleExpr::Inverse(sub_id), RoleExpr::Atomic(sup)) => {
             if role_equivalent(branch, super_role, sub_role) {
                 return true;
             }
-            role_subsumes(branch, &RoleExpr::Atomic(*sup), &RoleExpr::Inverse(*sub_id))
+            atomic_subsumes_inverse_role(branch, *sub_id, *sup)
         }
     }
+}
+
+/// Whether atomic role `sub` is subsumed by `ObjectInverseOf(sup)` (`sub ⊑ inv(sup)`).
+fn atomic_subsumes_inverse_role(branch: &Branch<'_>, sub: EntityId, sup: EntityId) -> bool {
+    if let Some(inv_sup) = branch.role_inverses.get(&sup) {
+        return branch
+            .role_hierarchy
+            .get(&sub)
+            .is_some_and(|supers| supers.contains(inv_sup));
+    }
+    if role_declared_symmetric(branch, &RoleExpr::Atomic(sup)) {
+        return branch
+            .role_hierarchy
+            .get(&sub)
+            .is_some_and(|supers| supers.contains(&sup));
+    }
+    false
 }
 
 pub(crate) fn role_exprs_equal(left: &RoleExpr, right: &RoleExpr) -> bool {
@@ -1894,7 +1958,7 @@ pub(crate) fn role_equivalent(branch: &Branch<'_>, left: &RoleExpr, right: &Role
     match (left, right) {
         (RoleExpr::Atomic(prop), RoleExpr::Inverse(inv))
         | (RoleExpr::Inverse(inv), RoleExpr::Atomic(prop)) => {
-            if prop == inv && is_symmetric_role(branch, &RoleExpr::Atomic(*prop)) {
+            if prop == inv && role_declared_symmetric(branch, &RoleExpr::Atomic(*prop)) {
                 return true;
             }
             branch

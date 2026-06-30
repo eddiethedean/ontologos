@@ -76,16 +76,20 @@ impl Taxonomy {
             return;
         }
         let edge_count = edges.len();
-        let mut direct_supers: std::collections::HashMap<EntityId, std::collections::HashSet<EntityId>> =
-            std::collections::HashMap::new();
+        let mut direct_supers: std::collections::HashMap<
+            EntityId,
+            std::collections::HashSet<EntityId>,
+        > = std::collections::HashMap::new();
         for (sub, sup) in &edges {
             direct_supers.entry(*sub).or_default().insert(*sup);
         }
         let mut reduced = Vec::with_capacity(edge_count);
         for (sub, sup) in edges {
-            let redundant = direct_supers
-                .get(&sub)
-                .is_some_and(|supers| supers.iter().any(|mid| *mid != sup && self.is_subsumed(*mid, sup)));
+            let redundant = direct_supers.get(&sub).is_some_and(|supers| {
+                supers
+                    .iter()
+                    .any(|mid| *mid != sup && self.is_subsumed(*mid, sup))
+            });
             if !redundant {
                 reduced.push((sub, sup));
             }

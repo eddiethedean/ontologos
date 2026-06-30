@@ -1,9 +1,10 @@
 //! HermiT validated blocking checker + validator (internal test port).
+#![allow(dead_code)]
 
 use std::collections::HashSet;
 
 use super::dl_clause_eval::DlAtom;
-use super::extension_manager::{ExtensionManagerRef, Node, NodeId, Tableau};
+use super::extension_manager::{ExtensionManagerRef, Node, NodeId};
 use super::ni_rules::AnnotatedEquality;
 
 /// DL clause indexed for blocking validation.
@@ -128,11 +129,7 @@ impl BlockingValidator {
         let mut out = Vec::new();
         for role in &clause.x_to_y_roles {
             for succ in ext.role_successors(role, x) {
-                if clause
-                    .y_concepts
-                    .iter()
-                    .all(|c| ext.has_concept(c, &succ))
-                {
+                if clause.y_concepts.iter().all(|c| ext.has_concept(c, &succ)) {
                     out.push(succ);
                 }
             }
@@ -199,7 +196,7 @@ impl BlockingStrategy {
         }
     }
 
-    fn can_be_blocked(&self, node: &Node, ext: &ExtensionManagerRef) -> bool {
+    fn can_be_blocked(&self, node: &Node, _ext: &ExtensionManagerRef) -> bool {
         node.is_tree_node() && node.parent_id().is_some()
     }
 
@@ -258,7 +255,11 @@ pub fn clause_info_from_atoms(head: &[DlAtom], body: &[DlAtom]) -> DlClauseInfo 
     for atom in body {
         match atom {
             DlAtom::Concept(c, super::dl_clause_eval::VarSlot::X) => x_concepts.push(*c),
-            DlAtom::Role(r, super::dl_clause_eval::VarSlot::X, super::dl_clause_eval::VarSlot::Y) => {
+            DlAtom::Role(
+                r,
+                super::dl_clause_eval::VarSlot::X,
+                super::dl_clause_eval::VarSlot::Y,
+            ) => {
                 x_to_y_roles.push(*r);
             }
             DlAtom::Concept(c, super::dl_clause_eval::VarSlot::Y) => y_concepts.push(*c),
@@ -296,7 +297,7 @@ pub struct AtLeastConcept {
 
 /// Known at-least concepts used in blocking tests.
 pub mod blocking_concepts {
-    use super::{AtLeastConcept, RoleRef};
+    use super::RoleRef;
     use crate::tableau::extension_manager::DlPredicate;
 
     fn at_least(n: u32, role: RoleRef, concept: &'static str) -> DlPredicate {

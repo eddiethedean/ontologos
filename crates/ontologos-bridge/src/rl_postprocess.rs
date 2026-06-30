@@ -1238,7 +1238,10 @@ mod tests {
         );
         let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
         let added = apply_inverse_subproperty_materialization(&mut ontology).expect("postprocess");
-        assert!(added >= 2, "expected inv(r3) ⊑ inv(r1) and inv(r2) ⊑ inv(r1) to materialize");
+        assert!(
+            added >= 2,
+            "expected inv(r3) ⊑ inv(r1) and inv(r2) ⊑ inv(r1) to materialize"
+        );
         let r1 = ontology.lookup_entity("file:/c/test.owl#r1").expect("r1");
         let r3 = ontology.lookup_entity("file:/c/test.owl#r3").expect("r3");
         assert!(ontology.direct_superproperties(r3).contains(&r1));

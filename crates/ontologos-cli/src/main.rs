@@ -206,7 +206,9 @@ fn parse_entailment_check(
     }
     if class_assertion {
         let individual = individual.ok_or_else(|| {
-            CliError::Core(ontologos_core::Error::Message("--individual required".into()))
+            CliError::Core(ontologos_core::Error::Message(
+                "--individual required".into(),
+            ))
         })?;
         let class = class.ok_or_else(|| {
             CliError::Core(ontologos_core::Error::Message("--class required".into()))
@@ -411,7 +413,8 @@ fn run() -> Result<(), CliError> {
             let reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .build(ontology)?;
-            let consistent = ontologos_facade::is_consistent(&reasoner).map_err(map_facade_error)?;
+            let consistent =
+                ontologos_facade::is_consistent(&reasoner).map_err(map_facade_error)?;
             match cli.format {
                 OutputFormat::Text => println!("consistent: {consistent}"),
                 OutputFormat::Json => emit_json(&ConsistentCliOutput {
@@ -433,12 +436,13 @@ fn run() -> Result<(), CliError> {
             let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            let check = parse_entailment_check(sub, sup, individual, class, subject, property, object)?;
+            let check =
+                parse_entailment_check(sub, sup, individual, class, subject, property, object)?;
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .build(ontology)?;
-            let entailed =
-                ontologos_facade::is_entailed_axiom(&mut reasoner, check.clone()).map_err(map_facade_error)?;
+            let entailed = ontologos_facade::is_entailed_axiom(&mut reasoner, check.clone())
+                .map_err(map_facade_error)?;
             match cli.format {
                 OutputFormat::Text => {
                     println!("entailed: {entailed}");
@@ -510,8 +514,9 @@ fn run() -> Result<(), CliError> {
             let reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .build(ontology)?;
-            let values = ontologos_facade::get_object_property_values(&reasoner, &subject, &property)
-                .map_err(map_facade_error)?;
+            let values =
+                ontologos_facade::get_object_property_values(&reasoner, &subject, &property)
+                    .map_err(map_facade_error)?;
             match cli.format {
                 OutputFormat::Text => {
                     println!("subject: {subject}");

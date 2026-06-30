@@ -3,8 +3,8 @@
 use std::collections::HashSet;
 
 use ontologos_alc::{
-    augment_for_role_classification, classify_object_property_on_augmented,
-    PreparedRoleSurrogateContext, DlOntology, TableauSeed,
+    augment_for_role_classification, classify_object_property_on_augmented, DlOntology,
+    PreparedRoleSurrogateContext, TableauSeed,
 };
 use ontologos_core::{Ontology, RoleExpr};
 
@@ -51,8 +51,14 @@ impl RolePropertyQueryContext {
 
 fn build_augmented_role_query(
     ontology: &Ontology,
-) -> Result<(DlOntology, std::collections::HashMap<RoleExpr, ontologos_core::EntityId>, TableauSeed), Error>
-{
+) -> Result<
+    (
+        DlOntology,
+        std::collections::HashMap<RoleExpr, ontologos_core::EntityId>,
+        TableauSeed,
+    ),
+    Error,
+> {
     let (augmented, role_map) = augment_for_role_classification(ontology).map_err(Error::Alc)?;
     let dl = DlOntology::from_ontology(&augmented).map_err(Error::Alc)?;
     let roles = RoleHierarchy::from_clauses(dl.clauses());
@@ -74,8 +80,7 @@ pub fn equivalent_object_property_expressions(
     ontology: &Ontology,
     property: &RoleExpr,
 ) -> Result<HashSet<RoleExpr>, Error> {
-    RolePropertyQueryContext::prepare(ontology)?
-        .equivalent_object_property_expressions(property)
+    RolePropertyQueryContext::prepare(ontology)?.equivalent_object_property_expressions(property)
 }
 
 /// OWL API `getSubObjectProperties`.
@@ -84,8 +89,7 @@ pub fn sub_object_property_expressions(
     property: &RoleExpr,
     direct: bool,
 ) -> Result<HashSet<RoleExpr>, Error> {
-    RolePropertyQueryContext::prepare(ontology)?
-        .sub_object_property_expressions(property, direct)
+    RolePropertyQueryContext::prepare(ontology)?.sub_object_property_expressions(property, direct)
 }
 
 /// OWL API `getInverseObjectProperties`.

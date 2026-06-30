@@ -10295,7 +10295,7 @@
     "consistent": null,
     "data_property_subsumptions": [],
     "datalog_queries": [],
-    "engine": "rdfs",
+    "engine": "dl",
     "expected_entailment": null,
     "fixture": null,
     "golden": null,

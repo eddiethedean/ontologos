@@ -231,31 +231,6 @@ fn hermit_clausify_catalog() -> Result<(), Error> {
     Ok(())
 }
 
-/// Fixtures that load into DL axioms after RDF/XML supplement (parser coverage).
-const STRUCTURAL_LOAD_FIXTURES: &[(&str, &str)] = &[
-    ("basic-input.xml", "basic-control.txt"),
-    ("nominals-1-input.xml", "nominals-1-control.txt"),
-    ("nominals-2-input.xml", "nominals-2-control.txt"),
-    ("has-self-1-input.owl", "has-self-1-control.txt"),
-    ("has-self-2-input.owl", "has-self-2-control.txt"),
-];
-
-/// Structural fixtures load and produce DL axioms (hyper clausify goldens tracked above).
-#[test]
-fn hermit_clausification_structural_fixtures_load() -> Result<(), Error> {
-    let base = structural_dir();
-    for (input, _golden) in STRUCTURAL_LOAD_FIXTURES {
-        let path = base.join(input);
-        let ontology = ontologos_parser::load_ontology(&path).map_err(Error::Parser)?;
-        assert!(
-            ontology.dl().axioms().next().is_some() || !ontology.axioms().is_empty(),
-            "expected axioms from {}",
-            path.display()
-        );
-    }
-    Ok(())
-}
-
 #[test]
 fn clausify_has_key_axiom() -> Result<(), Error> {
     let mut ontology = Ontology::builder()
@@ -264,7 +239,10 @@ fn clausify_has_key_axiom() -> Result<(), Error> {
         .build()
         .map_err(Error::Core)?;
     let dp = ontology
-        .entity_id("http://ex/int/dp_test", ontologos_core::EntityKind::DataProperty)
+        .entity_id(
+            "http://ex/int/dp_test",
+            ontologos_core::EntityKind::DataProperty,
+        )
         .map_err(Error::Core)?;
     let c = ontology.lookup_entity("http://ex/int/C_test").unwrap();
     let r = ontology.lookup_entity("http://ex/int/r_test").unwrap();

@@ -13,10 +13,18 @@ fn pizza_defined_class_enrichment_adds_cheesey_subsumptions() {
     let ontology = load_ontology(&path).expect("load pizza");
     let ns = "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#";
     let american = ontology.lookup_entity(&format!("{ns}American")).unwrap();
-    let cheesey = ontology.lookup_entity(&format!("{ns}CheeseyPizza")).unwrap();
-    let mozzarella = ontology.lookup_entity(&format!("{ns}MozzarellaTopping")).unwrap();
-    let cheese = ontology.lookup_entity(&format!("{ns}CheeseTopping")).unwrap();
-    let veg = ontology.lookup_entity(&format!("{ns}VegetarianTopping")).unwrap();
+    let cheesey = ontology
+        .lookup_entity(&format!("{ns}CheeseyPizza"))
+        .unwrap();
+    let mozzarella = ontology
+        .lookup_entity(&format!("{ns}MozzarellaTopping"))
+        .unwrap();
+    let cheese = ontology
+        .lookup_entity(&format!("{ns}CheeseTopping"))
+        .unwrap();
+    let veg = ontology
+        .lookup_entity(&format!("{ns}VegetarianTopping"))
+        .unwrap();
 
     let taxonomy = classify(&ontology).expect("classify");
     eprintln!("count={}", taxonomy.subsumption_count());

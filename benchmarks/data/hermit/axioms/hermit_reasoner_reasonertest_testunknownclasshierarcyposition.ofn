@@ -4,5 +4,5 @@ Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
 Ontology(<file:/c/test.owl#>
-Declaration( Class( :A ) )Declaration( Class( :B ) )Declaration( Class( :C ) )Declaration( Class( :D ) )Declaration( Class( :E ) )Declaration( Class( :F ) )SubClassOf( :A :B )SubClassOf( :A :C )SubClassOf( :C :E )SubClassOf( :B :E )SubClassOf( :B :D )SubClassOf( :F owl:Thing )SubClassOf( :E ObjectComplementOf(:F) )SubClassOf( :B ObjectComplementOf(:C) )
+Declaration( Class( :A ) )Declaration( Class( :D ) )Declaration( NamedIndividual( :ind ) )Declaration( NamedIndividual( :i ) )SubClassOf( owl:Thing ObjectOneOf( :ind ) )ClassAssertion(:A :i)
 )

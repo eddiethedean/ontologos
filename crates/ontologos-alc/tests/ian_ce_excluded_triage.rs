@@ -75,75 +75,46 @@ fn check(ofn: &str, ce: &str, expected: bool) {
 }
 
 #[test]
-#[ignore = "role_subsumes soundness fix: CE sat for inverse universals needs follow-up"]
 fn iant6_unsat_regression() {
     let ce = "ObjectIntersectionOf(ObjectComplementOf(:c) ObjectSomeValuesFrom(ObjectInverseOf(:f) :d) ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectSomeValuesFrom(ObjectInverseOf(:f) :d)))";
-    check(
-        "hermit_reasoner_reasonertest_testiant6.ofn",
-        ce,
-        false,
-    );
+    check("hermit_reasoner_reasonertest_testiant6.ofn", ce, false);
 }
 
 #[test]
 fn iant7c_unsat_regression() {
     let ce = "ObjectIntersectionOf(:p1 ObjectSomeValuesFrom(:r ObjectSomeValuesFrom(:r ObjectIntersectionOf(:p1 ObjectAllValuesFrom(ObjectInverseOf(:r) ObjectComplementOf(:p1))))) ObjectSomeValuesFrom(ObjectInverseOf(:f) :p1))";
-    check(
-        "hermit_reasoner_reasonertest_testiant7c.ofn",
-        ce,
-        false,
-    );
+    check("hermit_reasoner_reasonertest_testiant7c.ofn", ce, false);
 }
 
 #[test]
 fn ianbug1b_unsat() {
     let ce = "ObjectIntersectionOf(ObjectComplementOf(:c) :a ObjectComplementOf(:b) :d)";
-    check(
-        "hermit_reasoner_reasonertest_testianbug1b.ofn",
-        ce,
-        false,
-    );
+    check("hermit_reasoner_reasonertest_testianbug1b.ofn", ce, false);
 }
 
 // IanT9 promoted to conformance; kept here as regression guard.
 #[test]
 fn iant9_unsat_regression() {
     let ce = "ObjectIntersectionOf(:Infinite-Tree-Root ObjectAllValuesFrom(:descendant ObjectSomeValuesFrom(ObjectInverseOf(:successor) :root)))";
-    check(
-        "hermit_reasoner_reasonertest_testiant9.ofn",
-        ce,
-        false,
-    );
+    check("hermit_reasoner_reasonertest_testiant9.ofn", ce, false);
 }
 
 #[test]
 fn iant11_unsat_regression() {
     let ce = "ObjectIntersectionOf(ObjectComplementOf(:p) ObjectSomeValuesFrom(:f ObjectIntersectionOf(ObjectAllValuesFrom(ObjectInverseOf(:s) :p) ObjectAllValuesFrom(ObjectInverseOf(:f) ObjectSomeValuesFrom(:s :p)))) ObjectSomeValuesFrom(:f1 ObjectIntersectionOf(ObjectAllValuesFrom(ObjectInverseOf(:s) :p) ObjectAllValuesFrom(ObjectInverseOf(:f1) ObjectSomeValuesFrom(:s :p)))))";
-    check(
-        "hermit_reasoner_reasonertest_testiant11.ofn",
-        ce,
-        false,
-    );
+    check("hermit_reasoner_reasonertest_testiant11.ofn", ce, false);
 }
 
 #[test]
 fn iant13_unsat_regression() {
     let ce = "ObjectIntersectionOf(:a2 ObjectSomeValuesFrom(:s ObjectAllValuesFrom(ObjectInverseOf(:s) ObjectAllValuesFrom(:r :c))))";
-    check(
-        "hermit_reasoner_reasonertest_testiant13.ofn",
-        ce,
-        false,
-    );
+    check("hermit_reasoner_reasonertest_testiant13.ofn", ce, false);
 }
 
 #[test]
 fn ianfact1_unsat_regression() {
     let ce = "ObjectUnionOf(ObjectIntersectionOf(:a :b) ObjectIntersectionOf(:a :c) ObjectIntersectionOf(:b :c))";
-    check(
-        "hermit_reasoner_reasonertest_testianfact1.ofn",
-        ce,
-        false,
-    );
+    check("hermit_reasoner_reasonertest_testianfact1.ofn", ce, false);
 }
 
 fn class_sat(ofn: &str, local_name: &str) -> bool {
@@ -159,11 +130,23 @@ fn class_sat(ofn: &str, local_name: &str) -> bool {
 #[test]
 fn ian_recursive_definition_class_sat() {
     for (ofn, n) in [
-        ("hermit_reasoner_reasonertest_testianrecursivedefinitiontest1.ofn", 1),
-        ("hermit_reasoner_reasonertest_testianrecursivedefinitiontest2.ofn", 2),
-        ("hermit_reasoner_reasonertest_testianrecursivedefinitiontest3.ofn", 3),
+        (
+            "hermit_reasoner_reasonertest_testianrecursivedefinitiontest1.ofn",
+            1,
+        ),
+        (
+            "hermit_reasoner_reasonertest_testianrecursivedefinitiontest2.ofn",
+            2,
+        ),
+        (
+            "hermit_reasoner_reasonertest_testianrecursivedefinitiontest3.ofn",
+            3,
+        ),
     ] {
         let sat = class_sat(ofn, "A");
-        assert!(sat, "recursive definition test {n} :A should be satisfiable");
+        assert!(
+            sat,
+            "recursive definition test {n} :A should be satisfiable"
+        );
     }
 }

@@ -99,10 +99,7 @@ impl<T: Clone + Eq> TupleTable<T> {
         assert!(object_index < self.arity);
         let page = tuple_index as usize / PAGE_SIZE;
         let idx = (tuple_index as usize % PAGE_SIZE) * self.arity + object_index;
-        self.pages[page]
-            .as_ref()
-            .expect("page")
-            .objects[idx]
+        self.pages[page].as_ref().expect("page").objects[idx]
             .clone()
             .expect("tuple object")
     }
@@ -130,6 +127,7 @@ impl<T: Clone + Eq> TupleTable<T> {
 }
 
 struct Page<T: Clone + Eq> {
+    #[allow(dead_code)]
     arity: usize,
     objects: Vec<Option<T>>,
 }
@@ -219,9 +217,14 @@ impl<T: Hash + Eq + Clone> TupleTableFullIndex<T> {
         let entry_index = bucket_index(hash_code, self.buckets.len());
         let mut entry = self.buckets[entry_index] - BUCKET_OFFSET;
         while entry != -1 {
-            if hash_code == self.entry_manager.get_entry_component(entry, ENTRY_HASH_CODE) {
-                let tuple_index =
-                    self.entry_manager.get_entry_component(entry, ENTRY_TUPLE_INDEX);
+            if hash_code
+                == self
+                    .entry_manager
+                    .get_entry_component(entry, ENTRY_HASH_CODE)
+            {
+                let tuple_index = self
+                    .entry_manager
+                    .get_entry_component(entry, ENTRY_TUPLE_INDEX);
                 if self
                     .tuple_table
                     .tuple_equals(tuple, tuple_index, self.indexed_arity)
@@ -232,8 +235,11 @@ impl<T: Hash + Eq + Clone> TupleTableFullIndex<T> {
             entry = self.entry_manager.get_entry_component(entry, ENTRY_NEXT);
         }
         entry = self.entry_manager.new_entry();
-        self.entry_manager
-            .set_entry_component(entry, ENTRY_NEXT, self.buckets[entry_index] - BUCKET_OFFSET);
+        self.entry_manager.set_entry_component(
+            entry,
+            ENTRY_NEXT,
+            self.buckets[entry_index] - BUCKET_OFFSET,
+        );
         self.entry_manager
             .set_entry_component(entry, ENTRY_HASH_CODE, hash_code);
         self.entry_manager
@@ -253,9 +259,14 @@ impl<T: Hash + Eq + Clone> TupleTableFullIndex<T> {
         let entry_index = bucket_index(hash_code, self.buckets.len());
         let mut entry = self.buckets[entry_index] - BUCKET_OFFSET;
         while entry != -1 {
-            if hash_code == self.entry_manager.get_entry_component(entry, ENTRY_HASH_CODE) {
-                let tuple_index =
-                    self.entry_manager.get_entry_component(entry, ENTRY_TUPLE_INDEX);
+            if hash_code
+                == self
+                    .entry_manager
+                    .get_entry_component(entry, ENTRY_HASH_CODE)
+            {
+                let tuple_index = self
+                    .entry_manager
+                    .get_entry_component(entry, ENTRY_TUPLE_INDEX);
                 if self
                     .tuple_table
                     .tuple_equals(tuple, tuple_index, self.indexed_arity)
@@ -281,8 +292,14 @@ impl<T: Hash + Eq + Clone> TupleTableFullIndex<T> {
         let mut entry = self.buckets[entry_index] - BUCKET_OFFSET;
         while entry != -1 {
             let next_entry = self.entry_manager.get_entry_component(entry, ENTRY_NEXT);
-            if hash_code == self.entry_manager.get_entry_component(entry, ENTRY_HASH_CODE)
-                && tuple_index == self.entry_manager.get_entry_component(entry, ENTRY_TUPLE_INDEX)
+            if hash_code
+                == self
+                    .entry_manager
+                    .get_entry_component(entry, ENTRY_HASH_CODE)
+                && tuple_index
+                    == self
+                        .entry_manager
+                        .get_entry_component(entry, ENTRY_TUPLE_INDEX)
             {
                 if last_entry == -1 {
                     self.buckets[entry_index] = next_entry + BUCKET_OFFSET;
@@ -315,7 +332,9 @@ impl<T: Hash + Eq + Clone> TupleTableFullIndex<T> {
             let mut entry = self.buckets[bucket] - BUCKET_OFFSET;
             while entry != -1 {
                 let next_entry = self.entry_manager.get_entry_component(entry, ENTRY_NEXT);
-                let hash_code = self.entry_manager.get_entry_component(entry, ENTRY_HASH_CODE);
+                let hash_code = self
+                    .entry_manager
+                    .get_entry_component(entry, ENTRY_HASH_CODE);
                 let new_bucket_index = bucket_index(hash_code, new_buckets.len());
                 self.entry_manager.set_entry_component(
                     entry,
@@ -420,8 +439,7 @@ mod hermit_ports {
         }
 
         fn get(&self, a: &str, b: &str) -> i32 {
-            self.index
-                .get_tuple_index(&[a.to_string(), b.to_string()])
+            self.index.get_tuple_index(&[a.to_string(), b.to_string()])
         }
     }
 

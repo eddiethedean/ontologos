@@ -80,7 +80,12 @@ impl DescriptionGraph {
         edges: Vec<DescriptionGraphEdge>,
         start_concepts: Vec<&'static str>,
     ) -> Self {
-        Self::new(DescriptionGraphId(id), vertex_concepts, edges, start_concepts)
+        Self::new(
+            DescriptionGraphId(id),
+            vertex_concepts,
+            edges,
+            start_concepts,
+        )
     }
 
     /// HermiT test helper `E(role, from, to)`.

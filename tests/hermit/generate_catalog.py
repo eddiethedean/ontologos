@@ -552,6 +552,7 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
         ],
     },
     "reasoner.ReasonerTest.testUnknownClassHierarcyPosition": {
+        "engine": "dl",
         "subsumptions": [{"sub": ":D", "sup": ":A", "expected": True}],
     },
     "reasoner.ReasonerTest.testDatatypeDefEntailment": {

@@ -79,7 +79,10 @@ fn try_has_value(
     };
     let sig = format!(
         "hasvalue:{}:{}",
-        entity_canonical_iri(ontology, entity_from_ce(ontology, sub).unwrap_or(EntityId(0))),
+        entity_canonical_iri(
+            ontology,
+            entity_from_ce(ontology, sub).unwrap_or(EntityId(0))
+        ),
         entity_canonical_iri(ontology, individual)
     );
     if ctx.processed_signatures.contains(&sig) {
@@ -88,7 +91,13 @@ fn try_has_value(
     }
 
     let oneof_key = vec![entity_canonical_iri(ontology, individual)];
-    emit_nominal_facts(ontology, ctx, &oneof_key, std::slice::from_ref(&individual), push_fact);
+    emit_nominal_facts(
+        ontology,
+        ctx,
+        &oneof_key,
+        std::slice::from_ref(&individual),
+        push_fact,
+    );
     let role = role_atom(
         ontology,
         &property,

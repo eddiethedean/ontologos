@@ -160,5 +160,9 @@ fn hermit_normalization_smoke_catalog() {
             "{id}: expected clausify output"
         );
     }
-    assert_eq!(NORMALIZATION_SMOKE.len(), 24, "HermiT NormalizationTest count");
+    assert_eq!(
+        NORMALIZATION_SMOKE.len(),
+        24,
+        "HermiT NormalizationTest count"
+    );
 }

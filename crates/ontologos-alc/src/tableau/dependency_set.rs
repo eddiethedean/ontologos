@@ -1,4 +1,5 @@
 //! HermiT-style branching-point dependency sets (persistent trie + interning).
+#![allow(dead_code)]
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -89,6 +90,12 @@ struct EntryKey {
     branching_point: i32,
 }
 
+impl Default for DependencySetFactory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DependencySetFactory {
     /// Create a new factory with a shared empty set.
     #[must_use]
@@ -155,10 +162,7 @@ impl DependencySetFactory {
     ) -> Rc<PermanentDependencySet> {
         let permanent = self.get_permanent(dependency_set);
         if branching_point == permanent.branching_point {
-            return permanent
-                .rest
-                .clone()
-                .unwrap_or_else(|| self.empty_set());
+            return permanent.rest.clone().unwrap_or_else(|| self.empty_set());
         }
         if branching_point > permanent.branching_point {
             return permanent;
@@ -177,10 +181,7 @@ impl DependencySetFactory {
         if branching_point != rest.branching_point {
             return self.get_permanent(dependency_set);
         }
-        let mut result = rest
-            .rest
-            .clone()
-            .unwrap_or_else(|| self.empty_set());
+        let mut result = rest.rest.clone().unwrap_or_else(|| self.empty_set());
         for &bp in merge.iter().rev() {
             result = self.get_dependency_set(Some(result), bp);
         }
@@ -203,34 +204,14 @@ impl DependencySetFactory {
         while !Rc::ptr_eq(&permanent_set1, &permanent_set2) {
             if permanent_set1.branching_point > permanent_set2.branching_point {
                 merge.push(permanent_set1.branching_point);
-                permanent_set1 = Rc::clone(
-                    permanent_set1
-                        .rest
-                        .as_ref()
-                        .unwrap_or(&self.empty_set),
-                );
+                permanent_set1 = Rc::clone(permanent_set1.rest.as_ref().unwrap_or(&self.empty_set));
             } else if permanent_set1.branching_point < permanent_set2.branching_point {
                 merge.push(permanent_set2.branching_point);
-                permanent_set2 = Rc::clone(
-                    permanent_set2
-                        .rest
-                        .as_ref()
-                        .unwrap_or(&self.empty_set),
-                );
+                permanent_set2 = Rc::clone(permanent_set2.rest.as_ref().unwrap_or(&self.empty_set));
             } else {
                 merge.push(permanent_set1.branching_point);
-                permanent_set1 = Rc::clone(
-                    permanent_set1
-                        .rest
-                        .as_ref()
-                        .unwrap_or(&self.empty_set),
-                );
-                permanent_set2 = Rc::clone(
-                    permanent_set2
-                        .rest
-                        .as_ref()
-                        .unwrap_or(&self.empty_set),
-                );
+                permanent_set1 = Rc::clone(permanent_set1.rest.as_ref().unwrap_or(&self.empty_set));
+                permanent_set2 = Rc::clone(permanent_set2.rest.as_ref().unwrap_or(&self.empty_set));
             }
         }
         let mut result = permanent_set1;
@@ -302,15 +283,12 @@ impl DependencySetFactory {
             if has_equals {
                 for set in merge_sets.iter_mut() {
                     if set.branching_point == maximal {
-                        *set = Rc::clone(
-                            set.rest.as_ref().unwrap_or(&self.empty_set),
-                        );
+                        *set = Rc::clone(set.rest.as_ref().unwrap_or(&self.empty_set));
                     }
                 }
             } else {
                 let set = Rc::clone(&merge_sets[maximal_index]);
-                merge_sets[maximal_index] =
-                    Rc::clone(set.rest.as_ref().unwrap_or(&self.empty_set));
+                merge_sets[maximal_index] = Rc::clone(set.rest.as_ref().unwrap_or(&self.empty_set));
             }
         }
         let mut result = Rc::clone(&merge_sets[0]);
@@ -325,10 +303,7 @@ impl DependencySetFactory {
         rest: Option<Rc<PermanentDependencySet>>,
         branching_point: i32,
     ) -> Rc<PermanentDependencySet> {
-        let rest_ptr = rest
-            .as_ref()
-            .map(|r| Rc::as_ptr(r) as usize)
-            .unwrap_or(0);
+        let rest_ptr = rest.as_ref().map(|r| Rc::as_ptr(r) as usize).unwrap_or(0);
         let key = EntryKey {
             rest_ptr,
             branching_point,
@@ -341,9 +316,7 @@ impl DependencySetFactory {
             branching_point,
             next_entry: RefCell::new(None),
         });
-        self.entries
-            .borrow_mut()
-            .insert(key, Rc::clone(&new_set));
+        self.entries.borrow_mut().insert(key, Rc::clone(&new_set));
         new_set
     }
 }

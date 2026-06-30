@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::{BufReader, Read, Seek, SeekFrom};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::Path;
+use std::sync::Mutex;
 
 use horned_owl::curie::PrefixMapping;
 use horned_owl::error::HornedError;
@@ -15,6 +16,8 @@ use oxrdfio::RdfFormat;
 
 use crate::limits::ParseLimits;
 use crate::{Error, Format, Result};
+
+static HORNED_OWL_READ_LOCK: Mutex<()> = Mutex::new(());
 
 /// Read a horned-owl ontology from disk after format detection and size checks.
 ///
@@ -40,6 +43,9 @@ pub fn read_horned_owl_from_reader<R: Read>(
     format: Format,
     _limits: ParseLimits,
 ) -> Result<SetOntology<RcStr>> {
+    let _guard = HORNED_OWL_READ_LOCK
+        .lock()
+        .map_err(|e| Error::Parse(format!("horned-owl read lock poisoned: {e}")))?;
     let config = parser_config(format);
 
     let (ontology, _prefixes) = match format {

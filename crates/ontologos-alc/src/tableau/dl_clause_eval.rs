@@ -58,7 +58,7 @@ impl DlClauseEvaluator {
             DlAtom::Role(r, VarSlot::Z, VarSlot::W) => r,
             _ => return,
         };
-        for (x, y) in ext.role_pairs("R") {
+        for (_x, y) in ext.role_pairs("R") {
             for (y2, z) in ext.role_pairs("S") {
                 if y != y2 {
                     continue;

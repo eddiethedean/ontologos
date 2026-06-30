@@ -2,6 +2,7 @@
 //!
 //! Minimal port of `ExtensionManager`, `MergingManager`, and `ClashManager` sufficient
 //! for `MergeTest.testMergeAndBacktrack`.
+#![allow(private_interfaces)]
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -9,8 +10,8 @@ use std::rc::{Rc, Weak};
 
 use super::blocking_validator::RoleRef;
 use super::dependency_set::{DependencySetFactory, PermanentDependencySet};
-use super::graph_merge;
 use super::description_graph::DescriptionGraphId;
+use super::graph_merge;
 use super::ni_rules::NominalIntroductionManager;
 use super::tuple_index::TupleIndex;
 use super::tuple_table::TupleTable;
@@ -203,11 +204,7 @@ impl Node {
     #[must_use]
     pub fn blocker(&self, ext: &ExtensionManagerRef) -> Option<Node> {
         let _ = ext;
-        self.inner
-            .borrow()
-            .blocking
-            .blocker
-            .map(|id| ext.node(id))
+        self.inner.borrow().blocking.blocker.map(|id| ext.node(id))
     }
 
     pub(crate) fn block_violates_parent_constraints(&self) -> bool {
@@ -286,7 +283,9 @@ pub(crate) struct NodeStore {
 
 impl NodeStore {
     fn get(&self, id: NodeId) -> Option<NodeInnerSnapshot> {
-        self.nodes.get(id.0).map(|n| NodeInnerSnapshot::from(&*n.borrow()))
+        self.nodes
+            .get(id.0)
+            .map(|n| NodeInnerSnapshot::from(&n.borrow()))
     }
 
     fn node(&self, id: NodeId) -> Node {
@@ -459,7 +458,11 @@ pub struct ExtensionTable {
 }
 
 impl ExtensionTable {
-    fn new(arity: usize, indexing_sequences: &[Vec<usize>], nodes: &Rc<RefCell<NodeStore>>) -> Self {
+    fn new(
+        arity: usize,
+        indexing_sequences: &[Vec<usize>],
+        nodes: &Rc<RefCell<NodeStore>>,
+    ) -> Self {
         Self {
             arity,
             tuple_table: TupleTable::new(arity),
@@ -491,18 +494,18 @@ impl ExtensionTable {
                 let (DlObject::Node(from), DlObject::Node(to)) = (&tuple[1], &tuple[2]) else {
                     return false;
                 };
-                store.get(*from).is_some_and(|n| n.state == NodeState::Active)
+                store
+                    .get(*from)
+                    .is_some_and(|n| n.state == NodeState::Active)
                     && store.get(*to).is_some_and(|n| n.state == NodeState::Active)
             }
-            4 => tuple[1..]
-                .iter()
-                .all(|obj| {
-                    if let DlObject::Node(id) = obj {
-                        store.get(*id).is_some_and(|n| n.state == NodeState::Active)
-                    } else {
-                        true
-                    }
-                }),
+            4 => tuple[1..].iter().all(|obj| {
+                if let DlObject::Node(id) = obj {
+                    store.get(*id).is_some_and(|n| n.state == NodeState::Active)
+                } else {
+                    true
+                }
+            }),
             _ => true,
         }
     }
@@ -615,6 +618,7 @@ struct TableauState {
     last_merged_or_pruned: Option<NodeId>,
     last_tableau_node: Option<NodeId>,
     next_node_id: usize,
+    #[allow(dead_code)]
     last_backtrack_level: Option<usize>,
 }
 
@@ -628,11 +632,7 @@ impl TableauState {
                 &[vec![0, 1, 2], vec![1, 2, 0], vec![2, 0, 1]],
                 &nodes,
             ),
-            quaternary_table: ExtensionTable::new(
-                4,
-                &[vec![0, 1, 2, 3], vec![1, 2, 3, 0]],
-                &nodes,
-            ),
+            quaternary_table: ExtensionTable::new(4, &[vec![0, 1, 2, 3], vec![1, 2, 3, 0]], &nodes),
             nodes,
             dependency_factory: DependencySetFactory::new(),
             clash_dependency: None,
@@ -675,7 +675,12 @@ impl TableauState {
         });
     }
 
-    fn clash_on_add(&mut self, table: TableKind, tuple: &[DlObject], dependency: Rc<PermanentDependencySet>) {
+    fn clash_on_add(
+        &mut self,
+        table: TableKind,
+        tuple: &[DlObject],
+        dependency: Rc<PermanentDependencySet>,
+    ) {
         let DlObject::Predicate(predicate) = &tuple[0] else {
             return;
         };
@@ -702,18 +707,14 @@ impl TableauState {
             TableKind::Ternary => &self.ternary_table,
         };
 
-        if matches!(predicate, DlPredicate::AtomicConcept(_)) && snapshot.negated_atomic_concepts > 0 {
-            let neg = predicate.negation_of().unwrap();
-            let neg_tuple = [DlObject::Predicate(neg), DlObject::Node(*node_id)];
-            if ext.contains_tuple(&neg_tuple) {
-                self.set_clash(dependency);
-            }
-        } else if matches!(predicate, DlPredicate::AtomicNegationConcept(_))
-            && snapshot.positive_atomic_concepts > 0
+        if (matches!(predicate, DlPredicate::AtomicConcept(_))
+            && snapshot.negated_atomic_concepts > 0)
+            || (matches!(predicate, DlPredicate::AtomicNegationConcept(_))
+                && snapshot.positive_atomic_concepts > 0)
         {
-            let pos = predicate.negation_of().unwrap();
-            let pos_tuple = [DlObject::Predicate(pos), DlObject::Node(*node_id)];
-            if ext.contains_tuple(&pos_tuple) {
+            let opposite = predicate.negation_of().unwrap();
+            let tuple = [DlObject::Predicate(opposite), DlObject::Node(*node_id)];
+            if ext.contains_tuple(&tuple) {
                 self.set_clash(dependency);
             }
         }
@@ -733,12 +734,9 @@ impl TableauState {
             self.adjust_concept_counts(node.id(), &predicate, 1);
         }
         let tuple = [DlObject::Predicate(predicate), DlObject::Node(node.id())];
-        let added = self.binary_table.add_tuple(
-            &tuple,
-            dependency.clone(),
-            is_core,
-            &mut |_, _| {},
-        );
+        let added =
+            self.binary_table
+                .add_tuple(&tuple, dependency.clone(), is_core, &mut |_, _| {});
         if added {
             self.clash_on_add(TableKind::Binary, &tuple, dependency);
         }
@@ -758,12 +756,9 @@ impl TableauState {
             DlObject::Node(node0.id()),
             DlObject::Node(node1.id()),
         ];
-        let added = self.ternary_table.add_tuple(
-            &tuple,
-            dependency.clone(),
-            is_core,
-            &mut |_, _| {},
-        );
+        let added =
+            self.ternary_table
+                .add_tuple(&tuple, dependency.clone(), is_core, &mut |_, _| {});
         if added {
             self.clash_on_add(TableKind::Ternary, &tuple, dependency);
         }
@@ -779,7 +774,8 @@ impl TableauState {
         if !node0.is_active() || !node1.is_active() || node0.id() == node1.id() {
             return false;
         }
-        let (merge_from, merge_into) = Self::pick_merge_direction(node0, node1, &self.nodes.borrow());
+        let (merge_from, merge_into) =
+            Self::pick_merge_direction(node0, node1, &self.nodes.borrow());
         self.prune_descendants(merge_from);
         self.copy_unary(merge_from, merge_into);
         self.copy_ternary_first(merge_from, merge_into);
@@ -808,10 +804,10 @@ impl TableauState {
         let a1 = node1.cluster_anchor();
         let parent0 = node0.parent();
         let parent1 = node1.parent();
-        let can0_into1 = parent0 == parent1
-            || Self::is_descendant_of_at_most_three(node0.id(), a1, store);
-        let can1_into0 = parent0 == parent1
-            || Self::is_descendant_of_at_most_three(node1.id(), a0, store);
+        let can0_into1 =
+            parent0 == parent1 || Self::is_descendant_of_at_most_three(node0.id(), a1, store);
+        let can1_into0 =
+            parent0 == parent1 || Self::is_descendant_of_at_most_three(node1.id(), a0, store);
         if can0_into1 && can1_into0 {
             if node0.positive_atomic_concepts() > node1.positive_atomic_concepts() {
                 (node1.id(), node0.id())
@@ -849,7 +845,11 @@ impl TableauState {
     }
 
     fn prune_descendants(&mut self, merge_from: NodeId) {
-        let mut cursor = self.nodes.borrow().get(merge_from).and_then(|n| n.next_tableau);
+        let mut cursor = self
+            .nodes
+            .borrow()
+            .get(merge_from)
+            .and_then(|n| n.next_tableau);
         while let Some(id) = cursor {
             let (should_prune, next) = {
                 let store = self.nodes.borrow();
@@ -873,9 +873,9 @@ impl TableauState {
 
     fn copy_unary(&mut self, merge_from: NodeId, merge_into: NodeId) {
         let to_copy: Vec<(DlPredicate, bool)> = {
-            let mut retrieval =
-                self.binary_table
-                    .create_retrieval(&[false, true], ExtensionView::Total);
+            let mut retrieval = self
+                .binary_table
+                .create_retrieval(&[false, true], ExtensionView::Total);
             retrieval.bindings_buffer()[1] = Some(DlObject::Node(merge_from));
             retrieval.open();
             let mut out = Vec::new();
@@ -898,9 +898,9 @@ impl TableauState {
 
     fn copy_ternary_first(&mut self, merge_from: NodeId, merge_into: NodeId) {
         let to_copy: Vec<(DlPredicate, NodeId, bool)> = {
-            let mut retrieval =
-                self.ternary_table
-                    .create_retrieval(&[false, true, false], ExtensionView::Total);
+            let mut retrieval = self
+                .ternary_table
+                .create_retrieval(&[false, true, false], ExtensionView::Total);
             retrieval.bindings_buffer()[1] = Some(DlObject::Node(merge_from));
             retrieval.open();
             let mut out = Vec::new();
@@ -942,9 +942,9 @@ impl TableauState {
 
     fn copy_ternary_second(&mut self, merge_from: NodeId, merge_into: NodeId) {
         let to_copy: Vec<(DlPredicate, NodeId, bool)> = {
-            let mut retrieval =
-                self.ternary_table
-                    .create_retrieval(&[false, false, true], ExtensionView::Total);
+            let mut retrieval = self
+                .ternary_table
+                .create_retrieval(&[false, false, true], ExtensionView::Total);
             retrieval.bindings_buffer()[2] = Some(DlObject::Node(merge_from));
             retrieval.open();
             let mut out = Vec::new();
@@ -1007,7 +1007,9 @@ impl TableauState {
         let Some(id) = self.last_merged_or_pruned else {
             return;
         };
-        let prev = self.nodes.borrow().nodes[id.0].borrow().previous_merged_or_pruned;
+        let prev = self.nodes.borrow().nodes[id.0]
+            .borrow()
+            .previous_merged_or_pruned;
         self.nodes.borrow_mut().with_mut(id, |node| {
             node.state = NodeState::Active;
             node.merged_into = None;
@@ -1118,7 +1120,7 @@ impl Tableau {
             .branching_snapshots
             .get(&level)
             .cloned()
-            .unwrap_or_else(|| BranchingPoint {
+            .unwrap_or(BranchingPoint {
                 level,
                 last_merged_or_pruned: None,
             });
@@ -1183,9 +1185,13 @@ impl Tableau {
         }
         self.backtrack_to(level - 1);
         let ni = self.ni_manager();
-        if ni.start_next_ni_choice(self.state.borrow().clash_dependency.clone().unwrap_or_else(
-            || self.empty_dependency_set(),
-        )) {
+        if ni.start_next_ni_choice(
+            self.state
+                .borrow()
+                .clash_dependency
+                .clone()
+                .unwrap_or_else(|| self.empty_dependency_set()),
+        ) {
             self.state.borrow_mut().clear_clash();
             return true;
         }
@@ -1275,7 +1281,9 @@ impl ExtensionManagerRef {
         node1: &Node,
         dependency: Rc<PermanentDependencySet>,
     ) -> bool {
-        self.state.borrow_mut().merge_nodes(node0, node1, dependency)
+        self.state
+            .borrow_mut()
+            .merge_nodes(node0, node1, dependency)
     }
 
     /// Node handle by id.
@@ -1301,7 +1309,8 @@ impl ExtensionManagerRef {
         retrieval.bindings_buffer()[1] = Some(DlObject::Node(canonical_id));
         retrieval.open();
         while !retrieval.after_last() {
-            if let DlObject::Predicate(DlPredicate::AtomicConcept(c)) = retrieval.tuple_buffer()[0] {
+            if let DlObject::Predicate(DlPredicate::AtomicConcept(c)) = retrieval.tuple_buffer()[0]
+            {
                 if c == concept {
                     return true;
                 }
@@ -1313,12 +1322,7 @@ impl ExtensionManagerRef {
 
     /// Whether a role assertion holds between active nodes.
     #[must_use]
-    pub fn contains_assertion(
-        &self,
-        role: &str,
-        from: &Node,
-        to: &Node,
-    ) -> bool {
+    pub fn contains_assertion(&self, role: &str, from: &Node, to: &Node) -> bool {
         let from_id = self.canonical(from).id();
         let to_id = self.canonical(to).id();
         let state = self.state.borrow();
@@ -1494,7 +1498,8 @@ impl ExtensionManagerRef {
         retrieval.open();
         let mut out = Vec::new();
         while !retrieval.after_last() {
-            if let DlObject::Predicate(DlPredicate::AtomicConcept(c)) = retrieval.tuple_buffer()[0] {
+            if let DlObject::Predicate(DlPredicate::AtomicConcept(c)) = retrieval.tuple_buffer()[0]
+            {
                 if retrieval.is_core() {
                     out.push(c);
                 }
@@ -1581,13 +1586,19 @@ pub mod test_helpers {
             let found = expected.iter().enumerate().any(|(i, exp)| {
                 !used[i]
                     && exp.len() == retrieval.tuple_buffer().len()
-                    && exp.iter().zip(retrieval.tuple_buffer()).all(|(a, b)| a == b)
+                    && exp
+                        .iter()
+                        .zip(retrieval.tuple_buffer())
+                        .all(|(a, b)| a == b)
             });
             assert!(found, "unexpected tuple {:?}", retrieval.tuple_buffer());
             for (i, exp) in expected.iter().enumerate() {
                 if !used[i]
                     && exp.len() == retrieval.tuple_buffer().len()
-                    && exp.iter().zip(retrieval.tuple_buffer()).all(|(a, b)| a == b)
+                    && exp
+                        .iter()
+                        .zip(retrieval.tuple_buffer())
+                        .all(|(a, b)| a == b)
                 {
                     used[i] = true;
                     break;

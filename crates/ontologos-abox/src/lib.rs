@@ -135,9 +135,9 @@ fn property_entails_assertion(ontology: &Ontology, asserted: EntityId, query: En
         return true;
     }
     if let Some(equiv) = ontology.equivalents_of(asserted) {
-        return equiv.iter().any(|&e| {
-            e == query || transitive_subproperty_of(ontology, e, query)
-        });
+        return equiv
+            .iter()
+            .any(|&e| e == query || transitive_subproperty_of(ontology, e, query));
     }
     false
 }

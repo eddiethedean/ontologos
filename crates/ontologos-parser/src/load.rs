@@ -1,6 +1,7 @@
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Component, Path, PathBuf};
+use std::sync::Mutex;
 
 use ontologos_core::{Axiom, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology};
 
@@ -17,6 +18,8 @@ const SUPPLEMENT_STANDARD_PREFIXES: &str = "\
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
 Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n";
+
+static ONTOLOGY_LOAD_LOCK: Mutex<()> = Mutex::new(());
 
 #[cfg(target_os = "linux")]
 const O_NOFOLLOW: i32 = 0o100_000;
@@ -64,6 +67,9 @@ pub fn load_ontology_with_limits_and_base(
     limits: ParseLimits,
     base: Option<&Path>,
 ) -> Result<Ontology> {
+    let _guard = ONTOLOGY_LOAD_LOCK
+        .lock()
+        .map_err(|e| Error::Parse(format!("ontology load lock poisoned: {e}")))?;
     load_ontology_with_limits_and_base_inner(path, limits, base, limits.merge_imports)
 }
 

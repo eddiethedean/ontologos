@@ -281,7 +281,9 @@ fn taxonomy_entails_class_assertion(
     if reasoner.profile() == Profile::Rl {
         let mut working = reasoner.ontology().clone();
         ontologos_abox::materialize_abox(&mut working)?;
-        return Ok(individual_entails_named_class(&working, individual, class, None));
+        return Ok(individual_entails_named_class(
+            &working, individual, class, None,
+        ));
     }
 
     let outcome = classify(reasoner)?;
@@ -426,10 +428,7 @@ pub fn get_object_property_values(
     let property = lookup_object_property(ontology, property_iri)?;
     let mut working = ontology.clone();
     let values = ontologos_abox::object_property_values(&mut working, subject, property)?;
-    values
-        .iter()
-        .map(|id| entity_iri(ontology, *id))
-        .collect()
+    values.iter().map(|id| entity_iri(ontology, *id)).collect()
 }
 
 /// OWL API `getSubObjectProperties` for a named property IRI.
@@ -492,7 +491,9 @@ fn index_sub_object_properties(
 
 fn lookup_class(ontology: &ontologos_core::Ontology, iri: &str) -> Result<EntityId> {
     let id = ontology.lookup_entity(iri).ok_or_else(|| {
-        Error::El(ontologos_el::Error::Profile(format!("unknown class IRI: {iri}")))
+        Error::El(ontologos_el::Error::Profile(format!(
+            "unknown class IRI: {iri}"
+        )))
     })?;
     if ontology.entity(id).ok().map(|r| r.kind) != Some(EntityKind::Class) {
         return Err(Error::El(ontologos_el::Error::Profile(format!(
@@ -504,7 +505,9 @@ fn lookup_class(ontology: &ontologos_core::Ontology, iri: &str) -> Result<Entity
 
 fn lookup_individual(ontology: &ontologos_core::Ontology, iri: &str) -> Result<EntityId> {
     let id = ontology.lookup_entity(iri).ok_or_else(|| {
-        Error::El(ontologos_el::Error::Profile(format!("unknown individual IRI: {iri}")))
+        Error::El(ontologos_el::Error::Profile(format!(
+            "unknown individual IRI: {iri}"
+        )))
     })?;
     if ontology.entity(id).ok().map(|r| r.kind) != Some(EntityKind::Individual) {
         return Err(Error::El(ontologos_el::Error::Profile(format!(
@@ -953,11 +956,11 @@ mod tests {
             .profile(Profile::El)
             .build(ontology)
             .unwrap();
-        let direct = super::get_sub_object_properties(&reasoner, "http://example.org/p", true)
-            .unwrap();
+        let direct =
+            super::get_sub_object_properties(&reasoner, "http://example.org/p", true).unwrap();
         assert_eq!(direct, vec!["http://example.org/q"]);
-        let all = super::get_sub_object_properties(&reasoner, "http://example.org/p", false)
-            .unwrap();
+        let all =
+            super::get_sub_object_properties(&reasoner, "http://example.org/p", false).unwrap();
         assert_eq!(all, vec!["http://example.org/q"]);
     }
 }

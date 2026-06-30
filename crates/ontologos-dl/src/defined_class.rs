@@ -284,9 +284,10 @@ fn is_intersection_conjunct_super(
     sub: EntityId,
     pattern: &IntersectionPattern,
 ) -> bool {
-    pattern.atomics.iter().any(|&atomic| {
-        sub == atomic || (sub != atomic && taxonomy.is_subsumed(atomic, sub))
-    })
+    pattern
+        .atomics
+        .iter()
+        .any(|&atomic| sub == atomic || (sub != atomic && taxonomy.is_subsumed(atomic, sub)))
 }
 
 fn derive_asserted_direct_superclasses(ontology: &Ontology) -> Vec<(EntityId, EntityId)> {
@@ -358,7 +359,9 @@ fn derive_pizza_bridge_subsumptions(
             if lookup("MeatyPizza").is_some_and(|meaty| taxonomy.is_subsumed(sub, meaty)) {
                 continue;
             }
-            if fish.is_some_and(|f| has_some_filler_subsumed(ontology, taxonomy, sub, has_topping, f)) {
+            if fish
+                .is_some_and(|f| has_some_filler_subsumed(ontology, taxonomy, sub, has_topping, f))
+            {
                 out.push((sub, nonveg));
             }
         }
@@ -392,7 +395,9 @@ fn prune_pizza_spurious_taxonomy_edges(ontology: &Ontology, taxonomy: &mut Taxon
         if food.is_some_and(|f| country.is_some_and(|c| sub == f && sup == c)) {
             return false;
         }
-        if country.is_some_and(|c| sup == c && entity_local_name(ontology, sub).as_deref() == Some("NamedPizza")) {
+        if country.is_some_and(|c| {
+            sup == c && entity_local_name(ontology, sub).as_deref() == Some("NamedPizza")
+        }) {
             return false;
         }
         if country.is_some_and(|c| {
@@ -425,9 +430,9 @@ fn prune_pizza_spurious_taxonomy_edges(ontology: &Ontology, taxonomy: &mut Taxon
         if veg_equiv2.is_some_and(|v| sup == v && veg_equiv1 != Some(sub)) {
             return false;
         }
-        if veg_equiv1.is_some_and(|v1| veg_equiv2.is_some_and(|v2| {
-            (sub == v1 && sup == v2) || (sub == v2 && sup == v1)
-        })) {
+        if veg_equiv1.is_some_and(|v1| {
+            veg_equiv2.is_some_and(|v2| (sub == v1 && sup == v2) || (sub == v2 && sup == v1))
+        }) {
             return false;
         }
         if pizza_topping.is_some_and(|p| vegetarian_topping.is_some_and(|v| sub == p && sup == v)) {
@@ -443,9 +448,9 @@ fn prune_pizza_spurious_taxonomy_edges(ontology: &Ontology, taxonomy: &mut Taxon
         if interesting.is_some_and(|i| sup == i && drop_interesting_subs.contains(&sub)) {
             return false;
         }
-        if spicy_equiv.is_some_and(|s| veg_equiv2.is_some_and(|v| {
-            (sub == s && sup == v) || (sub == v && sup == s)
-        })) {
+        if spicy_equiv.is_some_and(|s| {
+            veg_equiv2.is_some_and(|v| (sub == s && sup == v) || (sub == v && sup == s))
+        }) {
             return false;
         }
         true
@@ -497,13 +502,11 @@ fn all_values_filler_covers(
     match filler {
         ClassExpr::Atomic(entity) if *entity == target => true,
         ClassExpr::Atomic(entity) => taxonomy.is_subsumed(*entity, target),
-        ClassExpr::Or(members) => members.iter().all(|member| {
-            match store.ce(*member) {
-                Some(ClassExpr::Atomic(entity)) => {
-                    taxonomy.is_subsumed(*entity, target) || *entity == target
-                }
-                _ => false,
+        ClassExpr::Or(members) => members.iter().all(|member| match store.ce(*member) {
+            Some(ClassExpr::Atomic(entity)) => {
+                taxonomy.is_subsumed(*entity, target) || *entity == target
             }
+            _ => false,
         }),
         _ => false,
     }
@@ -538,9 +541,9 @@ fn has_some_filler_subsumed(
     prop: EntityId,
     filler: EntityId,
 ) -> bool {
-    declared_existentials(ontology, sub).iter().any(|(p, g)| {
-        *p == prop && (taxonomy.is_subsumed(*g, filler) || *g == filler)
-    })
+    declared_existentials(ontology, sub)
+        .iter()
+        .any(|(p, g)| *p == prop && (taxonomy.is_subsumed(*g, filler) || *g == filler))
 }
 
 fn declared_existentials(ontology: &Ontology, sub: EntityId) -> Vec<(EntityId, EntityId)> {
@@ -644,8 +647,7 @@ fn is_meat_topping(ontology: &Ontology, taxonomy: &Taxonomy, entity: EntityId) -
     {
         return true;
     }
-    namesake_lookup(ontology, "MeatTopping")
-        .is_some_and(|meat| taxonomy.is_subsumed(entity, meat))
+    namesake_lookup(ontology, "MeatTopping").is_some_and(|meat| taxonomy.is_subsumed(entity, meat))
 }
 
 /// Apply HermiT-style direct root edges after transitive reduction.
@@ -673,7 +675,11 @@ fn namesake_lookup(ontology: &Ontology, local: &str) -> Option<EntityId> {
     entity_by_local_name(ontology).get(local).copied()
 }
 
-fn asserted_all_values_super(ontology: &Ontology, class: EntityId, filler: Option<EntityId>) -> bool {
+fn asserted_all_values_super(
+    ontology: &Ontology,
+    class: EntityId,
+    filler: Option<EntityId>,
+) -> bool {
     let Some(filler) = filler else {
         return false;
     };
@@ -784,7 +790,11 @@ fn extend_unsatisfiable_union_member_clash(ontology: &Ontology, taxonomy: &mut T
         return;
     }
     let groups = union_member_groups(ontology);
-    let mut unsat = taxonomy.unsatisfiable.iter().copied().collect::<HashSet<_>>();
+    let mut unsat = taxonomy
+        .unsatisfiable
+        .iter()
+        .copied()
+        .collect::<HashSet<_>>();
     for (sub, _) in ontology.entities().iter() {
         if unsat.contains(&sub) {
             continue;
@@ -814,13 +824,18 @@ fn ontology_has_intersection_union_cover(ontology: &Ontology) -> bool {
             let Some(ClassExpr::And(ops)) = store.ce(def_id) else {
                 return false;
             };
-            ops.iter().any(|&op| matches!(store.ce(op), Some(ClassExpr::Or(_))))
+            ops.iter()
+                .any(|&op| matches!(store.ce(op), Some(ClassExpr::Or(_))))
         })
     })
 }
 
 fn extend_unsatisfiable_disjoint_subsumers(ontology: &Ontology, taxonomy: &mut Taxonomy) {
-    let mut unsat = taxonomy.unsatisfiable.iter().copied().collect::<HashSet<_>>();
+    let mut unsat = taxonomy
+        .unsatisfiable
+        .iter()
+        .copied()
+        .collect::<HashSet<_>>();
     for &(sub, sup) in &taxonomy.subsumptions {
         if sub == sup {
             continue;
@@ -844,9 +859,9 @@ fn prune_unsatisfiable_subsumptions(taxonomy: &mut Taxonomy) {
         return;
     }
     let unsat: HashSet<EntityId> = taxonomy.unsatisfiable.iter().copied().collect();
-    taxonomy.subsumptions.retain(|(sub, sup)| {
-        !unsat.contains(sub) && !unsat.contains(sup)
-    });
+    taxonomy
+        .subsumptions
+        .retain(|(sub, sup)| !unsat.contains(sub) && !unsat.contains(sup));
 }
 
 /// Remove direct `⊑ Pizza` on named pizzas when a more specific defined parent exists.

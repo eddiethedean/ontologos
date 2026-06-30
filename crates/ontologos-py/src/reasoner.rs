@@ -203,6 +203,7 @@ impl PyReasoner {
 
     /// Check entailment for `SubClassOf`, `ClassAssertion`, or `ObjectPropertyAssertion`.
     #[pyo3(signature = (sub=None, sup=None, *, individual=None, class_=None, subject=None, property=None, object=None))]
+    #[allow(clippy::too_many_arguments)]
     fn is_entailed(
         &mut self,
         sub: Option<&str>,
@@ -214,9 +215,10 @@ impl PyReasoner {
         object: Option<&str>,
     ) -> PyResult<bool> {
         self.sync_from_shared()?;
-        let check = parse_entailment_check_py(sub, sup, individual, class_, subject, property, object)?;
-        let entailed =
-            ontologos_facade::is_entailed_axiom(&mut self.reasoner, check).map_err(map_facade_py_err)?;
+        let check =
+            parse_entailment_check_py(sub, sup, individual, class_, subject, property, object)?;
+        let entailed = ontologos_facade::is_entailed_axiom(&mut self.reasoner, check)
+            .map_err(map_facade_py_err)?;
         self.sync_to_shared();
         Ok(entailed)
     }

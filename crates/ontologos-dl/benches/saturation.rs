@@ -37,9 +37,7 @@ fn bench_dl_saturation(c: &mut Criterion, label: &str, file: &str) {
     let dl = DlOntology::from_ontology(&ontology).expect("dl ontology");
     let roles = RoleHierarchy::from_clauses(dl.clauses());
     c.bench_function(label, |b| {
-        b.iter(|| {
-            saturate(black_box(&ontology), dl.clauses(), &roles).expect("saturate")
-        })
+        b.iter(|| saturate(black_box(&ontology), dl.clauses(), &roles).expect("saturate"))
     });
 }
 

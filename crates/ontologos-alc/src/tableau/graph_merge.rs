@@ -12,7 +12,8 @@ pub fn saturate_graph_merges(tableau: &Tableau) -> bool {
     let mut tuples: Vec<(DescriptionGraphId, NodeId, NodeId, NodeId)> = Vec::new();
     {
         let table = ext.quaternary_extension_table();
-        let mut retrieval = table.create_retrieval(&[true, false, false, false], ExtensionView::Total);
+        let mut retrieval =
+            table.create_retrieval(&[true, false, false, false], ExtensionView::Total);
         retrieval.open();
         while !retrieval.after_last() {
             if let (
@@ -57,7 +58,15 @@ fn connects(
 ) -> bool {
     let (_, a1, b1, c1) = left;
     let (_, a2, b2, c2) = right;
-    a1 == a2 || a1 == b2 || a1 == c2 || b1 == a2 || b1 == b2 || b1 == c2 || c1 == a2 || c1 == b2 || c1 == c2
+    a1 == a2
+        || a1 == b2
+        || a1 == c2
+        || b1 == a2
+        || b1 == b2
+        || b1 == c2
+        || c1 == a2
+        || c1 == b2
+        || c1 == c2
 }
 
 fn merge_pair(
@@ -80,6 +89,7 @@ fn merge_pair(
 }
 
 /// HermiT `GraphTest.testGraphMerging` merge expectations after saturation.
+#[allow(clippy::too_many_arguments)]
 pub fn assert_graph_merging_canonicals(
     tableau: &Tableau,
     n1: &Node,

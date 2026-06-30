@@ -105,10 +105,7 @@ fn hermit_graph_test_graph2_fixture() {
     );
     assert_eq!(graph.number_of_vertices(), 4);
     assert!(graph.is_start_concept("P"));
-    let edges: Vec<_> = graph
-        .outgoing_edges(0)
-        .map(|e| (e.role, e.to))
-        .collect();
+    let edges: Vec<_> = graph.outgoing_edges(0).map(|e| (e.role, e.to)).collect();
     assert!(edges.contains(&("S", 1)));
     assert!(edges.contains(&("R", 2)));
 }

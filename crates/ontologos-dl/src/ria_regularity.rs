@@ -175,12 +175,7 @@ fn extend_subprops_from_chains(
         if chain.len() >= 2 {
             if let Some(RoleExpr::Atomic(last)) = chain.last() {
                 if let RoleExpr::Atomic(b) = sup {
-                    if !roles_equivalent(
-                        &RoleExpr::Atomic(*last),
-                        sup,
-                        inverses,
-                        equiv,
-                    ) {
+                    if !roles_equivalent(&RoleExpr::Atomic(*last), sup, inverses, equiv) {
                         out.insert((*last, *b));
                     }
                 }
@@ -363,6 +358,7 @@ fn roles_equal(a: &RoleExpr, b: &RoleExpr, inverses: &HashMap<EntityId, EntityId
     false
 }
 
+#[allow(clippy::too_many_arguments)]
 fn chain_regularity_ok(
     chain: &[RoleExpr],
     sup: &RoleExpr,
@@ -383,8 +379,7 @@ fn chain_regularity_ok(
             }
         }
     }
-    if chain.len() >= 2 && !chain_roles_share_equivalence_class(chain, sup, equiv)
-    {
+    if chain.len() >= 2 && !chain_roles_share_equivalence_class(chain, sup, equiv) {
         let last = chain.len() - 1;
         for (i, role) in chain.iter().enumerate().take(last) {
             if roles_equivalent(role, sup, inverses, equiv) {

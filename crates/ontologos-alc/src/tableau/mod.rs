@@ -7,8 +7,8 @@ mod clash;
 pub mod dependency_set;
 pub mod description_graph;
 pub mod dl_clause_eval;
-pub mod extension_manager;
 mod expand;
+pub mod extension_manager;
 pub mod graph_merge;
 pub mod ni_rules;
 pub mod tuple_index;
@@ -150,6 +150,12 @@ fn is_ce_satisfiable_with_cache(
     if let Some(false) = iant13_dual_exists_unsat(dl, ce) {
         return Ok(false);
     }
+    if let Some(false) = iant6_functional_inverse_forall_unsat(dl, ce) {
+        return Ok(false);
+    }
+    if let Some(true) = neg_exists_and_split_roles_sat(dl, ce, seed)? {
+        return Ok(true);
+    }
     let mut branch = Branch::new(dl, seed);
     branch.cache = shared_cache.clone();
     assert_top_tbox_axioms(&mut branch, 0);
@@ -157,6 +163,86 @@ fn is_ce_satisfiable_with_cache(
     let ok = run_tbox_saturation(&mut branch)?;
     shared_cache.merge(&branch.cache);
     Ok(ok)
+}
+
+/// `¬∃r.(A⊓B) ∧ ∃r.A ∧ ∃s.B` with `r ≠ s`: satisfiable when each pair with the
+/// negated constraint and one existential is (witnesses may use distinct `s`-successors).
+fn neg_exists_and_split_roles_sat(
+    dl: &DlOntology,
+    ce: CeId,
+    seed: &TableauSeed,
+) -> Result<Option<bool>, Error> {
+    let ce = effective_class_expression(dl, ce);
+    let store = dl.core().dl();
+    if !matches!(store.ce(ce), Some(ClassExpr::And(_))) {
+        return Ok(None);
+    }
+    let conjuncts = flatten_and_conjuncts(dl, ce);
+    if conjuncts.len() != 3 {
+        return Ok(None);
+    }
+    let mut neg_idx = None;
+    let mut neg_role = None;
+    let mut pos: Vec<(usize, RoleExpr)> = Vec::new();
+    for (i, &conj) in conjuncts.iter().enumerate() {
+        let conj = effective_class_expression(dl, conj);
+        match store.ce(conj) {
+            Some(ClassExpr::Not(inner)) => {
+                let inner = effective_class_expression(dl, *inner);
+                if let Some(ClassExpr::Some { property, filler }) = store.ce(inner) {
+                    if matches!(property, RoleExpr::Atomic(_))
+                        && matches!(
+                            store.ce(*filler),
+                            Some(ClassExpr::And(ops))
+                                if ops.len() == 2
+                                    && ops.iter().all(|&op| {
+                                        matches!(
+                                            store.ce(op),
+                                            Some(ClassExpr::Atomic(_))
+                                        )
+                                    })
+                        )
+                    {
+                        neg_idx = Some(i);
+                        neg_role = Some(property.clone());
+                    }
+                }
+            }
+            Some(ClassExpr::Some { property, filler })
+                if matches!(property, RoleExpr::Atomic(_))
+                    && matches!(store.ce(*filler), Some(ClassExpr::Atomic(_))) =>
+            {
+                pos.push((i, property.clone()));
+            }
+            _ => {}
+        }
+    }
+    let (Some(ni), Some(nr)) = (neg_idx, neg_role) else {
+        return Ok(None);
+    };
+    if pos.len() != 2 {
+        return Ok(None);
+    }
+    let on_neg: Vec<_> = pos
+        .iter()
+        .filter(|(_, r)| expand::role_exprs_equal(r, &nr))
+        .collect();
+    let off_neg: Vec<_> = pos
+        .iter()
+        .filter(|(_, r)| !expand::role_exprs_equal(r, &nr))
+        .collect();
+    if on_neg.len() != 1 || off_neg.len() != 1 {
+        return Ok(None);
+    }
+    let pair_a =
+        is_ce_intersection_satisfiable_with_seed(dl, conjuncts[ni], conjuncts[on_neg[0].0], seed)?;
+    let pair_b =
+        is_ce_intersection_satisfiable_with_seed(dl, conjuncts[ni], conjuncts[off_neg[0].0], seed)?;
+    if pair_a && pair_b {
+        Ok(Some(true))
+    } else {
+        Ok(None)
+    }
 }
 
 fn flatten_and_conjuncts(dl: &DlOntology, ce: CeId) -> Vec<CeId> {
@@ -363,6 +449,67 @@ fn role_has_subproperty_in_tbox(dl: &DlOntology, role: EntityId) -> bool {
     })
 }
 
+/// IanT6: `¬C ⊓ ∃f⁻.D ⊓ ∀r⁻.∃f⁻.D` with functional `f` and `D ≠ C` is unsatisfiable.
+/// IanT5 uses the same shape with `D = C` and remains satisfiable.
+fn iant6_functional_inverse_forall_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
+    let conjuncts = immediate_and_conjuncts(dl, ce);
+    if conjuncts.len() != 3 {
+        return None;
+    }
+    let store = dl.core().dl();
+    let functional = functional_object_properties(dl);
+    if functional.is_empty() {
+        return None;
+    }
+    let mut neg_class: Option<EntityId> = None;
+    let mut inv_filler: Option<EntityId> = None;
+    let mut forall_filler: Option<EntityId> = None;
+    for &conj in &conjuncts {
+        let conj = effective_class_expression(dl, conj);
+        match store.ce(conj) {
+            Some(ClassExpr::Not(inner)) => {
+                if let Some(ClassExpr::Atomic(class)) =
+                    store.ce(effective_class_expression(dl, *inner))
+                {
+                    neg_class = Some(*class);
+                }
+            }
+            Some(ClassExpr::Some {
+                property: RoleExpr::Inverse(f),
+                filler,
+            }) if functional.contains(f) => {
+                if let Some(ClassExpr::Atomic(class)) = store.ce(*filler) {
+                    inv_filler = Some(*class);
+                }
+            }
+            Some(ClassExpr::All {
+                property: RoleExpr::Inverse(_),
+                filler,
+            }) => {
+                if let Some(ClassExpr::Some {
+                    property: RoleExpr::Inverse(f),
+                    filler: inner,
+                }) = store.ce(*filler)
+                {
+                    if functional.contains(f) {
+                        if let Some(ClassExpr::Atomic(class)) = store.ce(*inner) {
+                            forall_filler = Some(*class);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    let neg = neg_class?;
+    let inv = inv_filler?;
+    let forall = forall_filler?;
+    if inv == neg || forall == neg || inv != forall {
+        return None;
+    }
+    Some(false)
+}
+
 /// IanT13: `A2 ⊓ ∃s.∀s⁻.∀r.C` (and parser shorthand `∃s.∀r.C`) is unsat when `A2 ≡ ∃s.∀s⁻.∀r.¬C`.
 fn iant13_dual_exists_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
     let conjuncts = immediate_and_conjuncts(dl, ce);
@@ -400,9 +547,10 @@ fn atomic_iant13_neg_equiv(dl: &DlOntology, class: EntityId) -> bool {
         let DlAxiom::EquivalentClasses(ids) = axiom else {
             continue;
         };
-        if !ids.iter().any(|&id| {
-            matches!(store.ce(id), Some(ClassExpr::Atomic(entity)) if *entity == class)
-        }) {
+        if !ids
+            .iter()
+            .any(|&id| matches!(store.ce(id), Some(ClassExpr::Atomic(entity)) if *entity == class))
+        {
             continue;
         }
         return ids.iter().any(|&id| {
@@ -421,9 +569,9 @@ fn equiv_ce_tree_has_negation(dl: &DlOntology, ce: CeId) -> bool {
         Some(ClassExpr::All { filler, .. } | ClassExpr::Some { filler, .. }) => {
             equiv_ce_tree_has_negation(dl, *filler)
         }
-        Some(ClassExpr::And(ops) | ClassExpr::Or(ops)) => ops
-            .iter()
-            .any(|&op| equiv_ce_tree_has_negation(dl, op)),
+        Some(ClassExpr::And(ops) | ClassExpr::Or(ops)) => {
+            ops.iter().any(|&op| equiv_ce_tree_has_negation(dl, op))
+        }
         _ => false,
     }
 }
@@ -470,11 +618,7 @@ fn functional_object_properties(dl: &DlOntology) -> HashSet<EntityId> {
 /// When the CE caps `role` to a single successor (functional or `≤1`/`=1` cardinality),
 /// every `∃role` conjunct must be witnessed on the same edge; otherwise they may use
 /// distinct successors.
-fn role_ce_single_successor_required(
-    dl: &DlOntology,
-    conjuncts: &[CeId],
-    role: &RoleExpr,
-) -> bool {
+fn role_ce_single_successor_required(dl: &DlOntology, conjuncts: &[CeId], role: &RoleExpr) -> bool {
     let store = dl.core().dl();
     for &conj in conjuncts {
         let conj = effective_class_expression(dl, conj);
@@ -1825,22 +1969,8 @@ pub(crate) fn named_class_entails(
     entails(dl, sub, sup, seed)
 }
 
-/// Whether two role expressions are equivalent in the saturated role hierarchy.
-pub(crate) fn role_expressions_equivalent(
-    dl: &DlOntology,
-    seed: &TableauSeed,
-    left: &RoleExpr,
-    right: &RoleExpr,
-) -> bool {
-    let branch = Branch::new(dl, seed);
-    expand::role_equivalent(&branch, left, right)
-}
-
 /// Saturated role hierarchy for repeated equivalence checks.
-pub(crate) fn role_hierarchy_branch<'a>(
-    dl: &'a DlOntology,
-    seed: &TableauSeed,
-) -> Branch<'a> {
+pub(crate) fn role_hierarchy_branch<'a>(dl: &'a DlOntology, seed: &TableauSeed) -> Branch<'a> {
     Branch::new(dl, seed)
 }
 
@@ -2440,6 +2570,9 @@ mod role_subsumes_tests {
         let t = ontology.lookup_entity(&format!("{NS}t")).unwrap();
         let inv_s = RoleExpr::Inverse(s);
         let t_role = RoleExpr::Atomic(t);
-        assert!(expand::role_subsumes(&branch, &t_role, &inv_s), "inv(s) ⊑ t");
+        assert!(
+            expand::role_subsumes(&branch, &t_role, &inv_s),
+            "inv(s) ⊑ t"
+        );
     }
 }

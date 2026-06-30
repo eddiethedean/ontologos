@@ -3,9 +3,7 @@
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{
-    ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy,
-};
+use ontologos_core::{ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy};
 
 use crate::dl_ontology::DlOntology;
 use crate::tableau::{
@@ -85,10 +83,7 @@ impl UnionFind {
         for &id in nodes {
             buckets.entry(self.find(id)).or_default().push(id);
         }
-        buckets
-            .into_values()
-            .filter(|c| c.len() > 1)
-            .collect()
+        buckets.into_values().filter(|c| c.len() > 1).collect()
     }
 }
 
@@ -140,7 +135,10 @@ fn build_role_equivalence_classes(
     }
     let mut buckets: HashMap<usize, HashSet<RoleExpr>> = HashMap::new();
     for (idx, role) in roles.iter().enumerate() {
-        buckets.entry(find(idx, &mut parent)).or_default().insert(role.clone());
+        buckets
+            .entry(find(idx, &mut parent))
+            .or_default()
+            .insert(role.clone());
     }
     buckets.into_values().filter(|c| c.len() > 1).collect()
 }
@@ -193,9 +191,7 @@ fn build_role_classification_ontology(
     let fresh_individual = ontology
         .entity_id(FRESH_INDIVIDUAL, EntityKind::Individual)
         .map_err(Error::Core)?;
-    let fresh_ce = ontology
-        .dl_mut()
-        .intern_ce(ClassExpr::Atomic(fresh_class));
+    let fresh_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(fresh_class));
     ontology.dl_mut().push_axiom(DlAxiom::ClassAssertion {
         individual: fresh_individual,
         class: fresh_ce,
@@ -207,17 +203,14 @@ fn build_role_classification_ontology(
         let surrogate = ontology
             .entity_id(&surrogate_iri, EntityKind::Class)
             .map_err(Error::Core)?;
-        let surrogate_ce = ontology
-            .dl_mut()
-            .intern_ce(ClassExpr::Atomic(surrogate));
+        let surrogate_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(surrogate));
         let exists_ce = ontology.dl_mut().intern_ce(ClassExpr::Some {
             property: role.clone(),
             filler: fresh_ce,
         });
-        ontology.dl_mut().push_axiom(DlAxiom::EquivalentClasses(vec![
-            surrogate_ce,
-            exists_ce,
-        ]));
+        ontology
+            .dl_mut()
+            .push_axiom(DlAxiom::EquivalentClasses(vec![surrogate_ce, exists_ce]));
         role_to_surrogate.insert(role, surrogate);
     }
     Ok((ontology, role_to_surrogate))
@@ -285,14 +278,15 @@ impl RoleSurrogateContext {
             {
                 return Ok(true);
             }
-            return Ok(
-                taxonomy.is_subsumed(left, right) && taxonomy.is_subsumed(right, left),
-            );
+            return Ok(taxonomy.is_subsumed(left, right) && taxonomy.is_subsumed(right, left));
         }
         Ok(self.entails_named(left, right)? && self.entails_named(right, left)?)
     }
 
-    fn query_equiv_surrogates(&self, query_surrogate: EntityId) -> Result<HashSet<EntityId>, Error> {
+    fn query_equiv_surrogates(
+        &self,
+        query_surrogate: EntityId,
+    ) -> Result<HashSet<EntityId>, Error> {
         let mut out = HashSet::new();
         for &candidate in self.role_to_surrogate.values() {
             if self.surrogates_equivalent(query_surrogate, candidate)? {
@@ -433,7 +427,7 @@ impl RoleSurrogateContext {
         if query_equiv.contains(&candidate_surrogate) {
             return Ok(false);
         }
-        Ok(self.entails_named(query_surrogate, candidate_surrogate)?)
+        self.entails_named(query_surrogate, candidate_surrogate)
     }
 
     fn filter_strict_super_roles(
@@ -480,15 +474,20 @@ impl RoleSurrogateContext {
                     let Some(candidate_surrogate) = self.role_to_surrogate.get(*role) else {
                         return false;
                     };
-                    self.has_strict_intermediate(*candidate_surrogate, &query_equiv, &sub_surrogates)
-                        .map(|has| !has)
-                        .unwrap_or(false)
+                    self.has_strict_intermediate(
+                        *candidate_surrogate,
+                        &query_equiv,
+                        &sub_surrogates,
+                    )
+                    .map(|has| !has)
+                    .unwrap_or(false)
                 })
                 .cloned()
                 .collect()
         };
         let out = self.filter_strict_super_roles(query_surrogate, &query_equiv, out)?;
-        let direct_base = self.filter_strict_super_roles(query_surrogate, &query_equiv, direct_base)?;
+        let direct_base =
+            self.filter_strict_super_roles(query_surrogate, &query_equiv, direct_base)?;
         let all = self.filter_strict_super_roles(
             query_surrogate,
             &query_equiv,
@@ -507,9 +506,9 @@ impl RoleSurrogateContext {
             return Ok(HashSet::new());
         };
         let mut cache = self.query_cache.borrow_mut();
-        if !cache.contains_key(&query_surrogate) {
+        if let std::collections::hash_map::Entry::Vacant(e) = cache.entry(query_surrogate) {
             let computed = self.compute_sub_roles_for_query(query_surrogate)?;
-            cache.insert(query_surrogate, computed);
+            e.insert(computed);
         }
         let entry = cache.get(&query_surrogate).expect("query cache populated");
         Ok(if direct {
@@ -702,7 +701,10 @@ mod tests {
         let inv_t = RoleExpr::Inverse(ontology.lookup_entity(&format!("{NS}t")).expect("t"));
 
         let r_inverses = inverse_object_property_expressions(&ontology, &r).expect("inverses of r");
-        assert_eq!(r_inverses, HashSet::from([inv_r.clone(), s.clone(), inv_t.clone()]));
+        assert_eq!(
+            r_inverses,
+            HashSet::from([inv_r.clone(), s.clone(), inv_t.clone()])
+        );
 
         let inv_r_inverses =
             inverse_object_property_expressions(&ontology, &inv_r).expect("inverses of inv(r)");
@@ -721,11 +723,19 @@ mod tests {
             .join("../../benchmarks/data/hermit/reasoner/res/OWLLink/agent.owl");
         let ontology = load_ontology(&path).expect("load agent.owl");
         const NS: &str = "http://www.iyouit.eu/agent.owl#";
-        let knows = RoleExpr::Atomic(ontology.lookup_entity(&format!("{NS}knows")).expect("knows"));
+        let knows = RoleExpr::Atomic(
+            ontology
+                .lookup_entity(&format!("{NS}knows"))
+                .expect("knows"),
+        );
         let all = sub_object_property_expressions(&ontology, &knows, false).expect("all");
         let direct = sub_object_property_expressions(&ontology, &knows, true).expect("direct");
         eprintln!("direct={} all={}", direct.len(), all.len());
-        let relation = RoleExpr::Atomic(ontology.lookup_entity(&format!("{NS}relation")).expect("relation"));
+        let relation = RoleExpr::Atomic(
+            ontology
+                .lookup_entity(&format!("{NS}relation"))
+                .expect("relation"),
+        );
         eprintln!("relation in all: {}", all.contains(&relation));
 
         let (augmented, role_map) = augment_for_role_classification(&ontology).expect("augment");

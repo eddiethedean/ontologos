@@ -182,13 +182,36 @@ fn derive_union_equivalence_subsumptions(ontology: &Ontology) -> Vec<(EntityId, 
 
 fn enrich_taxonomy(ontology: &Ontology, taxonomy: &mut Taxonomy) {
     for (sub, sup) in derive_union_equivalence_subsumptions(ontology) {
-        if !taxonomy
-            .subsumptions
-            .iter()
-            .any(|&(a, b)| a == sub && b == sup)
-        {
-            taxonomy.subsumptions.push((sub, sup));
+        push_subsumption_if_missing(taxonomy, sub, sup);
+    }
+    for cluster in taxonomy.equivalences.clone() {
+        for i in 0..cluster.len() {
+            for j in (i + 1)..cluster.len() {
+                push_subsumption_if_missing(taxonomy, cluster[i], cluster[j]);
+                push_subsumption_if_missing(taxonomy, cluster[j], cluster[i]);
+            }
         }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        let ontologos_core::Axiom::EquivalentClasses(classes) = axiom else {
+            continue;
+        };
+        for i in 0..classes.len() {
+            for j in (i + 1)..classes.len() {
+                push_subsumption_if_missing(taxonomy, classes[i], classes[j]);
+                push_subsumption_if_missing(taxonomy, classes[j], classes[i]);
+            }
+        }
+    }
+}
+
+fn push_subsumption_if_missing(taxonomy: &mut Taxonomy, sub: EntityId, sup: EntityId) {
+    if !taxonomy
+        .subsumptions
+        .iter()
+        .any(|&(a, b)| a == sub && b == sup)
+    {
+        taxonomy.subsumptions.push((sub, sup));
     }
 }
 /// Build tableau seed from saturation (used by consistency checking).

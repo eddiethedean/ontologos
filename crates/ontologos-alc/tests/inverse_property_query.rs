@@ -8,7 +8,15 @@ use std::path::PathBuf;
 
 const NS: &str = "file:/c/test.owl#";
 
-fn load_inverse_cycle() -> (ontologos_core::Ontology, RoleExpr, RoleExpr, RoleExpr, RoleExpr, RoleExpr, RoleExpr) {
+fn load_inverse_cycle() -> (
+    ontologos_core::Ontology,
+    RoleExpr,
+    RoleExpr,
+    RoleExpr,
+    RoleExpr,
+    RoleExpr,
+    RoleExpr,
+) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_owlreasonertest_testgetinverseobjectpropertyexpressions.ofn");
     let ontology = load_ontology(&path).expect("load inverse OFN");

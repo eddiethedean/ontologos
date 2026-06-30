@@ -13,7 +13,14 @@ fn merge_assert(base: &ontologos_core::Ontology, assertion: &str) -> ontologos_c
     let body = format!(
         "Prefix(:=<file:/c/test.owl#>)\nPrefix(a:=<file:/c/test.owl#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\nOntology(<file:/c/test.owl#>\n{assertion}\n)"
     );
-    let temp = std::env::temp_dir().join("probe.ofn");
+    let temp = std::env::temp_dir().join(format!(
+        "engine-gap-probe-{}-{}.ofn",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
     std::fs::write(&temp, &body).unwrap();
     let probe = load_ontology(&temp).unwrap();
     let mut merged = base.clone();

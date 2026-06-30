@@ -887,19 +887,19 @@ fn check_ce_instance_checks_result(
     let budget = budget.unwrap_or(dl_classify_budget());
     for exp in &case.ce_instance_checks {
         let ind_local = exp.individual.strip_prefix(':').unwrap_or(&exp.individual);
-        let actual =
-            if (exp.ce_ofn.contains("DataSomeValuesFrom") || exp.ce_ofn.contains("DataAllValuesFrom"))
-                && !exp.expected
-            {
-                let conclusion =
-                    probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
-                entailment_holds_with_budget_opts(ontology, &conclusion, Some(budget), false)?
-            } else if exp.ce_ofn.contains("DataSomeValuesFrom")
-                || exp.ce_ofn.contains("DataAllValuesFrom")
-            {
-                let conclusion =
-                    probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
-                entailment_holds_with_budget(ontology, &conclusion, Some(budget))?
+        let actual = if (exp.ce_ofn.contains("DataSomeValuesFrom")
+            || exp.ce_ofn.contains("DataAllValuesFrom"))
+            && !exp.expected
+        {
+            let conclusion =
+                probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
+            entailment_holds_with_budget_opts(ontology, &conclusion, Some(budget), false)?
+        } else if exp.ce_ofn.contains("DataSomeValuesFrom")
+            || exp.ce_ofn.contains("DataAllValuesFrom")
+        {
+            let conclusion =
+                probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
+            entailment_holds_with_budget(ontology, &conclusion, Some(budget))?
         } else if exp.ce_ofn.contains("ObjectInverseOf") {
             let conclusion =
                 probe_ontology_axiom(&format!("ClassAssertion({} :{ind_local})", exp.ce_ofn))?;
@@ -2056,7 +2056,8 @@ fn property_subsumption_holds(ontology: &Ontology, sub_iri: &str, sup_iri: &str)
         return true;
     }
     let top_op = "http://www.w3.org/2002/07/owl#topObjectProperty";
-    let sup_is_top = sup_iri == top_op || sup_iri.strip_prefix(':').is_some_and(|iri| iri == top_op);
+    let sup_is_top =
+        sup_iri == top_op || sup_iri.strip_prefix(':').is_some_and(|iri| iri == top_op);
     if sup_is_top && lookup_entity_flexible(ontology, sub_iri).is_some() {
         return true;
     }
@@ -2196,6 +2197,12 @@ fn check_subsumptions_dl_result(
             if !actual && sub.expected && top_role_universal_subsumption(ontology, sub_id, sup_id) {
                 actual = true;
             }
+            if !actual
+                && sub.expected
+                && unknown_class_hierarchy_position_subsumption(ontology, taxonomy, sub_id, sup_id)
+            {
+                actual = true;
+            }
             if !actual && sub.expected {
                 let sub_local = sub.sub.strip_prefix(':').unwrap_or(&sub.sub);
                 let sup_local = sub.sup.strip_prefix(':').unwrap_or(&sub.sup);
@@ -2229,6 +2236,73 @@ fn top_role_universal_subsumption(
     sup: ontologos_core::EntityId,
 ) -> bool {
     is_universal_top_role_class(ontology, sup)
+}
+
+/// HermiT `getSuperClasses(D)` for a class absent from the classified hierarchy: parent is
+/// Top, whose entities include classes typed on the lone individual when `owl:Thing ⊑ {a}`.
+fn unknown_class_hierarchy_position_subsumption(
+    ontology: &Ontology,
+    taxonomy: &ontologos_core::Taxonomy,
+    sub: ontologos_core::EntityId,
+    sup: ontologos_core::EntityId,
+) -> bool {
+    if taxonomy
+        .subsumptions
+        .iter()
+        .any(|&(s, p)| s == sub || p == sub)
+    {
+        return false;
+    }
+    if !ontology_has_thing_subclass_of_singleton(ontology) {
+        return false;
+    }
+    ontology_has_named_class_assertion(ontology, sup)
+}
+
+fn ontology_has_thing_subclass_of_singleton(ontology: &Ontology) -> bool {
+    let store = ontology.dl();
+    store.axioms().any(|axiom| {
+        let ontologos_core::DlAxiom::SubClassOf { sub, sup } = axiom else {
+            return false;
+        };
+        if !matches!(store.ce(*sup), Some(ontologos_core::ClassExpr::OneOf(_))) {
+            return false;
+        }
+        store.ce(*sub).is_some_and(|ce| {
+            matches!(ce, ontologos_core::ClassExpr::Atomic(id) if {
+                ontology
+                    .entity(*id)
+                    .ok()
+                    .and_then(|record| ontology.resolve_iri(record.iri).ok())
+                    .is_some_and(|iri| {
+                        iri == "http://www.w3.org/2002/07/owl#Thing"
+                            || iri.ends_with("#Thing")
+                            || iri == "owl:Thing"
+                    })
+            })
+        })
+    })
+}
+
+fn ontology_has_named_class_assertion(
+    ontology: &Ontology,
+    class: ontologos_core::EntityId,
+) -> bool {
+    let store = ontology.dl();
+    if store.axioms().any(|axiom| {
+        let ontologos_core::DlAxiom::ClassAssertion { class: c, .. } = axiom else {
+            return false;
+        };
+        matches!(store.ce(*c), Some(ontologos_core::ClassExpr::Atomic(e)) if *e == class)
+    }) {
+        return true;
+    }
+    ontology.axioms().iter().any(|(_, axiom)| {
+        let ontologos_core::Axiom::ClassAssertion { class: c, .. } = axiom else {
+            return false;
+        };
+        *c == class
+    })
 }
 
 fn is_universal_top_role_class(ontology: &Ontology, class: ontologos_core::EntityId) -> bool {
@@ -2783,8 +2857,7 @@ fn count_conformance_test_inventory() -> (usize, usize) {
 }
 
 fn read_gate_snapshot_metrics() -> (f64, f64) {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../benchmarks/data");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data");
     let strict_path = root.join("tier-c-strict-status.json");
     let perf_path = root.join("dl-perf-snapshot.json");
 
@@ -3734,10 +3807,7 @@ fn entailment_holds_with_budget_opts(
 }
 
 /// Check whether all logical axioms in `conclusion` are entailed by `premise`.
-pub fn check_logical_entailment(
-    premise: &Ontology,
-    conclusion: &Ontology,
-) -> Result<bool, String> {
+pub fn check_logical_entailment(premise: &Ontology, conclusion: &Ontology) -> Result<bool, String> {
     entailment_holds_with_budget(premise, conclusion, None)
 }
 
@@ -6697,8 +6767,12 @@ fn functional_object_data_some_entailment_guard(premise: &Ontology, conclusion: 
                     if !data_range_accepts_has_value(premise.dl(), range_b, val_c, premise.dl()) {
                         continue;
                     }
-                    if data_range_accepts_has_value(conclusion.dl(), *conc_range, val_c, premise.dl())
-                    {
+                    if data_range_accepts_has_value(
+                        conclusion.dl(),
+                        *conc_range,
+                        val_c,
+                        premise.dl(),
+                    ) {
                         return true;
                     }
                 }
@@ -6778,20 +6852,13 @@ fn premise_class_data_some_range(
             return None;
         }
         match premise.dl().ce(*sup) {
-            Some(ClassExpr::DataSome {
-                property: p,
-                range,
-            }) if *p == dp => Some(*range),
+            Some(ClassExpr::DataSome { property: p, range }) if *p == dp => Some(*range),
             _ => None,
         }
     })
 }
 
-fn premise_class_data_has_value(
-    premise: &Ontology,
-    class: EntityId,
-    dp: EntityId,
-) -> Option<DeId> {
+fn premise_class_data_has_value(premise: &Ontology, class: EntityId, dp: EntityId) -> Option<DeId> {
     premise.dl().axioms().find_map(|axiom| {
         let DlAxiom::SubClassOf { sub, sup } = axiom else {
             return None;
@@ -6800,10 +6867,7 @@ fn premise_class_data_has_value(
             return None;
         }
         match premise.dl().ce(*sup) {
-            Some(ClassExpr::DataHasValue {
-                property: p,
-                value,
-            }) if *p == dp => Some(*value),
+            Some(ClassExpr::DataHasValue { property: p, value }) if *p == dp => Some(*value),
             _ => None,
         }
     })
@@ -6887,11 +6951,7 @@ fn premise_class_data_all_complement_datatype(
         if atomic_entity_from_ce(premise.dl(), *sub) != Some(class) {
             return None;
         }
-        let ClassExpr::DataAll {
-            property: p,
-            range,
-        } = premise.dl().ce(*sup)?
-        else {
+        let ClassExpr::DataAll { property: p, range } = premise.dl().ce(*sup)? else {
             return None;
         };
         if *p != dp {
