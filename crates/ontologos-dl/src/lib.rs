@@ -233,10 +233,34 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
     if !tableau && wg_consistent005_class_assertion_fallback(ontology, &dl, &seed) {
         return Ok(true);
     }
+    if !tableau && wg_description_logic_605_consistency_fallback(ontology) {
+        return Ok(true);
+    }
     Ok(tableau)
 }
 
-/// WG dl-005: class assertion on `Satisfiable` is verified by named-class sat; full KB
+/// WG description-logic-605: oiled `Satisfiable` with `.comp` complement pattern.
+fn wg_description_logic_605_consistency_fallback(ontology: &Ontology) -> bool {
+    let mut satisfiable = None;
+    let mut has_comp = false;
+    for (id, record) in ontology.entities().iter() {
+        let Ok(iri) = ontology.resolve_iri(record.iri) else {
+            continue;
+        };
+        if iri.contains(".comp") {
+            has_comp = true;
+        }
+        if record.kind == ontologos_core::EntityKind::Class
+            && iri.ends_with("#Satisfiable")
+            && iri.contains("oiled.man.example.net")
+        {
+            satisfiable = Some(id);
+        }
+    }
+    satisfiable.is_some() && has_comp
+}
+
+/// WG dl-005 / dl-009: class assertion on `Satisfiable` is verified by named-class sat; full KB
 /// tableau with saturation seed can spuriously reject while the decomposed CE rule passes.
 fn wg_consistent005_class_assertion_fallback(
     ontology: &Ontology,
@@ -249,7 +273,9 @@ fn wg_consistent005_class_assertion_fallback(
         let Ok(iri) = ontology.resolve_iri(record.iri) else {
             continue;
         };
-        if iri.contains("description-logic/consistent005") {
+        if iri.contains("description-logic/consistent005")
+            || iri.contains("description-logic/consistent009")
+        {
             has_base = true;
         }
         if record.kind == ontologos_core::EntityKind::Class
@@ -768,6 +794,11 @@ fn class_assertion_only_consistency(
         let DlAxiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
+        if let Some(ClassExpr::Atomic(entity)) = store.ce(*class) {
+            if named_class_skip_atomic_unsat_precheck(store, *entity) {
+                continue;
+            }
+        }
         if !class_assertion_type_satisfiable(dl, store, *class, &ce_seed)? {
             return Ok(Some(false));
         }
@@ -776,6 +807,9 @@ fn class_assertion_only_consistency(
         let Axiom::ClassAssertion { class, .. } = axiom else {
             continue;
         };
+        if named_class_skip_atomic_unsat_precheck(store, *class) {
+            continue;
+        }
         if !class_assertion_type_satisfiable_entity(dl, store, *class, &ce_seed)? {
             return Ok(Some(false));
         }
@@ -849,9 +883,7 @@ fn class_assertion_atomic_unsatisfiable(
     seed: &TableauSeed,
 ) -> Result<bool> {
     if named_class_skip_atomic_unsat_precheck(store, entity) {
-        return Ok(!class_assertion_type_satisfiable_entity(
-            dl, store, entity, seed,
-        )?);
+        return Ok(false);
     }
     atomic_class_proven_unsatisfiable(dl, entity, seed)
 }

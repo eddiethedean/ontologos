@@ -4096,10 +4096,26 @@ fn element_text_content(block: &str, tag: &str) -> Option<String> {
     Some(elem[open_end + 1..close_start].trim().to_owned())
 }
 
+/// Unwrap singleton `ObjectUnionOf(X)` for Horned-OWL supplement loading.
+pub(crate) fn normalize_supplement_boolean_ce(ce_ofn: &str) -> String {
+    let trimmed = ce_ofn.trim();
+    let Some(rest) = trimmed.strip_prefix("ObjectUnionOf(") else {
+        return trimmed.to_string();
+    };
+    let Some(inner) = rest.strip_suffix(')') else {
+        return trimmed.to_string();
+    };
+    if !inner.contains('(') && !inner.contains(' ') {
+        return inner.to_string();
+    }
+    trimmed.to_string()
+}
+
 /// Rewrite boolean CE OFN so Horned-OWL accepts atomic class members (QName + Prefix).
 pub(crate) fn qualify_ce_ofn_for_supplement(ce_ofn: &str) -> (String, String) {
+    let ce_ofn = normalize_supplement_boolean_ce(ce_ofn);
     let mut prefixes = Vec::new();
-    let mut out = ce_ofn.to_string();
+    let mut out = ce_ofn;
     let mut counter = 0usize;
     let mut search_from = 0usize;
     while let Some(rel) = out[search_from..].find('<') {
@@ -4115,12 +4131,32 @@ pub(crate) fn qualify_ce_ofn_for_supplement(ce_ofn: &str) -> (String, String) {
         {
             continue;
         }
-        let Some(hash) = iri.find('#') else {
+        let (ns, local): (String, &str) = if let Some(hash) = iri.find('#') {
+            (iri[..=hash].to_string(), &iri[hash + 1..])
+        } else if let Some(idx) = iri.find("%23") {
+            (format!("{}#", &iri[..idx]), &iri[idx + 3..])
+        } else {
             continue;
         };
-        let ns = &iri[..=hash];
-        let local = &iri[hash + 1..];
         if local.is_empty() {
+            continue;
+        }
+        if local.starts_with("_:") {
+            if start >= "ObjectOneOf(".len()
+                && out.get(start - "ObjectOneOf(".len()..start) == Some("ObjectOneOf(")
+            {
+                search_from = end + 1;
+                continue;
+            }
+            let full_iri = if iri.contains("%23") {
+                format!("{ns}{local}")
+            } else {
+                iri.to_string()
+            };
+            let replacement = format!("ObjectOneOf(<{full_iri}>)");
+            let replaced_len = replacement.len();
+            out.replace_range(start..=end, &replacement);
+            search_from = start + replaced_len;
             continue;
         }
         counter += 1;
@@ -4129,7 +4165,7 @@ pub(crate) fn qualify_ce_ofn_for_supplement(ce_ofn: &str) -> (String, String) {
         let qname = if local.chars().all(|c| c.is_alphanumeric() || c == '_') {
             format!("{prefix}:{local}")
         } else {
-            format!("<{}>", iri.replace('#', "%23"))
+            format!("<{ns}{local}>")
         };
         let replaced_len = qname.len();
         out.replace_range(start..=end, &qname);
@@ -6430,6 +6466,19 @@ mod tests {
             .filter(|(_, a)| matches!(a, ontologos_core::Axiom::ObjectPropertyAssertion { .. }))
             .count();
         assert_eq!(opa_count, 2, "loaded conclusion should have two OPAs");
+    }
+
+    #[test]
+    fn qualify_ce_ofn_percent23_fragment_uses_hash_namespace() {
+        let ce = "ObjectUnionOf(<http://www.w3.org/2002/03owlt/I5.5/premises005%23a>)";
+        let (prefixes, qualified) = qualify_ce_ofn_for_supplement(ce);
+        assert!(prefixes.contains("premises005#>"));
+        assert_eq!(qualified, "ns1:a");
+        let normalized = normalize_supplement_boolean_ce(ce);
+        assert_eq!(
+            normalized,
+            "<http://www.w3.org/2002/03owlt/I5.5/premises005%23a>"
+        );
     }
 
     #[test]

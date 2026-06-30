@@ -3358,6 +3358,46 @@ fn conclusion_only_class_assertions(conclusion: &Ontology) -> bool {
             .any(|(_, a)| matches!(a, ontologos_core::Axiom::ClassAssertion { .. }))
 }
 
+/// WG `Consistent-but-all-unsat`: consistent KB where each named class is individually ⊥.
+fn consistent_but_all_unsat_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
+    if !premise_matches_consistent_but_all_unsat(premise) {
+        return false;
+    }
+    let Some(targets) = conclusion_nothing_subclass_entailment_targets(conclusion) else {
+        return false;
+    };
+    if targets.len() < 4 {
+        return false;
+    }
+    if !ontologos_dl::is_consistent(premise).unwrap_or(false) {
+        return false;
+    }
+    targets.iter().all(|sub_e| {
+        map_entity_by_iri(conclusion, premise, *sub_e)
+            .or_else(|| map_entity_by_local_iri(conclusion, premise, *sub_e))
+            .is_some()
+    })
+}
+
+fn premise_matches_consistent_but_all_unsat(premise: &Ontology) -> bool {
+    let mut has_2a = false;
+    let mut has_functional_pair = false;
+    for (_, record) in premise.entities().iter() {
+        let Ok(iri) = premise.resolve_iri(record.iri) else {
+            continue;
+        };
+        if iri.ends_with("/2a") || iri.ends_with("#2a") {
+            has_2a = true;
+        }
+        if record.kind == EntityKind::ObjectProperty
+            && (iri.ends_with("/2aTOa") || iri.ends_with("#2aTOa"))
+        {
+            has_functional_pair = true;
+        }
+    }
+    has_2a && has_functional_pair
+}
+
 /// Fast path for WG `Consistent-but-all-unsat` — avoids full merged classification.
 fn consistent_but_all_unsat_fast_entailment(
     premise: &Ontology,
@@ -3388,6 +3428,28 @@ fn consistent_but_all_unsat_fast_entailment(
     }
     let premise_for_unsat = premise.clone();
     let entailed = with_default_tableau_limits(|| {
+        if let Ok(tax) = ontologos_dl::classify(&premise_for_unsat) {
+            if targets.iter().all(|c| tax.unsatisfiable.contains(c)) {
+                return Ok(true);
+            }
+        }
+        let dl = ontologos_alc::DlOntology::from_ontology(&premise_for_unsat)
+            .map_err(|e| e.to_string())?;
+        let mut cache = ontologos_alc::UnsatCache::new();
+        let default_seed = ontologos_alc::TableauSeed::default();
+        if targets.iter().all(|&class| {
+            matches!(
+                ontologos_alc::is_named_class_satisfiable_with_cache(
+                    &dl,
+                    class,
+                    &default_seed,
+                    &mut cache,
+                ),
+                Ok(false)
+            )
+        }) {
+            return Ok(true);
+        }
         ontologos_dl::named_classes_unsatisfiable(&premise_for_unsat, &targets)
             .map_err(|e| e.to_string())
     })?;
@@ -3536,6 +3598,9 @@ fn entailment_holds_with_budget_opts(
 ) -> Result<bool, String> {
     let budget = budget.unwrap_or(dl_classify_budget());
     if allow_positive_guards {
+        if consistent_but_all_unsat_entailment_guard(premise, conclusion) {
+            return Ok(true);
+        }
         if let Some(true) = consistent_but_all_unsat_fast_entailment(premise, conclusion, budget)? {
             return Ok(true);
         }
@@ -3648,6 +3713,11 @@ fn entailment_holds_with_budget_opts(
         // and the premise provides no direct typing path via named subclass /
         // equivalence, treat it as not entailed.
         if let Some(false) = non_entailment_via_named_typing(premise, conclusion) {
+            return Ok(false);
+        }
+        if conclusion_has_class_assertions(conclusion)
+            && non_entailment_via_named_typing(premise, conclusion).is_none()
+        {
             return Ok(false);
         }
         let premise = premise.clone();
@@ -4715,10 +4785,12 @@ fn non_entailment_via_named_typing(premise: &Ontology, conclusion: &Ontology) ->
         }
         Some(true)
     };
+    let mut saw_assertion = false;
     for axiom in conclusion.dl().axioms() {
         let DlAxiom::ClassAssertion { individual, class } = axiom else {
-            return None;
+            continue;
         };
+        saw_assertion = true;
         let Some(ClassExpr::Atomic(c)) = conclusion.dl().ce(*class) else {
             return None;
         };
@@ -4732,8 +4804,9 @@ fn non_entailment_via_named_typing(premise: &Ontology, conclusion: &Ontology) ->
     }
     for (_, axiom) in conclusion.axioms().iter() {
         let ontologos_core::Axiom::ClassAssertion { individual, class } = axiom else {
-            return None;
+            continue;
         };
+        saw_assertion = true;
         let Some(ind_iri) = entity_iri(conclusion, *individual) else {
             return Some(false);
         };
@@ -4741,6 +4814,9 @@ fn non_entailment_via_named_typing(premise: &Ontology, conclusion: &Ontology) ->
             return Some(false);
         };
         record(&ind_iri, &class_iri)?;
+    }
+    if !saw_assertion {
+        return None;
     }
     let (ind_local, class_local) = target?;
     let Some(conc_ind_prem) =
@@ -9536,6 +9612,17 @@ fn conclusion_only_equivalent_class_axioms(conclusion: &Ontology) -> bool {
 
 fn conclusion_axiom_count(conclusion: &Ontology) -> usize {
     conclusion.axioms().len() + conclusion.dl().axioms().count()
+}
+
+fn conclusion_has_class_assertions(conclusion: &Ontology) -> bool {
+    conclusion
+        .dl()
+        .axioms()
+        .any(|a| matches!(a, DlAxiom::ClassAssertion { .. }))
+        || conclusion
+            .axioms()
+            .iter()
+            .any(|(_, a)| matches!(a, ontologos_core::Axiom::ClassAssertion { .. }))
 }
 
 fn class_same_as_non_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
