@@ -12,7 +12,7 @@ OntoLogos solves: *"We want OWL reasoning embedded in Rust or Python services—
 
 Library-first orchestration: **load → detect profile → classify/materialize**, not a Protégé replacement.
 
-> **Release channels:** Latest **published** release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
+> **Release channels:** Latest tagged release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
 > The `main` branch is **1.0.0** workspace: **`parity_pct = 100%`** in-scope gate; **v1.0.0 tag** pending — see [release checklist](docs/project/release-1.0-checklist.md).
 > Use `ontologos-* = "0.9.0"` on crates.io today; use **`1.0.0`** after tag or build from git for DL.
 

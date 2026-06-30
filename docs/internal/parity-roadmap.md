@@ -1,6 +1,6 @@
 # HermiT parity roadmap (implementation tiers)
 
-Tracks progress beyond the in-scope catalog gate (`parity_pct = 100%` on **916** cases). See [hermit-parity-honest-assessment.md](hermit-parity-honest-assessment.md) and [ROADMAP.md](../../ROADMAP.md#postphase-9--literal-parity-burndown-tiers-bd).
+Tracks progress beyond the in-scope catalog gate (`parity_pct = 100%` on **916** cases). See [hermit-parity-honest-assessment.md](hermit-parity-honest-assessment.md) and [ROADMAP.md](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#postphase-9--literal-parity-burndown-tiers-bd).
 
 ## Two parity metrics
 
@@ -79,7 +79,7 @@ Raise `ONTOLOGOS_TRUE_PARITY_MIN` as burndown progresses; switch `ONTOLOGOS_TRUE
 
 | ID | Workstream | Verify |
 |----|------------|--------|
-| **B3** | Port `ClausificationTest` / `NormalizationTest` / `tableau/*` | **Complete (portable scope)** — 39 `migrated`; 7/7 hyper goldens; 23+3 inventory tests ([internal_ports.toml](../../tests/hermit/internal_ports.toml)). **Bottleneck for true parity:** full `tableau.*` port (~19% internal_port_pct) |
+| **B3** | Port `ClausificationTest` / `NormalizationTest` / `tableau/*` | **Complete (portable scope)** — 39 `migrated`; 7/7 hyper goldens; 23+3 inventory tests ([internal_ports.toml](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/internal_ports.toml)). **Bottleneck for true parity:** full `tableau.*` port (~19% internal_port_pct) |
 | **B4** | Burn down **122** `#[ignore]` tests; promote OWLLink cases | Harness metrics live; nightly `--ignored` job; Bob A/B **ported** |
 | **C** | Strict taxonomy CI (`ONTOLOGOS_STRICT_TAXONOMY=1`, `--max-extra 0`) | `compare-tier-c-strict-family.sh` (PR informational); engine extras on pizza/go-subset remain |
 | **D1** | Criterion saturation/tableau benches; Pizza DL **< 30 s** PR gate | `compare-tier-d-perf-gate.sh` (Family **< 1.0 s** PR); `cargo bench -p ontologos-dl` |
@@ -99,15 +99,15 @@ Raise `ONTOLOGOS_TRUE_PARITY_MIN` as burndown progresses; switch `ONTOLOGOS_TRUE
 
 ## Internal test ports (Tier B3)
 
-Manifest: [tests/hermit/internal_ports.toml](../../tests/hermit/internal_ports.toml)
+Manifest: [tests/hermit/internal_ports.toml](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/internal_ports.toml)
 
 | HermiT suite | OntoLogos tests | Status |
 |--------------|-----------------|--------|
-| `structural/ClausificationTest` | [clausification.rs](../../crates/ontologos-alc/tests/clausification.rs) | 33 OFN clausify + 7 XML load; hyper goldens `#[ignore]` |
-| `structural/ClausificationDatatypesTest` | [clausification.rs](../../crates/ontologos-alc/tests/clausification.rs) | Via `hermit_clausify_catalog` |
-| `structural/NormalizationTest` | [normalization.rs](../../crates/ontologos-alc/tests/normalization.rs) | 24/24 smoke clausify (`migrated`) |
-| `tableau/*` (23 cases) | [tableau_internals.rs](../../crates/ontologos-alc/tests/tableau_internals.rs) | Inventory only — extension-manager port deferred |
-| Ian/ComplexConcept CE | [ian_ce_sat.rs](../../crates/ontologos-alc/tests/ian_ce_sat.rs) · [ian_ce_excluded_triage.rs](../../crates/ontologos-alc/tests/ian_ce_excluded_triage.rs) | Conformance ports |
+| `structural/ClausificationTest` | [clausification.rs](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-alc/tests/clausification.rs) | 33 OFN clausify + 7 XML load; hyper goldens `#[ignore]` |
+| `structural/ClausificationDatatypesTest` | [clausification.rs](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-alc/tests/clausification.rs) | Via `hermit_clausify_catalog` |
+| `structural/NormalizationTest` | [normalization.rs](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-alc/tests/normalization.rs) | 24/24 smoke clausify (`migrated`) |
+| `tableau/*` (23 cases) | [tableau_internals.rs](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-alc/tests/tableau_internals.rs) | Inventory only — extension-manager port deferred |
+| Ian/ComplexConcept CE | [ian_ce_sat.rs](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-alc/tests/ian_ce_sat.rs) · [ian_ce_excluded_triage.rs](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-alc/tests/ian_ce_excluded_triage.rs) | Conformance ports |
 
 ## Excluded case triage (Tier B1)
 

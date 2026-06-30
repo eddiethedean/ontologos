@@ -1897,9 +1897,13 @@ fn role_subsumes_inner(
                 .get(sub)
                 .is_some_and(|supers| supers.contains(sup))
         }
-        (RoleExpr::Inverse(is), RoleExpr::Inverse(it)) => {
-            role_subsumes_inner(branch, &RoleExpr::Atomic(*it), &RoleExpr::Atomic(*is), seen, depth + 1)
-        }
+        (RoleExpr::Inverse(is), RoleExpr::Inverse(it)) => role_subsumes_inner(
+            branch,
+            &RoleExpr::Atomic(*it),
+            &RoleExpr::Atomic(*is),
+            seen,
+            depth + 1,
+        ),
         (RoleExpr::Atomic(sup), RoleExpr::Inverse(sub_id)) => {
             if role_equivalent(branch, super_role, sub_role) {
                 return true;

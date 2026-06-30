@@ -6,7 +6,7 @@
 
 Twenty-five HermiT JVM tests under `AnyURITest`, `BinaryDataTest`, `RDFPlainLiteralTest`, and `DateTimeTest` exercise HermiT's internal `DatatypeRegistry` / `ValueSpaceSubset` APIs. They validate lexical facets, enumeration, pattern/length facets, and XSD dateTime parsing inside the JVM datatype manager — not OWL DL/TBox reasoning.
 
-OntoLogos does not ship a JVM-compatible datatype manager. These cases remain in `EXCLUDED_IDS` in [tests/hermit/generate_catalog.py](../../../tests/hermit/generate_catalog.py) and are **not** promoted to `run_hermit_case`.
+OntoLogos does not ship a JVM-compatible datatype manager. These cases remain in `EXCLUDED_IDS` in [tests/hermit/generate_catalog.py](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/generate_catalog.py) and are **not** promoted to `run_hermit_case`.
 
 ## Excluded HermiT IDs
 
