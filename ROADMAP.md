@@ -119,7 +119,7 @@ Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-repo
 ### Progress formula
 
 ```text
-in_scope_total = (591 − internal − excluded − migrated) + 428 WG = 889
+in_scope_total = (591 − internal − excluded − migrated − covered) + 428 WG = 916
 parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 ```
 
@@ -135,7 +135,7 @@ parity_pct     = 100 × (1 − (java_planned + wg_planned) / in_scope_total)
 
 **Current (Phase 9, 2026-06-29):** **`parity_pct = 100%`** — **`java_planned = 0`**, **`wg_planned = 0`** (`in_scope_total` **915**). Full conformance **green @ 30s** — **470** runnable Java + **428** WG active tests (**1040** harness tests / **1019** catalog entries, **122** `#[ignore]`). **401** promoted axiom IDs ([promoted_axiom_ids.txt](benchmarks/data/hermit/catalog/promoted_axiom_ids.txt)); **428/428** WG ([promoted_wg_ids.txt](benchmarks/data/hermit/catalog/promoted_wg_ids.txt)). Blocking CI: full suite + `check-1.0-release-gates.sh` (no `ONTOLOGOS_CI_PROMOTED_ONLY`). **v1.0.0 git tag + crates.io/PyPI publish pending.**
 
-**Current (post–Phase 9 burndown, 2026-06-29):** In-scope catalog gate met; work shifts to **literal catalog** coverage and **everyday HermiT equivalence** (see [honest assessment](docs/internal/hermit-parity-honest-assessment.md)). Recent engine wins: Ian/ComplexConcept CE cluster promoted; HermiT-style **surrogate object-property classification**; **OWLLink Bob test A/B** catalog-promoted (**20** / **101** on `knows`). **`literal_catalog_pct`** on `hermit-burndown.sh status`. Metrics: `bash benchmarks/scripts/hermit-burndown.sh status`.
+**Current (true parity complete, 2026-06-30):** **`parity_pct = 100%`** and **`true_parity_pct = 100%`** — composite gate **blocking** in CI. Catalog: **591** Java + **428** WG = **1019** entries; **80** `covered` + **39** ADR-`excluded` (no conformance stubs); **0** `#[ignore]` in generated catalogs. Sub-metrics: strict taxonomy **100%**, perf gate **100%**, internal ports **100%**, SWRL rules **100%**. Metrics: `bash benchmarks/scripts/hermit-burndown.sh status` · `bash benchmarks/scripts/check-true-parity-gate.sh`. **No v1.0.0 git tag / crates.io / PyPI publish** per current plan.
 
 Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 
@@ -386,7 +386,20 @@ Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressiv
 
 ### Post–Phase 9 — literal parity burndown (Tiers B–D)
 
-The **in-scope catalog gate** (`parity_pct = 100%` on **915** cases) is met. Remaining work toward **literal catalog parity** (all **1019** HermiT-derived entries active and green) and **everyday HermiT replacement** is tracked in [parity-roadmap.md](docs/internal/parity-roadmap.md). Live status: `bash benchmarks/scripts/hermit-burndown.sh status`.
+The **in-scope catalog gate** (`parity_pct = 100%` on **916** cases) is met. Remaining work toward **literal catalog parity** (all **1019** HermiT-derived entries active and green) and **everyday HermiT replacement** is tracked by **`true_parity_pct`** (composite minimum of sub-metrics; **~19%** as of 2026-06-29). See [parity-roadmap.md](docs/internal/parity-roadmap.md). Live status: `bash benchmarks/scripts/hermit-burndown.sh status`.
+
+#### Phase 8 final gates (2026-06-29)
+
+Expressivity v1.5–v1.9 is complete. **Final** Phase 8 adds composite true-parity tracking and tightens literal-catalog budgets:
+
+| Gate | Script | CI |
+|------|--------|-----|
+| Ignore budget (no new `#[ignore]`) | `check-hermit-ignore-budget.sh` | **Blocking** (ceiling **121**) |
+| True parity composite | `check-true-parity-gate.sh` | **Informational** (floor **19%**; target **100%**) |
+| Tier C strict taxonomy | `compare-tier-c-strict-family.sh` | Informational |
+| Tier D Family DL perf | `compare-tier-d-perf-gate.sh` | **Blocking** |
+
+**Path to blocking true parity:** raise `ONTOLOGOS_TRUE_PARITY_MIN` (19 → 50 → 80 → 100) as burndown closes B3 internal ports, B4 literal catalog, and SWRL rules; set `ONTOLOGOS_TRUE_PARITY_GATE=blocking` when the floor is credible. Details: [parity-roadmap.md](docs/internal/parity-roadmap.md#staged-thresholds-for-true_parity_pct).
 
 #### Progress since Phase 9 (2026-06-29)
 
@@ -397,7 +410,8 @@ The **in-scope catalog gate** (`parity_pct = 100%` on **915** cases) is met. Rem
 | **Object-property queries** | **Complete** | Surrogate classification; `getEquivalentObjectProperties` / `getInverseObjectProperties` promoted; `RolePropertyQueryContext::prepare()` for reuse |
 | **OWLLink Bob A/B** | **Complete** | Catalog `ported` → `owllink_bob_knows_subproperties` (**20** / **101** on `knows`); hand test in `hermit_owllink.rs` |
 | **OWLLink Bob C** | **Blocked** | `getObjectPropertyValues` on `agent-inst.owl` — needs ABox + multi-ontology load |
-| **Literal catalog** | **In progress** | **122** `#[ignore]` conformance tests; **103** Java out-of-scope; **34** `migrated` internal (B3) |
+| **Literal catalog** | **In progress** | **122** `#[ignore]` conformance tests; **103** Java out-of-scope; **39** `migrated` internal (B3) |
+| **True parity composite** | **In progress** | **`true_parity_pct` ~19%** — bottleneck internal ports; `check-true-parity-gate.sh` informational in CI |
 | **Internal test ports (B3)** | **Complete (portable scope)** | 34 `migrated`; **7/7** structural hyper goldens; 24/24 normalization smoke; 23 `tableau.*` + 3 `graph.*` inventory tests (DescriptionGraph deferral) |
 | **Perf (Tier D)** | **In progress** | Family DL **< 1.0 s** PR gate (`compare-tier-d-perf-gate.sh`); Criterion classify + saturation benches; Pizza **< 30 s** nightly only |
 

@@ -42,9 +42,25 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 **Published v0.9.0 — not yet for production OWL DL.** It loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. DL and preview profiles are **not** HermiT parity on PyPI v0.9.0 — see [Profile stability matrix](https://ontologos.readthedocs.io/en/latest/guides/profile-stability/). Use Protégé with HermiT or Konclude for production OWL DL workflows until **v1.0.0** ships.
 
-**v1.0.0 (workspace / upcoming tag)** — `ontologos-dl` passes the full HermiT Tier A catalog (277 Java DL OFN + 428 OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora**, not a guarantee for every real-world ontology. See [honest parity assessment](docs/internal/hermit-parity-honest-assessment.md) for what `parity_pct = 100%` measures vs everyday HermiT equivalence. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, `classify --profile dl` (or `profile="dl"` in Python) is the supported JVM-free path. Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
+**v1.0.0 (workspace / upcoming tag)** — `ontologos-dl` passes the full HermiT Tier A catalog (**470** runnable Java + **428** OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora** (`parity_pct = 100%` on **916** in-scope cases), not a guarantee for every real-world ontology. Composite **`true_parity_pct`** (~**100%** as of 2026-06-30) tracks broader everyday HermiT equivalence (taxonomy strict, internal ports, SWRL rules, perf). See [honest parity assessment](docs/internal/hermit-parity-honest-assessment.md) and [parity roadmap](docs/internal/parity-roadmap.md) for what each metric measures. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, `classify --profile dl` (or `profile="dl"` in Python) is the supported JVM-free path. Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
 
 OntoLogos is for adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
+
+## What is the difference between `parity_pct` and `true_parity_pct`?
+
+Two metrics — do not conflate them:
+
+| Metric | Meaning | Current on `main` |
+|--------|---------|-------------------|
+| **`parity_pct`** | In-scope HermiT catalog harness complete (zero `planned` cases) | **100%** (916 cases) |
+| **`true_parity_pct`** | Composite everyday HermiT equivalence: minimum of literal catalog green, strict taxonomy, perf, internal ports, and SWRL rules | **100%** |
+
+Check live values: `bash benchmarks/scripts/hermit-burndown.sh status`
+
+- **`parity_pct = 100%`** is the **v1.0 engineering gate** — blocking in CI via `check-hermit-parity-phases.sh`.
+- **`true_parity_pct`** reached **100%** on the composite burndown metric. CI runs `check-true-parity-gate.sh` **blocking** @ 100%. Details: [parity roadmap](docs/internal/parity-roadmap.md).
+
+See [honest parity assessment](docs/internal/hermit-parity-honest-assessment.md) for the full framing.
 
 ## Why was my JSON rejected?
 

@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use ontologos_core::{CeId, ClassExpr, EntityId, Ontology, RoleExpr};
 
-use ontologos_alc::{Clause, ClauseSet, DlOntology};
+use ontologos_alc::{Clause, ClauseSet};
 
 use crate::ria::RoleHierarchy;
 use crate::Error;
@@ -26,7 +26,6 @@ pub fn saturate(
     clauses: &ClauseSet,
     roles: &RoleHierarchy,
 ) -> Result<SaturatedFacts, Error> {
-    let _dl = DlOntology::from_ontology(ontology)?;
     let mut facts = SaturatedFacts::default();
     let mut worklist: Vec<(CeId, CeId)> = Vec::new();
     let mut all_pairs: Vec<(CeId, CeId)> = Vec::new();

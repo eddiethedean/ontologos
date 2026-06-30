@@ -34,6 +34,10 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/check-hermit-ignore-budget.sh
           ./benchmarks/scripts/check-hermit-ignore-budget.sh
+      - name: True parity gate (Phase 8 final — blocking @ 100%)
+        run: |
+          chmod +x benchmarks/scripts/check-true-parity-gate.sh
+          ./benchmarks/scripts/check-true-parity-gate.sh
       - name: EL Pizza golden conformance
         run: ./benchmarks/scripts/compare-pizza-el-golden.sh
       - name: HermiT Tier B classification fixtures
@@ -101,6 +105,21 @@ jobs:
         run: cargo test -p ontologos-conformance --test phase7_closure --release --locked
       - name: Build CLI
         run: cargo build -p ontologos-cli --release
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Download HermiT JAR
+        run: |
+          chmod +x benchmarks/scripts/download-hermit-jar.sh
+          ./benchmarks/scripts/download-hermit-jar.sh
+      - name: Tier C strict family gate (HermiT)
+        env:
+          HERMIT_JAR: benchmarks/data/hermit.jar
+        run: |
+          chmod +x benchmarks/scripts/compare-tier-c-strict-family.sh
+          chmod +x benchmarks/scripts/audit-taxonomy-extras.sh
+          ./benchmarks/scripts/compare-tier-c-strict-family.sh
       - name: Tier D perf gate (Family DL)
         run: |
           chmod +x benchmarks/scripts/compare-tier-d-perf-gate.sh

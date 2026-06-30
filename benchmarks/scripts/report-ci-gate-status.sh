@@ -34,6 +34,13 @@ else
 fi
 
 echo ""
+if bash "${ROOT}/benchmarks/scripts/check-true-parity-gate.sh" 2>&1; then
+  echo "True parity gate: PASS (blocking @ 100%)"
+else
+  echo "True parity gate: FAIL (see parity-roadmap.md)"
+fi
+
+echo ""
 BIN="$("${ROOT}/benchmarks/scripts/build-conformance-tools.sh" 2>/dev/null || true)"
 if [[ -x "${BIN}/dl_ofn_pass_rate" ]]; then
   "${BIN}/dl_ofn_pass_rate" | head -8

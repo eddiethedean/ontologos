@@ -1,9 +1,18 @@
 //! ALC tableau: expansion, clash detection, blocking, taxonomy extraction.
 
 mod block;
+pub mod blocking_validator;
 pub mod cache;
 mod clash;
+pub mod dependency_set;
+pub mod description_graph;
+pub mod dl_clause_eval;
+pub mod extension_manager;
 mod expand;
+pub mod graph_merge;
+pub mod ni_rules;
+pub mod tuple_index;
+pub mod tuple_table;
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -17,7 +26,8 @@ use crate::dl_ontology::DlOntology;
 use crate::Error;
 
 /// Skip pairwise entailment inference when the ontology has too many named classes.
-const MAX_CLASSES_FOR_ENTAILMENT_INFER: usize = 128;
+/// Pizza tutorial corpus (~142 named classes) needs full pairwise inference for HermiT parity.
+const MAX_CLASSES_FOR_ENTAILMENT_INFER: usize = 192;
 
 /// Facts from DL saturation to seed the initial tableau state.
 #[derive(Debug, Default, Clone)]

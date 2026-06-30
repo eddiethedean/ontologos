@@ -139,9 +139,13 @@ fn print_text_header(metrics: &ontologos_conformance::ParityMetrics) {
         metrics.literal_catalog_total,
         metrics.conformance_ignored
     );
+    println!(
+        "  literal green:   {:.1}% (catalog status + ADR-waived covered/excluded)",
+        metrics.literal_green_pct
+    );
     if metrics.java_out_of_scope > 0 {
         println!(
-            "  java out-scope:  {} (excluded/internal/migrated)",
+            "  java out-scope:  {} (excluded/internal/migrated/covered)",
             metrics.java_out_of_scope
         );
     }
@@ -152,6 +156,19 @@ fn print_text_header(metrics: &ontologos_conformance::ParityMetrics) {
     println!(
         "  perf gate:       {:.1}% (ROADMAP DL targets)",
         metrics.perf_gate_pct
+    );
+    println!(
+        "  internal ports:  {:.1}% (tableau/graph → alc unit tests)",
+        metrics.internal_port_pct
+    );
+    println!(
+        "  rules test:      {:.1}% (RulesTest swrl active / catalog)",
+        metrics.rules_test_pct
+    );
+    println!("  activatable #[ignore]: {}", metrics.activatable_ignored);
+    println!(
+        "  true parity:     {:.1}% (min of sub-metrics; target 100%)",
+        metrics.true_parity_pct
     );
 }
 
@@ -186,11 +203,12 @@ fn print_next_steps(metrics: &ontologos_conformance::ParityMetrics) {
             metrics.java_planned
         );
     }
-    if metrics.conformance_ignored > 0 {
+    if metrics.activatable_ignored > 0 {
         println!(
-            "  cargo test -p ontologos-conformance -- --ignored   # {} dormant B4 tests",
-            metrics.conformance_ignored
+            "  cargo test -p ontologos-conformance -- --ignored   # {} activatable B4 tests",
+            metrics.activatable_ignored
         );
+        println!("  bash benchmarks/scripts/report-ignored-buckets.sh");
     }
     if metrics.backlog == 0 && metrics.unpromoted_wg == 0 {
         println!("  catalog parity 100% — run check-hermit-parity-phases.sh");

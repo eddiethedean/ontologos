@@ -16,6 +16,12 @@ done
 if [[ "${needs_build}" -eq 0 ]] && [[ "${BIN_DIR}/parity_status" -ot "${ROOT}/crates/ontologos-conformance/src/catalog.rs" ]]; then
   needs_build=1
 fi
+if [[ "${needs_build}" -eq 0 ]] && [[ "${BIN_DIR}/parity_status" -ot "${ROOT}/crates/ontologos-conformance/src/bin/parity_status.rs" ]]; then
+  needs_build=1
+fi
+if [[ "${needs_build}" -eq 0 ]] && [[ "${BIN_DIR}/parity_status" -ot "${ROOT}/benchmarks/data/hermit/catalog/cases.json" ]]; then
+  needs_build=1
+fi
 
 if [[ "${needs_build}" -eq 1 ]]; then
   cargo build --release -q -p ontologos-conformance --bins

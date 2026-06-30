@@ -14,7 +14,7 @@ Single source of truth for `--profile` / `profile=` behavior. See [Release statu
 | `dl` | **Stable** (v1.0.0 workspace; publish pending) | `ontologos-dl` | **100% in-scope catalog** gate — see [honest assessment](../internal/hermit-parity-honest-assessment.md) | `ontologos-dl = "1.0.0"` after tag; build from `main` today |
 | `dl-preview` | **Preview** | `ontologos-dl` (gated) | Same engine as `dl` + extra checks | No |
 | `alc` | **Preview** | `ontologos-alc` | Subset | No |
-| `swrl` | **Preview** | `ontologos-swrl` | Minimal | No |
+| `swrl` | **Stable** | `ontologos-swrl` | 24/24 RulesTest @ Tier A | Yes — DLSafe SWRL forward chaining + DL consistency |
 | `ql` (detection only) | **Detection only** | None | N/A | Use ELK or another QL reasoner |
 
 ## What “stable” means here

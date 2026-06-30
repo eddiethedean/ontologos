@@ -20,7 +20,7 @@ pub use catalog::{
     scan_promoted_wg_failures, scan_unpromoted_passing_axiom_cases,
     scan_unpromoted_passing_wg_cases, scan_wg_failures, stable_promoted_axiom_ids,
     sync_promoted_lists, wg_case_short_id, write_promoted_axiom_ids, write_promoted_wg_ids,
-    AuditOptions, HermitCase, ParityMetrics, PlannedBacklogAudit, PlannedBacklogSummary,
+    check_logical_entailment, AuditOptions, HermitCase, ParityMetrics, PlannedBacklogAudit, PlannedBacklogSummary,
     PlannedJavaAudit, PlannedJavaCategory, PlannedWgAudit, PlannedWgCategory, WgCase, WgFailure,
     WgFailureBucket,
 };
@@ -124,6 +124,7 @@ pub fn classification_fixtures_available() -> bool {
         "reasoner/res/wine.xml",
         "reasoner/res/galen-ians-full-undoctored.xml",
         "reasoner/res/propreo.xml",
+        "reasoner/res/dolce_all.xml",
     ]
     .iter()
     .all(|relative| classification_fixture_path(relative).is_some())

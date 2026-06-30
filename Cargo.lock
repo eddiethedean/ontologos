@@ -1090,6 +1090,7 @@ dependencies = [
  "ontologos-rdfs",
  "ontologos-rl",
  "ontologos-swrl",
+ "serde",
  "thiserror 2.0.18",
 ]
 
@@ -1126,6 +1127,7 @@ dependencies = [
  "ontologos-explain",
  "ontologos-facade",
  "ontologos-parser",
+ "ontologos-ql",
  "ontologos-rdfs",
  "ontologos-rl",
  "pyo3",

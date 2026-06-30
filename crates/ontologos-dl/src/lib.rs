@@ -3,6 +3,7 @@
 #![warn(missing_docs)]
 
 mod object_property_query;
+mod defined_class;
 mod cardinality;
 mod cardinality_grid;
 mod classify;

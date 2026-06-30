@@ -3,30 +3,6 @@
 use ontologos_conformance::run_hermit_case;
 
 #[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_graph_graphtest_testcontradictionongraph() {
-    run_hermit_case("graph.GraphTest.testContradictionOnGraph");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_graph_graphtest_testgraph1() {
-    run_hermit_case("graph.GraphTest.testGraph1");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_graph_graphtest_testgraph2() {
-    run_hermit_case("graph.GraphTest.testGraph2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_anyuritest_testinvalidanyuriliterals() {
-    run_hermit_case("reasoner.AnyURITest.testInvalidAnyURILiterals");
-}
-
-#[test]
 fn hermit_reasoner_anyuritest_testlength_1() {
     run_hermit_case("reasoner.AnyURITest.testLength_1");
 }
@@ -112,18 +88,6 @@ fn hermit_reasoner_anyuritest_testpatternandlength1_3() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_anyuritest_testpatternandlength2() {
-    run_hermit_case("reasoner.AnyURITest.testPatternAndLength2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_anyuritest_testpatternandlength3() {
-    run_hermit_case("reasoner.AnyURITest.testPatternAndLength3");
-}
-
-#[test]
 fn hermit_reasoner_anyuritest_testpatterncomplement1_1() {
     run_hermit_case("reasoner.AnyURITest.testPatternComplement1_1");
 }
@@ -136,24 +100,6 @@ fn hermit_reasoner_anyuritest_testpatterncomplement1_2() {
 #[test]
 fn hermit_reasoner_anyuritest_testpatterncomplement1_3() {
     run_hermit_case("reasoner.AnyURITest.testPatternComplement1_3");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_anyuritest_testcomplement2() {
-    run_hermit_case("reasoner.AnyURITest.testComplement2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_anyuritest_testcomplement3() {
-    run_hermit_case("reasoner.AnyURITest.testComplement3");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_anyuritest_testcomplement4() {
-    run_hermit_case("reasoner.AnyURITest.testComplement4");
 }
 
 #[test]
@@ -214,70 +160,6 @@ fn hermit_reasoner_binarydatatest_testintersection_1() {
 #[test]
 fn hermit_reasoner_binarydatatest_testintersection_2() {
     run_hermit_case("reasoner.BinaryDataTest.testIntersection_2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_binarydatatest_testexplicitsize() {
-    run_hermit_case("reasoner.BinaryDataTest.testExplicitSize");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_binarydatatest_testenumerate1() {
-    run_hermit_case("reasoner.BinaryDataTest.testEnumerate1");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_binarydatatest_testenumerate2() {
-    run_hermit_case("reasoner.BinaryDataTest.testEnumerate2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_binarydatatest_testbase64parsing() {
-    run_hermit_case("reasoner.BinaryDataTest.testBase64Parsing");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_classificationindividualreusetest_testgaleniansfullundoctored() {
-    run_hermit_case("reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored");
-}
-
-#[test]
-#[ignore = "fixture not vendored (see benchmarks manifest)"]
-fn hermit_reasoner_classificationindividualreusetest_testdolce() {
-    run_hermit_case("reasoner.ClassificationIndividualReuseTest.testDolce");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: hermit_classification_wine_taxonomy"]
-fn hermit_reasoner_classificationtest_testwine() {
-    run_hermit_case("reasoner.ClassificationTest.testWine");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: hermit_classification_galen_taxonomy"]
-fn hermit_reasoner_classificationtest_testgaleniansfullundoctored() {
-    run_hermit_case("reasoner.ClassificationTest.testGalenIansFullUndoctored");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: hermit_classification_pizza_taxonomy"]
-fn hermit_reasoner_classificationtest_testpizza() {
-    run_hermit_case("reasoner.ClassificationTest.testPizza");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: hermit_classification_propreo_taxonomy"]
-fn hermit_reasoner_classificationtest_testpropreo() {
-    run_hermit_case("reasoner.ClassificationTest.testPropreo");
 }
 
 #[test]
@@ -623,42 +505,6 @@ fn hermit_reasoner_datatypestest_testdatatypeunionintersection4() {
 #[test]
 fn hermit_reasoner_datatypestest_testnegativedpassertions() {
     run_hermit_case("reasoner.DatatypesTest.testNegativeDPAssertions");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_datetimetest_testparsing() {
-    run_hermit_case("reasoner.DateTimeTest.testParsing");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_datetimetest_testexactintervalswithouttz1() {
-    run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithoutTZ1");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_datetimetest_testexactintervalswithouttz2() {
-    run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithoutTZ2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_datetimetest_testexactintervalswithtz1() {
-    run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithTZ1");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_datetimetest_testexactintervalswithtz2() {
-    run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithTZ2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_datetimetest_testexactintervalswithtz3() {
-    run_hermit_case("reasoner.DateTimeTest.testExactIntervalsWithTZ3");
 }
 
 #[test]
@@ -1101,81 +947,6 @@ fn hermit_reasoner_numericstest_testclique() {
     run_hermit_case("reasoner.NumericsTest.testClique");
 }
 
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owllink_bob_knows_subproperties"]
-fn hermit_reasoner_owllinktest_testbobtestaandb() {
-    run_hermit_case("reasoner.OWLLinkTest.testBobTestAandB");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owllink_update_hierarchy_buffered"]
-fn hermit_reasoner_owllinktest_testupdatesbuffered() {
-    run_hermit_case("reasoner.OWLLinkTest.testUpdatesBuffered");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owllink_update_hierarchy_non_buffered"]
-fn hermit_reasoner_owllinktest_testupdatesnonbuffered() {
-    run_hermit_case("reasoner.OWLLinkTest.testUpdatesNonBuffered");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owllink_primer_smoke"]
-fn hermit_reasoner_owllinktest_testinverses() {
-    run_hermit_case("reasoner.OWLLinkTest.testInverses");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owllink_object_properties_declaration_smoke"]
-fn hermit_reasoner_owllinktest_testobjectproperties() {
-    run_hermit_case("reasoner.OWLLinkTest.testObjectProperties");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owllink_primer_smoke"]
-fn hermit_reasoner_owllinktest_testsuccessivecalls() {
-    run_hermit_case("reasoner.OWLLinkTest.testSuccessiveCalls");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_owllinktest_testbobtestc() {
-    run_hermit_case("reasoner.OWLLinkTest.testBobTestC");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owllink_disjoint_properties_has_parent_spouse"]
-fn hermit_reasoner_owllinktest_testdisjointproperties() {
-    run_hermit_case("reasoner.OWLLinkTest.testDisjointProperties");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owllink_disjoint_classes_father_mother"]
-fn hermit_reasoner_owllinktest_testdisjointclasses() {
-    run_hermit_case("reasoner.OWLLinkTest.testDisjointClasses");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_owllinktest_testbobtests() {
-    run_hermit_case("reasoner.OWLLinkTest.testBobTests");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: owlreasoner_inverse_object_property_expressions_cycle"]
-fn hermit_reasoner_owlreasonertest_testgetinverseobjectpropertyexpressions() {
-    run_hermit_case("reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions");
-}
-
 #[test]
 fn hermit_reasoner_owlreasonertest_testbottomobjectpropertysubs() {
     run_hermit_case("reasoner.OWLReasonerTest.testBottomObjectPropertySubs");
@@ -1199,24 +970,6 @@ fn hermit_reasoner_owlreasonertest_testincrementaladdition2() {
 #[test]
 fn hermit_reasoner_owlreasonertest_testgetdatapropertyvalues() {
     run_hermit_case("reasoner.OWLReasonerTest.testGetDataPropertyValues");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_owlreasonertest_testequivalenceclasses() {
-    run_hermit_case("reasoner.OWLReasonerTest.testEquivalenceClasses");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_owlreasonertest_testnonequivalenceclasses() {
-    run_hermit_case("reasoner.OWLReasonerTest.testNonEquivalenceClasses");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testinvalidstringliterals() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testInvalidStringLiterals");
 }
 
 #[test]
@@ -1270,18 +1023,6 @@ fn hermit_reasoner_rdfplainliteraltest_testintersection_2() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testexplicitsize() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testExplicitSize");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testenumerate() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testEnumerate");
-}
-
-#[test]
 fn hermit_reasoner_rdfplainliteraltest_testpattern1_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPattern1_1");
 }
@@ -1322,18 +1063,6 @@ fn hermit_reasoner_rdfplainliteraltest_testpatternandlength1_3() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testpatternandlength2() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternAndLength2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testpatternandlength3() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternAndLength3");
-}
-
-#[test]
 fn hermit_reasoner_rdfplainliteraltest_testpatterncomplement1_1() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternComplement1_1");
 }
@@ -1346,36 +1075,6 @@ fn hermit_reasoner_rdfplainliteraltest_testpatterncomplement1_2() {
 #[test]
 fn hermit_reasoner_rdfplainliteraltest_testpatterncomplement1_3() {
     run_hermit_case("reasoner.RDFPlainLiteralTest.testPatternComplement1_3");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testcomplement2() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testComplement2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testcomplement3() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testComplement3");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testcomplement4() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testComplement4");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testlangrange1() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testLangRange1");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_rdfplainliteraltest_testlangrange2() {
-    run_hermit_case("reasoner.RDFPlainLiteralTest.testLangRange2");
 }
 
 #[test]
@@ -1439,12 +1138,6 @@ fn hermit_reasoner_reasonercoreblockingtest_testwidmann2() {
 }
 
 #[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_reasoner_reasonercoreblockingtest_testdependencydisjunctionmergingbug() {
-    run_hermit_case("reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug");
-}
-
-#[test]
 fn hermit_reasoner_reasonercoreblockingtest_testiant6() {
     run_hermit_case("reasoner.ReasonerCoreBlockingTest.testIanT6");
 }
@@ -1452,18 +1145,6 @@ fn hermit_reasoner_reasonercoreblockingtest_testiant6() {
 #[test]
 fn hermit_reasoner_reasonercoreblockingtest_testiant9() {
     run_hermit_case("reasoner.ReasonerCoreBlockingTest.testIanT9");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testemptychain() {
-    run_hermit_case("reasoner.ReasonerTest.testEmptyChain");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testonydeclaredentitiesinhierarchy() {
-    run_hermit_case("reasoner.ReasonerTest.testOnyDeclaredEntitiesInHierarchy");
 }
 
 #[test]
@@ -1479,12 +1160,6 @@ fn hermit_reasoner_reasonertest_testuniversalrolepartitionedabox() {
 #[test]
 fn hermit_reasoner_reasonertest_testincrementalwithsameas() {
     run_hermit_case("reasoner.ReasonerTest.testIncrementalWithSameAs");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testclassificationwithvalidatedblockingerror() {
-    run_hermit_case("reasoner.ReasonerTest.testClassificationWithValidatedBlockingError");
 }
 
 #[test]
@@ -1523,21 +1198,8 @@ fn hermit_reasoner_reasonertest_testincrementalwithfreshnames() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testinstantemanagererror() {
-    run_hermit_case("reasoner.ReasonerTest.testInstanteManagerError");
-}
-
-#[test]
 fn hermit_reasoner_reasonertest_testtopopequivalence() {
     run_hermit_case("reasoner.ReasonerTest.testTopOPEquivalence");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: reflexive_and_same_as_expand_property_instances"]
-fn hermit_reasoner_reasonertest_testreflexiveandsameas() {
-    run_hermit_case("reasoner.ReasonerTest.testReflexiveAndSameAs");
 }
 
 #[test]
@@ -1685,29 +1347,9 @@ fn hermit_reasoner_reasonertest_testlearningbacktracking() {
     run_hermit_case("reasoner.ReasonerTest.testLearningBacktracking");
 }
 
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: same_as_propagates_class_assertion"]
-fn hermit_reasoner_reasonertest_testsameas() {
-    run_hermit_case("reasoner.ReasonerTest.testSameAs");
-}
-
 #[test]
 fn hermit_reasoner_reasonertest_testobjectpropertydomainstimothybug() {
     run_hermit_case("reasoner.ReasonerTest.testObjectPropertyDomainsTimothyBug");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testdatatypeliterals() {
-    run_hermit_case("reasoner.ReasonerTest.testDatatypeLiterals");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: individual_property_retrieval"]
-fn hermit_reasoner_reasonertest_testindividualretrievalbug() {
-    run_hermit_case("reasoner.ReasonerTest.testIndividualRetrievalBug");
 }
 
 #[test]
@@ -1743,20 +1385,6 @@ fn hermit_reasoner_reasonertest_testanonymousindividualconstraints4() {
 #[test]
 fn hermit_reasoner_reasonertest_testtransitivity() {
     run_hermit_case("reasoner.ReasonerTest.testTransitivity");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: sub_and_super_concepts"]
-fn hermit_reasoner_reasonertest_testsubandsuperconcepts() {
-    run_hermit_case("reasoner.ReasonerTest.testSubAndSuperConcepts");
-}
-
-// Hand-written implementation: see hermit_rl/hermit_rdfs/hermit_el.rs
-#[test]
-#[ignore = "implemented in hand-written module: sub_and_super_roles"]
-fn hermit_reasoner_reasonertest_testsubandsuperroles() {
-    run_hermit_case("reasoner.ReasonerTest.testSubAndSuperRoles");
 }
 
 #[test]
@@ -1862,18 +1490,6 @@ fn hermit_reasoner_reasonertest_testnonunarykeys() {
 #[test]
 fn hermit_reasoner_reasonertest_testnonunarykeys2() {
     run_hermit_case("reasoner.ReasonerTest.testNonUnaryKeys2");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testhierarchyprinting1() {
-    run_hermit_case("reasoner.ReasonerTest.testHierarchyPrinting1");
-}
-
-#[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testhierarchyprinting2() {
-    run_hermit_case("reasoner.ReasonerTest.testHierarchyPrinting2");
 }
 
 #[test]
@@ -2042,7 +1658,6 @@ fn hermit_reasoner_reasonertest_testheinsohntbox3modified() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testheinsohntbox4a() {
     run_hermit_case("reasoner.ReasonerTest.testHeinsohnTBox4a");
 }
@@ -2053,7 +1668,6 @@ fn hermit_reasoner_reasonertest_testheinsohntbox4b() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
 fn hermit_reasoner_reasonertest_testheinsohntbox7() {
     run_hermit_case("reasoner.ReasonerTest.testHeinsohnTBox7");
 }
@@ -2174,12 +1788,6 @@ fn hermit_reasoner_reasonertest_testianbug1b() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testianbug3() {
-    run_hermit_case("reasoner.ReasonerTest.testIanBug3");
-}
-
-#[test]
 fn hermit_reasoner_reasonertest_testianbug4() {
     run_hermit_case("reasoner.ReasonerTest.testIanBug4");
 }
@@ -2245,12 +1853,6 @@ fn hermit_reasoner_reasonertest_testianbackjumping2() {
 }
 
 #[test]
-#[ignore = "documented semantic or mapping gap (see manifest)"]
-fn hermit_reasoner_reasonertest_testianbackjumping3() {
-    run_hermit_case("reasoner.ReasonerTest.testIanBackjumping3");
-}
-
-#[test]
 fn hermit_reasoner_reasonertest_testnominals1() {
     run_hermit_case("reasoner.ReasonerTest.testNominals1");
 }
@@ -2278,12 +1880,6 @@ fn hermit_reasoner_reasonertest_testnominals5() {
 #[test]
 fn hermit_reasoner_reasonertest_testnominals6() {
     run_hermit_case("reasoner.ReasonerTest.testNominals6");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_reasoner_reasonertest_testdependencydisjunctionmergingbug() {
-    run_hermit_case("reasoner.ReasonerTest.testDependencyDisjunctionMergingBug");
 }
 
 #[test]
@@ -2762,336 +2358,6 @@ fn hermit_structural_clausificationdatatypestest_testdatacomplementof4() {
 }
 
 #[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_clausificationtest_testbasic() {
-    run_hermit_case("structural.ClausificationTest.testBasic");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_clausificationtest_testnominals1() {
-    run_hermit_case("structural.ClausificationTest.testNominals1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_clausificationtest_testnominals2() {
-    run_hermit_case("structural.ClausificationTest.testNominals2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_clausificationtest_testnominals3() {
-    run_hermit_case("structural.ClausificationTest.testNominals3");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_clausificationtest_testnominals4() {
-    run_hermit_case("structural.ClausificationTest.testNominals4");
-}
-
-#[test]
 fn hermit_structural_clausificationtest_testasymmetry() {
     run_hermit_case("structural.ClausificationTest.testAsymmetry");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_clausificationtest_testexistsself1() {
-    run_hermit_case("structural.ClausificationTest.testExistsSelf1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_clausificationtest_testexistsself2() {
-    run_hermit_case("structural.ClausificationTest.testExistsSelf2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_clausificationtest_testhaskeys() {
-    run_hermit_case("structural.ClausificationTest.testHasKeys");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertieshasvalue1() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesHasValue1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertieshasvalue2() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesHasValue2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesall1() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesAll1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesall2() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesAll2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiessome1() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesSome1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiessome2() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesSome2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesdataoneof1() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesDataOneOf1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesdataoneof2() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesDataOneOf2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesdatacomplementof1() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesDataComplementOf1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesmax1() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesMax1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesmax2() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesMax2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesmax3() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesMax3");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesmax4() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesMax4");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesmin1() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesMin1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesmin2() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesMin2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesmin3() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesMin3");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesmin4() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesMin4");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesexact1() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesExact1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesexact2() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesExact2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesexact3() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesExact3");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testdatapropertiesexact4() {
-    run_hermit_case("structural.NormalizationTest.testDataPropertiesExact4");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testkeys1() {
-    run_hermit_case("structural.NormalizationTest.testKeys1");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testkeys2() {
-    run_hermit_case("structural.NormalizationTest.testKeys2");
-}
-
-#[test]
-#[ignore = "ported to ontologos-alc/dl unit tests"]
-fn hermit_structural_normalizationtest_testtopobjectpropertyinsuperposition() {
-    run_hermit_case("structural.NormalizationTest.testTopObjectPropertyInSuperPosition");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_blockingvalidatortest_testoneinvalidblock() {
-    run_hermit_case("tableau.BlockingValidatorTest.testOneInvalidBlock");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_blockingvalidatortest_testinvalidblockwithannotatedequalities() {
-    run_hermit_case("tableau.BlockingValidatorTest.testInvalidBlockWithAnnotatedEqualities");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_dlclauseevaluationtest_testevaluator() {
-    run_hermit_case("tableau.DLClauseEvaluationTest.testEvaluator");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_dependencysettest_testdependencyset1() {
-    run_hermit_case("tableau.DependencySetTest.testDependencySet1");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_dependencysettest_testdependencyset2() {
-    run_hermit_case("tableau.DependencySetTest.testDependencySet2");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_dependencysettest_testdependencyset3() {
-    run_hermit_case("tableau.DependencySetTest.testDependencySet3");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_graphtest_testgraphmerging() {
-    run_hermit_case("tableau.GraphTest.testGraphMerging");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_graphtest_testgraph1() {
-    run_hermit_case("tableau.GraphTest.testGraph1");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_mergetest_testmergeandbacktrack() {
-    run_hermit_case("tableau.MergeTest.testMergeAndBacktrack");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testniruledeterministic() {
-    run_hermit_case("tableau.NIRuleTest.testNIRuleDeterministic");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testnondeterministicequality() {
-    run_hermit_case("tableau.NIRuleTest.testNondeterministicEquality");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testniprunesonenode() {
-    run_hermit_case("tableau.NIRuleTest.testNIPrunesOneNode");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testnidoesnotprune() {
-    run_hermit_case("tableau.NIRuleTest.testNIDoesNotPrune");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testrepeatedniapplications() {
-    run_hermit_case("tableau.NIRuleTest.testRepeatedNIApplications");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testcontentingnis() {
-    run_hermit_case("tableau.NIRuleTest.testContentingNIs");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testniandpruning() {
-    run_hermit_case("tableau.NIRuleTest.testNIAndPruning");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testdeterministicruleapplication() {
-    run_hermit_case("tableau.NIRuleTest.testDeterministicRuleApplication");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testdisjunctionderivation() {
-    run_hermit_case("tableau.NIRuleTest.testDisjunctionDerivation");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_niruletest_testdisjunctionsintreepart() {
-    run_hermit_case("tableau.NIRuleTest.testDisjunctionsInTreePart");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_tupleindextest_testindex1() {
-    run_hermit_case("tableau.TupleIndexTest.testIndex1");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_tupleindextest_testindex2() {
-    run_hermit_case("tableau.TupleIndexTest.testIndex2");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_tupletablefullindextest_testindex() {
-    run_hermit_case("tableau.TupleTableFullIndexTest.testIndex");
-}
-
-#[test]
-#[ignore = "HermiT engine-internal test — port when ontologos-dl internals are exposed"]
-fn hermit_tableau_tupletablefullindextest_testlotsofdata() {
-    run_hermit_case("tableau.TupleTableFullIndexTest.testLotsOfData");
 }

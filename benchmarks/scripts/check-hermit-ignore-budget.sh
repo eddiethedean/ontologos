@@ -11,7 +11,13 @@ count_ignores() {
     echo 0
     return
   fi
-  rg -c '#\[ignore' "$file" || echo 0
+  local count=0
+  if command -v rg >/dev/null 2>&1; then
+    count=$(rg -c '#\[ignore' "$file" 2>/dev/null | head -1) || count=0
+  else
+    count=$(grep -c '#\[ignore' "$file" 2>/dev/null) || count=0
+  fi
+  echo "${count:-0}"
 }
 
 HERMIT_IGNORED=$(count_ignores "$GENERATED")

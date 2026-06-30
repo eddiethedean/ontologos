@@ -15,8 +15,12 @@ from pathlib import Path
 OWL_THING = "http://www.w3.org/2002/07/owl#Thing"
 
 
+def normalize_iri(iri: str) -> str:
+    return iri.replace("%23", "#")
+
+
 def pair_set(subsumptions: list[list[str]]) -> set[tuple[str, str]]:
-    return {tuple(p) for p in subsumptions}
+    return {(normalize_iri(s), normalize_iri(t)) for s, t in subsumptions}
 
 
 def filter_thing(edges: set[tuple[str, str]]) -> set[tuple[str, str]]:

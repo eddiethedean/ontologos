@@ -113,6 +113,22 @@ fn hermit_classification_propreo_taxonomy() {
 }
 
 #[test]
+fn hermit_classification_dolce_taxonomy() {
+    assert!(
+        classification_fixtures_available(),
+        "missing vendored classification fixtures; run ./benchmarks/scripts/download.sh"
+    );
+    let ontology = load_classification_fixture("reasoner/res/dolce_all.xml");
+    let control_path =
+        classification_fixture_path("reasoner/res/dolce_all.xml.txt").expect("dolce control");
+    let golden_text = fs::read_to_string(control_path).expect("read golden");
+    let golden = parse_hermit_hierarchy_txt(&golden_text);
+
+    let taxonomy = ElClassifier::new().classify(&ontology).expect("classify");
+    assert_hierarchies(&ontology, &taxonomy, &golden);
+}
+
+#[test]
 fn parse_hermit_hierarchy_format() {
     let sample = "http://ex.org/A SubClassOf http://ex.org/B\n";
     let pairs = parse_hermit_hierarchy_txt(sample);

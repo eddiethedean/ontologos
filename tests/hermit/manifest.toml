@@ -353,8 +353,8 @@ id = "RulesTest"
 tier = "C"
 milestone = "none"
 engine = "swrl"
-status = "deferred"
-notes = "SWRL / DLSafeRule — out of scope for OntoLogos 1.x"
+status = "ported"
+notes = "24 HermiT RulesTest OFN cases — ontologos-swrl + DL consistency gate"
 
 [[case]]
 id = "structural.ClausificationTest"

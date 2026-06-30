@@ -94,6 +94,53 @@ impl Taxonomy {
         reduced.dedup();
         self.subsumptions = reduced;
     }
+
+    /// Collapse `#` vs `%23` duplicate entity ids (RDF/XML encoding artifact).
+    pub fn canonicalize_entity_aliases(&mut self, ontology: &crate::Ontology) {
+        let mut by_canon: std::collections::HashMap<String, EntityId> =
+            std::collections::HashMap::new();
+        for (id, record) in ontology.entities().iter() {
+            let iri_str = ontology.resolve_iri(record.iri).unwrap_or("");
+            let canon = iri_str.replace("%23", "#");
+            by_canon.entry(canon).or_insert(id);
+        }
+        let remap = |id: EntityId| {
+            ontology
+                .entity(id)
+                .ok()
+                .and_then(|record| {
+                    let iri_str = ontology.resolve_iri(record.iri).unwrap_or("");
+                    let canon = iri_str.replace("%23", "#");
+                    by_canon.get(&canon).copied()
+                })
+                .unwrap_or(id)
+        };
+        self.subsumptions = self
+            .subsumptions
+            .iter()
+            .map(|&(sub, sup)| (remap(sub), remap(sup)))
+            .collect();
+        self.subsumptions.sort_by_key(|(a, b)| (a.0, b.0));
+        self.subsumptions.dedup();
+        self.equivalences = self
+            .equivalences
+            .iter()
+            .map(|cluster| {
+                let mut mapped: Vec<EntityId> = cluster.iter().map(|&id| remap(id)).collect();
+                mapped.sort_by_key(|id| id.0);
+                mapped.dedup();
+                mapped
+            })
+            .filter(|c| c.len() > 1)
+            .collect();
+        self.unsatisfiable = self
+            .unsatisfiable
+            .iter()
+            .map(|&id| remap(id))
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect();
+    }
 }
 
 #[cfg(test)]
@@ -111,5 +158,31 @@ mod tests {
         };
         tax.reduce_transitive_redundancy();
         assert_eq!(tax.subsumptions, vec![(a, b), (b, c)]);
+    }
+
+    /// family.owl pattern: redundant `X ⊑ Person` when `X ⊑ Relative ⊑ Person` (etc.) exists.
+    #[test]
+    fn reduce_transitive_redundancy_family_person_shortcuts() {
+        let person = EntityId(1);
+        let relative = EntityId(2);
+        let aunt = EntityId(3);
+        let man = EntityId(4);
+        let brother = EntityId(5);
+        let mut tax = Taxonomy {
+            subsumptions: vec![
+                (relative, person),
+                (aunt, person),
+                (aunt, relative),
+                (man, person),
+                (brother, person),
+                (brother, man),
+            ],
+            ..Taxonomy::default()
+        };
+        tax.reduce_transitive_redundancy();
+        assert!(!tax.subsumptions.contains(&(aunt, person)));
+        assert!(!tax.subsumptions.contains(&(brother, person)));
+        assert!(tax.subsumptions.contains(&(relative, person)));
+        assert!(tax.subsumptions.contains(&(man, person)));
     }
 }

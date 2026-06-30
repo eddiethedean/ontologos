@@ -5,13 +5,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DATA="${ROOT}/benchmarks/data"
 CLI="${ROOT}/target/release/ontologos"
-OWL="${DATA}/family.owl"
+JSON_OUT="${JSON_OUT:-${DATA}/dl-perf-snapshot.json}"
 
-# ROADMAP target 0.1s; PR gate uses 1.0s until saturation/tableau optimization lands.
-FAMILY_BUDGET_S="${ONTOLOGOS_FAMILY_DL_BUDGET_S:-1.0}"
+# ROADMAP small-corpus target (Family < 100 ms); gate uses 0.1s with release CLI overhead.
+FAMILY_BUDGET_S="${ONTOLOGOS_FAMILY_DL_BUDGET_S:-0.1}"
 
-if [[ ! -f "${OWL}" ]]; then
-  echo "missing ${OWL} (run benchmarks/scripts/download.sh)" >&2
+if [[ ! -f "${DATA}/family.owl" ]]; then
+  echo "missing ${DATA}/family.owl (run benchmarks/scripts/download.sh)" >&2
   exit 1
 fi
 
@@ -19,38 +19,83 @@ if [[ ! -x "${CLI}" ]]; then
   cargo build -q -p ontologos-cli --release
 fi
 
-start="$(python3 -c 'import time; print(time.perf_counter())')"
-"${CLI}" --profile dl --format json classify "${OWL}" >/dev/null
-end="$(python3 -c 'import time; print(time.perf_counter())')"
-elapsed="$(python3 -c "print(round(${end} - ${start}, 3))")"
+measure() {
+  local corpus="$1"
+  local profile="$2"
+  local owl="${DATA}/${corpus}"
+  if [[ ! -f "${owl}" ]]; then
+    echo "skip ${corpus}: missing file" >&2
+    return 0
+  fi
+  # Warm release CLI + JIT caches before timed run.
+  "${CLI}" --profile "${profile}" --format json classify "${owl}" >/dev/null
+  local start end elapsed
+  start="$(python3 -c 'import time; print(time.perf_counter())')"
+  "${CLI}" --profile "${profile}" --format json classify "${owl}" >/dev/null
+  end="$(python3 -c 'import time; print(time.perf_counter())')"
+  elapsed="$(python3 -c "print(round(${end} - ${start}, 3))")"
+  echo "${corpus}|${profile}|${elapsed}"
+}
 
-python3 - "${JSON_OUT:-${DATA}/dl-perf-snapshot.json}" "${elapsed}" "${FAMILY_BUDGET_S}" <<'PY'
+ROWS=()
+while IFS= read -r row; do
+  [[ -n "${row}" ]] && ROWS+=("${row}")
+done < <(
+  measure "family.owl" "dl"
+  measure "pizza.owl" "dl"
+  measure "go-subset.owl" "dl"
+)
+
+python3 - "${JSON_OUT}" "${FAMILY_BUDGET_S}" "${ROWS[@]}" <<'PY'
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 json_path = Path(sys.argv[1])
-elapsed = float(sys.argv[2])
-budget = float(sys.argv[3])
-meets = elapsed <= budget
+family_budget = float(sys.argv[2])
+rows = [r.split("|", 2) for r in sys.argv[3:] if r]
+
+targets = {
+    "family.owl": {"target_s": family_budget, "gate": True},
+    "pizza.owl": {"target_s": 30.0, "gate": False},
+    "go-subset.owl": {"target_s": 10.0, "gate": False},
+}
+
+results = []
+gate_ok = True
+for corpus, profile, elapsed_s in rows:
+    elapsed = float(elapsed_s)
+    meta = targets.get(corpus, {"target_s": None, "gate": False})
+    target = meta["target_s"]
+    meets = (target is None) or (elapsed <= target)
+    if meta.get("gate") and not meets:
+        gate_ok = False
+    results.append(
+        {
+            "corpus": corpus,
+            "profile": profile,
+            "elapsed_s": elapsed,
+            "target_s": target,
+            "meets_target": meets,
+            "pr_gate": meta.get("gate", False),
+        }
+    )
 
 doc = {
     "generated_at": datetime.now(timezone.utc).isoformat(),
-    "cli": "ontologos --profile dl classify family.owl (release)",
+    "cli": "ontologos --profile dl classify (release)",
     "run_slow_dl_gates": False,
-    "results": [
-        {
-            "corpus": "family.owl",
-            "profile": "dl",
-            "elapsed_s": elapsed,
-            "target_s": budget,
-            "meets_target": meets,
-        }
-    ],
+    "results": results,
 }
 json_path.parent.mkdir(parents=True, exist_ok=True)
 json_path.write_text(json.dumps(doc, indent=2) + "\n")
-print(f"family.owl DL: {elapsed:.3f}s (budget {budget:.1f}s)")
-sys.exit(0 if meets else 1)
+
+for r in results:
+    tag = "PR gate" if r.get("pr_gate") else "snapshot"
+    status = "ok" if r["meets_target"] else "SLOW"
+    target = "" if r["target_s"] is None else f"{r['target_s']:.1f}s"
+    print(f"{r['corpus']} ({tag}): {r['elapsed_s']:.3f}s / {target} ({status})")
+
+sys.exit(0 if gate_ok else 1)
 PY

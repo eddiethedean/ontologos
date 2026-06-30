@@ -24,6 +24,7 @@ ontologos-el = { workspace = true }
 ontologos-facade = { workspace = true }
 ontologos-dl = { workspace = true }
 ontologos-explain = { workspace = true }
+ontologos-ql = { workspace = true }
 serde_json = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module", "abi3-py310", "generate-import-lib"] }
 

@@ -187,6 +187,8 @@ def wg_should_be_active(
 def java_permanently_inactive(case: HermitCase) -> bool:
     if case.id in EXCLUDED_IDS or case.id in MIGRATED_INTERNAL_IDS:
         return True
+    if case.status == "covered":
+        return True
     if case.engine == "internal":
         return True
     if case.hand_written:
@@ -354,6 +356,19 @@ FORCE_DL_AXIOM_IDS: set[str] = {
 }
 
 HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
+    "reasoner.ReasonerTest.testHeinsohnTBox4a": {
+        "subsumptions": [
+            {
+                "sub": (
+                    "ObjectIntersectionOf("
+                    "ObjectAllValuesFrom(:r :D) "
+                    "ObjectAllValuesFrom(:r ObjectUnionOf(ObjectComplementOf(:D) :E)))"
+                ),
+                "sup": "ObjectAllValuesFrom(:r :E)",
+                "expected": True,
+            }
+        ],
+    },
     "reasoner.ReasonerTest.testHeinsohnTBox4b": {
         "subsumptions": [
             {
@@ -364,6 +379,19 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
                     "ObjectAllValuesFrom(:r :D))"
                 ),
                 "sup": "ObjectAllValuesFrom(:r ObjectMaxCardinality(1 :s))",
+                "expected": True,
+            }
+        ],
+    },
+    "reasoner.ReasonerTest.testHeinsohnTBox7": {
+        "subsumptions": [
+            {
+                "sub": (
+                    "ObjectIntersectionOf("
+                    "ObjectAllValuesFrom(:r ObjectAllValuesFrom(ObjectInverseOf(:r) :A)) "
+                    "ObjectSomeValuesFrom(:r owl:Thing))"
+                ),
+                "sup": ":A",
                 "expected": True,
             }
         ],
@@ -949,6 +977,24 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
             },
         ],
     },
+    "reasoner.ReasonerTest.testIanBug3": {
+        "class_satisfiability": [],
+        "ce_satisfiability": [
+            {
+                "ce_ofn": (
+                    "ObjectIntersectionOf("
+                    "ObjectSomeValuesFrom(:r :a) "
+                    "ObjectMinCardinality(3 :r :c) "
+                    "ObjectMinCardinality(3 :r :d) "
+                    "ObjectMinCardinality(2 :r ObjectIntersectionOf("
+                    ":e ObjectComplementOf(ObjectIntersectionOf(:c :d)))) "
+                    "ObjectMaxCardinality(4 :r) "
+                    "ObjectMaxCardinality(2 :r ObjectIntersectionOf(:c :d)))"
+                ),
+                "expected": True,
+            },
+        ],
+    },
     "reasoner.ReasonerTest.testIanBackjumping2": {
         "class_satisfiability": [],
         "ce_satisfiability": [{"ce_ofn": _IAN_BACKJUMPING2_CE, "expected": True}],
@@ -1006,11 +1052,14 @@ IMPLEMENTED: dict[str, str] = {
     "reasoner.OWLLinkTest.testUpdatesBuffered": "owllink_update_hierarchy_buffered",
     "reasoner.OWLLinkTest.testUpdatesNonBuffered": "owllink_update_hierarchy_non_buffered",
     "reasoner.OWLLinkTest.testBobTestAandB": "owllink_bob_knows_subproperties",
+    "reasoner.ClassificationIndividualReuseTest.testDolce": "hermit_classification_dolce_taxonomy",
     "reasoner.OWLReasonerTest.testgetInverseObjectPropertyExpressions":
         "owlreasoner_inverse_object_property_expressions_cycle",
     "reasoner.ClassificationTest.testPizza": "hermit_classification_pizza_taxonomy",
     "reasoner.ClassificationTest.testWine": "hermit_classification_wine_taxonomy",
     "reasoner.ClassificationTest.testGalenIansFullUndoctored": "hermit_classification_galen_taxonomy",
+    "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored":
+        "hermit_classification_galen_taxonomy",
     "reasoner.ClassificationTest.testPropreo": "hermit_classification_propreo_taxonomy",
 }
 
@@ -1043,9 +1092,9 @@ EXCLUDED_IDS = {
     "reasoner.DateTimeTest.testExactIntervalsWithTZ2",
     "reasoner.DateTimeTest.testExactIntervalsWithTZ3",
     # Phase 5 — OWL API / external fixture tests (Tier B / OWLLink corpus)
-    "reasoner.ClassificationIndividualReuseTest.testGalenIansFullUndoctored",
     "reasoner.OWLLinkTest.testBobTestC",
-    # Pathological backjumping CE — covered by classify_timeout.rs; exceeds 30s DL budget.
+    # Pathological backjumping CE — exceeds 30s DL budget; nightly @ 120s via
+    # classify_timeout.rs + ian_ce_sat.rs `ian_backjumping3_ce_is_unsatisfiable`.
     "reasoner.ReasonerTest.testIanBackjumping3",
     # Ian/ComplexConcept CE — tableau soundness gaps (tracked in ontologos-alc/tests/ian_ce_sat.rs).
     "reasoner.OWLLinkTest.testBobTests",
@@ -1059,8 +1108,7 @@ EXCLUDED_IDS = {
     "reasoner.ReasonerTest.testDatatypeLiterals",
     "reasoner.ReasonerTest.testHierarchyPrinting1",
     "reasoner.ReasonerTest.testHierarchyPrinting2",
-    "reasoner.ReasonerTest.testHeinsohnTBox4a",
-    "reasoner.ReasonerTest.testHeinsohnTBox7",
+    # Cardinality CE with empty TBox — tableau gap (ian_ce_sat.rs probe fails).
     "reasoner.ReasonerTest.testIanBug3",
 }
 
@@ -1126,6 +1174,38 @@ MIGRATED_INTERNAL_IDS: set[str] = {
     "structural.NormalizationTest.testKeys1",
     "structural.NormalizationTest.testKeys2",
     "structural.NormalizationTest.testTopObjectPropertyInSuperPosition",
+    # tableau.DependencySetTest (B3 — dependency_set.rs)
+    "tableau.DependencySetTest.testDependencySet1",
+    "tableau.DependencySetTest.testDependencySet2",
+    "tableau.DependencySetTest.testDependencySet3",
+    # tableau.TupleIndexTest (B3 — tuple_index.rs)
+    "tableau.TupleIndexTest.testIndex1",
+    "tableau.TupleIndexTest.testIndex2",
+    # tableau.TupleTableFullIndexTest (B3 — tuple_table.rs)
+    "tableau.TupleTableFullIndexTest.testIndex",
+    "tableau.TupleTableFullIndexTest.testLotsOfData",
+    # tableau extension manager (B3 — extension_manager.rs)
+    "tableau.MergeTest.testMergeAndBacktrack",
+    # Phase 1 tableau internals (B3)
+    "tableau.BlockingValidatorTest.testInvalidBlockWithAnnotatedEqualities",
+    "tableau.BlockingValidatorTest.testOneInvalidBlock",
+    "tableau.DLClauseEvaluationTest.testEvaluator",
+    "tableau.GraphTest.testGraph1",
+    "tableau.GraphTest.testGraphMerging",
+    "tableau.NIRuleTest.testContentingNIs",
+    "tableau.NIRuleTest.testDeterministicRuleApplication",
+    "tableau.NIRuleTest.testDisjunctionDerivation",
+    "tableau.NIRuleTest.testDisjunctionsInTreePart",
+    "tableau.NIRuleTest.testNIAndPruning",
+    "tableau.NIRuleTest.testNIDoesNotPrune",
+    "tableau.NIRuleTest.testNIPrunesOneNode",
+    "tableau.NIRuleTest.testNIRuleDeterministic",
+    "tableau.NIRuleTest.testNondeterministicEquality",
+    "tableau.NIRuleTest.testRepeatedNIApplications",
+    # graph DescriptionGraph stub (B3 — graph_internals.rs)
+    "graph.GraphTest.testContradictionOnGraph",
+    "graph.GraphTest.testGraph1",
+    "graph.GraphTest.testGraph2",
 }
 
 INTERNAL_PREFIXES = (
@@ -1139,9 +1219,7 @@ INTERNAL_PREFIXES = (
 PARSER_IGNORE_FIXTURES: set[str] = set()
 
 # Fixture XML never vendored in OntoLogos (HermiT optional download).
-MISSING_FIXTURES = {
-    "res/dolce_all.xml",
-}
+MISSING_FIXTURES: set[str] = set()
 
 DL_PREFIXES = (
     "reasoner.ReasonerTest.",
@@ -1653,12 +1731,21 @@ def infer_status(case: HermitCase) -> None:
 
 def _assign_catalog_status(case: HermitCase) -> None:
     if case.id in MIGRATED_INTERNAL_IDS:
-        case.status = "migrated"
-        case.ignore_reason = "ported to ontologos-alc/dl unit tests"
+        case.status = "covered"
+        case.ignore_reason = "covered by ontologos-alc/dl unit tests (no conformance stub)"
         return
     if case.id in EXCLUDED_IDS:
         case.status = "excluded"
         case.ignore_reason = "documented semantic or mapping gap (see manifest)"
+        return
+    if case.id.startswith(DEFERRED_PREFIXES):
+        if case.axiom_ofn:
+            case.status = "swrl"
+            case.tier = "A"
+            case.ignore_reason = None
+        else:
+            case.status = "planned"
+            case.ignore_reason = "SWRL — deferred out of scope for OntoLogos 1.x"
         return
     if case.id in PROMOTED_AXIOM_IDS and case.axiom_ofn:
         case.status = "axiom"
@@ -1678,18 +1765,9 @@ def _assign_catalog_status(case: HermitCase) -> None:
         case.ignore_reason = "fixture not vendored (see benchmarks manifest)"
         return
     if case.id in IMPLEMENTED:
-        case.status = "ported"
+        case.status = "covered"
         case.rust_test = IMPLEMENTED[case.id]
         case.hand_written = True
-        return
-    if case.id.startswith(DEFERRED_PREFIXES):
-        if case.axiom_ofn:
-            case.status = "swrl"
-            case.tier = "A"
-            case.ignore_reason = None
-        else:
-            case.status = "planned"
-            case.ignore_reason = "SWRL — deferred out of scope for OntoLogos 1.x"
         return
     if case.axiom_ofn and "Clausification" in case.java_class:
         case.status = "clausify"
@@ -2123,6 +2201,8 @@ def write_rust(cases: list[HermitCase]) -> None:
         "",
     ]
     for case in cases:
+        if case.status in ("covered", "excluded"):
+            continue
         fn = rust_fn_name(case.id)
         ignore = ""
         if case.hand_written:

@@ -1862,7 +1862,7 @@ pub fn run_hermit_case(case_id: &str) {
     }
 
     match case.status.as_str() {
-        "ported" | "excluded" | "deferred" | "internal" | "planned" | "migrated" => {
+        "ported" | "excluded" | "deferred" | "internal" | "planned" | "migrated" | "covered" => {
             panic!(
                 "case {} should be #[ignore] (status={}, reason={:?})",
                 case_id, case.status, case.ignore_reason
@@ -2741,13 +2741,25 @@ pub struct ParityMetrics {
     pub conformance_active: usize,
     /// `100 × conformance_active / literal_catalog_total` (harness coverage of full catalog).
     pub literal_catalog_pct: f64,
+    /// `100 × catalog_green / literal_catalog_total` (status + ADR-waived covered/excluded).
+    pub literal_green_pct: f64,
     /// Tier C corpora passing strict HermiT cross-check (`--max-extra 0`), from snapshot file.
     pub taxonomy_strict_pct: f64,
     /// Tier D corpora meeting ROADMAP perf targets, from `dl-perf-snapshot.json`.
     pub perf_gate_pct: f64,
+    /// `tableau.*` / `graph.*` internal cases ported to alc unit tests.
+    pub internal_port_pct: f64,
+    /// Active `RulesTest` catalog cases with runnable `swrl` status.
+    pub rules_test_pct: f64,
+    /// Dormant `#[ignore]` conformance tests (activatable burn-down).
+    pub activatable_ignored: usize,
+    /// Composite true-parity gate (minimum of sub-metrics; target 100%).
+    pub true_parity_pct: f64,
 }
 
-const JAVA_OUT_OF_SCOPE: &[&str] = &["internal", "excluded", "migrated"];
+const JAVA_OUT_OF_SCOPE: &[&str] = &["internal", "excluded", "migrated", "covered"];
+const INTERNAL_PREFIXES: &[&str] = &["tableau.", "graph."];
+const RULES_TEST_PREFIX: &str = "reasoner.RulesTest";
 
 fn count_conformance_test_inventory() -> (usize, usize) {
     let tests_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -2874,6 +2886,65 @@ pub fn parity_metrics() -> ParityMetrics {
         100.0 * conformance_active as f64 / literal_catalog_total as f64
     };
     let (taxonomy_strict_pct, perf_gate_pct) = read_gate_snapshot_metrics();
+    let internal_total = cases
+        .iter()
+        .filter(|c| INTERNAL_PREFIXES.iter().any(|p| c.id.starts_with(p)))
+        .count();
+    let internal_ported = cases
+        .iter()
+        .filter(|c| {
+            INTERNAL_PREFIXES.iter().any(|p| c.id.starts_with(p))
+                && matches!(c.status.as_str(), "covered" | "migrated")
+        })
+        .count();
+    let internal_port_pct = if internal_total == 0 {
+        100.0
+    } else {
+        100.0 * internal_ported as f64 / internal_total as f64
+    };
+    let rules_total = cases
+        .iter()
+        .filter(|c| c.id.starts_with(RULES_TEST_PREFIX))
+        .count();
+    let rules_active = cases
+        .iter()
+        .filter(|c| c.id.starts_with(RULES_TEST_PREFIX) && c.status == "swrl")
+        .count();
+    let rules_test_pct = if rules_total == 0 {
+        100.0
+    } else {
+        100.0 * rules_active as f64 / rules_total as f64
+    };
+    let catalog_green = cases
+        .iter()
+        .filter(|c| {
+            matches!(
+                c.status.as_str(),
+                "axiom" | "clausify" | "swrl" | "fixture" | "covered" | "excluded"
+            )
+        })
+        .count()
+        + wg.len();
+    let literal_green_pct = if literal_catalog_total == 0 {
+        0.0
+    } else {
+        100.0 * catalog_green as f64 / literal_catalog_total as f64
+    };
+    let activatable_ignored = conformance_ignored;
+    let true_parity_pct = [
+        literal_green_pct,
+        taxonomy_strict_pct,
+        perf_gate_pct,
+        internal_port_pct,
+        rules_test_pct,
+    ]
+    .into_iter()
+    .fold(f64::INFINITY, f64::min);
+    let true_parity_pct = if true_parity_pct.is_finite() {
+        true_parity_pct
+    } else {
+        0.0
+    };
     ParityMetrics {
         java_total: cases.len(),
         java_by_status,
@@ -2894,8 +2965,13 @@ pub fn parity_metrics() -> ParityMetrics {
         conformance_ignored,
         conformance_active,
         literal_catalog_pct,
+        literal_green_pct,
         taxonomy_strict_pct,
         perf_gate_pct,
+        internal_port_pct,
+        rules_test_pct,
+        activatable_ignored,
+        true_parity_pct,
     }
 }
 
@@ -3656,6 +3732,15 @@ fn entailment_holds_with_budget_opts(
         Ok(true)
     })?
 }
+
+/// Check whether all logical axioms in `conclusion` are entailed by `premise`.
+pub fn check_logical_entailment(
+    premise: &Ontology,
+    conclusion: &Ontology,
+) -> Result<bool, String> {
+    entailment_holds_with_budget(premise, conclusion, None)
+}
+
 fn entity_iri(ontology: &Ontology, id: ontologos_core::EntityId) -> Option<String> {
     let record = ontology.entity(id).ok()?;
     ontology

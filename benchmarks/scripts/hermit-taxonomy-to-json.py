@@ -12,13 +12,17 @@ from pathlib import Path
 SUBCLASS_LINE = re.compile(r"^\s*SubClassOf\(")
 
 
+def normalize_iri(iri: str) -> str:
+    return iri.replace("%23", "#")
+
+
 def parse_hermit_taxonomy(text: str) -> list[list[str]]:
     pairs: list[list[str]] = []
     seen: set[tuple[str, str]] = set()
     for line in text.splitlines():
         if not SUBCLASS_LINE.match(line):
             continue
-        iris = re.findall(r"<([^>]+)>", line)
+        iris = [normalize_iri(i) for i in re.findall(r"<([^>]+)>", line)]
         if len(iris) < 2:
             continue
         key = (iris[0], iris[1])

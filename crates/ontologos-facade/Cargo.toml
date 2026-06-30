@@ -24,3 +24,4 @@ ontologos-bridge = { workspace = true }
 ontologos-abox = { workspace = true }
 ontologos-query = { workspace = true }
 thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }

@@ -99,7 +99,8 @@ impl ElClassifier {
         normal_form::validate_el_profile(ontology)?;
         let mut graph = graph::CompletionGraph::seed(ontology).with_traces(record_traces);
         graph.saturate();
-        let taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);
+        let mut taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);
+        taxonomy.canonicalize_entity_aliases(ontology);
         let trace = graph.into_trace();
         Ok(ElReport { taxonomy, trace })
     }

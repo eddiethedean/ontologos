@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 
 use crate::convert::{
-    find_subclass_axiom_id, parse_meta_dict, parse_profile, proof_graph_dict, py_err,
+    entity_iri, find_subclass_axiom_id, parse_meta_dict, parse_profile, proof_graph_dict, py_err,
     resolve_class, resolve_individual, resolve_object_property, taxonomy_dict,
 };
 use crate::ontology::{PyOntology, SharedOntology};
@@ -191,6 +191,60 @@ impl PyReasoner {
         self.sync_to_shared();
         Ok(())
     }
+
+    /// Check ontology consistency (OWLReasoner-style).
+    fn is_consistent(&mut self) -> PyResult<bool> {
+        self.sync_from_shared()?;
+        let consistent =
+            ontologos_facade::is_consistent(&self.reasoner).map_err(map_facade_py_err)?;
+        self.sync_to_shared();
+        Ok(consistent)
+    }
+
+    /// Check entailment for `SubClassOf`, `ClassAssertion`, or `ObjectPropertyAssertion`.
+    #[pyo3(signature = (sub=None, sup=None, *, individual=None, class_=None, subject=None, property=None, object=None))]
+    fn is_entailed(
+        &mut self,
+        sub: Option<&str>,
+        sup: Option<&str>,
+        individual: Option<&str>,
+        class_: Option<&str>,
+        subject: Option<&str>,
+        property: Option<&str>,
+        object: Option<&str>,
+    ) -> PyResult<bool> {
+        self.sync_from_shared()?;
+        let check = parse_entailment_check_py(sub, sup, individual, class_, subject, property, object)?;
+        let entailed =
+            ontologos_facade::is_entailed_axiom(&mut self.reasoner, check).map_err(map_facade_py_err)?;
+        self.sync_to_shared();
+        Ok(entailed)
+    }
+
+    /// Answer a conjunctive query after classification (e.g. `Type(?x, http://ex.org/A)`).
+    fn query(&mut self, py: Python<'_>, query: &str) -> PyResult<Py<PyAny>> {
+        self.sync_from_shared()?;
+        if self.last_taxonomy.is_none() {
+            self.classify(py)?;
+        }
+        let taxonomy = self
+            .last_taxonomy
+            .as_ref()
+            .ok_or_else(|| py_err("query requires taxonomy classification outcome"))?;
+        let cq = ontologos_ql::parse_conjunctive_query(query).map_err(py_err)?;
+        let answers =
+            ontologos_ql::answer_query(self.reasoner.ontology(), taxonomy, &cq).map_err(py_err)?;
+        let list = pyo3::types::PyList::empty(py);
+        for answer in answers {
+            let dict = PyDict::new(py);
+            for (var, id) in answer.bindings {
+                dict.set_item(var, entity_iri(self.reasoner.ontology(), id)?)?;
+            }
+            list.append(dict)?;
+        }
+        self.sync_to_shared();
+        Ok(list.into())
+    }
 }
 
 impl PyReasoner {
@@ -349,5 +403,50 @@ fn map_facade_py_err(error: ontologos_facade::Error) -> PyErr {
         ontologos_facade::Error::Alc(e) => py_err(e.to_string()),
         ontologos_facade::Error::Dl(e) => py_err(e.to_string()),
         ontologos_facade::Error::Swrl(e) => py_err(e.to_string()),
+        ontologos_facade::Error::Abox(e) => py_err(e.to_string()),
     }
+}
+
+fn parse_entailment_check_py(
+    sub: Option<&str>,
+    sup: Option<&str>,
+    individual: Option<&str>,
+    class: Option<&str>,
+    subject: Option<&str>,
+    property: Option<&str>,
+    object: Option<&str>,
+) -> PyResult<ontologos_facade::EntailmentCheck> {
+    let subclass = sub.is_some() || sup.is_some();
+    let class_assertion = individual.is_some() || class.is_some();
+    let property_assertion = subject.is_some() || property.is_some() || object.is_some();
+    let count =
+        usize::from(subclass) + usize::from(class_assertion) + usize::from(property_assertion);
+    if count != 1 {
+        return Err(py_err(
+            "is_entailed requires exactly one of: (sub, sup), (individual=, class_=), or (subject=, property=, object=)",
+        ));
+    }
+    if subclass {
+        return Ok(ontologos_facade::EntailmentCheck::SubClassOf {
+            sub: sub.ok_or_else(|| py_err("sub required"))?.to_owned(),
+            sup: sup.ok_or_else(|| py_err("sup required"))?.to_owned(),
+        });
+    }
+    if class_assertion {
+        return Ok(ontologos_facade::EntailmentCheck::ClassAssertion {
+            individual: individual
+                .ok_or_else(|| py_err("individual required"))?
+                .to_owned(),
+            class: class.ok_or_else(|| py_err("class_ required"))?.to_owned(),
+        });
+    }
+    Ok(ontologos_facade::EntailmentCheck::ObjectPropertyAssertion {
+        subject: subject
+            .ok_or_else(|| py_err("subject required"))?
+            .to_owned(),
+        property: property
+            .ok_or_else(|| py_err("property required"))?
+            .to_owned(),
+        object: object.ok_or_else(|| py_err("object required"))?.to_owned(),
+    })
 }

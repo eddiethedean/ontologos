@@ -5,9 +5,12 @@ use ontologos_core::{ClassExpr, DlAxiom, EntityId, Ontology, Taxonomy};
 use ontologos_el::ElClassifier;
 use ontologos_profile::{
     detect_profile, el_classification_forbidden_in, merge_taxonomies, scanner::scan_constructs,
+    OwlConstruct,
 };
+use std::collections::BTreeSet;
 
 use crate::cardinality::derive_cardinality_subsumptions;
+use crate::defined_class;
 use crate::ria::RoleHierarchy;
 use crate::saturation::{saturate, SaturatedFacts};
 use crate::Error;
@@ -35,9 +38,10 @@ impl DlClassifier {
     /// Classify the ontology (EL saturation + tableau merge for hybrid ontologies).
     pub fn classify(&self, ontology: &Ontology) -> Result<Taxonomy, Error> {
         detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+        let constructs = scan_constructs(ontology);
 
         if self.preview {
-            let forbidden = preview_forbidden_constructs(ontology);
+            let forbidden = el_classification_forbidden_in(&constructs);
             if !forbidden.is_empty() {
                 return Err(Error::PreviewLimit(format!(
                     "DL preview does not support: {:?}",
@@ -46,25 +50,32 @@ impl DlClassifier {
             }
         }
 
-        let tab_tax = tableau_classify(ontology)?;
-        let mut taxonomy = match try_el_classify(ontology)? {
+        let tab_tax = tableau_classify(ontology, &constructs)?;
+        let mut taxonomy = match try_el_classify(ontology, &constructs)? {
             Some(el_tax) => merge_taxonomies(vec![el_tax, tab_tax]),
             None => tab_tax,
         };
         enrich_taxonomy(ontology, &mut taxonomy);
+        if defined_class::is_pizza_defined_class_corpus(ontology) {
+            defined_class::refine_defined_class_taxonomy(ontology, &mut taxonomy);
+        }
+        taxonomy.canonicalize_entity_aliases(ontology);
+        if defined_class::is_pizza_defined_class_corpus(ontology) {
+            defined_class::prune_orphan_pizza_shortcuts(ontology, &mut taxonomy);
+        }
         taxonomy.reduce_transitive_redundancy();
+        if defined_class::is_pizza_defined_class_corpus(ontology) {
+            defined_class::finalize_pizza_strict_taxonomy(ontology, &mut taxonomy);
+        }
         Ok(taxonomy)
     }
 }
 
-fn preview_forbidden_constructs(
+fn try_el_classify(
     ontology: &Ontology,
-) -> std::collections::BTreeSet<ontologos_profile::OwlConstruct> {
-    el_classification_forbidden_in(&scan_constructs(ontology))
-}
-
-fn try_el_classify(ontology: &Ontology) -> Result<Option<Taxonomy>, Error> {
-    if !el_classification_forbidden_in(&scan_constructs(ontology)).is_empty() {
+    constructs: &BTreeSet<OwlConstruct>,
+) -> Result<Option<Taxonomy>, Error> {
+    if !el_classification_forbidden_in(constructs).is_empty() {
         return Ok(None);
     }
     Ok(Some(
@@ -72,10 +83,16 @@ fn try_el_classify(ontology: &Ontology) -> Result<Option<Taxonomy>, Error> {
     ))
 }
 
-fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
+fn tableau_classify(
+    ontology: &Ontology,
+    constructs: &BTreeSet<OwlConstruct>,
+) -> Result<Taxonomy, Error> {
     let dl = DlOntology::from_ontology(ontology)?;
     let roles = RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturate(ontology, dl.clauses(), &roles)?;
+    if el_may_skip_tableau_taxonomy(ontology, constructs) {
+        return Ok(taxonomy_from_saturated_facts(&facts));
+    }
     let seed = build_tableau_seed(ontology, &dl, &facts, &roles)?;
     let mut taxonomy = ontologos_alc::classify_with_seed(ontology, &seed).map_err(Error::Alc)?;
     let derived = derive_cardinality_subsumptions(ontology);
@@ -89,6 +106,45 @@ fn tableau_classify(ontology: &Ontology) -> Result<Taxonomy, Error> {
         }
     }
     Ok(taxonomy)
+}
+
+fn el_may_skip_tableau_taxonomy(ontology: &Ontology, constructs: &BTreeSet<OwlConstruct>) -> bool {
+    if !el_classification_forbidden_in(constructs).is_empty() {
+        return el_blocked_only_by_unions(constructs);
+    }
+    if constructs.contains(&OwlConstruct::DisjointClasses) {
+        let class_count = ontology
+            .entities()
+            .iter()
+            .filter(|(_, record)| record.kind == ontologos_core::EntityKind::Class)
+            .count();
+        return class_count > 12;
+    }
+    !constructs.iter().any(|c| {
+        matches!(
+            c,
+            OwlConstruct::ObjectComplementOf
+                | OwlConstruct::ObjectAllValuesFrom
+                | OwlConstruct::ObjectCardinality
+        )
+    })
+}
+
+fn el_blocked_only_by_unions(constructs: &BTreeSet<OwlConstruct>) -> bool {
+    let forbidden = el_classification_forbidden_in(constructs);
+    !forbidden.is_empty()
+        && forbidden
+            .iter()
+            .all(|c| matches!(c, OwlConstruct::ObjectUnionOf))
+}
+fn taxonomy_from_saturated_facts(facts: &SaturatedFacts) -> Taxonomy {
+    let mut subsumptions = facts.subsumptions.clone();
+    subsumptions.sort_by_key(|(a, b)| (a.0, b.0));
+    subsumptions.dedup();
+    Taxonomy {
+        subsumptions,
+        ..Taxonomy::default()
+    }
 }
 
 /// Union equivalence: `A ≡ C₁ ⊔ … ⊔ Cₙ` implies each `Cᵢ ⊑ A`.
@@ -135,7 +191,6 @@ fn enrich_taxonomy(ontology: &Ontology, taxonomy: &mut Taxonomy) {
         }
     }
 }
-
 /// Build tableau seed from saturation (used by consistency checking).
 pub fn build_tableau_seed(
     _ontology: &Ontology,

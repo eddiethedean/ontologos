@@ -126,3 +126,27 @@ fn iant8a_ce_is_satisfiable() {
         "IanT8a CE should be satisfiable"
     );
 }
+
+const IAN_BACKJUMPING3_CE: &str = "ObjectIntersectionOf(ObjectUnionOf(:A0 :B0) ObjectUnionOf(:A1 :B1) ObjectUnionOf(:A2 :B2) ObjectUnionOf(:A3 :B3) ObjectUnionOf(:A4 :B4) ObjectUnionOf(:A5 :B5) ObjectUnionOf(:A6 :B6) ObjectUnionOf(:A7 :B7) ObjectUnionOf(:A8 :B8) ObjectUnionOf(:A9 :B9) ObjectUnionOf(:A10 :B10) ObjectUnionOf(:A11 :B11) ObjectUnionOf(:A12 :B12) ObjectUnionOf(:A13 :B13) ObjectUnionOf(:A14 :B14) ObjectUnionOf(:A15 :B15) ObjectUnionOf(:A16 :B16) ObjectUnionOf(:A17 :B17) ObjectUnionOf(:A18 :B18) ObjectUnionOf(:A19 :B19) ObjectUnionOf(:A20 :B20) ObjectUnionOf(:A21 :B21) ObjectUnionOf(:A22 :B22) ObjectUnionOf(:A23 :B23) ObjectUnionOf(:A24 :B24) ObjectUnionOf(:A25 :B25) ObjectUnionOf(:A26 :B26) ObjectUnionOf(:A27 :B27) ObjectUnionOf(:A28 :B28) ObjectUnionOf(:A29 :B29) ObjectUnionOf(:A30 :B30) ObjectUnionOf(:A31 :B31) ObjectUnionOf(:C4 :C6) ObjectUnionOf(:C5 :C7))";
+
+#[test]
+#[ignore = "exceeds 30s DL budget — nightly @ ONTOLOGOS_DL_BUDGET_SECS=120 (classify_timeout.rs)"]
+fn ian_backjumping3_ce_is_unsatisfiable() {
+    assert!(
+        !ce_sat(
+            "hermit_reasoner_reasonertest_testianbackjumping3.ofn",
+            IAN_BACKJUMPING3_CE
+        ),
+        "IanBackjumping3 CE should be unsatisfiable"
+    );
+}
+
+#[test]
+#[ignore = "cardinality CE on empty TBox — tableau gap"]
+fn ianbug3_ce_is_satisfiable() {
+    let ce = "ObjectIntersectionOf(ObjectSomeValuesFrom(:r :a) ObjectMinCardinality(3 :r :c) ObjectMinCardinality(3 :r :d) ObjectMinCardinality(2 :r ObjectIntersectionOf(:e ObjectComplementOf(ObjectIntersectionOf(:c :d)))) ObjectMaxCardinality(4 :r) ObjectMaxCardinality(2 :r ObjectIntersectionOf(:c :d)))";
+    assert!(
+        ce_sat("hermit_reasoner_reasonertest_testianbug3.ofn", ce),
+        "IanBug3 CE should be satisfiable (empty TBox)"
+    );
+}

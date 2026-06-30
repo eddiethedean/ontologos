@@ -18,9 +18,24 @@ rust_tests = ["crates/ontologos-alc/tests/normalization.rs::hermit_normalization
 notes = "24 methods — smoke clausify on HermiT input axioms (full OWLNormalization strings deferred)"
 
 [[suite]]
+hermit_class = "tableau.DependencySetTest"
+rust_tests = ["crates/ontologos-alc/src/tableau/dependency_set.rs::hermit_ports"]
+notes = "3 methods — HermiT DependencySetFactory port"
+
+[[suite]]
+hermit_class = "tableau.TupleIndexTest"
+rust_tests = ["crates/ontologos-alc/src/tableau/tuple_index.rs::hermit_ports"]
+notes = "2 methods — HermiT TupleIndex trie+hash port"
+
+[[suite]]
+hermit_class = "tableau.TupleTableFullIndexTest"
+rust_tests = ["crates/ontologos-alc/src/tableau/tuple_table.rs::hermit_ports"]
+notes = "2 methods — HermiT TupleTable + TupleTableFullIndex port"
+
+[[suite]]
 hermit_class = "tableau"
 rust_tests = ["crates/ontologos-alc/tests/tableau_internals.rs"]
-notes = "23 internal cases — inventory test; MergeTest/NIRuleTest need extension-manager port"
+notes = "16 internal cases — inventory test; MergeTest/NIRuleTest need extension-manager port"
 
 [[suite]]
 hermit_class = "graph.GraphTest"
@@ -82,4 +97,60 @@ catalog_status = "migrated"
 [[port]]
 hermit_id = "reasoner.ReasonerCoreBlockingTest.testDependencyDisjunctionMergingBug"
 rust_test = "ontologos-alc unit (blocking)"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "tableau.DependencySetTest.testDependencySet1"
+rust_test = "dependency_set::hermit_ports::hermit_dependency_set_test_1"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "tableau.DependencySetTest.testDependencySet2"
+rust_test = "dependency_set::hermit_ports::hermit_dependency_set_test_2"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "tableau.DependencySetTest.testDependencySet3"
+rust_test = "dependency_set::hermit_ports::hermit_dependency_set_test_3"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "tableau.TupleIndexTest.testIndex1"
+rust_test = "tuple_index::hermit_ports::hermit_tuple_index_test_1"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "tableau.TupleIndexTest.testIndex2"
+rust_test = "tuple_index::hermit_ports::hermit_tuple_index_test_2"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "tableau.TupleTableFullIndexTest.testIndex"
+rust_test = "tuple_table::hermit_ports::hermit_tuple_table_full_index_test_1"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "tableau.TupleTableFullIndexTest.testLotsOfData"
+rust_test = "tuple_table::hermit_ports::hermit_tuple_table_full_index_test_2"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "tableau.MergeTest.testMergeAndBacktrack"
+rust_test = "tableau_internals::hermit_merge_test_merge_and_backtrack"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "graph.GraphTest.testContradictionOnGraph"
+rust_test = "graph_internals::hermit_graph_test_contradiction_on_graph_fixture"
+catalog_status = "migrated"
+notes = "DescriptionGraph fixture stub; full tableau saturation deferred"
+
+[[port]]
+hermit_id = "graph.GraphTest.testGraph1"
+rust_test = "graph_internals::hermit_graph_test_graph1_fixture"
+catalog_status = "migrated"
+
+[[port]]
+hermit_id = "graph.GraphTest.testGraph2"
+rust_test = "graph_internals::hermit_graph_test_graph2_fixture"
 catalog_status = "migrated"

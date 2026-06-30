@@ -44,6 +44,7 @@ step fmt cargo fmt --all -- --check
 step clippy cargo clippy --workspace --all-targets -- -D warnings
 step test-workspace cargo test --workspace --exclude ontologos-conformance --locked
 step hermit-ignore-budget ./benchmarks/scripts/check-hermit-ignore-budget.sh
+step_optional true-parity-gate bash -c './benchmarks/scripts/check-true-parity-gate.sh'
 step pizza-el-golden ./benchmarks/scripts/compare-pizza-el-golden.sh
 step tier-b-classification ./benchmarks/scripts/compare-classification-fixtures.sh
 step hermit-tier-a cargo test -p ontologos-conformance --release --locked \

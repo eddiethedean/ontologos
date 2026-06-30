@@ -35,6 +35,26 @@ pub use object_property_classify::{
 };
 pub use tableau::cache::UnsatCache;
 pub use tableau::AlcClassifier;
+pub use tableau::dependency_set::{
+    DependencySetFactory, DependencySetRef, PermanentDependencySet, UnionDependencySet,
+};
+pub use tableau::description_graph::{DescriptionGraph, DescriptionGraphEdge, DescriptionGraphId};
+pub use tableau::extension_manager::{
+    test_helpers, BranchingPoint, DlObject, DlPredicate, ExtensionManagerRef, ExtensionTable,
+    ExtensionView, Node, Tableau,
+};
+pub use tableau::tuple_index::{TupleIndex, TupleIndexRetrieval};
+pub use tableau::tuple_table::{TupleTable, TupleTableFullIndex};
+pub use tableau::blocking_validator::{
+    blocking_test_annotated_equalities_clauses, blocking_test_one_invalid_block_clauses,
+    blocking_concepts, BlockingStrategy, BlockingValidator, RoleRef,
+};
+pub use tableau::dl_clause_eval::{
+    derive_at_most_equalities, dl_clause_evaluation_test_clause, do_iteration, run_calculus,
+    DlClauseEvaluator,
+};
+pub use tableau::graph_merge;
+pub use tableau::ni_rules::{AnnotatedEquality, NominalIntroductionManager};
 pub use tableau::{
     classify as tableau_classify, classify_with_seed as tableau_classify_with_seed,
     classify_with_seed_options as tableau_classify_with_seed_options,

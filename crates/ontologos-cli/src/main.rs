@@ -60,15 +60,50 @@ enum Command {
     Instances { ontology: PathBuf },
     /// Check ontology consistency (OWLReasoner-style)
     Consistent { ontology: PathBuf },
-    /// Check class subsumption entailment: sub ⊑ sup
+    /// Check entailment (`SubClassOf`, `ClassAssertion`, or `ObjectPropertyAssertion`)
     Entail {
         ontology: PathBuf,
-        /// Subclass IRI
+        /// Subclass IRI (`SubClassOf` entailment)
         #[arg(long)]
-        sub: String,
-        /// Superclass IRI
+        sub: Option<String>,
+        /// Superclass IRI (`SubClassOf` entailment)
         #[arg(long)]
-        sup: String,
+        sup: Option<String>,
+        /// Individual IRI (`ClassAssertion` entailment)
+        #[arg(long)]
+        individual: Option<String>,
+        /// Class IRI (`ClassAssertion` entailment)
+        #[arg(long)]
+        class: Option<String>,
+        /// Subject individual IRI (`ObjectPropertyAssertion` entailment)
+        #[arg(long)]
+        subject: Option<String>,
+        /// Object property IRI (`ObjectPropertyAssertion` entailment)
+        #[arg(long)]
+        property: Option<String>,
+        /// Object individual IRI (`ObjectPropertyAssertion` entailment)
+        #[arg(long)]
+        object: Option<String>,
+    },
+    /// List sub-object-properties of a named property (OWL API `getSubObjectProperties`)
+    Subproperties {
+        ontology: PathBuf,
+        /// Object property IRI
+        #[arg(long)]
+        property: String,
+        /// Direct sub-properties only
+        #[arg(long, default_value_t = false)]
+        direct: bool,
+    },
+    /// List object property values for an individual (OWL API `getObjectPropertyValues`)
+    PropertyValues {
+        ontology: PathBuf,
+        /// Subject individual IRI
+        #[arg(long)]
+        subject: String,
+        /// Object property IRI
+        #[arg(long)]
+        property: String,
     },
 }
 
@@ -135,7 +170,63 @@ fn map_facade_error(error: ontologos_facade::Error) -> CliError {
         ontologos_facade::Error::Alc(inner) => CliError::Alc(inner),
         ontologos_facade::Error::Dl(inner) => CliError::Dl(inner),
         ontologos_facade::Error::Swrl(inner) => CliError::Swrl(inner),
+        ontologos_facade::Error::Abox(inner) => {
+            CliError::Core(ontologos_core::Error::Message(inner.to_string()))
+        }
     }
+}
+
+fn parse_entailment_check(
+    sub: Option<String>,
+    sup: Option<String>,
+    individual: Option<String>,
+    class: Option<String>,
+    subject: Option<String>,
+    property: Option<String>,
+    object: Option<String>,
+) -> Result<ontologos_facade::EntailmentCheck, CliError> {
+    let subclass = sub.is_some() || sup.is_some();
+    let class_assertion = individual.is_some() || class.is_some();
+    let property_assertion = subject.is_some() || property.is_some() || object.is_some();
+    let count =
+        usize::from(subclass) + usize::from(class_assertion) + usize::from(property_assertion);
+    if count != 1 {
+        return Err(CliError::Core(ontologos_core::Error::Message(
+            "entail requires exactly one of: (--sub and --sup), (--individual and --class), or (--subject, --property, and --object)".into(),
+        )));
+    }
+    if subclass {
+        let sub = sub.ok_or_else(|| {
+            CliError::Core(ontologos_core::Error::Message("--sub required".into()))
+        })?;
+        let sup = sup.ok_or_else(|| {
+            CliError::Core(ontologos_core::Error::Message("--sup required".into()))
+        })?;
+        return Ok(ontologos_facade::EntailmentCheck::SubClassOf { sub, sup });
+    }
+    if class_assertion {
+        let individual = individual.ok_or_else(|| {
+            CliError::Core(ontologos_core::Error::Message("--individual required".into()))
+        })?;
+        let class = class.ok_or_else(|| {
+            CliError::Core(ontologos_core::Error::Message("--class required".into()))
+        })?;
+        return Ok(ontologos_facade::EntailmentCheck::ClassAssertion { individual, class });
+    }
+    let subject = subject.ok_or_else(|| {
+        CliError::Core(ontologos_core::Error::Message("--subject required".into()))
+    })?;
+    let property = property.ok_or_else(|| {
+        CliError::Core(ontologos_core::Error::Message("--property required".into()))
+    })?;
+    let object = object.ok_or_else(|| {
+        CliError::Core(ontologos_core::Error::Message("--object required".into()))
+    })?;
+    Ok(ontologos_facade::EntailmentCheck::ObjectPropertyAssertion {
+        subject,
+        property,
+        object,
+    })
 }
 
 fn main() {
@@ -329,25 +420,111 @@ fn run() -> Result<(), CliError> {
                 })?,
             }
         }
-        Command::Entail { ontology, sub, sup } => {
+        Command::Entail {
+            ontology,
+            sub,
+            sup,
+            individual,
+            class,
+            subject,
+            property,
+            object,
+        } => {
             let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
+            let check = parse_entailment_check(sub, sup, individual, class, subject, property, object)?;
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .build(ontology)?;
             let entailed =
-                ontologos_facade::is_entailed(&mut reasoner, &sub, &sup).map_err(map_facade_error)?;
+                ontologos_facade::is_entailed_axiom(&mut reasoner, check.clone()).map_err(map_facade_error)?;
             match cli.format {
                 OutputFormat::Text => {
                     println!("entailed: {entailed}");
-                    println!("sub: {sub}");
-                    println!("sup: {sup}");
+                    match check {
+                        ontologos_facade::EntailmentCheck::SubClassOf { sub, sup } => {
+                            println!("sub: {sub}");
+                            println!("sup: {sup}");
+                        }
+                        ontologos_facade::EntailmentCheck::ClassAssertion { individual, class } => {
+                            println!("individual: {individual}");
+                            println!("class: {class}");
+                        }
+                        ontologos_facade::EntailmentCheck::ObjectPropertyAssertion {
+                            subject,
+                            property,
+                            object,
+                        } => {
+                            println!("subject: {subject}");
+                            println!("property: {property}");
+                            println!("object: {object}");
+                        }
+                    }
                 }
                 OutputFormat::Json => emit_json(&EntailCliOutput {
                     entailed,
-                    sub: &sub,
-                    sup: &sup,
+                    check: &check,
+                    parse_meta: &parse_meta,
+                })?,
+            }
+        }
+        Command::Subproperties {
+            ontology,
+            property,
+            direct,
+        } => {
+            let ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
+            let reasoner = Reasoner::builder()
+                .profile(cli.profile.into())
+                .build(ontology)?;
+            let subs = ontologos_facade::get_sub_object_properties(&reasoner, &property, direct)
+                .map_err(map_facade_error)?;
+            match cli.format {
+                OutputFormat::Text => {
+                    println!("property: {property}");
+                    println!("direct: {direct}");
+                    println!("count: {}", subs.len());
+                    for iri in &subs {
+                        println!("  {iri}");
+                    }
+                }
+                OutputFormat::Json => emit_json(&SubpropertiesCliOutput {
+                    property: &property,
+                    direct,
+                    subproperties: &subs,
+                    parse_meta: &parse_meta,
+                })?,
+            }
+        }
+        Command::PropertyValues {
+            ontology,
+            subject,
+            property,
+        } => {
+            let ontology = load_ontology(&ontology)?;
+            let parse_meta = parse_meta_summary(&ontology);
+            emit_parse_meta_text(cli.format, &parse_meta);
+            let reasoner = Reasoner::builder()
+                .profile(cli.profile.into())
+                .build(ontology)?;
+            let values = ontologos_facade::get_object_property_values(&reasoner, &subject, &property)
+                .map_err(map_facade_error)?;
+            match cli.format {
+                OutputFormat::Text => {
+                    println!("subject: {subject}");
+                    println!("property: {property}");
+                    println!("count: {}", values.len());
+                    for iri in &values {
+                        println!("  {iri}");
+                    }
+                }
+                OutputFormat::Json => emit_json(&PropertyValuesCliOutput {
+                    subject: &subject,
+                    property: &property,
+                    values: &values,
                     parse_meta: &parse_meta,
                 })?,
             }
@@ -413,8 +590,26 @@ struct ConsistentCliOutput<'a> {
 #[derive(Serialize)]
 struct EntailCliOutput<'a> {
     entailed: bool,
-    sub: &'a str,
-    sup: &'a str,
+    #[serde(flatten)]
+    check: &'a ontologos_facade::EntailmentCheck,
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct SubpropertiesCliOutput<'a> {
+    property: &'a str,
+    direct: bool,
+    subproperties: &'a [String],
+    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
+    parse_meta: &'a ParseMetaSummary,
+}
+
+#[derive(Serialize)]
+struct PropertyValuesCliOutput<'a> {
+    subject: &'a str,
+    property: &'a str,
+    values: &'a [String],
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }
