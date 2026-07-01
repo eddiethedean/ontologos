@@ -3,6 +3,7 @@
 #![warn(missing_docs)]
 
 mod classify;
+mod engines;
 mod entailment;
 mod error;
 mod lookup;

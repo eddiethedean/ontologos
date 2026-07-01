@@ -39,6 +39,7 @@
 mod axiom;
 mod dirty;
 mod dl;
+mod engine;
 mod entity;
 mod error;
 mod graph;
@@ -56,6 +57,7 @@ mod trace;
 pub use axiom::{Axiom, AxiomId, DataLiteral};
 pub use dirty::{DirtySet, OntologyRevision, axiom_signature};
 pub use dl::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, DlStore, RoleExpr};
+pub use engine::{DetectedProfileKind, EngineCapabilities, EngineKind, ResolvedRoute};
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 pub use error::{Error, Result};
 pub use graph::{AxiomIndex, AxiomStore};

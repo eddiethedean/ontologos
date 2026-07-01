@@ -1,10 +1,10 @@
 use ontologos_core::{Error as CoreError, Profile, Reasoner, Taxonomy};
 
-use crate::{ElClassifier, ElReport, take_el_session};
+use crate::{ElClassifier, ElEngine, ElReport, take_el_session};
 
 /// Classify when the reasoner profile is [`Profile::El`].
 pub fn classify_reasoner(reasoner: &mut Reasoner) -> crate::Result<Taxonomy> {
-    classify_with_report(reasoner).map(|r| r.taxonomy)
+    ElEngine.classify_taxonomy(reasoner)
 }
 
 /// Classify and return taxonomy plus optional inference trace.

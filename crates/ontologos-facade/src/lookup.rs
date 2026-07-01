@@ -1,8 +1,6 @@
-use std::collections::HashSet;
-
 use ontologos_core::{EntityId, EntityKind, Reasoner, RoleExpr};
-use ontologos_profile::{OwlProfile, detect_profile};
 
+use crate::engines::EngineRegistry;
 use crate::error::{Error, Result};
 
 /// OWL API `getObjectPropertyValues` for named individuals and properties.
@@ -27,24 +25,8 @@ pub fn get_sub_object_properties(
 ) -> Result<Vec<String>> {
     let ontology = reasoner.ontology();
     let property = lookup_object_property(ontology, property_iri)?;
-    let role = RoleExpr::Atomic(property);
-
-    let roles = match reasoner.profile() {
-        ontologos_core::Profile::Alc
-        | ontologos_core::Profile::Dl
-        | ontologos_core::Profile::Swrl => {
-            ontologos_dl::sub_object_property_expressions(ontology, &role, direct)?
-        }
-        ontologos_core::Profile::Auto => {
-            let report = detect_profile(ontology).map_err(|e| Error::El(e.into()))?;
-            if report.detected == Some(OwlProfile::Dl) {
-                ontologos_dl::sub_object_property_expressions(ontology, &role, direct)?
-            } else {
-                index_sub_object_properties(ontology, property, direct)
-            }
-        }
-        _ => index_sub_object_properties(ontology, property, direct),
-    };
+    let route = EngineRegistry::resolve(reasoner)?;
+    let roles = EngineRegistry::sub_object_properties(route, reasoner, property, direct)?;
 
     let mut out: Vec<String> = roles
         .iter()
@@ -121,12 +103,12 @@ fn role_expr_iri(ontology: &ontologos_core::Ontology, role: &RoleExpr) -> Result
     }
 }
 
-fn index_sub_object_properties(
+pub(crate) fn index_sub_object_properties(
     ontology: &ontologos_core::Ontology,
     property: EntityId,
     direct: bool,
-) -> HashSet<RoleExpr> {
-    let mut out = HashSet::new();
+) -> std::collections::HashSet<RoleExpr> {
+    let mut out = std::collections::HashSet::new();
     if direct {
         for &sub in ontology.direct_subproperties(property) {
             out.insert(RoleExpr::Atomic(sub));
@@ -134,7 +116,7 @@ fn index_sub_object_properties(
         return out;
     }
     let mut frontier = ontology.direct_subproperties(property).to_vec();
-    let mut seen = HashSet::new();
+    let mut seen = std::collections::HashSet::new();
     while let Some(prop) = frontier.pop() {
         if seen.insert(prop) {
             out.insert(RoleExpr::Atomic(prop));

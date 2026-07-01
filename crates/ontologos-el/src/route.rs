@@ -51,7 +51,7 @@ fn saturate_rl_unchecked(reasoner: &mut Reasoner) -> Result<RlReport, Error> {
         .saturate_reasoner(reasoner)?)
 }
 
-fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
+pub(crate) fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
     let report = detect_profile(reasoner.ontology())?;
     let detected = report
         .detected

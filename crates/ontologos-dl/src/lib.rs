@@ -8,6 +8,7 @@ mod classify;
 mod datatype;
 mod defined_class;
 mod dependency_index;
+mod engine;
 mod object_property_query;
 mod perf;
 mod ria;
@@ -27,6 +28,7 @@ pub use datatype::{
     LiteralIndex, LiteralValue, is_datatype_consistent, named_class_datatype_satisfiable,
 };
 pub use dependency_index::DependencyIndex;
+pub use engine::DlEngine;
 pub use object_property_query::{
     RolePropertyQueryContext, classify_object_property_expressions,
     equivalent_object_property_expressions, inverse_object_property_expressions,

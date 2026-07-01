@@ -1,66 +1,14 @@
-use ontologos_core::{Axiom, EntityId, Profile, Reasoner, Taxonomy};
-use ontologos_profile::{OwlProfile, detect_profile};
+use ontologos_core::{Axiom, DetectedProfileKind, EntityId, Profile, Reasoner, Taxonomy};
 
 use crate::classify::{classify, taxonomy_from_outcome};
+use crate::engines::EngineRegistry;
 use crate::error::{EntailmentCheck, Error, Result};
 use crate::lookup::{lookup_class, lookup_individual, lookup_object_property};
 
 /// Check ontology consistency for the configured profile.
 pub fn is_consistent(reasoner: &Reasoner) -> Result<bool> {
-    match reasoner.profile() {
-        Profile::Alc => Ok(ontologos_alc::is_consistent(reasoner.ontology())?),
-        Profile::Dl | Profile::Swrl => Ok(ontologos_dl::is_consistent(reasoner.ontology())?),
-        Profile::Auto => is_consistent_auto(reasoner),
-        Profile::El => el_is_consistent(reasoner.ontology()),
-        Profile::Rl => rl_is_consistent(reasoner.ontology()),
-        Profile::Rdfs => rdfs_is_consistent(reasoner.ontology()),
-    }
-}
-
-fn rl_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
-    let mut working = ontology.clone();
-    let report = ontologos_rl::RlEngine::new(1)
-        .saturate(&mut working)
-        .map_err(|e| Error::El(ontologos_el::Error::Message(format!("rl saturate: {e}"))))?;
-    if !report.clashes.is_empty() || ontologos_bridge::has_bottom_chain_violation(&working) {
-        return Ok(false);
-    }
-    ontologos_abox::is_abox_consistent(&working).map_err(|e| {
-        Error::El(ontologos_el::Error::Message(format!(
-            "abox consistent: {e}"
-        )))
-    })
-}
-
-fn rdfs_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
-    let mut working = ontology.clone();
-    let report = ontologos_rdfs::RdfsEngine::new()
-        .materialize(&mut working)
-        .map_err(|e| {
-            Error::El(ontologos_el::Error::Message(format!(
-                "rdfs materialize: {e}"
-            )))
-        })?;
-    Ok(report.clashes.is_empty())
-}
-
-fn el_is_consistent(ontology: &ontologos_core::Ontology) -> Result<bool> {
-    ontologos_el::ElClassifier::new()
-        .classify(ontology)
-        .map(|t| t.unsatisfiable.is_empty())
-        .map_err(Error::El)
-}
-
-fn is_consistent_auto(reasoner: &Reasoner) -> Result<bool> {
-    let report = detect_profile(reasoner.ontology()).map_err(|e| Error::El(e.into()))?;
-    match report.detected {
-        Some(OwlProfile::Dl) => Ok(ontologos_dl::is_consistent(reasoner.ontology())?),
-        Some(OwlProfile::El) | Some(OwlProfile::Ql) => el_is_consistent(reasoner.ontology()),
-        Some(OwlProfile::Rl) => rl_is_consistent(reasoner.ontology()),
-        None => Err(Error::El(ontologos_el::Error::Message(
-            "no profile detected".into(),
-        ))),
-    }
+    let route = EngineRegistry::resolve(reasoner)?;
+    EngineRegistry::is_consistent(route, reasoner)
 }
 
 /// Whether named class `sub_iri` is entailed to be subsumed by `sup_iri` after classification.
@@ -127,20 +75,14 @@ fn is_class_assertion_entailed(
     let individual = lookup_individual(ontology, individual_iri)?;
     let class = lookup_class(ontology, class_iri)?;
 
-    match reasoner.profile() {
-        Profile::Alc | Profile::Dl | Profile::Swrl => {
-            dl_entails_class_assertion(ontology, individual, class)
-        }
-        Profile::Auto => {
-            let report = detect_profile(ontology).map_err(|e| Error::El(e.into()))?;
-            if report.detected == Some(OwlProfile::Dl) {
-                dl_entails_class_assertion(ontology, individual, class)
-            } else {
-                taxonomy_entails_class_assertion(reasoner, individual, class)
-            }
-        }
-        _ => taxonomy_entails_class_assertion(reasoner, individual, class),
+    let route = EngineRegistry::resolve(reasoner)?;
+    if route.capabilities.entailment_dl {
+        return dl_entails_class_assertion(ontology, individual, class);
     }
+    if reasoner.profile() == Profile::Auto && route.detected == Some(DetectedProfileKind::Dl) {
+        return dl_entails_class_assertion(ontology, individual, class);
+    }
+    taxonomy_entails_class_assertion(reasoner, individual, class)
 }
 
 fn taxonomy_entails_class_assertion(
@@ -229,20 +171,14 @@ fn is_object_property_assertion_entailed(
     let property = lookup_object_property(ontology, property_iri)?;
     let object = lookup_individual(ontology, object_iri)?;
 
-    match reasoner.profile() {
-        Profile::Alc | Profile::Dl | Profile::Swrl => {
-            dl_entails_object_property_assertion(ontology, subject, property, object)
-        }
-        Profile::Auto => {
-            let report = detect_profile(ontology).map_err(|e| Error::El(e.into()))?;
-            if report.detected == Some(OwlProfile::Dl) {
-                dl_entails_object_property_assertion(ontology, subject, property, object)
-            } else {
-                abox_entails_object_property_assertion(ontology, subject, property, object)
-            }
-        }
-        _ => abox_entails_object_property_assertion(ontology, subject, property, object),
+    let route = EngineRegistry::resolve(reasoner)?;
+    if route.capabilities.entailment_dl {
+        return dl_entails_object_property_assertion(ontology, subject, property, object);
     }
+    if reasoner.profile() == Profile::Auto && route.detected == Some(DetectedProfileKind::Dl) {
+        return dl_entails_object_property_assertion(ontology, subject, property, object);
+    }
+    abox_entails_object_property_assertion(ontology, subject, property, object)
 }
 
 fn abox_entails_object_property_assertion(

@@ -3,6 +3,7 @@
 #![warn(missing_docs)]
 
 mod engine;
+mod engine_adapter;
 mod rules;
 
 use ontologos_core::{Ontology, OwlConstruct};
@@ -10,6 +11,7 @@ use ontologos_profile::scanner::scan_constructs;
 use thiserror::Error;
 
 pub use engine::materialize_swrl_rules;
+pub use engine_adapter::SwrlEngine;
 pub use rules::{SwrlReport, apply_swrl_rules};
 
 /// Result type for SWRL operations.

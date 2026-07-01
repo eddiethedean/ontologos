@@ -1,10 +1,12 @@
 //! RDFS reasoning facade over [`reasonable`](https://crates.io/crates/reasonable).
 
 mod engine;
+mod profile_engine;
 mod reasoner;
 mod report;
 
 pub use engine::RdfsEngine;
+pub use profile_engine::RdfsEngineAdapter;
 pub use reasoner::{classify_reasoner, materialize_reasoner};
 pub use report::{InferenceRecord, MaterializationReport, RdfsRule};
 

@@ -23,6 +23,7 @@
 mod construct;
 mod detect;
 mod hybrid;
+mod routing;
 mod rules;
 /// Construct scanning helpers for profile detection.
 pub mod scanner;
@@ -38,6 +39,7 @@ pub use hybrid::{
     extract_signature, merge_taxonomies, partition_axioms, signature_for_axioms,
     subontology_with_axioms,
 };
+pub use routing::{detected_profile_kind, resolve_route};
 pub use rules::{el_classification_forbidden_in, el_diagnostics, el_forbidden_in, satisfies_el};
 
 /// Result type alias for profile operations.

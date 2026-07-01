@@ -4,6 +4,7 @@
 
 mod clause;
 mod dl_ontology;
+mod engine;
 mod hyper_abox;
 mod hyper_cardinality;
 mod hyper_clausify;
@@ -20,6 +21,7 @@ use thiserror::Error;
 
 pub use clause::{Clause, ClauseSet};
 pub use dl_ontology::DlOntology;
+pub use engine::AlcEngine;
 pub use hyper_clausify::clausify_hyper;
 pub use hyperclause::{HyperClauseSet, format_hyper_clauses};
 pub use normalize::clausify;

@@ -16,6 +16,7 @@
 
 #![warn(missing_docs)]
 
+mod engine;
 mod graph;
 mod normal_form;
 mod partition;
@@ -28,6 +29,7 @@ mod trace;
 use ontologos_core::{Ontology, Taxonomy};
 use thiserror::Error;
 
+pub use engine::ElEngine;
 pub use reasoner::{classify_reasoner, classify_with_report, try_classify_reasoner};
 pub use route::{ClassifyOutcome, ProfileFlag, classify_with_profile, resolve_profile_flag};
 pub use session::{ElSession, take_el_session};
