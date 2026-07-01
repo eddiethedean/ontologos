@@ -4,21 +4,29 @@ set -euo pipefail
 # Publish workspace crates in dependency order. crates.io index propagation
 # can lag behind uploads, so each crate is retried before failing the job.
 #
-# v0.8.x: core → profile → parser → bridge → rdfs → rl → el → query → explain.
-# profile/parser must precede bridge (bridge dev-depends on parser).
+# v1.0.x order (15 publish = true crates):
+#   core → profile → query → bridge → parser → rdfs → rl → abox → alc → el
+#   → dl → swrl → explain → ql → facade
+#
+# ontologos-alc has no runtime dependency on ontologos-dl (dl is dev-only).
+# CLI, Python, conformance, and watch are not published.
 
 CRATES=(
   ontologos-core
   ontologos-profile
-  ontologos-parser
+  ontologos-query
   ontologos-bridge
+  ontologos-parser
   ontologos-rdfs
   ontologos-rl
+  ontologos-abox
+  ontologos-alc
   ontologos-el
-  ontologos-query
+  ontologos-dl
+  ontologos-swrl
   ontologos-explain
-  # ontologos-cli
-  # ontologos-py
+  ontologos-ql
+  ontologos-facade
 )
 
 already_published() {

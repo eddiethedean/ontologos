@@ -200,10 +200,16 @@ impl Reasoner {
 
     /// Run classification over the loaded ontology.
     ///
-    /// Profile engines live in separate crates. Use `ontologos_rdfs::classify_reasoner`
-    /// for [`Profile::Rdfs`] and `ontologos_rl::classify_reasoner` for [`Profile::Rl`].
-    /// EL/Auto return [`Error::NotImplemented`]. Calling this with [`Profile::Rdfs`]
-    /// or [`Profile::Rl`] returns [`Error::Message`] with a delegate hint.
+    /// Profile engines live in separate crates. Prefer [`ontologos_facade::classify`]
+    /// or profile-specific helpers (`ontologos_el::classify_with_profile`,
+    /// `ontologos_rdfs::classify_reasoner`, `ontologos_rl::classify_reasoner`).
+    ///
+    /// EL/Auto return [`Error::NotImplemented`]. [`Profile::Rdfs`] and [`Profile::Rl`]
+    /// return [`Error::Message`] with a delegate hint.
+    #[deprecated(
+        since = "1.0.0",
+        note = "use ontologos_facade::classify or profile crate helpers instead"
+    )]
     pub fn classify(&mut self) -> Result<()> {
         if self.profile == Profile::Rdfs {
             return Err(Error::Message(

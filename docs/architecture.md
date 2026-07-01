@@ -67,11 +67,9 @@ flowchart TB
   core --> serde
 ```
 
-Published to crates.io: `ontologos-core`, `ontologos-parser`, `ontologos-profile`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, `ontologos-facade`.
+Published to crates.io (15 crates): `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-abox`, `ontologos-alc`, `ontologos-dl`, `ontologos-swrl`, `ontologos-query`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-Preview (workspace): `ontologos-alc`, `ontologos-dl`, `ontologos-swrl`.
-
-Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`.
+Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`, `ontologos-watch`.
 
 ## Data flow
 
@@ -162,17 +160,24 @@ Owns conversions between models for parsing and RL/RDFS adapters:
 
 CLI and Python call **`ontologos_facade::classify`**. Prefer it in Rust when using `Profile::Auto`, `Dl`, `Alc`, or `Swrl`.
 
+Routing uses a two-layer design (DIP):
+
+1. **`ontologos_profile::resolve_route`** — maps `Profile` + ontology to [`ResolvedRoute`](https://docs.rs/ontologos-core/latest/ontologos_core/struct.ResolvedRoute.html) (`EngineKind`, capabilities) without depending on engine crates.
+2. **`EngineRegistry`** (facade-internal) — dispatches to profile adapters (`ElAdapter`, `RlAdapter`, `DlAdapter`, …) implementing narrow traits (`ClassifyEngine`, `ConsistencyEngine`, `RoleQueryEngine`).
+
 | `Profile` | Routed to |
 |-----------|-----------|
-| `Auto` | EL/RL if detected; **DL** if profile detection returns DL |
-| `El`, `Rdfs`, `Rl` | `ontologos-el` router (EL/RL/RDFS paths) |
-| `Alc` | `ontologos-alc::classify` |
-| `Dl` | `ontologos-dl::classify` |
-| `Swrl` | `ontologos-swrl::classify_with_swrl` (preview) |
+| `Auto` | Detected EL/RL; **DL** if profile detection returns DL; **Hybrid** for multi-module DL ontologies |
+| `El`, `Rdfs`, `Rl` | Respective engine adapter |
+| `Alc` | `ontologos-alc` |
+| `Dl` | `ontologos-dl` |
+| `Swrl` | `ontologos-swrl` (preview) |
 
-See [Facade API](guides/facade-api.md) and [Preview profiles](guides/preview-profiles.md).
+`ClassifyOutcome` is re-exported from the facade (`ontologos_facade::ClassifyOutcome`).
 
-**Do not** call `ontologos_core::Reasoner::classify()` — it is a stub.
+See [Facade API](guides/facade-api.md), [Preview profiles](guides/preview-profiles.md), and [API stability ADR](internal/design/api-stability.md).
+
+**Do not** call `ontologos_core::Reasoner::classify()` — deprecated since 1.0.0; use the facade or profile crates.
 
 ## CLI surface
 

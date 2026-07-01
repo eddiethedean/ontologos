@@ -72,6 +72,7 @@ pub use taxonomy::Taxonomy;
 pub use trace::{InferenceTrace, TraceConclusion, TracePremise, TraceStep};
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod integration_tests {
     use super::*;
 

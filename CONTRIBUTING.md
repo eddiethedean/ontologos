@@ -4,7 +4,7 @@ Thank you for your interest in contributing. OntoLogos is in active development:
 
 ## Prerequisites
 
-- Rust **1.88+** (see `rust-version` in the workspace [Cargo.toml](Cargo.toml))
+- Rust **1.88+** (MSRV — see `rust-version` in the workspace [Cargo.toml](Cargo.toml); CI enforces 1.88)
 - `cargo fmt` and `cargo clippy` (installed via `rustup component add rustfmt clippy`)
 - For Python bindings: Python **3.10+**, `maturin`, `pytest`
 

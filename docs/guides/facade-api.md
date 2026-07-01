@@ -17,8 +17,7 @@ The **`ontologos-facade`** crate is the unified routing layer for CLI, Python, a
 
 ```rust
 use ontologos_core::{Profile, Reasoner};
-use ontologos_el::ClassifyOutcome;
-use ontologos_facade;
+use ontologos_facade::{self, ClassifyOutcome};
 use ontologos_parser::load_ontology;
 
 let ontology = load_ontology(path)?;

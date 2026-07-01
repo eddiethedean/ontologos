@@ -34,8 +34,22 @@ pub use object_property_query::{
     equivalent_object_property_expressions, inverse_object_property_expressions,
     sub_object_property_expressions,
 };
-pub use ontologos_alc::{Clause, ClauseSet, DlOntology, classify as alc_classify, clausify};
-pub use ontologos_alc::{TableauSeed, classify_with_seed, role_expression_subsumes};
+#[deprecated(since = "1.0.0", note = "import from ontologos_alc instead")]
+pub use ontologos_alc::Clause;
+#[deprecated(since = "1.0.0", note = "import from ontologos_alc instead")]
+pub use ontologos_alc::ClauseSet;
+#[deprecated(since = "1.0.0", note = "import from ontologos_alc instead")]
+pub use ontologos_alc::DlOntology;
+#[deprecated(since = "1.0.0", note = "import from ontologos_alc instead")]
+pub use ontologos_alc::TableauSeed;
+#[deprecated(since = "1.0.0", note = "import from ontologos_alc::classify instead")]
+pub use ontologos_alc::classify as alc_classify;
+#[deprecated(since = "1.0.0", note = "import from ontologos_alc::classify_with_seed instead")]
+pub use ontologos_alc::classify_with_seed;
+#[deprecated(since = "1.0.0", note = "import from ontologos_alc::clausify instead")]
+pub use ontologos_alc::clausify;
+#[deprecated(since = "1.0.0", note = "import from ontologos_alc::role_expression_subsumes instead")]
+pub use ontologos_alc::role_expression_subsumes;
 pub use perf::{DlPerfTimings, perf_enabled};
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};

@@ -13,7 +13,7 @@ OntoLogos is a **Rust workspace** with optional **Python bindings**. Pick the ro
 | MSRV CI gate | **1.88** exactly | — | Yes |
 | Contribute (fmt, clippy, tests) | **stable** (1.88+) | 3.10+ for `ontologos-py` | Yes |
 
-**MSRV:** Rust **1.88** (see root `Cargo.toml`). CI enforces MSRV on every push.
+**MSRV:** Rust **1.88** (workspace `Cargo.toml` `rust-version`; CI `msrv` job enforces exactly 1.88).
 
 ## Rust toolchain
 
