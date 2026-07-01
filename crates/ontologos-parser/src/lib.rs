@@ -36,9 +36,7 @@ pub use load::{
     validate_load_path,
 };
 pub use rdf_preprocess::expand_xml_entities;
-pub use read::{
-    detect_turtle_from_bytes, read_horned_owl, read_horned_owl_from_reader, sniff_file_header,
-};
+pub use read::{detect_turtle_from_bytes, read_horned_owl_from_reader, sniff_file_header};
 pub use validate::validate_loaded_ontology;
 
 /// Supported ontology serialization formats.

@@ -18,11 +18,13 @@ mod route;
 mod saturation;
 mod union_csp;
 
+use ontologos_alc::{DlOntology, TableauSeed};
 use ontologos_core::{
     Axiom, CeId, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, Profile, RoleExpr, Taxonomy,
 };
 use thiserror::Error;
 
+pub use bounded::{dl_max_workers, run_bounded};
 pub use classify::DlClassifier;
 pub use datatype::is_data_range_satisfiable;
 pub use ontologos_core::ConsistencyResult;
@@ -36,28 +38,6 @@ pub use object_property_query::{
     equivalent_object_property_expressions, inverse_object_property_expressions,
     sub_object_property_expressions,
 };
-#[deprecated(since = "1.0.0", note = "import from ontologos_alc instead")]
-pub use ontologos_alc::Clause;
-#[deprecated(since = "1.0.0", note = "import from ontologos_alc instead")]
-pub use ontologos_alc::ClauseSet;
-#[deprecated(since = "1.0.0", note = "import from ontologos_alc instead")]
-pub use ontologos_alc::DlOntology;
-#[deprecated(since = "1.0.0", note = "import from ontologos_alc instead")]
-pub use ontologos_alc::TableauSeed;
-#[deprecated(since = "1.0.0", note = "import from ontologos_alc::classify instead")]
-pub use ontologos_alc::classify as alc_classify;
-#[deprecated(
-    since = "1.0.0",
-    note = "import from ontologos_alc::classify_with_seed instead"
-)]
-pub use ontologos_alc::classify_with_seed;
-#[deprecated(since = "1.0.0", note = "import from ontologos_alc::clausify instead")]
-pub use ontologos_alc::clausify;
-#[deprecated(
-    since = "1.0.0",
-    note = "import from ontologos_alc::role_expression_subsumes instead"
-)]
-pub use ontologos_alc::role_expression_subsumes;
 pub use perf::{DlPerfTimings, perf_enabled};
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};
@@ -2501,11 +2481,6 @@ pub fn is_subsumed(ontology: &Ontology, sub: &str, sup: &str) -> Result<bool> {
         .lookup_entity(sup)
         .ok_or_else(|| Error::Message(format!("unknown entity: {sup}")))?;
     Ok(taxonomy.is_subsumed(sub_id, sup_id))
-}
-
-/// Check entailment of a named subsumption axiom.
-pub fn is_entailed(ontology: &Ontology, sub: &str, sup: &str) -> Result<bool> {
-    is_subsumed(ontology, sub, sup)
 }
 
 #[cfg(test)]

@@ -30,8 +30,8 @@ use ontologos_core::{Ontology, Taxonomy};
 use thiserror::Error;
 
 pub use engine::ElEngine;
-pub use reasoner::{classify_reasoner, classify_with_report, try_classify_reasoner};
-pub use route::{ClassifyOutcome, ProfileFlag, classify_with_profile, resolve_profile_flag};
+pub use reasoner::{classify_reasoner, classify_with_report};
+pub use route::{ClassifyOutcome, classify_with_profile};
 pub use session::{ElSession, take_el_session};
 pub use trace::ElReport;
 

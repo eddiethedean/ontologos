@@ -218,6 +218,8 @@ Exactly one entailment form:
 
 ### `property-values <file> --subject <iri> --property <iri>`
 
+Uses ABox RL lookup (`get_object_property_values`); the global `--profile` flag does **not** affect this command.
+
 **JSON:**
 
 ```json
@@ -242,7 +244,7 @@ ontologos --format json consistent --profile dl ontology.owl
 ontologos --format json query --profile el pizza.owl --query 'Type(?x, http://www.co-ode.org/ontologies/pizza/pizza.owl#VegetarianPizza)'
 ontologos entail --profile el pizza.owl --sub http://... --sup http://...
 ontologos subproperties --profile el ontology.owl --property http://ex.org/hasPart
-ontologos property-values --profile rl family.owl --subject http://... --property http://...
+ontologos property-values family.owl --subject http://... --property http://...
 ontologos instances family.owl
 ontologos materialize ontology.owl
 ontologos --format json explain --profile el benchmarks/data/pizza.owl

@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
@@ -538,9 +537,8 @@ fn run() -> Result<(), CliError> {
             let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            let reasoner = Reasoner::builder()
-                .profile(cli.profile.into())
-                .build(ontology)?;
+            // ABox RL lookup; global `--profile` does not affect this command.
+            let reasoner = Reasoner::builder().build(ontology)?;
             let values =
                 ontologos_facade::get_object_property_values(&reasoner, &subject, &property)
                     .map_err(map_facade_error)?;
@@ -571,10 +569,6 @@ fn parse_meta_summary(ontology: &Ontology) -> ParseMetaSummary {
         .parse_meta()
         .map(ParseMetaSummary::from)
         .unwrap_or_default()
-}
-
-fn skip_empty_clashes(clashes: &&[String]) -> bool {
-    clashes.is_empty()
 }
 
 fn emit_parse_meta_text(format: OutputFormat, parse_meta: &ParseMetaSummary) {
@@ -661,45 +655,6 @@ struct PropertyValuesCliOutput<'a> {
 }
 
 #[derive(Serialize)]
-struct RdfsCliOutput<'a> {
-    status: &'static str,
-    initial_axiom_count: usize,
-    final_axiom_count: usize,
-    inferred_axioms: usize,
-    inferred_by_rule: &'a BTreeMap<ontologos_rdfs::RdfsRule, usize>,
-    clash_count: usize,
-    #[serde(skip_serializing_if = "skip_empty_clashes")]
-    clashes: &'a [String],
-    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
-    parse_meta: &'a ParseMetaSummary,
-}
-
-#[derive(Serialize)]
-struct RlCliOutput<'a> {
-    status: &'static str,
-    initial_axiom_count: usize,
-    final_axiom_count: usize,
-    inferred_axioms: usize,
-    inferred_by_rule: &'a BTreeMap<ontologos_rl::RlRule, usize>,
-    clash_count: usize,
-    #[serde(skip_serializing_if = "skip_empty_clashes")]
-    clashes: &'a [String],
-    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
-    parse_meta: &'a ParseMetaSummary,
-}
-
-#[derive(Serialize)]
-struct TaxonomyCliOutput<'a> {
-    status: &'static str,
-    subsumption_count: usize,
-    subsumptions: &'a [(String, String)],
-    equivalences: &'a [Vec<String>],
-    unsatisfiable: &'a [String],
-    #[serde(skip_serializing_if = "skip_clean_parse_meta")]
-    parse_meta: &'a ParseMetaSummary,
-}
-
-#[derive(Serialize)]
 struct ExplainCliOutput<'a> {
     #[serde(flatten)]
     graph: &'a ProofGraph,
@@ -775,14 +730,11 @@ fn emit_taxonomy(
                 }
             }
         }
-        OutputFormat::Json => emit_json(&TaxonomyCliOutput {
-            status,
-            subsumption_count: taxonomy.subsumption_count(),
-            subsumptions: &subsumptions,
-            equivalences: &equivalences,
-            unsatisfiable: &unsatisfiable,
-            parse_meta,
-        })?,
+        OutputFormat::Json => {
+            let output = ontologos_facade::taxonomy_json(status, taxonomy, ontology, Some(parse_meta))
+                .map_err(map_facade_error)?;
+            emit_json(&output)?;
+        }
     }
     Ok(())
 }
@@ -815,16 +767,10 @@ fn emit_rdfs_report(
                 }
             }
         }
-        OutputFormat::Json => emit_json(&RdfsCliOutput {
-            status,
-            initial_axiom_count: report.initial_axiom_count,
-            final_axiom_count: report.final_axiom_count,
-            inferred_axioms: report.inferred_total(),
-            inferred_by_rule: &report.inferred_by_rule,
-            clash_count: report.clashes.len(),
-            clashes: &report.clashes,
-            parse_meta,
-        })?,
+        OutputFormat::Json => {
+            let output = ontologos_facade::rdfs_materialization_json(status, report, Some(parse_meta));
+            emit_json(&output)?;
+        }
     }
     Ok(())
 }
@@ -857,16 +803,10 @@ fn emit_rl_report(
                 }
             }
         }
-        OutputFormat::Json => emit_json(&RlCliOutput {
-            status,
-            initial_axiom_count: report.initial_axiom_count,
-            final_axiom_count: report.final_axiom_count,
-            inferred_axioms: report.inferred_total(),
-            inferred_by_rule: &report.inferred_by_rule,
-            clash_count: report.clashes.len(),
-            clashes: &report.clashes,
-            parse_meta,
-        })?,
+        OutputFormat::Json => {
+            let output = ontologos_facade::rl_materialization_json(status, report, Some(parse_meta));
+            emit_json(&output)?;
+        }
     }
     Ok(())
 }

@@ -200,54 +200,47 @@ pub(crate) fn find_subclass_axiom_id(
     Ok(None)
 }
 
+pub(crate) fn json_to_py(py: Python<'_>, value: &serde_json::Value) -> PyResult<Py<PyAny>> {
+    let json_mod = PyModule::import(py, "json")?;
+    let s = serde_json::to_string(value).map_err(py_err)?;
+    Ok(json_mod.call_method1("loads", (s,))?.unbind())
+}
+
+pub(crate) fn json_to_pydict<'py>(
+    py: Python<'py>,
+    value: &serde_json::Value,
+) -> PyResult<Bound<'py, PyDict>> {
+    json_to_py(py, value)?
+        .into_bound(py)
+        .downcast_into()
+        .map_err(|e| py_err(e.to_string()))
+}
+
 pub(crate) fn taxonomy_classify_dict<'py>(
     py: Python<'py>,
     ontology: &Ontology,
     taxonomy: &Taxonomy,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let dict = taxonomy_dict(py, ontology, taxonomy)?;
-    dict.set_item("status", "classified")?;
-    Ok(dict)
+    let json = ontologos_facade::taxonomy_json("classified", taxonomy, ontology, None)
+        .map_err(py_err)?;
+    let value = serde_json::to_value(&json).map_err(py_err)?;
+    json_to_pydict(py, &value)
 }
 
 pub(crate) fn rdfs_classify_dict<'py>(
     py: Python<'py>,
     report: &ontologos_rdfs::MaterializationReport,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let dict = PyDict::new(py);
-    dict.set_item("status", "classified")?;
-    dict.set_item("initial_axiom_count", report.initial_axiom_count)?;
-    dict.set_item("final_axiom_count", report.final_axiom_count)?;
-    dict.set_item("inferred_axioms", report.inferred_total())?;
-    let rules = PyDict::new(py);
-    for (rule, count) in &report.inferred_by_rule {
-        rules.set_item(rule.as_str(), count)?;
-    }
-    dict.set_item("inferred_by_rule", rules)?;
-    dict.set_item("clash_count", report.clashes.len())?;
-    if !report.clashes.is_empty() {
-        dict.set_item("clashes", &report.clashes)?;
-    }
-    Ok(dict)
+    let json = ontologos_facade::rdfs_materialization_json("classified", report, None);
+    let value = serde_json::to_value(&json).map_err(py_err)?;
+    json_to_pydict(py, &value)
 }
 
 pub(crate) fn rl_classify_dict<'py>(
     py: Python<'py>,
     report: &ontologos_rl::MaterializationReport,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let dict = PyDict::new(py);
-    dict.set_item("status", "classified")?;
-    dict.set_item("initial_axiom_count", report.initial_axiom_count)?;
-    dict.set_item("final_axiom_count", report.final_axiom_count)?;
-    dict.set_item("inferred_axioms", report.inferred_total())?;
-    let rules = PyDict::new(py);
-    for (rule, count) in &report.inferred_by_rule {
-        rules.set_item(rule.as_str(), count)?;
-    }
-    dict.set_item("inferred_by_rule", rules)?;
-    dict.set_item("clash_count", report.clashes.len())?;
-    if !report.clashes.is_empty() {
-        dict.set_item("clashes", &report.clashes)?;
-    }
-    Ok(dict)
+    let json = ontologos_facade::rl_materialization_json("classified", report, None);
+    let value = serde_json::to_value(&json).map_err(py_err)?;
+    json_to_pydict(py, &value)
 }

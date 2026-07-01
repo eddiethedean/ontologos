@@ -18,12 +18,12 @@ pub fn detected_profile_kind(profile: OwlProfile) -> DetectedProfileKind {
 /// Resolve the engine route for a reasoner profile and ontology.
 pub fn resolve_route(profile: Profile, ontology: &Ontology) -> Result<ResolvedRoute> {
     match profile {
-        Profile::El => Ok(ResolvedRoute::explicit(profile, EngineKind::El)),
-        Profile::Rdfs => Ok(ResolvedRoute::explicit(profile, EngineKind::Rdfs)),
-        Profile::Rl => Ok(ResolvedRoute::explicit(profile, EngineKind::Rl)),
-        Profile::Alc => Ok(ResolvedRoute::explicit(profile, EngineKind::Alc)),
-        Profile::Dl | Profile::DlPreview => Ok(ResolvedRoute::explicit(profile, EngineKind::Dl)),
-        Profile::Swrl => Ok(ResolvedRoute::explicit(profile, EngineKind::Swrl)),
+        Profile::El => Ok(ResolvedRoute::explicit(EngineKind::El)),
+        Profile::Rdfs => Ok(ResolvedRoute::explicit(EngineKind::Rdfs)),
+        Profile::Rl => Ok(ResolvedRoute::explicit(EngineKind::Rl)),
+        Profile::Alc => Ok(ResolvedRoute::explicit(EngineKind::Alc)),
+        Profile::Dl | Profile::DlPreview => Ok(ResolvedRoute::explicit(EngineKind::Dl)),
+        Profile::Swrl => Ok(ResolvedRoute::explicit(EngineKind::Swrl)),
         Profile::Auto => resolve_auto_route(ontology),
     }
 }

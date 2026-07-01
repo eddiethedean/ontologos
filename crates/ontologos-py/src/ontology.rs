@@ -1,7 +1,6 @@
 //! Python `Ontology` and `OntologyBuilder` bindings.
 
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use ontologos_core::{Limits, Ontology, OntologyBuilder};
 use pyo3::exceptions::PyRuntimeError;
@@ -12,7 +11,7 @@ use crate::convert::py_err;
 use crate::exceptions::map_core_py_err;
 
 /// Shared in-memory ontology handle used by `Ontology` and `Reasoner`.
-pub(crate) type SharedOntology = Rc<RefCell<Ontology>>;
+pub(crate) type SharedOntology = Arc<Mutex<Ontology>>;
 
 /// In-memory ontology constructed from JSON or the builder API.
 #[pyclass(name = "Ontology", unsendable)]
@@ -23,7 +22,7 @@ pub(crate) struct PyOntology {
 impl PyOntology {
     pub(crate) fn from_owned(ontology: Ontology) -> Self {
         Self {
-            inner: Rc::new(RefCell::new(ontology)),
+            inner: Arc::new(Mutex::new(ontology)),
         }
     }
 }
@@ -75,7 +74,11 @@ impl PyOntology {
     }
 
     fn to_json(&self) -> PyResult<String> {
-        self.inner.borrow().to_json().map_err(py_err)
+        let guard = self
+            .inner
+            .lock()
+            .map_err(|e| py_err(format!("ontology lock poisoned: {e}")))?;
+        guard.to_json().map_err(py_err)
     }
 
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
@@ -88,13 +91,21 @@ impl PyOntology {
     }
 
     #[getter]
-    fn axiom_count(&self) -> usize {
-        self.inner.borrow().axiom_count()
+    fn axiom_count(&self) -> PyResult<usize> {
+        let guard = self
+            .inner
+            .lock()
+            .map_err(|e| py_err(format!("ontology lock poisoned: {e}")))?;
+        Ok(guard.axiom_count())
     }
 
     #[getter]
-    fn entity_count(&self) -> usize {
-        self.inner.borrow().entity_count()
+    fn entity_count(&self) -> PyResult<usize> {
+        let guard = self
+            .inner
+            .lock()
+            .map_err(|e| py_err(format!("ontology lock poisoned: {e}")))?;
+        Ok(guard.entity_count())
     }
 }
 

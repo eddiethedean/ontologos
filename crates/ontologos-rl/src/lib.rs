@@ -23,7 +23,7 @@ mod report;
 pub use engine::RlEngine;
 pub use native_eval::transitive_subclass_closure;
 pub use profile_engine::RlEngineAdapter;
-pub use reasoner::{classify_reasoner, materialize_reasoner};
+pub use reasoner::{classify_reasoner, materialize_reasoner, saturate_routed};
 pub use report::{InferenceRecord, MaterializationReport, RlRule};
 
 use ontologos_core::Error as CoreError;

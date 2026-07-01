@@ -11,6 +11,11 @@ pub fn materialize_reasoner(reasoner: &mut Reasoner) -> crate::Result<Materializ
             actual: reasoner.profile(),
         });
     }
+    saturate_routed(reasoner)
+}
+
+/// Saturate after profile routing selected RL (including [`Profile::Auto`]).
+pub fn saturate_routed(reasoner: &mut Reasoner) -> crate::Result<MaterializationReport> {
     let parallelism = reasoner.config().parallelism;
     let record_traces = reasoner.config().explanations;
     RlEngine::try_new(parallelism)?

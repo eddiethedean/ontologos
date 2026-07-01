@@ -31,14 +31,12 @@ fn build_reasoner(
     profile: Option<&str>,
     incremental: bool,
     budget_secs: Option<u64>,
-    parallelism: usize,
 ) -> PyResult<Reasoner> {
     Reasoner::builder()
         .profile(parse_profile(profile)?)
         .config(ReasonerConfig {
             incremental,
             budget_secs,
-            parallelism,
             ..ReasonerConfig::default()
         })
         .build(ontology)
@@ -48,14 +46,13 @@ fn build_reasoner(
 #[pymethods]
 impl PyReasoner {
     #[new]
-    #[pyo3(signature = (path=None, ontology=None, profile=None, incremental=false, budget_secs=None, parallelism=1))]
+    #[pyo3(signature = (path=None, ontology=None, profile=None, incremental=false, budget_secs=None))]
     fn new(
         path: Option<&str>,
         ontology: Option<&PyOntology>,
         profile: Option<&str>,
         incremental: bool,
         budget_secs: Option<u64>,
-        parallelism: usize,
     ) -> PyResult<Self> {
         let has_path = path.is_some();
         let has_ontology = ontology.is_some();
@@ -73,8 +70,12 @@ impl PyReasoner {
             )
         } else {
             let shared = ontology.expect("ontology checked above").inner.clone();
-            let revision = shared.borrow().revision();
-            let core_ontology = shared.borrow().clone();
+            let guard = shared
+                .lock()
+                .map_err(|e| py_err(format!("ontology lock poisoned: {e}")))?;
+            let revision = guard.revision();
+            let core_ontology = guard.clone();
+            drop(guard);
             (core_ontology, Some(shared), Some(revision))
         };
 
@@ -83,7 +84,6 @@ impl PyReasoner {
             profile,
             incremental,
             budget_secs,
-            parallelism,
         )?;
         Ok(Self {
             reasoner,
@@ -298,10 +298,13 @@ impl PyReasoner {
 impl PyReasoner {
     fn sync_from_shared(&mut self) -> PyResult<()> {
         if let Some(shared) = &self.shared_ontology {
-            let current = shared.borrow().revision();
+            let mut guard = shared
+                .lock()
+                .map_err(|e| py_err(format!("ontology lock poisoned: {e}")))?;
+            let current = guard.revision();
             if self.shared_revision != Some(current) {
-                *self.reasoner.ontology_mut() = shared.borrow().clone();
-                self.shared_revision = Some(current);
+                std::mem::swap(self.reasoner.ontology_mut(), &mut *guard);
+                self.shared_revision = Some(self.reasoner.ontology().revision());
             }
         }
         Ok(())
@@ -311,8 +314,10 @@ impl PyReasoner {
         if let Some(shared) = &self.shared_ontology {
             let reasoner_rev = self.reasoner.ontology().revision();
             if self.shared_revision != Some(reasoner_rev) {
-                *shared.borrow_mut() = self.reasoner.ontology().clone();
-                self.shared_revision = Some(reasoner_rev);
+                if let Ok(mut guard) = shared.lock() {
+                    std::mem::swap(self.reasoner.ontology_mut(), &mut *guard);
+                    self.shared_revision = Some(reasoner_rev);
+                }
             }
         }
     }

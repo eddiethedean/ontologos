@@ -34,7 +34,7 @@ pub struct ReasonerConfig {
     pub incremental: bool,
     /// Record explanations for inferences.
     pub explanations: bool,
-    /// Number of threads for parallel rule execution.
+    /// Thread count for DL tableau workers (`1..=64`). RL saturation ignores this (reasonable manages parallelism internally).
     pub parallelism: usize,
     /// Optional wall-clock budget (seconds) for DL consistency/classify paths.
     /// Falls back to `ONTOLOGOS_DL_BUDGET_SECS` when unset.

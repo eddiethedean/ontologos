@@ -1,7 +1,5 @@
 //! Profile engine routing types (DIP boundary — no engine implementations).
 
-use crate::reasoner::Profile;
-
 /// Dispatch key for a profile-specific reasoning engine.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EngineKind {
@@ -37,119 +35,25 @@ pub enum DetectedProfileKind {
 /// Operations supported by the resolved engine route.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EngineCapabilities {
-    /// Engine can run classification / materialization.
-    pub classify: bool,
-    /// Engine can check ontology consistency.
-    pub consistency: bool,
-    /// Engine can answer sub-object-property queries.
+    /// Engine can answer sub-object-property queries via DL/ALC saturation.
     pub role_query: bool,
     /// Engine uses DL tableau for class/property assertion entailment.
     pub entailment_dl: bool,
 }
 
 impl EngineCapabilities {
-    /// EL completion engine capabilities.
-    #[must_use]
-    pub const fn el() -> Self {
-        Self {
-            classify: true,
-            consistency: true,
-            role_query: false,
-            entailment_dl: false,
-        }
-    }
-
-    /// RDFS materialization engine capabilities.
-    #[must_use]
-    pub const fn rdfs() -> Self {
-        Self {
-            classify: true,
-            consistency: true,
-            role_query: false,
-            entailment_dl: false,
-        }
-    }
-
-    /// OWL RL saturation engine capabilities.
-    #[must_use]
-    pub const fn rl() -> Self {
-        Self {
-            classify: true,
-            consistency: true,
-            role_query: false,
-            entailment_dl: false,
-        }
-    }
-
-    /// ALC tableau engine capabilities.
-    #[must_use]
-    pub const fn alc() -> Self {
-        Self {
-            classify: true,
-            consistency: true,
-            role_query: true,
-            entailment_dl: true,
-        }
-    }
-
-    /// DL hybrid engine capabilities.
-    #[must_use]
-    pub const fn dl() -> Self {
-        Self {
-            classify: true,
-            consistency: true,
-            role_query: true,
-            entailment_dl: true,
-        }
-    }
-
-    /// SWRL + DL engine capabilities.
-    #[must_use]
-    pub const fn swrl() -> Self {
-        Self {
-            classify: true,
-            consistency: true,
-            role_query: true,
-            entailment_dl: true,
-        }
-    }
-
-    /// Hybrid multi-module routing capabilities.
-    #[must_use]
-    pub const fn hybrid() -> Self {
-        Self {
-            classify: true,
-            consistency: true,
-            role_query: true,
-            entailment_dl: true,
-        }
-    }
-
-    /// Capabilities for an explicit [`Profile`] selection.
-    #[must_use]
-    pub fn for_profile(profile: Profile) -> Self {
-        match profile {
-            Profile::El => Self::el(),
-            Profile::Rdfs => Self::rdfs(),
-            Profile::Rl => Self::rl(),
-            Profile::Alc => Self::alc(),
-            Profile::Dl | Profile::DlPreview => Self::dl(),
-            Profile::Swrl => Self::swrl(),
-            Profile::Auto => Self::hybrid(),
-        }
-    }
-
     /// Capabilities for a resolved [`EngineKind`].
     #[must_use]
-    pub fn for_kind(kind: EngineKind) -> Self {
+    pub const fn for_kind(kind: EngineKind) -> Self {
         match kind {
-            EngineKind::El => Self::el(),
-            EngineKind::Rdfs => Self::rdfs(),
-            EngineKind::Rl => Self::rl(),
-            EngineKind::Alc => Self::alc(),
-            EngineKind::Dl => Self::dl(),
-            EngineKind::Swrl => Self::swrl(),
-            EngineKind::Hybrid => Self::hybrid(),
+            EngineKind::El | EngineKind::Rdfs | EngineKind::Rl => Self {
+                role_query: false,
+                entailment_dl: false,
+            },
+            EngineKind::Alc | EngineKind::Dl | EngineKind::Swrl | EngineKind::Hybrid => Self {
+                role_query: true,
+                entailment_dl: true,
+            },
         }
     }
 }
@@ -168,7 +72,7 @@ pub struct ResolvedRoute {
 impl ResolvedRoute {
     /// Build a route for an explicit profile selection.
     #[must_use]
-    pub fn explicit(_profile: Profile, kind: EngineKind) -> Self {
+    pub fn explicit(kind: EngineKind) -> Self {
         Self {
             kind,
             capabilities: EngineCapabilities::for_kind(kind),
@@ -185,4 +89,19 @@ impl ResolvedRoute {
             detected: Some(detected),
         }
     }
+}
+
+/// Whether class/property assertion entailment should use the DL tableau path.
+#[must_use]
+pub const fn uses_dl_entailment(kind: EngineKind) -> bool {
+    matches!(
+        kind,
+        EngineKind::Alc | EngineKind::Dl | EngineKind::Swrl | EngineKind::Hybrid
+    )
+}
+
+/// Whether sub-object-property queries use DL/ALC saturation.
+#[must_use]
+pub const fn uses_dl_role_query(kind: EngineKind) -> bool {
+    uses_dl_entailment(kind)
 }

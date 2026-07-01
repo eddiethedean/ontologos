@@ -27,7 +27,7 @@ ontologos-swrl = { workspace = true }
 ontologos-profile = { workspace = true }
 ontologos-bridge = { workspace = true }
 ontologos-abox = { workspace = true }
-ontologos-query = { workspace = true }
+ontologos-ql = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

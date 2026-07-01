@@ -1,14 +1,14 @@
 //! Query rewriting over a classified taxonomy (OWL QL fragment).
 
 use ontologos_core::Taxonomy;
-use ontologos_query::QueryEngine;
+use crate::hierarchy::TaxonomyHierarchy;
 
 use crate::query::{ConjunctiveQuery, QueryAtom};
 use crate::{Error, Result};
 
 /// Rewrite CQ atoms to subsume queries over named classes using the taxonomy.
 pub fn rewrite_query(
-    engine: &QueryEngine<'_>,
+    engine: &TaxonomyHierarchy<'_>,
     taxonomy: &Taxonomy,
     query: &ConjunctiveQuery,
 ) -> Result<ConjunctiveQuery> {
@@ -20,7 +20,7 @@ pub fn rewrite_query(
 }
 
 fn rewrite_atom(
-    engine: &QueryEngine<'_>,
+    engine: &TaxonomyHierarchy<'_>,
     taxonomy: &Taxonomy,
     atom: &QueryAtom,
 ) -> Result<QueryAtom> {
@@ -55,7 +55,7 @@ fn rewrite_atom(
 }
 
 /// True when every class named in the query is known in the ontology.
-pub fn is_ql_shape(ontology: &ontologos_core::Ontology, query: &ConjunctiveQuery) -> bool {
+pub(crate) fn is_ql_shape(ontology: &ontologos_core::Ontology, query: &ConjunctiveQuery) -> bool {
     query.atoms.iter().all(|atom| match atom {
         QueryAtom::Type { class, .. }
         | QueryAtom::Subsumed {
@@ -67,6 +67,7 @@ pub fn is_ql_shape(ontology: &ontologos_core::Ontology, query: &ConjunctiveQuery
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::TaxonomyHierarchy;
     use ontologos_core::Ontology;
     use ontologos_el::ElClassifier;
 
@@ -82,7 +83,7 @@ mod tests {
             .build()
             .unwrap();
         let tax = ElClassifier::new().classify(&ont).unwrap();
-        let engine = QueryEngine::new(&ont, &tax);
+        let engine = TaxonomyHierarchy::new(&ont, &tax);
         let cq = ConjunctiveQuery {
             atoms: vec![QueryAtom::Type {
                 var: "?x".into(),

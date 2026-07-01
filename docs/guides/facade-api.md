@@ -55,7 +55,7 @@ if result.consistent {
 let consistent = ontologos_facade::is_consistent(&reasoner)?;
 ```
 
-Set a wall-clock budget via `ReasonerConfig::budget_secs` (or `ONTOLOGOS_BUDGET_SECS` env fallback in DL).
+Set a wall-clock budget via `ReasonerConfig::budget_secs` (or `ONTOLOGOS_DL_BUDGET_SECS` env fallback in DL).
 
 ### Entailment
 
@@ -84,7 +84,7 @@ let values = ontologos_facade::get_object_property_values(&reasoner, subject_iri
 
 ### Taxonomy navigation
 
-`query_engine(ontology, taxonomy)` returns a hierarchy navigator — not the OWL QL conjunctive query API (`ontologos_ql` / CLI `query`).
+`taxonomy_hierarchy(ontology, taxonomy)` returns a hierarchy navigator — not the OWL QL conjunctive query API (`ontologos_ql` / CLI `query`). `query_engine` is a deprecated alias.
 
 ### Profile routing
 

@@ -1,7 +1,7 @@
 //! Conjunctive query AST and evaluation.
 
 use ontologos_core::{EntityId, Ontology};
-use ontologos_query::QueryEngine;
+use crate::hierarchy::TaxonomyHierarchy;
 
 use crate::{Error, Result};
 
@@ -40,7 +40,7 @@ pub struct QueryAnswer {
 
 /// Evaluate a CQ with a single type atom per variable (QL subset).
 pub fn evaluate(
-    engine: &QueryEngine<'_>,
+    engine: &TaxonomyHierarchy<'_>,
     ontology: &Ontology,
     query: &ConjunctiveQuery,
 ) -> Result<Vec<QueryAnswer>> {

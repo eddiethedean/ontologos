@@ -15,10 +15,6 @@ use thiserror::Error;
 
 pub use build::build_proof_graph;
 pub use format::render_text;
-pub use query::{
-    explain_subsumption, explain_unsatisfiable, find_bottom_subsumption, find_subsumption_step,
-    subsumption_from_axioms,
-};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -135,18 +131,6 @@ fn collect_trace_auto(reasoner: &mut Reasoner) -> Result<InferenceTrace> {
 }
 
 /// Generate a full proof graph using automatic profile detection.
-pub fn explain(ontology: &Ontology) -> Result<ProofGraph> {
-    let mut reasoner = Reasoner::builder()
-        .profile(Profile::Auto)
-        .config(ReasonerConfig {
-            explanations: true,
-            ..ReasonerConfig::default()
-        })
-        .build(ontology.clone())?;
-    explain_with_profile(&mut reasoner)
-}
-
-/// Generate proof graph for RDFS materialization traces.
 pub fn explain_rdfs(ontology: &mut Ontology) -> Result<ProofGraph> {
     let trace = ontologos_rdfs::RdfsEngine::new()
         .with_traces(true)
@@ -192,12 +176,6 @@ fn collect_trace_dl(ontology: &Ontology) -> Result<InferenceTrace> {
         });
     }
     Ok(trace)
-}
-
-/// Generate proof graph for OWL DL/ALC tableau subsumptions.
-pub fn explain_dl(ontology: &Ontology) -> Result<ProofGraph> {
-    let trace = collect_trace_dl(ontology)?;
-    build_proof_graph(ontology, &trace)
 }
 
 /// Generate proof graph for OWL EL classification traces.

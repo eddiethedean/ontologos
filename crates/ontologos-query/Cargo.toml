@@ -17,5 +17,5 @@ workspace = true
 
 [dependencies]
 ontologos-core = { workspace = true }
-petgraph = { workspace = true }
+ontologos-ql = { workspace = true }
 thiserror = { workspace = true }

@@ -86,7 +86,7 @@ print(graph["node_count"])
 
 ## API reference
 
-### `Reasoner(path=None, ontology=None, profile=None, incremental=False, budget_secs=None, parallelism=1)`
+### `Reasoner(path=None, ontology=None, profile=None, incremental=False, budget_secs=None)`
 
 Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly one of `path` or `ontology` is required.
 
@@ -97,7 +97,6 @@ Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly o
 | `profile` | `str` or `None` | `"auto"` | `"auto"`, `"rdfs"`, `"rl"`, `"el"`, `"alc"`, `"dl"`, `"dl-preview"`, `"swrl"` |
 | `incremental` | `bool` | `False` | Enable incremental session for multi-pass workflows |
 | `budget_secs` | `int` or `None` | `None` | Wall-clock budget for DL consistency/classify (mirrors `ReasonerConfig`) |
-| `parallelism` | `int` | `1` | Worker parallelism for supported engines |
 
 **Profiles:**
 

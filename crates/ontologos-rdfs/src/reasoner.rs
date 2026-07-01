@@ -11,6 +11,11 @@ pub fn materialize_reasoner(reasoner: &mut Reasoner) -> crate::Result<Materializ
             actual: reasoner.profile(),
         });
     }
+    materialize_routed(reasoner)
+}
+
+/// Materialize after profile routing selected RDFS (including [`Profile::Auto`]).
+pub fn materialize_routed(reasoner: &mut Reasoner) -> crate::Result<MaterializationReport> {
     let record_traces = reasoner.config().explanations;
     RdfsEngine::new()
         .with_traces(record_traces)

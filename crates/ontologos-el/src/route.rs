@@ -74,35 +74,3 @@ pub(crate) fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, 
         OwlProfile::Dl => Err(Error::UnsupportedProfile(OwlProfile::Dl)),
     }
 }
-
-/// Resolve an explicit CLI/API profile override against auto-detection.
-pub fn resolve_profile_flag(flag: ProfileFlag) -> Profile {
-    match flag {
-        ProfileFlag::Auto => Profile::Auto,
-        ProfileFlag::El => Profile::El,
-        ProfileFlag::Rl => Profile::Rl,
-        ProfileFlag::Alc => Profile::Alc,
-        ProfileFlag::Dl => Profile::Dl,
-        ProfileFlag::Swrl => Profile::Swrl,
-        ProfileFlag::Rdfs => Profile::Rdfs,
-    }
-}
-
-/// Explicit profile selection for CLI and bindings.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ProfileFlag {
-    /// Detect profile automatically.
-    Auto,
-    /// OWL EL taxonomy classification.
-    El,
-    /// OWL RL saturation.
-    Rl,
-    /// OWL ALC tableau-lite.
-    Alc,
-    /// OWL 2 DL classification.
-    Dl,
-    /// DLSafe SWRL with DL.
-    Swrl,
-    /// RDFS materialization.
-    Rdfs,
-}

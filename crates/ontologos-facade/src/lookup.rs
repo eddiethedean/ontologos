@@ -1,6 +1,6 @@
 use ontologos_core::{EntityId, EntityKind, Reasoner, RoleExpr};
 
-use crate::engines::EngineRegistry;
+use crate::engines::{resolve, sub_object_properties as dispatch_sub_object_properties};
 use crate::error::{Error, Result};
 
 /// OWL API `getObjectPropertyValues` for named individuals and properties.
@@ -25,8 +25,8 @@ pub fn get_sub_object_properties(
 ) -> Result<Vec<String>> {
     let ontology = reasoner.ontology();
     let property = lookup_object_property(ontology, property_iri)?;
-    let route = EngineRegistry::resolve(reasoner)?;
-    let roles = EngineRegistry::sub_object_properties(route, reasoner, property, direct)?;
+    let route = resolve(reasoner)?;
+    let roles = dispatch_sub_object_properties(route, reasoner, property, direct)?;
 
     let mut out: Vec<String> = roles
         .iter()

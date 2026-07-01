@@ -1094,7 +1094,7 @@ dependencies = [
  "ontologos-el",
  "ontologos-parser",
  "ontologos-profile",
- "ontologos-query",
+ "ontologos-ql",
  "ontologos-rdfs",
  "ontologos-rl",
  "ontologos-swrl",
@@ -1152,7 +1152,7 @@ dependencies = [
  "ontologos-core",
  "ontologos-el",
  "ontologos-parser",
- "ontologos-query",
+ "petgraph",
  "thiserror 2.0.18",
 ]
 
@@ -1161,7 +1161,7 @@ name = "ontologos-query"
 version = "1.0.0"
 dependencies = [
  "ontologos-core",
- "petgraph",
+ "ontologos-ql",
  "thiserror 2.0.18",
 ]
 

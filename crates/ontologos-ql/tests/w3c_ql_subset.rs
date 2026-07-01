@@ -17,7 +17,7 @@ fn ql_subclass_query_returns_direct_subclasses() {
         .expect("build");
     let tax = ElClassifier::new().classify(&ont).expect("classify");
     let cq = parse_conjunctive_query("SubClassOf(?x, http://ex.org/B)").expect("parse");
-    let engine = ontologos_query::QueryEngine::new(&ont, &tax);
+    let engine = ontologos_ql::TaxonomyHierarchy::new(&ont, &tax);
     let rewritten = rewrite_query(&engine, &tax, &cq).expect("rewrite");
     let answers = answer_query(&ont, &tax, &rewritten).expect("answer");
     assert_eq!(rewritten.atoms.len(), 1);
@@ -39,7 +39,7 @@ fn ql_type_query_returns_direct_subclasses_of_named_class() {
         .expect("build");
     let tax = ElClassifier::new().classify(&ont).expect("classify");
     let cq = parse_conjunctive_query("Type(?x, http://ex.org/B)").expect("parse");
-    let engine = ontologos_query::QueryEngine::new(&ont, &tax);
+    let engine = ontologos_ql::TaxonomyHierarchy::new(&ont, &tax);
     let rewritten = rewrite_query(&engine, &tax, &cq).expect("rewrite");
     let answers = answer_query(&ont, &tax, &rewritten).expect("answer");
     assert_eq!(answers.len(), 1);

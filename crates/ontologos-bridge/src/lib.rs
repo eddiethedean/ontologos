@@ -9,7 +9,6 @@ mod taxonomy;
 mod triples;
 
 pub use error::{Error, Result};
-pub use horned::core_to_horned;
 pub use perf::{BridgePerfTimings, perf_enabled as bridge_perf_enabled};
 pub use reasonable_session::{
     MaterializeOutcome, ReasonableSession, downcast_reasonable_session, materialize_with_session,

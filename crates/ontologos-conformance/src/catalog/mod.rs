@@ -19,7 +19,6 @@ use crate::{
 
 static CATALOG: RwLock<Option<Vec<HermitCase>>> = RwLock::new(None);
 static WG_CATALOG: OnceLock<Vec<WgCase>> = OnceLock::new();
-static DL_WORKER_GATE: OnceLock<Arc<(Mutex<usize>, Condvar)>> = OnceLock::new();
 
 const PROBE_OFN_PREFIX: &str = "Prefix(:=<file:/c/test.owl#>)\nPrefix(a:=<file:/c/test.owl#>)\nPrefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\nPrefix(owl:=<http://www.w3.org/2002/07/owl#>)\nPrefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n";
 
@@ -37,22 +36,14 @@ fn dl_classify_budget() -> Duration {
 }
 
 /// Maximum concurrent DL worker threads (limits orphan work after timeouts).
-/// Override with `ONTOLOGOS_DL_MAX_WORKERS` (default 10).
-const DEFAULT_DL_MAX_WORKERS: usize = 10;
+/// Uses [`ontologos_dl::dl_max_workers`] with a conformance floor of 10.
+const CONFORMANCE_DL_MAX_WORKERS_FLOOR: usize = 10;
 
 /// Rayon pool size for catalog / WG scans (`ONTOLOGOS_SCAN_THREADS`, default 10).
 const DEFAULT_SCAN_THREADS: usize = 10;
 
 fn dl_max_workers() -> usize {
-    static LIMIT: OnceLock<usize> = OnceLock::new();
-    *LIMIT.get_or_init(|| {
-        let n = std::env::var("ONTOLOGOS_DL_MAX_WORKERS")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .filter(|&n| n > 0)
-            .unwrap_or(DEFAULT_DL_MAX_WORKERS);
-        n.max(DEFAULT_DL_MAX_WORKERS)
-    })
+    ontologos_dl::dl_max_workers().max(CONFORMANCE_DL_MAX_WORKERS_FLOOR)
 }
 
 fn scan_thread_count() -> usize {
@@ -141,11 +132,11 @@ pub fn ensure_concurrent_scan_defaults() {
         if std::env::var("ONTOLOGOS_DL_MAX_WORKERS")
             .ok()
             .and_then(|s| s.parse::<usize>().ok())
-            .is_none_or(|n| n < DEFAULT_DL_MAX_WORKERS)
+            .is_none_or(|n| n < CONFORMANCE_DL_MAX_WORKERS_FLOOR)
         {
             std::env::set_var(
                 "ONTOLOGOS_DL_MAX_WORKERS",
-                DEFAULT_DL_MAX_WORKERS.to_string(),
+                CONFORMANCE_DL_MAX_WORKERS_FLOOR.to_string(),
             );
         }
     }
@@ -167,82 +158,13 @@ fn log_parallel_progress(label: &str, done: &AtomicUsize, total: usize, id: &str
     eprintln!("[{label} {n}/{total}] {id}");
 }
 
-struct DlWorkerPermit {
-    gate: Arc<(Mutex<usize>, Condvar)>,
-    /// Set when the parent times out so the orphan thread does not double-release.
-    reclaimed: Arc<AtomicBool>,
-}
-
-impl Drop for DlWorkerPermit {
-    fn drop(&mut self) {
-        if self.reclaimed.swap(true, Ordering::AcqRel) {
-            return;
-        }
-        release_dl_permit(&self.gate);
-    }
-}
-
-fn dl_worker_gate() -> Arc<(Mutex<usize>, Condvar)> {
-    DL_WORKER_GATE
-        .get_or_init(|| {
-            let limit = dl_max_workers();
-            Arc::new((Mutex::new(limit), Condvar::new()))
-        })
-        .clone()
-}
-
-fn release_dl_permit(gate: &Arc<(Mutex<usize>, Condvar)>) {
-    let (lock, cvar) = &**gate;
-    let mut permits = lock.lock().expect("dl worker gate");
-    *permits = (*permits + 1).min(dl_max_workers());
-    cvar.notify_one();
-}
-
-fn acquire_dl_worker_permit(gate: &Arc<(Mutex<usize>, Condvar)>) -> DlWorkerPermit {
-    let (lock, cvar) = &**gate;
-    let mut permits = lock.lock().expect("dl worker gate");
-    while *permits == 0 {
-        permits = cvar.wait(permits).expect("dl worker gate");
-    }
-    *permits -= 1;
-    drop(permits);
-    DlWorkerPermit {
-        gate: gate.clone(),
-        reclaimed: Arc::new(AtomicBool::new(false)),
-    }
-}
-
 fn run_dl_bounded_inner<T, F>(budget: Duration, work: F) -> Result<T, CatalogError>
 where
     T: Send + 'static,
     F: FnOnce() -> T + Send + 'static,
 {
-    let gate = dl_worker_gate();
-    let permit = acquire_dl_worker_permit(&gate);
-    let reclaimed = permit.reclaimed.clone();
-    let (tx, rx) = std::sync::mpsc::sync_channel(1);
-    std::thread::spawn(move || {
-        let _permit = permit;
-        let _ = tx.send(work());
-    });
-    match rx.recv_timeout(budget) {
-        Ok(v) => Ok(v),
-        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
-            if !reclaimed.swap(true, Ordering::AcqRel) {
-                release_dl_permit(&gate);
-            }
-            Err(CatalogError::Message(format!(
-                "dl operation exceeded {}s budget",
-                budget.as_secs()
-            )))
-        }
-        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
-            if !reclaimed.swap(true, Ordering::AcqRel) {
-                release_dl_permit(&gate);
-            }
-            Err(CatalogError::Message("dl worker disconnected".into()))
-        }
-    }
+    ontologos_dl::run_bounded(Some(budget.as_secs()), work)
+        .map_err(|e| CatalogError::Message(e.to_string()))
 }
 
 fn run_dl_bounded<T, F>(budget: Duration, work: F) -> Result<T, String>

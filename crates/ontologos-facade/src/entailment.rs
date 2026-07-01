@@ -1,14 +1,14 @@
-use ontologos_core::{Axiom, ConsistencyResult, DetectedProfileKind, EntityId, Profile, Reasoner, Taxonomy};
+use ontologos_core::{uses_dl_entailment, Axiom, ConsistencyResult, DetectedProfileKind, EntityId, Profile, Reasoner, Taxonomy};
 
 use crate::classify::{classify, taxonomy_from_outcome};
-use crate::engines::EngineRegistry;
+use crate::engines::{check_consistency as dispatch_check_consistency, resolve};
 use crate::error::{EntailmentCheck, Error, Result};
 use crate::lookup::{lookup_class, lookup_individual, lookup_object_property};
 
 /// Check ontology consistency for the configured profile.
 pub fn check_consistency(reasoner: &Reasoner) -> Result<ConsistencyResult> {
-    let route = EngineRegistry::resolve(reasoner)?;
-    let result = EngineRegistry::check_consistency(route, reasoner)?;
+    let route = resolve(reasoner)?;
+    let result = dispatch_check_consistency(route, reasoner)?;
     tracing::info!(
         complete = result.complete,
         consistent = result.consistent,
@@ -89,8 +89,8 @@ fn is_class_assertion_entailed(
     let individual = lookup_individual(ontology, individual_iri)?;
     let class = lookup_class(ontology, class_iri)?;
 
-    let route = EngineRegistry::resolve(reasoner)?;
-    if route.capabilities.entailment_dl {
+    let route = resolve(reasoner)?;
+    if uses_dl_entailment(route.kind) {
         return dl_entails_class_assertion(ontology, individual, class);
     }
     if reasoner.profile() == Profile::Auto && route.detected == Some(DetectedProfileKind::Dl) {
@@ -185,8 +185,8 @@ fn is_object_property_assertion_entailed(
     let property = lookup_object_property(ontology, property_iri)?;
     let object = lookup_individual(ontology, object_iri)?;
 
-    let route = EngineRegistry::resolve(reasoner)?;
-    if route.capabilities.entailment_dl {
+    let route = resolve(reasoner)?;
+    if uses_dl_entailment(route.kind) {
         return dl_entails_object_property_assertion(ontology, subject, property, object);
     }
     if reasoner.profile() == Profile::Auto && route.detected == Some(DetectedProfileKind::Dl) {

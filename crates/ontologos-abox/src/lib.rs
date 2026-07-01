@@ -161,12 +161,6 @@ fn transitive_subproperty_of(ontology: &Ontology, sub: EntityId, sup: EntityId) 
     false
 }
 
-/// Expand `differentFrom` pairs modulo `sameAs` and detect clashes.
-#[must_use]
-pub fn different_from_clash(ontology: &Ontology) -> bool {
-    detect_clash(ontology)
-}
-
 fn detect_clash(ontology: &Ontology) -> bool {
     let closure = same_as_closure(ontology);
     let mut rep_pairs: std::collections::HashSet<(EntityId, EntityId)> =

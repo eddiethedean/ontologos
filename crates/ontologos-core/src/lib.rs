@@ -59,7 +59,7 @@ pub use axiom::{Axiom, AxiomId, DataLiteral};
 pub use consistency::ConsistencyResult;
 pub use dirty::{DirtySet, OntologyRevision, axiom_signature};
 pub use dl::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, DlStore, RoleExpr};
-pub use engine::{DetectedProfileKind, EngineCapabilities, EngineKind, ResolvedRoute};
+pub use engine::{DetectedProfileKind, EngineCapabilities, EngineKind, ResolvedRoute, uses_dl_entailment, uses_dl_role_query};
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 pub use error::{Error, Result};
 pub use graph::{AxiomIndex, AxiomStore};

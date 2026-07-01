@@ -14,7 +14,7 @@ use ontologos_core::{Axiom, EntityId, EntityKind, Ontology};
 use crate::Result;
 
 /// Convert a core ontology into a horned-owl set ontology.
-pub fn core_to_horned(ontology: &Ontology) -> Result<SetOntology<RcStr>> {
+pub(crate) fn core_to_horned(ontology: &Ontology) -> Result<SetOntology<RcStr>> {
     let b = Build::new_rc();
     let mut set = SetOntology::new();
 

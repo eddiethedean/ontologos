@@ -84,7 +84,6 @@ class Reasoner:
         profile: str | None = None,
         incremental: bool = False,
         budget_secs: int | None = None,
-        parallelism: int = 1,
     ) -> None: ...
     @property
     def parse_meta(self) -> ParseMeta: ...

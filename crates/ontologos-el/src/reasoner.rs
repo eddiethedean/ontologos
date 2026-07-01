@@ -1,4 +1,4 @@
-use ontologos_core::{Error as CoreError, Profile, Reasoner, Taxonomy};
+use ontologos_core::{Profile, Reasoner, Taxonomy};
 
 use crate::{ElClassifier, ElEngine, ElReport, take_el_session};
 
@@ -33,14 +33,5 @@ pub fn classify_with_report(reasoner: &mut Reasoner) -> crate::Result<ElReport> 
             ElClassifier::new().classify_with_options(reasoner.ontology(), record_traces)?;
         reasoner.clear_session();
         Ok(report)
-    }
-}
-
-/// Classify when the reasoner profile is [`Profile::El`]; otherwise returns
-/// [`CoreError::NotImplemented`].
-pub fn try_classify_reasoner(reasoner: &mut Reasoner) -> crate::Result<Taxonomy> {
-    match reasoner.profile() {
-        Profile::El => classify_reasoner(reasoner),
-        _ => Err(crate::Error::Core(CoreError::NotImplemented)),
     }
 }

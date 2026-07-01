@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Component, Path, PathBuf};
-use std::sync::Mutex;
 
 use ontologos_core::{Axiom, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology};
 
@@ -18,12 +17,6 @@ const SUPPLEMENT_STANDARD_PREFIXES: &str = "\
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
 Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n";
-
-/// Serializes ontology loading (including Horned-OWL reads invoked from [`load_ontology`]).
-///
-/// The `horned-owl` RDF/XML and functional parser is not documented as thread-safe; this
-/// process-wide mutex keeps concurrent `load_*` calls from sharing parser state.
-static ONTOLOGY_LOAD_LOCK: Mutex<()> = Mutex::new(());
 
 #[cfg(target_os = "linux")]
 const O_NOFOLLOW: i32 = 0o100_000;
@@ -71,9 +64,6 @@ pub fn load_ontology_with_limits_and_base(
     limits: ParseLimits,
     base: Option<&Path>,
 ) -> Result<Ontology> {
-    let _guard = ONTOLOGY_LOAD_LOCK
-        .lock()
-        .map_err(|e| Error::Parse(format!("ontology load lock poisoned: {e}")))?;
     load_ontology_with_limits_and_base_inner(path, limits, base, limits.merge_imports)
 }
 
@@ -433,28 +423,10 @@ fn supplement_rdf_dl_axioms(
         )? {
             continue;
         }
-        let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
-             Ontology(<http://example.org/same-as-supplement>\n\
-               Declaration(NamedIndividual(<{left}>))\n\
-               Declaration(NamedIndividual(<{right}>))\n\
-               SameIndividual(<{left}> <{right}>)\n\
-             )"
-        );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        insert_same_individual_supplement(ontology, report, &left, &right)?;
     }
     for (left, right) in crate::rdf_preprocess::collect_property_disjoint_pairs(preprocessed_rdf) {
-        let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
-             Ontology(<http://example.org/disjoint-supplement>\n\
-               Declaration(ObjectProperty(<{left}>))\n\
-               Declaration(ObjectProperty(<{right}>))\n\
-               DisjointObjectProperties(<{left}> <{right}>)\n\
-             )"
-        );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        insert_disjoint_object_properties_supplement(ontology, report, &left, &right)?;
     }
     for (property, domain) in
         crate::rdf_preprocess::collect_rdfs_object_property_domains(preprocessed_rdf)
@@ -599,47 +571,6 @@ fn supplement_rdf_dl_axioms(
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
         merge_supplement_with_accounting(ontology, report, &supplement)?;
     }
-    for (left, right) in crate::rdf_preprocess::collect_owl_same_as_pairs(preprocessed_rdf) {
-        if merge_datatype_sameas_supplement(ontology, report, limits, &left, &right)? {
-            continue;
-        }
-        if merge_property_sameas_supplement(
-            ontology,
-            report,
-            limits,
-            preprocessed_rdf,
-            &left,
-            &right,
-        )? {
-            continue;
-        }
-        let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
-             Ontology(<http://example.org/same-as-supplement>\n\
-               Declaration(NamedIndividual(<{left}>))\n\
-               Declaration(NamedIndividual(<{right}>))\n\
-               SameIndividual(<{left}> <{right}>)\n\
-             )"
-        );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
-    }
-    for body in crate::rdf_preprocess::collect_anonymous_intersection_subclasses(preprocessed_rdf) {
-        let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
-             Ontology(<http://example.org/anon-intersection-supplement>\n{body}\n)"
-        );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
-    }
-    for body in crate::rdf_preprocess::collect_anonymous_intersection_subclasses(preprocessed_rdf) {
-        let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
-             Ontology(<http://example.org/anon-intersection-supplement>\n{body}\n)"
-        );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
-    }
     if ill_founded_list {
         let thing = ontology
             .entity_id("http://www.w3.org/2002/07/owl#Thing", EntityKind::Class)
@@ -700,7 +631,7 @@ fn merge_rdf_owl_imports(
         }
         let imported = load_ontology_with_limits_and_base_inner(&import_path, limits, base, false)?;
         let before = ontology.axiom_count();
-        merge_full_ontology(ontology, &imported)?;
+        merge_supplement_ontology(ontology, &imported)?;
         report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
     }
     Ok(())
@@ -739,10 +670,6 @@ fn resolve_wg_import_path(current: &Path, import_iri: &str) -> Option<PathBuf> {
     candidate.is_file().then_some(candidate)
 }
 
-fn merge_full_ontology(target: &mut Ontology, source: &Ontology) -> Result<()> {
-    merge_supplement_ontology(target, source)
-}
-
 fn merge_supplement_with_accounting(
     ontology: &mut Ontology,
     report: &mut ParseReport,
@@ -751,6 +678,44 @@ fn merge_supplement_with_accounting(
     let before = ontology.axiom_count();
     merge_supplement_ontology(ontology, supplement)?;
     report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
+    Ok(())
+}
+
+fn ensure_entity(ontology: &mut Ontology, iri: &str, kind: EntityKind) -> Result<EntityId> {
+    ontology
+        .entity_id(iri, kind)
+        .map_err(|e| Error::Parse(e.to_string()))
+}
+
+fn insert_same_individual_supplement(
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    left: &str,
+    right: &str,
+) -> Result<()> {
+    let left_id = ensure_entity(ontology, left, EntityKind::Individual)?;
+    let right_id = ensure_entity(ontology, right, EntityKind::Individual)?;
+    let before = ontology.axiom_count();
+    ontology
+        .add_axiom(Axiom::SameIndividual(vec![left_id, right_id]))
+        .map_err(|e| Error::Parse(e.to_string()))?;
+    report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
+    Ok(())
+}
+
+fn insert_disjoint_object_properties_supplement(
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    left: &str,
+    right: &str,
+) -> Result<()> {
+    let left_id = ensure_entity(ontology, left, EntityKind::ObjectProperty)?;
+    let right_id = ensure_entity(ontology, right, EntityKind::ObjectProperty)?;
+    let before = ontology.dl().axiom_count();
+    ontology
+        .dl_mut()
+        .push_axiom(DlAxiom::DisjointObjectProperties(vec![left_id, right_id]));
+    report.meta.mapped_axiom_count += ontology.dl().axiom_count().saturating_sub(before);
     Ok(())
 }
 
