@@ -1,11 +1,7 @@
 //! Taxonomy hierarchy navigation (subclasses, subsumption) after classification.
 
-mod graph;
-
-use ontologos_core::{EntityId, Ontology, Taxonomy};
+use ontologos_core::{EntityId, EntityKind, Ontology, Taxonomy};
 use thiserror::Error;
-
-pub use graph::TaxonomyGraph;
 
 /// Result type for hierarchy navigation.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -24,20 +20,12 @@ pub enum Error {
 pub struct TaxonomyHierarchy<'a> {
     ontology: &'a Ontology,
     taxonomy: &'a Taxonomy,
-    graph: TaxonomyGraph,
 }
-
-/// Legacy name for [`TaxonomyHierarchy`].
-pub type QueryEngine<'a> = TaxonomyHierarchy<'a>;
 
 impl<'a> TaxonomyHierarchy<'a> {
     #[must_use]
     pub fn new(ontology: &'a Ontology, taxonomy: &'a Taxonomy) -> Self {
-        Self {
-            ontology,
-            taxonomy,
-            graph: TaxonomyGraph::from_taxonomy(taxonomy),
-        }
+        Self { ontology, taxonomy }
     }
 
     #[must_use]
@@ -52,18 +40,18 @@ impl<'a> TaxonomyHierarchy<'a> {
 
     pub fn direct_subclasses(&self, class: EntityId) -> Result<Vec<EntityId>> {
         self.ensure_class(class)?;
-        Ok(self.graph.direct_subclasses(class))
+        Ok(self.taxonomy.direct_subclasses(class))
     }
 
     pub fn direct_superclasses(&self, class: EntityId) -> Result<Vec<EntityId>> {
         self.ensure_class(class)?;
-        Ok(self.graph.direct_superclasses(class))
+        Ok(self.taxonomy.direct_superclasses(class))
     }
 
     pub fn is_subsumed(&self, sub: EntityId, sup: EntityId) -> Result<bool> {
         self.ensure_class(sub)?;
         self.ensure_class(sup)?;
-        Ok(self.graph.is_subsumed(sub, sup))
+        Ok(self.taxonomy.is_subsumed(sub, sup))
     }
 
     pub fn lookup(&self, iri: &str) -> Option<EntityId> {
@@ -81,7 +69,7 @@ impl<'a> TaxonomyHierarchy<'a> {
             else {
                 continue;
             };
-            if *asserted == class || self.graph.is_subsumed(*asserted, class) {
+            if *asserted == class || self.taxonomy.is_subsumed(*asserted, class) {
                 out.push(*individual);
             }
         }
@@ -92,7 +80,7 @@ impl<'a> TaxonomyHierarchy<'a> {
 
     pub fn types_of(&self, individual: EntityId) -> Result<Vec<EntityId>> {
         let record = self.ontology.entity(individual)?;
-        if record.kind != ontologos_core::EntityKind::Individual {
+        if record.kind != EntityKind::Individual {
             return Err(Error::UnknownEntity(individual));
         }
         let mut out = Vec::new();
@@ -112,7 +100,7 @@ impl<'a> TaxonomyHierarchy<'a> {
 
     fn ensure_class(&self, class: EntityId) -> Result<()> {
         let record = self.ontology.entity(class)?;
-        if record.kind != ontologos_core::EntityKind::Class {
+        if record.kind != EntityKind::Class {
             return Err(Error::UnknownEntity(class));
         }
         Ok(())

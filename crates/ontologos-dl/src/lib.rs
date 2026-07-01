@@ -14,7 +14,7 @@ mod object_property_query;
 mod perf;
 mod ria;
 mod ria_regularity;
-mod route;
+mod reasoner;
 mod saturation;
 mod union_csp;
 
@@ -41,7 +41,7 @@ pub use object_property_query::{
 pub use perf::{DlPerfTimings, perf_enabled};
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};
-pub use route::{DlReport, classify_reasoner, classify_with_profile};
+pub use reasoner::{DlReport, classify_reasoner};
 pub use saturation::{SaturatedFacts, saturate};
 
 /// Result type for DL operations.

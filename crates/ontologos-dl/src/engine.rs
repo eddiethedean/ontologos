@@ -15,8 +15,8 @@ impl DlEngine {
     }
 
     /// Classify via reasoner when profile is DL.
-    pub fn classify_reasoner(&self, reasoner: &Reasoner) -> crate::Result<crate::route::DlReport> {
-        crate::route::classify_reasoner(reasoner)
+    pub fn classify_reasoner(&self, reasoner: &Reasoner) -> crate::Result<crate::reasoner::DlReport> {
+        crate::reasoner::classify_reasoner(reasoner)
     }
 
     /// Check ontology consistency under DL.

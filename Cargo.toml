@@ -19,7 +19,6 @@ members = [
     "crates/ontologos-cli",
     "crates/ontologos-py",
     "crates/ontologos-conformance",
-    "crates/ontologos-watch",
 ]
 
 [workspace.package]

@@ -2,7 +2,7 @@
 
 use ontologos_core::{Ontology, Reasoner, Taxonomy};
 
-use crate::{ClassifyOutcome, ElClassifier, ElReport};
+use crate::{ElClassifier, ElReport};
 
 /// OWL EL profile engine adapter.
 #[derive(Debug, Default, Clone, Copy)]
@@ -22,16 +22,6 @@ impl ElEngine {
     /// Classify an ontology directly (non-incremental).
     pub fn classify_ontology(&self, ontology: &Ontology) -> crate::Result<Taxonomy> {
         ElClassifier::new().classify(ontology)
-    }
-
-    /// Profile-routed classification for EL / RDFS / RL / ALC / Auto (non-DL).
-    pub fn classify_with_profile(&self, reasoner: &mut Reasoner) -> crate::Result<ClassifyOutcome> {
-        crate::route::classify_with_profile(reasoner)
-    }
-
-    /// Auto-profile classification (El / Ql / Rl detection).
-    pub fn classify_auto(&self, reasoner: &mut Reasoner) -> crate::Result<ClassifyOutcome> {
-        crate::route::classify_auto(reasoner)
     }
 
     /// Check consistency via EL classification (no unsatisfiable classes).

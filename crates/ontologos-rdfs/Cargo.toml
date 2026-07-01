@@ -8,10 +8,7 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "RDFS materialization facade over reasonable for OntoLogos"
-readme = "README.md"
-keywords = ["owl", "ontology", "rdfs", "reasoner", "semantic-web"]
-categories = ["science"]
+description = "Deprecated re-export of RDFS support in ontologos-rl"
 publish = true
 
 
@@ -19,11 +16,8 @@ publish = true
 workspace = true
 
 [dependencies]
-ontologos-core = { workspace = true }
-ontologos-bridge = { workspace = true }
-reasonable = { workspace = true }
-serde = { workspace = true }
-thiserror = { workspace = true }
+ontologos-rl = { workspace = true }
 
 [dev-dependencies]
+ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }

@@ -14,15 +14,24 @@
 //! # }
 //! ```
 
+pub mod abox;
 mod engine;
 mod native_eval;
-mod profile_engine;
+pub mod rdfs;
 mod reasoner;
 mod report;
 
+pub use abox::{
+    AboxReport, SameAsClosure, is_abox_consistent, materialize_abox, object_property_values,
+    same_as_closure,
+};
 pub use engine::RlEngine;
 pub use native_eval::transitive_subclass_closure;
-pub use profile_engine::RlEngineAdapter;
+pub use rdfs::{
+    MaterializationReport as RdfsMaterializationReport, RdfsEngine, RdfsRule,
+    classify_reasoner as rdfs_classify_reasoner, materialize_reasoner as rdfs_materialize_reasoner,
+    materialize_routed as rdfs_materialize_routed,
+};
 pub use reasoner::{classify_reasoner, materialize_reasoner, saturate_routed};
 pub use report::{InferenceRecord, MaterializationReport, RlRule};
 

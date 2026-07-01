@@ -44,6 +44,11 @@ pub fn evaluate(
     ontology: &Ontology,
     query: &ConjunctiveQuery,
 ) -> Result<Vec<QueryAnswer>> {
+    if query.atoms.len() > 1 {
+        return Err(crate::Error::Parse(
+            "conjunctive queries with more than one atom are not supported yet".into(),
+        ));
+    }
     if query.atoms.is_empty() {
         return Ok(Vec::new());
     }

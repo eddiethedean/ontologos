@@ -1,12 +1,12 @@
 use ontologos_core::{Error as CoreError, Profile, Reasoner};
 
-use crate::engine::RdfsEngine;
-use crate::report::MaterializationReport;
+use crate::rdfs::engine::RdfsEngine;
+use crate::rdfs::report::MaterializationReport;
 
 /// Materialize RDFS inferences for a reasoner configured with [`Profile::Rdfs`].
-pub fn materialize_reasoner(reasoner: &mut Reasoner) -> crate::Result<MaterializationReport> {
+pub fn materialize_reasoner(reasoner: &mut Reasoner) -> super::Result<MaterializationReport> {
     if reasoner.profile() != Profile::Rdfs {
-        return Err(crate::Error::WrongProfile {
+        return Err(super::Error::WrongProfile {
             expected: Profile::Rdfs,
             actual: reasoner.profile(),
         });
@@ -15,7 +15,7 @@ pub fn materialize_reasoner(reasoner: &mut Reasoner) -> crate::Result<Materializ
 }
 
 /// Materialize after profile routing selected RDFS (including [`Profile::Auto`]).
-pub fn materialize_routed(reasoner: &mut Reasoner) -> crate::Result<MaterializationReport> {
+pub fn materialize_routed(reasoner: &mut Reasoner) -> super::Result<MaterializationReport> {
     let record_traces = reasoner.config().explanations;
     RdfsEngine::new()
         .with_traces(record_traces)
@@ -24,9 +24,9 @@ pub fn materialize_routed(reasoner: &mut Reasoner) -> crate::Result<Materializat
 
 /// Run classification when the reasoner profile is [`Profile::Rdfs`]; otherwise returns
 /// [`CoreError::NotImplemented`].
-pub fn classify_reasoner(reasoner: &mut Reasoner) -> crate::Result<()> {
+pub fn classify_reasoner(reasoner: &mut Reasoner) -> super::Result<()> {
     match reasoner.profile() {
         Profile::Rdfs => materialize_reasoner(reasoner).map(|_| ()),
-        _ => Err(crate::Error::Core(CoreError::NotImplemented)),
+        _ => Err(super::Error::Core(CoreError::NotImplemented)),
     }
 }

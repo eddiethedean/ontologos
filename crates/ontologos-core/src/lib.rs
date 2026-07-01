@@ -5,7 +5,7 @@
 //!
 //! # Start here — load and reason
 //!
-//! **Do not use [`Ontology::from_file`] or [`Reasoner::classify`] for file loading / reasoning.**
+//! **Do not use [`Ontology::from_file`] for file loading.** Use `ontologos_parser::load_ontology` and `ontologos_facade::classify` for reasoning.
 //!
 //! ```ignore
 //! use ontologos_parser::load_ontology;
@@ -59,7 +59,7 @@ pub use axiom::{Axiom, AxiomId, DataLiteral};
 pub use consistency::ConsistencyResult;
 pub use dirty::{DirtySet, OntologyRevision, axiom_signature};
 pub use dl::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, DlStore, RoleExpr};
-pub use engine::{DetectedProfileKind, EngineCapabilities, EngineKind, ResolvedRoute, uses_dl_entailment, uses_dl_role_query};
+pub use engine::{DetectedProfileKind, EngineKind, ResolvedRoute, uses_dl_entailment};
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 pub use error::{Error, Result};
 pub use graph::{AxiomIndex, AxiomStore};
@@ -67,49 +67,15 @@ pub use iri::{InternPool, IriId};
 pub use limits::Limits;
 pub use ontology::{Ontology, OntologyBuilder};
 pub use parse_meta::{OwlConstruct, ParseMeta, ParseMetaSummary};
-pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerCache, ReasonerConfig};
+pub use reasoner::{Profile, Reasoner, ReasonerBuilder, ReasonerConfig};
 pub use session::ReasonerSession;
 pub use swrl::{SwrlAtom, SwrlDArg, SwrlIArg, SwrlRule};
 pub use taxonomy::Taxonomy;
 pub use trace::{InferenceTrace, TraceConclusion, TracePremise, TraceStep};
 
 #[cfg(test)]
-#[allow(deprecated)]
 mod integration_tests {
     use super::*;
-
-    #[test]
-    fn classify_returns_not_implemented_for_el() {
-        let ontology = Ontology::default();
-        let mut reasoner = Reasoner::builder()
-            .profile(Profile::El)
-            .build(ontology)
-            .expect("build");
-        assert_eq!(reasoner.classify().unwrap_err(), Error::NotImplemented);
-        assert_eq!(reasoner.ontology().entity_count(), 0);
-    }
-
-    #[test]
-    fn classify_rdfs_profile_returns_delegate_hint() {
-        let ontology = Ontology::default();
-        let mut reasoner = Reasoner::builder()
-            .profile(Profile::Rdfs)
-            .build(ontology)
-            .expect("build");
-        let err = reasoner.classify().expect_err("rdfs delegate hint");
-        assert!(matches!(err, Error::Message(_)));
-    }
-
-    #[test]
-    fn classify_rl_profile_returns_delegate_hint() {
-        let ontology = Ontology::default();
-        let mut reasoner = Reasoner::builder()
-            .profile(Profile::Rl)
-            .build(ontology)
-            .expect("build");
-        let err = reasoner.classify().expect_err("rl delegate hint");
-        assert!(matches!(err, Error::Message(_)));
-    }
 
     #[test]
     fn reasoner_rejects_invalid_parallelism() {

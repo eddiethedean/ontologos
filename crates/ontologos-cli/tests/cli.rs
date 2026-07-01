@@ -200,7 +200,7 @@ fn materialize_minimal_fixture_succeeds() {
 }
 
 #[test]
-fn explain_family_rdfs_json_has_proof_nodes() {
+fn explain_family_el_json_has_proof_nodes() {
     let path = repo_root().join("benchmarks/data/family.owl");
     assert!(path.exists(), "missing family corpus at {}", path.display());
     let output = Command::cargo_bin("ontologos")
@@ -209,7 +209,7 @@ fn explain_family_rdfs_json_has_proof_nodes() {
             "--format",
             "json",
             "--profile",
-            "rdfs",
+            "el",
             "explain",
             path.to_str().expect("path"),
         ])
@@ -331,7 +331,7 @@ fn explain_surfaces_parse_meta_warnings_on_stderr() {
     let path = kind_clash_fixture();
     let output = Command::cargo_bin("ontologos")
         .expect("ontologos binary")
-        .args(["--profile", "rdfs", "explain", path.to_str().expect("path")])
+        .args(["--profile", "el", "explain", path.to_str().expect("path")])
         .assert()
         .success();
     let stderr = String::from_utf8(output.get_output().stderr.clone()).expect("utf8");

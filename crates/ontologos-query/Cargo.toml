@@ -8,7 +8,7 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "Query interface for OntoLogos ontologies"
+description = "Deprecated re-export of taxonomy hierarchy in ontologos-ql"
 publish = true
 
 
@@ -16,6 +16,4 @@ publish = true
 workspace = true
 
 [dependencies]
-ontologos-core = { workspace = true }
 ontologos-ql = { workspace = true }
-thiserror = { workspace = true }

@@ -3,7 +3,7 @@ use ontologos_bridge::{
 };
 use ontologos_core::{Ontology, Profile, Reasoner};
 
-use crate::report::MaterializationReport;
+use crate::rdfs::report::MaterializationReport;
 
 /// RDFS materialization facade over `reasonable`.
 #[derive(Debug, Default)]
@@ -32,7 +32,7 @@ impl RdfsEngine {
     }
 
     /// Materialize RDFS/RL inferences into `ontology` via reasonable.
-    pub fn materialize(&self, ontology: &mut Ontology) -> crate::Result<MaterializationReport> {
+    pub fn materialize(&self, ontology: &mut Ontology) -> super::Result<MaterializationReport> {
         let initial_axiom_count = ontology.axiom_count();
         let (outcome, _) = materialize_with_session(
             ontology,
@@ -40,7 +40,7 @@ impl RdfsEngine {
             false,
             self.merge_limits,
         )
-        .map_err(|boxed| crate::Error::Bridge(boxed.0))?;
+        .map_err(|boxed| super::Error::Bridge(boxed.0))?;
         Ok(report_from_outcome(
             initial_axiom_count,
             ontology.axiom_count(),
@@ -52,7 +52,7 @@ impl RdfsEngine {
     pub fn materialize_with_reasoner(
         &self,
         reasoner: &mut Reasoner,
-    ) -> crate::Result<MaterializationReport> {
+    ) -> super::Result<MaterializationReport> {
         let initial_axiom_count = reasoner.ontology().axiom_count();
         let incremental = reasoner.config().incremental;
         let session = take_reasonable_session(reasoner, Profile::Rdfs);
@@ -73,7 +73,7 @@ impl RdfsEngine {
             Err(boxed) => {
                 let (e, session) = *boxed;
                 reasoner.set_session(Box::new(session));
-                Err(crate::Error::Bridge(e))
+                Err(super::Error::Bridge(e))
             }
         }
     }

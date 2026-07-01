@@ -10,7 +10,7 @@ pub mod rewrite;
 use ontologos_core::{Ontology, Taxonomy};
 use thiserror::Error;
 
-pub use hierarchy::{QueryEngine, TaxonomyGraph, TaxonomyHierarchy};
+pub use hierarchy::TaxonomyHierarchy;
 pub use parse::parse_conjunctive_query;
 pub use query::{ConjunctiveQuery, QueryAnswer, QueryAtom};
 pub use rewrite::rewrite_query;

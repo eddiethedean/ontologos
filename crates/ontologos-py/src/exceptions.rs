@@ -29,9 +29,6 @@ pub(crate) fn map_core_py_err(error: CoreError) -> PyErr {
 
 pub(crate) fn map_facade_py_err(error: FacadeError) -> PyErr {
     match error {
-        FacadeError::Alc(e) if matches!(e, ontologos_alc::Error::ResourceLimit(_)) => {
-            ResourceLimitError::new_err(e.to_string())
-        }
         FacadeError::Dl(e) => match e {
             ontologos_dl::Error::IncompleteReasoning(msg) => {
                 IncompleteReasoningError::new_err(msg)

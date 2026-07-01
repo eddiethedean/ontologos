@@ -17,12 +17,11 @@ pub(crate) fn parse_profile(profile: Option<&str>) -> PyResult<ontologos_core::P
         "rdfs" => Ok(Profile::Rdfs),
         "rl" => Ok(Profile::Rl),
         "el" => Ok(Profile::El),
-        "alc" => Ok(Profile::Alc),
-        "dl" => Ok(Profile::Dl),
+        "alc" | "dl" => Ok(Profile::Dl),
         "dl-preview" | "dl_preview" => Ok(Profile::DlPreview),
-        "swrl" => Ok(Profile::Swrl),
+        "swrl" => Ok(Profile::Dl),
         other => Err(py_err(format!(
-            "unsupported profile {other:?}; use auto, rdfs, rl, el, alc, dl, dl-preview, or swrl"
+            "unsupported profile {other:?}; use auto, rdfs, rl, el, dl, or dl-preview"
         ))),
     }
 }
@@ -44,42 +43,6 @@ pub(crate) fn parse_meta_dict<'py>(
     dict.set_item("mapped_axiom_count", summary.mapped_axiom_count)?;
     dict.set_item("skipped_axiom_count", summary.skipped_axiom_count)?;
     dict.set_item("logical_axiom_count", summary.logical_axiom_count)?;
-    Ok(dict)
-}
-
-pub(crate) fn taxonomy_dict<'py>(
-    py: Python<'py>,
-    ontology: &Ontology,
-    taxonomy: &Taxonomy,
-) -> PyResult<Bound<'py, PyDict>> {
-    let dict = PyDict::new(py);
-    dict.set_item("subsumption_count", taxonomy.subsumption_count())?;
-
-    let subs: Vec<(String, String)> = taxonomy
-        .subsumptions
-        .iter()
-        .map(|&(sub, sup)| Ok((entity_iri(ontology, sub)?, entity_iri(ontology, sup)?)))
-        .collect::<PyResult<Vec<_>>>()?;
-    dict.set_item("subsumptions", subs)?;
-
-    let equiv: Vec<Vec<String>> = taxonomy
-        .equivalences
-        .iter()
-        .map(|cluster| {
-            cluster
-                .iter()
-                .map(|&id| entity_iri(ontology, id))
-                .collect::<PyResult<Vec<_>>>()
-        })
-        .collect::<PyResult<Vec<_>>>()?;
-    dict.set_item("equivalences", equiv)?;
-
-    let unsat: Vec<String> = taxonomy
-        .unsatisfiable
-        .iter()
-        .map(|&id| entity_iri(ontology, id))
-        .collect::<PyResult<Vec<_>>>()?;
-    dict.set_item("unsatisfiable", unsat)?;
     Ok(dict)
 }
 
@@ -229,7 +192,7 @@ pub(crate) fn taxonomy_classify_dict<'py>(
 
 pub(crate) fn rdfs_classify_dict<'py>(
     py: Python<'py>,
-    report: &ontologos_rdfs::MaterializationReport,
+    report: &ontologos_rl::rdfs::MaterializationReport,
 ) -> PyResult<Bound<'py, PyDict>> {
     let json = ontologos_facade::rdfs_materialization_json("classified", report, None);
     let value = serde_json::to_value(&json).map_err(py_err)?;

@@ -1,4 +1,4 @@
-use ontologos_core::{uses_dl_entailment, Axiom, ConsistencyResult, DetectedProfileKind, EntityId, Profile, Reasoner, Taxonomy};
+use ontologos_core::{uses_dl_entailment, Axiom, ConsistencyResult, EntityId, Profile, Reasoner, Taxonomy};
 
 use crate::classify::{classify, taxonomy_from_outcome};
 use crate::engines::{check_consistency as dispatch_check_consistency, resolve};
@@ -93,9 +93,6 @@ fn is_class_assertion_entailed(
     if uses_dl_entailment(route.kind) {
         return dl_entails_class_assertion(ontology, individual, class);
     }
-    if reasoner.profile() == Profile::Auto && route.detected == Some(DetectedProfileKind::Dl) {
-        return dl_entails_class_assertion(ontology, individual, class);
-    }
     taxonomy_entails_class_assertion(reasoner, individual, class)
 }
 
@@ -106,7 +103,7 @@ fn taxonomy_entails_class_assertion(
 ) -> Result<bool> {
     if reasoner.profile() == Profile::Rl {
         let mut working = reasoner.ontology().clone();
-        ontologos_abox::materialize_abox(&mut working)?;
+        ontologos_rl::abox::materialize_abox(&mut working)?;
         return Ok(individual_entails_named_class(
             &working, individual, class, None,
         ));
@@ -189,9 +186,6 @@ fn is_object_property_assertion_entailed(
     if uses_dl_entailment(route.kind) {
         return dl_entails_object_property_assertion(ontology, subject, property, object);
     }
-    if reasoner.profile() == Profile::Auto && route.detected == Some(DetectedProfileKind::Dl) {
-        return dl_entails_object_property_assertion(ontology, subject, property, object);
-    }
     abox_entails_object_property_assertion(ontology, subject, property, object)
 }
 
@@ -202,7 +196,7 @@ fn abox_entails_object_property_assertion(
     object: EntityId,
 ) -> Result<bool> {
     let mut working = ontology.clone();
-    let values = ontologos_abox::object_property_values(&mut working, subject, property)?;
+    let values = ontologos_rl::abox::object_property_values(&mut working, subject, property)?;
     Ok(values
         .iter()
         .any(|&candidate| individuals_entailed_same(ontology, candidate, object)))

@@ -32,39 +32,11 @@ pub enum DetectedProfileKind {
     Dl,
 }
 
-/// Operations supported by the resolved engine route.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct EngineCapabilities {
-    /// Engine can answer sub-object-property queries via DL/ALC saturation.
-    pub role_query: bool,
-    /// Engine uses DL tableau for class/property assertion entailment.
-    pub entailment_dl: bool,
-}
-
-impl EngineCapabilities {
-    /// Capabilities for a resolved [`EngineKind`].
-    #[must_use]
-    pub const fn for_kind(kind: EngineKind) -> Self {
-        match kind {
-            EngineKind::El | EngineKind::Rdfs | EngineKind::Rl => Self {
-                role_query: false,
-                entailment_dl: false,
-            },
-            EngineKind::Alc | EngineKind::Dl | EngineKind::Swrl | EngineKind::Hybrid => Self {
-                role_query: true,
-                entailment_dl: true,
-            },
-        }
-    }
-}
-
 /// Result of profile → engine resolution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ResolvedRoute {
     /// Engine to dispatch to.
     pub kind: EngineKind,
-    /// Supported operations for this route.
-    pub capabilities: EngineCapabilities,
     /// Profile detected during Auto resolution, if applicable.
     pub detected: Option<DetectedProfileKind>,
 }
@@ -75,7 +47,6 @@ impl ResolvedRoute {
     pub fn explicit(kind: EngineKind) -> Self {
         Self {
             kind,
-            capabilities: EngineCapabilities::for_kind(kind),
             detected: None,
         }
     }
@@ -85,7 +56,6 @@ impl ResolvedRoute {
     pub fn auto(kind: EngineKind, detected: DetectedProfileKind) -> Self {
         Self {
             kind,
-            capabilities: EngineCapabilities::for_kind(kind),
             detected: Some(detected),
         }
     }
@@ -98,10 +68,4 @@ pub const fn uses_dl_entailment(kind: EngineKind) -> bool {
         kind,
         EngineKind::Alc | EngineKind::Dl | EngineKind::Swrl | EngineKind::Hybrid
     )
-}
-
-/// Whether sub-object-property queries use DL/ALC saturation.
-#[must_use]
-pub const fn uses_dl_role_query(kind: EngineKind) -> bool {
-    uses_dl_entailment(kind)
 }

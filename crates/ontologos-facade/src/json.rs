@@ -1,7 +1,7 @@
 //! Shared JSON report shapes for CLI and Python parity.
 
 use ontologos_core::{Ontology, ParseMetaSummary, Taxonomy};
-use ontologos_rdfs::MaterializationReport as RdfsReport;
+use ontologos_rl::rdfs::{MaterializationReport as RdfsReport, RdfsRule};
 use ontologos_rl::MaterializationReport as RlReport;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -99,7 +99,7 @@ pub fn rdfs_materialization_json<'a>(
     status: &'static str,
     report: &'a RdfsReport,
     parse_meta: Option<&'a ParseMetaSummary>,
-) -> MaterializationJson<'a, ontologos_rdfs::RdfsRule> {
+) -> MaterializationJson<'a, RdfsRule> {
     materialization_json(status, report, parse_meta)
 }
 
@@ -137,7 +137,7 @@ trait MaterializationReportView<R> {
     fn clashes(&self) -> &[String];
 }
 
-impl MaterializationReportView<ontologos_rdfs::RdfsRule> for RdfsReport {
+impl MaterializationReportView<RdfsRule> for RdfsReport {
     fn initial_axiom_count(&self) -> usize {
         self.initial_axiom_count
     }
@@ -147,7 +147,7 @@ impl MaterializationReportView<ontologos_rdfs::RdfsRule> for RdfsReport {
     fn inferred_total(&self) -> usize {
         self.inferred_total()
     }
-    fn inferred_by_rule(&self) -> &BTreeMap<ontologos_rdfs::RdfsRule, usize> {
+    fn inferred_by_rule(&self) -> &BTreeMap<RdfsRule, usize> {
         &self.inferred_by_rule
     }
     fn clashes(&self) -> &[String] {

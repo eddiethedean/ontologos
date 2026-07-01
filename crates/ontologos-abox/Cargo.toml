@@ -8,7 +8,7 @@ authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
-description = "ABox reasoning and individual closure for OntoLogos"
+description = "Deprecated re-export of ABox support in ontologos-rl"
 publish = true
 
 
@@ -16,9 +16,8 @@ publish = true
 workspace = true
 
 [dependencies]
-ontologos-core = { workspace = true }
 ontologos-rl = { workspace = true }
-thiserror = { workspace = true }
 
 [dev-dependencies]
+ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }

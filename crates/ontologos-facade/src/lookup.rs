@@ -13,7 +13,7 @@ pub fn get_object_property_values(
     let subject = lookup_individual(ontology, subject_iri)?;
     let property = lookup_object_property(ontology, property_iri)?;
     let mut working = ontology.clone();
-    let values = ontologos_abox::object_property_values(&mut working, subject, property)?;
+    let values = ontologos_rl::abox::object_property_values(&mut working, subject, property)?;
     values.iter().map(|id| entity_iri(ontology, *id)).collect()
 }
 

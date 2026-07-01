@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use ontologos_core::ReasonerConfig;
 use ontologos_core::{EntityId, Ontology, ParseMetaSummary, Profile, Reasoner, Taxonomy};
-use ontologos_el::ClassifyOutcome;
+use ontologos_facade::ClassifyOutcome;
 use ontologos_explain::{ProofGraph, explain_with_profile, render_text};
 use ontologos_parser::load_ontology;
 use ontologos_profile::{ProfileReport, classify_hybrid, detect_profile};
@@ -117,7 +117,6 @@ enum CliProfile {
     Dl,
     /// OWL 2 DL preview (subset checks, explicit warning)
     DlPreview,
-    Swrl,
 }
 
 impl From<CliProfile> for Profile {
@@ -127,10 +126,8 @@ impl From<CliProfile> for Profile {
             CliProfile::El => Profile::El,
             CliProfile::Rl => Profile::Rl,
             CliProfile::Rdfs => Profile::Rdfs,
-            CliProfile::Alc => Profile::Alc,
-            CliProfile::Dl => Profile::Dl,
+            CliProfile::Alc | CliProfile::Dl => Profile::Dl,
             CliProfile::DlPreview => Profile::DlPreview,
-            CliProfile::Swrl => Profile::Swrl,
         }
     }
 }
@@ -152,13 +149,9 @@ enum CliError {
     #[error(transparent)]
     El(#[from] ontologos_el::Error),
     #[error(transparent)]
-    Alc(#[from] ontologos_alc::Error),
-    #[error(transparent)]
     Dl(#[from] ontologos_dl::Error),
     #[error(transparent)]
-    Swrl(#[from] ontologos_swrl::Error),
-    #[error(transparent)]
-    Rdfs(#[from] ontologos_rdfs::Error),
+    Rl(#[from] ontologos_rl::Error),
     #[error(transparent)]
     Explain(#[from] ontologos_explain::Error),
 }
@@ -166,69 +159,10 @@ enum CliError {
 fn map_facade_error(error: ontologos_facade::Error) -> CliError {
     match error {
         ontologos_facade::Error::El(inner) => CliError::El(inner),
-        ontologos_facade::Error::Alc(inner) => CliError::Alc(inner),
         ontologos_facade::Error::Dl(inner) => CliError::Dl(inner),
-        ontologos_facade::Error::Swrl(inner) => CliError::Swrl(inner),
-        ontologos_facade::Error::Abox(inner) => {
-            CliError::Core(ontologos_core::Error::Message(inner.to_string()))
-        }
+        ontologos_facade::Error::Rl(inner) => CliError::Rl(inner),
         ontologos_facade::Error::Core(inner) => CliError::Core(inner),
     }
-}
-
-fn parse_entailment_check(
-    sub: Option<String>,
-    sup: Option<String>,
-    individual: Option<String>,
-    class: Option<String>,
-    subject: Option<String>,
-    property: Option<String>,
-    object: Option<String>,
-) -> Result<ontologos_facade::EntailmentCheck, CliError> {
-    let subclass = sub.is_some() || sup.is_some();
-    let class_assertion = individual.is_some() || class.is_some();
-    let property_assertion = subject.is_some() || property.is_some() || object.is_some();
-    let count =
-        usize::from(subclass) + usize::from(class_assertion) + usize::from(property_assertion);
-    if count != 1 {
-        return Err(CliError::Core(ontologos_core::Error::Message(
-            "entail requires exactly one of: (--sub and --sup), (--individual and --class), or (--subject, --property, and --object)".into(),
-        )));
-    }
-    if subclass {
-        let sub = sub.ok_or_else(|| {
-            CliError::Core(ontologos_core::Error::Message("--sub required".into()))
-        })?;
-        let sup = sup.ok_or_else(|| {
-            CliError::Core(ontologos_core::Error::Message("--sup required".into()))
-        })?;
-        return Ok(ontologos_facade::EntailmentCheck::SubClassOf { sub, sup });
-    }
-    if class_assertion {
-        let individual = individual.ok_or_else(|| {
-            CliError::Core(ontologos_core::Error::Message(
-                "--individual required".into(),
-            ))
-        })?;
-        let class = class.ok_or_else(|| {
-            CliError::Core(ontologos_core::Error::Message("--class required".into()))
-        })?;
-        return Ok(ontologos_facade::EntailmentCheck::ClassAssertion { individual, class });
-    }
-    let subject = subject.ok_or_else(|| {
-        CliError::Core(ontologos_core::Error::Message("--subject required".into()))
-    })?;
-    let property = property.ok_or_else(|| {
-        CliError::Core(ontologos_core::Error::Message("--property required".into()))
-    })?;
-    let object = object.ok_or_else(|| {
-        CliError::Core(ontologos_core::Error::Message("--object required".into()))
-    })?;
-    Ok(ontologos_facade::EntailmentCheck::ObjectPropertyAssertion {
-        subject,
-        property,
-        object,
-    })
 }
 
 fn main() {
@@ -462,8 +396,10 @@ fn run() -> Result<(), CliError> {
             let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            let check =
-                parse_entailment_check(sub, sup, individual, class, subject, property, object)?;
+            let check = ontologos_facade::parse_entailment_check(
+                sub, sup, individual, class, subject, property, object,
+            )
+            .map_err(map_facade_error)?;
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .build(ontology)?;

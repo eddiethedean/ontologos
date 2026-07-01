@@ -21,7 +21,6 @@ mod graph;
 mod normal_form;
 mod partition;
 mod reasoner;
-mod route;
 mod session;
 mod taxonomy_extract;
 mod trace;
@@ -31,7 +30,6 @@ use thiserror::Error;
 
 pub use engine::ElEngine;
 pub use reasoner::{classify_reasoner, classify_with_report};
-pub use route::{ClassifyOutcome, classify_with_profile};
 pub use session::{ElSession, take_el_session};
 pub use trace::ElReport;
 
@@ -58,21 +56,9 @@ pub enum Error {
     /// Profile detection failed.
     #[error(transparent)]
     Profile(#[from] ontologos_profile::Error),
-    /// Auto-routing cannot classify this profile.
-    #[error("classification not supported for profile {0:?}")]
-    UnsupportedProfile(ontologos_profile::OwlProfile),
     /// Core error.
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),
-    /// RDFS engine error.
-    #[error(transparent)]
-    Rdfs(#[from] ontologos_rdfs::Error),
-    /// RL engine error.
-    #[error(transparent)]
-    Rl(#[from] ontologos_rl::Error),
-    /// ALC engine error.
-    #[error(transparent)]
-    Alc(#[from] ontologos_alc::Error),
     /// General configuration or validation error.
     #[error("{0}")]
     Message(String),
@@ -90,9 +76,6 @@ impl ElClassifier {
     }
 
     /// Classify the ontology and return the extracted taxonomy.
-    ///
-    /// Runs ELK-style goal-directed completion and transitive-reduction taxonomy
-    /// extraction. The ontology is not mutated.
     pub fn classify(&self, ontology: &Ontology) -> Result<Taxonomy> {
         self.classify_with_options(ontology, false)
             .map(|r| r.taxonomy)

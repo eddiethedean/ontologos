@@ -98,9 +98,8 @@ impl ReasonerBuilder {
     }
 }
 
-/// Cached classification result keyed by ontology revision.
 #[derive(Debug, Clone)]
-pub struct ReasonerCache {
+struct ReasonerCache {
     revision: OntologyRevision,
     taxonomy: Taxonomy,
 }
@@ -197,46 +196,5 @@ impl Reasoner {
     /// Drop cached classification results.
     pub fn invalidate_classify_cache(&mut self) {
         self.classify_cache = None;
-    }
-
-    /// Check ontology consistency (profile engines implement semantics).
-    #[deprecated(
-        since = "1.0.0",
-        note = "use ontologos_facade::check_consistency or ontologos_facade::is_consistent instead"
-    )]
-    pub fn is_consistent(&self) -> Result<bool> {
-        Err(Error::NotImplemented)
-    }
-
-    /// Run classification over the loaded ontology.
-    ///
-    /// Profile engines live in separate crates. Prefer [`ontologos_facade::classify`]
-    /// or profile-specific helpers (`ontologos_el::classify_with_profile`,
-    /// `ontologos_rdfs::classify_reasoner`, `ontologos_rl::classify_reasoner`).
-    ///
-    /// EL/Auto return [`Error::NotImplemented`]. [`Profile::Rdfs`] and [`Profile::Rl`]
-    /// return [`Error::Message`] with a delegate hint.
-    #[deprecated(
-        since = "1.0.0",
-        note = "use ontologos_facade::classify or profile crate helpers instead"
-    )]
-    pub fn classify(&mut self) -> Result<()> {
-        if self.profile == Profile::Rdfs {
-            return Err(Error::Message(
-                "Profile::Rdfs: use ontologos_rdfs::classify_reasoner or \
-                 ontologos_rdfs::materialize_reasoner; Reasoner::classify does not \
-                 dispatch to profile engines"
-                    .into(),
-            ));
-        }
-        if self.profile == Profile::Rl {
-            return Err(Error::Message(
-                "Profile::Rl: use ontologos_rl::classify_reasoner or \
-                 ontologos_rl::materialize_reasoner; Reasoner::classify does not \
-                 dispatch to profile engines"
-                    .into(),
-            ));
-        }
-        Err(Error::NotImplemented)
     }
 }

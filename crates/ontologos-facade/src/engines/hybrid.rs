@@ -1,25 +1,19 @@
 //! Hybrid multi-module classification orchestration.
 
 use ontologos_core::Ontology;
-use ontologos_el::{ClassifyOutcome, ElClassifier};
+use ontologos_el::ElClassifier;
 use ontologos_profile::{OwlProfile, classify_hybrid, merge_taxonomies, subontology_with_axioms};
 
 use crate::error::{Error, Result};
+use crate::outcome::ClassifyOutcome;
 
 /// Classify a hybrid DL ontology by per-module engine dispatch.
 pub(crate) fn classify_hybrid_modules(ontology: &Ontology) -> Result<ClassifyOutcome> {
     let hybrid = classify_hybrid(ontology).map_err(|e| Error::El(e.into()))?;
-    if hybrid.modules.len() <= 1 {
-        let module = hybrid.modules.first();
-        if module.is_some_and(|m| m.profile == OwlProfile::Dl) {
-            return Ok(ClassifyOutcome::Taxonomy(
-                ontologos_dl::classify(ontology).map_err(Error::Dl)?,
-            ));
-        }
-        return Ok(ClassifyOutcome::Taxonomy(
-            ElClassifier::new().classify(ontology).map_err(Error::El)?,
-        ));
-    }
+    debug_assert!(
+        hybrid.modules.len() > 1,
+        "Hybrid route requires multiple modules"
+    );
 
     let mut parts = Vec::with_capacity(hybrid.modules.len());
     for module in &hybrid.modules {

@@ -1,13 +1,10 @@
-//! v0.6 explanation exit criteria with dependency-first adapters.
-//!
-//! EL explanations use in-house completion traces; RDFS/RL traces remain
-//! empty until reasonable exposes rule-level diagnostics.
+//! v0.6 explanation exit criteria — EL explanations use in-house completion traces.
 
 use ontologos_core::{EntityKind, Ontology, Profile, Reasoner, ReasonerConfig};
 use ontologos_el::ElClassifier;
-use ontologos_explain::{build_proof_graph, collect_trace, explain_el, explain_rdfs, explain_rl};
+use ontologos_explain::{build_proof_graph, collect_trace, explain_el};
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 use ontologos_rl::RlEngine;
 
 fn family_path() -> std::path::PathBuf {
@@ -42,28 +39,28 @@ fn reasoner_with_profile(ontology: Ontology, profile: Profile) -> Reasoner {
 }
 
 #[test]
-fn rdfs_family_materialization_and_graph() {
+fn rdfs_family_materialization_smoke() {
     let path = family_path();
     require_fixture(&path);
     let mut ontology = load_ontology(&path).expect("load family");
     let before = ontology.axiom_count();
-    let graph = explain_rdfs(&mut ontology).expect("rdfs explain");
-    assert_valid_graph(&ontology, &graph);
+    let report = RdfsEngine::new().materialize(&mut ontology).expect("rdfs");
     assert!(
         ontology.axiom_count() > before,
         "reasonable adapter should materialize family"
     );
+    assert!(report.inferred_total() > 0);
 }
 
 #[test]
-fn rl_family_saturation_and_graph() {
+fn rl_family_saturation_smoke() {
     let path = family_path();
     require_fixture(&path);
     let mut ontology = load_ontology(&path).expect("load family");
     let before = ontology.axiom_count();
-    let graph = explain_rl(&mut ontology).expect("rl explain");
-    assert_valid_graph(&ontology, &graph);
+    let report = RlEngine::new(1).saturate(&mut ontology).expect("rl");
     assert!(ontology.axiom_count() > before, "RL saturation expected");
+    assert!(report.inferred_total() > 0);
 }
 
 #[test]
@@ -115,32 +112,6 @@ fn el_pizza_subsumption_explanation() {
 }
 
 #[test]
-fn rdfs_engine_smoke() {
-    let path = family_path();
-    require_fixture(&path);
-    let mut ontology = load_ontology(&path).expect("load");
-    let report = RdfsEngine::new()
-        .materialize(&mut ontology)
-        .expect("materialize");
-    assert!(
-        report.inferred_total() > 0,
-        "family RDFS materialization must infer axioms"
-    );
-}
-
-#[test]
-fn rl_engine_smoke() {
-    let path = family_path();
-    require_fixture(&path);
-    let mut ontology = load_ontology(&path).expect("load");
-    let report = RlEngine::new(1).saturate(&mut ontology).expect("saturate");
-    assert!(
-        report.inferred_total() > 0,
-        "family RL saturation must infer axioms"
-    );
-}
-
-#[test]
 fn el_existential_subsumption() {
     let mut ontology = Ontology::new();
     let a = ontology
@@ -169,7 +140,6 @@ fn el_existential_subsumption() {
         })
         .unwrap();
 
-    // In-house EL: B ⊑ C via subsumption transitivity; A ⊑ ∃r.B is asserted, not A ⊑ C directly.
     let taxonomy = ElClassifier::new().classify(&ontology).expect("classify");
     assert!(taxonomy.is_subsumed(b, c));
 }

@@ -16,13 +16,9 @@ publish = true
 workspace = true
 
 [dependencies]
-ontologos-alc = { workspace = true }
 ontologos-core = { workspace = true }
-ontologos-dl = { workspace = true }
 ontologos-el = { workspace = true }
 ontologos-profile = { workspace = true }
-ontologos-rdfs = { workspace = true }
-ontologos-rl = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

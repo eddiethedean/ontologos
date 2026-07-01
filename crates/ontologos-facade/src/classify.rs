@@ -1,8 +1,8 @@
 use ontologos_core::{Reasoner, Taxonomy};
-use ontologos_el::ClassifyOutcome;
 
 use crate::engines::{classify as dispatch_classify, resolve};
 use crate::error::Result;
+use crate::outcome::ClassifyOutcome;
 
 /// Classify using any supported profile (EL, RL, RDFS, ALC, DL, SWRL, Auto).
 #[tracing::instrument(skip(reasoner), fields(profile = ?reasoner.profile()))]

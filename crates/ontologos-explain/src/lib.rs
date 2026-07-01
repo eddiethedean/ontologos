@@ -2,14 +2,10 @@
 
 mod build;
 mod format;
-mod query;
 
-use ontologos_core::{
-    EntityId, Error as CoreError, InferenceTrace, Ontology, Profile, Reasoner, ReasonerConfig,
-};
+use ontologos_core::{EngineKind, InferenceTrace, Ontology, Reasoner};
 use ontologos_el::ElClassifier;
-use ontologos_profile::{OwlProfile, detect_profile};
-use ontologos_rl::RlEngine;
+use ontologos_profile::resolve_route;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -24,20 +20,12 @@ pub enum Error {
     NotImplemented,
     #[error(transparent)]
     Profile(#[from] ontologos_profile::Error),
-    #[error("classification not supported for profile {0:?}")]
-    UnsupportedProfile(OwlProfile),
+    #[error("explanation is only supported for OWL EL classification (got {0:?})")]
+    UnsupportedEngine(EngineKind),
     #[error(transparent)]
-    Core(#[from] CoreError),
-    #[error(transparent)]
-    Rdfs(#[from] ontologos_rdfs::Error),
-    #[error(transparent)]
-    Rl(#[from] ontologos_rl::Error),
+    Core(#[from] ontologos_core::Error),
     #[error(transparent)]
     El(#[from] ontologos_el::Error),
-    #[error(transparent)]
-    Alc(#[from] ontologos_alc::Error),
-    #[error(transparent)]
-    Dl(#[from] ontologos_dl::Error),
 }
 
 /// Node identifier within a proof graph.
@@ -56,13 +44,13 @@ pub struct ProofNode {
     pub conclusion_axiom: Option<ontologos_core::AxiomId>,
     /// EL subsumption conclusion `sub ⊑ sup`.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub conclusion_sub: Option<(EntityId, EntityId)>,
+    pub conclusion_sub: Option<(ontologos_core::EntityId, ontologos_core::EntityId)>,
     /// EL existential conclusion.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub conclusion_existential: Option<(EntityId, EntityId, EntityId)>,
+    pub conclusion_existential: Option<(ontologos_core::EntityId, ontologos_core::EntityId, ontologos_core::EntityId)>,
     /// EL subproperty conclusion.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub conclusion_subproperty: Option<(EntityId, EntityId)>,
+    pub conclusion_subproperty: Option<(ontologos_core::EntityId, ontologos_core::EntityId)>,
 }
 
 /// Proof graph backing explanation traces.
@@ -76,7 +64,7 @@ impl ProofGraph {
     /// Export the proof graph as JSON.
     pub fn to_json(&self) -> Result<String> {
         serde_json::to_string_pretty(self)
-            .map_err(|e| Error::Core(CoreError::Message(e.to_string())))
+            .map_err(|e| Error::Core(ontologos_core::Error::Message(e.to_string())))
     }
 
     /// Number of proof nodes.
@@ -94,88 +82,13 @@ impl ProofGraph {
 
 /// Collect inference trace with explanations enabled on `reasoner`'s ontology.
 pub fn collect_trace(reasoner: &mut Reasoner) -> Result<InferenceTrace> {
-    match reasoner.profile() {
-        Profile::Rdfs => Ok(ontologos_rdfs::RdfsEngine::new()
-            .with_traces(true)
-            .materialize(reasoner.ontology_mut())?
-            .trace),
-        Profile::Rl => Ok(RlEngine::try_new(reasoner.config().parallelism)?
-            .with_traces(true)
-            .saturate(reasoner.ontology_mut())?
-            .trace),
-        Profile::El => Ok(ElClassifier::new()
+    let route = resolve_route(reasoner.profile(), reasoner.ontology())?;
+    match route.kind {
+        EngineKind::El => Ok(ElClassifier::new()
             .classify_with_options(reasoner.ontology(), true)?
             .trace),
-        Profile::Alc => collect_trace_alc(reasoner.ontology()),
-        Profile::Dl | Profile::DlPreview | Profile::Swrl => collect_trace_dl(reasoner.ontology()),
-        Profile::Auto => collect_trace_auto(reasoner),
+        other => Err(Error::UnsupportedEngine(other)),
     }
-}
-
-fn collect_trace_auto(reasoner: &mut Reasoner) -> Result<InferenceTrace> {
-    let report = detect_profile(reasoner.ontology())?;
-    let detected = report
-        .detected
-        .ok_or_else(|| ontologos_profile::Error::Message("no profile detected".into()))?;
-
-    match detected {
-        OwlProfile::El | OwlProfile::Ql => Ok(ElClassifier::new()
-            .classify_with_options(reasoner.ontology(), true)?
-            .trace),
-        OwlProfile::Rl => Ok(RlEngine::try_new(reasoner.config().parallelism)?
-            .with_traces(true)
-            .saturate(reasoner.ontology_mut())?
-            .trace),
-        OwlProfile::Dl => collect_trace_dl(reasoner.ontology()),
-    }
-}
-
-/// Generate a full proof graph using automatic profile detection.
-pub fn explain_rdfs(ontology: &mut Ontology) -> Result<ProofGraph> {
-    let trace = ontologos_rdfs::RdfsEngine::new()
-        .with_traces(true)
-        .materialize(ontology)?
-        .trace;
-    build_proof_graph(ontology, &trace)
-}
-
-/// Generate proof graph for OWL RL saturation traces.
-pub fn explain_rl(ontology: &mut Ontology) -> Result<ProofGraph> {
-    let trace = RlEngine::try_new(1)?
-        .with_traces(true)
-        .saturate(ontology)?
-        .trace;
-    build_proof_graph(ontology, &trace)
-}
-
-fn collect_trace_alc(ontology: &Ontology) -> Result<InferenceTrace> {
-    use ontologos_core::{TraceConclusion, TraceStep};
-
-    let taxonomy = ontologos_alc::classify(ontology)?;
-    let mut trace = InferenceTrace::default();
-    for &(sub, sup) in &taxonomy.subsumptions {
-        trace.push(TraceStep {
-            rule: "alc_tableau_subsumption".into(),
-            premises: vec![],
-            conclusion: TraceConclusion::SubClassOf { sub, sup },
-        });
-    }
-    Ok(trace)
-}
-
-fn collect_trace_dl(ontology: &Ontology) -> Result<InferenceTrace> {
-    use ontologos_core::{TraceConclusion, TraceStep};
-
-    let taxonomy = ontologos_dl::classify(ontology)?;
-    let mut trace = InferenceTrace::default();
-    for &(sub, sup) in &taxonomy.subsumptions {
-        trace.push(TraceStep {
-            rule: "dl_tableau_subsumption".into(),
-            premises: vec![],
-            conclusion: TraceConclusion::SubClassOf { sub, sup },
-        });
-    }
-    Ok(trace)
 }
 
 /// Generate proof graph for OWL EL classification traces.
@@ -206,7 +119,7 @@ pub fn assert_valid_proof_graph(ontology: &Ontology, graph: &ProofGraph) {
     }
 }
 
-/// Route explanation collection by reasoner profile (like classify).
+/// Route explanation collection by resolved engine route.
 pub fn explain_with_profile(reasoner: &mut Reasoner) -> Result<ProofGraph> {
     let trace = collect_trace(reasoner)?;
     build_proof_graph(reasoner.ontology(), &trace)
@@ -214,45 +127,12 @@ pub fn explain_with_profile(reasoner: &mut Reasoner) -> Result<ProofGraph> {
 
 #[cfg(test)]
 mod tests {
-    use ontologos_core::{Axiom, EntityKind, Ontology};
+    use ontologos_core::{Axiom, EntityId, EntityKind, Ontology};
 
     use super::*;
 
     fn class(ontology: &mut Ontology, iri: &str) -> EntityId {
         ontology.entity_id(iri, EntityKind::Class).expect("class")
-    }
-
-    #[test]
-    fn explain_rdfs_builds_graph() {
-        let mut ontology = Ontology::new();
-        let a = class(&mut ontology, "http://ex.org/A");
-        let b = class(&mut ontology, "http://ex.org/B");
-        let c = class(&mut ontology, "http://ex.org/C");
-        ontology
-            .add_axiom(Axiom::SubClassOf {
-                subclass: a,
-                superclass: b,
-            })
-            .unwrap();
-        ontology
-            .add_axiom(Axiom::SubClassOf {
-                subclass: b,
-                superclass: c,
-            })
-            .unwrap();
-
-        let graph = explain_rdfs(&mut ontology).expect("graph");
-        assert!(graph.node_count() > 2);
-        assert_valid_proof_graph(&ontology, &graph);
-        let json = graph.to_json().expect("json");
-        assert!(
-            json.contains("\"nodes\""),
-            "proof JSON should include nodes"
-        );
-        assert!(
-            json.contains("\"rule\""),
-            "proof JSON should include rule steps"
-        );
     }
 
     #[test]

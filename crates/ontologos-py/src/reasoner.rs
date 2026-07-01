@@ -1,7 +1,7 @@
 //! Python `Reasoner` bindings.
 
 use ontologos_core::{Axiom, Ontology, OntologyRevision, ParseMetaSummary, Profile, Reasoner, ReasonerConfig};
-use ontologos_el::ClassifyOutcome;
+use ontologos_facade::ClassifyOutcome;
 use ontologos_explain::explain_with_profile;
 use ontologos_parser::load_ontology;
 use pyo3::prelude::*;
@@ -10,7 +10,7 @@ use pyo3::types::{PyAny, PyDict};
 use crate::convert::{
     entity_iri, find_subclass_axiom_id, parse_meta_dict, parse_profile, proof_graph_dict, py_err,
     rdfs_classify_dict, resolve_class, resolve_individual, resolve_object_property,
-    rl_classify_dict, taxonomy_classify_dict, taxonomy_dict,
+    rl_classify_dict, taxonomy_classify_dict,
 };
 use crate::exceptions::map_facade_py_err;
 use crate::ontology::{PyOntology, SharedOntology};
@@ -111,7 +111,7 @@ impl PyReasoner {
         let Some(ref taxonomy) = self.last_taxonomy else {
             return Ok(py.None());
         };
-        Ok(taxonomy_dict(py, self.reasoner.ontology(), taxonomy)?.into())
+        Ok(taxonomy_classify_dict(py, self.reasoner.ontology(), taxonomy)?.into())
     }
 
     fn classify(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
@@ -144,7 +144,7 @@ impl PyReasoner {
 
     fn explain(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         self.sync_from_shared()?;
-        let graph = explain_with_profile(&mut self.reasoner).map_err(py_err)?;
+        let graph = explain_with_profile(&mut self.reasoner).map_err(|e| py_err(e.to_string()))?;
         let summary = self
             .reasoner
             .ontology()
@@ -249,8 +249,16 @@ impl PyReasoner {
         object: Option<&str>,
     ) -> PyResult<bool> {
         self.sync_from_shared()?;
-        let check =
-            parse_entailment_check_py(sub, sup, individual, class_, subject, property, object)?;
+        let check = ontologos_facade::parse_entailment_check(
+            sub.map(str::to_owned),
+            sup.map(str::to_owned),
+            individual.map(str::to_owned),
+            class_.map(str::to_owned),
+            subject.map(str::to_owned),
+            property.map(str::to_owned),
+            object.map(str::to_owned),
+        )
+        .map_err(map_facade_py_err)?;
         let profile = self.reasoner.profile();
         let config = self.reasoner.config().clone();
         let ontology = self.reasoner.ontology().clone();
@@ -474,46 +482,3 @@ fn apply_snapshot_axiom(
     ))
 }
 
-fn parse_entailment_check_py(
-    sub: Option<&str>,
-    sup: Option<&str>,
-    individual: Option<&str>,
-    class: Option<&str>,
-    subject: Option<&str>,
-    property: Option<&str>,
-    object: Option<&str>,
-) -> PyResult<ontologos_facade::EntailmentCheck> {
-    let subclass = sub.is_some() || sup.is_some();
-    let class_assertion = individual.is_some() || class.is_some();
-    let property_assertion = subject.is_some() || property.is_some() || object.is_some();
-    let count =
-        usize::from(subclass) + usize::from(class_assertion) + usize::from(property_assertion);
-    if count != 1 {
-        return Err(py_err(
-            "is_entailed requires exactly one of: (sub, sup), (individual=, class_=), or (subject=, property=, object=)",
-        ));
-    }
-    if subclass {
-        return Ok(ontologos_facade::EntailmentCheck::SubClassOf {
-            sub: sub.ok_or_else(|| py_err("sub required"))?.to_owned(),
-            sup: sup.ok_or_else(|| py_err("sup required"))?.to_owned(),
-        });
-    }
-    if class_assertion {
-        return Ok(ontologos_facade::EntailmentCheck::ClassAssertion {
-            individual: individual
-                .ok_or_else(|| py_err("individual required"))?
-                .to_owned(),
-            class: class.ok_or_else(|| py_err("class_ required"))?.to_owned(),
-        });
-    }
-    Ok(ontologos_facade::EntailmentCheck::ObjectPropertyAssertion {
-        subject: subject
-            .ok_or_else(|| py_err("subject required"))?
-            .to_owned(),
-        property: property
-            .ok_or_else(|| py_err("property required"))?
-            .to_owned(),
-        object: object.ok_or_else(|| py_err("object required"))?.to_owned(),
-    })
-}

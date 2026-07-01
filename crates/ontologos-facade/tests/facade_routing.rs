@@ -1,9 +1,8 @@
 use ontologos_core::{Axiom, EntityKind, Ontology, Profile, Reasoner};
-use ontologos_el::ClassifyOutcome;
 use ontologos_facade::{
-    EntailmentCheck, classify, get_object_property_values, get_sub_object_properties,
-    is_consistent, is_entailed, is_entailed_axiom, is_subsumption_entailed, query_engine,
-    taxonomy_from_outcome,
+    ClassifyOutcome, EntailmentCheck, classify, get_object_property_values,
+    get_sub_object_properties, is_consistent, is_entailed, is_entailed_axiom,
+    is_subsumption_entailed, taxonomy_from_outcome, taxonomy_hierarchy,
 };
 
 fn el_ontology() -> Ontology {
@@ -219,7 +218,7 @@ fn is_consistent_rl_detects_disjoint_clash() {
 }
 
 #[test]
-fn is_consistent_alc_uses_alc_engine() {
+fn is_consistent_dl_profile_routes_to_dl_engine() {
     let ontology = Ontology::builder()
         .class("http://example.org/A")
         .unwrap()
@@ -266,7 +265,7 @@ fn is_subsumption_entailed_after_classify() {
 }
 
 #[test]
-fn query_engine_direct_subclasses() {
+fn taxonomy_hierarchy_direct_subclasses() {
     let ontology = el_chain_ontology();
     let mut reasoner = Reasoner::builder()
         .profile(Profile::El)
@@ -274,7 +273,7 @@ fn query_engine_direct_subclasses() {
         .unwrap();
     let outcome = classify(&mut reasoner).unwrap();
     let tax = taxonomy_from_outcome(&outcome).expect("taxonomy");
-    let q = query_engine(reasoner.ontology(), tax);
+    let q = taxonomy_hierarchy(reasoner.ontology(), tax);
     let a = reasoner
         .ontology()
         .lookup_entity("http://example.org/A")
