@@ -1920,6 +1920,7 @@ fn materialize_ontology(case: &HermitCase, ontology: &mut Ontology) {
             let _ = ontologos_bridge::apply_inverse_subproperty_materialization(ontology);
             let _ = ontologos_bridge::apply_transitive_subproperties(ontology);
             let _ = ontologos_bridge::apply_equivalent_property_subproperties(ontology);
+            let _ = ontologos_bridge::apply_characteristic_propagation(ontology);
         }
         "rl" => {
             ontologos_rl::RlEngine::new(1)
