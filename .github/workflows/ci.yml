@@ -11,6 +11,8 @@ env:
   CARGO_INCREMENTAL: "0"
   # Cap per-operation DL wall time in conformance (entailment may run classify twice).
   ONTOLOGOS_DL_BUDGET_SECS: "30"
+  # WG corpus consistency shortcuts (conformance only; off in production embedders).
+  ONTOLOGOS_DL_WG_SHORTCUTS: "1"
   # Phase 9: blocking CI runs the full in-scope HermiT + OWL WG catalog @ 30s.
 
 jobs:

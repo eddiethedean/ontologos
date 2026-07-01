@@ -1,6 +1,6 @@
 //! DL engine trait implementations.
 
-use ontologos_core::Reasoner;
+use ontologos_core::{ConsistencyResult, Reasoner};
 use ontologos_dl::DlEngine;
 use ontologos_el::ClassifyOutcome;
 
@@ -18,9 +18,9 @@ impl ClassifyEngine for DlAdapter {
 }
 
 impl ConsistencyEngine for DlAdapter {
-    fn is_consistent(&self, reasoner: &Reasoner) -> Result<bool> {
+    fn check_consistency(&self, reasoner: &Reasoner) -> Result<ConsistencyResult> {
         DlEngine
-            .is_consistent(reasoner.ontology())
+            .check_consistency(reasoner.ontology(), reasoner.config().budget_secs)
             .map_err(Error::Dl)
     }
 }

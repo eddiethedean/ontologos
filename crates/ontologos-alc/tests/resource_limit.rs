@@ -46,12 +46,19 @@ fn resource_limit_is_not_reported_as_consistent() {
 #[test]
 fn dl_propagates_tableau_resource_limit() {
     let ontology = long_existential_chain_ontology();
-    let result = ontologos_dl::is_consistent(&ontology);
+    let result = ontologos_dl::check_consistency(&ontology, None);
     assert!(
         matches!(
             result,
-            Err(ontologos_dl::Error::Alc(Error::ResourceLimit(_))) | Ok(false)
+            Ok(ontologos_core::ConsistencyResult {
+                complete: false,
+                ..
+            }) | Err(ontologos_dl::Error::IncompleteReasoning(_))
+                | Ok(ontologos_core::ConsistencyResult {
+                    consistent: false,
+                    complete: true
+                })
         ),
-        "DL must not map ResourceLimit to consistent: {result:?}"
+        "DL must not map ResourceLimit to proved consistent: {result:?}"
     );
 }

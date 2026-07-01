@@ -173,6 +173,7 @@ fn map_facade_error(error: ontologos_facade::Error) -> CliError {
         ontologos_facade::Error::Abox(inner) => {
             CliError::Core(ontologos_core::Error::Message(inner.to_string()))
         }
+        ontologos_facade::Error::Core(inner) => CliError::Core(inner),
     }
 }
 
@@ -413,12 +414,19 @@ fn run() -> Result<(), CliError> {
             let reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .build(ontology)?;
-            let consistent =
-                ontologos_facade::is_consistent(&reasoner).map_err(map_facade_error)?;
+            let result =
+                ontologos_facade::check_consistency(&reasoner).map_err(map_facade_error)?;
             match cli.format {
-                OutputFormat::Text => println!("consistent: {consistent}"),
+                OutputFormat::Text => {
+                    if !result.complete {
+                        eprintln!("warning: consistency check incomplete (budget or tableau limit)");
+                    }
+                    println!("consistent: {}", result.consistent);
+                    println!("complete: {}", result.complete);
+                }
                 OutputFormat::Json => emit_json(&ConsistentCliOutput {
-                    consistent,
+                    consistent: result.consistent,
+                    complete: result.complete,
                     parse_meta: &parse_meta,
                 })?,
             }
@@ -588,6 +596,8 @@ struct InstancesCliOutput<'a> {
 #[derive(Serialize)]
 struct ConsistentCliOutput<'a> {
     consistent: bool,
+    /// Whether the check finished without budget or tableau limits.
+    complete: bool,
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }

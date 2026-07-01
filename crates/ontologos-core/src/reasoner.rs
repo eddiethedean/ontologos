@@ -34,6 +34,9 @@ pub struct ReasonerConfig {
     pub explanations: bool,
     /// Number of threads for parallel rule execution.
     pub parallelism: usize,
+    /// Optional wall-clock budget (seconds) for DL consistency/classify paths.
+    /// Falls back to `ONTOLOGOS_DL_BUDGET_SECS` when unset.
+    pub budget_secs: Option<u64>,
 }
 
 impl Default for ReasonerConfig {
@@ -42,6 +45,7 @@ impl Default for ReasonerConfig {
             incremental: false,
             explanations: false,
             parallelism: 1,
+            budget_secs: None,
         }
     }
 }

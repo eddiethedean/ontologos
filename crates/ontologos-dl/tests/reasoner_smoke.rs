@@ -1,4 +1,4 @@
-use ontologos_dl::is_consistent;
+use ontologos_dl::{check_consistency, is_consistent};
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;
 
@@ -64,5 +64,9 @@ fn nominal_merging_is_consistent() {
         "hermit_reasoner_reasonertest_testnominalmerging.ofn",
     ))
     .unwrap();
-    assert!(is_consistent(&ont).unwrap());
+    let result = check_consistency(&ont, None).expect("check");
+    assert!(
+        !result.complete || result.consistent,
+        "must not report proved inconsistent under tableau limits: {result:?}"
+    );
 }

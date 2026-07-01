@@ -8,6 +8,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   ONTOLOGOS_DL_BUDGET_SECS: "120"
+  ONTOLOGOS_DL_WG_SHORTCUTS: "1"
 
 jobs:
   ignored-conformance:

@@ -14,7 +14,16 @@ pub(crate) trait ClassifyEngine {
 
 /// Consistency checking engine.
 pub(crate) trait ConsistencyEngine {
-    fn is_consistent(&self, reasoner: &Reasoner) -> Result<bool>;
+    fn check_consistency(
+        &self,
+        reasoner: &Reasoner,
+    ) -> Result<ontologos_core::ConsistencyResult>;
+
+    fn is_consistent(&self, reasoner: &Reasoner) -> Result<bool> {
+        self.check_consistency(reasoner)?
+            .into_bool()
+            .map_err(crate::error::Error::Core)
+    }
 }
 
 /// Sub-object-property query engine.

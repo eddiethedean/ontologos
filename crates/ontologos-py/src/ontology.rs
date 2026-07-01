@@ -3,12 +3,13 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use ontologos_core::{Ontology, OntologyBuilder};
+use ontologos_core::{Limits, Ontology, OntologyBuilder};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyString, PyType};
 
 use crate::convert::py_err;
+use crate::exceptions::map_core_py_err;
 
 /// Shared in-memory ontology handle used by `Ontology` and `Reasoner`.
 pub(crate) type SharedOntology = Rc<RefCell<Ontology>>;
@@ -31,7 +32,34 @@ impl PyOntology {
 impl PyOntology {
     #[classmethod]
     fn from_json(_cls: &Bound<'_, PyType>, json: &str) -> PyResult<Self> {
-        let inner = Ontology::from_json(json).map_err(py_err)?;
+        let inner = Ontology::from_json(json).map_err(map_core_py_err)?;
+        Ok(Self::from_owned(inner))
+    }
+
+    #[classmethod]
+    #[pyo3(signature = (json, *, max_json_bytes=None, max_entities=None, max_axioms=None, max_iri_len=None))]
+    fn from_json_with_limits(
+        _cls: &Bound<'_, PyType>,
+        json: &str,
+        max_json_bytes: Option<usize>,
+        max_entities: Option<usize>,
+        max_axioms: Option<usize>,
+        max_iri_len: Option<usize>,
+    ) -> PyResult<Self> {
+        let mut limits = Limits::default();
+        if let Some(n) = max_json_bytes {
+            limits.max_json_bytes = n;
+        }
+        if let Some(n) = max_entities {
+            limits.max_entities = n;
+        }
+        if let Some(n) = max_axioms {
+            limits.max_axioms = n;
+        }
+        if let Some(n) = max_iri_len {
+            limits.max_iri_len = n;
+        }
+        let inner = Ontology::from_json_with_limits(json, limits).map_err(map_core_py_err)?;
         Ok(Self::from_owned(inner))
     }
 

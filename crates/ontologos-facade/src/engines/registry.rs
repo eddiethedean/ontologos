@@ -3,7 +3,8 @@
 use std::collections::HashSet;
 
 use ontologos_core::{
-    DetectedProfileKind, EngineKind, EntityId, Profile, Reasoner, ResolvedRoute, RoleExpr,
+    ConsistencyResult, DetectedProfileKind, EngineKind, EntityId, Profile, Reasoner, ResolvedRoute,
+    RoleExpr,
 };
 use ontologos_el::ClassifyOutcome;
 use ontologos_profile::resolve_route;
@@ -50,16 +51,26 @@ impl EngineRegistry {
     }
 
     /// Check consistency using the resolved engine route.
-    pub(crate) fn is_consistent(route: ResolvedRoute, reasoner: &Reasoner) -> Result<bool> {
+    pub(crate) fn check_consistency(
+        route: ResolvedRoute,
+        reasoner: &Reasoner,
+    ) -> Result<ConsistencyResult> {
         match route.kind {
-            EngineKind::El => ElAdapter.is_consistent(reasoner),
-            EngineKind::Rdfs => RdfsAdapter.is_consistent(reasoner),
-            EngineKind::Rl => RlAdapter.is_consistent(reasoner),
-            EngineKind::Alc => AlcAdapter.is_consistent(reasoner),
-            EngineKind::Dl => DlAdapter.is_consistent(reasoner),
-            EngineKind::Swrl => SwrlAdapter.is_consistent(reasoner),
-            EngineKind::Hybrid => Self::is_consistent_hybrid(route, reasoner),
+            EngineKind::El => ElAdapter.check_consistency(reasoner),
+            EngineKind::Rdfs => RdfsAdapter.check_consistency(reasoner),
+            EngineKind::Rl => RlAdapter.check_consistency(reasoner),
+            EngineKind::Alc => AlcAdapter.check_consistency(reasoner),
+            EngineKind::Dl => DlAdapter.check_consistency(reasoner),
+            EngineKind::Swrl => SwrlAdapter.check_consistency(reasoner),
+            EngineKind::Hybrid => Self::check_consistency_hybrid(route, reasoner),
         }
+    }
+
+    /// Check consistency using the resolved engine route (bool; errors if incomplete).
+    pub(crate) fn is_consistent(route: ResolvedRoute, reasoner: &Reasoner) -> Result<bool> {
+        Self::check_consistency(route, reasoner)?
+            .into_bool()
+            .map_err(Error::Core)
     }
 
     /// Sub-object-property query using the resolved engine route.
@@ -86,12 +97,15 @@ impl EngineRegistry {
         ElAdapter.sub_object_properties(reasoner, property, direct)
     }
 
-    fn is_consistent_hybrid(route: ResolvedRoute, reasoner: &Reasoner) -> Result<bool> {
+    fn check_consistency_hybrid(
+        route: ResolvedRoute,
+        reasoner: &Reasoner,
+    ) -> Result<ConsistencyResult> {
         match route.detected {
-            Some(DetectedProfileKind::Dl) => DlAdapter.is_consistent(reasoner),
-            Some(DetectedProfileKind::Rl) => RlAdapter.is_consistent(reasoner),
+            Some(DetectedProfileKind::Dl) => DlAdapter.check_consistency(reasoner),
+            Some(DetectedProfileKind::Rl) => RlAdapter.check_consistency(reasoner),
             Some(DetectedProfileKind::El) | Some(DetectedProfileKind::Ql) => {
-                ElAdapter.is_consistent(reasoner)
+                ElAdapter.check_consistency(reasoner)
             }
             None => Err(Error::El(ontologos_el::Error::Message(
                 "no profile detected".into(),

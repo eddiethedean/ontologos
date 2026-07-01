@@ -1,7 +1,7 @@
 //! ALC engine trait implementations.
 
 use ontologos_alc::AlcEngine;
-use ontologos_core::Reasoner;
+use ontologos_core::{ConsistencyResult, Reasoner};
 use ontologos_dl::DlEngine;
 use ontologos_el::ClassifyOutcome;
 
@@ -21,10 +21,16 @@ impl ClassifyEngine for AlcAdapter {
 }
 
 impl ConsistencyEngine for AlcAdapter {
-    fn is_consistent(&self, reasoner: &Reasoner) -> Result<bool> {
-        AlcEngine
-            .is_consistent(reasoner.ontology())
-            .map_err(Error::Alc)
+    fn check_consistency(&self, reasoner: &Reasoner) -> Result<ConsistencyResult> {
+        match AlcEngine.is_consistent(reasoner.ontology()) {
+            Ok(consistent) => Ok(if consistent {
+                ConsistencyResult::consistent()
+            } else {
+                ConsistencyResult::inconsistent()
+            }),
+            Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(ConsistencyResult::incomplete()),
+            Err(e) => Err(Error::Alc(e)),
+        }
     }
 }
 

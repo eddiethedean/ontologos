@@ -24,6 +24,15 @@ impl DlEngine {
         crate::is_consistent(ontology)
     }
 
+    /// Check ontology consistency with optional wall-clock budget.
+    pub fn check_consistency(
+        &self,
+        ontology: &Ontology,
+        budget_secs: Option<u64>,
+    ) -> crate::Result<ontologos_core::ConsistencyResult> {
+        crate::check_consistency(ontology, budget_secs)
+    }
+
     /// Sub-object-property expressions for a role.
     pub fn sub_object_properties(
         &self,

@@ -1,6 +1,6 @@
 //! SWRL engine trait implementations.
 
-use ontologos_core::Reasoner;
+use ontologos_core::{ConsistencyResult, Reasoner};
 use ontologos_dl::DlEngine;
 use ontologos_el::ClassifyOutcome;
 use ontologos_swrl::SwrlEngine;
@@ -20,10 +20,15 @@ impl ClassifyEngine for SwrlAdapter {
 }
 
 impl ConsistencyEngine for SwrlAdapter {
-    fn is_consistent(&self, reasoner: &Reasoner) -> Result<bool> {
-        SwrlEngine
+    fn check_consistency(&self, reasoner: &Reasoner) -> Result<ConsistencyResult> {
+        let consistent = SwrlEngine
             .is_consistent(reasoner.ontology())
-            .map_err(Error::Swrl)
+            .map_err(Error::Swrl)?;
+        Ok(if consistent {
+            ConsistencyResult::consistent()
+        } else {
+            ConsistencyResult::inconsistent()
+        })
     }
 }
 

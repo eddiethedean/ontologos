@@ -29,6 +29,7 @@ ontologos-bridge = { workspace = true }
 ontologos-abox = { workspace = true }
 ontologos-query = { workspace = true }
 thiserror = { workspace = true }
+tracing = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]

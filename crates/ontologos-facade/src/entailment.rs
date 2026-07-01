@@ -1,4 +1,4 @@
-use ontologos_core::{Axiom, DetectedProfileKind, EntityId, Profile, Reasoner, Taxonomy};
+use ontologos_core::{Axiom, ConsistencyResult, DetectedProfileKind, EntityId, Profile, Reasoner, Taxonomy};
 
 use crate::classify::{classify, taxonomy_from_outcome};
 use crate::engines::EngineRegistry;
@@ -6,9 +6,23 @@ use crate::error::{EntailmentCheck, Error, Result};
 use crate::lookup::{lookup_class, lookup_individual, lookup_object_property};
 
 /// Check ontology consistency for the configured profile.
-pub fn is_consistent(reasoner: &Reasoner) -> Result<bool> {
+pub fn check_consistency(reasoner: &Reasoner) -> Result<ConsistencyResult> {
     let route = EngineRegistry::resolve(reasoner)?;
-    EngineRegistry::is_consistent(route, reasoner)
+    let result = EngineRegistry::check_consistency(route, reasoner)?;
+    tracing::info!(
+        complete = result.complete,
+        consistent = result.consistent,
+        profile = ?reasoner.profile(),
+        "consistency check finished"
+    );
+    Ok(result)
+}
+
+/// Check ontology consistency (errors when the answer is incomplete).
+pub fn is_consistent(reasoner: &Reasoner) -> Result<bool> {
+    check_consistency(reasoner)?
+        .into_bool()
+        .map_err(Error::Core)
 }
 
 /// Whether named class `sub_iri` is entailed to be subsumed by `sup_iri` after classification.

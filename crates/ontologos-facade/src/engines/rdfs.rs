@@ -1,6 +1,6 @@
 //! RDFS engine trait implementations.
 
-use ontologos_core::Reasoner;
+use ontologos_core::{ConsistencyResult, Reasoner};
 use ontologos_el::ClassifyOutcome;
 use ontologos_rdfs::RdfsEngineAdapter;
 
@@ -20,9 +20,14 @@ impl ClassifyEngine for RdfsAdapter {
 }
 
 impl ConsistencyEngine for RdfsAdapter {
-    fn is_consistent(&self, reasoner: &Reasoner) -> Result<bool> {
-        RdfsEngineAdapter
+    fn check_consistency(&self, reasoner: &Reasoner) -> Result<ConsistencyResult> {
+        let consistent = RdfsEngineAdapter
             .is_consistent(reasoner.ontology())
-            .map_err(|e| Error::El(e.into()))
+            .map_err(|e| Error::El(e.into()))?;
+        Ok(if consistent {
+            ConsistencyResult::consistent()
+        } else {
+            ConsistencyResult::inconsistent()
+        })
     }
 }

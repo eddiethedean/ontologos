@@ -1,6 +1,6 @@
 //! Python `Reasoner` bindings.
 
-use ontologos_core::{Axiom, ParseMetaSummary, Reasoner, ReasonerConfig};
+use ontologos_core::{Axiom, Ontology, OntologyRevision, ParseMetaSummary, Profile, Reasoner, ReasonerConfig};
 use ontologos_el::ClassifyOutcome;
 use ontologos_explain::explain_with_profile;
 use ontologos_parser::load_ontology;
@@ -11,6 +11,7 @@ use crate::convert::{
     entity_iri, find_subclass_axiom_id, parse_meta_dict, parse_profile, proof_graph_dict, py_err,
     resolve_class, resolve_individual, resolve_object_property, taxonomy_dict,
 };
+use crate::exceptions::map_facade_py_err;
 use crate::ontology::{PyOntology, SharedOntology};
 
 /// Python wrapper around the OntoLogos reasoner.
@@ -21,6 +22,8 @@ pub(crate) struct PyReasoner {
     pub(crate) dl_preview: bool,
     /// When constructed from `Ontology`, mutations sync back to this shared handle.
     shared_ontology: Option<SharedOntology>,
+    /// Last synced ontology revision (avoids full clone when unchanged).
+    shared_revision: Option<OntologyRevision>,
 }
 
 fn build_reasoner(
@@ -56,15 +59,17 @@ impl PyReasoner {
             ));
         }
 
-        let (core_ontology, shared_ontology) = if let Some(path) = path {
+        let (core_ontology, shared_ontology, shared_revision) = if let Some(path) = path {
             (
                 load_ontology(std::path::Path::new(path)).map_err(py_err)?,
+                None,
                 None,
             )
         } else {
             let shared = ontology.expect("ontology checked above").inner.clone();
+            let revision = shared.borrow().revision();
             let core_ontology = shared.borrow().clone();
-            (core_ontology, Some(shared))
+            (core_ontology, Some(shared), Some(revision))
         };
 
         let dl_preview = matches!(
@@ -77,6 +82,7 @@ impl PyReasoner {
             last_taxonomy: None,
             dl_preview,
             shared_ontology,
+            shared_revision,
         })
     }
 
@@ -103,15 +109,14 @@ impl PyReasoner {
 
     fn classify(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         self.sync_from_shared()?;
-        let outcome = match self.reasoner.profile() {
-            ontologos_core::Profile::Dl if self.dl_preview => ClassifyOutcome::Taxonomy(
-                ontologos_dl::DlClassifier::new()
-                    .preview(true)
-                    .classify(self.reasoner.ontology())
-                    .map_err(py_err)?,
-            ),
-            _ => ontologos_facade::classify(&mut self.reasoner).map_err(map_facade_py_err)?,
+        let work = ClassifyWork {
+            profile: self.reasoner.profile(),
+            config: self.reasoner.config().clone(),
+            dl_preview: self.dl_preview,
+            ontology: self.reasoner.ontology().clone(),
         };
+        let (outcome, ontology) = py.allow_threads(move || run_classify_work(work))?;
+        *self.reasoner.ontology_mut() = ontology;
         let result = match outcome {
             ClassifyOutcome::Taxonomy(taxonomy) => {
                 let dict = taxonomy_dict(py, self.reasoner.ontology(), &taxonomy)?;
@@ -192,11 +197,41 @@ impl PyReasoner {
         Ok(())
     }
 
-    /// Check ontology consistency (OWLReasoner-style).
-    fn is_consistent(&mut self) -> PyResult<bool> {
+    /// Check ontology consistency; returns `{"consistent": bool, "complete": bool}`.
+    fn check_consistency(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         self.sync_from_shared()?;
-        let consistent =
-            ontologos_facade::is_consistent(&self.reasoner).map_err(map_facade_py_err)?;
+        let profile = self.reasoner.profile();
+        let config = self.reasoner.config().clone();
+        let ontology = self.reasoner.ontology().clone();
+        let result = py.allow_threads(move || {
+            let reasoner = Reasoner::builder()
+                .profile(profile)
+                .config(config)
+                .build(ontology)
+                .map_err(py_err)?;
+            ontologos_facade::check_consistency(&reasoner).map_err(map_facade_py_err)
+        })?;
+        self.sync_to_shared();
+        let dict = PyDict::new(py);
+        dict.set_item("consistent", result.consistent)?;
+        dict.set_item("complete", result.complete)?;
+        Ok(dict.into())
+    }
+
+    /// Check ontology consistency (OWLReasoner-style bool; raises if incomplete).
+    fn is_consistent(&mut self, py: Python<'_>) -> PyResult<bool> {
+        self.sync_from_shared()?;
+        let profile = self.reasoner.profile();
+        let config = self.reasoner.config().clone();
+        let ontology = self.reasoner.ontology().clone();
+        let consistent = py.allow_threads(move || {
+            let reasoner = Reasoner::builder()
+                .profile(profile)
+                .config(config)
+                .build(ontology)
+                .map_err(py_err)?;
+            ontologos_facade::is_consistent(&reasoner).map_err(map_facade_py_err)
+        })?;
         self.sync_to_shared();
         Ok(consistent)
     }
@@ -206,6 +241,7 @@ impl PyReasoner {
     #[allow(clippy::too_many_arguments)]
     fn is_entailed(
         &mut self,
+        py: Python<'_>,
         sub: Option<&str>,
         sup: Option<&str>,
         individual: Option<&str>,
@@ -217,8 +253,20 @@ impl PyReasoner {
         self.sync_from_shared()?;
         let check =
             parse_entailment_check_py(sub, sup, individual, class_, subject, property, object)?;
-        let entailed = ontologos_facade::is_entailed_axiom(&mut self.reasoner, check)
-            .map_err(map_facade_py_err)?;
+        let profile = self.reasoner.profile();
+        let config = self.reasoner.config().clone();
+        let ontology = self.reasoner.ontology().clone();
+        let (entailed, ontology) = py.allow_threads(move || -> PyResult<(bool, Ontology)> {
+            let mut reasoner = Reasoner::builder()
+                .profile(profile)
+                .config(config)
+                .build(ontology)
+                .map_err(py_err)?;
+            let entailed =
+                ontologos_facade::is_entailed_axiom(&mut reasoner, check).map_err(map_facade_py_err)?;
+            Ok((entailed, reasoner.ontology().clone()))
+        })?;
+        *self.reasoner.ontology_mut() = ontology;
         self.sync_to_shared();
         Ok(entailed)
     }
@@ -252,16 +300,49 @@ impl PyReasoner {
 impl PyReasoner {
     fn sync_from_shared(&mut self) -> PyResult<()> {
         if let Some(shared) = &self.shared_ontology {
-            *self.reasoner.ontology_mut() = shared.borrow().clone();
+            let current = shared.borrow().revision();
+            if self.shared_revision != Some(current) {
+                *self.reasoner.ontology_mut() = shared.borrow().clone();
+                self.shared_revision = Some(current);
+            }
         }
         Ok(())
     }
 
     fn sync_to_shared(&mut self) {
         if let Some(shared) = &self.shared_ontology {
-            *shared.borrow_mut() = self.reasoner.ontology().clone();
+            let reasoner_rev = self.reasoner.ontology().revision();
+            if self.shared_revision != Some(reasoner_rev) {
+                *shared.borrow_mut() = self.reasoner.ontology().clone();
+                self.shared_revision = Some(reasoner_rev);
+            }
         }
     }
+}
+
+struct ClassifyWork {
+    profile: Profile,
+    config: ReasonerConfig,
+    dl_preview: bool,
+    ontology: Ontology,
+}
+
+fn run_classify_work(work: ClassifyWork) -> PyResult<(ClassifyOutcome, Ontology)> {
+    let mut reasoner = Reasoner::builder()
+        .profile(work.profile)
+        .config(work.config)
+        .build(work.ontology)
+        .map_err(py_err)?;
+    let outcome = match work.profile {
+        Profile::Dl if work.dl_preview => ClassifyOutcome::Taxonomy(
+            ontologos_dl::DlClassifier::new()
+                .preview(true)
+                .classify(reasoner.ontology())
+                .map_err(py_err)?,
+        ),
+        _ => ontologos_facade::classify(&mut reasoner).map_err(map_facade_py_err)?,
+    };
+    Ok((outcome, reasoner.ontology().clone()))
 }
 
 fn apply_snapshot_axiom(
@@ -397,16 +478,6 @@ fn apply_snapshot_axiom(
     Err(py_err(
         "unsupported axiom JSON; use format v2 axiom objects (e.g. {\"SubClassOf\": {...}})",
     ))
-}
-
-fn map_facade_py_err(error: ontologos_facade::Error) -> PyErr {
-    match error {
-        ontologos_facade::Error::El(e) => py_err(e.to_string()),
-        ontologos_facade::Error::Alc(e) => py_err(e.to_string()),
-        ontologos_facade::Error::Dl(e) => py_err(e.to_string()),
-        ontologos_facade::Error::Swrl(e) => py_err(e.to_string()),
-        ontologos_facade::Error::Abox(e) => py_err(e.to_string()),
-    }
 }
 
 fn parse_entailment_check_py(

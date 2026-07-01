@@ -2,6 +2,7 @@
 
 #![warn(missing_docs)]
 
+mod bounded;
 mod cardinality;
 mod cardinality_grid;
 mod classify;
@@ -24,6 +25,7 @@ use thiserror::Error;
 
 pub use classify::DlClassifier;
 pub use datatype::is_data_range_satisfiable;
+pub use ontologos_core::ConsistencyResult;
 pub use datatype::{
     LiteralIndex, LiteralValue, is_datatype_consistent, named_class_datatype_satisfiable,
 };
@@ -95,6 +97,9 @@ pub enum Error {
     /// General message.
     #[error("{0}")]
     Message(String),
+    /// Consistency or satisfiability check did not complete (budget or tableau limit).
+    #[error("consistency check incomplete: {0}")]
+    IncompleteReasoning(String),
 }
 
 /// Classify an ontology under OWL 2 DL semantics.
@@ -123,15 +128,42 @@ pub fn classify_for_entailment(ontology: &Ontology) -> Result<Taxonomy> {
     Ok(taxonomy)
 }
 
-/// Check ontology consistency under DL.
+/// Check ontology consistency under DL with optional wall-clock budget.
+#[tracing::instrument(skip(ontology))]
+pub fn check_consistency(
+    ontology: &Ontology,
+    budget_secs: Option<u64>,
+) -> Result<ConsistencyResult> {
+    if bounded::resolve_budget_secs(budget_secs).is_none() {
+        return check_consistency_inner(ontology);
+    }
+    let ontology = ontology.clone();
+    bounded::run_bounded(budget_secs, move || check_consistency_inner(&ontology))?
+}
+
+/// Check ontology consistency under DL (errors when the answer is incomplete).
 pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
+    check_consistency(ontology, None)?
+        .into_bool()
+        .map_err(Error::Core)
+}
+
+fn check_consistency_inner(ontology: &Ontology) -> Result<ConsistencyResult> {
+    match check_consistency_inner_impl(ontology) {
+        Err(Error::IncompleteReasoning(_)) => Ok(ConsistencyResult::incomplete()),
+        Ok(result) => Ok(result),
+        Err(e) => Err(e),
+    }
+}
+
+fn check_consistency_inner_impl(ontology: &Ontology) -> Result<ConsistencyResult> {
     let trace = std::env::var("ONTOLOGOS_CONSISTENCY_TRACE").is_ok();
     macro_rules! reject {
         ($step:expr) => {{
             if trace {
                 eprintln!("is_consistent: reject at {}", $step);
             }
-            return Ok(false);
+            return Ok(ConsistencyResult::inconsistent());
         }};
     }
     if thing_equivalent_nothing(ontology) {
@@ -189,13 +221,17 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
         if trace {
             eprintln!("is_consistent: union_csp => {consistent}");
         }
-        return Ok(consistent);
+        return Ok(if consistent {
+            ConsistencyResult::consistent()
+        } else {
+            ConsistencyResult::inconsistent()
+        });
     }
-    if wg_wine_import_merge_consistency_shortcut(ontology) {
+    if bounded::wg_shortcuts_enabled() && wg_wine_import_merge_consistency_shortcut(ontology) {
         if trace {
             eprintln!("is_consistent: wine_wg_import_merge => true");
         }
-        return Ok(true);
+        return Ok(ConsistencyResult::consistent());
     }
     let dl = ontologos_alc::DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
@@ -231,10 +267,12 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
                 if trace {
                     eprintln!("is_consistent: class_assertion_kb empty_seed => true");
                 }
-                return Ok(true);
+                return Ok(ConsistencyResult::consistent());
             }
             Ok(false) => {}
-            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {}
+            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {
+                return Ok(ConsistencyResult::incomplete());
+            }
             Err(e) => return Err(e),
         }
     }
@@ -242,26 +280,37 @@ pub fn is_consistent(ontology: &Ontology) -> Result<bool> {
         if trace {
             eprintln!("is_consistent: class_assertion_only => {consistent}");
         }
-        return Ok(consistent);
+        return Ok(if consistent {
+            ConsistencyResult::consistent()
+        } else {
+            ConsistencyResult::inconsistent()
+        });
     }
-    let tableau =
-        match ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc) {
-            Ok(consistent) => consistent,
-            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {
-                ontologos_alc::tableau_is_consistent(ontology).map_err(Error::Alc)?
-            }
-            Err(e) => return Err(e),
-        };
+    let tableau = match ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed)
+        .map_err(Error::Alc)
+    {
+        Ok(consistent) => consistent,
+        Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {
+            return Ok(ConsistencyResult::incomplete());
+        }
+        Err(e) => return Err(e),
+    };
     if trace {
         eprintln!("is_consistent: tableau => {tableau}");
     }
-    if !tableau && wg_consistent005_class_assertion_fallback(ontology, &dl, &seed) {
-        return Ok(true);
+    if !tableau {
+        if bounded::wg_shortcuts_enabled()
+            && wg_consistent005_class_assertion_fallback(ontology, &dl, &seed)
+        {
+            return Ok(ConsistencyResult::consistent());
+        }
+        if bounded::wg_shortcuts_enabled() && wg_description_logic_605_consistency_fallback(ontology)
+        {
+            return Ok(ConsistencyResult::consistent());
+        }
+        return Ok(ConsistencyResult::inconsistent());
     }
-    if !tableau && wg_description_logic_605_consistency_fallback(ontology) {
-        return Ok(true);
-    }
-    Ok(tableau)
+    Ok(ConsistencyResult::consistent())
 }
 
 /// WG description-logic-605: oiled `Satisfiable` with `.comp` complement pattern.
@@ -384,34 +433,86 @@ fn named_classes_unsatisfiable_inner(ontology: &Ontology, classes: &[EntityId]) 
         ) {
             Ok(false) => Ok(true),
             Ok(true) => Ok(false),
-            Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(true),
+            Err(ontologos_alc::Error::ResourceLimit(_)) => {
+                Err(Error::IncompleteReasoning("parallel unsat resource limit".into()))
+            }
             Err(e) => Err(Error::Alc(e)),
         };
     }
     let dl = std::sync::Arc::new(dl);
     let seed = std::sync::Arc::new(seed);
-    let mut handles = Vec::with_capacity(pending.len());
-    for &class in &pending {
-        let dl = std::sync::Arc::clone(&dl);
-        let seed = std::sync::Arc::clone(&seed);
-        handles.push(std::thread::spawn(move || {
-            let mut cache = ontologos_alc::UnsatCache::new();
-            match ontologos_alc::is_named_class_satisfiable_with_cache(
-                &dl, class, &seed, &mut cache,
-            ) {
-                Ok(false) => Ok(true),
-                Ok(true) => Ok(false),
-                Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(true),
-                Err(e) => Err(Error::Alc(e)),
-            }
-        }));
-    }
-    for handle in handles {
-        if !handle.join().expect("unsat worker panicked")? {
-            return Ok(false);
+    parallel_named_class_unsat(&dl, &seed, &pending)
+}
+
+fn parallel_named_class_unsat(
+    dl: &std::sync::Arc<DlOntology>,
+    seed: &std::sync::Arc<TableauSeed>,
+    pending: &[EntityId],
+) -> Result<bool> {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+    let max_workers = bounded::dl_max_workers().min(pending.len());
+    let next = Arc::new(AtomicUsize::new(0));
+    let all_unsat = Arc::new(AtomicBool::new(true));
+    let incomplete = Arc::new(AtomicBool::new(false));
+    let worker_error: Arc<std::sync::Mutex<Option<Error>>> =
+        Arc::new(std::sync::Mutex::new(None));
+
+    std::thread::scope(|scope| {
+        for _ in 0..max_workers {
+            let dl = std::sync::Arc::clone(dl);
+            let seed = std::sync::Arc::clone(seed);
+            let next = Arc::clone(&next);
+            let all_unsat = Arc::clone(&all_unsat);
+            let incomplete = Arc::clone(&incomplete);
+            let worker_error = Arc::clone(&worker_error);
+            scope.spawn(move || {
+                loop {
+                    if incomplete.load(Ordering::Relaxed) {
+                        return;
+                    }
+                    let index = next.fetch_add(1, Ordering::Relaxed);
+                    if index >= pending.len() {
+                        return;
+                    }
+                    let class = pending[index];
+                    let mut cache = ontologos_alc::UnsatCache::new();
+                    match ontologos_alc::is_named_class_satisfiable_with_cache(
+                        &dl, class, &seed, &mut cache,
+                    ) {
+                        Ok(false) => {}
+                        Ok(true) => {
+                            all_unsat.store(false, Ordering::Relaxed);
+                            return;
+                        }
+                        Err(ontologos_alc::Error::ResourceLimit(_)) => {
+                            incomplete.store(true, Ordering::Relaxed);
+                            return;
+                        }
+                        Err(e) => {
+                            if let Ok(mut slot) = worker_error.lock() {
+                                if slot.is_none() {
+                                    *slot = Some(Error::Alc(e));
+                                }
+                            }
+                            return;
+                        }
+                    }
+                }
+            });
         }
+    });
+
+    if let Some(err) = worker_error.lock().expect("unsat worker error lock").take() {
+        return Err(err);
     }
-    Ok(true)
+    if incomplete.load(Ordering::Relaxed) {
+        return Err(Error::IncompleteReasoning(
+            "parallel unsat resource limit".into(),
+        ));
+    }
+    Ok(all_unsat.load(Ordering::Relaxed))
 }
 
 fn atomic_entity_from_clause(dl: &DlOntology, ce: ontologos_core::CeId) -> Option<EntityId> {
@@ -429,8 +530,9 @@ pub fn is_named_class_unsatisfiable(ontology: &Ontology, class: EntityId) -> Res
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
     match ontologos_alc::is_named_class_satisfiable_with_seed(&dl, class, &seed) {
         Ok(sat) => Ok(!sat),
-        // Budget exhaustion during SAT search: no model found within limits.
-        Err(ontologos_alc::Error::ResourceLimit(_)) => Ok(true),
+        Err(ontologos_alc::Error::ResourceLimit(_)) => Err(Error::IncompleteReasoning(
+            "named class satisfiability resource limit".into(),
+        )),
         Err(e) => Err(Error::Alc(e)),
     }
 }
@@ -877,7 +979,9 @@ fn class_assertion_type_satisfiable(
         }
         _ => match ontologos_alc::is_ce_satisfiable_with_seed(dl, ce, seed).map_err(Error::Alc) {
             Ok(v) => Ok(v),
-            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => Ok(true),
+            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {
+                Err(Error::IncompleteReasoning("CE satisfiability resource limit".into()))
+            }
             Err(e) => Err(e),
         },
     }

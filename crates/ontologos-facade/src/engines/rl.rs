@@ -1,7 +1,7 @@
 //! RL engine trait implementations.
 
 use ontologos_bridge::has_bottom_chain_violation;
-use ontologos_core::Reasoner;
+use ontologos_core::{ConsistencyResult, Reasoner};
 use ontologos_el::ClassifyOutcome;
 use ontologos_rl::{RlEngine, RlEngineAdapter};
 
@@ -22,18 +22,23 @@ impl ClassifyEngine for RlAdapter {
 }
 
 impl ConsistencyEngine for RlAdapter {
-    fn is_consistent(&self, reasoner: &Reasoner) -> Result<bool> {
+    fn check_consistency(&self, reasoner: &Reasoner) -> Result<ConsistencyResult> {
         let mut working = reasoner.ontology().clone();
         let report = RlEngine::new(1)
             .saturate(&mut working)
             .map_err(|e| Error::El(ontologos_el::Error::Message(format!("rl saturate: {e}"))))?;
         if !report.clashes.is_empty() || has_bottom_chain_violation(&working) {
-            return Ok(false);
+            return Ok(ConsistencyResult::inconsistent());
         }
-        ontologos_abox::is_abox_consistent(&working).map_err(|e| {
+        let consistent = ontologos_abox::is_abox_consistent(&working).map_err(|e| {
             Error::El(ontologos_el::Error::Message(format!(
                 "abox consistent: {e}"
             )))
+        })?;
+        Ok(if consistent {
+            ConsistencyResult::consistent()
+        } else {
+            ConsistencyResult::inconsistent()
         })
     }
 }

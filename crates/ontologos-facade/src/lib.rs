@@ -10,8 +10,11 @@ mod lookup;
 mod query;
 
 pub use classify::{classify, taxonomy_from_outcome};
-pub use entailment::{is_consistent, is_entailed, is_entailed_axiom, is_subsumption_entailed};
+pub use entailment::{
+    check_consistency, is_consistent, is_entailed, is_entailed_axiom, is_subsumption_entailed,
+};
 pub use error::{EntailmentCheck, Error, Result};
 pub use lookup::{get_object_property_values, get_sub_object_properties};
+pub use ontologos_core::ConsistencyResult;
 pub use ontologos_el::ClassifyOutcome;
 pub use query::query_engine;

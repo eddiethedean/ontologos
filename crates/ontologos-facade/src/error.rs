@@ -22,6 +22,9 @@ pub enum Error {
     /// ABox engine error.
     #[error(transparent)]
     Abox(#[from] ontologos_abox::Error),
+    /// Core error (e.g. incomplete consistency folded to message).
+    #[error(transparent)]
+    Core(#[from] ontologos_core::Error),
 }
 
 /// Axiom-shaped entailment checks for [`crate::is_entailed_axiom`].

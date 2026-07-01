@@ -5,8 +5,10 @@ use crate::engines::EngineRegistry;
 use crate::error::Result;
 
 /// Classify using any supported profile (EL, RL, RDFS, ALC, DL, SWRL, Auto).
+#[tracing::instrument(skip(reasoner), fields(profile = ?reasoner.profile()))]
 pub fn classify(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
     let route = EngineRegistry::resolve(reasoner)?;
+    tracing::debug!(engine = ?route.kind, "resolved classify route");
     let outcome = EngineRegistry::classify(route, reasoner)?;
     if let Some(taxonomy) = taxonomy_from_outcome(&outcome) {
         reasoner.set_cached_taxonomy(taxonomy.clone());

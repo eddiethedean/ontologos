@@ -37,6 +37,7 @@
 #![warn(missing_docs)]
 
 mod axiom;
+mod consistency;
 mod dirty;
 mod dl;
 mod engine;
@@ -55,6 +56,7 @@ mod taxonomy;
 mod trace;
 
 pub use axiom::{Axiom, AxiomId, DataLiteral};
+pub use consistency::ConsistencyResult;
 pub use dirty::{DirtySet, OntologyRevision, axiom_signature};
 pub use dl::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, DlStore, RoleExpr};
 pub use engine::{DetectedProfileKind, EngineCapabilities, EngineKind, ResolvedRoute};

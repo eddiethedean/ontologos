@@ -24,6 +24,7 @@ ontologos-alc = { workspace = true }
 ontologos-bridge = { workspace = true }
 horned-owl = { workspace = true }
 thiserror = { workspace = true }
+tracing = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 

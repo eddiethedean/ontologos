@@ -1,6 +1,6 @@
 //! EL engine trait implementations.
 
-use ontologos_core::{Profile, Reasoner};
+use ontologos_core::{ConsistencyResult, Profile, Reasoner};
 use ontologos_el::{ClassifyOutcome, ElEngine};
 
 use super::{ClassifyEngine, ConsistencyEngine, RoleQueryEngine};
@@ -20,10 +20,19 @@ impl ClassifyEngine for ElAdapter {
 }
 
 impl ConsistencyEngine for ElAdapter {
-    fn is_consistent(&self, reasoner: &Reasoner) -> Result<bool> {
-        ElEngine
+    fn check_consistency(&self, reasoner: &Reasoner) -> Result<ConsistencyResult> {
+        let consistent = ElEngine
             .is_consistent(reasoner.ontology())
-            .map_err(Error::El)
+            .map_err(Error::El)?;
+        Ok(consistency_from_bool(consistent))
+    }
+}
+
+fn consistency_from_bool(consistent: bool) -> ConsistencyResult {
+    if consistent {
+        ConsistencyResult::consistent()
+    } else {
+        ConsistencyResult::inconsistent()
     }
 }
 
