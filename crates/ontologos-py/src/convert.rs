@@ -19,7 +19,7 @@ pub(crate) fn parse_profile(profile: Option<&str>) -> PyResult<ontologos_core::P
         "el" => Ok(Profile::El),
         "alc" => Ok(Profile::Alc),
         "dl" => Ok(Profile::Dl),
-        "dl-preview" | "dl_preview" => Ok(Profile::Dl),
+        "dl-preview" | "dl_preview" => Ok(Profile::DlPreview),
         "swrl" => Ok(Profile::Swrl),
         other => Err(py_err(format!(
             "unsupported profile {other:?}; use auto, rdfs, rl, el, alc, dl, dl-preview, or swrl"
@@ -198,4 +198,56 @@ pub(crate) fn find_subclass_axiom_id(
         }
     }
     Ok(None)
+}
+
+pub(crate) fn taxonomy_classify_dict<'py>(
+    py: Python<'py>,
+    ontology: &Ontology,
+    taxonomy: &Taxonomy,
+) -> PyResult<Bound<'py, PyDict>> {
+    let dict = taxonomy_dict(py, ontology, taxonomy)?;
+    dict.set_item("status", "classified")?;
+    Ok(dict)
+}
+
+pub(crate) fn rdfs_classify_dict<'py>(
+    py: Python<'py>,
+    report: &ontologos_rdfs::MaterializationReport,
+) -> PyResult<Bound<'py, PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("status", "classified")?;
+    dict.set_item("initial_axiom_count", report.initial_axiom_count)?;
+    dict.set_item("final_axiom_count", report.final_axiom_count)?;
+    dict.set_item("inferred_axioms", report.inferred_total())?;
+    let rules = PyDict::new(py);
+    for (rule, count) in &report.inferred_by_rule {
+        rules.set_item(rule.as_str(), count)?;
+    }
+    dict.set_item("inferred_by_rule", rules)?;
+    dict.set_item("clash_count", report.clashes.len())?;
+    if !report.clashes.is_empty() {
+        dict.set_item("clashes", &report.clashes)?;
+    }
+    Ok(dict)
+}
+
+pub(crate) fn rl_classify_dict<'py>(
+    py: Python<'py>,
+    report: &ontologos_rl::MaterializationReport,
+) -> PyResult<Bound<'py, PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("status", "classified")?;
+    dict.set_item("initial_axiom_count", report.initial_axiom_count)?;
+    dict.set_item("final_axiom_count", report.final_axiom_count)?;
+    dict.set_item("inferred_axioms", report.inferred_total())?;
+    let rules = PyDict::new(py);
+    for (rule, count) in &report.inferred_by_rule {
+        rules.set_item(rule.as_str(), count)?;
+    }
+    dict.set_item("inferred_by_rule", rules)?;
+    dict.set_item("clash_count", report.clashes.len())?;
+    if !report.clashes.is_empty() {
+        dict.set_item("clashes", &report.clashes)?;
+    }
+    Ok(dict)
 }

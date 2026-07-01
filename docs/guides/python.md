@@ -1,6 +1,6 @@
 # Python Guide
 
-Python bindings for OntoLogos (PyPI **0.9.0** published; **1.0.0** on `main`) via PyO3 (`pip install ontologos`).
+Python bindings for OntoLogos (PyPI **1.0.0** on `main`; **0.9.0** latest tag) via PyO3 (`pip install ontologos`).
 
 OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
 (`ontologos-el` in-house EL, `ontologos-rl` / `ontologos-rdfs` → reasonable). Power users who need
@@ -86,7 +86,7 @@ print(graph["node_count"])
 
 ## API reference
 
-### `Reasoner(path=None, ontology=None, profile=None, incremental=False)`
+### `Reasoner(path=None, ontology=None, profile=None, incremental=False, budget_secs=None, parallelism=1)`
 
 Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly one of `path` or `ontology` is required.
 
@@ -96,14 +96,16 @@ Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly o
 | `ontology` | `Ontology` or `None` | `None` | In-memory ontology from builder or JSON |
 | `profile` | `str` or `None` | `"auto"` | `"auto"`, `"rdfs"`, `"rl"`, `"el"`, `"alc"`, `"dl"`, `"dl-preview"`, `"swrl"` |
 | `incremental` | `bool` | `False` | Enable incremental session for multi-pass workflows |
+| `budget_secs` | `int` or `None` | `None` | Wall-clock budget for DL consistency/classify (mirrors `ReasonerConfig`) |
+| `parallelism` | `int` | `1` | Worker parallelism for supported engines |
 
 **Profiles:**
 
 | Profile | `classify()` return value |
 |---------|--------------------------|
-| `"rdfs"` | `dict` with `initial_axiom_count`, `final_axiom_count`, `inferred_axioms` |
+| `"rdfs"` | `dict` with `status`, `initial_axiom_count`, `final_axiom_count`, `inferred_axioms`, `inferred_by_rule`, `clash_count`, optional `clashes` |
 | `"rl"` | Same report shape as RDFS (includes RL inferences) |
-| `"el"` | `dict` with `subsumption_count`, `subsumptions`, `equivalences`, `unsatisfiable` |
+| `"el"` | `dict` with `status`, `subsumption_count`, `subsumptions`, `equivalences`, `unsatisfiable` |
 | `"auto"` | EL taxonomy, RL report, or DL taxonomy based on profile detection |
 | `"dl"`, `"dl-preview"`, `"alc"` | Taxonomy dict (preview — see [Preview profiles](preview-profiles.md)) |
 | `"swrl"` | Preview — usually errors (`NotImplemented` / `PreviewLimit`) |
@@ -114,8 +116,24 @@ Invalid profile strings raise `RuntimeError`.
 
 Runs the selected profile engine on the loaded ontology.
 
-- **EL / auto (EL):** Returns taxonomy dict; also available via `reasoner.taxonomy` after classify.
-- **RDFS / RL:** Returns materialization report dict with axiom counts.
+- **EL / auto (EL) / DL / ALC:** Returns taxonomy dict with `status: "classified"`; also available via `reasoner.taxonomy` after classify.
+- **RDFS / RL:** Returns materialization report dict aligned with CLI JSON.
+
+### `check_consistency() -> dict`
+
+Returns `{"consistent": bool, "complete": bool}`. When `complete` is `False`, do not treat `consistent` as proof — the DL engine hit a budget or tableau limit.
+
+### `is_consistent() -> bool`
+
+OWLReasoner-style convenience: returns `True`/`False` only when complete. Raises `IncompleteReasoningError` when the check did not finish.
+
+### `is_entailed(...) -> bool`
+
+Check entailment for `SubClassOf` (positional `sub`, `sup`), `ClassAssertion` (`individual=`, `class_=`), or `ObjectPropertyAssertion` (`subject=`, `property=`, `object=`). Exactly one form required.
+
+### `query(query: str) -> list[dict]`
+
+Answer an OWL QL conjunctive query after taxonomy classification (auto-classifies if needed). Each answer is a dict mapping variable names to IRI strings.
 
 ### `explain() -> dict`
 
@@ -155,6 +173,7 @@ See [Incremental reasoning](incremental-reasoning.md).
 | Method | Description |
 |--------|-------------|
 | `Ontology.from_json(str)` | Load from JSON v2 snapshot |
+| `Ontology.from_json_with_limits(str, *, max_json_bytes=..., max_entities=..., max_axioms=..., max_iri_len=...)` | Load with resource caps (preferred for untrusted input) |
 | `Ontology.from_dict(dict)` | Load from Python dict (same schema as JSON v2) |
 | `to_json()` / `to_dict()` | Serialize |
 | `axiom_count` / `entity_count` | Size getters |
@@ -192,20 +211,24 @@ Read-only dict after load:
 | `skipped_axiom_count` | `int` | Logical components not mapped |
 | `logical_axiom_count` | `int` | Mapped + skipped |
 
-## Limitations (v0.9.0)
+## Limitations (v1.0.0)
 
-| Capability | Rust v0.9.0 | Python v0.9.0 |
-|------------|-------------|---------------|
+| Capability | Rust | Python |
+|------------|------|--------|
 | Load OWL files | Yes (horned-owl) | Yes |
 | In-memory ontology | Yes (`OntologyBuilder`) | Yes |
 | Profile detection | Yes | Via `"auto"` |
 | RDFS / RL / EL classify | Yes | Yes |
 | DL / ALC preview | Yes (preview) | Yes (`dl`, `dl-preview`, `alc`) |
+| Consistency (`check_consistency`) | Yes (facade) | Yes |
 | Incremental multi-pass | Yes (library API) | Yes |
 | EL explain | Yes | Yes |
 | RL/RDFS explain (full traces) | Partial (asserted-only) | Partial (asserted-only) |
 | Export saturated ontology | Yes (in-process) | No |
-| Query API | Yes (`ontologos-query`) | No |
+| OWL QL query | Yes (`ontologos-ql` / CLI) | Yes (`Reasoner.query`) |
+| Subproperties / property values | Yes (facade) | CLI only |
+| Typed exceptions | Yes (`Error` enum) | Yes (`ParseError`, `ResourceLimitError`, `IncompleteReasoningError`) |
+| `py.typed` / stubs | N/A | Yes |
 
 `Reasoner` is not thread-safe; do not mutate from multiple threads concurrently.
 
@@ -220,13 +243,25 @@ Read-only dict after load:
 
 ## Errors
 
-All failures surface as `RuntimeError` with a string message. Common messages:
+Import typed exceptions from the package root:
+
+```python
+from ontologos import ParseError, ResourceLimitError, IncompleteReasoningError
+```
+
+| Exception | When |
+|-----------|------|
+| `ParseError` | Parser / JSON serialization failures |
+| `ResourceLimitError` | DL/ALC preview or resource caps exceeded |
+| `IncompleteReasoningError` | `is_consistent()` when check incomplete; DL budget limits |
+| `RuntimeError` | Other failures (unsupported profile, invalid constructor args, etc.) |
+
+Common `RuntimeError` messages:
 
 | Message pattern | Cause |
 |-----------------|-------|
 | `unsupported profile` | Invalid profile string |
 | `classification not supported for profile` | Invalid profile or SWRL not implemented |
-| `PreviewLimit` / `ResourceLimit` | DL preview limits — see [Preview profiles](preview-profiles.md) |
 | `requires exactly one of path or ontology` | Both or neither constructor args |
 | Parse / I/O errors | Bad path, unsupported format, mapping failure |
 

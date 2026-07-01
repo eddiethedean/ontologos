@@ -9,7 +9,8 @@ use pyo3::types::{PyAny, PyDict};
 
 use crate::convert::{
     entity_iri, find_subclass_axiom_id, parse_meta_dict, parse_profile, proof_graph_dict, py_err,
-    resolve_class, resolve_individual, resolve_object_property, taxonomy_dict,
+    rdfs_classify_dict, resolve_class, resolve_individual, resolve_object_property,
+    rl_classify_dict, taxonomy_classify_dict, taxonomy_dict,
 };
 use crate::exceptions::map_facade_py_err;
 use crate::ontology::{PyOntology, SharedOntology};
@@ -19,7 +20,6 @@ use crate::ontology::{PyOntology, SharedOntology};
 pub(crate) struct PyReasoner {
     pub(crate) reasoner: Reasoner,
     pub(crate) last_taxonomy: Option<ontologos_core::Taxonomy>,
-    pub(crate) dl_preview: bool,
     /// When constructed from `Ontology`, mutations sync back to this shared handle.
     shared_ontology: Option<SharedOntology>,
     /// Last synced ontology revision (avoids full clone when unchanged).
@@ -30,11 +30,15 @@ fn build_reasoner(
     ontology: ontologos_core::Ontology,
     profile: Option<&str>,
     incremental: bool,
+    budget_secs: Option<u64>,
+    parallelism: usize,
 ) -> PyResult<Reasoner> {
     Reasoner::builder()
         .profile(parse_profile(profile)?)
         .config(ReasonerConfig {
             incremental,
+            budget_secs,
+            parallelism,
             ..ReasonerConfig::default()
         })
         .build(ontology)
@@ -44,12 +48,14 @@ fn build_reasoner(
 #[pymethods]
 impl PyReasoner {
     #[new]
-    #[pyo3(signature = (path=None, ontology=None, profile=None, incremental=false))]
+    #[pyo3(signature = (path=None, ontology=None, profile=None, incremental=false, budget_secs=None, parallelism=1))]
     fn new(
         path: Option<&str>,
         ontology: Option<&PyOntology>,
         profile: Option<&str>,
         incremental: bool,
+        budget_secs: Option<u64>,
+        parallelism: usize,
     ) -> PyResult<Self> {
         let has_path = path.is_some();
         let has_ontology = ontology.is_some();
@@ -72,15 +78,16 @@ impl PyReasoner {
             (core_ontology, Some(shared), Some(revision))
         };
 
-        let dl_preview = matches!(
-            profile.map(str::to_ascii_lowercase).as_deref(),
-            Some("dl-preview") | Some("dl_preview")
-        );
-        let reasoner = build_reasoner(core_ontology, profile, incremental)?;
+        let reasoner = build_reasoner(
+            core_ontology,
+            profile,
+            incremental,
+            budget_secs,
+            parallelism,
+        )?;
         Ok(Self {
             reasoner,
             last_taxonomy: None,
-            dl_preview,
             shared_ontology,
             shared_revision,
         })
@@ -112,32 +119,23 @@ impl PyReasoner {
         let work = ClassifyWork {
             profile: self.reasoner.profile(),
             config: self.reasoner.config().clone(),
-            dl_preview: self.dl_preview,
             ontology: self.reasoner.ontology().clone(),
         };
         let (outcome, ontology) = py.allow_threads(move || run_classify_work(work))?;
         *self.reasoner.ontology_mut() = ontology;
         let result = match outcome {
             ClassifyOutcome::Taxonomy(taxonomy) => {
-                let dict = taxonomy_dict(py, self.reasoner.ontology(), &taxonomy)?;
+                let dict = taxonomy_classify_dict(py, self.reasoner.ontology(), &taxonomy)?;
                 self.last_taxonomy = Some(taxonomy);
                 Ok(dict.into())
             }
             ClassifyOutcome::Rdfs(report) => {
                 self.last_taxonomy = None;
-                let dict = PyDict::new(py);
-                dict.set_item("initial_axiom_count", report.initial_axiom_count)?;
-                dict.set_item("final_axiom_count", report.final_axiom_count)?;
-                dict.set_item("inferred_axioms", report.inferred_total())?;
-                Ok(dict.into())
+                Ok(rdfs_classify_dict(py, &report)?.into())
             }
             ClassifyOutcome::Rl(report) => {
                 self.last_taxonomy = None;
-                let dict = PyDict::new(py);
-                dict.set_item("initial_axiom_count", report.initial_axiom_count)?;
-                dict.set_item("final_axiom_count", report.final_axiom_count)?;
-                dict.set_item("inferred_axioms", report.inferred_total())?;
-                Ok(dict.into())
+                Ok(rl_classify_dict(py, &report)?.into())
             }
         };
         self.sync_to_shared();
@@ -323,7 +321,6 @@ impl PyReasoner {
 struct ClassifyWork {
     profile: Profile,
     config: ReasonerConfig,
-    dl_preview: bool,
     ontology: Ontology,
 }
 
@@ -333,15 +330,7 @@ fn run_classify_work(work: ClassifyWork) -> PyResult<(ClassifyOutcome, Ontology)
         .config(work.config)
         .build(work.ontology)
         .map_err(py_err)?;
-    let outcome = match work.profile {
-        Profile::Dl if work.dl_preview => ClassifyOutcome::Taxonomy(
-            ontologos_dl::DlClassifier::new()
-                .preview(true)
-                .classify(reasoner.ontology())
-                .map_err(py_err)?,
-        ),
-        _ => ontologos_facade::classify(&mut reasoner).map_err(map_facade_py_err)?,
-    };
+    let outcome = ontologos_facade::classify(&mut reasoner).map_err(map_facade_py_err)?;
     Ok((outcome, reasoner.ontology().clone()))
 }
 

@@ -13,7 +13,10 @@ pub struct DlReport {
 
 /// Classify via [`ontologos_core::Reasoner`] when profile is DL.
 pub fn classify_reasoner(reasoner: &Reasoner) -> Result<DlReport, Error> {
-    if !matches!(reasoner.profile(), Profile::Dl | Profile::Auto) {
+    if !matches!(
+        reasoner.profile(),
+        Profile::Dl | Profile::DlPreview | Profile::Auto
+    ) {
         return Err(Error::WrongProfile(reasoner.profile()));
     }
     let taxonomy = classify(reasoner.ontology())?;
@@ -24,6 +27,12 @@ pub fn classify_reasoner(reasoner: &Reasoner) -> Result<DlReport, Error> {
 pub fn classify_with_profile(reasoner: &mut Reasoner) -> Result<DlReport, Error> {
     match reasoner.profile() {
         Profile::Dl => classify_reasoner(reasoner),
+        Profile::DlPreview => {
+            let taxonomy = DlClassifier::new()
+                .preview(true)
+                .classify(reasoner.ontology())?;
+            Ok(DlReport { taxonomy })
+        }
         Profile::Auto => {
             let taxonomy = DlClassifier::new().classify(reasoner.ontology())?;
             Ok(DlReport { taxonomy })

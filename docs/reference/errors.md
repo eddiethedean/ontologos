@@ -53,6 +53,14 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.9.0/on
 
 Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/0.9.0/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
 
+`Reasoner::is_consistent()` is **deprecated** — it returns `NotImplemented`. Use `ontologos_facade::check_consistency` instead.
+
+### `IncompleteConsistency`
+
+**Cause:** `ConsistencyResult::into_bool()` or `ontologos_facade::is_consistent` when the consistency check did not finish (`complete == false`), typically due to DL wall-clock budget or tableau limits.
+
+**Recovery:** Call `ontologos_facade::check_consistency` and inspect `complete`. Increase `ReasonerConfig::budget_secs` or simplify the ontology. Python: use `check_consistency()` or catch `IncompleteReasoningError` from `is_consistent()`.
+
 ### `OntologyNotLoaded`
 
 **Cause:** Reasoner used without ontology (reserved for future API).

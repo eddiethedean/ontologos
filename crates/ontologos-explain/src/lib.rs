@@ -111,7 +111,7 @@ pub fn collect_trace(reasoner: &mut Reasoner) -> Result<InferenceTrace> {
             .classify_with_options(reasoner.ontology(), true)?
             .trace),
         Profile::Alc => collect_trace_alc(reasoner.ontology()),
-        Profile::Dl | Profile::Swrl => collect_trace_dl(reasoner.ontology()),
+        Profile::Dl | Profile::DlPreview | Profile::Swrl => collect_trace_dl(reasoner.ontology()),
         Profile::Auto => collect_trace_auto(reasoner),
     }
 }

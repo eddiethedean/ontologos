@@ -56,7 +56,7 @@ use ontologos_core::{Profile, Reasoner};
 use ontologos_facade::{self, ClassifyOutcome};
 
 let mut reasoner = Reasoner::builder()
-    .profile(Profile::Dl)
+    .profile(Profile::DlPreview)  // or Profile::Dl for full path
     .build(ontology)?;
 match ontologos_facade::classify(&mut reasoner)? {
     ClassifyOutcome::Taxonomy(t) => {

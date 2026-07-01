@@ -137,6 +137,7 @@ mod tests {
             (Profile::Rl, EngineKind::Rl),
             (Profile::Alc, EngineKind::Alc),
             (Profile::Dl, EngineKind::Dl),
+            (Profile::DlPreview, EngineKind::Dl),
             (Profile::Swrl, EngineKind::Swrl),
         ] {
             let reasoner = Reasoner::builder()

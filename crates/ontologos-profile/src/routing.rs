@@ -22,7 +22,7 @@ pub fn resolve_route(profile: Profile, ontology: &Ontology) -> Result<ResolvedRo
         Profile::Rdfs => Ok(ResolvedRoute::explicit(profile, EngineKind::Rdfs)),
         Profile::Rl => Ok(ResolvedRoute::explicit(profile, EngineKind::Rl)),
         Profile::Alc => Ok(ResolvedRoute::explicit(profile, EngineKind::Alc)),
-        Profile::Dl => Ok(ResolvedRoute::explicit(profile, EngineKind::Dl)),
+        Profile::Dl | Profile::DlPreview => Ok(ResolvedRoute::explicit(profile, EngineKind::Dl)),
         Profile::Swrl => Ok(ResolvedRoute::explicit(profile, EngineKind::Swrl)),
         Profile::Auto => resolve_auto_route(ontology),
     }

@@ -27,7 +27,7 @@ pub fn classify_with_profile(reasoner: &mut Reasoner) -> Result<ClassifyOutcome,
         Profile::Alc => Ok(ClassifyOutcome::Taxonomy(ontologos_alc::classify(
             reasoner.ontology(),
         )?)),
-        Profile::Dl => Err(Error::UnsupportedProfile(OwlProfile::Dl)),
+        Profile::Dl | Profile::DlPreview => Err(Error::UnsupportedProfile(OwlProfile::Dl)),
         Profile::Swrl => Err(Error::UnsupportedProfile(ontologos_profile::OwlProfile::Dl)),
         Profile::Auto => classify_auto(reasoner),
     }

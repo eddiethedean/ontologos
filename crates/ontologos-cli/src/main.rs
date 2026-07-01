@@ -130,7 +130,7 @@ impl From<CliProfile> for Profile {
             CliProfile::Rdfs => Profile::Rdfs,
             CliProfile::Alc => Profile::Alc,
             CliProfile::Dl => Profile::Dl,
-            CliProfile::DlPreview => Profile::Dl,
+            CliProfile::DlPreview => Profile::DlPreview,
             CliProfile::Swrl => Profile::Swrl,
         }
     }
@@ -276,6 +276,11 @@ fn run() -> Result<(), CliError> {
             let ontology = load_ontology(&ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
+            if cli.profile == CliProfile::DlPreview {
+                eprintln!(
+                    "warning: DL preview mode — incomplete reasoning, not suitable for production"
+                );
+            }
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .config(ReasonerConfig {
@@ -283,19 +288,7 @@ fn run() -> Result<(), CliError> {
                     ..ReasonerConfig::default()
                 })
                 .build(ontology)?;
-            let outcome = if cli.profile == CliProfile::DlPreview {
-                eprintln!(
-                    "warning: DL preview mode — incomplete reasoning, not suitable for production"
-                );
-                ClassifyOutcome::Taxonomy(
-                    ontologos_dl::DlClassifier::new()
-                        .preview(true)
-                        .classify(reasoner.ontology())
-                        .map_err(CliError::Dl)?,
-                )
-            } else {
-                ontologos_facade::classify(&mut reasoner).map_err(map_facade_error)?
-            };
+            let outcome = ontologos_facade::classify(&mut reasoner).map_err(map_facade_error)?;
             emit_classify_outcome(cli.format, &outcome, reasoner.ontology(), &parse_meta)?;
         }
         Command::Materialize { ontology } => {
@@ -356,10 +349,36 @@ fn run() -> Result<(), CliError> {
                         }
                     }
                 }
-                OutputFormat::Json => emit_json(&QueryCliOutput {
-                    answers: answers.len(),
-                    parse_meta: &parse_meta,
-                })?,
+                OutputFormat::Json => {
+                    let results: Vec<QueryAnswer> = answers
+                        .iter()
+                        .map(|answer| {
+                            let bindings = answer
+                                .bindings
+                                .iter()
+                                .map(|(var, id)| {
+                                    let iri = reasoner
+                                        .ontology()
+                                        .resolve_iri(
+                                            reasoner.ontology().entity(*id).expect("entity").iri,
+                                        )
+                                        .unwrap_or("?")
+                                        .to_owned();
+                                    QueryBinding {
+                                        variable: var.clone(),
+                                        iri,
+                                    }
+                                })
+                                .collect();
+                            QueryAnswer { bindings }
+                        })
+                        .collect();
+                    emit_json(&QueryCliOutput {
+                        answers: answers.len(),
+                        results,
+                        parse_meta: &parse_meta,
+                    })?
+                }
             }
         }
         Command::Instances { ontology } => {
@@ -578,8 +597,20 @@ struct ProfileCliOutput<'a> {
 }
 
 #[derive(Serialize)]
+struct QueryBinding {
+    variable: String,
+    iri: String,
+}
+
+#[derive(Serialize)]
+struct QueryAnswer {
+    bindings: Vec<QueryBinding>,
+}
+
+#[derive(Serialize)]
 struct QueryCliOutput<'a> {
     answers: usize,
+    results: Vec<QueryAnswer>,
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }

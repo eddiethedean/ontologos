@@ -133,7 +133,7 @@ impl EngineCapabilities {
             Profile::Rdfs => Self::rdfs(),
             Profile::Rl => Self::rl(),
             Profile::Alc => Self::alc(),
-            Profile::Dl => Self::dl(),
+            Profile::Dl | Profile::DlPreview => Self::dl(),
             Profile::Swrl => Self::swrl(),
             Profile::Auto => Self::hybrid(),
         }

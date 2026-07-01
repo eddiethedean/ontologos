@@ -1,10 +1,12 @@
 //! Consistency check outcomes for production embedders.
 
+use serde::Serialize;
+
 /// Result of an ontology consistency check.
 ///
 /// When [`complete`](Self::complete) is `false`, [`consistent`](Self::consistent) must not be
 /// used as a proof — the reasoner hit a budget or resource limit before finishing.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct ConsistencyResult {
     /// Whether the ontology is consistent (only meaningful when [`complete`](Self::complete)).
     pub consistent: bool,
@@ -43,10 +45,7 @@ impl ConsistencyResult {
     /// Legacy bool API: error if incomplete.
     pub fn into_bool(self) -> crate::Result<bool> {
         if !self.complete {
-            return Err(crate::Error::Message(
-                "consistency check incomplete (budget or tableau limit); use ConsistencyResult"
-                    .into(),
-            ));
+            return Err(crate::Error::IncompleteConsistency);
         }
         Ok(self.consistent)
     }

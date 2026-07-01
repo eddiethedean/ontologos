@@ -52,6 +52,9 @@ pub enum Error {
     /// Reasoning not yet implemented for the selected engine or profile.
     #[error("reasoning not yet implemented")]
     NotImplemented,
+    /// Consistency check did not complete (budget or tableau limit).
+    #[error("consistency check incomplete")]
+    IncompleteConsistency,
     /// Generic configuration or validation error.
     #[error("{0}")]
     Message(String),

@@ -227,18 +227,24 @@ use ontologos_parser::load_ontology;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ontology = load_ontology("family.owl".as_ref())?;
-    let mut reasoner = Reasoner::builder()
+    let reasoner = Reasoner::builder()
         .profile(Profile::Auto)
         .build(ontology)?;
-    match ontologos_facade::classify(&mut reasoner)? {
-        ClassifyOutcome::Taxonomy(t) => {
-            println!("EL/DL taxonomy: {} subsumptions", t.subsumption_count());
-        }
-        ClassifyOutcome::Rdfs(r) => {
-            println!("RDFS inferred: {}", r.inferred_total());
-        }
-        ClassifyOutcome::Rl(r) => {
-            println!("RL inferred: {}", r.inferred_total());
+
+    // Production consistency: always inspect `complete`
+    let consistency = ontologos_facade::check_consistency(&reasoner)?;
+    if consistency.complete && consistency.consistent {
+        let mut reasoner = reasoner;
+        match ontologos_facade::classify(&mut reasoner)? {
+            ClassifyOutcome::Taxonomy(t) => {
+                println!("EL/DL taxonomy: {} subsumptions", t.subsumption_count());
+            }
+            ClassifyOutcome::Rdfs(r) => {
+                println!("RDFS inferred: {}", r.inferred_total());
+            }
+            ClassifyOutcome::Rl(r) => {
+                println!("RL inferred: {}", r.inferred_total());
+            }
         }
     }
     Ok(())
@@ -256,7 +262,7 @@ ontologos-facade = "0.9.0"
 
 On crates.io the latest **tagged** release is **0.9.0**. Build from `main` with `"1.0.0"` pins for DL and the full 15-crate set — see [Release status](docs/project/release-status.md). **v1.0.0** publish is prepared but not tagged yet.
 
-Do **not** call `ontologos_core::Reasoner::classify()` — use profile crates or the facade. See [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api.html).
+Do **not** call `ontologos_core::Reasoner::classify()` or `Reasoner::is_consistent()` — use `ontologos_facade::check_consistency` and `ontologos_facade::classify`. See [Facade API](https://ontologos.readthedocs.io/en/latest/guides/facade-api.html).
 
 ---
 

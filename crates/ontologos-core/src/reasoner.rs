@@ -21,6 +21,8 @@ pub enum Profile {
     Alc,
     /// OWL 2 DL coupled saturation + tableau.
     Dl,
+    /// OWL 2 DL preview mode (gated subset checks; same engine as [`Dl`](Self::Dl)).
+    DlPreview,
     /// DLSafe SWRL rules with DL.
     Swrl,
 }
@@ -198,6 +200,10 @@ impl Reasoner {
     }
 
     /// Check ontology consistency (profile engines implement semantics).
+    #[deprecated(
+        since = "1.0.0",
+        note = "use ontologos_facade::check_consistency or ontologos_facade::is_consistent instead"
+    )]
     pub fn is_consistent(&self) -> Result<bool> {
         Err(Error::NotImplemented)
     }

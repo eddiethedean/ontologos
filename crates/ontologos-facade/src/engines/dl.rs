@@ -11,9 +11,15 @@ pub(crate) struct DlAdapter;
 
 impl ClassifyEngine for DlAdapter {
     fn classify(&self, reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
-        Ok(ClassifyOutcome::Taxonomy(
-            DlEngine.classify(reasoner.ontology()).map_err(Error::Dl)?,
-        ))
+        let taxonomy = if reasoner.profile() == ontologos_core::Profile::DlPreview {
+            ontologos_dl::DlClassifier::new()
+                .preview(true)
+                .classify(reasoner.ontology())
+                .map_err(Error::Dl)?
+        } else {
+            DlEngine.classify(reasoner.ontology()).map_err(Error::Dl)?
+        };
+        Ok(ClassifyOutcome::Taxonomy(taxonomy))
     }
 }
 

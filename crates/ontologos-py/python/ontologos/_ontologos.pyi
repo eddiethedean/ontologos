@@ -20,19 +20,38 @@ class ExplainResult(TypedDict, total=False):
     parse_meta: ParseMeta
 
 class TaxonomyResult(TypedDict):
+    status: str
     subsumption_count: int
     subsumptions: list[tuple[str, str]]
     equivalences: list[list[str]]
     unsatisfiable: list[str]
 
-class MaterializeResult(TypedDict):
+class MaterializeResult(TypedDict, total=False):
+    status: str
     initial_axiom_count: int
     final_axiom_count: int
     inferred_axioms: int
+    inferred_by_rule: dict[str, int]
+    clash_count: int
+    clashes: list[str]
+
+class ConsistencyResult(TypedDict):
+    consistent: bool
+    complete: bool
 
 class Ontology:
     @classmethod
     def from_json(cls, json: str) -> Ontology: ...
+    @classmethod
+    def from_json_with_limits(
+        cls,
+        json: str,
+        *,
+        max_json_bytes: int | None = None,
+        max_entities: int | None = None,
+        max_axioms: int | None = None,
+        max_iri_len: int | None = None,
+    ) -> Ontology: ...
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Ontology: ...
     def to_json(self) -> str: ...
@@ -64,6 +83,8 @@ class Reasoner:
         ontology: Ontology | None = None,
         profile: str | None = None,
         incremental: bool = False,
+        budget_secs: int | None = None,
+        parallelism: int = 1,
     ) -> None: ...
     @property
     def parse_meta(self) -> ParseMeta: ...
@@ -71,6 +92,7 @@ class Reasoner:
     def taxonomy(self) -> TaxonomyResult | None: ...
     def classify(self) -> TaxonomyResult | MaterializeResult: ...
     def explain(self) -> ExplainResult: ...
+    def check_consistency(self) -> ConsistencyResult: ...
     def is_consistent(self) -> bool: ...
     def is_entailed(
         self,
@@ -87,3 +109,7 @@ class Reasoner:
     def add_subclass_of(self, subclass: str, superclass: str) -> None: ...
     def remove_subclass_of(self, subclass: str, superclass: str) -> None: ...
     def add_axiom_json(self, axiom: dict[str, Any]) -> None: ...
+
+class ParseError(Exception): ...
+class ResourceLimitError(Exception): ...
+class IncompleteReasoningError(Exception): ...
