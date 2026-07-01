@@ -979,7 +979,7 @@ fn verify_opened_under_base(
 fn opened_path(file: &File) -> Result<PathBuf> {
     use std::os::unix::io::AsRawFd;
     let fd = file.as_raw_fd();
-    std::fs::read_link(format!("/proc/self/fd/{fd}"))
+    Ok(std::fs::read_link(format!("/proc/self/fd/{fd}"))?)
 }
 
 #[cfg(target_os = "macos")]
