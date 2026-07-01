@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "OWL profile detection for OntoLogos"
 publish = true
 
+
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
 all-features = true
 

@@ -44,9 +44,9 @@ impl DlClassifier {
 
         if perf {
             let _t = PhaseTimer::start(&mut timings.detect_profile_s);
-            detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+            detect_profile(ontology)?;
         } else {
-            detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+            detect_profile(ontology)?;
         }
 
         let constructs = if perf {

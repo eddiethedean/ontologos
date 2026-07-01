@@ -24,10 +24,9 @@ pub fn classify_with_profile(reasoner: &mut Reasoner) -> Result<ClassifyOutcome,
         )),
         Profile::Rdfs => Ok(ClassifyOutcome::Rdfs(materialize_reasoner(reasoner)?)),
         Profile::Rl => Ok(ClassifyOutcome::Rl(saturate_rl(reasoner)?)),
-        Profile::Alc => Ok(ClassifyOutcome::Taxonomy(
-            ontologos_alc::classify(reasoner.ontology())
-                .map_err(|e| Error::Profile(e.to_string()))?,
-        )),
+        Profile::Alc => Ok(ClassifyOutcome::Taxonomy(ontologos_alc::classify(
+            reasoner.ontology(),
+        )?)),
         Profile::Dl => Err(Error::UnsupportedProfile(OwlProfile::Dl)),
         Profile::Swrl => Err(Error::UnsupportedProfile(ontologos_profile::OwlProfile::Dl)),
         Profile::Auto => classify_auto(reasoner),
@@ -53,10 +52,10 @@ fn saturate_rl_unchecked(reasoner: &mut Reasoner) -> Result<RlReport, Error> {
 }
 
 fn classify_auto(reasoner: &mut Reasoner) -> Result<ClassifyOutcome, Error> {
-    let report = detect_profile(reasoner.ontology()).map_err(|e| Error::Profile(e.to_string()))?;
+    let report = detect_profile(reasoner.ontology())?;
     let detected = report
         .detected
-        .ok_or_else(|| Error::Profile("no profile detected".into()))?;
+        .ok_or_else(|| ontologos_profile::Error::Message("no profile detected".into()))?;
 
     match detected {
         // OWL QL TBox is a subset of EL for mapped axioms; EL completion is sound for QL corpora.

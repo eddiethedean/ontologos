@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "Unified OWL reasoner facade routing EL/RL/RDFS/ALC/DL/SWRL"
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-el = { workspace = true }

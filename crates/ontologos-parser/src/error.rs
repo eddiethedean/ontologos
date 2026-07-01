@@ -12,6 +12,9 @@ pub enum Error {
     /// Parse or I/O failure (missing file, size limit, horned-owl error).
     #[error("parse error: {0}")]
     Parse(String),
+    /// I/O failure while reading ontology files.
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
     /// Wrapped error from `ontologos-core` during axiom mapping.
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),

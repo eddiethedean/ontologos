@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "ABox reasoning and individual closure for OntoLogos"
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-rl = { workspace = true }

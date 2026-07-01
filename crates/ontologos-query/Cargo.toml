@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "Query interface for OntoLogos ontologies"
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 petgraph = { workspace = true }

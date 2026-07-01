@@ -14,10 +14,10 @@ pub fn validate_el_profile(ontology: &Ontology) -> crate::Result<()> {
     if non_el_constructs(ontology).is_empty() {
         return Ok(());
     }
-    let report = detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    let report = detect_profile(ontology)?;
     let detected = report
         .detected
-        .ok_or_else(|| Error::Profile("no profile detected".into()))?;
+        .ok_or_else(|| ontologos_profile::Error::Message("no profile detected".into()))?;
     Err(Error::NonElProfile { detected })
 }
 

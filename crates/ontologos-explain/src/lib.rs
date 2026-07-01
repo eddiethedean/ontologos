@@ -26,8 +26,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("explanation generation not yet implemented")]
     NotImplemented,
-    #[error("profile detection failed: {0}")]
-    Profile(String),
+    #[error(transparent)]
+    Profile(#[from] ontologos_profile::Error),
     #[error("classification not supported for profile {0:?}")]
     UnsupportedProfile(OwlProfile),
     #[error(transparent)]
@@ -38,6 +38,10 @@ pub enum Error {
     Rl(#[from] ontologos_rl::Error),
     #[error(transparent)]
     El(#[from] ontologos_el::Error),
+    #[error(transparent)]
+    Alc(#[from] ontologos_alc::Error),
+    #[error(transparent)]
+    Dl(#[from] ontologos_dl::Error),
 }
 
 /// Node identifier within a proof graph.
@@ -113,10 +117,10 @@ pub fn collect_trace(reasoner: &mut Reasoner) -> Result<InferenceTrace> {
 }
 
 fn collect_trace_auto(reasoner: &mut Reasoner) -> Result<InferenceTrace> {
-    let report = detect_profile(reasoner.ontology()).map_err(|e| Error::Profile(e.to_string()))?;
+    let report = detect_profile(reasoner.ontology())?;
     let detected = report
         .detected
-        .ok_or_else(|| Error::Profile("no profile detected".into()))?;
+        .ok_or_else(|| ontologos_profile::Error::Message("no profile detected".into()))?;
 
     match detected {
         OwlProfile::El | OwlProfile::Ql => Ok(ElClassifier::new()
@@ -163,7 +167,7 @@ pub fn explain_rl(ontology: &mut Ontology) -> Result<ProofGraph> {
 fn collect_trace_alc(ontology: &Ontology) -> Result<InferenceTrace> {
     use ontologos_core::{TraceConclusion, TraceStep};
 
-    let taxonomy = ontologos_alc::classify(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    let taxonomy = ontologos_alc::classify(ontology)?;
     let mut trace = InferenceTrace::default();
     for &(sub, sup) in &taxonomy.subsumptions {
         trace.push(TraceStep {
@@ -178,7 +182,7 @@ fn collect_trace_alc(ontology: &Ontology) -> Result<InferenceTrace> {
 fn collect_trace_dl(ontology: &Ontology) -> Result<InferenceTrace> {
     use ontologos_core::{TraceConclusion, TraceStep};
 
-    let taxonomy = ontologos_dl::classify(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    let taxonomy = ontologos_dl::classify(ontology)?;
     let mut trace = InferenceTrace::default();
     for &(sub, sup) in &taxonomy.subsumptions {
         trace.push(TraceStep {

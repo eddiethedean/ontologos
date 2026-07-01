@@ -14,6 +14,10 @@ keywords = ["owl", "ontology", "owl-rl", "reasoner", "semantic-web"]
 categories = ["science"]
 publish = true
 
+
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
 all-features = true
 

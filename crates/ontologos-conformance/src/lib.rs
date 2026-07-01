@@ -8,6 +8,9 @@
 //! also supported.
 
 mod catalog;
+mod catalog_error;
+
+pub use catalog_error::CatalogError;
 
 pub use catalog::{
     AuditOptions, HermitCase, ParityMetrics, PlannedBacklogAudit, PlannedBacklogSummary,

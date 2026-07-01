@@ -19,6 +19,10 @@ Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
 Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n";
 
+/// Serializes ontology loading (including Horned-OWL reads invoked from [`load_ontology`]).
+///
+/// The `horned-owl` RDF/XML and functional parser is not documented as thread-safe; this
+/// process-wide mutex keeps concurrent `load_*` calls from sharing parser state.
 static ONTOLOGY_LOAD_LOCK: Mutex<()> = Mutex::new(());
 
 #[cfg(target_os = "linux")]
@@ -896,7 +900,7 @@ fn remap_supplement_axiom(
 }
 
 fn open_for_load(path: &Path, base: Option<&Path>) -> Result<File> {
-    let pre_meta = std::fs::symlink_metadata(path).map_err(|e| Error::Parse(e.to_string()))?;
+    let pre_meta = std::fs::symlink_metadata(path)?;
     let file = open_readonly_nofollow(path)?;
     if let Some(base) = base {
         verify_opened_under_base(&file, base, path, &pre_meta)?;
@@ -916,7 +920,7 @@ fn open_readonly_nofollow(path: &Path) -> Result<File> {
     }
     #[cfg(not(unix))]
     {
-        File::open(path).map_err(|e| Error::Parse(e.to_string()))
+        File::open(path)
     }
 }
 
@@ -929,7 +933,7 @@ fn verify_opened_under_base(
     #[cfg(unix)]
     use std::os::unix::fs::MetadataExt;
 
-    let file_meta = file.metadata().map_err(|e| Error::Parse(e.to_string()))?;
+    let file_meta = file.metadata()?;
     #[cfg(unix)]
     if pre_meta.dev() != file_meta.dev() || pre_meta.ino() != file_meta.ino() {
         return Err(Error::Parse(
@@ -975,7 +979,7 @@ fn verify_opened_under_base(
 fn opened_path(file: &File) -> Result<PathBuf> {
     use std::os::unix::io::AsRawFd;
     let fd = file.as_raw_fd();
-    std::fs::read_link(format!("/proc/self/fd/{fd}")).map_err(|e| Error::Parse(e.to_string()))
+    std::fs::read_link(format!("/proc/self/fd/{fd}"))
 }
 
 #[cfg(target_os = "macos")]
@@ -986,6 +990,8 @@ fn opened_path(file: &File) -> Result<PathBuf> {
     const F_GETPATH: i32 = 50;
     let fd = file.as_raw_fd();
     let mut buf = [0u8; 1024];
+    // SAFETY: `fcntl(F_GETPATH)` is the macOS API for resolving an open fd to its path.
+    #[allow(unsafe_code)]
     let rc = unsafe { libc::fcntl(fd, F_GETPATH, buf.as_mut_ptr()) };
     if rc == -1 {
         return Err(Error::Parse("fcntl(F_GETPATH) failed".into()));
@@ -1028,7 +1034,7 @@ fn normalize_path(path: &Path) -> Result<PathBuf> {
     let base = if path.is_absolute() {
         PathBuf::new()
     } else {
-        std::env::current_dir().map_err(|e| Error::Parse(e.to_string()))?
+        std::env::current_dir()?
     };
 
     let mut normalized = base;
@@ -1101,8 +1107,8 @@ pub fn load_ofn_from_str_with_limits(text: &str, limits: ParseLimits) -> Result<
 
 /// Load an OFN ontology and append axioms from a second OFN fragment (same prefixes/IRIs).
 pub fn load_ofn_with_incremental(base: &Path, incremental: &Path) -> Result<Ontology> {
-    let base_text = std::fs::read_to_string(base).map_err(|e| Error::Parse(e.to_string()))?;
-    let inc_text = std::fs::read_to_string(incremental).map_err(|e| Error::Parse(e.to_string()))?;
+    let base_text = std::fs::read_to_string(base)?;
+    let inc_text = std::fs::read_to_string(incremental)?;
     let merged = merge_ofn_documents(&base_text, &inc_text)?;
     load_ofn_from_str(&merged)
 }

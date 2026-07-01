@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "OWL EL classification engine for OntoLogos"
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-alc = { workspace = true }

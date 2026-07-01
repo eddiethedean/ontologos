@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "Python bindings for OntoLogos"
 publish = false
 
+
+[lints]
+workspace = true
+
 [lib]
 name = "_ontologos"
 crate-type = ["cdylib"]

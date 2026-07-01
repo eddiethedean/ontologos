@@ -13,6 +13,10 @@ keywords = ["owl", "ontology", "adapter", "reasoner"]
 categories = ["science"]
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 horned-owl = { workspace = true }

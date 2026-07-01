@@ -12,6 +12,10 @@ description = "Command-line interface for OntoLogos"
 publish = false
 default-run = "ontologos"
 
+
+[lints]
+workspace = true
+
 [[bin]]
 name = "ontologos"
 path = "src/main.rs"

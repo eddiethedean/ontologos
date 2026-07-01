@@ -62,8 +62,9 @@ ontologos-query = { path = "crates/ontologos-query", version = "1.0.0" }
 ontologos-explain = { path = "crates/ontologos-explain", version = "1.0.0" }
 
 [workspace.lints.rust]
-unsafe_code = "forbid"
+unsafe_code = "deny"
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
-pedantic = { level = "warn", priority = -1 }
+# Pedantic deferred: enabling workspace inheritance without mass doc-section churn.
+pedantic = { level = "allow", priority = -1 }

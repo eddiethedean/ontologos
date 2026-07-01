@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "OWL QL query answering for OntoLogos"
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-query = { workspace = true }

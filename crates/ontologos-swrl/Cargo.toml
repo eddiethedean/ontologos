@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "DLSafe SWRL rule engine for OntoLogos"
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-dl = { workspace = true }

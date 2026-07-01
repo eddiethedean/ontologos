@@ -54,8 +54,8 @@ pub enum Error {
         detected: ontologos_profile::OwlProfile,
     },
     /// Profile detection failed.
-    #[error("profile detection failed: {0}")]
-    Profile(String),
+    #[error(transparent)]
+    Profile(#[from] ontologos_profile::Error),
     /// Auto-routing cannot classify this profile.
     #[error("classification not supported for profile {0:?}")]
     UnsupportedProfile(ontologos_profile::OwlProfile),
@@ -68,6 +68,12 @@ pub enum Error {
     /// RL engine error.
     #[error(transparent)]
     Rl(#[from] ontologos_rl::Error),
+    /// ALC engine error.
+    #[error(transparent)]
+    Alc(#[from] ontologos_alc::Error),
+    /// General configuration or validation error.
+    #[error("{0}")]
+    Message(String),
 }
 
 /// OWL EL classifier using completion rules.

@@ -68,8 +68,8 @@ pub enum Error {
     #[error("DL preview: {0}")]
     PreviewLimit(String),
     /// Profile detection failed.
-    #[error("profile detection failed: {0}")]
-    Profile(String),
+    #[error(transparent)]
+    Profile(#[from] ontologos_profile::Error),
     /// General message.
     #[error("{0}")]
     Message(String),
@@ -82,7 +82,7 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
 
 /// Classify for OWL entailment checks (skips pairwise named subsumption inference).
 pub fn classify_for_entailment(ontology: &Ontology) -> Result<Taxonomy> {
-    ontologos_profile::detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    ontologos_profile::detect_profile(ontology)?;
     let dl = DlOntology::from_ontology(ontology).map_err(Error::Alc)?;
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;

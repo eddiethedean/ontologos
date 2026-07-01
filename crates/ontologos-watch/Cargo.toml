@@ -10,6 +10,10 @@ homepage.workspace = true
 description = "File-watch helpers for OntoLogos ontology reload (Ontocode hook)"
 publish = false
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }

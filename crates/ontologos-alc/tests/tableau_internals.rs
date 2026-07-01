@@ -449,33 +449,33 @@ fn hermit_tuple_index_test_1() {
 
     assert_tuple_retrieval(&index, &[], &[]);
 
-    index.add_tuple(&tuple3("a", "b", "c"), 1);
+    index.add_tuple(&tuple3("a", "b", "c"), 1).unwrap();
     assert_tuple_retrieval(&index, &["a"], &[1]);
     assert_tuple_retrieval(&index, &["a", "b"], &[1]);
 
-    index.add_tuple(&tuple3("a", "b", "d"), 2);
+    index.add_tuple(&tuple3("a", "b", "d"), 2).unwrap();
     assert_tuple_retrieval(&index, &["a"], &[1, 2]);
     assert_tuple_retrieval(&index, &["a", "b"], &[1, 2]);
 
-    index.add_tuple(&tuple3("a", "b", "c"), 3);
+    index.add_tuple(&tuple3("a", "b", "c"), 3).unwrap();
     assert_tuple_retrieval(&index, &["a"], &[2, 1]);
     assert_tuple_retrieval(&index, &["a", "b"], &[2, 1]);
     assert_tuple_retrieval(&index, &["a", "b", "c"], &[1]);
 
-    index.add_tuple(&tuple3("c", "b", "d"), 4);
+    index.add_tuple(&tuple3("c", "b", "d"), 4).unwrap();
     assert_tuple_retrieval(&index, &[], &[2, 1, 4]);
     assert_tuple_retrieval(&index, &["a"], &[2, 1]);
     assert_tuple_retrieval(&index, &["a", "b"], &[2, 1]);
     assert_tuple_retrieval(&index, &["a", "b", "c"], &[1]);
     assert_tuple_retrieval(&index, &["f"], &[]);
 
-    index.remove_tuple(&tuple3("a", "b", "d"));
+    index.remove_tuple(&tuple3("a", "b", "d")).unwrap();
     assert_tuple_retrieval(&index, &[], &[1, 4]);
 
-    index.remove_tuple(&tuple3("a", "b", "c"));
+    index.remove_tuple(&tuple3("a", "b", "c")).unwrap();
     assert_tuple_retrieval(&index, &[], &[4]);
 
-    index.remove_tuple(&tuple3("c", "b", "d"));
+    index.remove_tuple(&tuple3("c", "b", "d")).unwrap();
     assert_tuple_retrieval(&index, &[], &[]);
 }
 
@@ -491,12 +491,12 @@ fn hermit_tuple_index_test_2() {
     }
 
     for (i, tuple) in tuples.iter().enumerate() {
-        index.add_tuple(tuple, i as i32);
+        index.add_tuple(tuple, i as i32).unwrap();
     }
     assert_tuple_retrieval(&index, &[], &tuple_indexes);
 
     for (i, tuple) in tuples.iter().enumerate() {
-        assert_eq!(index.remove_tuple(tuple), i as i32);
+        assert_eq!(index.remove_tuple(tuple).unwrap(), i as i32);
     }
     assert_tuple_retrieval(&index, &[], &[]);
 }

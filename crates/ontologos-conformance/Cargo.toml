@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "HermiT and OWL conformance test harness for OntoLogos"
 publish = false
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-alc = { workspace = true }
 ontologos-bridge = { workspace = true }
@@ -24,6 +28,7 @@ ontologos-swrl = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 rayon = { workspace = true }
+thiserror = { workspace = true }
 
 [[bin]]
 name = "dl_ofn_pass_rate"

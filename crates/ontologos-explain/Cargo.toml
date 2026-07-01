@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "Explanation and proof graph generation for OntoLogos"
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-alc = { workspace = true }
 ontologos-core = { workspace = true }

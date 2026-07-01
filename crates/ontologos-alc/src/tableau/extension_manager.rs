@@ -13,7 +13,7 @@ use super::dependency_set::{DependencySetFactory, PermanentDependencySet};
 use super::description_graph::DescriptionGraphId;
 use super::graph_merge;
 use super::ni_rules::NominalIntroductionManager;
-use super::tuple_index::TupleIndex;
+use super::tuple_index::{TupleIndex, TupleIndexError};
 use super::tuple_table::TupleTable;
 
 /// Tableau node identifier (stable across merges).
@@ -534,15 +534,15 @@ impl ExtensionTable {
         dependency: Rc<PermanentDependencySet>,
         is_core: bool,
         on_add: &mut dyn FnMut(&[DlObject], Rc<PermanentDependencySet>),
-    ) -> bool {
+    ) -> Result<bool, TupleIndexError> {
         if !self.is_tuple_active(tuple) {
-            return false;
+            return Ok(false);
         }
         let first_free = self.tuple_table.first_free_tuple_index();
-        let add_index = self.tuple_indexes[0].add_tuple(tuple, first_free);
+        let add_index = self.tuple_indexes[0].add_tuple(tuple, first_free)?;
         if add_index == first_free {
             for index in &mut self.tuple_indexes[1..] {
-                index.add_tuple(tuple, add_index);
+                index.add_tuple(tuple, add_index)?;
             }
             self.tuple_table.add_tuple(tuple);
             while self.dependency_sets.len() <= add_index as usize {
@@ -553,12 +553,12 @@ impl ExtensionTable {
             self.core_flags[add_index as usize] = is_core;
             self.after_delta_new = self.tuple_table.first_free_tuple_index();
             on_add(tuple, dependency);
-            return true;
+            return Ok(true);
         }
         if is_core && !self.core_flags[add_index as usize] {
             self.core_flags[add_index as usize] = true;
         }
-        false
+        Ok(false)
     }
 
     fn branching_point_pushed(&mut self, level: usize) {
@@ -576,7 +576,7 @@ impl ExtensionTable {
             let mut tuple = vec![DlObject::Predicate(DlPredicate::Equality); self.arity];
             self.tuple_table.retrieve_tuple(&mut tuple, tuple_index);
             for index in self.tuple_indexes.iter_mut().rev() {
-                index.remove_tuple(&tuple);
+                let _ = index.remove_tuple(&tuple);
             }
         }
         self.tuple_table.truncate(new_after_delta);
@@ -620,6 +620,8 @@ pub(crate) struct TableauState {
     next_node_id: usize,
     #[allow(dead_code)]
     last_backtrack_level: Option<usize>,
+    tuple_index_error: Option<TupleIndexError>,
+    merge_error: Option<String>,
 }
 
 impl TableauState {
@@ -642,7 +644,18 @@ impl TableauState {
             last_tableau_node: None,
             next_node_id: 0,
             last_backtrack_level: None,
+            tuple_index_error: None,
+            merge_error: None,
         }))
+    }
+
+    /// Take the first tableau error recorded during expansion (if any).
+    #[allow(dead_code)] // reserved for DL error propagation from tableau internals
+    pub(crate) fn take_tableau_error(&mut self) -> Option<crate::Error> {
+        if let Some(err) = self.tuple_index_error.take() {
+            return Some(err.into_alc_error());
+        }
+        self.merge_error.take().map(crate::Error::Message)
     }
 
     fn empty_set(&self) -> Rc<PermanentDependencySet> {
@@ -735,8 +748,16 @@ impl TableauState {
         }
         let tuple = [DlObject::Predicate(predicate), DlObject::Node(node.id())];
         let added =
-            self.binary_table
-                .add_tuple(&tuple, dependency.clone(), is_core, &mut |_, _| {});
+            match self
+                .binary_table
+                .add_tuple(&tuple, dependency.clone(), is_core, &mut |_, _| {})
+            {
+                Ok(added) => added,
+                Err(err) => {
+                    self.tuple_index_error = Some(err);
+                    return false;
+                }
+            };
         if added {
             self.clash_on_add(TableKind::Binary, &tuple, dependency);
         }
@@ -757,8 +778,16 @@ impl TableauState {
             DlObject::Node(node1.id()),
         ];
         let added =
-            self.ternary_table
-                .add_tuple(&tuple, dependency.clone(), is_core, &mut |_, _| {});
+            match self
+                .ternary_table
+                .add_tuple(&tuple, dependency.clone(), is_core, &mut |_, _| {})
+            {
+                Ok(added) => added,
+                Err(err) => {
+                    self.tuple_index_error = Some(err);
+                    return false;
+                }
+            };
         if added {
             self.clash_on_add(TableKind::Ternary, &tuple, dependency);
         }
@@ -775,7 +804,13 @@ impl TableauState {
             return false;
         }
         let (merge_from, merge_into) =
-            Self::pick_merge_direction(node0, node1, &self.nodes.borrow());
+            match Self::pick_merge_direction(node0, node1, &self.nodes.borrow()) {
+                Ok(direction) => direction,
+                Err(msg) => {
+                    self.merge_error = Some(msg);
+                    return false;
+                }
+            };
         self.prune_descendants(merge_from);
         self.copy_unary(merge_from, merge_into);
         self.copy_ternary_first(merge_from, merge_into);
@@ -785,20 +820,24 @@ impl TableauState {
         true
     }
 
-    fn pick_merge_direction(node0: &Node, node1: &Node, store: &NodeStore) -> (NodeId, NodeId) {
+    fn pick_merge_direction(
+        node0: &Node,
+        node1: &Node,
+        store: &NodeStore,
+    ) -> Result<(NodeId, NodeId), String> {
         if node0.is_root_node() && !node1.is_root_node() {
-            return (node1.id(), node0.id());
+            return Ok((node1.id(), node0.id()));
         }
         if node1.is_root_node() && !node0.is_root_node() {
-            return (node0.id(), node1.id());
+            return Ok((node0.id(), node1.id()));
         }
         let p0 = node0.node_type().merge_precedence();
         let p1 = node1.node_type().merge_precedence();
         if p0 < p1 {
-            return (node1.id(), node0.id());
+            return Ok((node1.id(), node0.id()));
         }
         if p0 > p1 {
-            return (node0.id(), node1.id());
+            return Ok((node0.id(), node1.id()));
         }
         let a0 = node0.cluster_anchor();
         let a1 = node1.cluster_anchor();
@@ -810,16 +849,16 @@ impl TableauState {
             parent0 == parent1 || Self::is_descendant_of_at_most_three(node1.id(), a0, store);
         if can0_into1 && can1_into0 {
             if node0.positive_atomic_concepts() > node1.positive_atomic_concepts() {
-                (node1.id(), node0.id())
+                Ok((node1.id(), node0.id()))
             } else {
-                (node0.id(), node1.id())
+                Ok((node0.id(), node1.id()))
             }
         } else if can0_into1 {
-            (node0.id(), node1.id())
+            Ok((node0.id(), node1.id()))
         } else if can1_into0 {
-            (node1.id(), node0.id())
+            Ok((node1.id(), node0.id()))
         } else {
-            panic!("unsupported merge type");
+            Err("unsupported merge type".into())
         }
     }
 
@@ -1286,6 +1325,12 @@ impl ExtensionManagerRef {
             .merge_nodes(node0, node1, dependency)
     }
 
+    /// Take a fatal tableau engine error (tuple index / merge), if any.
+    #[allow(dead_code)] // reserved for DL error propagation from tableau internals
+    pub(crate) fn take_internal_error(&self) -> Option<crate::Error> {
+        self.state.borrow_mut().take_tableau_error()
+    }
+
     /// Node handle by id.
     #[must_use]
     pub fn node(&self, id: NodeId) -> Node {
@@ -1532,12 +1577,17 @@ impl ExtensionManagerRef {
             DlObject::Node(n1.id()),
             DlObject::Node(n2.id()),
         ];
-        self.state.borrow_mut().quaternary_table.add_tuple(
+        match self.state.borrow_mut().quaternary_table.add_tuple(
             &tuple,
             dependency,
             is_core,
             &mut |_, _| {},
-        );
+        ) {
+            Ok(_) => {}
+            Err(err) => {
+                self.state.borrow_mut().tuple_index_error = Some(err);
+            }
+        }
     }
 
     /// Whether a 4-tuple is present.

@@ -11,6 +11,10 @@ documentation.workspace = true
 description = "OWL ALC tableau-lite classification for OntoLogos"
 publish = true
 
+
+[lints]
+workspace = true
+
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }

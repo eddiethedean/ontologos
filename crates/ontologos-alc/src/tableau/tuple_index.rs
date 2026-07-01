@@ -15,6 +15,27 @@ const TRIE_NODE_NEXT_ENTRY: usize = 4;
 const TRIE_NODE_SIZE: usize = 5;
 const TRIE_NODE_PAGE_SIZE: usize = 1024;
 
+/// Errors from [`TupleIndex`] trie operations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TupleIndexError {
+    /// Trie node id space exhausted.
+    NodeSpaceExhausted,
+    /// Internal trie invariant violated.
+    InvariantViolation,
+}
+
+impl TupleIndexError {
+    #[allow(dead_code)] // used when tuple index errors propagate through tableau
+    pub(crate) fn into_alc_error(self) -> crate::Error {
+        match self {
+            Self::NodeSpaceExhausted => crate::Error::TupleIndexExhausted,
+            Self::InvariantViolation => {
+                crate::Error::Message("tuple index internal invariant violated".into())
+            }
+        }
+    }
+}
+
 /// Index tuples by a permuted key sequence (HermiT `TupleIndex`).
 pub struct TupleIndex<T: Hash + Eq + Clone> {
     indexing_sequence: Vec<usize>,
@@ -46,7 +67,10 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
     /// Remove all tuples.
     pub fn clear(&mut self) {
         self.trie_node_manager.clear();
-        self.root = self.trie_node_manager.new_trie_node();
+        self.root = self
+            .trie_node_manager
+            .new_trie_node()
+            .expect("fresh tuple index root");
         self.trie_node_manager
             .initialize_trie_node(self.root, -1, -1, -1, -1, -1, None);
         self.buckets = vec![0; 16];
@@ -56,12 +80,16 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
     }
 
     /// Insert or refresh a tuple; returns the stored tuple index.
-    pub fn add_tuple(&mut self, tuple: &[T], potential_tuple_index: i32) -> i32 {
+    pub fn add_tuple(
+        &mut self,
+        tuple: &[T],
+        potential_tuple_index: i32,
+    ) -> Result<i32, TupleIndexError> {
         let seq = self.indexing_sequence.clone();
         let mut trie_node = self.root;
         for &position in &seq {
             let object = &tuple[position];
-            trie_node = self.get_child_node_add_if_necessary(trie_node, object);
+            trie_node = self.get_child_node_add_if_necessary(trie_node, object)?;
         }
         if self
             .trie_node_manager
@@ -73,10 +101,11 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
                 TRIE_NODE_TUPLE_INDEX,
                 potential_tuple_index,
             );
-            potential_tuple_index
+            Ok(potential_tuple_index)
         } else {
-            self.trie_node_manager
-                .get_trie_node_component(trie_node, TRIE_NODE_TUPLE_INDEX)
+            Ok(self
+                .trie_node_manager
+                .get_trie_node_component(trie_node, TRIE_NODE_TUPLE_INDEX))
         }
     }
 
@@ -95,15 +124,15 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
             .get_trie_node_component(trie_node, TRIE_NODE_TUPLE_INDEX)
     }
 
-    /// Remove a tuple; returns its index or `-1`.
-    pub fn remove_tuple(&mut self, tuple: &[T]) -> i32 {
+    /// Remove a tuple; returns its index or `-1` when absent.
+    pub fn remove_tuple(&mut self, tuple: &[T]) -> Result<i32, TupleIndexError> {
         let seq = self.indexing_sequence.clone();
         let mut leaf = self.root;
         for &position in &seq {
             let object = &tuple[position];
             leaf = self.get_child_node(leaf, object);
             if leaf == -1 {
-                return -1;
+                return Ok(-1);
             }
         }
         let tuple_index = self
@@ -112,7 +141,7 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
         let mut trie_node = self
             .trie_node_manager
             .get_trie_node_component(leaf, TRIE_NODE_PARENT);
-        self.remove_trie_node(leaf);
+        self.remove_trie_node(leaf)?;
         while trie_node != self.root
             && self
                 .trie_node_manager
@@ -122,13 +151,13 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
             let parent = self
                 .trie_node_manager
                 .get_trie_node_component(trie_node, TRIE_NODE_PARENT);
-            self.remove_trie_node(trie_node);
+            self.remove_trie_node(trie_node)?;
             trie_node = parent;
         }
-        tuple_index
+        Ok(tuple_index)
     }
 
-    fn remove_trie_node(&mut self, trie_node: i32) {
+    fn remove_trie_node(&mut self, trie_node: i32) -> Result<(), TupleIndexError> {
         let object = self
             .trie_node_manager
             .get_trie_node_object(trie_node)
@@ -182,12 +211,12 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
                     );
                 }
                 self.trie_node_manager.delete_trie_node(trie_node);
-                return;
+                return Ok(());
             }
             previous_child = child;
             child = next_child;
         }
-        panic!("Internal error: should be able to remove the child node.");
+        Err(TupleIndexError::InvariantViolation)
     }
 
     fn get_child_node(&self, parent: i32, object: &T) -> i32 {
@@ -210,7 +239,11 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
         -1
     }
 
-    fn get_child_node_add_if_necessary(&mut self, parent: i32, object: &T) -> i32 {
+    fn get_child_node_add_if_necessary(
+        &mut self,
+        parent: i32,
+        object: &T,
+    ) -> Result<i32, TupleIndexError> {
         let hash_code = hash_key(&object, parent);
         let bucket_index = get_index_for(hash_code, self.buckets_length_minus_one) as usize;
         let mut child = self.buckets[bucket_index] - BUCKET_OFFSET;
@@ -221,7 +254,7 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
                     .get_trie_node_component(child, TRIE_NODE_PARENT)
                 && Some(object) == self.trie_node_manager.get_trie_node_object(child).as_ref()
             {
-                return child;
+                return Ok(child);
             }
             child = self
                 .trie_node_manager
@@ -235,8 +268,13 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
         self.insert_child(parent, object, bucket_index)
     }
 
-    fn insert_child(&mut self, parent: i32, object: &T, bucket_index: usize) -> i32 {
-        let child = self.trie_node_manager.new_trie_node();
+    fn insert_child(
+        &mut self,
+        parent: i32,
+        object: &T,
+        bucket_index: usize,
+    ) -> Result<i32, TupleIndexError> {
+        let child = self.trie_node_manager.new_trie_node()?;
         let next_sibling = self
             .trie_node_manager
             .get_trie_node_component(parent, TRIE_NODE_FIRST_CHILD);
@@ -260,7 +298,7 @@ impl<T: Hash + Eq + Clone> TupleIndex<T> {
         );
         self.buckets[bucket_index] = child + BUCKET_OFFSET;
         self.number_of_nodes += 1;
-        child
+        Ok(child)
     }
 
     fn resize_buckets(&mut self) {
@@ -381,7 +419,7 @@ impl<T: Clone> TrieNodeManager<T> {
         self.object_pages[page_index].as_mut().unwrap()[index_in_page] = object;
     }
 
-    fn new_trie_node(&mut self) -> i32 {
+    fn new_trie_node(&mut self) -> Result<i32, TupleIndexError> {
         let new_trie_node = self.first_free_trie_node;
         let next_free =
             self.get_trie_node_component(self.first_free_trie_node, TRIE_NODE_NEXT_SIBLING);
@@ -390,7 +428,7 @@ impl<T: Clone> TrieNodeManager<T> {
         } else {
             self.first_free_trie_node += 1;
             if self.first_free_trie_node < 0 {
-                panic!("TupleIndex node space exhausted");
+                return Err(TupleIndexError::NodeSpaceExhausted);
             }
             let page_index = self.first_free_trie_node as usize / TRIE_NODE_PAGE_SIZE;
             if page_index >= self.number_of_pages as usize {
@@ -405,7 +443,7 @@ impl<T: Clone> TrieNodeManager<T> {
             }
             self.set_trie_node_component(self.first_free_trie_node, TRIE_NODE_NEXT_SIBLING, -1);
         }
-        new_trie_node
+        Ok(new_trie_node)
     }
 
     fn delete_trie_node(&mut self, trie_node: i32) {
@@ -569,33 +607,33 @@ mod hermit_ports {
 
         assert_tuple_retrieval(&index, &[], &[]);
 
-        index.add_tuple(&tuple3("a", "b", "c"), 1);
+        index.add_tuple(&tuple3("a", "b", "c"), 1).unwrap();
         assert_tuple_retrieval(&index, &["a"], &[1]);
         assert_tuple_retrieval(&index, &["a", "b"], &[1]);
 
-        index.add_tuple(&tuple3("a", "b", "d"), 2);
+        index.add_tuple(&tuple3("a", "b", "d"), 2).unwrap();
         assert_tuple_retrieval(&index, &["a"], &[1, 2]);
         assert_tuple_retrieval(&index, &["a", "b"], &[1, 2]);
 
-        index.add_tuple(&tuple3("a", "b", "c"), 3);
+        index.add_tuple(&tuple3("a", "b", "c"), 3).unwrap();
         assert_tuple_retrieval(&index, &["a"], &[2, 1]);
         assert_tuple_retrieval(&index, &["a", "b"], &[2, 1]);
         assert_tuple_retrieval(&index, &["a", "b", "c"], &[1]);
 
-        index.add_tuple(&tuple3("c", "b", "d"), 4);
+        index.add_tuple(&tuple3("c", "b", "d"), 4).unwrap();
         assert_tuple_retrieval(&index, &[], &[2, 1, 4]);
         assert_tuple_retrieval(&index, &["a"], &[2, 1]);
         assert_tuple_retrieval(&index, &["a", "b"], &[2, 1]);
         assert_tuple_retrieval(&index, &["a", "b", "c"], &[1]);
         assert_tuple_retrieval(&index, &["f"], &[]);
 
-        index.remove_tuple(&tuple3("a", "b", "d"));
+        index.remove_tuple(&tuple3("a", "b", "d")).unwrap();
         assert_tuple_retrieval(&index, &[], &[1, 4]);
 
-        index.remove_tuple(&tuple3("a", "b", "c"));
+        index.remove_tuple(&tuple3("a", "b", "c")).unwrap();
         assert_tuple_retrieval(&index, &[], &[4]);
 
-        index.remove_tuple(&tuple3("c", "b", "d"));
+        index.remove_tuple(&tuple3("c", "b", "d")).unwrap();
         assert_tuple_retrieval(&index, &[], &[]);
     }
 
@@ -611,12 +649,12 @@ mod hermit_ports {
         }
 
         for (i, tuple) in tuples.iter().enumerate() {
-            index.add_tuple(tuple, i as i32);
+            index.add_tuple(tuple, i as i32).unwrap();
         }
         assert_tuple_retrieval(&index, &[], &tuple_indexes);
 
         for (i, tuple) in tuples.iter().enumerate() {
-            assert_eq!(index.remove_tuple(tuple), i as i32);
+            assert_eq!(index.remove_tuple(tuple).unwrap(), i as i32);
         }
         assert_tuple_retrieval(&index, &[], &[]);
     }

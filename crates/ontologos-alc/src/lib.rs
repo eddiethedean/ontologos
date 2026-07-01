@@ -83,19 +83,22 @@ pub enum Error {
     #[error(transparent)]
     Parser(#[from] ontologos_parser::Error),
     /// Profile detection error.
-    #[error("profile detection failed: {0}")]
-    Profile(String),
+    #[error(transparent)]
+    Profile(#[from] ontologos_profile::Error),
     /// General message.
     #[error("{0}")]
     Message(String),
     /// Tableau expansion budget exhausted (incomplete reasoning).
     #[error("tableau expansion budget exhausted ({0} expansions)")]
     ResourceLimit(u32),
+    /// Tuple index trie node space exhausted.
+    #[error("tuple index node space exhausted")]
+    TupleIndexExhausted,
 }
 
 /// Classify an ontology under ALC tableau semantics.
 pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
-    let report = detect_profile(ontology).map_err(|e| Error::Profile(e.to_string()))?;
+    let report = detect_profile(ontology)?;
     if !matches!(
         report.detected,
         Some(OwlProfile::El | OwlProfile::Ql | OwlProfile::Dl)

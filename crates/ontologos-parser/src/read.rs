@@ -17,6 +17,10 @@ use oxrdfio::RdfFormat;
 use crate::limits::ParseLimits;
 use crate::{Error, Format, Result};
 
+/// Serializes low-level Horned-OWL reader entry points.
+///
+/// `horned-owl` parsers may panic or corrupt state when invoked concurrently; this mutex
+/// pairs with the ontology-load lock for callers that read directly.
 static HORNED_OWL_READ_LOCK: Mutex<()> = Mutex::new(());
 
 /// Read a horned-owl ontology from disk after format detection and size checks.
@@ -28,9 +32,9 @@ pub fn read_horned_owl(
     format: Format,
     limits: ParseLimits,
 ) -> Result<SetOntology<RcStr>> {
-    let metadata = std::fs::metadata(path).map_err(|e| Error::Parse(e.to_string()))?;
+    let metadata = std::fs::metadata(path)?;
     check_file_size(metadata.len(), limits)?;
-    let file = File::open(path).map_err(|e| Error::Parse(e.to_string()))?;
+    let file = File::open(path)?;
     read_horned_owl_from_reader(BufReader::new(file), format, limits)
 }
 
@@ -150,7 +154,7 @@ fn strip_utf8_bom(text: &str) -> &str {
 
 /// Read up to `max` bytes from `path` for format sniffing.
 pub fn sniff_file_header(path: &Path, max: usize) -> Result<Vec<u8>> {
-    let mut file = File::open(path).map_err(|e| Error::Parse(e.to_string()))?;
+    let mut file = File::open(path)?;
     sniff_reader(&mut file, max)
 }
 
