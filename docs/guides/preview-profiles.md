@@ -1,9 +1,9 @@
-# Preview profiles (DL, ALC, SWRL)
+# Preview profiles (DL and ALC)
 
-OntoLogos ships **stable** EL, RL, and RDFS classification on published **v0.9.0**. **DL**, **ALC**, **dl-preview**, and **SWRL** are pre-release or preview — see the canonical [Profile stability matrix](profile-stability.md).
+OntoLogos ships **stable** EL, RL, RDFS, and **SWRL** on the workspace **1.0.0** line (see [Profile stability matrix](profile-stability.md)). **DL**, **ALC**, and **dl-preview** are pre-release or preview — limitations below.
 
-!!! warning "Preview only"
-    Preview engines are incomplete. Use Protégé + HermiT or Konclude for production OWL DL workflows. See [Comparison](../comparison.md) and [Release status](../project/release-status.md).
+!!! warning "Preview only (DL / ALC)"
+    Preview DL/ALC engines may return `PreviewLimit` or `ResourceLimit`. Use Protégé + HermiT or Konclude when you need guaranteed production OWL DL equivalence. See [Comparison](../comparison.md) and [Release status](../project/release-status.md).
 
 ## Profile summary
 
@@ -13,10 +13,10 @@ OntoLogos ships **stable** EL, RL, and RDFS classification on published **v0.9.0
 | `el` | Stable | `ontologos-el` | Taxonomy |
 | `rl` | Stable | `ontologos-rl` | Materialization report |
 | `rdfs` | Stable | `ontologos-rdfs` | Materialization report |
+| `swrl` | Stable | `ontologos-swrl` | Rules + DL consistency |
 | `dl` | Pre-release | `ontologos-dl` | Taxonomy — **100%** catalog parity; gated suite @ 30s on `main` |
 | `dl-preview` | Preview | `ontologos-dl` (gated) | Taxonomy + explicit preview checks |
 | `alc` | Preview | `ontologos-alc` | Taxonomy |
-| `swrl` | Preview | `ontologos-swrl` | Rules + DL consistency |
 
 Full matrix with production recommendations: [Profile stability matrix](profile-stability.md).
 
@@ -45,7 +45,7 @@ Reasoner(path="ontology.owl", profile="dl-preview").classify()  # gated preview 
 Reasoner(path="ontology.owl", profile="alc").classify()
 ```
 
-Use `profile="swrl"` when the ontology contains DLSafe SWRL rules; otherwise expect DL/EL routing.
+Use `profile="swrl"` when the ontology contains DLSafe SWRL rules; see [Profile stability matrix](profile-stability.md).
 
 ## Rust
 
@@ -53,12 +53,18 @@ Prefer the unified facade for multi-profile apps:
 
 ```rust
 use ontologos_core::{Profile, Reasoner};
-use ontologos_facade;
+use ontologos_facade::{self, ClassifyOutcome};
 
 let mut reasoner = Reasoner::builder()
     .profile(Profile::Dl)
     .build(ontology)?;
-let outcome = ontologos_facade::classify(&mut reasoner)?;
+match ontologos_facade::classify(&mut reasoner)? {
+    ClassifyOutcome::Taxonomy(t) => {
+        println!("subsumptions: {}", t.subsumption_count());
+    }
+    ClassifyOutcome::Rdfs(r) => println!("inferred: {}", r.inferred_total()),
+    ClassifyOutcome::Rl(r) => println!("inferred: {}", r.inferred_total()),
+}
 ```
 
 See [Facade API](facade-api.md), [Classify quick start](../getting-started/classify-quickstart.md), and [Choosing an API](choosing-an-api.md).
@@ -71,7 +77,6 @@ See [Facade API](facade-api.md), [Classify quick start](../getting-started/class
 | Expansion budget | `dl`, `alc` | `ResourceLimit` after 4096 expansions |
 | Entailment cap | `dl`, `alc` | Pairwise subsumption skipped when >128 named classes |
 | Preview construct gate | `dl-preview` | `PreviewLimit` when EL-forbidden constructs present |
-| SWRL not implemented | `swrl` | `NotImplemented` or `PreviewLimit` |
 | Partial OWL mapping | All | Skipped axioms in `parse_meta.warnings` |
 
 Full construct list: [Supported constructs](../reference/supported-constructs.md).
@@ -80,9 +85,8 @@ Full construct list: [Supported constructs](../reference/supported-constructs.md
 
 | Error | Meaning | Action |
 |-------|---------|--------|
-| `PreviewLimit` | Construct or feature not in preview scope | Use stable profile or wait for 1.0 tag |
+| `PreviewLimit` | Construct or feature not in preview scope | Use stable profile or wait for v1.0 publish |
 | `ResourceLimit` | Tableau expansion budget exhausted | Simplify ontology or retry later |
-| `NotImplemented` (SWRL) | No executable SWRL rules mapped | Use EL/RL/DL profiles instead |
 | `Profile` / `WrongProfile` | Profile mismatch | Check `ontologos profile` output |
 
 See [Error reference](../reference/errors.md) and [Troubleshooting](troubleshooting.md).
@@ -94,3 +98,4 @@ See [Error reference](../reference/errors.md) and [Troubleshooting](troubleshoot
 - [Architecture](../architecture.md)
 - [Evaluator playbook](evaluator-playbook.md)
 - [Roadmap summary](../project/roadmap-summary.md) — path to 1.0 HermiT parity
+

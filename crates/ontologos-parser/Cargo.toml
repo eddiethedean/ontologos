@@ -9,6 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "OWL/RDF parsers for OntoLogos"
+readme = "README.md"
 publish = true
 
 

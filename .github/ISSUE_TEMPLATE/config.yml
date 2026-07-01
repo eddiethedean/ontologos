@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Read the Docs
+    url: https://ontologos.readthedocs.io/en/latest/
+    about: Guides, API picker, and troubleshooting
+  - name: FAQ
+    url: https://ontologos.readthedocs.io/en/latest/project/faq.html
+    about: Common questions before opening an issue

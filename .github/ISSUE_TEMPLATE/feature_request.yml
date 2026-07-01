@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a new capability or API improvement
+title: "[feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What workflow are you trying to support?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: dropdown
+    id: profile
+    attributes:
+      label: OWL profile (if relevant)
+      options:
+        - N/A
+        - EL
+        - RL
+        - RDFS
+        - DL
+        - SWRL
+        - Other

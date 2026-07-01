@@ -44,11 +44,17 @@ pub use ontologos_alc::DlOntology;
 pub use ontologos_alc::TableauSeed;
 #[deprecated(since = "1.0.0", note = "import from ontologos_alc::classify instead")]
 pub use ontologos_alc::classify as alc_classify;
-#[deprecated(since = "1.0.0", note = "import from ontologos_alc::classify_with_seed instead")]
+#[deprecated(
+    since = "1.0.0",
+    note = "import from ontologos_alc::classify_with_seed instead"
+)]
 pub use ontologos_alc::classify_with_seed;
 #[deprecated(since = "1.0.0", note = "import from ontologos_alc::clausify instead")]
 pub use ontologos_alc::clausify;
-#[deprecated(since = "1.0.0", note = "import from ontologos_alc::role_expression_subsumes instead")]
+#[deprecated(
+    since = "1.0.0",
+    note = "import from ontologos_alc::role_expression_subsumes instead"
+)]
 pub use ontologos_alc::role_expression_subsumes;
 pub use perf::{DlPerfTimings, perf_enabled};
 pub use ria::RoleHierarchy;

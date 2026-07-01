@@ -12,9 +12,18 @@ OntoLogos solves: *"We want OWL reasoning embedded in Rust or Python services—
 
 Library-first orchestration: **load → detect profile → classify/materialize**, not a Protégé replacement.
 
+> **Install channels**
+>
+> | Channel | Version | Use when |
+> |---------|---------|----------|
+> | **crates.io / PyPI** | **0.9.0** (latest tag) | Production EL, RL, RDFS today |
+> | **`main` git** | **1.0.0** workspace | DL, SWRL, full facade routing — build from source |
+>
+> **v1.0.0** publish to crates.io/PyPI is prepared; the git tag is not cut yet. See [release checklist](docs/project/release-1.0-checklist.md).
+
 > **Release channels:** Latest tagged release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
-> The `main` branch is **1.0.0** workspace: **`parity_pct = 100%`** in-scope gate; **v1.0.0 tag** pending — see [release checklist](docs/project/release-1.0-checklist.md).
-> Use `ontologos-* = "0.9.0"` on crates.io today; use **`1.0.0`** after tag or build from git for DL.
+> The `main` branch is the **1.0.0** workspace (**`parity_pct = 100%`** in-scope gate). **v1.0.0** publish is prepared; git tag not cut yet — see [release checklist](docs/project/release-1.0-checklist.md).
+> Use `ontologos-* = "0.9.0"` from crates.io today; use **`1.0.0`** when building from `main` for DL.
 
 **In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "0.9.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
 
@@ -38,7 +47,7 @@ Library-first orchestration: **load → detect profile → classify/materialize*
 | **Not sure?** | [Start here](https://ontologos.readthedocs.io/en/latest/guides/start-here.html) on Read the Docs |
 | **Rust (no clone)** | [5-minute crates.io guide](https://ontologos.readthedocs.io/en/latest/getting-started/#cratesio-only-no-clone) |
 | **Python** | `pip install ontologos` → [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html) |
-| **CLI** | Clone → `cargo build -p ontologos-cli --release` → [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli.html) |
+| **CLI** | `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` or clone → [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli.html) |
 | **Evaluate vs HermiT/ELK** | [Evaluator playbook](https://ontologos.readthedocs.io/en/latest/guides/evaluator-playbook.html) · [Comparison](https://ontologos.readthedocs.io/en/latest/comparison.html) |
 | **Contribute** | Clone → [CONTRIBUTING](CONTRIBUTING.md) |
 
@@ -98,7 +107,7 @@ See [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing
 |------|----------|
 | **Loading** | OWL Functional, RDF/XML, Turtle via horned-owl |
 | **Profiles** | EL, RL, RDFS, QL detection; `auto` routing |
-| **Reasoning** | RDFS materialize, RL saturate, EL classify, DL preview |
+| **Reasoning** | RDFS materialize, RL saturate, EL classify, OWL DL (on `main` / v1.0.0) |
 | **Incremental** | Session state for EL/RL/RDFS mutations |
 | **Explain** | Proof graphs (EL full; RL/RDFS asserted-only) |
 | **Interop** | JSON snapshot v2, bridge adapters, Python wheels |
@@ -160,11 +169,11 @@ pip install ontologos
 ```python
 from ontologos import Reasoner
 
-report = Reasoner(path="ontology.owl").classify()
-print(report.profile, report.axiom_count)
+report = Reasoner(path="family.owl", profile="rl").classify()
+print(report)
 ```
 
-See [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html).
+Download `family.owl` first (see [Quick start](#rust-cratesio-no-clone)). See [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html).
 
 ### Repository clone (CLI, benchmarks, tests)
 
@@ -213,6 +222,7 @@ At runtime, **`ontologos-facade`** routes `classify` by profile. Use **`material
 
 ```rust
 use ontologos_core::{Profile, Reasoner};
+use ontologos_facade::ClassifyOutcome;
 use ontologos_parser::load_ontology;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -220,13 +230,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut reasoner = Reasoner::builder()
         .profile(Profile::Auto)
         .build(ontology)?;
-    let outcome = ontologos_facade::classify(&mut reasoner)?;
-    println!("profile: {:?}, status: {:?}", outcome.profile, outcome.status);
+    match ontologos_facade::classify(&mut reasoner)? {
+        ClassifyOutcome::Taxonomy(t) => {
+            println!("EL/DL taxonomy: {} subsumptions", t.subsumption_count());
+        }
+        ClassifyOutcome::Rdfs(r) => {
+            println!("RDFS inferred: {}", r.inferred_total());
+        }
+        ClassifyOutcome::Rl(r) => {
+            println!("RL inferred: {}", r.inferred_total());
+        }
+    }
     Ok(())
 }
 ```
 
-Add `ontologos-facade = "0.9.0"` to `Cargo.toml`. For OWL EL on Pizza, clone the repo and run `./benchmarks/scripts/download.sh` — see [Classify quick start](https://ontologos.readthedocs.io/en/latest/getting-started/classify-quickstart.html).
+`Cargo.toml` dependencies:
+
+```toml
+[dependencies]
+ontologos-core = "0.9.0"
+ontologos-parser = "0.9.0"
+ontologos-facade = "0.9.0"
+```
+
+On crates.io the latest **tagged** release is **0.9.0**. Build from `main` with `"1.0.0"` pins for DL and the full 15-crate set — see [Release status](docs/project/release-status.md). **v1.0.0** publish is prepared but not tagged yet.
 
 Do **not** call `ontologos_core::Reasoner::classify()` — use profile crates or the facade. See [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api.html).
 
@@ -252,7 +280,12 @@ See [Migration hub](https://ontologos.readthedocs.io/en/latest/migration/) for g
 | `ontologos-query` | [yes](https://crates.io/crates/ontologos-query) | Taxonomy queries |
 | `ontologos-facade` | [yes](https://crates.io/crates/ontologos-facade) | Unified classify routing |
 | `ontologos-bridge` | [yes](https://crates.io/crates/ontologos-bridge) | horned-owl / reasonable adapters |
-| `ontologos-cli` | source only | CLI binary |
+| `ontologos-abox` | [yes](https://crates.io/crates/ontologos-abox) | ABox helpers (RL-backed) |
+| `ontologos-alc` | [yes](https://crates.io/crates/ontologos-alc) | ALC tableau-lite (preview) |
+| `ontologos-dl` | [yes](https://crates.io/crates/ontologos-dl) | OWL 2 DL (workspace 1.0.0; crates.io after publish) |
+| `ontologos-swrl` | [yes](https://crates.io/crates/ontologos-swrl) | DLSafe SWRL + DL |
+| `ontologos-ql` | [yes](https://crates.io/crates/ontologos-ql) | OWL QL queries |
+| `ontologos-cli` | source only | CLI binary — `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` |
 | `ontologos-py` | [PyPI](https://pypi.org/project/ontologos/) | Python bindings |
 
 ---
@@ -295,7 +328,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 | Single crate | `cargo test -p ontologos-el` |
 | Full CI parity | `cargo test --workspace` + conformance release build |
 
-Contributors: [CONTRIBUTING.md](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [ROADMAP.md](ROADMAP.md)
+Contributors: [CONTRIBUTING.md](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [Roadmap summary](docs/project/roadmap-summary.md)
 
 ---
 

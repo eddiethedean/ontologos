@@ -49,4 +49,4 @@ Verify: `bash benchmarks/scripts/check-hermit-parity-phases.sh` · `bash benchma
 | **1.3–1.4** | Ontocode LSP, Python maturity |
 | **2.0** | Beyond HermiT (Konclude-class performance, breaking API where needed) |
 
-See [ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md) for full milestone detail.
+See [docs/internal/roadmap.md](internal/roadmap.md) for full milestone detail.

@@ -26,6 +26,7 @@ Run the quick-start examples:
 cargo run -p ontologos-core --example pizza_builder
 cargo run -p ontologos-parser --example load_and_profile
 cargo run -p ontologos-rl --example rl_saturation
+cargo run -p ontologos-facade --example facade_auto -- benchmarks/data/family.owl
 ```
 
 ## Python bindings development
@@ -67,7 +68,20 @@ chmod +x docs/scripts/check-doc-versions.sh
 
 ## Checks before opening a PR
 
-CI runs the following on every push to `main` (see [.github/workflows/ci.yml](.github/workflows/ci.yml)). Run all locally before submitting:
+### Light path (docs, examples, or single-crate fixes)
+
+Usually sufficient:
+
+```bash
+cargo fmt --all -- --check
+cargo clippy -p <affected-crate> --all-targets -- -D warnings
+cargo test -p <affected-crate>
+./docs/scripts/check-doc-versions.sh   # when docs/ or README version pins change
+```
+
+### Full CI parity (engine, conformance, or workspace-wide changes)
+
+CI runs the following on every push to `main` (see [.github/workflows/ci.yml](.github/workflows/ci.yml)):
 
 ```bash
 ./benchmarks/scripts/download.sh
@@ -114,17 +128,34 @@ pytest tests/ -q
 | `crates/ontologos-rdfs/` | RDFS facade → reasonable |
 | `crates/ontologos-rl/` | OWL RL facade → reasonable |
 | `crates/ontologos-el/` | OWL EL completion engine |
+| `crates/ontologos-abox/` | ABox helpers (RL-backed) |
+| `crates/ontologos-alc/` | ALC tableau-lite (preview) |
+| `crates/ontologos-dl/` | OWL 2 DL reasoner |
+| `crates/ontologos-swrl/` | DLSafe SWRL + DL |
+| `crates/ontologos-ql/` | OWL QL queries |
+| `crates/ontologos-facade/` | Unified classify routing |
 | `crates/ontologos-query/` | Taxonomy queries |
 | `crates/ontologos-explain/` | Proof graphs and explanations |
-| `crates/ontologos-cli/` | CLI binary (not published) |
+| `crates/ontologos-cli/` | CLI binary (not on crates.io) |
 | `crates/ontologos-py/` | Python bindings (PyPI) |
 | `crates/ontologos-watch/` | File-watch reload hook (workspace only) |
 | `crates/ontologos-conformance/` | HermiT-ported tests |
 | `docs/` | User and reference documentation |
-| `docs/internal/research/` | Maintainer research notes |
+| `docs/internal/` | Maintainer roadmap, ADRs, parity notes |
 | `benchmarks/` | Benchmark ontology manifest and corpora |
 
-See [Roadmap summary](docs/project/roadmap-summary.md) (full checklist: [ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md)).
+See [Roadmap summary](docs/project/roadmap-summary.md) (full checklist: [docs/internal/roadmap.md](docs/internal/roadmap.md)).
+
+## Issue labels
+
+Use GitHub issue templates when opening bugs or doc fixes. Recommended labels (create in repo settings if missing):
+
+| Label | Use for |
+|-------|---------|
+| `good first issue` | Docs, examples, small isolated fixes |
+| `documentation` | Read the Docs / README / migration guides |
+| `bug` | Incorrect results, panics, parser failures |
+| `enhancement` | New features or API proposals |
 
 ## Working on HermiT parity (v1.0 burndown)
 
@@ -165,7 +196,7 @@ Create or update [`.github/release/vX.Y.Z.md`](.github/release/) with highlights
 Optional full local packaging check:
 
 ```bash
-for crate in ontologos-core ontologos-profile ontologos-parser ontologos-bridge ontologos-rdfs ontologos-rl ontologos-el ontologos-query ontologos-explain; do
+for crate in ontologos-core ontologos-profile ontologos-query ontologos-bridge ontologos-parser ontologos-rdfs ontologos-rl ontologos-abox ontologos-alc ontologos-el ontologos-dl ontologos-swrl ontologos-explain ontologos-ql ontologos-facade; do
   cargo package -p "$crate" --allow-dirty
 done
 ```
@@ -192,7 +223,7 @@ Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire
 
 On each release tag, CI publishes:
 
-- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (`ontologos-core`, `ontologos-bridge`, `ontologos-profile`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-query`, `ontologos-explain`, in dependency order)
+- **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (15 crates: `ontologos-core`, `ontologos-profile`, `ontologos-query`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-abox`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`)
 - **PyPI** — `ontologos` via release CI (`maturin-action`): Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x64, aarch64), plus sdist. Manual upload: [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh)
 
 - **Tags:** Release tags follow semver (`v0.9.0`, …)

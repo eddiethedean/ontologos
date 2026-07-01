@@ -44,20 +44,32 @@ pytest tests/ -q
 
 ## Quick start
 
+Download a sample ontology (works with `pip install` only — no clone required):
+
+```bash
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
+```
+
 ```python
 import ontologos
 
 print(ontologos.__version__)
 
-# RDFS TBox materialization
-reasoner = ontologos.Reasoner(path="ontology.owl", profile="rdfs")
+# OWL RL saturation (Family ontology)
+reasoner = ontologos.Reasoner(path="family.owl", profile="rl")
 report = reasoner.classify()
-print(report["inferred_axioms"])
+print(report.get("inferred_axioms", report))
 
-# OWL EL taxonomy
-reasoner = ontologos.Reasoner(path="pizza.owl", profile="el")
-taxonomy = reasoner.classify()
-print(taxonomy["subsumption_count"])
+# RDFS TBox materialization
+reasoner = ontologos.Reasoner(path="family.owl", profile="rdfs")
+report = reasoner.classify()
+print(report)
+
+# OWL EL taxonomy — Pizza corpus requires clone + ./benchmarks/scripts/download.sh
+# reasoner = ontologos.Reasoner(path="benchmarks/data/pizza.owl", profile="el")
+# taxonomy = reasoner.classify()
+# print(taxonomy["subsumption_count"])
 
 # Build in memory
 builder = ontologos.OntologyBuilder()

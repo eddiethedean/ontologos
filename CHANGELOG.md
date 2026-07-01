@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- OSS maintainer review: fixed facade classify examples, install-channel clarity, SWRL stability alignment, GitHub issue/PR templates, `facade_auto` example, roadmap moved to `docs/internal/`.
+
 ## [1.0.0] - 2026-06-13
 
 ### Added

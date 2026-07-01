@@ -1,11 +1,11 @@
 # Classify in five minutes (Rust)
 
-Run OWL **classification** from crates.io — no repository clone. Uses `ontologos-facade` (not the `ontologos_core::Reasoner` stub).
+Run OWL **classification** from crates.io — no repository clone. Uses `ontologos-facade` (not the deprecated `ontologos_core::Reasoner::classify` stub).
 
 ## Prerequisites
 
 - Rust **1.88+**
-- Published crates **0.9.0** on crates.io (see [Release status](../project/release-status.md))
+- OntoLogos crates — see [Release status](../project/release-status.md) for published vs `main` pins
 
 ```bash
 curl -L -o family.owl \
@@ -22,12 +22,13 @@ ontologos-parser = "0.9.0"
 ontologos-facade = "0.9.0"
 ```
 
-Tracking `main` (1.0.0 workspace)? Use `"1.0.0"` pins instead and build from git.
+Build from `main`? Pin `"1.0.0"` on all `ontologos-*` crates instead.
 
 ## Classify with profile auto
 
 ```rust
 use ontologos_core::{Profile, Reasoner};
+use ontologos_facade::ClassifyOutcome;
 use ontologos_parser::load_ontology;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -35,9 +36,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut reasoner = Reasoner::builder()
         .profile(Profile::Auto)
         .build(ontology)?;
-    let outcome = ontologos_facade::classify(&mut reasoner)?;
-    println!("profile: {:?}", outcome.profile);
-    println!("status: {:?}", outcome.status);
+    match ontologos_facade::classify(&mut reasoner)? {
+        ClassifyOutcome::Taxonomy(t) => {
+            println!("subsumptions: {}", t.subsumption_count());
+        }
+        ClassifyOutcome::Rdfs(r) => {
+            println!("inferred: {}", r.inferred_total());
+        }
+        ClassifyOutcome::Rl(r) => {
+            println!("inferred: {}", r.inferred_total());
+        }
+    }
     Ok(())
 }
 ```
@@ -55,7 +64,7 @@ use ontologos_parser::load_ontology;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ontology = load_ontology("ontology.owl".as_ref())?;
     let taxonomy = ElClassifier::new().classify(&ontology)?;
-    println!("subsumptions: {}", taxonomy.subsumptions.len());
+    println!("subsumptions: {}", taxonomy.subsumption_count());
     Ok(())
 }
 ```
@@ -63,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Do not use
 
 ```rust
-// WRONG — returns NotImplemented / delegate hints
+// WRONG — deprecated; returns NotImplemented / delegate hints
 ontologos_core::Reasoner::classify(&mut reasoner)?;
 ```
 

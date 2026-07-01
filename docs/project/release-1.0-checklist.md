@@ -26,7 +26,7 @@ cargo doc -p ontologos-alc --no-deps
 - [release-status.md](release-status.md) — channels table → **1.0.0 published**
 - [profile-stability.md](../guides/profile-stability.md) — `dl` → **Stable**
 - [README.md](../../README.md) — default pins `1.0.0`
-- [ROADMAP.md](../../ROADMAP.md) — Phase 9 publish boxes checked
+- [docs/internal/roadmap.md](docs/internal/roadmap.md) — Phase 9 publish boxes checked
 
 ## Verify install
 

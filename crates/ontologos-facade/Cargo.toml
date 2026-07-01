@@ -9,6 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 documentation.workspace = true
 description = "Unified OWL reasoner facade routing EL/RL/RDFS/ALC/DL/SWRL"
+readme = "README.md"
 publish = true
 
 
@@ -33,6 +34,10 @@ serde = { workspace = true, features = ["derive"] }
 [dev-dependencies]
 ontologos-parser = { workspace = true }
 criterion = "0.5"
+
+[[example]]
+name = "facade_auto"
+path = "examples/facade_auto.rs"
 
 [[bench]]
 name = "entailment"

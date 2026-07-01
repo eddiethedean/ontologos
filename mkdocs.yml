@@ -78,7 +78,6 @@ nav:
       - Facade API: guides/facade-api.md
       - Preview profiles: guides/preview-profiles.md
       - Evaluator playbook: guides/evaluator-playbook.md
-      - HermiT burndown (contributors): guides/hermit-burndown.md
       - Profile detection: guides/profile-detection.md
       - Python: guides/python.md
       - Glossary: guides/glossary.md
@@ -91,7 +90,6 @@ nav:
       - Security: security.md
   - Reference:
       - Architecture: architecture.md
-      - Dependency-first ADR: internal/design/dependency-first.md
       - CLI: reference/cli.md
       - Errors: reference/errors.md
       - Supported constructs: reference/supported-constructs.md
@@ -105,14 +103,19 @@ nav:
       - Taxonomy tolerance: reference/taxonomy-tolerance.md
       - Rust API (docs.rs):
           - ontologos-core: https://docs.rs/ontologos-core/0.9.0
-          - ontologos-bridge: https://docs.rs/ontologos-bridge/0.9.0
-          - ontologos-parser: https://docs.rs/ontologos-parser/0.9.0
           - ontologos-profile: https://docs.rs/ontologos-profile/0.9.0
+          - ontologos-parser: https://docs.rs/ontologos-parser/0.9.0
+          - ontologos-bridge: https://docs.rs/ontologos-bridge/0.9.0
           - ontologos-rdfs: https://docs.rs/ontologos-rdfs/0.9.0
           - ontologos-rl: https://docs.rs/ontologos-rl/0.9.0
           - ontologos-el: https://docs.rs/ontologos-el/0.9.0
+          - ontologos-abox: https://docs.rs/ontologos-abox/0.9.0
+          - ontologos-alc: https://docs.rs/ontologos-alc/0.9.0
+          - ontologos-dl: https://docs.rs/ontologos-dl/0.9.0
+          - ontologos-swrl: https://docs.rs/ontologos-swrl/0.9.0
           - ontologos-query: https://docs.rs/ontologos-query/0.9.0
           - ontologos-explain: https://docs.rs/ontologos-explain/0.9.0
+          - ontologos-ql: https://docs.rs/ontologos-ql/0.9.0
           - ontologos-facade: https://docs.rs/ontologos-facade/0.9.0
   - Migration:
       - Upgrade to latest: migration/index.md
@@ -127,6 +130,7 @@ nav:
       - Roadmap summary: project/roadmap-summary.md
       - Changelog: project/changelog.md
       - Contributing: project/contributing.md
+      - HermiT burndown (contributors): guides/hermit-burndown.md
       - Documentation build: readthedocs.md
       - Technical spec: project/spec.md
       - Benchmarks: project/benchmarks.md

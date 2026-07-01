@@ -1,0 +1,71 @@
+name: Bug report
+description: Report incorrect reasoning, parser failure, or crash
+title: "[bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [Troubleshooting](https://ontologos.readthedocs.io/en/latest/guides/troubleshooting.html) and [FAQ](https://ontologos.readthedocs.io/en/latest/project/faq.html) first.
+
+        **Which release channel?** Latest tag is **v0.9.0** on crates.io/PyPI; **`main`** is **1.0.0** workspace (DL, full facade). Say which you used.
+
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Release channel
+      options:
+        - crates.io / PyPI 0.9.0
+        - git main (1.0.0 workspace)
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Rust library
+        - Python (pip)
+        - CLI
+        - Docs only
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: e.g. ontologos==0.9.0 or git sha
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: Minimal ontology, profile, and command or code snippet
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Environment
+      placeholder: OS, Rust version, Python version

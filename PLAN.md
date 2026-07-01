@@ -1,7 +1,7 @@
 # OntoLogos Plan Document
 
-> **Canonical release plan:** [ROADMAP.md](ROADMAP.md) — semver milestones, exit criteria, crate publish policy.
-> **This document** is historical background and long-term ecosystem vision (Ontocode, OntoHub). For **current shipped scope and milestone status**, use ROADMAP.md and [dependency-first ADR](docs/internal/design/dependency-first.md).
+> Canonical plan: [docs/internal/roadmap.md](docs/internal/roadmap.md) — semver milestones, exit criteria, crate publish policy.
+> **This document** is historical background and long-term ecosystem vision (Ontocode, OntoHub). For **current shipped scope and milestone status**, use the internal roadmap and [dependency-first ADR](docs/internal/design/dependency-first.md).
 
 ## Current status (2026-06-13)
 

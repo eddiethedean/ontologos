@@ -47,6 +47,7 @@ See [JSON snapshot v2](../json-snapshot-v2.md).
 | Builder API | `cargo run -p ontologos-core --example pizza_builder` |
 | Load + profile | `cargo run -p ontologos-parser --example load_and_profile` |
 | RL saturation | `cargo run -p ontologos-rl --example rl_saturation` |
+| Facade auto classify | `cargo run -p ontologos-facade --example facade_auto -- benchmarks/data/family.owl` |
 
 ## Python
 

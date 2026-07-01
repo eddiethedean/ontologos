@@ -16,8 +16,17 @@
   <p style="margin-top:1rem;margin-bottom:0"><a href="guides/start-here/">Not sure? Start here</a></p>
 </div>
 
+> **Install channels**
+>
+> | Channel | Version | Use when |
+> |---------|---------|----------|
+> | **crates.io / PyPI** | **0.9.0** (latest tag) | Production EL, RL, RDFS today |
+> | **`main` git** | **1.0.0** workspace | DL, SWRL, full facade — build from source |
+>
+> **v1.0.0** publish is prepared; the git tag is not cut yet. See [Release status](project/release-status.md).
+
 > **Release channels:** Latest tagged release is **v0.9.0** on crates.io and PyPI.
-> The `main` branch is **1.0.0** (pre-release): **`parity_pct = 100%`**; **1009** active conformance tests; blocking CI runs full HermiT + WG suite @ 30s. Tag pending publish.
+> The `main` branch is the **1.0.0** workspace: **`parity_pct = 100%`**; **1009** active conformance tests; blocking CI runs full HermiT + WG suite @ 30s. **v1.0.0** publish is prepared; git tag not cut yet.
 > Use `ontologos-* = "0.9.0"` for production today unless you build from git. See [Release status](project/release-status.md).
 
 Pick the path that matches how you work:
@@ -71,7 +80,7 @@ Pick the path that matches how you work:
 !!! warning "Integration DO / DON'T"
     **DO** use CLI `ontologos classify`, Python `Reasoner(path=...).classify()`, or `ontologos_facade::classify` / profile crates.
 
-    **DON'T** call `ontologos_core::Reasoner::classify()` directly — it is a stub. See [Choosing an API](guides/choosing-an-api.md).
+    **DON'T** call `ontologos_core::Reasoner::classify()` directly — deprecated since 1.0.0; use the facade or profile crates. See [Choosing an API](guides/choosing-an-api.md).
 
 !!! note "OWL DL / HermiT parity"
     On `main`, **`parity_pct = 100%`** (catalog porting) and **450+428** active conformance tests pass @ 30s on the gated HermiT suite. **13** Ian/ComplexConcept CE cases are documented exclusions. Published **v0.9.0** on PyPI/crates.io is still EL/RL/RDFS-stable only. See [Profile stability matrix](guides/profile-stability.md), [FAQ](project/faq.md), and [Release status](project/release-status.md).

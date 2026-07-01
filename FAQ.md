@@ -83,9 +83,9 @@ The parser maps a subset of OWL constructs into the core model. Complex class ex
 
 See [Protégé vs OntoLogos counts](https://ontologos.readthedocs.io/en/latest/guides/protege-axiom-counts/), [Troubleshooting](https://ontologos.readthedocs.io/en/latest/guides/troubleshooting/), and [Supported constructs](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/).
 
-## What is the difference between ROADMAP.md and PLAN.md?
+## What is the difference between ROADMAP and PLAN.md?
 
-**[ROADMAP.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md)** is the canonical semver release plan. **[PLAN.md on GitHub](https://github.com/eddiethedean/ontologos/blob/main/PLAN.md)** is historical background and ecosystem vision; prefer ROADMAP for current status.
+**[docs/internal/roadmap.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/roadmap.md)** is the canonical semver release plan. **[PLAN.md](https://github.com/eddiethedean/ontologos/blob/main/PLAN.md)** is historical background and ecosystem vision; prefer the internal roadmap for current status. The root [ROADMAP.md](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md) is a short pointer.
 
 ## Is OntoLogos the same as Ontologos?
 

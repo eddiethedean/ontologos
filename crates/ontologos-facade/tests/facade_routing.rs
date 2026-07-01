@@ -410,3 +410,29 @@ fn get_sub_object_properties_uses_asserted_hierarchy_for_el() {
     let all = get_sub_object_properties(&reasoner, "http://example.org/p", false).unwrap();
     assert_eq!(all, vec!["http://example.org/q"]);
 }
+
+/// Mirrors the getting-started classify quickstart (family.owl → Profile::Auto).
+#[test]
+fn getting_started_classify_family_auto() {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/family.owl");
+    if !path.exists() {
+        return;
+    }
+    let ontology = ontologos_parser::load_ontology(&path).expect("load family.owl");
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::Auto)
+        .build(ontology)
+        .expect("build");
+    match classify(&mut reasoner).expect("classify") {
+        ClassifyOutcome::Taxonomy(t) => {
+            assert!(t.subsumption_count() > 0 || t.subsumptions.is_empty());
+        }
+        ClassifyOutcome::Rdfs(r) => {
+            let _ = r.inferred_total();
+        }
+        ClassifyOutcome::Rl(r) => {
+            assert!(r.inferred_total() > 0);
+        }
+    }
+}

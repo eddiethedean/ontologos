@@ -1,0 +1,32 @@
+name: Documentation
+description: Fix or improve docs, examples, or README
+title: "[docs]: "
+labels:
+  - documentation
+  - good first issue
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Docs live in `docs/` (MkDocs) and [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/).
+        Run `./docs/scripts/check-doc-versions.sh` after changing version pins.
+
+  - type: input
+    id: page
+    attributes:
+      label: Page or file
+      placeholder: e.g. docs/getting-started/classify-quickstart.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix (optional)
