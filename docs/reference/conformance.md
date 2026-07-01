@@ -1,28 +1,39 @@
 # Conformance Coverage
 
-Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners. OntoLogos v0.9.0 ships EL classification, RL/RDFS saturation via reasonable, explanations, incremental reasoning, and growing HermiT ports.
+Summary for evaluators comparing OntoLogos to HermiT, ELK, and other reasoners.
 
-## HermiT porting strategy
+## User API contract (Tier 0 — PR gate)
+
+[`ontologos-contract`](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-contract) checks semantics through **`ontologos_facade`** (classify, consistency, entailment). This is what CLI and Python consumers depend on.
+
+```bash
+cargo test -p ontologos-contract --release
+```
+
+Sample catalog cases: [`crates/ontologos-contract/data/case_ids.txt`](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-contract/data/case_ids.txt).
+
+## HermiT parity harness (nightly / release)
 
 **Contributors:** see the **[HermiT burndown guide](../guides/hermit-burndown.md)** for the daily workflow, parity scoreboard, and what to fix when.
 
-Tests are cataloged in [tests/hermit/manifest.toml](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/manifest.toml) and implemented in `ontologos-conformance`.
+Tests are cataloged in [tests/hermit/manifest.toml](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/manifest.toml) and implemented in `ontologos-conformance` (internal engine paths — not the public API contract).
 
 | Tier | CI | HermiT checkout required | Purpose |
 |------|-----|--------------------------|---------|
-| **A** | Always (`cargo test -p ontologos-conformance`) | No | Inlined RL logic + small fixtures |
-| **B** | Always | No (vendored under `benchmarks/data/hermit/`) | `ClassificationTest` taxonomy goldens via [`compare-classification-fixtures.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-classification-fixtures.sh) |
+| **0** | PR | No | Facade-routed contract (`ontologos-contract`) + pizza/family scripts |
+| **A** | Nightly / release | No | Full HermiT + OWL WG catalog (`ontologos-conformance`) |
+| **B** | PR | No (vendored under `benchmarks/data/hermit/`) | `ClassificationTest` taxonomy goldens via [`compare-classification-fixtures.sh`](https://github.com/eddiethedean/ontologos/blob/main/benchmarks/scripts/compare-classification-fixtures.sh) |
 | **C** | PR (`compare-tier-c-gate.sh`) + nightly HermiT JAR | JVM nightly only | DL taxonomy goldens + HermiT ⊆ OntoLogos cross-check — [taxonomy tolerance](taxonomy-tolerance.md) |
 
-Run locally:
+Run parity locally:
 
 ```bash
-cargo test -p ontologos-conformance
+cargo test -p ontologos-conformance --release
 ```
 
 Optional full HermiT tree: set `ONTOLOGOS_HERMIT_ROOT` or clone to `HermiT/` for additional fixtures.
 
-See [tests/hermit/README.md](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/README.md) for catalog regeneration. **New contributors:** start with the [HermiT burndown guide](../guides/hermit-burndown.md).
+See [tests/hermit/README.md](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/README.md) for catalog regeneration.
 
 ## Tier A coverage (RL engine)
 

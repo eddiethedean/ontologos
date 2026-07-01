@@ -20,12 +20,12 @@ check() {
 # Workspace must be 1.0.0 once release gates pass.
 check "workspace version is 1.0.0" grep -q 'version = "1.0.0"' "${ROOT}/Cargo.toml"
 
-# Conformance active test budget (target ≥400 at 1.0).
-ACTIVE="$("${ROOT}/benchmarks/scripts/report-conformance-coverage.sh" 2>/dev/null | awk '/active in default CI/ {print $NF}')"
+# Conformance active test budget (target ≥400 at 1.0; nightly/release only).
+ACTIVE="$("${ROOT}/benchmarks/scripts/report-conformance-coverage.sh" 2>/dev/null | awk '/active parity \(nightly\)/ {print $NF}')"
 if [[ "${ACTIVE:-0}" -ge 400 ]]; then
-  echo "OK  active conformance tests (${ACTIVE} ≥ 400)"
+  echo "OK  active parity tests (${ACTIVE} ≥ 400)"
 else
-  echo "FAIL active conformance tests (${ACTIVE:-0} < 400 target)" >&2
+  echo "FAIL active parity tests (${ACTIVE:-0} < 400 target)" >&2
   FAIL=1
 fi
 

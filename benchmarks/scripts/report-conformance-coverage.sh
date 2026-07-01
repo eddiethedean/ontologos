@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Report active vs ignored conformance test counts for CI transparency.
+# Report contract vs parity test counts for CI transparency.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 CONF="$ROOT/crates/ontologos-conformance/tests"
+CONTRACT="$ROOT/crates/ontologos-contract/tests"
 
 count_in_dir() {
   local pattern="$1"
@@ -21,16 +22,20 @@ count_in_dir() {
   echo "$total"
 }
 
-TOTAL=$(count_in_dir '#[test]' "$CONF")
-IGNORED=$(count_in_dir '#[ignore' "$CONF")
-ACTIVE=$((TOTAL - IGNORED))
+CONTRACT_TOTAL=$(count_in_dir '#[test]' "$CONTRACT")
+PARITY_TOTAL=$(count_in_dir '#[test]' "$CONF")
+PARITY_IGNORED=$(count_in_dir '#[ignore' "$CONF")
+PARITY_ACTIVE=$((PARITY_TOTAL - PARITY_IGNORED))
 
 CATALOG="${ROOT}/benchmarks/data/hermit/catalog/cases.json"
 
-echo "ontologos-conformance test inventory"
-echo "  total test functions: $TOTAL"
-echo "  ignored (dormant):    $IGNORED"
-echo "  active in default CI: $ACTIVE"
+echo "ontologos-contract test inventory (PR gate)"
+echo "  contract test functions: $CONTRACT_TOTAL"
+echo ""
+echo "ontologos-conformance test inventory (nightly parity)"
+echo "  total test functions: $PARITY_TOTAL"
+echo "  ignored (dormant):    $PARITY_IGNORED"
+echo "  active parity (nightly): $PARITY_ACTIVE"
 echo ""
 
 if [[ -f "$CATALOG" ]]; then
@@ -51,10 +56,15 @@ PY
   echo ""
 fi
 
-echo "Note: default 'cargo test' skips #[ignore] tests."
-echo "Run ignored tier: cargo test -p ontologos-conformance -- --ignored"
+echo "Note: PR CI runs cargo test -p ontologos-contract --release"
+echo "Note: parity tier runs cargo test -p ontologos-conformance (nightly / release)"
 
-if (( ACTIVE < 1 )); then
-  echo "error: expected at least one active conformance test" >&2
+if (( CONTRACT_TOTAL < 1 )); then
+  echo "error: expected at least one contract test" >&2
+  exit 1
+fi
+
+if (( PARITY_ACTIVE < 1 )); then
+  echo "error: expected at least one active parity test" >&2
   exit 1
 fi

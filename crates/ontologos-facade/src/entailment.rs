@@ -1,4 +1,9 @@
-use ontologos_core::{uses_dl_entailment, Axiom, ConsistencyResult, EntityId, Profile, Reasoner, Taxonomy};
+use std::collections::HashSet;
+
+use ontologos_core::{
+    uses_dl_entailment, Axiom, ConsistencyResult, EngineKind, EntityId, Ontology, Profile,
+    Reasoner, Taxonomy,
+};
 
 use crate::classify::{classify, taxonomy_from_outcome};
 use crate::engines::{check_consistency as dispatch_check_consistency, resolve};
@@ -42,6 +47,11 @@ pub fn is_subsumption_entailed(
             "unknown class IRI: {sup_iri}"
         )))
     })?;
+    let route = resolve(reasoner)?;
+    if matches!(route.kind, EngineKind::Rl | EngineKind::Rdfs) {
+        classify(reasoner)?;
+        return Ok(named_class_subsumed(reasoner.ontology(), sub, sup));
+    }
     if let Some(taxonomy) = reasoner.cached_taxonomy() {
         return Ok(taxonomy.is_subsumed(sub, sup));
     }
@@ -52,6 +62,28 @@ pub fn is_subsumption_entailed(
         ))
     })?;
     Ok(taxonomy.is_subsumed(sub, sup))
+}
+
+fn named_class_subsumed(ontology: &Ontology, subclass: EntityId, superclass: EntityId) -> bool {
+    if ontology.direct_superclasses(subclass).contains(&superclass) {
+        return true;
+    }
+    transitive_superclasses(ontology, subclass, superclass)
+}
+
+fn transitive_superclasses(ontology: &Ontology, subclass: EntityId, target: EntityId) -> bool {
+    let mut stack: Vec<EntityId> = ontology.direct_superclasses(subclass).to_vec();
+    let mut seen = HashSet::new();
+    while let Some(current) = stack.pop() {
+        if !seen.insert(current) {
+            continue;
+        }
+        if current == target {
+            return true;
+        }
+        stack.extend_from_slice(ontology.direct_superclasses(current));
+    }
+    false
 }
 
 /// OWLReasoner-style class subsumption entailment (`isEntailed` for `SubClassOf`).
@@ -101,9 +133,11 @@ fn taxonomy_entails_class_assertion(
     individual: EntityId,
     class: EntityId,
 ) -> Result<bool> {
-    if reasoner.profile() == Profile::Rl {
+    if matches!(reasoner.profile(), Profile::Rl | Profile::Rdfs) {
         let mut working = reasoner.ontology().clone();
-        ontologos_rl::abox::materialize_abox(&mut working)?;
+        if reasoner.profile() == Profile::Rl {
+            ontologos_rl::abox::materialize_abox(&mut working)?;
+        }
         return Ok(individual_entails_named_class(
             &working, individual, class, None,
         ));

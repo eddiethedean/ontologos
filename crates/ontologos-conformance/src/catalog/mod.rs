@@ -197,8 +197,13 @@ fn dl_is_consistent_with_budget(ontology: &Ontology, budget: Duration) -> Result
 }
 
 mod types;
+mod user_case;
 
 pub use types::*;
+pub use user_case::{
+    check_user_axiom_case, check_user_wg_case, profile_for_engine, user_case_supported,
+    user_wg_case_supported,
+};
 pub fn catalog_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/hermit/catalog/cases.json")
 }

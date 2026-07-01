@@ -412,6 +412,68 @@ fn get_sub_object_properties_uses_asserted_hierarchy_for_el() {
 
 /// Mirrors the getting-started classify quickstart (family.owl → Profile::Auto).
 #[test]
+fn is_subsumption_entailed_rl_after_classify() {
+    let ontology = Ontology::builder()
+        .class("http://example.org/A")
+        .unwrap()
+        .class("http://example.org/B")
+        .unwrap()
+        .class("http://example.org/C")
+        .unwrap()
+        .subclass_of("http://example.org/A", "http://example.org/B")
+        .unwrap()
+        .subclass_of("http://example.org/B", "http://example.org/C")
+        .unwrap()
+        .build()
+        .unwrap();
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::Rl)
+        .build(ontology)
+        .unwrap();
+    assert!(
+        is_subsumption_entailed(
+            &mut reasoner,
+            "http://example.org/A",
+            "http://example.org/C"
+        )
+        .unwrap()
+    );
+    assert!(
+        !is_subsumption_entailed(
+            &mut reasoner,
+            "http://example.org/C",
+            "http://example.org/A"
+        )
+        .unwrap()
+    );
+}
+
+#[test]
+fn is_subsumption_entailed_rdfs_after_classify() {
+    let ontology = Ontology::builder()
+        .class("http://example.org/A")
+        .unwrap()
+        .class("http://example.org/B")
+        .unwrap()
+        .subclass_of("http://example.org/A", "http://example.org/B")
+        .unwrap()
+        .build()
+        .unwrap();
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::Rdfs)
+        .build(ontology)
+        .unwrap();
+    assert!(
+        is_subsumption_entailed(
+            &mut reasoner,
+            "http://example.org/A",
+            "http://example.org/B"
+        )
+        .unwrap()
+    );
+}
+
+#[test]
 fn getting_started_classify_family_auto() {
     let path =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/family.owl");

@@ -870,6 +870,7 @@ dependencies = [
  "ontologos-dl",
  "ontologos-el",
  "ontologos-explain",
+ "ontologos-facade",
  "ontologos-parser",
  "ontologos-rdfs",
  "ontologos-rl",
@@ -878,6 +879,16 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "ontologos-contract"
+version = "1.0.0"
+dependencies = [
+ "ontologos-conformance",
+ "ontologos-core",
+ "ontologos-facade",
+ "ontologos-parser",
 ]
 
 [[package]]

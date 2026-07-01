@@ -1,0 +1,21 @@
+[package]
+name = "ontologos-contract"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "User-facing API contract tests for OntoLogos (facade-routed)"
+publish = false
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+ontologos-conformance = { path = "../ontologos-conformance" }
+ontologos-core = { workspace = true }
+ontologos-facade = { workspace = true }
+ontologos-parser = { workspace = true }

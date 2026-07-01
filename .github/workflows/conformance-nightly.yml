@@ -30,6 +30,53 @@ jobs:
           cargo test -p ontologos-conformance --release --test classify_timeout --
           --test-threads=1
 
+  hermit-parity-tier-a:
+    runs-on: ubuntu-latest
+    env:
+      ONTOLOGOS_DL_BUDGET_SECS: "30"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Download benchmark corpora
+        run: ./benchmarks/scripts/download.sh
+      - name: HermiT parity Tier A (full catalog @ 30s)
+        run: >-
+          cargo test -p ontologos-conformance --release --locked
+          --test hermit_generated
+          --test hermit_rdfs
+          --test hermit_rl
+          --test hermit_el
+          --test hermit_parser
+          --test hermit_wg_generated
+          --test dl_subsumption_cases
+          --test explain_benchmarks
+          --
+          --test-threads=4
+          --skip planned_engine_failure_scan
+          --skip ian_backjumping3_axiom_check_completes_within_budget
+      - name: Phase 3 closure gate
+        run: cargo test -p ontologos-conformance --test phase3_closure --locked
+      - name: Phase 6 closure gate
+        run: cargo test -p ontologos-conformance --test phase6_closure --release --locked
+      - name: Phase 7 closure gate
+        run: cargo test -p ontologos-conformance --test phase7_closure --release --locked
+      - name: Promoted-list hygiene (Phase 9)
+        run: >-
+          cargo test -p ontologos-conformance --release --locked
+          --test phase9_closure
+          --
+          --test-threads=1
+          --skip phase9_true_parity_pct_is_100
+      - name: 1.0 release gates (conformance)
+        run: |
+          chmod +x benchmarks/scripts/check-1.0-release-gates.sh
+          ./benchmarks/scripts/check-1.0-release-gates.sh
+      - name: True parity gate (Phase 8 final)
+        run: |
+          chmod +x benchmarks/scripts/check-true-parity-gate.sh
+          ./benchmarks/scripts/check-true-parity-gate.sh
+
   tier-c-hermit-crosscheck:
     runs-on: ubuntu-latest
     steps:
