@@ -1,4 +1,4 @@
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
@@ -911,6 +911,7 @@ fn open_for_load(path: &Path, base: Option<&Path>) -> Result<File> {
 fn open_readonly_nofollow(path: &Path) -> Result<File> {
     #[cfg(unix)]
     {
+        use std::fs::OpenOptions;
         use std::os::unix::fs::OpenOptionsExt;
         OpenOptions::new()
             .read(true)
@@ -920,7 +921,7 @@ fn open_readonly_nofollow(path: &Path) -> Result<File> {
     }
     #[cfg(not(unix))]
     {
-        File::open(path)
+        Ok(File::open(path)?)
     }
 }
 
