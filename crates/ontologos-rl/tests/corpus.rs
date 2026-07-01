@@ -42,7 +42,10 @@ fn family_corpus_inherits_range_on_inverse_property() {
         .saturate(&mut ontology)
         .expect("rl saturate");
 
-    assert!(report.inferred_total() > 0, "family RL should add inferences");
+    assert!(
+        report.inferred_total() > 0,
+        "family RL should add inferences"
+    );
     let ns = "http://a.com/ontology#";
     assert!(
         has_property_range(&ontology, &format!("{ns}hasChild"), &format!("{ns}Person")),

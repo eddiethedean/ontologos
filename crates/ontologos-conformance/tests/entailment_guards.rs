@@ -24,44 +24,44 @@ fn swrl_case_without_assertions_is_rejected() {
 #[test]
 fn wg_keys_002_entailment_via_catalog_runner() {
     let case = load_wg_catalog()
-        .into_iter()
+        .iter()
         .find(|c| c.id == "owl_wg_tests.New-2DFeature-2DKeys-2D002")
         .expect("Keys-002 WG case");
-    check_wg_case(&case).expect("Keys-002 entailment");
+    check_wg_case(case).expect("Keys-002 entailment");
 }
 
 #[test]
 fn wg_consistent_but_all_unsat_entailment_via_catalog_runner() {
     let case = load_wg_catalog()
-        .into_iter()
+        .iter()
         .find(|c| c.id == "owl_wg_tests.Consistent-2Dbut-2Dall-2Dunsat")
         .expect("Consistent-but-all-unsat WG case");
-    check_wg_case(&case).expect("consistent-but-all-unsat entailment");
+    check_wg_case(case).expect("consistent-but-all-unsat entailment");
 }
 
 #[test]
 fn wg_equivalent_class_007_demorgan_via_catalog_runner() {
     let case = load_wg_catalog()
-        .into_iter()
+        .iter()
         .find(|c| c.id == "owl_wg_tests.TestCase-3AWebOnt-2DequivalentClass-2D007")
         .expect("equivalentClass-007 WG case");
-    check_wg_case(&case).expect("equivalentClass-007 entailment");
+    check_wg_case(case).expect("equivalentClass-007 entailment");
 }
 
 #[test]
 fn wg_functional_property_004_via_catalog_runner() {
     let case = load_wg_catalog()
-        .into_iter()
+        .iter()
         .find(|c| c.id == "owl_wg_tests.TestCase-3AWebOnt-2DFunctionalProperty-2D004")
         .expect("FunctionalProperty-004 WG case");
-    check_wg_case(&case).expect("FunctionalProperty-004 entailment");
+    check_wg_case(case).expect("FunctionalProperty-004 entailment");
 }
 
 #[test]
 fn wg_cardinality_003_via_catalog_runner() {
     let case = load_wg_catalog()
-        .into_iter()
+        .iter()
         .find(|c| c.id == "owl_wg_tests.TestCase-3AWebOnt-2Dcardinality-2D003")
         .expect("cardinality-003 WG case");
-    check_wg_case(&case).expect("cardinality-003 entailment");
+    check_wg_case(case).expect("cardinality-003 entailment");
 }

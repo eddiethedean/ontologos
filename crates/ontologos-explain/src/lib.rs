@@ -267,8 +267,14 @@ mod tests {
         assert!(graph.node_count() > 2);
         assert_valid_proof_graph(&ontology, &graph);
         let json = graph.to_json().expect("json");
-        assert!(json.contains("\"nodes\""), "proof JSON should include nodes");
-        assert!(json.contains("\"rule\""), "proof JSON should include rule steps");
+        assert!(
+            json.contains("\"nodes\""),
+            "proof JSON should include nodes"
+        );
+        assert!(
+            json.contains("\"rule\""),
+            "proof JSON should include rule steps"
+        );
     }
 
     #[test]
