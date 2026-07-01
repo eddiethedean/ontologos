@@ -1,30 +1,48 @@
 //! W3C OWL 2 QL test subset (documented in SPEC) — taxonomy query smoke.
 
+use ontologos_core::Ontology;
 use ontologos_el::ElClassifier;
-use ontologos_parser::load_ontology;
 use ontologos_ql::{answer_query, parse_conjunctive_query, rewrite_query};
-use std::path::PathBuf;
 
 #[test]
-fn pizza_ql_type_query_has_answers() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/pizza.owl");
-    let ont = load_ontology(&path).expect("pizza");
+fn ql_subclass_query_returns_direct_subclasses() {
+    let ont = Ontology::builder()
+        .class("http://ex.org/A")
+        .expect("A")
+        .class("http://ex.org/B")
+        .expect("B")
+        .subclass_of("http://ex.org/A", "http://ex.org/B")
+        .expect("A sub B")
+        .build()
+        .expect("build");
     let tax = ElClassifier::new().classify(&ont).expect("classify");
-    let pizza = ont
-        .lookup_entity("http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza")
-        .or_else(|| ont.lookup_entity("http://www.w3.org/2002/07/owl#Thing"))
-        .expect("Pizza class");
-    let pizza_iri = ont
-        .resolve_iri(ont.entity(pizza).expect("entity").iri)
-        .expect("iri")
-        .to_string();
-    let cq = parse_conjunctive_query(&format!("Type(?x, {pizza_iri})")).expect("parse");
+    let cq = parse_conjunctive_query("SubClassOf(?x, http://ex.org/B)").expect("parse");
     let engine = ontologos_query::QueryEngine::new(&ont, &tax);
     let rewritten = rewrite_query(&engine, &tax, &cq).expect("rewrite");
     let answers = answer_query(&ont, &tax, &rewritten).expect("answer");
-    assert!(
-        rewritten.atoms.len() == 1,
-        "rewritten query should preserve atom count"
-    );
-    let _ = answers;
+    assert_eq!(rewritten.atoms.len(), 1);
+    assert_eq!(answers.len(), 1, "expected one direct subclass of B");
+    let a = ont.lookup_entity("http://ex.org/A").expect("A");
+    assert_eq!(answers[0].bindings, vec![("x".to_owned(), a)]);
+}
+
+#[test]
+fn ql_type_query_returns_direct_subclasses_of_named_class() {
+    let ont = Ontology::builder()
+        .class("http://ex.org/A")
+        .expect("A")
+        .class("http://ex.org/B")
+        .expect("B")
+        .subclass_of("http://ex.org/A", "http://ex.org/B")
+        .expect("A sub B")
+        .build()
+        .expect("build");
+    let tax = ElClassifier::new().classify(&ont).expect("classify");
+    let cq = parse_conjunctive_query("Type(?x, http://ex.org/B)").expect("parse");
+    let engine = ontologos_query::QueryEngine::new(&ont, &tax);
+    let rewritten = rewrite_query(&engine, &tax, &cq).expect("rewrite");
+    let answers = answer_query(&ont, &tax, &rewritten).expect("answer");
+    assert_eq!(answers.len(), 1);
+    let a = ont.lookup_entity("http://ex.org/A").expect("A");
+    assert_eq!(answers[0].bindings, vec![("x".to_owned(), a)]);
 }

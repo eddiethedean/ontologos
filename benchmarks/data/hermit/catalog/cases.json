@@ -16368,7 +16368,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": true,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16412,7 +16412,20 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":B",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      },
+      {
+        "class": ":B",
+        "direct": false,
+        "expected": true,
+        "individual": ":b"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testRuleNotAxiom",
@@ -16432,7 +16445,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": true,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16476,7 +16489,14 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":C",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testSimpleRule",
@@ -16508,7 +16528,14 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":C",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testRuleWithConstants",
@@ -16528,7 +16555,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": true,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16560,7 +16587,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": true,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16604,7 +16631,14 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":D",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testRuleWithDatatypes2",
@@ -16636,7 +16670,20 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":B",
+        "direct": false,
+        "expected": true,
+        "individual": ":b"
+      },
+      {
+        "class": ":C",
+        "direct": false,
+        "expected": true,
+        "individual": ":b"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testRuleWithFreshIndividuals",
@@ -16668,7 +16715,32 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":B",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      },
+      {
+        "class": ":C",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      },
+      {
+        "class": ":D",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      },
+      {
+        "class": ":E",
+        "direct": false,
+        "expected": true,
+        "individual": ":e"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testAddingFactsByRules",
@@ -16700,7 +16772,20 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":B",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      },
+      {
+        "class": ":C",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testLloydTopor",
@@ -16720,7 +16805,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": true,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16764,7 +16849,20 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":Ap",
+        "direct": false,
+        "expected": true,
+        "individual": ":a"
+      },
+      {
+        "class": ":B",
+        "direct": false,
+        "expected": true,
+        "individual": ":b"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testSeveralVars",
@@ -16784,7 +16882,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": true,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16828,7 +16926,14 @@
     "ignore_reason": null,
     "incremental_ofn": null,
     "individual_instances": [],
-    "individual_types": [],
+    "individual_types": [
+      {
+        "class": ":B",
+        "direct": false,
+        "expected": true,
+        "individual": ":b"
+      }
+    ],
     "java_class": "reasoner.RulesTest",
     "java_file": "reasoner/RulesTest.java",
     "java_method": "testNegativeBodyDataRange",
@@ -16848,7 +16953,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": true,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16880,7 +16985,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": false,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16912,7 +17017,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": false,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",
@@ -16944,7 +17049,7 @@
     "ce_satisfiability": [],
     "class_satisfiability": [],
     "conclusion_ofn": null,
-    "consistent": null,
+    "consistent": true,
     "data_property_subsumptions": [],
     "datalog_queries": [],
     "engine": "swrl",

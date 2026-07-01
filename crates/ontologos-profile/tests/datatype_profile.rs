@@ -6,9 +6,11 @@ use std::path::PathBuf;
 fn datatype_fixture_detected_as_dl_not_rl() {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testallvaluesfrominteger1.ofn");
-    if !path.is_file() {
-        return;
-    }
+    assert!(
+        path.is_file(),
+        "missing HermiT datatype fixture at {} (vendored with benchmarks/data/hermit)",
+        path.display()
+    );
     let ontology = load_ontology(&path).expect("load");
     let report = detect_profile(&ontology).expect("detect");
     let constructs = scan_constructs(&ontology);

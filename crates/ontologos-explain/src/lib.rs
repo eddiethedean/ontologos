@@ -266,7 +266,9 @@ mod tests {
         let graph = explain_rdfs(&mut ontology).expect("graph");
         assert!(graph.node_count() > 2);
         assert_valid_proof_graph(&ontology, &graph);
-        graph.to_json().expect("json");
+        let json = graph.to_json().expect("json");
+        assert!(json.contains("\"nodes\""), "proof JSON should include nodes");
+        assert!(json.contains("\"rule\""), "proof JSON should include rule steps");
     }
 
     #[test]

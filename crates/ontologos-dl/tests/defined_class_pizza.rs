@@ -7,9 +7,11 @@ use ontologos_parser::load_ontology;
 fn pizza_defined_class_enrichment_adds_cheesey_subsumptions() {
     let path =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/pizza.owl");
-    if !path.exists() {
-        return;
-    }
+    assert!(
+        path.exists(),
+        "missing pizza.owl at {} (run ./benchmarks/scripts/download.sh)",
+        path.display()
+    );
     let ontology = load_ontology(&path).expect("load pizza");
     let ns = "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#";
     let american = ontology.lookup_entity(&format!("{ns}American")).unwrap();

@@ -1,7 +1,7 @@
 use std::path::Path;
 
+use ontologos_core::Axiom;
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::RdfsEngine;
 use ontologos_rl::RlEngine;
 
 fn repo_root() -> std::path::PathBuf {
@@ -11,27 +11,56 @@ fn repo_root() -> std::path::PathBuf {
         .expect("repo root")
 }
 
-#[test]
-fn family_corpus_materializes_with_rl_inferences() {
+fn family_corpus() -> std::path::PathBuf {
     let path = repo_root().join("benchmarks/data/family.owl");
     assert!(
         path.exists(),
         "missing family corpus at {} (run ./benchmarks/scripts/download.sh)",
         path.display()
     );
+    path
+}
 
-    let mut rdfs_only = load_ontology(&path).expect("load family");
-    let rdfs_report = RdfsEngine::new().materialize(&mut rdfs_only).expect("rdfs");
-    let rdfs_total = rdfs_report.final_axiom_count;
+fn has_property_range(ontology: &ontologos_core::Ontology, property: &str, range: &str) -> bool {
+    let property = ontology.lookup_entity(property).expect("property");
+    let range = ontology.lookup_entity(range).expect("range");
+    ontology.axioms().iter().any(|(_, ax)| {
+        matches!(
+            ax,
+            Axiom::ObjectPropertyRange {
+                property: p,
+                range: r
+            } if *p == property && *r == range
+        )
+    })
+}
 
-    let mut ontology = load_ontology(&path).expect("load family");
+#[test]
+fn family_corpus_inherits_range_on_inverse_property() {
+    let mut ontology = load_ontology(&family_corpus()).expect("load family");
     let report = RlEngine::new(1)
         .saturate(&mut ontology)
         .expect("rl saturate");
 
-    assert!(report.final_axiom_count >= rdfs_total);
+    assert!(report.inferred_total() > 0, "family RL should add inferences");
+    let ns = "http://a.com/ontology#";
     assert!(
-        report.inferred_total() > 0 || report.final_axiom_count > report.initial_axiom_count,
-        "expected materialization via reasonable adapter"
+        has_property_range(&ontology, &format!("{ns}hasChild"), &format!("{ns}Person")),
+        "RL/RDFS should propagate hasParent range to hasChild via inverse"
+    );
+}
+
+#[test]
+fn family_corpus_adds_axioms_beyond_asserted_tbox() {
+    let mut ontology = load_ontology(&family_corpus()).expect("load family");
+    let initial = ontology.axiom_count();
+    let report = RlEngine::new(1)
+        .saturate(&mut ontology)
+        .expect("rl saturate");
+
+    assert!(report.final_axiom_count > initial);
+    assert!(
+        report.inferred_total() > 0,
+        "family RL saturation should materialize new axioms"
     );
 }

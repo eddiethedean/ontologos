@@ -546,6 +546,12 @@ fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Re
     if case.engine == "swrl" {
         ontologos_swrl::apply_swrl_rules(&mut ontology)
             .map_err(|e| format!("{}: swrl: {e}", case.id))?;
+        if !case_has_axiom_assertions(case) {
+            return Err(format!(
+                "{}: SWRL case has no harvested assertions — vacuous pass blocked",
+                case.id
+            ));
+        }
     }
 
     if let Some(ria) = &case.ria_regular {

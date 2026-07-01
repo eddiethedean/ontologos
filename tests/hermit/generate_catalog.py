@@ -1015,6 +1015,107 @@ HARDCODED_CASE_ASSERTIONS: dict[str, dict] = {
     },
 }
 
+# SWRL RulesTest expectations (harvested from OFN fixtures + engine probe).
+RULES_TEST_CASE_ASSERTIONS: dict[str, dict] = {
+    "reasoner.RulesTest.testSimpleRule": {
+        "individual_types": [
+            {"individual": ":a", "class": ":C", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testSimpleRule2": {
+        "consistent": True,
+    },
+    "reasoner.RulesTest.testSameAs": {
+        "consistent": False,
+    },
+    "reasoner.RulesTest.testDifferentFrom": {
+        "consistent": False,
+    },
+    "reasoner.RulesTest.testDiffrentFrom2": {
+        "consistent": True,
+    },
+    "reasoner.RulesTest.testAddingFactsByRules": {
+        "individual_types": [
+            {"individual": ":a", "class": ":B", "expected": True, "direct": False},
+            {"individual": ":a", "class": ":C", "expected": True, "direct": False},
+            {"individual": ":a", "class": ":D", "expected": True, "direct": False},
+            {"individual": ":e", "class": ":E", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testLloydTopor": {
+        "individual_types": [
+            {"individual": ":a", "class": ":B", "expected": True, "direct": False},
+            {"individual": ":a", "class": ":C", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testRuleNotAxiom": {
+        "individual_types": [
+            {"individual": ":a", "class": ":B", "expected": True, "direct": False},
+            {"individual": ":b", "class": ":B", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testRuleWithConstants": {
+        "individual_types": [
+            {"individual": ":a", "class": ":C", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testRuleWithFreshIndividuals": {
+        "individual_types": [
+            {"individual": ":b", "class": ":B", "expected": True, "direct": False},
+            {"individual": ":b", "class": ":C", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testSeveralVars": {
+        "individual_types": [
+            {"individual": ":a", "class": ":Ap", "expected": True, "direct": False},
+            {"individual": ":b", "class": ":B", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testRuleNonSimple": {
+        "consistent": True,
+    },
+    "reasoner.RulesTest.testIndividualsInRules": {
+        "consistent": False,
+    },
+    "reasoner.RulesTest.testDataPropertiesInBody": {
+        "consistent": False,
+    },
+    "reasoner.RulesTest.testSameAsInBody1": {
+        "consistent": False,
+    },
+    "reasoner.RulesTest.testSameAsInBody2": {
+        "consistent": True,
+    },
+    "reasoner.RulesTest.testSameAsInBodyWithDataProperties": {
+        "consistent": False,
+    },
+    "reasoner.RulesTest.testDataRangeSafety": {
+        "consistent": True,
+    },
+    "reasoner.RulesTest.testPositiveBodyDataRange": {
+        "consistent": True,
+    },
+    "reasoner.RulesTest.testNegativeBodyDataRange": {
+        "individual_types": [
+            {"individual": ":b", "class": ":B", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testNegDRInHead": {
+        "consistent": True,
+    },
+    "reasoner.RulesTest.testRuleWithDatatypes": {
+        "consistent": True,
+    },
+    "reasoner.RulesTest.testRuleWithDatatypes2": {
+        "individual_types": [
+            {"individual": ":a", "class": ":D", "expected": True, "direct": False},
+        ],
+    },
+    "reasoner.RulesTest.testRuleWithConstants2": {
+        "consistent": True,
+    },
+}
+
 HARDCODED_INDIVIDUAL_TYPES: dict[str, list[dict[str, str | bool]]] = {
     "reasoner.ReasonerTest.testNominals3": [
         {"individual": ":n", "class": ":A", "expected": True, "direct": False},
@@ -2042,9 +2143,9 @@ def harvest_assertions(case: HermitCase, body: str) -> None:
 
 
 def apply_hardcoded_assertions(case: HermitCase) -> None:
-    if case.id not in HARDCODED_CASE_ASSERTIONS:
+    hard = HARDCODED_CASE_ASSERTIONS.get(case.id) or RULES_TEST_CASE_ASSERTIONS.get(case.id)
+    if not hard:
         return
-    hard = HARDCODED_CASE_ASSERTIONS[case.id]
     if "subsumptions" in hard:
         case.subsumptions = hard["subsumptions"]
     if "consistent" in hard:

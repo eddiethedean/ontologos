@@ -30,9 +30,10 @@ fn pizza_detects_dl_and_hybrid_partitions() {
 }
 
 #[test]
+#[ignore = "optional corpus — run ./benchmarks/scripts/download.sh for go-subset.owl"]
 fn go_subset_hybrid_when_present() {
     let Some(ontology) = load_corpus("benchmarks/data/go-subset.owl") else {
-        return;
+        panic!("go-subset.owl missing — run ./benchmarks/scripts/download.sh or ignore this test");
     };
     let report = detect_profile(&ontology).expect("profile");
     assert!(
@@ -56,10 +57,10 @@ fn family_dl_profile_detected_or_rl() {
 }
 
 #[test]
+#[ignore = "optional corpus — run ./benchmarks/scripts/download.sh for galen.owl"]
 fn galen_hybrid_el_module() {
     let Some(ontology) = load_corpus("benchmarks/data/galen.owl") else {
-        eprintln!("skip: galen.owl not present (run benchmarks/scripts/download.sh)");
-        return;
+        panic!("galen.owl missing — run ./benchmarks/scripts/download.sh or ignore this test");
     };
     let hybrid = classify_hybrid(&ontology).expect("hybrid");
     assert!(
