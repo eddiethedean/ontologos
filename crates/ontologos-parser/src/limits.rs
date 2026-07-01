@@ -62,3 +62,13 @@ impl ParseLimits {
         }
     }
 }
+
+impl From<ParseLimits> for ontologos_core::Limits {
+    fn from(limits: ParseLimits) -> Self {
+        Self {
+            max_entities: limits.max_entities,
+            max_axioms: limits.max_axioms,
+            ..Self::default()
+        }
+    }
+}

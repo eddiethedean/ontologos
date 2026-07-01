@@ -1329,6 +1329,9 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     if trace {
         eprintln!("kb_consistent: ok={ok} clash={}", branch.clash);
     }
+    if block::is_budget_exhausted(&branch) && !ok {
+        return Err(Error::ResourceLimit(block::max_expansions()));
+    }
     Ok(ok && !branch.clash)
 }
 
@@ -2563,7 +2566,7 @@ impl<'a> Branch<'a> {
             }
             stall_steps = 0;
 
-            if self.cache.is_unsat(&self.worlds[world].labels) {
+            if self.cache.is_unsat(&self.worlds[world].labels, &self.worlds[world].negated) {
                 return Ok(false);
             }
 

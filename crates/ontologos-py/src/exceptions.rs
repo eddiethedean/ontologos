@@ -29,7 +29,10 @@ pub(crate) fn map_core_py_err(error: CoreError) -> PyErr {
 }
 
 pub(crate) fn map_parser_py_err(error: ontologos_parser::Error) -> PyErr {
-    ParseError::new_err(error.to_string())
+    match error {
+        ontologos_parser::Error::Core(e) => map_core_py_err(e),
+        other => ParseError::new_err(other.to_string()),
+    }
 }
 
 pub(crate) fn map_facade_py_err(error: FacadeError) -> PyErr {

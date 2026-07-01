@@ -8,6 +8,7 @@ use crate::entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 use crate::error::{Error, Result};
 use crate::graph::{AxiomIndex, AxiomStore};
 use crate::iri::{InternPool, IriId, validate_iri};
+use crate::limits::Limits;
 use crate::parse_meta::ParseMeta;
 use crate::swrl::SwrlRule;
 
@@ -24,6 +25,7 @@ pub struct Ontology {
     pub(crate) swrl_rules: Vec<SwrlRule>,
     #[doc(hidden)]
     pub parse_meta: Option<ParseMeta>,
+    enforce_limits: Option<Limits>,
 }
 
 impl Clone for Ontology {
@@ -38,6 +40,7 @@ impl Clone for Ontology {
             dl: Arc::clone(&self.dl),
             swrl_rules: self.swrl_rules.clone(),
             parse_meta: self.parse_meta.clone(),
+            enforce_limits: self.enforce_limits,
         }
     }
 }
@@ -53,6 +56,7 @@ impl PartialEq for Ontology {
             && *self.dl == *other.dl
             && self.swrl_rules == other.swrl_rules
             && self.parse_meta == other.parse_meta
+            && self.enforce_limits == other.enforce_limits
     }
 }
 
@@ -78,6 +82,7 @@ impl Ontology {
             dl: Arc::new(DlStore::new()),
             swrl_rules: Vec::new(),
             parse_meta: None,
+            enforce_limits: None,
         }
     }
 
@@ -114,6 +119,17 @@ impl Ontology {
     /// Attach parse metadata (used by `ontologos-parser`).
     pub fn set_parse_meta(&mut self, meta: ParseMeta) {
         self.parse_meta = Some(meta);
+    }
+
+    /// Enforce resource limits on entity registration and axiom insertion.
+    pub fn set_enforce_limits(&mut self, limits: Limits) {
+        self.enforce_limits = Some(limits);
+    }
+
+    /// Active resource limits for this ontology, if any.
+    #[must_use]
+    pub fn enforce_limits(&self) -> Option<Limits> {
+        self.enforce_limits
     }
 
     /// Drop cached profile constructs after ontology mutation (forces re-scan).
@@ -262,6 +278,19 @@ impl Ontology {
     /// Look up an entity by IRI string, registering it if absent.
     pub fn entity_id(&mut self, iri: &str, kind: EntityKind) -> Result<EntityId> {
         self.uniquify_shared();
+        if let Some(limits) = self.enforce_limits {
+            let already_registered = self
+                .iris
+                .get(iri)
+                .and_then(|iri_id| self.entities.entity_by_iri(iri_id))
+                .is_some();
+            if !already_registered && self.entity_count() >= limits.max_entities {
+                return Err(Error::ResourceLimit(format!(
+                    "entity count exceeds maximum of {}",
+                    limits.max_entities
+                )));
+            }
+        }
         let iri_id = Arc::make_mut(&mut self.iris).intern(iri)?;
         let iri_str = self.iris.resolve(iri_id)?;
         Arc::make_mut(&mut self.entities).get_or_register(iri_id, iri_str, kind)
@@ -396,6 +425,14 @@ impl Ontology {
     /// Add a validated axiom, updating indexes.
     pub fn add_axiom(&mut self, axiom: Axiom) -> Result<AxiomId> {
         self.uniquify_shared();
+        if let Some(limits) = self.enforce_limits
+            && self.axiom_count() >= limits.max_axioms
+        {
+            return Err(Error::ResourceLimit(format!(
+                "axiom count exceeds maximum of {}",
+                limits.max_axioms
+            )));
+        }
         self.validate_inverse_pair(&axiom)?;
         let id = Arc::make_mut(&mut self.axioms).push(axiom, &self.entities)?;
         let stored = self.axioms.get(id)?;

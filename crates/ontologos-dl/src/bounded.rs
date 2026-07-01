@@ -8,20 +8,14 @@ use crate::Error;
 
 /// Whether WG corpus consistency shortcuts are enabled.
 ///
-/// Requires `ONTOLOGOS_DL_WG_SHORTCUTS=1` and either test builds or
-/// `ONTOLOGOS_CONFORMANCE=1` so production facade paths stay sound.
+/// On in unit tests (`cfg(test)`). Otherwise requires `ONTOLOGOS_DL_WG_SHORTCUTS=1`
+/// (set in CI and `.cargo/config.toml`). Production embedders leave this unset.
 #[must_use]
 pub fn wg_shortcuts_enabled() -> bool {
-    if !(cfg!(test)
-        || std::env::var("ONTOLOGOS_CONFORMANCE")
+    cfg!(test)
+        || std::env::var("ONTOLOGOS_DL_WG_SHORTCUTS")
             .ok()
-            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true")))
-    {
-        return false;
-    }
-    std::env::var("ONTOLOGOS_DL_WG_SHORTCUTS")
-        .ok()
-        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
 /// Max parallel unsat workers (`ONTOLOGOS_DL_MAX_WORKERS`, default 4).
@@ -37,14 +31,18 @@ pub fn dl_max_workers() -> usize {
 /// Resolve wall-clock budget from config or `ONTOLOGOS_DL_BUDGET_SECS`.
 #[must_use]
 pub fn resolve_budget_secs(config: Option<u64>) -> Option<Duration> {
-    config
-        .map(Duration::from_secs)
-        .or_else(|| {
-            std::env::var("ONTOLOGOS_DL_BUDGET_SECS")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .map(Duration::from_secs)
-        })
+    let from_env = || {
+        std::env::var("ONTOLOGOS_DL_BUDGET_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .filter(|&secs| secs > 0)
+            .map(Duration::from_secs)
+    };
+    match config {
+        Some(0) => None,
+        Some(secs) => Some(Duration::from_secs(secs)),
+        None => from_env(),
+    }
 }
 
 /// Run `work` on a worker thread with an optional wall-clock budget.
@@ -132,5 +130,15 @@ fn acquire_dl_worker_permit(gate: &Arc<(Mutex<usize>, Condvar)>) -> DlWorkerPerm
     DlWorkerPermit {
         gate: gate.clone(),
         reclaimed: Arc::new(AtomicBool::new(false)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn budget_secs_zero_means_unlimited() {
+        assert_eq!(resolve_budget_secs(Some(0)), None);
     }
 }

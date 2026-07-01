@@ -45,8 +45,8 @@ fn mergeable_triple_key(triple: &Triple) -> Option<String> {
     if key.starts_with(&format!("{OWL_THING}|{RDF_TYPE}|")) {
         return None;
     }
-    if key.starts_with("http://www.w3.org/2002/07/owl#")
-        && key.contains(&format!("|{RDF_TYPE}|"))
+    // Entity kinds live in the registry; reasonable may emit rdf:type declarations.
+    if key.contains(&format!("|{RDF_TYPE}|"))
         && (key.ends_with(&format!("|{RDF_TYPE}|{OWL_CLASS}"))
             || key.ends_with(&format!("|{RDF_TYPE}|{OWL_NAMED_INDIVIDUAL}"))
             || key.ends_with(&format!("|{RDF_TYPE}|{OWL_OBJECT_PROPERTY}")))

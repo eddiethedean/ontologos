@@ -146,23 +146,23 @@ impl Ontology {
             ));
         }
 
-        let (entity_count, axiom_count) = count_snapshot_array_lengths(json)?;
-        if entity_count > limits.max_entities {
-            return Err(Error::ResourceLimit(format!(
-                "entity count exceeds maximum of {}",
-                limits.max_entities
-            )));
-        }
-        if axiom_count > limits.max_axioms {
-            return Err(Error::ResourceLimit(format!(
-                "axiom count exceeds maximum of {}",
-                limits.max_axioms
-            )));
-        }
+        Self::reject_duplicate_top_level_keys(json)?;
 
         let snapshot: OntologySnapshot =
             serde_json::from_str(json).map_err(|e| Error::Serialization(e.to_string()))?;
         Self::from_snapshot(snapshot, limits)
+    }
+
+    fn reject_duplicate_top_level_keys(json: &str) -> Result<()> {
+        for key in ["format_version", "entities", "axioms"] {
+            let needle = format!("\"{key}\"");
+            if json.match_indices(&needle).count() > 1 {
+                return Err(Error::Serialization(format!(
+                    "duplicate top-level key {key:?} in JSON snapshot"
+                )));
+            }
+        }
+        Ok(())
     }
 
     fn to_snapshot(&self) -> Result<OntologySnapshot> {
@@ -237,68 +237,6 @@ impl Ontology {
 
         Ok(ontology)
     }
-}
-
-fn count_snapshot_array_lengths(json: &str) -> Result<(usize, usize)> {
-    Ok((
-        count_json_top_level_array(json, "entities")?,
-        count_json_top_level_array(json, "axioms")?,
-    ))
-}
-
-fn count_json_top_level_array(json: &str, key: &str) -> Result<usize> {
-    let needle = format!("\"{key}\"");
-    let Some(key_pos) = json.find(&needle) else {
-        return Ok(0);
-    };
-    let after_key = &json[key_pos + needle.len()..];
-    let Some(colon_rel) = after_key.find(':') else {
-        return Ok(0);
-    };
-    let after_colon = after_key[colon_rel + 1..].trim_start();
-    let Some(rest) = after_colon.strip_prefix('[') else {
-        return Ok(0);
-    };
-    count_json_array_elements(rest)
-}
-
-fn count_json_array_elements(mut input: &str) -> Result<usize> {
-    input = input.trim_start();
-    if input.starts_with(']') {
-        return Ok(0);
-    }
-    let mut count = 1usize;
-    let mut depth = 0i32;
-    let mut in_string = false;
-    let mut escape = false;
-
-    for ch in input.chars() {
-        if in_string {
-            if escape {
-                escape = false;
-            } else if ch == '\\' {
-                escape = true;
-            } else if ch == '"' {
-                in_string = false;
-            }
-            continue;
-        }
-
-        match ch {
-            '"' => in_string = true,
-            '[' | '{' => depth += 1,
-            ']' | '}' => {
-                depth -= 1;
-                if depth < 0 {
-                    break;
-                }
-            }
-            ',' if depth == 0 => count += 1,
-            _ => {}
-        }
-    }
-
-    Ok(count)
 }
 
 fn entity_iri(ontology: &Ontology, id: EntityId) -> Result<String> {

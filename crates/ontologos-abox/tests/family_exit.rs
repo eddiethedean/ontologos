@@ -13,6 +13,12 @@ fn family_individuals_typed_after_materialize() {
         report.rl_inferences > 0 || !report.same_as_clusters.is_empty(),
         "family ABox materialize should infer typings or sameAs clusters"
     );
+    let closure = same_as_closure(&ont);
+    assert_eq!(
+        report.same_as_clusters.len(),
+        closure.clusters.len(),
+        "same_as_clusters in report must match post-saturation closure"
+    );
     assert!(is_abox_consistent(&ont).expect("consistent"));
 }
 

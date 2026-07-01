@@ -217,7 +217,10 @@ fn check_consistency_inner_impl(ontology: &Ontology) -> Result<ConsistencyResult
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
-    if abox_exists_forall_role_clash(ontology, &dl, &seed)? {
+    if matches!(
+        abox_exists_forall_role_clash(ontology, &dl, &seed)?,
+        Some(true)
+    ) {
         reject!("exists_forall_role_clash");
     }
     if abox_asserted_exact_zero_equiv_class(ontology) {
@@ -577,9 +580,8 @@ fn abox_atomic_class_unsatisfiable(
     _seed: &TableauSeed,
 ) -> Result<bool> {
     if ontology.entities().iter().count() > 150 {
-        return Err(Error::IncompleteReasoning(
-            "abox atomic class precheck skipped for large entity set".into(),
-        ));
+        // Defer to full KB tableau for large ABoxes; skipping is not inconclusive.
+        return Ok(false);
     }
     // Class-assertion CE checks use an empty seed; saturation seed can spuriously exhaust
     // the tableau budget on nominal/HasSelf patterns (see class_assertion_only_consistency).
@@ -1016,11 +1018,14 @@ fn atomic_class_proven_unsatisfiable(
 }
 
 /// `∃R.E ⊓ ∀R.F` on an individual's type is unsatisfiable when `E ⊓ F` is.
+///
+/// Returns `Ok(Some(true))` when a clash is found, `Ok(Some(false))` when none,
+/// and `Ok(None)` when the precheck could not complete (resource limit).
 fn abox_exists_forall_role_clash(
     ontology: &Ontology,
     dl: &ontologos_alc::DlOntology,
     _seed: &TableauSeed,
-) -> Result<bool> {
+) -> Result<Option<bool>> {
     use std::collections::HashMap;
 
     let ce_seed = TableauSeed::default();
@@ -1096,16 +1101,16 @@ fn abox_exists_forall_role_clash(
                     match ontologos_alc::is_ce_intersection_satisfiable_with_seed(
                         dl, e, f, &ce_seed,
                     ) {
-                        Ok(false) => return Ok(true),
+                        Ok(false) => return Ok(Some(true)),
                         Ok(true) => {}
-                        Err(ontologos_alc::Error::ResourceLimit(_)) => {}
+                        Err(ontologos_alc::Error::ResourceLimit(_)) => return Ok(None),
                         Err(e) => return Err(Error::Alc(e)),
                     }
                 }
             }
         }
     }
-    Ok(false)
+    Ok(Some(false))
 }
 
 fn entity_subsumption_closure(
@@ -2469,7 +2474,7 @@ mod exists_forall_tests {
         let start = Instant::now();
         let clash =
             abox_exists_forall_role_clash(&ont, &dl, &TableauSeed::default()).expect("clash");
-        eprintln!("dl040 clash={clash} elapsed={:?}", start.elapsed());
-        assert!(clash);
+        eprintln!("dl040 clash={clash:?} elapsed={:?}", start.elapsed());
+        assert_eq!(clash, Some(true));
     }
 }

@@ -125,6 +125,16 @@ pub(crate) struct PyOntologyBuilder {
     builder: OntologyBuilder,
 }
 
+fn apply_builder<F>(slf: &mut PyOntologyBuilder, f: F) -> PyResult<()>
+where
+    F: FnOnce(OntologyBuilder) -> ontologos_core::Result<OntologyBuilder>,
+{
+    let mut next = std::mem::take(&mut slf.builder);
+    next = f(next).map_err(map_core_py_err)?;
+    slf.builder = next;
+    Ok(())
+}
+
 #[pymethods]
 impl PyOntologyBuilder {
     #[new]
@@ -136,59 +146,35 @@ impl PyOntologyBuilder {
 
     #[pyo3(name = "add_class")]
     fn class(mut slf: PyRefMut<'_, Self>, iri: &str) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .class(iri)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.class(iri))
     }
 
     fn individual(mut slf: PyRefMut<'_, Self>, iri: &str) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .individual(iri)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.individual(iri))
     }
 
     fn object_property(mut slf: PyRefMut<'_, Self>, iri: &str) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .object_property(iri)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.object_property(iri))
     }
 
     fn subclass_of(mut slf: PyRefMut<'_, Self>, subclass: &str, superclass: &str) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .subclass_of(subclass, superclass)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.subclass_of(subclass, superclass))
     }
 
     fn subproperty_of(mut slf: PyRefMut<'_, Self>, sub: &str, sup: &str) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .subproperty_of(sub, sup)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.subproperty_of(sub, sup))
     }
 
     fn property_domain(mut slf: PyRefMut<'_, Self>, property: &str, domain: &str) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .property_domain(property, domain)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.property_domain(property, domain))
     }
 
     fn property_range(mut slf: PyRefMut<'_, Self>, property: &str, range: &str) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .property_range(property, range)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.property_range(property, range))
     }
 
     fn class_assertion(mut slf: PyRefMut<'_, Self>, individual: &str, class: &str) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .class_assertion(individual, class)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.class_assertion(individual, class))
     }
 
     fn object_property_assertion(
@@ -197,14 +183,11 @@ impl PyOntologyBuilder {
         property: &str,
         object: &str,
     ) -> PyResult<()> {
-        slf.builder = std::mem::take(&mut slf.builder)
-            .object_property_assertion(subject, property, object)
-            .map_err(py_err)?;
-        Ok(())
+        apply_builder(&mut slf, |b| b.object_property_assertion(subject, property, object))
     }
 
     fn build(mut slf: PyRefMut<'_, Self>) -> PyResult<PyOntology> {
-        let inner = std::mem::take(&mut slf.builder).build().map_err(py_err)?;
+        let inner = std::mem::take(&mut slf.builder).build().map_err(map_core_py_err)?;
         Ok(PyOntology::from_owned(inner))
     }
 }

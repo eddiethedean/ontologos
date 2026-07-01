@@ -300,8 +300,7 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
             }
             materialize_filler_on_world(branch, target, filler);
             if branch.clash {
-                branch.clash = false;
-                continue;
+                return;
             }
             if world_satisfies_filler(branch, target, filler) {
                 clash::check_negated_cardinality(branch);
@@ -317,8 +316,7 @@ fn expand_existential(branch: &mut Branch<'_>, world: usize, property: RoleExpr,
                     }
                     assert_label(branch, target, filler);
                     if branch.clash {
-                        branch.clash = false;
-                        continue;
+                        return;
                     }
                     if world_satisfies_filler(branch, target, filler) {
                         clash::check_negated_cardinality(branch);
@@ -946,7 +944,7 @@ pub(crate) fn materialize_existential_successors(branch: &mut Branch<'_>) {
                     }
                     materialize_filler_on_world(branch, to, *filler);
                     if branch.clash {
-                        branch.clash = false;
+                        return;
                     }
                 }
             }
@@ -1752,8 +1750,12 @@ fn expand_disjunction(
                 return Ok(true);
             }
             Ok(false) => {
-                if child.cache.is_unsat(&child.worlds[world].labels) {
-                    branch.cache.record_unsat(&child.worlds[world].labels);
+                if child.cache.is_unsat(&child.worlds[world].labels, &child.worlds[world].negated)
+                {
+                    branch.cache.record_unsat(
+                        &child.worlds[world].labels,
+                        &child.worlds[world].negated,
+                    );
                 }
             }
             Err(crate::Error::ResourceLimit(limit)) => {

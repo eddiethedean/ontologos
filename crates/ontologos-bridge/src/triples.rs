@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{Axiom, AxiomId, EntityId, EntityKind, Ontology};
-use oxrdf::{BlankNode, NamedNode, Term, Triple};
+use ontologos_core::{Axiom, AxiomId, DataLiteral, EntityId, EntityKind, Ontology};
+use oxrdf::{BlankNode, Literal, NamedNode, Term, Triple};
 
 use crate::{Error, Result};
 
@@ -23,6 +23,7 @@ const OWL_IRREFLEXIVE: &str = "http://www.w3.org/2002/07/owl#IrreflexiveProperty
 const OWL_ASYMMETRIC: &str = "http://www.w3.org/2002/07/owl#AsymmetricProperty";
 const OWL_CLASS: &str = "http://www.w3.org/2002/07/owl#Class";
 const OWL_OBJECT_PROPERTY: &str = "http://www.w3.org/2002/07/owl#ObjectProperty";
+const OWL_DATATYPE_PROPERTY: &str = "http://www.w3.org/2002/07/owl#DatatypeProperty";
 const OWL_NAMED_INDIVIDUAL: &str = "http://www.w3.org/2002/07/owl#NamedIndividual";
 const OWL_RESTRICTION: &str = "http://www.w3.org/2002/07/owl#Restriction";
 const OWL_ON_PROPERTY: &str = "http://www.w3.org/2002/07/owl#onProperty";
@@ -57,6 +58,18 @@ fn triple(s: &str, p: &str, o: &str) -> Result<Triple> {
         subject: nn(s)?.into(),
         predicate: nn(p)?,
         object: Term::NamedNode(nn(o)?),
+    })
+}
+
+fn data_property_triple(subject: &str, property: &str, value: &DataLiteral) -> Result<Triple> {
+    let datatype = nn(&value.datatype)?;
+    Ok(Triple {
+        subject: nn(subject)?.into(),
+        predicate: nn(property)?,
+        object: Term::Literal(Literal::new_typed_literal(
+            value.lexical.clone(),
+            datatype,
+        )),
     })
 }
 
@@ -107,7 +120,10 @@ pub fn core_to_triples(ontology: &Ontology) -> Result<Vec<Triple>> {
             EntityKind::ObjectProperty => {
                 out.push(triple(iri, RDF_TYPE, OWL_OBJECT_PROPERTY)?);
             }
-            EntityKind::DataProperty | EntityKind::AnnotationProperty | _ => {}
+            EntityKind::DataProperty => {
+                out.push(triple(iri, RDF_TYPE, OWL_DATATYPE_PROPERTY)?);
+            }
+            EntityKind::AnnotationProperty | _ => {}
         }
         let _ = id;
     }
@@ -136,7 +152,10 @@ pub fn core_to_triples_all(ontology: &Ontology) -> Result<Vec<Triple>> {
             EntityKind::ObjectProperty => {
                 out.push(triple(iri, RDF_TYPE, OWL_OBJECT_PROPERTY)?);
             }
-            EntityKind::DataProperty | EntityKind::AnnotationProperty | _ => {}
+            EntityKind::DataProperty => {
+                out.push(triple(iri, RDF_TYPE, OWL_DATATYPE_PROPERTY)?);
+            }
+            EntityKind::AnnotationProperty | _ => {}
         }
         let _ = id;
     }
@@ -311,8 +330,18 @@ fn axiom_to_triples(
                 &entity_iri_cached(iri_cache, ontology, *object)?,
             )?);
         }
-        Axiom::DataPropertyAssertion { .. }
-        | Axiom::NegativeObjectPropertyAssertion { .. }
+        Axiom::DataPropertyAssertion {
+            individual,
+            property,
+            value,
+        } => {
+            out.push(data_property_triple(
+                &entity_iri_cached(iri_cache, ontology, *individual)?,
+                &entity_iri_cached(iri_cache, ontology, *property)?,
+                value,
+            )?);
+        }
+        Axiom::NegativeObjectPropertyAssertion { .. }
         | Axiom::NegativeDataPropertyAssertion { .. } => {}
         Axiom::SameIndividual(individuals) => {
             for pair in individuals.windows(2) {
@@ -396,6 +425,11 @@ pub fn merge_triples_into_ontology_with_limits(
     limits: MergeLimits,
 ) -> Result<MergeReport> {
     let before = ontology.axiom_count();
+    ontology.set_enforce_limits(ontologos_core::Limits {
+        max_entities: limits.max_entities,
+        max_axioms: limits.max_axioms,
+        ..ontologos_core::Limits::default()
+    });
     let mut seen: HashSet<(String, String, String)> = HashSet::new();
     let mut seen_entity: HashSet<u64> = HashSet::new();
 
@@ -431,7 +465,7 @@ pub fn merge_triples_into_ontology_with_limits(
         }
     }
 
-    if ontology.entity_count() > limits.max_entities {
+    if ontology.entity_count() >= limits.max_entities {
         return Err(Error::Bridge(format!(
             "entity limit {} would be exceeded during merge",
             limits.max_entities
@@ -542,6 +576,21 @@ fn triple_to_axiom(ontology: &mut Ontology, triple: &Triple) -> Result<Option<Ax
         _ => return Ok(None),
     };
     let pred = triple.predicate.as_str();
+    if let Term::Literal(lit) = &triple.object {
+        let individual = lookup_or_insert(ontology, sub, EntityKind::Individual)?;
+        let property = lookup_or_insert(ontology, pred, EntityKind::DataProperty)?;
+        return Ok(match (individual, property) {
+            (Some(individual), Some(property)) => Some(Axiom::DataPropertyAssertion {
+                individual,
+                property,
+                value: DataLiteral {
+                    lexical: lit.value().to_string(),
+                    datatype: lit.datatype().as_str().to_string(),
+                },
+            }),
+            _ => None,
+        });
+    }
     let obj = match term_iri(&triple.object) {
         Some(o) => o,
         None => return Ok(None),

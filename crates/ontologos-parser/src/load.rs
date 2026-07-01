@@ -99,16 +99,7 @@ Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n";
 
 /// Reject IRIs that would break OWL Functional Syntax interpolation in supplements.
 fn validate_supplement_iri(iri: &str) -> Result<()> {
-    ontologos_core::validate_iri(iri).map_err(|e| Error::Parse(e.to_string()))?;
-    if iri
-        .bytes()
-        .any(|b| matches!(b, b'>' | b')' | b'\n' | b'\r'))
-    {
-        return Err(Error::Parse(format!(
-            "supplement IRI contains OWL functional metacharacters: {iri}"
-        )));
-    }
-    Ok(())
+    crate::validate::validate_supplement_iri(iri)
 }
 
 fn validate_supplement_iris(iris: impl IntoIterator<Item = impl AsRef<str>>) -> Result<()> {
@@ -443,6 +434,7 @@ fn supplement_rdf_dl_axioms(
     for body in
         crate::rdf_preprocess::collect_anonymous_restriction_subclass_axioms(preprocessed_rdf)
     {
+        crate::validate::validate_supplement_ofn_body(&body)?;
         let ofn = format!(
             "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<http://example.org/anon-restriction-supplement>\n{body}\n)"
@@ -485,6 +477,8 @@ fn supplement_rdf_dl_axioms(
             crate::rdf_preprocess::qualify_ce_ofn_for_supplement(&left_ofn);
         let (right_prefixes, right_q) =
             crate::rdf_preprocess::qualify_ce_ofn_for_supplement(&right_ofn);
+        crate::validate::validate_supplement_ofn_body(&left_q)?;
+        crate::validate::validate_supplement_ofn_body(&right_q)?;
         let ofn = format!(
             "{SUPPLEMENT_STANDARD_PREFIXES}\
              {left_prefixes}\n\
@@ -619,6 +613,7 @@ fn supplement_rdf_dl_axioms(
         merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for body in crate::rdf_preprocess::collect_disjoint_union_axioms(preprocessed_rdf) {
+        crate::validate::validate_supplement_ofn_body(&body)?;
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Ontology(<http://example.org/disjoint-union-supplement>\n{body}\n)"
@@ -761,6 +756,36 @@ fn merge_rdf_owl_imports(
             continue;
         }
         let imported = load_ontology_with_limits_and_base_inner(&import_path, limits, base, false)?;
+        if ontology.axiom_count().saturating_add(imported.axiom_count()) > limits.max_axioms {
+            if limits.strict {
+                return Err(Error::Parse(format!(
+                    "import merge would exceed axiom limit {} (current {} + import {})",
+                    limits.max_axioms,
+                    ontology.axiom_count(),
+                    imported.axiom_count()
+                )));
+            }
+            report.meta.warn(format!(
+                "skipping import {import_iri}: would exceed axiom limit {}",
+                limits.max_axioms
+            ));
+            continue;
+        }
+        if ontology.entity_count().saturating_add(imported.entity_count()) > limits.max_entities {
+            if limits.strict {
+                return Err(Error::Parse(format!(
+                    "import merge would exceed entity limit {} (current {} + import {})",
+                    limits.max_entities,
+                    ontology.entity_count(),
+                    imported.entity_count()
+                )));
+            }
+            report.meta.warn(format!(
+                "skipping import {import_iri}: would exceed entity limit {}",
+                limits.max_entities
+            ));
+            continue;
+        }
         let before = ontology.axiom_count();
         merge_supplement_ontology(ontology, &imported)?;
         report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);

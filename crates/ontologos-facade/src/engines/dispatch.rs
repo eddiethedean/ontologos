@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use ontologos_bridge::has_bottom_chain_violation;
 use ontologos_core::{
-    ConsistencyResult, DetectedProfileKind, EngineKind, EntityId, Profile, Reasoner, ResolvedRoute,
+    ClassExpr, ConsistencyResult, DlAxiom, EngineKind, EntityId, Profile, Reasoner, ResolvedRoute,
     RoleExpr,
 };
 use ontologos_dl::DlEngine;
@@ -44,6 +44,11 @@ pub(crate) fn check_consistency(
 ) -> Result<ConsistencyResult> {
     match route.kind {
         EngineKind::El => {
+            if ontology_needs_dl_abox_consistency(reasoner.ontology()) {
+                return DlEngine
+                    .check_consistency(reasoner.ontology(), reasoner.config().budget_secs)
+                    .map_err(Error::Dl);
+            }
             let consistent = ontologos_el::ElEngine
                 .is_consistent(reasoner.ontology())
                 .map_err(Error::El)?;
@@ -134,24 +139,24 @@ fn check_consistency_rl(reasoner: &Reasoner) -> Result<ConsistencyResult> {
 }
 
 fn check_consistency_hybrid(
-    route: ResolvedRoute,
+    _route: ResolvedRoute,
     reasoner: &Reasoner,
 ) -> Result<ConsistencyResult> {
-    match route.detected {
-        Some(DetectedProfileKind::Dl) => DlEngine
-            .check_consistency(reasoner.ontology(), reasoner.config().budget_secs)
-            .map_err(Error::Dl),
-        Some(DetectedProfileKind::Rl) => check_consistency_rl(reasoner),
-        Some(DetectedProfileKind::El) | Some(DetectedProfileKind::Ql) => {
-            let consistent = ontologos_el::ElEngine
-                .is_consistent(reasoner.ontology())
-                .map_err(Error::El)?;
-            Ok(consistency_from_bool(consistent))
-        }
-        None => Err(Error::El(ontologos_el::Error::Message(
-            "no profile detected".into(),
-        ))),
-    }
+    DlEngine
+        .check_consistency(reasoner.ontology(), reasoner.config().budget_secs)
+        .map_err(Error::Dl)
+}
+
+fn ontology_needs_dl_abox_consistency(ontology: &ontologos_core::Ontology) -> bool {
+    ontology.dl().axioms().any(|axiom| {
+        let DlAxiom::ClassAssertion { class: ce, .. } = axiom else {
+            return false;
+        };
+        ontology
+            .dl()
+            .ce(*ce)
+            .is_some_and(|expr| !matches!(expr, ClassExpr::Atomic(_)))
+    })
 }
 
 fn consistency_from_bool(consistent: bool) -> ConsistencyResult {

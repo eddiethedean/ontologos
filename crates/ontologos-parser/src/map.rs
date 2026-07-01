@@ -19,6 +19,7 @@ pub fn map_to_core(
     limits: ParseLimits,
 ) -> Result<(Ontology, ParseReport)> {
     let mut ontology = Ontology::new();
+    ontology.set_enforce_limits(limits.into());
     let mut report = ParseReport::new();
 
     // Pass 1: explicit declarations only, so axiom mapping cannot pin entity kinds

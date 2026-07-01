@@ -29,6 +29,9 @@ pub fn parse_conjunctive_query(input: &str) -> Result<ConjunctiveQuery> {
             "query atom count exceeds maximum of {MAX_QUERY_ATOMS}"
         )));
     }
+    if atoms.is_empty() {
+        return Err(Error::Parse("query must contain at least one atom".into()));
+    }
     Ok(ConjunctiveQuery { atoms })
 }
 

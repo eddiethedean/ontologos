@@ -3,7 +3,7 @@
 use ontologos_core::{Axiom, ConsistencyResult, Ontology, OntologyRevision, ParseMetaSummary, Profile, Reasoner, ReasonerConfig};
 use ontologos_facade::ClassifyOutcome;
 use ontologos_explain::explain_with_profile;
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient as load_ontology;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 
@@ -12,7 +12,7 @@ use crate::convert::{
     rdfs_classify_dict, resolve_class, resolve_individual, resolve_object_property,
     rl_classify_dict, taxonomy_classify_dict,
 };
-use crate::exceptions::map_facade_py_err;
+use crate::exceptions::{map_core_py_err, map_facade_py_err, map_parser_py_err};
 use crate::ontology::{PyOntology, SharedOntology};
 
 /// Python wrapper around the OntoLogos reasoner.
@@ -40,7 +40,7 @@ fn build_reasoner(
             ..ReasonerConfig::default()
         })
         .build(ontology)
-        .map_err(py_err)
+        .map_err(map_core_py_err)
 }
 
 #[pymethods]
@@ -64,7 +64,7 @@ impl PyReasoner {
 
         let (core_ontology, shared_ontology, shared_revision) = if let Some(path) = path {
             (
-                load_ontology(std::path::Path::new(path)).map_err(py_err)?,
+                load_ontology(std::path::Path::new(path)).map_err(map_parser_py_err)?,
                 None,
                 None,
             )
@@ -149,14 +149,19 @@ impl PyReasoner {
     fn explain(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         self.sync_from_shared()?;
         let graph = explain_with_profile(&mut self.reasoner).map_err(|e| py_err(e.to_string()))?;
-        let summary = self
+        let parse_meta = self
             .reasoner
             .ontology()
             .parse_meta()
-            .map(ParseMetaSummary::from)
-            .ok_or_else(|| py_err("ontology has no parse metadata"))?;
+            .map(ParseMetaSummary::from);
         self.sync_to_shared()?;
-        Ok(proof_graph_dict(py, self.reasoner.ontology(), &graph, Some(&summary))?.into())
+        Ok(proof_graph_dict(
+            py,
+            self.reasoner.ontology(),
+            &graph,
+            parse_meta.as_ref(),
+        )?
+        .into())
     }
 
     fn add_subclass_of(&mut self, subclass: &str, superclass: &str) -> PyResult<()> {

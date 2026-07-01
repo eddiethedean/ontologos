@@ -240,3 +240,34 @@ fn validate_blank_object_property_graph(ontology: &Ontology) -> Result<(), Error
     }
     Ok(())
 }
+
+/// Reject IRIs that would break OWL Functional Syntax interpolation in supplements.
+pub(crate) fn validate_supplement_iri(iri: &str) -> Result<(), Error> {
+    ontologos_core::validate_iri(iri).map_err(|e| Error::Parse(e.to_string()))?;
+    if iri
+        .bytes()
+        .any(|b| matches!(b, b'>' | b')' | b'\n' | b'\r'))
+    {
+        return Err(Error::Parse(format!(
+            "supplement IRI contains OWL functional metacharacters: {iri}"
+        )));
+    }
+    Ok(())
+}
+
+/// Validate every IRI embedded in `<...>` tokens inside a supplement OFN body.
+pub(crate) fn validate_supplement_ofn_body(body: &str) -> Result<(), Error> {
+    let mut rest = body;
+    while let Some(start) = rest.find('<') {
+        let after = &rest[start + 1..];
+        let Some(end) = after.find('>') else {
+            return Err(Error::Parse(
+                "unterminated IRI in supplement OFN body".into(),
+            ));
+        };
+        let iri = &after[..end];
+        validate_supplement_iri(iri)?;
+        rest = &after[end + 1..];
+    }
+    Ok(())
+}

@@ -13,8 +13,8 @@ pub type Result<T> = crate::Result<T>;
 
 /// Materialize ABox consequences (typing + `sameAs` closure) via RL saturation.
 pub fn materialize_abox(ontology: &mut Ontology) -> Result<AboxReport> {
-    let closure = same_as_closure(ontology);
     let rl_report = crate::RlEngine::new(1).saturate(ontology)?;
+    let closure = same_as_closure(ontology);
     Ok(AboxReport {
         same_as_clusters: closure.clusters,
         rl_inferences: rl_report.inferred_total(),
@@ -23,7 +23,9 @@ pub fn materialize_abox(ontology: &mut Ontology) -> Result<AboxReport> {
 
 /// Returns true when no `differentFrom` clash exists among `sameAs` clusters.
 pub fn is_abox_consistent(ontology: &Ontology) -> Result<bool> {
-    Ok(!detect_clash(ontology))
+    let mut working = ontology.clone();
+    crate::RlEngine::new(1).saturate(&mut working)?;
+    Ok(!detect_clash(&working))
 }
 
 /// Object individuals entailed as values of `property` on `subject` after RL ABox materialization.

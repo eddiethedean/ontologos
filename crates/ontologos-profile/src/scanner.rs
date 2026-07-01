@@ -12,15 +12,25 @@ pub fn axiom_constructs(axiom: &ontologos_core::Axiom) -> BTreeSet<OwlConstruct>
 
 /// Collect OWL constructs used for profile **classification** (mapped TBox shapes).
 pub fn scan_constructs(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
-    if ontology.dirty().is_dirty() {
-        return scan_constructs_from_axioms(ontology);
-    }
-    if let Some(meta) = ontology.parse_meta()
-        && !meta.profile_constructs.is_empty() {
-            return meta.profile_constructs.clone();
-        }
+    let mut constructs = if ontology.dirty().is_dirty() {
+        scan_constructs_from_axioms(ontology)
+    } else if let Some(meta) = ontology.parse_meta()
+        && !meta.profile_constructs.is_empty()
+    {
+        meta.profile_constructs.clone()
+    } else {
+        scan_constructs_from_axioms(ontology)
+    };
 
-    scan_constructs_from_axioms(ontology)
+    // Freshly loaded ontologies are dirty but still carry parse-time profile tags
+    // (e.g. datatype restrictions) that core axioms alone do not surface.
+    if ontology.dirty().is_dirty() {
+        if let Some(meta) = ontology.parse_meta() {
+            constructs.extend(meta.profile_constructs.iter().cloned());
+        }
+    }
+
+    constructs
 }
 
 fn scan_constructs_from_axioms(ontology: &Ontology) -> BTreeSet<OwlConstruct> {

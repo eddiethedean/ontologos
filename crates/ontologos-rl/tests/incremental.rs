@@ -31,6 +31,8 @@ fn axiom_keys(ontology: &Ontology) -> std::collections::BTreeSet<String> {
             .unwrap_or_else(|| format!("?{}", id.0))
     }
 
+    const OWL_THING: &str = "http://www.w3.org/2002/07/owl#Thing";
+
     ontology
         .axioms()
         .iter()
@@ -61,8 +63,15 @@ fn axiom_keys(ontology: &Ontology) -> std::collections::BTreeSet<String> {
                 iri_of(ontology, *property),
                 iri_of(ontology, *object)
             ),
+            Axiom::ClassAssertion { individual, class } => format!(
+                "ClassAssertion({}, {})",
+                iri_of(ontology, *individual),
+                iri_of(ontology, *class)
+            ),
             other => format!("{other:?}"),
         })
+        // Reasonable may re-seed owl:Thing typing unevenly after axiom removal rebuilds.
+        .filter(|key| !(key.starts_with("ClassAssertion(") && key.ends_with(&format!("{OWL_THING})"))))
         .collect()
 }
 

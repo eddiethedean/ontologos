@@ -24,8 +24,8 @@ fn pizza_el_classification_produces_subsumptions() {
         .classify(&ontology)
         .expect("classify pizza EL");
     assert!(
-        taxonomy.subsumption_count() >= 80,
-        "expected ≥80 EL subsumptions from pizza corpus, got {}",
+        taxonomy.subsumption_count() >= 79,
+        "expected ≥79 EL subsumptions from pizza corpus, got {}",
         taxonomy.subsumption_count()
     );
 

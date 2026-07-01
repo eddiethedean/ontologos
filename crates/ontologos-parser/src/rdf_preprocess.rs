@@ -1592,6 +1592,10 @@ pub(crate) fn collect_anonymous_restriction_subclass_axioms(rdf: &str) -> Vec<St
             continue;
         };
         let super_iri = resolve_relative_iri(&resource, &base);
+        if crate::validate::validate_supplement_iri(&super_iri).is_err() {
+            pos = end;
+            continue;
+        }
         let Some(sub_ce) = restriction_ce_to_ofn(block, &base, &dt_props) else {
             pos = end;
             continue;

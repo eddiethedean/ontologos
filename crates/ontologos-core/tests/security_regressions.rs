@@ -215,3 +215,15 @@ fn rejects_unknown_snapshot_fields() {
     let err = Ontology::from_json(json).expect_err("unknown field");
     assert!(matches!(err, Error::Serialization(_)));
 }
+
+#[test]
+fn rejects_duplicate_top_level_entities_key() {
+    let json = r#"{
+        "format_version": 2,
+        "entities": [],
+        "axioms": [],
+        "entities": [{"iri": "http://example.org/A", "kind": "Class"}]
+    }"#;
+    let err = Ontology::from_json(json).expect_err("duplicate entities key");
+    assert!(matches!(err, Error::Serialization(_)));
+}
