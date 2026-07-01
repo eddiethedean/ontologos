@@ -6,9 +6,19 @@ use std::time::Duration;
 
 use crate::Error;
 
-/// Whether WG corpus consistency shortcuts are enabled (`ONTOLOGOS_DL_WG_SHORTCUTS=1`).
+/// Whether WG corpus consistency shortcuts are enabled.
+///
+/// Requires `ONTOLOGOS_DL_WG_SHORTCUTS=1` and either test builds or
+/// `ONTOLOGOS_CONFORMANCE=1` so production facade paths stay sound.
 #[must_use]
 pub fn wg_shortcuts_enabled() -> bool {
+    if !(cfg!(test)
+        || std::env::var("ONTOLOGOS_CONFORMANCE")
+            .ok()
+            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true")))
+    {
+        return false;
+    }
     std::env::var("ONTOLOGOS_DL_WG_SHORTCUTS")
         .ok()
         .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))

@@ -24,6 +24,7 @@ fn merge_taxonomies_preserves_equivalences() {
     let left = Taxonomy::from_parts(vec![(a, b), (b, a)], vec![vec![a, b]], vec![]);
     let right = Taxonomy::from_parts(vec![(b, c)], vec![vec![b, c]], vec![]);
     let merged = merge_taxonomies(vec![left, right]);
-    assert_eq!(merged.equivalences.len(), 2);
+    assert_eq!(merged.equivalences.len(), 1);
+    assert_eq!(merged.equivalences[0].len(), 3);
     assert!(merged.is_subsumed(a, c));
 }

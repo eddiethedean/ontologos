@@ -18,6 +18,8 @@ pub struct SaturatedFacts {
     pub existentials: Vec<(RoleExpr, CeId, CeId)>,
     /// Saturated role subsumptions.
     pub role_subsumptions: Vec<(EntityId, EntityId)>,
+    /// Composed multi-step role chains (all atomic roles).
+    pub role_chains: Vec<(Vec<RoleExpr>, RoleExpr)>,
 }
 
 /// Run lightweight saturation on existential/subsumption clauses.
@@ -50,9 +52,13 @@ pub fn saturate(
     }
 
     for (chain, sup) in roles.chains() {
-        if let [RoleExpr::Atomic(r)] = chain.as_slice() {
-            if let RoleExpr::Atomic(s) = sup {
-                push_role_subsumption(&mut facts.role_subsumptions, *r, *s);
+        if chain.iter().all(|r| matches!(r, RoleExpr::Atomic(_))) {
+            if chain.len() == 1 {
+                if let (RoleExpr::Atomic(r), RoleExpr::Atomic(s)) = (&chain[0], sup) {
+                    push_role_subsumption(&mut facts.role_subsumptions, *r, *s);
+                }
+            } else {
+                facts.role_chains.push((chain.clone(), sup.clone()));
             }
         }
     }
@@ -72,7 +78,14 @@ pub fn saturate(
             push_subsumption(&mut facts.subsumptions, a, b);
         }
         propagate_intersection(ontology, sub, sup, &mut worklist, roles);
-        propagate_existential_role(ontology, sub, sup, &mut worklist, &facts.role_subsumptions);
+        propagate_existential_role(
+            ontology,
+            sub,
+            sup,
+            &mut worklist,
+            &facts.role_subsumptions,
+            &facts.role_chains,
+        );
         propagate_through(sub, sup, &mut worklist, &ce_forward);
     }
 
@@ -100,6 +113,7 @@ fn propagate_existential_role(
     sup: CeId,
     worklist: &mut Vec<(CeId, CeId)>,
     role_subs: &[(EntityId, EntityId)],
+    role_chains: &[(Vec<RoleExpr>, RoleExpr)],
 ) {
     let store = ontology.dl();
     let Some(ClassExpr::Some {
@@ -116,6 +130,20 @@ fn propagate_existential_role(
         if let Some(exists_sup) = find_some_ce(ontology, RoleExpr::Atomic(r_sup), filler) {
             worklist.push((sub, exists_sup));
         }
+    }
+    for (chain, chain_sup) in role_chains {
+        let Some(RoleExpr::Atomic(first)) = chain.first() else {
+            continue;
+        };
+        if r != *first {
+            continue;
+        }
+        if let RoleExpr::Atomic(sup_role) = chain_sup
+            && let Some(exists_sup) =
+                find_some_ce(ontology, RoleExpr::Atomic(*sup_role), filler)
+            {
+                worklist.push((sub, exists_sup));
+            }
     }
 }
 
@@ -164,32 +192,25 @@ fn propagate_intersection(
             worklist.push((sub, *op));
         }
     }
-    if let Some(ClassExpr::Some { property, filler }) = store.ce(sub) {
-        if let Some(ClassExpr::All {
+    if let Some(ClassExpr::Some { property, filler }) = store.ce(sub)
+        && let Some(ClassExpr::All {
             property: p2,
             filler: f2,
         }) = store.ce(sup)
-        {
-            if properties_related(property, p2, roles) {
+            && properties_related(property, p2, roles) {
                 worklist.push((*filler, *f2));
             }
-        }
-    }
     if let Some(ClassExpr::Some {
         property: RoleExpr::Atomic(r),
         filler,
     }) = store.ce(sub).cloned()
-    {
-        if let Some(ClassExpr::Some {
+        && let Some(ClassExpr::Some {
             property: RoleExpr::Atomic(r2),
             filler: f2,
         }) = store.ce(sup).cloned()
-        {
-            if filler == f2 && roles.is_subrole(r, r2) {
+            && filler == f2 && roles.is_subrole(r, r2) {
                 worklist.push((sub, sup));
             }
-        }
-    }
 }
 
 fn properties_related(a: &RoleExpr, b: &RoleExpr, roles: &RoleHierarchy) -> bool {

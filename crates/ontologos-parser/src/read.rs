@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufReader, Read, Seek, SeekFrom};
+use std::io::{BufReader, Cursor, Read, Seek, SeekFrom};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 use std::sync::Mutex;
@@ -40,13 +40,111 @@ pub fn read_horned_owl(
 
 /// Parse ontology bytes from an already-open reader (single-fd load path).
 ///
-/// `limits` are enforced during axiom mapping (`map_to_core`); horned-owl itself
-/// may allocate before mapping caps apply (see `docs/security.md`).
+/// `limits` are enforced during axiom mapping (`map_to_core`) and via a lightweight
+/// pre-scan before horned-owl parsing (see `docs/security.md`).
 pub fn read_horned_owl_from_reader<R: Read>(
     reader: R,
     format: Format,
-    _limits: ParseLimits,
+    limits: ParseLimits,
 ) -> Result<SetOntology<RcStr>> {
+    let bytes = read_bounded_bytes(reader, limits.max_file_bytes)?;
+    prescan_axiom_estimate(&bytes, format, limits)?;
+    read_horned_owl_from_bytes(&bytes, format)
+}
+
+fn read_bounded_bytes<R: Read>(reader: R, max_bytes: usize) -> Result<Vec<u8>> {
+    let mut limited = reader.take(max_bytes.saturating_add(1) as u64);
+    let mut bytes = Vec::new();
+    limited
+        .read_to_end(&mut bytes)
+        .map_err(|e| Error::Parse(e.to_string()))?;
+    if bytes.len() > max_bytes {
+        return Err(Error::Parse(format!(
+            "input size {} exceeds limit of {max_bytes} bytes",
+            bytes.len()
+        )));
+    }
+    Ok(bytes)
+}
+
+/// Lightweight axiom/component estimate before horned-owl allocates.
+fn prescan_axiom_estimate(bytes: &[u8], format: Format, limits: ParseLimits) -> Result<()> {
+    let estimate = match format {
+        Format::Functional => count_ofn_axiom_markers(bytes),
+        Format::OwlXml | Format::RdfXml => count_xml_axiom_markers(bytes),
+        Format::Turtle => count_turtle_statement_markers(bytes),
+    };
+    if estimate > limits.max_axioms {
+        return Err(Error::Parse(format!(
+            "pre-scan estimate of {estimate} components exceeds axiom limit of {}",
+            limits.max_axioms
+        )));
+    }
+    Ok(())
+}
+
+fn count_ofn_axiom_markers(bytes: &[u8]) -> usize {
+    const MARKERS: &[&str] = &[
+        "SubClassOf(",
+        "EquivalentClasses(",
+        "DisjointClasses(",
+        "ClassAssertion(",
+        "ObjectPropertyAssertion(",
+        "DataPropertyAssertion(",
+        "Declaration(",
+        "SubObjectPropertyOf(",
+        "EquivalentObjectProperties(",
+        "DisjointObjectProperties(",
+        "SameIndividual(",
+        "DifferentIndividuals(",
+        "ObjectPropertyDomain(",
+        "ObjectPropertyRange(",
+        "NegativeObjectPropertyAssertion(",
+        "NegativeDataPropertyAssertion(",
+    ];
+    let text = String::from_utf8_lossy(bytes);
+    MARKERS
+        .iter()
+        .map(|marker| text.matches(marker).count())
+        .sum()
+}
+
+fn count_xml_axiom_markers(bytes: &[u8]) -> usize {
+    let text = String::from_utf8_lossy(bytes);
+    const MARKERS: &[&str] = &[
+        "owl:Class",
+        "owl:ObjectProperty",
+        "owl:DatatypeProperty",
+        "owl:NamedIndividual",
+        "owl:Restriction",
+        "owl:equivalentClass",
+        "owl:intersectionOf",
+        "owl:unionOf",
+        "owl:complementOf",
+        "owl:disjointWith",
+        "owl:someValuesFrom",
+        "owl:allValuesFrom",
+        "owl:hasValue",
+        "owl:cardinality",
+        "owl:minCardinality",
+        "owl:maxCardinality",
+        "rdf:type",
+        "rdfs:subClassOf",
+    ];
+    MARKERS
+        .iter()
+        .map(|marker| text.matches(marker).count())
+        .sum()
+}
+
+fn count_turtle_statement_markers(bytes: &[u8]) -> usize {
+    let text = String::from_utf8_lossy(bytes);
+    text.matches(" ;").count()
+        + text.matches(" .").count()
+        + text.matches('\n').map(|_| 1).sum::<usize>() / 4
+}
+
+fn read_horned_owl_from_bytes(bytes: &[u8], format: Format) -> Result<SetOntology<RcStr>> {
     let _guard = HORNED_OWL_READ_LOCK
         .lock()
         .map_err(|e| Error::Parse(format!("horned-owl read lock poisoned: {e}")))?;
@@ -54,10 +152,11 @@ pub fn read_horned_owl_from_reader<R: Read>(
 
     let (ontology, _prefixes) = match format {
         Format::OwlXml => guard_horned_parse(|| {
-            owx_reader::read(&mut BufReader::new(reader), config).map_err(map_horned_error)
+            owx_reader::read(&mut BufReader::new(Cursor::new(bytes)), config)
+                .map_err(map_horned_error)
         })?,
         Format::RdfXml | Format::Turtle => guard_horned_parse(|| {
-            let mut reader = BufReader::new(reader);
+            let mut reader = BufReader::new(Cursor::new(bytes));
             let (concrete, incomplete) =
                 rdf_reader::read(&mut reader, config).map_err(map_horned_error)?;
             if !incomplete.is_complete() {
@@ -72,8 +171,8 @@ pub fn read_horned_owl_from_reader<R: Read>(
             Ok((concrete.into(), PrefixMapping::default()))
         })?,
         Format::Functional => guard_horned_parse(|| {
-            let mut reader = BufReader::new(reader);
-            ofn_reader::read(&mut reader, config).map_err(map_horned_error)
+            ofn_reader::read(&mut BufReader::new(Cursor::new(bytes)), config)
+                .map_err(map_horned_error)
         })?,
     };
 

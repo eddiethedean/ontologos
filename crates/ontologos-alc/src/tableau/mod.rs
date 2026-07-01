@@ -39,6 +39,8 @@ pub struct TableauSeed {
     pub existentials: Vec<(RoleExpr, CeId, CeId)>,
     /// Saturated atomic role subsumptions `r ⊑ s`.
     pub role_subsumptions: Vec<(EntityId, EntityId)>,
+    /// Multi-step role chains from saturation.
+    pub role_chains: Vec<(Vec<RoleExpr>, RoleExpr)>,
 }
 
 /// ALC tableau classifier entry point.
@@ -199,8 +201,8 @@ fn neg_exists_and_split_roles_sat(
         match store.ce(conj) {
             Some(ClassExpr::Not(inner)) => {
                 let inner = effective_class_expression(dl, *inner);
-                if let Some(ClassExpr::Some { property, filler }) = store.ce(inner) {
-                    if matches!(property, RoleExpr::Atomic(_))
+                if let Some(ClassExpr::Some { property, filler }) = store.ce(inner)
+                    && matches!(property, RoleExpr::Atomic(_))
                         && matches!(
                             store.ce(*filler),
                             Some(ClassExpr::And(ops))
@@ -216,7 +218,6 @@ fn neg_exists_and_split_roles_sat(
                         neg_idx = Some(i);
                         neg_role = Some(property.clone());
                     }
-                }
             }
             Some(ClassExpr::Some { property, filler })
                 if matches!(property, RoleExpr::Atomic(_))
@@ -500,13 +501,10 @@ fn iant6_functional_inverse_forall_unsat(dl: &DlOntology, ce: CeId) -> Option<bo
                     property: RoleExpr::Inverse(f),
                     filler: inner,
                 }) = store.ce(*filler)
-                {
-                    if functional.contains(f) {
-                        if let Some(ClassExpr::Atomic(class)) = store.ce(*inner) {
+                    && functional.contains(f)
+                        && let Some(ClassExpr::Atomic(class)) = store.ce(*inner) {
                             forall_filler = Some(*class);
                         }
-                    }
-                }
             }
             _ => {}
         }
@@ -538,11 +536,9 @@ fn iant13_dual_exists_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
             property: RoleExpr::Atomic(_),
             filler,
         }) = store.ce(conj)
-        {
-            if iant13_pos_exists_filler(dl, *filler) {
+            && iant13_pos_exists_filler(dl, *filler) {
                 pos_exists = true;
             }
-        }
     }
     if atomic_neg && pos_exists {
         Some(false)
@@ -572,16 +568,27 @@ fn atomic_iant13_neg_equiv(dl: &DlOntology, class: EntityId) -> bool {
 }
 
 fn equiv_ce_tree_has_negation(dl: &DlOntology, ce: CeId) -> bool {
+    equiv_ce_tree_has_negation_inner(dl, ce, &mut HashSet::new())
+}
+
+fn equiv_ce_tree_has_negation_inner(
+    dl: &DlOntology,
+    ce: CeId,
+    seen: &mut HashSet<CeId>,
+) -> bool {
     let store = dl.core().dl();
     let ce = effective_class_expression(dl, ce);
+    if !seen.insert(ce) {
+        return false;
+    }
     match store.ce(ce) {
         Some(ClassExpr::Not(_)) => true,
         Some(ClassExpr::All { filler, .. } | ClassExpr::Some { filler, .. }) => {
-            equiv_ce_tree_has_negation(dl, *filler)
+            equiv_ce_tree_has_negation_inner(dl, *filler, seen)
         }
-        Some(ClassExpr::And(ops) | ClassExpr::Or(ops)) => {
-            ops.iter().any(|&op| equiv_ce_tree_has_negation(dl, op))
-        }
+        Some(ClassExpr::And(ops) | ClassExpr::Or(ops)) => ops
+            .iter()
+            .any(|&op| equiv_ce_tree_has_negation_inner(dl, op, seen)),
         _ => false,
     }
 }
@@ -1699,8 +1706,8 @@ fn individual_in_key_class(
     if labels.contains(&key_class) {
         return true;
     }
-    if let Some(ClassExpr::Atomic(entity)) = dl.core().dl().ce(key_class) {
-        if dl
+    if let Some(ClassExpr::Atomic(entity)) = dl.core().dl().ce(key_class)
+        && dl
             .core()
             .entity(*entity)
             .ok()
@@ -1709,7 +1716,6 @@ fn individual_in_key_class(
         {
             return true;
         }
-    }
     for &label in labels {
         if label_subsumes_key(branch, dl, label, key_class) {
             return true;
@@ -1743,11 +1749,9 @@ fn label_subsumes_key(branch: &Branch<'_>, dl: &DlOntology, sub: CeId, key: CeId
         }
         if let (Some(ClassExpr::Atomic(a)), Some(ClassExpr::Atomic(b))) =
             (dl.core().dl().ce(cur), dl.core().dl().ce(key))
-        {
-            if a == b {
+            && a == b {
                 return true;
             }
-        }
     }
     false
 }
@@ -1821,11 +1825,10 @@ fn run_tableau(
 
     let mut subsumptions = Vec::new();
     for clause in dl.clauses().clauses() {
-        if let Clause::Subsumption { sub, sup } = clause {
-            if let (Some(a), Some(b)) = (atomic_entity(dl, *sub), atomic_entity(dl, *sup)) {
+        if let Clause::Subsumption { sub, sup } = clause
+            && let (Some(a), Some(b)) = (atomic_entity(dl, *sub), atomic_entity(dl, *sup)) {
                 subsumptions.push((a, b));
             }
-        }
     }
     for &(sub, sup) in &seed.subsumptions {
         if let (Some(a), Some(b)) = (atomic_entity(dl, sub), atomic_entity(dl, sup)) {
@@ -1905,11 +1908,10 @@ pub fn structural_unsat_classes(
 
     let mut disjoint = Vec::new();
     for clause in dl.clauses().clauses() {
-        if let Clause::Disjoint { left, right } = clause {
-            if let (Some(a), Some(b)) = (atomic_entity(dl, *left), atomic_entity(dl, *right)) {
+        if let Clause::Disjoint { left, right } = clause
+            && let (Some(a), Some(b)) = (atomic_entity(dl, *left), atomic_entity(dl, *right)) {
                 disjoint.push((a, b));
             }
-        }
     }
 
     let mut unsat = HashSet::new();
@@ -2329,6 +2331,7 @@ pub(crate) struct Branch<'a> {
     pub(crate) different_pairs: HashSet<(EntityId, EntityId)>,
     pub(crate) cache: cache::UnsatCache,
     pub(crate) expansions: u32,
+    pub(crate) disjunction_depth: u32,
     pub(crate) blocked_signatures: std::collections::HashSet<u64>,
 }
 
@@ -2416,6 +2419,8 @@ impl<'a> Branch<'a> {
         }
 
         saturate_inverse_role_chains(&mut role_chains);
+        role_chains.extend(seed.role_chains.clone());
+        saturate_inverse_role_chains(&mut role_chains);
         saturate_role_hierarchy(&mut role_hierarchy);
 
         let top_ce = dl.core().dl().expressions().find_map(|(id, e)| match e {
@@ -2471,6 +2476,7 @@ impl<'a> Branch<'a> {
             different_pairs: HashSet::new(),
             cache: cache::UnsatCache::new(),
             expansions: 0,
+            disjunction_depth: 0,
             blocked_signatures: std::collections::HashSet::new(),
         }
     }

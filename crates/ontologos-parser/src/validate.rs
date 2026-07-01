@@ -4,16 +4,28 @@ use ontologos_core::{Axiom, ClassExpr, DataExpr, DlAxiom, EntityId, Ontology};
 
 use crate::Error;
 
-/// Reject ontologies with inconsistent datatype definitions or invalid literals.
-pub fn validate_loaded_ontology(ontology: &Ontology) -> Result<(), Error> {
+/// Lightweight validation run after every successful load.
+pub fn validate_loaded_ontology_light(ontology: &Ontology) -> Result<(), Error> {
+    validate_ontology_datatypes(ontology, false)
+}
+
+/// Expensive blank-node graph validation for strict loads.
+pub(crate) fn validate_loaded_ontology_strict_graph(ontology: &Ontology) -> Result<(), Error> {
+    validate_ontology_datatypes(ontology, true)?;
+    validate_blank_object_property_graph(ontology)
+}
+
+fn validate_ontology_datatypes(ontology: &Ontology, strict: bool) -> Result<(), Error> {
     let store = ontology.dl();
     for axiom in store.axioms() {
         match axiom {
-            DlAxiom::DatatypeDefinition { range, .. } => validate_data_expr(ontology, *range)?,
+            DlAxiom::DatatypeDefinition { range, .. } => {
+                validate_data_expr(ontology, *range, strict)?;
+            }
             DlAxiom::SubClassOf { sub, sup } => {
                 for id in [*sub, *sup] {
                     if let Some(ce) = store.ce(id) {
-                        validate_ce_data(ontology, ce)?;
+                        validate_ce_data(ontology, ce, strict)?;
                     }
                 }
             }
@@ -24,6 +36,34 @@ pub fn validate_loaded_ontology(ontology: &Ontology) -> Result<(), Error> {
                     "same/different individuals cannot mix named and blank nodes".into(),
                 ));
             }
+            _ => {}
+        }
+    }
+    for (_, axiom) in ontology.axioms().iter() {
+        match axiom {
+            Axiom::SameIndividual(ids) | Axiom::DifferentIndividuals(ids)
+                if individuals_mix_named_and_blank(ontology, ids) =>
+            {
+                return Err(Error::Parse(
+                    "same/different individuals cannot mix named and blank nodes".into(),
+                ));
+            }
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+/// Full validation including blank-node assertion and graph cycle checks.
+pub fn validate_loaded_ontology(ontology: &Ontology) -> Result<(), Error> {
+    validate_loaded_ontology_light(ontology)?;
+    validate_blank_node_assertions(ontology)?;
+    validate_blank_object_property_graph(ontology)
+}
+
+fn validate_blank_node_assertions(ontology: &Ontology) -> Result<(), Error> {
+    for axiom in ontology.dl().axioms() {
+        match axiom {
             DlAxiom::NegativeObjectPropertyAssertion {
                 subject, object, ..
             } if is_blank_individual(ontology, *subject)
@@ -47,49 +87,29 @@ pub fn validate_loaded_ontology(ontology: &Ontology) -> Result<(), Error> {
                     "data property assertions cannot use blank nodes".into(),
                 ));
             }
-            DlAxiom::ObjectPropertyAssertion {
-                subject, object, ..
-            } if is_blank_individual(ontology, *subject)
-                || is_blank_individual(ontology, *object) =>
-            {
-                validate_blank_object_property_graph(ontology)?;
-            }
-            _ => {}
-        }
-    }
-    validate_blank_object_property_graph(ontology)?;
-    for (_, axiom) in ontology.axioms().iter() {
-        match axiom {
-            Axiom::SameIndividual(ids) | Axiom::DifferentIndividuals(ids)
-                if individuals_mix_named_and_blank(ontology, ids) =>
-            {
-                return Err(Error::Parse(
-                    "same/different individuals cannot mix named and blank nodes".into(),
-                ));
-            }
             _ => {}
         }
     }
     Ok(())
 }
 
-fn validate_ce_data(ontology: &Ontology, ce: &ClassExpr) -> Result<(), Error> {
+fn validate_ce_data(ontology: &Ontology, ce: &ClassExpr, strict: bool) -> Result<(), Error> {
     let store = ontology.dl();
     match ce {
         ClassExpr::DataSome { range, .. } | ClassExpr::DataAll { range, .. } => {
-            validate_data_expr(ontology, *range)?;
+            validate_data_expr(ontology, *range, strict)?;
         }
-        ClassExpr::DataHasValue { value, .. } => validate_data_expr(ontology, *value)?,
+        ClassExpr::DataHasValue { value, .. } => validate_data_expr(ontology, *value, strict)?,
         ClassExpr::And(ops) | ClassExpr::Or(ops) => {
             for op in ops {
                 if let Some(inner) = store.ce(*op) {
-                    validate_ce_data(ontology, inner)?;
+                    validate_ce_data(ontology, inner, strict)?;
                 }
             }
         }
         ClassExpr::Not(inner) => {
             if let Some(inner_ce) = store.ce(*inner) {
-                validate_ce_data(ontology, inner_ce)?;
+                validate_ce_data(ontology, inner_ce, strict)?;
             }
         }
         _ => {}
@@ -97,7 +117,11 @@ fn validate_ce_data(ontology: &Ontology, ce: &ClassExpr) -> Result<(), Error> {
     Ok(())
 }
 
-fn validate_data_expr(ontology: &Ontology, de: ontologos_core::DeId) -> Result<(), Error> {
+fn validate_data_expr(
+    ontology: &Ontology,
+    de: ontologos_core::DeId,
+    _strict: bool,
+) -> Result<(), Error> {
     let store = ontology.dl();
     let Some(expr) = store.de(de) else {
         return Ok(());
@@ -108,22 +132,15 @@ fn validate_data_expr(ontology: &Ontology, de: ontologos_core::DeId) -> Result<(
             validate_literal_lexical(&dt, lexical)?;
         }
         DataExpr::Or(ops) | DataExpr::And(ops) => {
-            let mut literal_dtypes = std::collections::HashSet::new();
             for &op in ops {
                 if let Some(DataExpr::Literal { lexical, datatype }) = store.de(op) {
                     let dt = datatype_iri(ontology, *datatype);
                     validate_literal_lexical(&dt, lexical)?;
-                    literal_dtypes.insert(dt);
                 }
             }
-            if matches!(expr, DataExpr::Or(_)) && literal_dtypes.len() > 1 {
-                return Err(Error::Parse(
-                    "data oneOf cannot mix literal datatypes".into(),
-                ));
-            }
         }
-        DataExpr::Not(inner) => validate_data_expr(ontology, *inner)?,
-        DataExpr::Facet { base, .. } => validate_data_expr(ontology, *base)?,
+        DataExpr::Not(inner) => validate_data_expr(ontology, *inner, _strict)?,
+        DataExpr::Facet { base, .. } => validate_data_expr(ontology, *base, _strict)?,
         DataExpr::Datatype(_) | DataExpr::Top => {}
     }
     Ok(())
@@ -189,21 +206,17 @@ fn validate_blank_object_property_graph(ontology: &Ontology) -> Result<(), Error
         if let DlAxiom::ObjectPropertyAssertion {
             subject, object, ..
         } = axiom
-        {
-            if is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
+            && is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
                 graph.entry(*subject).or_default().push(*object);
             }
-        }
     }
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::ObjectPropertyAssertion {
             subject, object, ..
         } = axiom
-        {
-            if is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
+            && is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
                 graph.entry(*subject).or_default().push(*object);
             }
-        }
     }
     for &start in graph.keys() {
         let mut stack = vec![(start, HashSet::from([start]))];

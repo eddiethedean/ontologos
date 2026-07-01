@@ -269,6 +269,11 @@ pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
             axiom_ids: dl_ids,
         });
     }
+    if modules.is_empty() && ontology.entity_count() > 0 {
+        return Err(crate::Error::Message(
+            "hybrid classification produced no modules for a non-empty ontology".into(),
+        ));
+    }
     if modules.is_empty() {
         modules.push(ClassifiedModule {
             profile: OwlProfile::El,
@@ -286,14 +291,79 @@ pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
 /// Merge module taxonomies (called from `ontologos-dl` after per-engine classify).
 #[must_use]
 pub fn merge_taxonomies(mut parts: Vec<Taxonomy>) -> Taxonomy {
+    use std::collections::HashMap;
+
     let mut subsumptions = Vec::new();
-    let mut equivalences = Vec::new();
+    let mut equivalence_clusters = Vec::new();
     let mut unsatisfiable = Vec::new();
     for t in &mut parts {
         subsumptions.append(&mut t.subsumptions);
-        equivalences.append(&mut t.equivalences);
+        equivalence_clusters.append(&mut t.equivalences);
         unsatisfiable.append(&mut t.unsatisfiable);
     }
+
+    let mut parent: HashMap<u32, u32> = HashMap::new();
+    let find = |id: u32, parent: &mut HashMap<u32, u32>| -> u32 {
+        let mut root = id;
+        while let Some(&p) = parent.get(&root) {
+            if p == root {
+                break;
+            }
+            root = p;
+        }
+        let mut current = id;
+        while current != root {
+            let next = parent.get(&current).copied().unwrap_or(current);
+            parent.insert(current, root);
+            current = next;
+        }
+        root
+    };
+    let union = |a: EntityId, b: EntityId, parent: &mut HashMap<u32, u32>| {
+        let ra = find(a.0, parent);
+        let rb = find(b.0, parent);
+        if ra != rb {
+            let (root, child) = if ra <= rb { (ra, rb) } else { (rb, ra) };
+            parent.insert(child, root);
+            parent.insert(root, root);
+        }
+    };
+
+    for cluster in &equivalence_clusters {
+        if cluster.len() < 2 {
+            continue;
+        }
+        for i in 1..cluster.len() {
+            union(cluster[0], cluster[i], &mut parent);
+        }
+    }
+    for &(sub, sup) in &subsumptions {
+        union(sub, sup, &mut parent);
+        union(sup, sub, &mut parent);
+    }
+
+    let mut clusters: HashMap<u32, Vec<EntityId>> = HashMap::new();
+    for cluster in equivalence_clusters {
+        for id in cluster {
+            let root = find(id.0, &mut parent);
+            clusters.entry(root).or_default().push(id);
+        }
+    }
+    for &(sub, sup) in &subsumptions {
+        let root = find(sub.0, &mut parent);
+        clusters.entry(root).or_default().push(sub);
+        clusters.entry(root).or_default().push(sup);
+    }
+
+    let mut equivalences: Vec<Vec<EntityId>> = clusters
+        .into_values()
+        .filter_map(|mut members| {
+            members.sort_unstable_by_key(|id| id.0);
+            members.dedup();
+            (members.len() >= 2).then_some(members)
+        })
+        .collect();
+
     subsumptions.sort_unstable_by_key(|(a, b)| (a.0, b.0));
     subsumptions.dedup();
     equivalences.sort_by_cached_key(|cluster| cluster.iter().map(|id| id.0).min().unwrap_or(0));
@@ -316,7 +386,7 @@ pub fn engine_for_profile(profile: OwlProfile) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ontologos_core::Axiom;
+    use ontologos_core::{Axiom, EntityKind, Ontology};
 
     #[test]
     fn partitions_el_and_dl_axioms() {
@@ -342,5 +412,15 @@ mod tests {
 
         let report = classify_hybrid(&ontology).expect("hybrid");
         assert_eq!(report.modules.len(), 1);
+    }
+
+    #[test]
+    fn empty_axioms_with_entities_errors() {
+        let mut ontology = Ontology::new();
+        ontology
+            .entity_id("http://ex.org/A", EntityKind::Class)
+            .expect("class");
+        let err = classify_hybrid(&ontology).expect_err("expected error");
+        assert!(err.to_string().contains("no modules"));
     }
 }

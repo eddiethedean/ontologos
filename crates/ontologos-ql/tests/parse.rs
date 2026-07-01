@@ -9,9 +9,10 @@ fn parses_type_atom() {
 }
 
 #[test]
-fn parses_conjunctive_query() {
-    let cq =
-        parse_conjunctive_query("Type(?x, http://ex.org/A) AND SubClassOf(?y, http://ex.org/B)")
-            .expect("parse");
-    assert_eq!(cq.atoms.len(), 2);
+fn rejects_multi_atom_query() {
+    let err = parse_conjunctive_query(
+        "Type(?x, http://ex.org/A) AND SubClassOf(?y, http://ex.org/B)",
+    )
+    .expect_err("parse");
+    assert!(err.to_string().contains("atom count"));
 }

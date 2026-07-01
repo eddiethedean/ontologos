@@ -46,6 +46,9 @@ pub enum Error {
     /// Serialization or deserialization failed (bad JSON, limits, format version).
     #[error("serialization error: {0}")]
     Serialization(String),
+    /// Resource limit exceeded during load or reasoning.
+    #[error("resource limit exceeded: {0}")]
+    ResourceLimit(String),
     /// Ontology not loaded (reasoner).
     #[error("ontology not loaded")]
     OntologyNotLoaded,

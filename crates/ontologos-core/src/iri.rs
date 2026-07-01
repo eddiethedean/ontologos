@@ -128,6 +128,7 @@ impl InternPool {
 }
 
 const ALLOWED_SCHEMES: &[&str] = &["http", "https", "urn", "file", "internal"];
+const SNAPSHOT_ALLOWED_SCHEMES: &[&str] = &["http", "https", "urn"];
 
 /// Validate that `iri` is an absolute IRI with an allowed scheme.
 pub fn validate_iri(iri: &str) -> Result<()> {
@@ -136,6 +137,20 @@ pub fn validate_iri(iri: &str) -> Result<()> {
 
 /// Validate an IRI with a custom maximum length.
 pub fn validate_iri_with_max_len(iri: &str, max_len: usize) -> Result<()> {
+    validate_iri_schemes(iri, max_len, ALLOWED_SCHEMES)
+}
+
+/// Validate an IRI from an untrusted JSON snapshot (`http`, `https`, `urn` only).
+pub fn validate_snapshot_iri(iri: &str) -> Result<()> {
+    validate_snapshot_iri_with_max_len(iri, Limits::default().max_iri_len)
+}
+
+/// Validate a snapshot IRI with a custom maximum length.
+pub fn validate_snapshot_iri_with_max_len(iri: &str, max_len: usize) -> Result<()> {
+    validate_iri_schemes(iri, max_len, SNAPSHOT_ALLOWED_SCHEMES)
+}
+
+fn validate_iri_schemes(iri: &str, max_len: usize, allowed_schemes: &[&str]) -> Result<()> {
     if iri.is_empty() {
         return Err(Error::InvalidIri("IRI must not be empty".into()));
     }
@@ -173,9 +188,10 @@ pub fn validate_iri_with_max_len(iri: &str, max_len: usize) -> Result<()> {
         return Err(Error::InvalidIri(format!("invalid IRI scheme: {iri}")));
     }
 
-    if !ALLOWED_SCHEMES.contains(&scheme) {
+    if !allowed_schemes.contains(&scheme) {
         return Err(Error::InvalidIri(format!(
-            "IRI scheme '{scheme}' is not allowed (allowed: http, https, urn, file, internal)"
+            "IRI scheme '{scheme}' is not allowed (allowed: {})",
+            allowed_schemes.join(", ")
         )));
     }
 
@@ -233,6 +249,12 @@ mod tests {
     #[test]
     fn rejects_javascript_scheme() {
         assert!(validate_iri("javascript:alert(1)").is_err());
+    }
+
+    #[test]
+    fn snapshot_iri_rejects_file_scheme() {
+        assert!(validate_snapshot_iri("file:///etc/passwd").is_err());
+        assert!(validate_snapshot_iri("https://example.org/C").is_ok());
     }
 
     #[test]

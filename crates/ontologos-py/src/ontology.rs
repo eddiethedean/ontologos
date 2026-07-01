@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyString, PyType};
 
 use crate::convert::py_err;
-use crate::exceptions::map_core_py_err;
+use crate::exceptions::{map_core_py_err, map_parser_py_err};
 
 /// Shared in-memory ontology handle used by `Ontology` and `Reasoner`.
 pub(crate) type SharedOntology = Arc<Mutex<Ontology>>;
@@ -70,7 +70,17 @@ impl PyOntology {
     ) -> PyResult<Self> {
         let json_mod = PyModule::import(py, "json")?;
         let json: String = json_mod.call_method1("dumps", (data,))?.extract()?;
-        Self::from_json(_cls, &json)
+        Self::from_json_with_limits(_cls, &json, None, None, None, None)
+    }
+
+    #[classmethod]
+    fn load_in(_cls: &Bound<'_, PyType>, base: &str, path: &str) -> PyResult<Self> {
+        let ontology = ontologos_parser::load_ontology_in(
+            std::path::Path::new(base),
+            std::path::Path::new(path),
+        )
+        .map_err(map_parser_py_err)?;
+        Ok(Self::from_owned(ontology))
     }
 
     fn to_json(&self) -> PyResult<String> {

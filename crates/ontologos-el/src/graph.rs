@@ -14,6 +14,7 @@ pub struct CompletionGraph {
     existentials: HashSet<(EntityId, EntityId, EntityId)>,
     subproperties: HashSet<(EntityId, EntityId)>,
     domains: HashMap<EntityId, HashSet<EntityId>>,
+    ranges: HashMap<EntityId, HashSet<EntityId>>,
     todo_sub: VecDeque<(EntityId, EntityId)>,
     todo_ex: VecDeque<(EntityId, EntityId, EntityId)>,
     todo_sp: VecDeque<(EntityId, EntityId)>,
@@ -64,6 +65,9 @@ impl CompletionGraph {
                 }
                 Axiom::ObjectPropertyDomain { property, domain } => {
                     graph.domains.entry(*property).or_default().insert(*domain);
+                }
+                Axiom::ObjectPropertyRange { property, range } => {
+                    graph.ranges.entry(*property).or_default().insert(*range);
                 }
                 _ => {}
             }
@@ -202,6 +206,13 @@ impl CompletionGraph {
             domains.retain(|d| !signature.contains(d));
             !domains.is_empty()
         });
+        self.ranges.retain(|prop, ranges| {
+            if signature.contains(prop) {
+                return false;
+            }
+            ranges.retain(|r| !signature.contains(r));
+            !ranges.is_empty()
+        });
         self.todo_sub.clear();
         self.todo_ex.clear();
         self.todo_sp.clear();
@@ -218,6 +229,12 @@ impl CompletionGraph {
                 let sig = axiom_signature(axiom);
                 if sig.iter().any(|e| signature.contains(e)) {
                     self.domains.entry(*property).or_default().insert(*domain);
+                }
+            }
+            if let Axiom::ObjectPropertyRange { property, range } = axiom {
+                let sig = axiom_signature(axiom);
+                if sig.iter().any(|e| signature.contains(e)) {
+                    self.ranges.entry(*property).or_default().insert(*range);
                 }
             }
         }
@@ -274,6 +291,9 @@ impl CompletionGraph {
             }
             Axiom::ObjectPropertyDomain { property, domain } => {
                 self.domains.entry(*property).or_default().insert(*domain);
+            }
+            Axiom::ObjectPropertyRange { property, range } => {
+                self.ranges.entry(*property).or_default().insert(*range);
             }
             _ => {}
         }
@@ -362,6 +382,20 @@ impl CompletionGraph {
                 vec![existential_premise(class, property, filler)],
                 class,
                 domain,
+            );
+        }
+
+        let ranges: Vec<EntityId> = self
+            .ranges
+            .get(&property)
+            .map(|set| set.iter().copied().collect())
+            .unwrap_or_default();
+        for range in ranges {
+            self.infer_subsumption(
+                ElRule::PropertyRange,
+                vec![existential_premise(class, property, filler)],
+                filler,
+                range,
             );
         }
 

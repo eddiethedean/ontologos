@@ -170,11 +170,10 @@ fn facet_check(
             facet_iri,
             value,
         } => {
-            if let Some(bounds) = datetime_bounds_from_facet_chain(store, defs, range) {
-                if datetime_facet_range_empty(&bounds.0, &bounds.1) {
+            if let Some(bounds) = datetime_bounds_from_facet_chain(store, defs, range)
+                && datetime_facet_range_empty(&bounds.0, &bounds.1) {
                     return false;
                 }
-            }
             if !facet_check(lit, store, *base, ontology, defs) {
                 return false;
             }
@@ -779,11 +778,10 @@ fn parse_xml_tag_name_and_attrs(inner: &str) -> (String, Vec<(String, String)>) 
 
 /// Normalize plain literal forms: `abc@es` and `abc` with language tag.
 pub(crate) fn plain_literal_key(lex: &str, datatype_iri: Option<&str>) -> String {
-    if let Some(iri) = datatype_iri {
-        if iri.contains("PlainLiteral") || iri.contains("langString") {
+    if let Some(iri) = datatype_iri
+        && (iri.contains("PlainLiteral") || iri.contains("langString")) {
             return canonical_plain_literal(lex);
         }
-    }
     if lex.contains('@') {
         return canonical_plain_literal(lex);
     }
@@ -973,13 +971,11 @@ fn datetime_compare(a: &str, b: &str) -> i32 {
 
 fn strip_datetime_timezone(s: &str) -> &str {
     let s = s.strip_suffix('Z').unwrap_or(s);
-    if let Some(t_pos) = s.find('T') {
-        if let Some(off_pos) = s[t_pos..].rfind(['+', '-']) {
-            if s[t_pos + off_pos..].contains(':') {
+    if let Some(t_pos) = s.find('T')
+        && let Some(off_pos) = s[t_pos..].rfind(['+', '-'])
+            && s[t_pos + off_pos..].contains(':') {
                 return &s[..t_pos + off_pos];
             }
-        }
-    }
     s
 }
 
@@ -1156,7 +1152,7 @@ fn hex_binary_octet_length(lex: &str) -> usize {
     if lex.is_empty() {
         return 0;
     }
-    if lex.len() % 2 != 0 || !lex.chars().all(|c| c.is_ascii_hexdigit()) {
+    if !lex.len().is_multiple_of(2) || !lex.chars().all(|c| c.is_ascii_hexdigit()) {
         return usize::MAX;
     }
     lex.len() / 2

@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient;
 
 #[test]
 fn hermit_ofn_axioms_load_without_skips() {
@@ -18,7 +18,7 @@ fn hermit_ofn_axioms_load_without_skips() {
             continue;
         }
         loaded += 1;
-        let ontology = match load_ontology(&path) {
+        let ontology = match load_ontology_lenient(&path) {
             Ok(o) => o,
             Err(e) => {
                 failures.push(format!("{}: load error: {e}", path.display()));

@@ -12,12 +12,18 @@ pub fn axiom_constructs(axiom: &ontologos_core::Axiom) -> BTreeSet<OwlConstruct>
 
 /// Collect OWL constructs used for profile **classification** (mapped TBox shapes).
 pub fn scan_constructs(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
-    if let Some(meta) = ontology.parse_meta() {
-        if !meta.profile_constructs.is_empty() {
+    if ontology.dirty().is_dirty() {
+        return scan_constructs_from_axioms(ontology);
+    }
+    if let Some(meta) = ontology.parse_meta()
+        && !meta.profile_constructs.is_empty() {
             return meta.profile_constructs.clone();
         }
-    }
 
+    scan_constructs_from_axioms(ontology)
+}
+
+fn scan_constructs_from_axioms(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
     let mut constructs = BTreeSet::new();
     for (_, axiom) in ontology.axioms().iter() {
         note_axiom_construct(axiom, &mut constructs);

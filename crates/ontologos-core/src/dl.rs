@@ -374,14 +374,13 @@ impl DlStore {
     #[must_use]
     pub fn intern_ce(&mut self, expr: ClassExpr) -> CeId {
         let fp = ce_fingerprint(&expr);
-        if let Some(&id) = self.ce_dedup.get(&fp) {
-            if self
+        if let Some(&id) = self.ce_dedup.get(&fp)
+            && self
                 .expressions
                 .get(id.index() as usize)
                 .is_some_and(|e| e == &expr)
-            {
-                return id;
-            }
+        {
+            return id;
         }
         if let Some((i, _)) = self
             .expressions
@@ -403,14 +402,13 @@ impl DlStore {
     #[must_use]
     pub fn intern_de(&mut self, expr: DataExpr) -> DeId {
         let fp = de_fingerprint(&expr);
-        if let Some(&id) = self.de_dedup.get(&fp) {
-            if self
+        if let Some(&id) = self.de_dedup.get(&fp)
+            && self
                 .data_exprs
                 .get(id.0 as usize)
                 .is_some_and(|e| e == &expr)
-            {
-                return id;
-            }
+        {
+            return id;
         }
         if let Some((i, _)) = self
             .data_exprs

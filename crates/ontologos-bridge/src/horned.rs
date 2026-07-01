@@ -1,3 +1,6 @@
+//! Horned-owl export (integration tests and future bridge paths).
+#![allow(dead_code)]
+
 use horned_owl::model::{
     AsymmetricObjectProperty, Build, ClassAssertion, ClassExpression, DeclareClass,
     DeclareNamedIndividual, DeclareObjectProperty, DifferentIndividuals, DisjointClasses,

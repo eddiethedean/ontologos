@@ -72,8 +72,8 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         }
         ClassExpr::OneOf(individuals) => {
             let mut active_world = world;
-            if individuals.len() == 1 {
-                if let Some(&named_world) = branch.named_worlds.get(&individuals[0]) {
+            if individuals.len() == 1
+                && let Some(&named_world) = branch.named_worlds.get(&individuals[0]) {
                     if named_world != active_world {
                         branch.merge_worlds(named_world, active_world);
                         if branch.clash {
@@ -82,7 +82,6 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
                     }
                     active_world = named_world;
                 }
-            }
             for ind in individuals {
                 let nom = branch
                     .dl
@@ -790,6 +789,9 @@ fn world_structurally_satisfies_inner(
         ClassExpr::And(ops) => ops
             .iter()
             .all(|op| world_structurally_satisfies_inner(branch, world, *op, seen)),
+        ClassExpr::Or(ops) => ops
+            .iter()
+            .any(|op| world_structurally_satisfies_inner(branch, world, *op, seen)),
         ClassExpr::Not(inner) => branch.worlds[world].negated.contains(&inner),
         ClassExpr::All { property, filler } => {
             let mut targets: Vec<usize> = branch
@@ -970,15 +972,14 @@ fn push_saturated_role_edge(branch: &mut Branch<'_>, from: usize, property: Role
         {
             branch.edges.push((to, property.clone(), from));
         }
-    } else if let Some(inverse) = inverse_partner(branch, &property) {
-        if !branch
+    } else if let Some(inverse) = inverse_partner(branch, &property)
+        && !branch
             .edges
             .iter()
             .any(|(f, role, t)| *f == to && role_exprs_equal(role, &inverse) && *t == from)
         {
             branch.edges.push((to, inverse, from));
         }
-    }
     recheck_cardinality_on_world(branch, from);
     recheck_cardinality_on_world(branch, to);
     recheck_functional_constraints(branch);
@@ -1737,8 +1738,13 @@ fn expand_disjunction(
     world: usize,
     ops: Vec<CeId>,
 ) -> Result<bool, crate::Error> {
+    const MAX_DISJUNCTION_DEPTH: u32 = 128;
+    if branch.disjunction_depth >= MAX_DISJUNCTION_DEPTH {
+        return Ok(false);
+    }
     for alt in ops {
         let mut child = branch.clone();
+        child.disjunction_depth = branch.disjunction_depth.saturating_add(1);
         assert_label(&mut child, world, alt);
         match child.expand() {
             Ok(true) => {

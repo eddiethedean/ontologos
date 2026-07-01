@@ -11,10 +11,16 @@ pub struct ParseLimits {
     pub max_entities: usize,
     /// Maximum expanded RDF/XML size after entity expansion (defaults to 4× `max_file_bytes`).
     pub max_expanded_bytes: usize,
+    /// Cumulative allocation budget across RDF/XML preprocessing stages.
+    pub max_preprocess_bytes: usize,
+    /// Maximum harvested RDF/XML assertions converted to OFN supplements per load.
+    pub max_harvested_assertions: usize,
     /// When true, return an error if axioms or entities are skipped due to limits.
     pub strict: bool,
     /// When true, resolve and merge `owl:imports` for RDF/XML ontologies (default).
     pub merge_imports: bool,
+    /// When true, run post-load validation on successful parses.
+    pub validate_output: bool,
 }
 
 impl Default for ParseLimits {
@@ -25,8 +31,11 @@ impl Default for ParseLimits {
             max_axioms: 10_000_000,
             max_entities: 1_000_000,
             max_expanded_bytes: max_file_bytes.saturating_mul(4),
-            strict: false,
+            max_preprocess_bytes: max_file_bytes.saturating_mul(8),
+            max_harvested_assertions: 100_000,
+            strict: true,
             merge_imports: true,
+            validate_output: true,
         }
     }
 }
@@ -38,6 +47,17 @@ impl ParseLimits {
         Self {
             max_file_bytes,
             max_expanded_bytes: max_file_bytes.saturating_mul(4),
+            max_preprocess_bytes: max_file_bytes.saturating_mul(8),
+            ..Self::default()
+        }
+    }
+
+    /// Lenient limits: allow skipped axioms and incompatible declarations to warn instead of error.
+    #[must_use]
+    pub fn lenient() -> Self {
+        Self {
+            strict: false,
+            validate_output: false,
             ..Self::default()
         }
     }

@@ -3,15 +3,31 @@
 use crate::query::{ConjunctiveQuery, QueryAtom};
 use crate::{Error, Result};
 
+/// Maximum conjunctive query string length.
+pub const MAX_QUERY_LEN: usize = 4096;
+
+/// OWL QL allows at most one query atom.
+pub const MAX_QUERY_ATOMS: usize = 1;
+
 /// Parse a conjunctive query string.
 ///
 /// Supported atoms (AND-separated):
 /// - `Type(?var, ClassIRI)`
 /// - `SubClassOf(?var, ClassIRI)`
 pub fn parse_conjunctive_query(input: &str) -> Result<ConjunctiveQuery> {
+    if input.len() > MAX_QUERY_LEN {
+        return Err(Error::Parse(format!(
+            "query length exceeds maximum of {MAX_QUERY_LEN}"
+        )));
+    }
     let mut atoms = Vec::new();
     for part in input.split("AND").map(str::trim).filter(|s| !s.is_empty()) {
         atoms.push(parse_atom(part)?);
+    }
+    if atoms.len() > MAX_QUERY_ATOMS {
+        return Err(Error::Parse(format!(
+            "query atom count exceeds maximum of {MAX_QUERY_ATOMS}"
+        )));
     }
     Ok(ConjunctiveQuery { atoms })
 }

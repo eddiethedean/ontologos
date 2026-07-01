@@ -8,15 +8,115 @@ use crate::limits::ParseLimits;
 use crate::map::map_to_core;
 use crate::read::{read_horned_owl_from_reader, sniff_and_rewind};
 use crate::report::ParseReport;
+use crate::validate::validate_loaded_ontology_strict_graph;
 use crate::{
     Error, Format, Result, detect_format, detect_format_from_bytes, detect_functional_from_bytes,
-    detect_turtle_from_bytes, validate_loaded_ontology,
+    detect_turtle_from_bytes, validate_loaded_ontology_light,
 };
+
+struct PreprocessBudget {
+    limit: usize,
+    used: usize,
+}
+
+impl PreprocessBudget {
+    fn new(limit: usize) -> Self {
+        Self { limit, used: 0 }
+    }
+
+    fn track(&mut self, stage: &str) -> Result<()> {
+        self.used = self.used.saturating_add(stage.len());
+        if self.used > self.limit {
+            Err(Error::Parse(format!(
+                "RDF/XML preprocessing allocation {} bytes exceeds limit of {} bytes",
+                self.used, self.limit
+            )))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+fn finalize_parsed_ontology(
+    ontology: Ontology,
+    report: ParseReport,
+    limits: ParseLimits,
+    validate: bool,
+) -> Result<Ontology> {
+    if limits.strict && report.meta.skipped_axiom_count > 0 {
+        return Err(Error::Parse(format!(
+            "strict parse: skipped {} axioms due to limits or mapping failures",
+            report.meta.skipped_axiom_count
+        )));
+    }
+    let mut ontology = ontology;
+    ontology.set_parse_meta(report.into_meta());
+    if validate {
+        validate_loaded_ontology_light(&ontology)?;
+        if limits.strict {
+            validate_loaded_ontology_strict_graph(&ontology)?;
+        }
+    }
+    Ok(ontology)
+}
+
+fn finish_loaded_ontology(
+    ontology: Ontology,
+    report: ParseReport,
+    limits: ParseLimits,
+) -> Result<Ontology> {
+    finalize_parsed_ontology(ontology, report, limits, limits.validate_output)
+}
+
+fn bump_harvested_assertions(count: &mut usize, limits: ParseLimits) -> Result<()> {
+    *count += 1;
+    if *count > limits.max_harvested_assertions {
+        Err(Error::Parse(format!(
+            "harvested assertion count {} exceeds limit of {}",
+            *count, limits.max_harvested_assertions
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+fn read_text_file_with_limit(path: &Path, limits: ParseLimits) -> Result<String> {
+    let metadata = std::fs::metadata(path).map_err(|e| Error::Parse(e.to_string()))?;
+    if metadata.len() as usize > limits.max_file_bytes {
+        return Err(Error::Parse(format!(
+            "file size {} exceeds limit of {} bytes",
+            metadata.len(),
+            limits.max_file_bytes
+        )));
+    }
+    std::fs::read_to_string(path).map_err(|e| Error::Parse(e.to_string()))
+}
 
 const SUPPLEMENT_STANDARD_PREFIXES: &str = "\
 Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
 Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
 Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n";
+
+/// Reject IRIs that would break OWL Functional Syntax interpolation in supplements.
+fn validate_supplement_iri(iri: &str) -> Result<()> {
+    ontologos_core::validate_iri(iri).map_err(|e| Error::Parse(e.to_string()))?;
+    if iri
+        .bytes()
+        .any(|b| matches!(b, b'>' | b')' | b'\n' | b'\r'))
+    {
+        return Err(Error::Parse(format!(
+            "supplement IRI contains OWL functional metacharacters: {iri}"
+        )));
+    }
+    Ok(())
+}
+
+fn validate_supplement_iris(iris: impl IntoIterator<Item = impl AsRef<str>>) -> Result<()> {
+    for iri in iris {
+        validate_supplement_iri(iri.as_ref())?;
+    }
+    Ok(())
+}
 
 #[cfg(target_os = "linux")]
 const O_NOFOLLOW: i32 = 0o100_000;
@@ -48,9 +148,19 @@ pub fn load_ontology(path: &Path) -> Result<Ontology> {
     load_ontology_with_limits(path, ParseLimits::default())
 }
 
+/// Load an ontology without failing on skipped axioms or incompatible declarations.
+pub fn load_ontology_lenient(path: &Path) -> Result<Ontology> {
+    load_ontology_with_limits(path, ParseLimits::lenient())
+}
+
 /// Load an ontology constrained to stay under `base` (untrusted uploads).
 pub fn load_ontology_in(base: &Path, path: &Path) -> Result<Ontology> {
     load_ontology_with_limits_and_base(path, ParseLimits::default(), Some(base))
+}
+
+/// Lenient sandboxed load for untrusted uploads that may skip axioms with warnings.
+pub fn load_ontology_lenient_in(base: &Path, path: &Path) -> Result<Ontology> {
+    load_ontology_with_limits_and_base(path, ParseLimits::lenient(), Some(base))
 }
 
 /// Load an ontology with custom [`ParseLimits`].
@@ -103,37 +213,54 @@ fn load_ontology_with_limits_and_base_inner(
                 limits.max_file_bytes
             )));
         }
-        let text = String::from_utf8_lossy(&bytes);
+        let text = String::from_utf8(bytes).map_err(|e| Error::Parse(e.to_string()))?;
+        let mut budget = PreprocessBudget::new(limits.max_preprocess_bytes);
+        budget.track(&text)?;
         let root_tag = crate::rdf_preprocess::normalize_multiline_rdf_root_tag(&text);
+        budget.track(&root_tag)?;
         let deduped = crate::rdf_preprocess::dedupe_rdf_xml_ids(&root_tag);
+        budget.track(&deduped)?;
         let normalized_ids = crate::rdf_preprocess::normalize_invalid_rdf_ids(&deduped);
+        budget.track(&normalized_ids)?;
         let expanded = crate::rdf_preprocess::expand_xml_entities_with_limit(
             &normalized_ids,
             limits.max_expanded_bytes,
         )?;
+        budget.track(&expanded)?;
         let ill_founded_list = crate::rdf_preprocess::contains_ill_founded_rdf_list(&expanded);
         let relative_uris = crate::rdf_preprocess::normalize_relative_owl_uris(&expanded);
+        budget.track(&relative_uris)?;
         let rdfs_classes = crate::rdf_preprocess::normalize_rdfs_class_elements(&relative_uris);
+        budget.track(&rdfs_classes)?;
         let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&rdfs_classes);
+        budget.track(&injected)?;
         let typed_about = crate::rdf_preprocess::materialize_typed_about_elements(&injected);
+        budget.track(&typed_about)?;
         let typed_nodes = crate::rdf_preprocess::materialize_typed_node_elements(&typed_about);
+        budget.track(&typed_nodes)?;
         let intersections =
             crate::rdf_preprocess::normalize_class_intersection_definitions(&typed_nodes);
+        budget.track(&intersections)?;
         let same_as = crate::rdf_preprocess::normalize_class_same_as(&intersections);
+        budget.track(&same_as)?;
         let named_individuals =
             crate::rdf_preprocess::materialize_named_individual_descriptions(&same_as);
-        // let class_assertions =
-        //     crate::rdf_preprocess::materialize_complex_class_assertions(&named_individuals);
+        budget.track(&named_individuals)?;
         let individuals = crate::rdf_preprocess::materialize_anonymous_individual_descriptions(
             &named_individuals,
         );
+        budget.track(&individuals)?;
         let normalized = crate::rdf_preprocess::normalize_all_different_members(&individuals);
+        budget.track(&normalized)?;
         let disjoint = crate::rdf_preprocess::expand_all_disjoint_collections(&normalized);
+        budget.track(&disjoint)?;
         let property_usage =
             crate::rdf_preprocess::inject_object_property_declarations_from_usage(&disjoint);
+        budget.track(&property_usage)?;
         let preprocessed_rdf = crate::rdf_preprocess::normalize_property_same_as(&property_usage);
+        budget.track(&preprocessed_rdf)?;
         let set_ontology = read_horned_owl_from_reader(
-            &mut std::io::Cursor::new(preprocessed_rdf.as_bytes().to_vec()),
+            &mut std::io::Cursor::new(preprocessed_rdf.as_bytes()),
             format,
             limits,
         )?;
@@ -157,33 +284,13 @@ fn load_ontology_with_limits_and_base_inner(
         }
         report.meta.logical_axiom_count =
             report.meta.mapped_axiom_count + report.meta.skipped_axiom_count;
-        if limits.strict && report.meta.skipped_axiom_count > 0 {
-            return Err(Error::Parse(format!(
-                "strict parse: skipped {} axioms due to limits or mapping failures",
-                report.meta.skipped_axiom_count
-            )));
-        }
-        ontology.set_parse_meta(report.into_meta());
-        if limits.strict {
-            validate_loaded_ontology(&ontology)?;
-        }
-        return Ok(ontology);
+        return finish_loaded_ontology(ontology, report, limits);
     }
     file.seek(SeekFrom::Start(0))
         .map_err(|e| Error::Parse(e.to_string()))?;
     let set_ontology = read_horned_owl_from_reader(&mut file, format, limits)?;
-    let (mut ontology, report) = map_to_core(&set_ontology, limits)?;
-    if limits.strict && report.meta.skipped_axiom_count > 0 {
-        return Err(Error::Parse(format!(
-            "strict parse: skipped {} axioms due to limits or mapping failures",
-            report.meta.skipped_axiom_count
-        )));
-    }
-    ontology.set_parse_meta(report.into_meta());
-    if limits.strict {
-        validate_loaded_ontology(&ontology)?;
-    }
-    Ok(ontology)
+    let (ontology, report) = map_to_core(&set_ontology, limits)?;
+    finish_loaded_ontology(ontology, report, limits)
 }
 
 fn merge_datatype_sameas_supplement(
@@ -230,16 +337,14 @@ fn sameas_pair_is_property_entities(
     right: &str,
 ) -> bool {
     fn is_property_iri(ontology: &Ontology, preprocessed_rdf: &str, iri: &str) -> bool {
-        if let Some(id) = ontology.lookup_entity(iri) {
-            if let Ok(rec) = ontology.entity(id) {
-                if matches!(
+        if let Some(id) = ontology.lookup_entity(iri)
+            && let Ok(rec) = ontology.entity(id)
+                && matches!(
                     rec.kind,
                     EntityKind::ObjectProperty | EntityKind::DataProperty
                 ) {
                     return true;
                 }
-            }
-        }
         crate::rdf_preprocess::collect_object_property_assertions(preprocessed_rdf)
             .iter()
             .any(|(_, property, _)| property == iri)
@@ -272,6 +377,18 @@ fn merge_property_sameas_supplement(
     Ok(true)
 }
 
+fn merge_ofn_supplement(
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    limits: ParseLimits,
+    harvested: &mut usize,
+    ofn: &str,
+) -> Result<()> {
+    bump_harvested_assertions(harvested, limits)?;
+    let supplement = load_ofn_from_str_with_limits(ofn, limits)?;
+    merge_supplement_with_accounting(ontology, report, &supplement)
+}
+
 fn supplement_rdf_dl_axioms(
     preprocessed_rdf: &str,
     ontology: &mut Ontology,
@@ -279,9 +396,11 @@ fn supplement_rdf_dl_axioms(
     limits: ParseLimits,
     ill_founded_list: bool,
 ) -> Result<()> {
+    let mut harvested = 0usize;
     for (individual_iri, restriction_iri, ce_ofn) in
         crate::rdf_preprocess::collect_self_disjoint_restriction_assertions(preprocessed_rdf)
     {
+        validate_supplement_iris([&individual_iri, &restriction_iri])?;
         let ofn = format!(
             "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<{individual_iri}>\n\
@@ -293,12 +412,12 @@ fn supplement_rdf_dl_axioms(
                ClassAssertion(<{restriction_iri}> <{individual_iri}>)\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for (individual_iri, ce_ofn) in
         crate::rdf_preprocess::collect_object_class_assertions(preprocessed_rdf)
     {
+        validate_supplement_iri(&individual_iri)?;
         let ofn = format!(
             "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<{individual_iri}>\n\
@@ -306,12 +425,12 @@ fn supplement_rdf_dl_axioms(
                ClassAssertion({ce_ofn} <{individual_iri}>)\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for (class_iri, ce_ofn) in
         crate::rdf_preprocess::collect_restriction_subclasses(preprocessed_rdf)
     {
+        validate_supplement_iri(&class_iri)?;
         let ofn = format!(
             "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<{class_iri}>\n\
@@ -319,8 +438,7 @@ fn supplement_rdf_dl_axioms(
                SubClassOf(<{class_iri}> {ce_ofn})\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for body in
         crate::rdf_preprocess::collect_anonymous_restriction_subclass_axioms(preprocessed_rdf)
@@ -329,12 +447,12 @@ fn supplement_rdf_dl_axioms(
             "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<http://example.org/anon-restriction-supplement>\n{body}\n)"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for (class_iri, ce_ofn) in
         crate::rdf_preprocess::collect_complement_subclasses(preprocessed_rdf)
     {
+        validate_supplement_iri(&class_iri)?;
         let ofn = format!(
             "{SUPPLEMENT_STANDARD_PREFIXES}\
              Ontology(<{class_iri}>\n\
@@ -342,12 +460,12 @@ fn supplement_rdf_dl_axioms(
                SubClassOf(<{class_iri}> {ce_ofn})\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for (class_iri, ce_ofn) in
         crate::rdf_preprocess::collect_boolean_class_equivalences(preprocessed_rdf)
     {
+        validate_supplement_iri(&class_iri)?;
         let (extra_prefixes, ce_qualified) =
             crate::rdf_preprocess::qualify_ce_ofn_for_supplement(&ce_ofn);
         let ofn = format!(
@@ -358,8 +476,7 @@ fn supplement_rdf_dl_axioms(
                EquivalentClasses(<{class_iri}> {ce_qualified})\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for (left_ofn, right_ofn) in
         crate::rdf_preprocess::collect_boolean_binary_equivalences(preprocessed_rdf)
@@ -376,20 +493,26 @@ fn supplement_rdf_dl_axioms(
                EquivalentClasses({left_q} {right_q})\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
+    let mut opa_bodies = Vec::new();
     for (subject, property, object) in
         crate::rdf_preprocess::collect_object_property_assertions(preprocessed_rdf)
     {
+        validate_supplement_iris([&subject, &property, &object])?;
+        bump_harvested_assertions(&mut harvested, limits)?;
+        opa_bodies.push(format!(
+            "Declaration(NamedIndividual(<{subject}>))\n\
+             Declaration(NamedIndividual(<{object}>))\n\
+             Declaration(ObjectProperty(<{property}>))\n\
+             ObjectPropertyAssertion(<{property}> <{subject}> <{object}>)"
+        ));
+    }
+    if !opa_bodies.is_empty() {
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
-             Ontology(<http://example.org/opa-supplement>\n\
-               Declaration(NamedIndividual(<{subject}>))\n\
-               Declaration(NamedIndividual(<{object}>))\n\
-               Declaration(ObjectProperty(<{property}>))\n\
-               ObjectPropertyAssertion(<{property}> <{subject}> <{object}>)\n\
-             )"
+             Ontology(<http://example.org/opa-supplement>\n{}\n)",
+            opa_bodies.join("\n")
         );
         let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
         merge_supplement_with_accounting(ontology, report, &supplement)?;
@@ -397,6 +520,7 @@ fn supplement_rdf_dl_axioms(
     for (property, range) in
         crate::rdf_preprocess::collect_datatype_property_ranges(preprocessed_rdf)
     {
+        validate_supplement_iri(&property)?;
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
@@ -406,10 +530,11 @@ fn supplement_rdf_dl_axioms(
                DataPropertyRange(<{property}> {range})\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for (left, right) in crate::rdf_preprocess::collect_owl_same_as_pairs(preprocessed_rdf) {
+        validate_supplement_iris([&left, &right])?;
+        bump_harvested_assertions(&mut harvested, limits)?;
         if merge_datatype_sameas_supplement(ontology, report, limits, &left, &right)? {
             continue;
         }
@@ -426,11 +551,14 @@ fn supplement_rdf_dl_axioms(
         insert_same_individual_supplement(ontology, report, &left, &right)?;
     }
     for (left, right) in crate::rdf_preprocess::collect_property_disjoint_pairs(preprocessed_rdf) {
+        validate_supplement_iris([&left, &right])?;
+        bump_harvested_assertions(&mut harvested, limits)?;
         insert_disjoint_object_properties_supplement(ontology, report, &left, &right)?;
     }
     for (property, domain) in
         crate::rdf_preprocess::collect_rdfs_object_property_domains(preprocessed_rdf)
     {
+        validate_supplement_iris([&property, &domain])?;
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Ontology(<http://example.org/rdfs-domain-supplement>\n\
@@ -439,12 +567,12 @@ fn supplement_rdf_dl_axioms(
                ObjectPropertyDomain(<{property}> <{domain}>)\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for (property, range) in
         crate::rdf_preprocess::collect_rdfs_object_property_ranges(preprocessed_rdf)
     {
+        validate_supplement_iris([&property, &range])?;
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Ontology(<http://example.org/rdfs-range-supplement>\n\
@@ -453,10 +581,10 @@ fn supplement_rdf_dl_axioms(
                ObjectPropertyRange(<{property}> <{range}>)\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for (sub, sup) in crate::rdf_preprocess::collect_rdfs_sub_object_properties(preprocessed_rdf) {
+        validate_supplement_iris([&sub, &sup])?;
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Ontology(<http://example.org/rdfs-subproperty-supplement>\n\
@@ -465,10 +593,10 @@ fn supplement_rdf_dl_axioms(
                SubObjectPropertyOf(<{sub}> <{sup}>)\n\
              )"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for property in crate::rdf_preprocess::collect_functional_object_properties(preprocessed_rdf) {
+        validate_supplement_iri(&property)?;
         let datatype_props =
             crate::rdf_preprocess::declared_datatype_property_iris(preprocessed_rdf);
         let ofn = if datatype_props.contains(&property) {
@@ -488,18 +616,17 @@ fn supplement_rdf_dl_axioms(
                  )"
             )
         };
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for body in crate::rdf_preprocess::collect_disjoint_union_axioms(preprocessed_rdf) {
         let ofn = format!(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Ontology(<http://example.org/disjoint-union-supplement>\n{body}\n)"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for npa in crate::rdf_preprocess::collect_reified_data_npas(preprocessed_rdf) {
+        validate_supplement_iris([&npa.subject, &npa.property])?;
         let lit = npa.value_literal.replace('"', "\\\"");
         let mut body = format!(
             "Declaration(NamedIndividual(<{}>))\n\
@@ -509,6 +636,7 @@ fn supplement_rdf_dl_axioms(
             npa.subject, npa.property, npa.property, npa.subject, npa.property, npa.subject
         );
         if let Some((prop, value)) = &npa.positive_property {
+            validate_supplement_iri(prop)?;
             if prop != &npa.property || value != &npa.value_literal {
                 body.push_str(&format!(
                     "\nDataPropertyAssertion(<{prop}> <{}> \"{}\"^^xsd:string)",
@@ -522,10 +650,10 @@ fn supplement_rdf_dl_axioms(
              Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)\n\
              Ontology(<http://example.org/data-npa-supplement>\n{body}\n)"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     for dpa in crate::rdf_preprocess::collect_direct_data_literal_assertions(preprocessed_rdf) {
+        validate_supplement_iris([&dpa.subject, &dpa.property])?;
         let (lexical, datatype_iri) = if dpa.value_literal.contains("^^") {
             let mut parts = dpa.value_literal.splitn(2, "^^");
             let lex = parts.next().unwrap_or("").trim_matches('"').to_string();
@@ -537,6 +665,9 @@ fn supplement_rdf_dl_axioms(
         } else {
             (dpa.value_literal.replace('"', "\\\""), String::new())
         };
+        if !datatype_iri.is_empty() && datatype_iri.contains("://") {
+            validate_supplement_iri(&datatype_iri)?;
+        }
         let (extra_prefixes, lit, dt_decl) = if datatype_iri.is_empty() {
             if dpa.value_literal.contains('@') || dpa.value_literal.contains("^^") {
                 (String::new(), dpa.value_literal.clone(), None)
@@ -568,8 +699,7 @@ fn supplement_rdf_dl_axioms(
              {extra_prefixes}\n\
              Ontology(<http://example.org/thing-data-literal-supplement>\n{body}\n)"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     if ill_founded_list {
         let thing = ontology
@@ -589,6 +719,7 @@ fn supplement_rdf_dl_axioms(
         report.meta.mapped_axiom_count += 1;
     }
     for npa in crate::rdf_preprocess::collect_reified_npas(preprocessed_rdf) {
+        validate_supplement_iris([&npa.subject, &npa.object, &npa.property])?;
         let mut body = format!(
             "Declaration(NamedIndividual(<{}>))\n\
              Declaration(NamedIndividual(<{}>))\n\
@@ -597,6 +728,7 @@ fn supplement_rdf_dl_axioms(
             npa.subject, npa.object, npa.property, npa.property, npa.subject, npa.object
         );
         if let Some((prop, object)) = npa.positive_property {
+            validate_supplement_iris([&prop, &object])?;
             body.push_str(&format!(
                 "\nObjectPropertyAssertion(<{prop}> <{}> <{object}>)",
                 npa.subject
@@ -606,8 +738,7 @@ fn supplement_rdf_dl_axioms(
             "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
              Ontology(<http://example.org/npa-supplement>\n{body}\n)"
         );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     Ok(())
 }
@@ -739,11 +870,18 @@ fn merge_supplement_ontology(target: &mut Ontology, source: &Ontology) -> Result
             Some((id, target.lookup_entity(iri)?))
         })
         .collect();
+    for (id, _) in source.entities().iter() {
+        if !entity_map.contains_key(&id) {
+            return Err(Error::Parse(format!(
+                "supplement entity {id:?} missing after merge"
+            )));
+        }
+    }
     target.dl_mut().import_axioms_from(source.dl(), |id| {
         entity_map
             .get(&id)
             .copied()
-            .expect("supplement entity missing after merge")
+            .expect("supplement entities validated above")
     });
     for (_, axiom) in source.axioms().iter() {
         let remapped = remap_supplement_axiom(axiom, &entity_map)?;
@@ -1040,7 +1178,25 @@ fn path_is_under_base(path: &Path, base: &Path) -> bool {
 
 /// Parse OWL Functional Syntax from an in-memory document (no temp file).
 pub fn load_ofn_from_str(text: &str) -> Result<Ontology> {
-    load_ofn_from_str_with_limits(text, ParseLimits::default())
+    load_ofn_from_str_validated(text, ParseLimits::default())
+}
+
+/// Parse in-memory OFN and run post-load validation (public callers).
+pub fn load_ofn_from_str_validated(text: &str, limits: ParseLimits) -> Result<Ontology> {
+    if text.len() > limits.max_file_bytes {
+        return Err(Error::Parse(format!(
+            "in-memory OFN size {} exceeds limit of {} bytes",
+            text.len(),
+            limits.max_file_bytes
+        )));
+    }
+    let set_ontology = read_horned_owl_from_reader(
+        &mut std::io::Cursor::new(text.as_bytes()),
+        Format::Functional,
+        limits,
+    )?;
+    let (ontology, report) = map_to_core(&set_ontology, limits)?;
+    finalize_parsed_ontology(ontology, report, limits, true)
 }
 
 /// Parse OWL Functional Syntax from an in-memory document with custom limits.
@@ -1057,26 +1213,35 @@ pub fn load_ofn_from_str_with_limits(text: &str, limits: ParseLimits) -> Result<
         Format::Functional,
         limits,
     )?;
-    let (mut ontology, report) = map_to_core(&set_ontology, limits)?;
-    if limits.strict && report.meta.skipped_axiom_count > 0 {
-        return Err(Error::Parse(format!(
-            "strict parse: skipped {} axioms due to limits or mapping failures",
-            report.meta.skipped_axiom_count
-        )));
-    }
-    ontology.set_parse_meta(report.into_meta());
-    if limits.strict {
-        validate_loaded_ontology(&ontology)?;
-    }
-    Ok(ontology)
+    let (ontology, report) = map_to_core(&set_ontology, limits)?;
+    finalize_parsed_ontology(ontology, report, limits, false)
 }
 
 /// Load an OFN ontology and append axioms from a second OFN fragment (same prefixes/IRIs).
 pub fn load_ofn_with_incremental(base: &Path, incremental: &Path) -> Result<Ontology> {
-    let base_text = std::fs::read_to_string(base)?;
-    let inc_text = std::fs::read_to_string(incremental)?;
+    load_ofn_with_incremental_and_limits(base, incremental, ParseLimits::default(), None)
+}
+
+/// Load and merge OFN documents with path validation and parse limits.
+pub fn load_ofn_with_incremental_and_limits(
+    base: &Path,
+    incremental: &Path,
+    limits: ParseLimits,
+    sandbox_base: Option<&Path>,
+) -> Result<Ontology> {
+    let base_path = validate_load_path(base, sandbox_base)?;
+    let inc_path = validate_load_path(incremental, sandbox_base)?;
+    let base_text = read_text_file_with_limit(&base_path, limits)?;
+    let inc_text = read_text_file_with_limit(&inc_path, limits)?;
     let merged = merge_ofn_documents(&base_text, &inc_text)?;
-    load_ofn_from_str(&merged)
+    if merged.len() > limits.max_file_bytes {
+        return Err(Error::Parse(format!(
+            "merged OFN size {} exceeds limit of {} bytes",
+            merged.len(),
+            limits.max_file_bytes
+        )));
+    }
+    load_ofn_from_str_validated(&merged, limits)
 }
 
 fn merge_ofn_documents(base: &str, incremental: &str) -> Result<String> {

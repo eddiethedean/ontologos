@@ -41,8 +41,8 @@ fn triage(case: &str) -> bool {
                 .ok()
                 .is_some_and(|iri| iri.contains(".comp"))
     });
-    if has_ca && has_comp {
-        if let Ok(tax) = classify(&ont) {
+    if has_ca && has_comp
+        && let Ok(tax) = classify(&ont) {
             let comp_unsat: Vec<_> = tax
                 .unsatisfiable
                 .iter()
@@ -55,7 +55,6 @@ fn triage(case: &str) -> bool {
                 .collect();
             eprintln!("flower path: comp_unsat={}", comp_unsat.len());
         }
-    }
 
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let seed = TableauSeed::default();

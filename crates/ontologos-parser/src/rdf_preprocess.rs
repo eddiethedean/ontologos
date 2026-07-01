@@ -6,10 +6,9 @@ use crate::{Error, Result};
 
 const BUILTIN_PREFIXES: &[&str] = &["rdf", "owl", "rdfs", "xsd", "xml"];
 
-/// Expand `<!ENTITY ...>` declarations in RDF/XML prolog.
-#[must_use]
-pub fn expand_xml_entities(input: &str) -> String {
-    expand_xml_entities_with_limit(input, usize::MAX).unwrap_or_else(|_| input.to_owned())
+/// Expand `<!ENTITY ...>` declarations in RDF/XML prolog with an output size cap.
+pub fn expand_xml_entities(input: &str, max_bytes: usize) -> Result<String> {
+    expand_xml_entities_with_limit(input, max_bytes)
 }
 
 /// Collapse a multiline `<rdf:RDF ...>` opening tag onto one line for Horned-OWL's RDF/XML reader.
@@ -54,21 +53,18 @@ pub fn dedupe_rdf_xml_ids(input: &str) -> String {
             break;
         };
         let tag = &input[start..start + tag_end + 1];
-        if tag.starts_with("<!--") || tag.starts_with("<!---") {
-            if let Some(close) = input[start..].find("-->") {
+        if (tag.starts_with("<!--") || tag.starts_with("<!---"))
+            && let Some(close) = input[start..].find("-->") {
                 out.push_str(&input[start..start + close + 3]);
                 pos = start + close + 3;
                 continue;
             }
-        }
-        if let Some(id) = extract_rdf_id(tag) {
-            if !seen.insert(id.to_owned()) {
-                if let Some(end) = find_element_end(input, start) {
+        if let Some(id) = extract_rdf_id(tag)
+            && !seen.insert(id.to_owned())
+                && let Some(end) = find_element_end(input, start) {
                     pos = end;
                     continue;
                 }
-            }
-        }
         out.push_str(tag);
         pos = start + tag_end + 1;
     }
@@ -683,13 +679,11 @@ fn collect_punned_class_iris(
             pos = start + tag_end + 1;
             continue;
         }
-        if let Some(name) = element_qname(tag) {
-            if let Some(iri) = expand_qname(name, xmlns) {
-                if tag.contains("rdf:about=\"") {
+        if let Some(name) = element_qname(tag)
+            && let Some(iri) = expand_qname(name, xmlns)
+                && tag.contains("rdf:about=\"") {
                     out.insert(iri);
                 }
-            }
-        }
         pos = start + tag_end + 1;
     }
 }
@@ -782,14 +776,12 @@ pub fn normalize_rdfs_class_elements(input: &str) -> String {
     let mut out = input
         .replace("<rdfs:Class", "<owl:Class")
         .replace("</rdfs:Class>", "</owl:Class>");
-    if out.contains("owl:Class") && !out.contains("xmlns:owl") {
-        if let Some(root_start) = out.find("<rdf:RDF") {
-            if let Some(rel_end) = out[root_start..].find('>') {
+    if out.contains("owl:Class") && !out.contains("xmlns:owl")
+        && let Some(root_start) = out.find("<rdf:RDF")
+            && let Some(rel_end) = out[root_start..].find('>') {
                 let insert_at = root_start + rel_end;
                 out.insert_str(insert_at, " xmlns:owl=\"http://www.w3.org/2002/07/owl#\"");
             }
-        }
-    }
     out
 }
 
@@ -862,8 +854,8 @@ pub fn materialize_typed_node_elements(input: &str) -> String {
         };
         let tag_end = start + tag_end_rel;
         let open_tag = &input[start..=tag_end];
-        if is_direct_rdf_document_child(input, start) && is_typed_node_element(open_tag) {
-            if let Some(type_iri) = typed_node_class_iri(open_tag, &xmlns) {
+        if is_direct_rdf_document_child(input, start) && is_typed_node_element(open_tag)
+            && let Some(type_iri) = typed_node_class_iri(open_tag, &xmlns) {
                 counter += 1;
                 let iri = format!("{base}#_:tn{counter}");
                 out.push_str(&format!(
@@ -872,9 +864,8 @@ pub fn materialize_typed_node_elements(input: &str) -> String {
                 pos = tag_end + 1;
                 continue;
             }
-        }
-        if let Some(qname) = element_qname(open_tag) {
-            if is_direct_rdf_document_child(input, start) && !open_tag.trim_end().ends_with("/>") {
+        if let Some(qname) = element_qname(open_tag)
+            && is_direct_rdf_document_child(input, start) && !open_tag.trim_end().ends_with("/>") {
                 let end = find_element_end(input, start)
                     .filter(|&e| e <= input.len())
                     .unwrap_or(tag_end + 1);
@@ -887,7 +878,6 @@ pub fn materialize_typed_node_elements(input: &str) -> String {
                     continue;
                 }
             }
-        }
         out.push_str(open_tag);
         pos = tag_end + 1;
     }
@@ -2208,11 +2198,10 @@ pub(crate) fn collect_datatype_property_ranges(rdf: &str) -> Vec<(String, String
             break;
         };
         let block = &rdf[start..end];
-        if block.contains("owl#DatatypeProperty") || block.contains("DatatypeProperty") {
-            if let Some(pair) = datatype_property_range_from_description_block(block, &base) {
+        if (block.contains("owl#DatatypeProperty") || block.contains("DatatypeProperty"))
+            && let Some(pair) = datatype_property_range_from_description_block(block, &base) {
                 out.push(pair);
             }
-        }
         pos = end;
     }
     out
@@ -2260,6 +2249,7 @@ pub(crate) fn collect_object_property_assertions(rdf: &str) -> Vec<(String, Stri
 }
 
 /// Collect anonymous `SubClassOf(intersection sub)` from blank `owl:Class` (WG description-logic-902/904).
+#[allow(dead_code)] // retained for RDF/XML intersection harvesting
 pub(crate) fn collect_anonymous_intersection_subclasses(rdf: &str) -> Vec<String> {
     let base = parse_xml_base(rdf);
     let dt_props = declared_datatype_property_iris(rdf);
@@ -2445,11 +2435,10 @@ fn parse_rdf_list_members_ofn(
     let mut members = Vec::new();
     let mut rest_block = list_content;
     loop {
-        if let Some((_, _, first_block)) = find_top_level_element_bounds(rest_block, "rdf:first") {
-            if let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists) {
+        if let Some((_, _, first_block)) = find_top_level_element_bounds(rest_block, "rdf:first")
+            && let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists) {
                 members.push(ofn);
             }
-        }
         let (_, _, rest_elem) = find_top_level_element_bounds(rest_block, "rdf:rest")?;
         if rest_elem.contains("rdf:nil")
             || rest_elem.contains("#nil")
@@ -2635,13 +2624,11 @@ fn member_block_to_ofn(
         if let Some(ofn) = inline_restriction_ce_to_ofn(inner.trim(), base, dt_props) {
             return Some(ofn);
         }
-    } else if block.contains("<owl:Class") {
-        if let Some((_, _, class_block)) = find_top_level_element_bounds(block, "owl:Class") {
-            if let Some(ofn) = member_block_to_ofn(class_block, base, dt_props, node_lists) {
+    } else if block.contains("<owl:Class")
+        && let Some((_, _, class_block)) = find_top_level_element_bounds(block, "owl:Class")
+            && let Some(ofn) = member_block_to_ofn(class_block, base, dt_props, node_lists) {
                 return Some(ofn);
             }
-        }
-    }
     if block.contains("owl:onProperty") {
         return inline_restriction_ce_to_ofn(block, base, dt_props);
     }
@@ -2673,11 +2660,10 @@ fn build_rdf_collection_node_map(
         };
         let close_start = block.rfind("</rdf:Description>").unwrap_or(block.len());
         let inner = &block[open_end + 1..close_start];
-        if inner.contains("rdf:first") {
-            if let Some(members) = parse_rdf_list_description(inner, base, dt_props, &map) {
+        if inner.contains("rdf:first")
+            && let Some(members) = parse_rdf_list_description(inner, base, dt_props, &map) {
                 map.insert(node, members);
             }
-        }
         pos = end;
     }
     map
@@ -2692,11 +2678,10 @@ fn parse_rdf_list_description(
     let mut members = Vec::new();
     if let Some(first) = extract_property_resource(inner, "rdf:first", base) {
         members.push(ofn_entity_ref(&first));
-    } else if let Some((_, _, first_block)) = find_top_level_element_bounds(inner, "rdf:first") {
-        if let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists) {
+    } else if let Some((_, _, first_block)) = find_top_level_element_bounds(inner, "rdf:first")
+        && let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists) {
             members.push(ofn);
         }
-    }
     let (_, _, rest_block) = find_top_level_element_bounds(inner, "rdf:rest")?;
     if rest_block.contains("parseType=\"Collection\"")
         || rest_block.contains("parseType='Collection'")
@@ -3699,11 +3684,10 @@ fn object_class_assertion_from_block(
         if let Some(ce_ofn) = data_restriction_ce_to_ofn(inner, base, dt_props) {
             return Some((individual_iri, ce_ofn));
         }
-        if !is_class_restriction_description(inner) {
-            if let Some(ce_ofn) = inline_restriction_ce_to_ofn(inner, base, dt_props) {
+        if !is_class_restriction_description(inner)
+            && let Some(ce_ofn) = inline_restriction_ce_to_ofn(inner, base, dt_props) {
                 return Some((individual_iri, ce_ofn));
             }
-        }
     }
     None
 }
@@ -3753,11 +3737,10 @@ fn data_restriction_ce_to_ofn(
 fn data_range_ofn(ce_block: &str, base: &str) -> Option<String> {
     let (_, _, avf_block) = find_top_level_element_bounds(ce_block, "owl:allValuesFrom")?;
     let mut inner = element_inner(avf_block, "owl:allValuesFrom");
-    if inner.contains("rdfs:Datatype") || inner.contains("<Datatype") {
-        if let Some((_, _, dt_block)) = find_top_level_element_bounds(&inner, "rdfs:Datatype") {
+    if (inner.contains("rdfs:Datatype") || inner.contains("<Datatype"))
+        && let Some((_, _, dt_block)) = find_top_level_element_bounds(&inner, "rdfs:Datatype") {
             inner = element_inner(dt_block, "rdfs:Datatype");
         }
-    }
     if let Some(resource) = extract_attribute(
         avf_block
             .get(
@@ -3980,15 +3963,14 @@ fn restriction_ce_to_ofn(
     if let Some(filler) = extract_filler_ofn(&body, "owl:someValuesFrom", base) {
         return Some(format!("ObjectSomeValuesFrom({role_ofn} {filler})"));
     }
-    if role_ofn.contains("ObjectInverseOf") {
-        if let Some((_, _, sv_block)) = find_top_level_element_bounds(&body, "owl:someValuesFrom") {
+    if role_ofn.contains("ObjectInverseOf")
+        && let Some((_, _, sv_block)) = find_top_level_element_bounds(&body, "owl:someValuesFrom") {
             let inner = element_inner(sv_block, "owl:someValuesFrom");
             let node_lists = std::collections::HashMap::new();
             if let Some(filler) = member_block_to_ofn(inner.trim(), base, dt_props, &node_lists) {
                 return Some(format!("ObjectSomeValuesFrom({role_ofn} {filler})"));
             }
         }
-    }
     if let Some(filler) = extract_filler_ofn(&body, "owl:allValuesFrom", base) {
         return Some(format!("ObjectAllValuesFrom({role_ofn} {filler})"));
     }

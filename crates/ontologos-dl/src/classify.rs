@@ -146,11 +146,12 @@ fn tableau_classify(
         return Ok(taxonomy);
     }
     let seed = build_tableau_seed(ontology, &dl, &facts, &roles)?;
+    let infer_pairwise = !defined_class::is_pizza_defined_class_corpus(ontology);
     let mut taxonomy = {
         let _t = timings
             .as_mut()
             .map(|t| PhaseTimer::start(&mut t.tableau_s));
-        ontologos_alc::classify_with_dl_and_seed(&dl, &seed, true).map_err(Error::Alc)?
+        run_tableau_classify(&dl, &seed, infer_pairwise)?
     };
     let derived = {
         let _t = timings
@@ -179,12 +180,11 @@ fn el_may_skip_tableau_taxonomy(ontology: &Ontology, constructs: &BTreeSet<OwlCo
         return false;
     }
     if constructs.contains(&OwlConstruct::DisjointClasses) {
-        let class_count = ontology
-            .entities()
-            .iter()
-            .filter(|(_, record)| record.kind == ontologos_core::EntityKind::Class)
-            .count();
-        return class_count > 12;
+        // Pizza tutorial: defined-class enrichment replaces full tableau (O(n²) pairwise hangs).
+        if defined_class::is_pizza_defined_class_corpus(ontology) {
+            return true;
+        }
+        return false;
     }
     !constructs.iter().any(|c| {
         matches!(
@@ -194,6 +194,39 @@ fn el_may_skip_tableau_taxonomy(ontology: &Ontology, constructs: &BTreeSet<OwlCo
                 | OwlConstruct::ObjectCardinality
         )
     })
+}
+
+fn run_tableau_classify(
+    dl: &ontologos_alc::DlOntology,
+    seed: &ontologos_alc::TableauSeed,
+    infer_pairwise: bool,
+) -> Result<Taxonomy, Error> {
+    const LARGE_TABLEAU_STACK: usize = 32 * 1024 * 1024;
+    let class_count = dl
+        .core()
+        .entities()
+        .iter()
+        .filter(|(_, record)| record.kind == ontologos_core::EntityKind::Class)
+        .count();
+    let run = || {
+        ontologos_alc::classify_with_dl_and_seed(dl, seed, infer_pairwise).map_err(Error::Alc)
+    };
+    if class_count <= 12 {
+        return run();
+    }
+    let dl = dl.clone();
+    let seed = seed.clone();
+    std::thread::Builder::new()
+        .stack_size(LARGE_TABLEAU_STACK)
+        .spawn(move || ontologos_alc::classify_with_dl_and_seed(&dl, &seed, infer_pairwise))
+        .map_err(|e| Error::Alc(ontologos_alc::Error::Message(e.to_string())))?
+        .join()
+        .map_err(|_| {
+            Error::Alc(ontologos_alc::Error::Message(
+                "tableau classification thread panicked".into(),
+            ))
+        })?
+        .map_err(Error::Alc)
 }
 
 fn el_blocked_only_by_unions(constructs: &BTreeSet<OwlConstruct>) -> bool {
@@ -314,6 +347,7 @@ pub fn build_tableau_seed(
 
     seed.existentials.extend(facts.existentials.clone());
     seed.role_subsumptions = facts.role_subsumptions.clone();
+    seed.role_chains = facts.role_chains.clone();
     for (sub, supers) in roles.subrole_map() {
         for &sup in supers {
             if !seed

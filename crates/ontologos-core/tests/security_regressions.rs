@@ -91,7 +91,7 @@ fn rejects_snapshot_exceeding_max_entities() {
         "axioms": []
     }"#;
     let err = Ontology::from_json_with_limits(json, limits).expect_err("entities");
-    assert!(matches!(err, Error::Serialization(_)));
+    assert!(matches!(err, Error::ResourceLimit(_)));
 }
 
 #[test]
@@ -112,7 +112,7 @@ fn rejects_snapshot_exceeding_max_axioms() {
         ]
     }"#;
     let err = Ontology::from_json_with_limits(json, limits).expect_err("axioms");
-    assert!(matches!(err, Error::Serialization(_)));
+    assert!(matches!(err, Error::ResourceLimit(_)));
 }
 
 #[test]
@@ -153,6 +153,55 @@ fn rejects_duplicate_entity_iris_in_snapshot() {
     }"#;
     let err = Ontology::from_json(json).expect_err("duplicate entity");
     assert!(matches!(err, Error::Serialization(_)));
+}
+
+#[test]
+fn rejects_javascript_datatype_iri() {
+    let json = r#"{
+        "format_version": 2,
+        "entities": [
+            {"iri": "http://example.org/alice", "kind": "Individual"},
+            {"iri": "http://example.org/age", "kind": "DataProperty"}
+        ],
+        "axioms": [
+            {"DataPropertyAssertion": {
+                "individual": "http://example.org/alice",
+                "property": "http://example.org/age",
+                "value": {"lexical": "30", "datatype": "javascript:alert(1)"}
+            }}
+        ]
+    }"#;
+    let err = Ontology::from_json(json).expect_err("js datatype");
+    assert!(matches!(err, Error::InvalidIri(_)));
+}
+
+#[test]
+fn rejects_file_scheme_in_snapshot_entity() {
+    let json = r#"{
+        "format_version": 2,
+        "entities": [{"iri": "file:///etc/passwd", "kind": "Class"}],
+        "axioms": []
+    }"#;
+    let err = Ontology::from_json(json).expect_err("file scheme");
+    assert!(matches!(err, Error::InvalidIri(_)));
+}
+
+#[test]
+fn early_rejects_entity_count_before_full_parse() {
+    let limits = Limits {
+        max_entities: 1,
+        ..Limits::default()
+    };
+    let json = r#"{
+        "format_version": 2,
+        "entities": [
+            {"iri": "http://example.org/A", "kind": "Class"},
+            {"iri": "http://example.org/B", "kind": "Class"}
+        ],
+        "axioms": []
+    }"#;
+    let err = Ontology::from_json_with_limits(json, limits).expect_err("entities");
+    assert!(matches!(err, Error::ResourceLimit(_)));
 }
 
 #[test]

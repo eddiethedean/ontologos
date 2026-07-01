@@ -29,19 +29,33 @@ pub fn map_to_core(
     let mut declaration_kind_sets: BTreeMap<String, HashSet<EntityKind>> = BTreeMap::new();
     let mut declaration_warnings: Vec<String> = Vec::new();
     for annotated in source.iter() {
-        if is_declaration(&annotated.component) {
-            if let Some((iri, kind)) = declaration_component(&annotated.component) {
+        if is_declaration(&annotated.component)
+            && let Some((iri, kind)) = declaration_component(&annotated.component) {
                 declaration_kind_sets
                     .entry(iri.clone())
                     .or_default()
                     .insert(kind);
-                if let Some(prev) = declaration_kinds.insert(iri.clone(), kind) {
-                    if prev != kind {
+                if let Some(prev) = declaration_kinds.insert(iri.clone(), kind)
+                    && prev != kind {
+                        if limits.strict && !declaration_kinds_compatible(&declaration_kind_sets[&iri])
+                        {
+                            return Err(Error::Parse(format!(
+                                "incompatible declaration kinds for {iri}: {:?}",
+                                declaration_kind_sets[&iri]
+                            )));
+                        }
                         declaration_warnings.push(format!(
                             "entity kind mismatch on declaration for {iri}: {prev:?} then {kind:?}; using last declaration"
                         ));
                     }
-                }
+            }
+    }
+    if limits.strict {
+        for (iri, kinds) in &declaration_kind_sets {
+            if kinds.len() > 1 && !declaration_kinds_compatible(kinds) {
+                return Err(Error::Parse(format!(
+                    "incompatible declaration kinds for {iri}: {kinds:?}"
+                )));
             }
         }
     }
@@ -97,6 +111,22 @@ pub fn map_to_core(
     report.meta.logical_axiom_count =
         report.meta.mapped_axiom_count + report.meta.skipped_axiom_count;
     Ok((ontology, report))
+}
+
+fn declaration_kinds_compatible(kinds: &HashSet<EntityKind>) -> bool {
+    if kinds.len() <= 1 {
+        return true;
+    }
+    let mut kinds_vec: Vec<EntityKind> = kinds.iter().copied().collect();
+    kinds_vec.sort_by_key(|k| format!("{k:?}"));
+    let mut merged = kinds_vec[0];
+    for &kind in &kinds_vec[1..] {
+        merged = match EntityKind::merge_punning(merged, kind) {
+            Some(m) => m,
+            None => return false,
+        };
+    }
+    kinds.iter().all(|&k| merged.satisfies(k))
 }
 
 fn is_declaration(component: &Component<RcStr>) -> bool {
@@ -418,14 +448,13 @@ impl Mapper<'_> {
             return;
         }
 
-        if let Some(sub_id) = sub_lookup.resolved_id() {
-            if self.map_intersection_superclass(sub_id, sup) {
+        if let Some(sub_id) = sub_lookup.resolved_id()
+            && self.map_intersection_superclass(sub_id, sup) {
                 // Keep the full DL subclass axiom when EL decomposition only maps a subset
                 // of intersection operands (e.g. cardinality restrictions in flower ontologies).
                 let _ = self.map_dl_subclass_of(sub, sup);
                 return;
             }
-        }
 
         let mut lookups = vec![sub_lookup, sup_lookup];
         lookups.extend(existential.lookups());
@@ -529,11 +558,10 @@ impl Mapper<'_> {
             }
             self.push_dl_axiom(DlAxiom::DisjointClasses(ids.clone()));
             let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
-            if let Some(entity_ids) = collect_resolved(&lookups) {
-                if entity_ids.iter().copied().collect::<HashSet<_>>().len() >= 2 {
+            if let Some(entity_ids) = collect_resolved(&lookups)
+                && entity_ids.iter().copied().collect::<HashSet<_>>().len() >= 2 {
                     self.push_axiom(Axiom::DisjointClasses(entity_ids));
                 }
-            }
             return;
         }
         let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
@@ -1221,7 +1249,7 @@ mod tests {
 
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../ontologos-parser/tests/fixtures/subclass_data_property_decl_first.ttl");
-        let ontology = crate::load_ontology(&path).expect("load");
+        let ontology = crate::load_ontology_lenient(&path).expect("load");
         let meta = ontology.parse_meta().expect("parse_meta");
 
         assert!(

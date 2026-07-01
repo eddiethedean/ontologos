@@ -13,6 +13,7 @@ env:
   ONTOLOGOS_DL_BUDGET_SECS: "30"
   # WG corpus consistency shortcuts (contract + conformance nightly; off in production embedders).
   ONTOLOGOS_DL_WG_SHORTCUTS: "1"
+  ONTOLOGOS_CONFORMANCE: "1"
 
 jobs:
   check:

@@ -1,7 +1,7 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use ontologos_parser::{Error, ParseLimits, load_ontology, load_ontology_with_limits};
+use ontologos_parser::{Error, ParseLimits, load_ontology, load_ontology_lenient, load_ontology_with_limits};
 
 fn fixture(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -63,7 +63,7 @@ fn legacy_galen_fixture_loads_after_entity_expansion() {
         .join("../../benchmarks/data/hermit/reasoner/res/galen-ians-full-undoctored.xml");
     assert!(path.exists(), "missing galen fixture at {}", path.display());
 
-    let ontology = load_ontology(&path).expect("galen.xml should load after entity expansion");
+    let ontology = load_ontology_lenient(&path).expect("galen.xml should load after entity expansion");
     assert!(
         ontology.axiom_count() > 0,
         "expected mapped axioms from galen.xml"
@@ -80,7 +80,7 @@ fn legacy_propreo_fixture_loads_after_entity_expansion() {
         path.display()
     );
 
-    let ontology = load_ontology(&path).expect("propreo.xml should load after entity expansion");
+    let ontology = load_ontology_lenient(&path).expect("propreo.xml should load after entity expansion");
     assert!(
         ontology.axiom_count() > 0,
         "expected mapped axioms from propreo.xml"
@@ -97,7 +97,7 @@ fn legacy_wine_fixture_loads_after_duplicate_rdf_id_dedup() {
         path.display()
     );
 
-    let ontology = load_ontology(&path).expect("wine.xml should load after rdf:ID dedup");
+    let ontology = load_ontology_lenient(&path).expect("wine.xml should load after rdf:ID dedup");
     assert!(
         ontology.axiom_count() > 0,
         "expected mapped axioms from wine.xml"
@@ -114,7 +114,7 @@ fn owllink_primer_loads_with_families_import() {
         path.display()
     );
 
-    let ontology = load_ontology(&path).expect("primer.owl should load with families import");
+    let ontology = load_ontology_lenient(&path).expect("primer.owl should load with families import");
     assert!(
         ontology.axiom_count() > 0,
         "expected axioms from primer.owl"
@@ -131,4 +131,49 @@ fn owllink_primer_loads_with_families_import() {
 fn parse_limits_merge_imports_defaults_true() {
     let limits = ParseLimits::default();
     assert!(limits.merge_imports);
+    assert!(limits.strict);
+}
+
+#[test]
+fn parse_limits_lenient_disables_strict() {
+    let limits = ParseLimits::lenient();
+    assert!(!limits.strict);
+}
+
+#[test]
+fn rejects_invalid_utf8_rdf_xml() {
+    let path = std::env::temp_dir().join(format!(
+        "ontologos_invalid_utf8_{}_{}.rdf",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time")
+            .as_nanos()
+    ));
+    std::fs::write(&path, b"<rdf:RDF>\xff</rdf:RDF>").expect("write");
+    let err = load_ontology(&path).expect_err("invalid utf8");
+    assert!(matches!(err, Error::Parse(_)));
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn rejects_incompatible_declarations_in_strict_mode() {
+    let path = fixture("subclass_data_property_decl_first.ofn");
+    let err = load_ontology(&path).expect_err("incompatible declarations");
+    assert!(matches!(err, Error::Parse(_)));
+}
+
+#[test]
+fn rejects_oversized_preprocess_budget() {
+    let path = fixture("minimal_subclass.rdf");
+    let limits = ParseLimits {
+        max_preprocess_bytes: 32,
+        ..ParseLimits::default()
+    };
+    let err = load_ontology_with_limits(&path, limits).expect_err("preprocess budget");
+    assert!(matches!(err, Error::Parse(_)));
+    assert!(
+        err.to_string().contains("preprocessing allocation"),
+        "unexpected: {err}"
+    );
 }

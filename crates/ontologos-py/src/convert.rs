@@ -154,11 +154,9 @@ pub(crate) fn find_subclass_axiom_id(
             subclass: sub,
             superclass: sup,
         } = axiom
-        {
-            if *sub == subclass && *sup == superclass {
+            && *sub == subclass && *sup == superclass {
                 return Ok(Some(id));
             }
-        }
     }
     Ok(None)
 }

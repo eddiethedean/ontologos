@@ -104,13 +104,11 @@ pub fn classify(ontology: &Ontology) -> Result<Taxonomy> {
     if !matches!(
         report.detected,
         Some(OwlProfile::El | OwlProfile::Ql | OwlProfile::Dl)
-    ) {
-        if let Some(p) = report.detected {
-            if p == OwlProfile::Rl {
+    )
+        && let Some(p) = report.detected
+            && p == OwlProfile::Rl {
                 return Err(Error::NonAlcProfile(p));
             }
-        }
-    }
     tableau::classify(ontology)
 }
 

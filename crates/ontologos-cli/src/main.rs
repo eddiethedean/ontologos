@@ -5,7 +5,7 @@ use ontologos_core::ReasonerConfig;
 use ontologos_core::{EntityId, Ontology, ParseMetaSummary, Profile, Reasoner, Taxonomy};
 use ontologos_facade::ClassifyOutcome;
 use ontologos_explain::{ProofGraph, explain_with_profile, render_text};
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient as load_ontology;
 use ontologos_profile::{ProfileReport, classify_hybrid, detect_profile};
 use ontologos_rdfs::MaterializationReport as RdfsReport;
 use ontologos_rl::MaterializationReport as RlReport;
@@ -32,6 +32,10 @@ struct Cli {
     /// Enable incremental re-classification / materialization when axioms change
     #[arg(long, default_value_t = false)]
     incremental: bool,
+
+    /// Wall-clock budget in seconds for DL consistency/classify (0 = unlimited)
+    #[arg(long)]
+    budget_secs: Option<u64>,
 
     /// Output format
     #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
@@ -165,6 +169,14 @@ fn map_facade_error(error: ontologos_facade::Error) -> CliError {
     }
 }
 
+fn reasoner_config(cli: &Cli) -> ReasonerConfig {
+    ReasonerConfig {
+        incremental: cli.incremental,
+        budget_secs: cli.budget_secs,
+        ..ReasonerConfig::default()
+    }
+}
+
 fn main() {
     if let Err(error) = run() {
         eprintln!("error: {error}");
@@ -175,9 +187,9 @@ fn main() {
 fn run() -> Result<(), CliError> {
     let cli = Cli::parse();
 
-    match cli.command {
+    match &cli.command {
         Command::Profile { ontology } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let report = detect_profile(&ontology)?;
@@ -206,7 +218,7 @@ fn run() -> Result<(), CliError> {
             }
         }
         Command::Classify { ontology } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             if cli.profile == CliProfile::DlPreview {
@@ -216,50 +228,45 @@ fn run() -> Result<(), CliError> {
             }
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
-                .config(ReasonerConfig {
-                    incremental: cli.incremental,
-                    ..ReasonerConfig::default()
-                })
+                .config(reasoner_config(&cli))
                 .build(ontology)?;
             let outcome = ontologos_facade::classify(&mut reasoner).map_err(map_facade_error)?;
             emit_classify_outcome(cli.format, &outcome, reasoner.ontology(), &parse_meta)?;
         }
         Command::Materialize { ontology } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let mut reasoner = Reasoner::builder()
                 .profile(Profile::Rdfs)
-                .config(ReasonerConfig {
-                    incremental: cli.incremental,
-                    ..ReasonerConfig::default()
-                })
+                .config(reasoner_config(&cli))
                 .build(ontology)?;
             let report = ontologos_rdfs::materialize_reasoner(&mut reasoner)?;
             emit_rdfs_report(cli.format, "materialized", &report, &parse_meta)?;
         }
         Command::Explain { ontology } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .config(ReasonerConfig {
                     explanations: true,
-                    ..ReasonerConfig::default()
+                    ..reasoner_config(&cli)
                 })
                 .build(ontology)?;
             let graph = explain_with_profile(&mut reasoner)?;
             emit_explain(cli.format, reasoner.ontology(), &graph, &parse_meta)?;
         }
         Command::Query { ontology, query } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            let cq = ontologos_ql::parse_conjunctive_query(&query)
+            let cq = ontologos_ql::parse_conjunctive_query(query)
                 .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
+                .config(reasoner_config(&cli))
                 .build(ontology)?;
             let outcome = ontologos_facade::classify(&mut reasoner).map_err(map_facade_error)?;
             let taxonomy = ontologos_facade::taxonomy_from_outcome(&outcome).ok_or_else(|| {
@@ -274,10 +281,7 @@ fn run() -> Result<(), CliError> {
                     println!("answers: {}", answers.len());
                     for answer in &answers {
                         for (var, id) in &answer.bindings {
-                            let iri = reasoner
-                                .ontology()
-                                .resolve_iri(reasoner.ontology().entity(*id).expect("entity").iri)
-                                .unwrap_or("?");
+                            let iri = entity_iri(reasoner.ontology(), *id)?;
                             println!("  ?{var} -> {iri}");
                         }
                     }
@@ -290,22 +294,16 @@ fn run() -> Result<(), CliError> {
                                 .bindings
                                 .iter()
                                 .map(|(var, id)| {
-                                    let iri = reasoner
-                                        .ontology()
-                                        .resolve_iri(
-                                            reasoner.ontology().entity(*id).expect("entity").iri,
-                                        )
-                                        .unwrap_or("?")
-                                        .to_owned();
-                                    QueryBinding {
+                                    let iri = entity_iri(reasoner.ontology(), *id)?;
+                                    Ok(QueryBinding {
                                         variable: var.clone(),
                                         iri,
-                                    }
+                                    })
                                 })
-                                .collect();
-                            QueryAnswer { bindings }
+                                .collect::<Result<Vec<_>, CliError>>()?;
+                            Ok(QueryAnswer { bindings })
                         })
-                        .collect();
+                        .collect::<Result<Vec<_>, CliError>>()?;
                     emit_json(&QueryCliOutput {
                         answers: answers.len(),
                         results,
@@ -315,7 +313,7 @@ fn run() -> Result<(), CliError> {
             }
         }
         Command::Instances { ontology } => {
-            let mut ontology = load_ontology(&ontology)?;
+            let mut ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let report = ontologos_abox::materialize_abox(&mut ontology)
@@ -341,12 +339,8 @@ fn run() -> Result<(), CliError> {
                     }
                     for (_, axiom) in ontology.axioms().iter() {
                         if let ontologos_core::Axiom::ClassAssertion { individual, class } = axiom {
-                            let ind = ontology
-                                .resolve_iri(ontology.entity(*individual).expect("ind").iri)
-                                .unwrap_or("?");
-                            let cls = ontology
-                                .resolve_iri(ontology.entity(*class).expect("cls").iri)
-                                .unwrap_or("?");
+                            let ind = entity_iri(&ontology, *individual)?;
+                            let cls = entity_iri(&ontology, *class)?;
                             println!("  {ind} : {cls}");
                         }
                     }
@@ -360,11 +354,12 @@ fn run() -> Result<(), CliError> {
             }
         }
         Command::Consistent { ontology } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
+                .config(reasoner_config(&cli))
                 .build(ontology)?;
             let result =
                 ontologos_facade::check_consistency(&reasoner).map_err(map_facade_error)?;
@@ -393,15 +388,22 @@ fn run() -> Result<(), CliError> {
             property,
             object,
         } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let check = ontologos_facade::parse_entailment_check(
-                sub, sup, individual, class, subject, property, object,
+                sub.clone(),
+                sup.clone(),
+                individual.clone(),
+                class.clone(),
+                subject.clone(),
+                property.clone(),
+                object.clone(),
             )
             .map_err(map_facade_error)?;
             let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
+                .config(reasoner_config(&cli))
                 .build(ontology)?;
             let entailed = ontologos_facade::is_entailed_axiom(&mut reasoner, check.clone())
                 .map_err(map_facade_error)?;
@@ -440,13 +442,14 @@ fn run() -> Result<(), CliError> {
             property,
             direct,
         } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             let reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
+                .config(reasoner_config(&cli))
                 .build(ontology)?;
-            let subs = ontologos_facade::get_sub_object_properties(&reasoner, &property, direct)
+            let subs = ontologos_facade::get_sub_object_properties(&reasoner, property, *direct)
                 .map_err(map_facade_error)?;
             match cli.format {
                 OutputFormat::Text => {
@@ -458,8 +461,8 @@ fn run() -> Result<(), CliError> {
                     }
                 }
                 OutputFormat::Json => emit_json(&SubpropertiesCliOutput {
-                    property: &property,
-                    direct,
+                    property,
+                    direct: *direct,
                     subproperties: &subs,
                     parse_meta: &parse_meta,
                 })?,
@@ -470,13 +473,13 @@ fn run() -> Result<(), CliError> {
             subject,
             property,
         } => {
-            let ontology = load_ontology(&ontology)?;
+            let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
             // ABox RL lookup; global `--profile` does not affect this command.
             let reasoner = Reasoner::builder().build(ontology)?;
             let values =
-                ontologos_facade::get_object_property_values(&reasoner, &subject, &property)
+                ontologos_facade::get_object_property_values(&reasoner, subject, property)
                     .map_err(map_facade_error)?;
             match cli.format {
                 OutputFormat::Text => {
@@ -488,8 +491,8 @@ fn run() -> Result<(), CliError> {
                     }
                 }
                 OutputFormat::Json => emit_json(&PropertyValuesCliOutput {
-                    subject: &subject,
-                    property: &property,
+                    subject,
+                    property,
                     values: &values,
                     parse_meta: &parse_meta,
                 })?,

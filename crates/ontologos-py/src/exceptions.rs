@@ -22,9 +22,14 @@ pub(crate) fn register_exceptions(m: &Bound<'_, PyModule>) -> PyResult<()> {
 pub(crate) fn map_core_py_err(error: CoreError) -> PyErr {
     match &error {
         CoreError::Parse(_) | CoreError::Serialization(_) => ParseError::new_err(error.to_string()),
+        CoreError::ResourceLimit(_) => ResourceLimitError::new_err(error.to_string()),
         CoreError::IncompleteConsistency => IncompleteReasoningError::new_err(error.to_string()),
         _ => PyException::new_err(error.to_string()),
     }
+}
+
+pub(crate) fn map_parser_py_err(error: ontologos_parser::Error) -> PyErr {
+    ParseError::new_err(error.to_string())
 }
 
 pub(crate) fn map_facade_py_err(error: FacadeError) -> PyErr {

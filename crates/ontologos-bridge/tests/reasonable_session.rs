@@ -56,6 +56,11 @@ fn axiom_keys(ontology: &Ontology) -> std::collections::BTreeSet<String> {
                 iri_of(ontology, *subclass),
                 iri_of(ontology, *superclass)
             ),
+            Axiom::ClassAssertion { individual, class } => format!(
+                "ClassAssertion({}, {})",
+                iri_of(ontology, *individual),
+                iri_of(ontology, *class)
+            ),
             other => format!("{other:?}"),
         })
         .collect()

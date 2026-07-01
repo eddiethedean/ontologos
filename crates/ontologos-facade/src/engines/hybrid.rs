@@ -20,10 +20,10 @@ pub(crate) fn classify_hybrid_modules(ontology: &Ontology) -> Result<ClassifyOut
         let mut view = subontology_with_axioms(ontology, &module.axiom_ids)
             .map_err(|e| Error::El(e.into()))?;
         let tax = match module.profile {
-            OwlProfile::El | OwlProfile::Ql => {
-                ElClassifier::new().classify(&view).map_err(Error::El)?
+            OwlProfile::El => ElClassifier::new().classify(&view).map_err(Error::El)?,
+            OwlProfile::Ql | OwlProfile::Dl => {
+                ontologos_dl::classify(&view).map_err(Error::Dl)?
             }
-            OwlProfile::Dl => ontologos_dl::classify(&view).map_err(Error::Dl)?,
             OwlProfile::Rl => {
                 ontologos_rl::RlEngine::new(1)
                     .saturate(&mut view)

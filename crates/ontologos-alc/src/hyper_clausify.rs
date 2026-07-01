@@ -188,19 +188,16 @@ impl HyperClausifier {
 
         if let (Some(ClassExpr::Atomic(sub_id)), Some(ClassExpr::DataAll { property, range })) =
             (&sub_expr, &sup_expr)
-        {
-            if !is_thing_entity(ontology, *sub_id) {
+            && !is_thing_entity(ontology, *sub_id) {
                 self.emit_data_all_forward(ontology, *sub_id, *property, *range);
                 return Ok(());
             }
-        }
 
-        if is_thing_ce(ontology, sub) {
-            if let Some(ClassExpr::DataAll { property, range }) = sup_expr {
+        if is_thing_ce(ontology, sub)
+            && let Some(ClassExpr::DataAll { property, range }) = sup_expr {
                 self.emit_data_all_on_thing(ontology, property, range)?;
                 return Ok(());
             }
-        }
 
         if let (Some(ClassExpr::DataAll { property, range }), Some(ClassExpr::Atomic(sup_id))) =
             (&sub_expr, &sup_expr)
@@ -1159,11 +1156,10 @@ fn simplify_data_range(ontology: &Ontology, de: DeId) -> DeId {
     let Some(expr) = ontology.dl().de(de).cloned() else {
         return de;
     };
-    if let DataExpr::Not(inner) = expr {
-        if let Some(DataExpr::Not(inner2)) = ontology.dl().de(inner).cloned() {
+    if let DataExpr::Not(inner) = expr
+        && let Some(DataExpr::Not(inner2)) = ontology.dl().de(inner).cloned() {
             return simplify_data_range(ontology, inner2);
         }
-    }
     de
 }
 

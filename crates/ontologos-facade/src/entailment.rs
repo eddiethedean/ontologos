@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use ontologos_core::{
-    uses_dl_entailment, Axiom, ConsistencyResult, EngineKind, EntityId, Ontology, Profile,
-    Reasoner, Taxonomy,
+    uses_dl_entailment, Axiom, ClassExpr, ConsistencyResult, DlAxiom, EngineKind, EntityId,
+    Ontology, Profile, Reasoner, Taxonomy,
 };
 
 use crate::classify::{classify, taxonomy_from_outcome};
@@ -125,7 +125,29 @@ fn is_class_assertion_entailed(
     if uses_dl_entailment(route.kind) {
         return dl_entails_class_assertion(ontology, individual, class);
     }
+    if matches!(route.kind, EngineKind::El)
+        && needs_dl_class_assertion(ontology, individual, class)
+    {
+        return dl_entails_class_assertion(ontology, individual, class);
+    }
     taxonomy_entails_class_assertion(reasoner, individual, class)
+}
+
+fn needs_dl_class_assertion(ontology: &Ontology, individual: EntityId, _class: EntityId) -> bool {
+    ontology.dl().axioms().any(|axiom| {
+        let DlAxiom::ClassAssertion {
+            individual: ind,
+            class: ce,
+        } = axiom
+        else {
+            return false;
+        };
+        *ind == individual
+            && ontology
+                .dl()
+                .ce(*ce)
+                .is_some_and(|expr| !matches!(expr, ClassExpr::Atomic(_)))
+    })
 }
 
 fn taxonomy_entails_class_assertion(
@@ -176,11 +198,10 @@ fn individual_entails_named_class(
         if asserted == class {
             return true;
         }
-        if let Some(tax) = taxonomy {
-            if tax.is_subsumed(asserted, class) {
+        if let Some(tax) = taxonomy
+            && tax.is_subsumed(asserted, class) {
                 return true;
             }
-        }
     }
     false
 }
@@ -260,15 +281,13 @@ fn individuals_entailed_same(
     if left == right {
         return true;
     }
-    if let Some(cluster) = ontology.same_as(left) {
-        if cluster.contains(&right) {
+    if let Some(cluster) = ontology.same_as(left)
+        && cluster.contains(&right) {
             return true;
         }
-    }
-    if let Some(cluster) = ontology.same_as(right) {
-        if cluster.contains(&left) {
+    if let Some(cluster) = ontology.same_as(right)
+        && cluster.contains(&left) {
             return true;
         }
-    }
     false
 }

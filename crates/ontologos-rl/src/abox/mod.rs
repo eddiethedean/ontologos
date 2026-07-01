@@ -144,8 +144,6 @@ fn transitive_subproperty_of(ontology: &Ontology, sub: EntityId, sup: EntityId) 
 
 fn detect_clash(ontology: &Ontology) -> bool {
     let closure = same_as_closure(ontology);
-    let mut rep_pairs: std::collections::HashSet<(EntityId, EntityId)> =
-        std::collections::HashSet::new();
     for (_, axiom) in ontology.axioms().iter() {
         if let ontologos_core::Axiom::DifferentIndividuals(ids) = axiom {
             for i in 0..ids.len() {
@@ -153,10 +151,6 @@ fn detect_clash(ontology: &Ontology) -> bool {
                     let a = closure.representative(ids[i]);
                     let b = closure.representative(ids[j]);
                     if a == b {
-                        return true;
-                    }
-                    let key = if a.0 <= b.0 { (a, b) } else { (b, a) };
-                    if !rep_pairs.insert(key) {
                         return true;
                     }
                 }

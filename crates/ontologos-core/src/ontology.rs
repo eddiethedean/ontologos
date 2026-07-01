@@ -116,6 +116,13 @@ impl Ontology {
         self.parse_meta = Some(meta);
     }
 
+    /// Drop cached profile constructs after ontology mutation (forces re-scan).
+    pub(crate) fn invalidate_profile_constructs(&mut self) {
+        if let Some(meta) = self.parse_meta.as_mut() {
+            meta.profile_constructs.clear();
+        }
+    }
+
     /// Number of registered entities.
     #[must_use]
     pub fn entity_count(&self) -> usize {
@@ -395,6 +402,7 @@ impl Ontology {
         self.index.insert(id, stored);
         self.revision.bump();
         self.dirty.record_add(id);
+        self.invalidate_profile_constructs();
         Ok(id)
     }
 
@@ -410,6 +418,7 @@ impl Ontology {
         }
         self.revision.bump();
         self.dirty.record_remove(id);
+        self.invalidate_profile_constructs();
         Ok(())
     }
 
@@ -422,19 +431,19 @@ impl Ontology {
         let Axiom::InverseObjectProperties { left, right } = axiom else {
             return Ok(());
         };
-        if let Some(existing) = self.index.inverse_of(*left) {
-            if existing != *right {
-                return Err(Error::InvalidAxiom(format!(
-                    "property {left:?} already has inverse {existing:?}, cannot add inverse {right:?}"
-                )));
-            }
+        if let Some(existing) = self.index.inverse_of(*left)
+            && existing != *right
+        {
+            return Err(Error::InvalidAxiom(format!(
+                "property {left:?} already has inverse {existing:?}, cannot add inverse {right:?}"
+            )));
         }
-        if let Some(existing) = self.index.inverse_of(*right) {
-            if existing != *left {
-                return Err(Error::InvalidAxiom(format!(
-                    "property {right:?} already has inverse {existing:?}, cannot add inverse {left:?}"
-                )));
-            }
+        if let Some(existing) = self.index.inverse_of(*right)
+            && existing != *left
+        {
+            return Err(Error::InvalidAxiom(format!(
+                "property {right:?} already has inverse {existing:?}, cannot add inverse {left:?}"
+            )));
         }
         Ok(())
     }
@@ -622,6 +631,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn from_file_returns_parse_not_available() {
         let err = Ontology::from_file("any.owl").expect_err("should fail");
         assert_eq!(err, Error::ParseNotAvailable);

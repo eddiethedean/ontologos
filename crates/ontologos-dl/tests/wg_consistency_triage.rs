@@ -143,8 +143,8 @@ fn diagnose_dl005_is_consistent_steps() {
         });
         if let Some(def) = def {
             for ax in store.axioms() {
-                if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax {
-                    if ids.contains(&def) {
+                if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax
+                    && ids.contains(&def) {
                         for &other in ids {
                             if other != def {
                                 eprintln!(
@@ -191,7 +191,6 @@ fn diagnose_dl005_is_consistent_steps() {
                             }
                         }
                     }
-                }
             }
         }
     }
@@ -236,8 +235,8 @@ fn diagnose_dl018_tableau() {
         });
         if let Some(def) = def {
             for ax in store.axioms() {
-                if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax {
-                    if ids.contains(&def) {
+                if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax
+                    && ids.contains(&def) {
                         for &other in ids {
                             if other != def {
                                 eprintln!("equiv {other:?} => {:?}", store.ce(other));
@@ -267,7 +266,6 @@ fn diagnose_dl018_tableau() {
                             }
                         }
                     }
-                }
             }
         }
     }
@@ -389,8 +387,8 @@ fn diagnose_dl608_unsatisfiable() {
         _ => None,
     }) {
         for ax in store.axioms() {
-            if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax {
-                if ids.contains(&ce) {
+            if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax
+                && ids.contains(&ce) {
                     for &other in ids {
                         if other != ce {
                             eprintln!("equiv {other:?}: {:?}", store.ce(other));
@@ -401,7 +399,6 @@ fn diagnose_dl608_unsatisfiable() {
                         }
                     }
                 }
-            }
         }
     }
     eprintln!("consistent={:?}", is_consistent(&ont));
@@ -429,8 +426,8 @@ fn diagnose_dl608_unsatisfiable() {
             }
         }
         for ent in [p1, p2] {
-            if let Ok(record) = dl.core().entity(ent) {
-                if let Ok(iri) = dl.core().resolve_iri(record.iri) {
+            if let Ok(record) = dl.core().entity(ent)
+                && let Ok(iri) = dl.core().resolve_iri(record.iri) {
                     eprintln!(
                         "{iri} equiv ce: {:?}",
                         store.expressions().find_map(|(id, e)| match e {
@@ -440,7 +437,6 @@ fn diagnose_dl608_unsatisfiable() {
                         })
                     );
                 }
-            }
         }
         let p2comp = store.expressions().find_map(|(id, e)| match e {
             ontologos_core::ClassExpr::Atomic(c) if c.0 == 4 => Some(id),
@@ -449,22 +445,20 @@ fn diagnose_dl608_unsatisfiable() {
         if let Some(p2comp) = p2comp {
             eprintln!("p2.comp ce {:?} = {:?}", p2comp, store.ce(p2comp));
             for ax in store.axioms() {
-                if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax {
-                    if ids.contains(&p2comp) {
+                if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax
+                    && ids.contains(&p2comp) {
                         for id in ids {
                             eprintln!("  equiv partner {:?}: {:?}", id, store.ce(*id));
                         }
                     }
-                }
             }
         }
         for eid in [4u32, 19, 20, 23] {
             let e = ontologos_core::EntityId(eid);
-            if let Ok(record) = dl.core().entity(e) {
-                if let Ok(iri) = dl.core().resolve_iri(record.iri) {
+            if let Ok(record) = dl.core().entity(e)
+                && let Ok(iri) = dl.core().resolve_iri(record.iri) {
                     eprintln!("EntityId({eid}) = {iri}");
                 }
-            }
         }
         use ontologos_alc::TableauSeed;
         let seed = TableauSeed::default();

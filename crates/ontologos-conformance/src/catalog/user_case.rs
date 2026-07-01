@@ -5,7 +5,7 @@ use ontologos_facade::{
     EntailmentCheck, classify, is_consistent, is_entailed_axiom, is_subsumption_entailed,
     taxonomy_from_outcome,
 };
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient as load_ontology;
 
 use super::{
     case_has_axiom_assertions, check_logical_entailment, configure_wg_tableau_limits,
@@ -102,13 +102,11 @@ pub fn check_user_axiom_case(case: &HermitCase) -> Result<(), String> {
 
     if case.load_error_expected {
         let loaded = load_ontology(&path);
-        if loaded.is_ok() {
-            if let Ok(ontology) = loaded {
-                if ontologos_parser::validate_loaded_ontology(&ontology).is_ok() {
+        if loaded.is_ok()
+            && let Ok(ontology) = loaded
+                && ontologos_parser::validate_loaded_ontology(&ontology).is_ok() {
                     return Err(format!("{}: expected ontology load to fail", case.id));
                 }
-            }
-        }
         return Ok(());
     }
 

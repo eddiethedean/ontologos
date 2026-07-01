@@ -10,12 +10,11 @@ fn strip_xml_comments(input: &str) -> String {
         };
         let start = pos + rel;
         out.push_str(&input[pos..start]);
-        if input[start..].starts_with("<!--") || input[start..].starts_with("<!---") {
-            if let Some(close) = input[start..].find("-->") {
+        if (input[start..].starts_with("<!--") || input[start..].starts_with("<!---"))
+            && let Some(close) = input[start..].find("-->") {
                 pos = start + close + 3;
                 continue;
             }
-        }
         if let Some(tag_end) = input[start..].find('>') {
             out.push_str(&input[start..start + tag_end + 1]);
             pos = start + tag_end + 1;
@@ -43,7 +42,7 @@ fn expands_single_quoted_entity() {
     <!ENTITY owl 'http://www.w3.org/2002/07/owl#'>
 ]>
 <rdf:RDF xmlns:owl="&owl;"><owl:Ontology rdf:about=""/></rdf:RDF>"#;
-    let expanded = expand_xml_entities(input);
+    let expanded = expand_xml_entities(input, 1_000_000).expect("expand");
     assert!(!expanded.contains("<!ENTITY"));
     assert!(!expanded.contains("<!DOCTYPE"));
     assert!(expanded.contains("http://www.w3.org/2002/07/owl#"));
@@ -57,7 +56,7 @@ fn expands_simple_entity() {
 <!DOCTYPE rdf:RDF [{xml}]>
 <rdf:RDF>&ex;a</rdf:RDF>"#
     );
-    let expanded = expand_xml_entities(&input);
+    let expanded = expand_xml_entities(&input, 1_000_000).expect("expand");
     assert!(expanded.contains("http://example.org/"));
     assert!(!expanded.contains("&ex;"));
 }
@@ -316,7 +315,7 @@ fn misc203_dpa_supplement_ofn_parses() {
              Ontology(<http://example.org/thing-data-literal-supplement>\n{body}\n)"
     );
     eprintln!("{ofn}");
-    let ont = crate::load_ofn_from_str(&ofn).expect("supplement ofn");
+    let ont = crate::load_ofn_from_str_with_limits(&ofn, crate::ParseLimits::default()).expect("supplement ofn");
     assert!(
         ont.dl()
             .axioms()
@@ -396,7 +395,8 @@ fn xml_literal_data_property_supplement_loads() {
                Declaration(DataProperty(<http://example.org/p>))\n\
                DataPropertyAssertion(<http://example.org/p> <http://example.org/i> \"<b>x</b>\"^^rdf:XMLLiteral)\n\
              )";
-    let ont = crate::load_ofn_from_str(ofn).expect("load xml literal dpa");
+    let ont = crate::load_ofn_from_str_with_limits(ofn, crate::ParseLimits::default())
+        .expect("load xml literal dpa");
     let has_dpa = ont
         .dl()
         .axioms()

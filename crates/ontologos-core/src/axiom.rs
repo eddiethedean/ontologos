@@ -241,6 +241,10 @@ impl Axiom {
                         "data property assertion requires datatype IRI".into(),
                     ));
                 }
+                crate::iri::validate_snapshot_iri_with_max_len(
+                    &value.datatype,
+                    limits.max_iri_len,
+                )?;
             }
             Self::NegativeObjectPropertyAssertion {
                 subject,
@@ -263,6 +267,10 @@ impl Axiom {
                         "negative data property assertion requires literal and datatype".into(),
                     ));
                 }
+                crate::iri::validate_snapshot_iri_with_max_len(
+                    &value.datatype,
+                    limits.max_iri_len,
+                )?;
             }
             Self::ObjectPropertyDomain { property, domain } => {
                 require_kind(registry, *property, EntityKind::ObjectProperty, "property")?;

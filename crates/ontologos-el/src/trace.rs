@@ -23,6 +23,8 @@ pub enum ElRule {
     ExSuperProp,
     /// Domain propagation from `ObjectPropertyDomain`.
     PropertyDomain,
+    /// Range propagation from `ObjectPropertyRange`.
+    PropertyRange,
 }
 
 impl ElRule {
@@ -37,6 +39,7 @@ impl ElRule {
             Self::SubPropTransBackward => "sub_prop_trans_backward",
             Self::ExSuperProp => "ex_super_prop",
             Self::PropertyDomain => "property_domain",
+            Self::PropertyRange => "property_range",
         }
     }
 }

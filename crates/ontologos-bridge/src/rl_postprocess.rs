@@ -213,11 +213,10 @@ pub fn apply_domain_range_nominal_subsumption(ontology: &mut Ontology) -> Result
 pub fn apply_equivalent_property_subproperties(ontology: &mut Ontology) -> Result<usize> {
     let mut clusters: Vec<Vec<EntityId>> = Vec::new();
     for (_, axiom) in ontology.axioms().iter() {
-        if let Axiom::EquivalentObjectProperties(properties) = axiom {
-            if properties.len() >= 2 {
+        if let Axiom::EquivalentObjectProperties(properties) = axiom
+            && properties.len() >= 2 {
                 clusters.push(properties.clone());
             }
-        }
     }
 
     let existing: HashSet<(EntityId, EntityId)> = ontology
@@ -613,8 +612,7 @@ fn property_endpoint_singletons(
             property: prop,
             domain,
         } = axiom
-        {
-            if *prop == property {
+            && *prop == property {
                 if let Some(ClassExpr::OneOf(v)) = store.ce(*domain) {
                     if v.len() == 1 {
                         domain_ind = Some(v[0]);
@@ -623,13 +621,11 @@ fn property_endpoint_singletons(
                     domain_ind = singleton_from_equivalent_classes(ontology, *class);
                 }
             }
-        }
         if let DlAxiom::ObjectPropertyRange {
             property: prop,
             range,
         } = axiom
-        {
-            if *prop == property {
+            && *prop == property {
                 if let Some(ClassExpr::OneOf(v)) = store.ce(*range) {
                     if v.len() == 1 {
                         range_ind = Some(v[0]);
@@ -638,7 +634,6 @@ fn property_endpoint_singletons(
                     range_ind = singleton_from_equivalent_classes(ontology, *class);
                 }
             }
-        }
     }
     let domains = property_domains(ontology);
     let ranges = property_ranges(ontology);
@@ -752,28 +747,24 @@ fn singleton_individual_of_class(ontology: &Ontology, class: EntityId) -> Option
         let DlAxiom::ObjectPropertyDomain { domain, .. } = axiom else {
             continue;
         };
-        if let Some(ClassExpr::OneOf(individuals)) = store.ce(*domain) {
-            if individuals.len() == 1 {
+        if let Some(ClassExpr::OneOf(individuals)) = store.ce(*domain)
+            && individuals.len() == 1 {
                 return Some(individuals[0]);
             }
-        }
-        if let Some(ClassExpr::Atomic(domain_class)) = store.ce(*domain) {
-            if *domain_class == class {
-                if let Some(ind) = singleton_from_equivalent_classes(ontology, class) {
+        if let Some(ClassExpr::Atomic(domain_class)) = store.ce(*domain)
+            && *domain_class == class
+                && let Some(ind) = singleton_from_equivalent_classes(ontology, class) {
                     return Some(ind);
                 }
-            }
-        }
     }
     for axiom in store.axioms() {
         let DlAxiom::ObjectPropertyRange { range, .. } = axiom else {
             continue;
         };
-        if let Some(ClassExpr::OneOf(individuals)) = store.ce(*range) {
-            if individuals.len() == 1 {
+        if let Some(ClassExpr::OneOf(individuals)) = store.ce(*range)
+            && individuals.len() == 1 {
                 return Some(individuals[0]);
             }
-        }
     }
     None
 }
@@ -791,11 +782,10 @@ fn singleton_from_equivalent_classes(ontology: &Ontology, class: EntityId) -> Op
             continue;
         }
         for &id in ids {
-            if let Some(ClassExpr::OneOf(individuals)) = store.ce(id) {
-                if individuals.len() == 1 {
+            if let Some(ClassExpr::OneOf(individuals)) = store.ce(id)
+                && individuals.len() == 1 {
                     return Some(individuals[0]);
                 }
-            }
         }
     }
     for (_, axiom) in ontology.axioms().iter() {
@@ -934,30 +924,28 @@ fn propagate_domain_range_along_subproperties(ontology: &mut Ontology) -> Result
     let domains = property_domains(ontology);
     for sub in sub_to_supers.keys() {
         for sup in transitive_supers(*sub, &sub_to_supers) {
-            if let Some(&domain) = domains.get(&sup) {
-                if !has_domain_axiom(ontology, *sub, domain) {
+            if let Some(&domain) = domains.get(&sup)
+                && !has_domain_axiom(ontology, *sub, domain) {
                     ontology.add_inferred_axiom(Axiom::ObjectPropertyDomain {
                         property: *sub,
                         domain,
                     })?;
                     added += 1;
                 }
-            }
         }
     }
 
     let ranges = property_ranges(ontology);
     for sub in sub_to_supers.keys() {
         for sup in transitive_supers(*sub, &sub_to_supers) {
-            if let Some(&range) = ranges.get(&sup) {
-                if !has_range_axiom(ontology, *sub, range) {
+            if let Some(&range) = ranges.get(&sup)
+                && !has_range_axiom(ontology, *sub, range) {
                     ontology.add_inferred_axiom(Axiom::ObjectPropertyRange {
                         property: *sub,
                         range,
                     })?;
                     added += 1;
                 }
-            }
         }
     }
 

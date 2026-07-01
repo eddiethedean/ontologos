@@ -43,7 +43,12 @@ pub(crate) fn lookup_class(ontology: &ontologos_core::Ontology, iri: &str) -> Re
             "unknown class IRI: {iri}"
         )))
     })?;
-    if ontology.entity(id).ok().map(|r| r.kind) != Some(EntityKind::Class) {
+    if !ontology
+        .entity(id)
+        .ok()
+        .map(|r| r.kind.satisfies(EntityKind::Class))
+        .unwrap_or(false)
+    {
         return Err(Error::El(ontologos_el::Error::Message(format!(
             "expected class IRI: {iri}"
         ))));
@@ -60,7 +65,12 @@ pub(crate) fn lookup_individual(
             "unknown individual IRI: {iri}"
         )))
     })?;
-    if ontology.entity(id).ok().map(|r| r.kind) != Some(EntityKind::Individual) {
+    if !ontology
+        .entity(id)
+        .ok()
+        .map(|r| r.kind.satisfies(EntityKind::Individual))
+        .unwrap_or(false)
+    {
         return Err(Error::El(ontologos_el::Error::Message(format!(
             "expected individual IRI: {iri}"
         ))));

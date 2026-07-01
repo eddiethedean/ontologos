@@ -91,15 +91,14 @@ impl AxiomStore {
         let axiom = normalize_class_operands(axiom);
         axiom.validate(registry)?;
         let fp = axiom_fingerprint(&axiom);
-        if let Some(&id) = self.dedup_index.get(&fp) {
-            if !self.removed.contains(&id)
-                && self.axioms.get(id.0 as usize).is_some_and(|e| e == &axiom)
-            {
-                if !inferred {
-                    self.inferred.remove(&id);
-                }
-                return Ok(id);
+        if let Some(&id) = self.dedup_index.get(&fp)
+            && !self.removed.contains(&id)
+            && self.axioms.get(id.0 as usize).is_some_and(|e| e == &axiom)
+        {
+            if !inferred {
+                self.inferred.remove(&id);
             }
+            return Ok(id);
         }
         if let Some((index, _)) = self.axioms.iter().enumerate().find(|(i, existing)| {
             !self.removed.contains(&AxiomId(*i as u32)) && **existing == axiom
@@ -228,10 +227,10 @@ impl DenseAdjacency {
     }
 
     fn remove(&mut self, from: EntityId, to: EntityId) {
-        if let Some(vec) = self.edges.get_mut(from.0 as usize) {
-            if let Ok(pos) = vec.binary_search(&to) {
-                vec.remove(pos);
-            }
+        if let Some(vec) = self.edges.get_mut(from.0 as usize)
+            && let Ok(pos) = vec.binary_search(&to)
+        {
+            vec.remove(pos);
         }
     }
 }

@@ -12,6 +12,18 @@ pub fn rewrite_query(
     taxonomy: &Taxonomy,
     query: &ConjunctiveQuery,
 ) -> Result<ConjunctiveQuery> {
+    if !is_ql_shape(engine.ontology(), query) {
+        let unknown = query
+            .atoms
+            .iter()
+            .find_map(|atom| match atom {
+                QueryAtom::Type { class, .. } | QueryAtom::Subsumed { superclass: class, .. } => {
+                    engine.ontology().lookup_entity(class).is_none().then(|| class.clone())
+                }
+            })
+            .unwrap_or_else(|| "<unknown>".into());
+        return Err(Error::UnknownClass(unknown));
+    }
     let mut atoms = Vec::with_capacity(query.atoms.len());
     for atom in &query.atoms {
         atoms.push(rewrite_atom(engine, taxonomy, atom)?);
@@ -70,6 +82,29 @@ mod tests {
     use crate::TaxonomyHierarchy;
     use ontologos_core::Ontology;
     use ontologos_el::ElClassifier;
+
+    #[test]
+    fn is_ql_shape_requires_known_classes() {
+        let ont = Ontology::builder()
+            .class("http://ex/A")
+            .unwrap()
+            .build()
+            .unwrap();
+        let q = ConjunctiveQuery {
+            atoms: vec![QueryAtom::Type {
+                var: "x".into(),
+                class: "http://ex/A".into(),
+            }],
+        };
+        assert!(is_ql_shape(&ont, &q));
+        let bad = ConjunctiveQuery {
+            atoms: vec![QueryAtom::Type {
+                var: "x".into(),
+                class: "http://ex/Missing".into(),
+            }],
+        };
+        assert!(!is_ql_shape(&ont, &bad));
+    }
 
     #[test]
     fn rewrite_preserves_type_atom() {

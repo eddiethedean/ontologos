@@ -2,14 +2,14 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, Condvar, Mutex, OnceLock, RwLock};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, OnceLock, RwLock};
 use std::time::Duration;
 
 use rayon::prelude::*;
 
 use ontologos_core::{CeId, ClassExpr, DeId, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr};
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient as load_ontology;
 use ontologos_rdfs::RdfsEngine;
 
 use crate::{
@@ -35,16 +35,11 @@ fn dl_classify_budget() -> Duration {
     })
 }
 
-/// Maximum concurrent DL worker threads (limits orphan work after timeouts).
-/// Uses [`ontologos_dl::dl_max_workers`] with a conformance floor of 10.
+/// Minimum concurrent DL worker threads for conformance scans.
 const CONFORMANCE_DL_MAX_WORKERS_FLOOR: usize = 10;
 
 /// Rayon pool size for catalog / WG scans (`ONTOLOGOS_SCAN_THREADS`, default 10).
 const DEFAULT_SCAN_THREADS: usize = 10;
-
-fn dl_max_workers() -> usize {
-    ontologos_dl::dl_max_workers().max(CONFORMANCE_DL_MAX_WORKERS_FLOOR)
-}
 
 fn scan_thread_count() -> usize {
     static COUNT: OnceLock<usize> = OnceLock::new();
@@ -220,11 +215,10 @@ pub fn promoted_axiom_ids_path() -> PathBuf {
 }
 
 fn load_catalog_cached() -> Vec<HermitCase> {
-    if let Ok(guard) = CATALOG.read() {
-        if let Some(cached) = guard.as_ref() {
+    if let Ok(guard) = CATALOG.read()
+        && let Some(cached) = guard.as_ref() {
             return cached.clone();
         }
-    }
     let loaded = load_catalog_file_from_disk();
     if let Ok(mut guard) = CATALOG.write() {
         *guard = Some(loaded.clone());
@@ -445,13 +439,11 @@ fn check_axiom_case_with_opts(case: &HermitCase, budget: Option<Duration>) -> Re
 
     if case.load_error_expected {
         let loaded = load_ontology(&path);
-        if loaded.is_ok() {
-            if let Ok(ontology) = loaded {
-                if ontologos_parser::validate_loaded_ontology(&ontology).is_ok() {
+        if loaded.is_ok()
+            && let Ok(ontology) = loaded
+                && ontologos_parser::validate_loaded_ontology(&ontology).is_ok() {
                     return Err(format!("{}: expected ontology load to fail", case.id));
                 }
-            }
-        }
         return Ok(());
     }
 
@@ -920,22 +912,20 @@ fn individual_asserted_class_types(
     let mut asserted: std::collections::HashSet<ontologos_core::EntityId> =
         ontology.classes_of(individual).iter().copied().collect();
     for axiom in ontology.dl().axioms() {
-        if let DlAxiom::SameIndividual(ids) = axiom {
-            if ids.contains(&individual) {
+        if let DlAxiom::SameIndividual(ids) = axiom
+            && ids.contains(&individual) {
                 for &other in ids {
                     asserted.extend(ontology.classes_of(other).iter().copied());
                 }
             }
-        }
     }
     for (_, axiom) in ontology.axioms().iter() {
-        if let ontologos_core::Axiom::SameIndividual(ids) = axiom {
-            if ids.contains(&individual) {
+        if let ontologos_core::Axiom::SameIndividual(ids) = axiom
+            && ids.contains(&individual) {
                 for &other in ids {
                     asserted.extend(ontology.classes_of(other).iter().copied());
                 }
             }
-        }
     }
     asserted
 }
@@ -1104,12 +1094,11 @@ fn some_values_from_instance_locals(
     }
 
     for &filler_class in &filler_classes {
-        if !direct {
-            if let Some(filler_name) = entity_local_name(ontology, filler_class) {
+        if !direct
+            && let Some(filler_name) = entity_local_name(ontology, filler_class) {
                 let sub_ce = format!("ObjectSomeValuesFrom(:{role_local} :{filler_name})");
                 out.extend(equivalent_class_instance_locals(ontology, &sub_ce));
             }
-        }
         for (subject, record) in ontology.entities().iter() {
             if record.kind != ontologos_core::EntityKind::Individual {
                 continue;
@@ -1117,11 +1106,9 @@ fn some_values_from_instance_locals(
             for &(property, object) in ontology.object_assertions_of(subject) {
                 if property == role_id
                     && individual_has_type(ontology, taxonomy, object, filler_class, false, false)
-                {
-                    if let Some(local) = entity_local_name(ontology, subject) {
+                    && let Some(local) = entity_local_name(ontology, subject) {
                         out.insert(format!(":{local}"));
                     }
-                }
             }
         }
     }
@@ -1187,11 +1174,10 @@ fn check_individual_instances_result(
                     if record.kind != ontologos_core::EntityKind::Individual {
                         continue;
                     }
-                    if individual_has_type(ontology, taxonomy, ind, class_id, false, false) {
-                        if let Some(local) = entity_local_name(ontology, ind) {
+                    if individual_has_type(ontology, taxonomy, ind, class_id, false, false)
+                        && let Some(local) = entity_local_name(ontology, ind) {
                             actual.insert(format!(":{local}"));
                         }
-                    }
                 }
             }
         }
@@ -1226,13 +1212,10 @@ fn cyclic_roles_for_class(
             }),
             Some(ontologos_core::ClassExpr::Atomic(sup_class)),
         ) = (store.ce(*sub), store.ce(*sup))
-        {
-            if *sup_class == class_id {
-                if let RoleExpr::Atomic(prop) = property {
+            && *sup_class == class_id
+                && let RoleExpr::Atomic(prop) = property {
                     cyclic_roles.insert(*prop, class_id);
                 }
-            }
-        }
     }
     cyclic_roles
 }
@@ -1856,18 +1839,15 @@ fn property_subsumption_holds(ontology: &Ontology, sub_iri: &str, sup_iri: &str)
     if sup_is_top && lookup_entity_flexible(ontology, sub_iri).is_some() {
         return true;
     }
-    if sup_is_top {
-        if let Some(sub_id) = lookup_entity_flexible(ontology, sub_iri) {
-            if is_universal_object_property(ontology, sub_id) {
+    if sup_is_top
+        && let Some(sub_id) = lookup_entity_flexible(ontology, sub_iri)
+            && is_universal_object_property(ontology, sub_id) {
                 return true;
             }
-        }
-    }
-    if sub_iri == top_op {
-        if let Some(sup_id) = ontology.lookup_entity(sup_iri) {
+    if sub_iri == top_op
+        && let Some(sup_id) = ontology.lookup_entity(sup_iri) {
             return is_universal_object_property(ontology, sup_id);
         }
-    }
     false
 }
 
@@ -2003,15 +1983,13 @@ fn check_subsumptions_dl_result(
                 let sup_local = sub.sup.strip_prefix(':').unwrap_or(&sub.sup);
                 if let Ok(conclusion) =
                     probe_ontology_axiom(&format!("SubClassOf(:{sub_local} :{sup_local})"))
-                {
-                    if let Ok(entailed) = entailment_holds_with_budget(
+                    && let Ok(entailed) = entailment_holds_with_budget(
                         ontology,
                         &conclusion,
                         Some(dl_classify_budget()),
                     ) {
                         actual = entailed;
                     }
-                }
             }
             actual
         };
@@ -2108,11 +2086,10 @@ fn is_universal_top_role_class(ontology: &Ontology, class: ontologos_core::Entit
     let store = ontology.dl();
     let mut top_roles = std::collections::HashSet::from([top]);
     for (_, axiom) in ontology.axioms().iter() {
-        if let ontologos_core::Axiom::EquivalentObjectProperties(props) = axiom {
-            if props.contains(&top) {
+        if let ontologos_core::Axiom::EquivalentObjectProperties(props) = axiom
+            && props.contains(&top) {
                 top_roles.extend(props.iter().copied());
             }
-        }
     }
     for axiom in store.axioms() {
         let ontologos_core::DlAxiom::EquivalentClasses(ids) = axiom else {
@@ -3223,11 +3200,10 @@ fn consistent_but_all_unsat_fast_entailment(
     }
     let premise_for_unsat = premise.clone();
     let entailed = with_default_tableau_limits(|| {
-        if let Ok(tax) = ontologos_dl::classify(&premise_for_unsat) {
-            if targets.iter().all(|c| tax.unsatisfiable.contains(c)) {
+        if let Ok(tax) = ontologos_dl::classify(&premise_for_unsat)
+            && targets.iter().all(|c| tax.unsatisfiable.contains(c)) {
                 return Ok(true);
             }
-        }
         let dl = ontologos_alc::DlOntology::from_ontology(&premise_for_unsat)
             .map_err(|e| e.to_string())?;
         let mut cache = ontologos_alc::UnsatCache::new();
@@ -3272,14 +3248,13 @@ fn entailment_via_subclass_nothing(
     let seed = ontologos_alc::TableauSeed::default();
     let mut atomic_subs = Vec::new();
     for clause in dl.clauses().clauses() {
-        if let ontologos_alc::Clause::Subsumption { sub, sup } = clause {
-            if let (Some(a), Some(b)) = (
+        if let ontologos_alc::Clause::Subsumption { sub, sup } = clause
+            && let (Some(a), Some(b)) = (
                 atomic_entity_from_dl_ce(&dl, *sub),
                 atomic_entity_from_dl_ce(&dl, *sup),
             ) {
                 atomic_subs.push((a, b));
             }
-        }
     }
     let structural = ontologos_alc::structural_unsat_classes(&dl, &seed, &atomic_subs);
     if targets.iter().all(|c| structural.contains(c)) {
@@ -3292,11 +3267,10 @@ fn entailment_via_subclass_nothing(
     let premise = premise.clone();
     let entailed = with_default_tableau_limits(|| {
         run_dl_bounded(budget, move || {
-            if let Ok(tax) = ontologos_dl::classify_for_entailment(&premise) {
-                if pending.iter().all(|c| tax.unsatisfiable.contains(c)) {
+            if let Ok(tax) = ontologos_dl::classify_for_entailment(&premise)
+                && pending.iter().all(|c| tax.unsatisfiable.contains(c)) {
                     return Ok(true);
                 }
-            }
             ontologos_dl::named_classes_unsatisfiable(&premise, &pending).map_err(|e| e.to_string())
         })
     })??;
@@ -3401,11 +3375,9 @@ fn entailment_holds_with_budget_opts(
         }
     }
     if allow_positive_guards && conclusion_nothing_subclass_entailment_targets(conclusion).is_some()
-    {
-        if let Some(entailed) = entailment_via_subclass_nothing(premise, conclusion, budget)? {
+        && let Some(entailed) = entailment_via_subclass_nothing(premise, conclusion, budget)? {
             return Ok(entailed);
         }
-    }
     if allow_positive_guards {
         if data_exact_cardinality_literal_entailment_guard(premise, conclusion) {
             return Ok(true);
@@ -4400,13 +4372,12 @@ fn spurious_class_equivalence_non_entailment_guard(
 fn mutual_subclass_in_premise(premise: &Ontology, left: EntityId, right: EntityId) -> bool {
     fn has_sub(premise: &Ontology, sub: EntityId, sup: EntityId) -> bool {
         let sub_ce = premise.dl().axioms().find_map(|ax| {
-            if let DlAxiom::SubClassOf { sub: s, sup: p } = ax {
-                if atomic_entity_from_ce(premise.dl(), *s) == Some(sub)
+            if let DlAxiom::SubClassOf { sub: s, sup: p } = ax
+                && atomic_entity_from_ce(premise.dl(), *s) == Some(sub)
                     && atomic_entity_from_ce(premise.dl(), *p) == Some(sup)
                 {
                     return Some(());
                 }
-            }
             None
         });
         sub_ce.is_some()
@@ -6045,11 +6016,10 @@ fn inverse_existential_instance_entailed(
         if premise_class_equivalent_to_existential_on_property(premise, target_class, prop) {
             return true;
         }
-        if let Some(inv) = premise_inverse_property(premise, prop) {
-            if premise_class_equivalent_to_existential_on_property(premise, target_class, inv) {
+        if let Some(inv) = premise_inverse_property(premise, prop)
+            && premise_class_equivalent_to_existential_on_property(premise, target_class, inv) {
                 return true;
             }
-        }
     }
     for axiom in premise.dl().axioms() {
         let DlAxiom::ObjectPropertyAssertion {
@@ -6072,11 +6042,10 @@ fn inverse_existential_instance_entailed(
         if premise_class_equivalent_to_existential_on_property(premise, target_class, prop) {
             return true;
         }
-        if let Some(inv) = premise_inverse_property(premise, prop) {
-            if premise_class_equivalent_to_existential_on_property(premise, target_class, inv) {
+        if let Some(inv) = premise_inverse_property(premise, prop)
+            && premise_class_equivalent_to_existential_on_property(premise, target_class, inv) {
                 return true;
             }
-        }
     }
     for (_, axiom) in premise.axioms().iter() {
         let ontologos_core::Axiom::ObjectPropertyAssertion {
@@ -6096,11 +6065,10 @@ fn inverse_existential_instance_entailed(
         if premise_class_equivalent_to_existential_on_property(premise, target_class, *property) {
             return true;
         }
-        if let Some(inv) = premise_inverse_property(premise, *property) {
-            if premise_class_equivalent_to_existential_on_property(premise, target_class, inv) {
+        if let Some(inv) = premise_inverse_property(premise, *property)
+            && premise_class_equivalent_to_existential_on_property(premise, target_class, inv) {
                 return true;
             }
-        }
     }
     false
 }
@@ -8577,15 +8545,14 @@ fn restriction_instance_typing_entailment_guard(premise: &Ontology, conclusion: 
                     if let Some(ClassExpr::Atomic(comp)) = conclusion.dl().ce(*inner) {
                         let comp_prem = map_entity_by_iri(conclusion, premise, *comp)
                             .or_else(|| map_entity_by_local_iri(conclusion, premise, *comp));
-                        if let Some(comp_prem) = comp_prem {
-                            if complement_instance_typing_from_disjoint_entailed(
+                        if let Some(comp_prem) = comp_prem
+                            && complement_instance_typing_from_disjoint_entailed(
                                 premise,
                                 &conc_ind_iri,
                                 comp_prem,
                             ) {
                                 return true;
                             }
-                        }
                     }
                 }
                 _ => {}
@@ -9437,18 +9404,16 @@ fn class_same_as_non_entailment_guard(premise: &Ontology, conclusion: &Ontology)
 fn same_individual_pairs(ontology: &Ontology) -> Vec<(EntityId, EntityId)> {
     let mut pairs = Vec::new();
     for (_, axiom) in ontology.axioms().iter() {
-        if let ontologos_core::Axiom::SameIndividual(individuals) = axiom {
-            if individuals.len() >= 2 {
+        if let ontologos_core::Axiom::SameIndividual(individuals) = axiom
+            && individuals.len() >= 2 {
                 pairs.push((individuals[0], individuals[1]));
             }
-        }
     }
     for axiom in ontology.dl().axioms() {
-        if let DlAxiom::SameIndividual(individuals) = axiom {
-            if individuals.len() >= 2 {
+        if let DlAxiom::SameIndividual(individuals) = axiom
+            && individuals.len() >= 2 {
                 pairs.push((individuals[0], individuals[1]));
             }
-        }
     }
     pairs
 }
@@ -9463,11 +9428,10 @@ fn individual_typed_with_class(ontology: &Ontology, individual: EntityId, class:
             if *ind != individual {
                 continue;
             }
-            if let Some(ClassExpr::Atomic(c)) = ontology.dl().ce(*ce) {
-                if *c == class {
+            if let Some(ClassExpr::Atomic(c)) = ontology.dl().ce(*ce)
+                && *c == class {
                     return true;
                 }
-            }
         }
     }
     for (_, axiom) in ontology.axioms().iter() {
@@ -9475,11 +9439,9 @@ fn individual_typed_with_class(ontology: &Ontology, individual: EntityId, class:
             individual: ind,
             class: c,
         } = axiom
-        {
-            if *ind == individual && *c == class {
+            && *ind == individual && *c == class {
                 return true;
             }
-        }
     }
     false
 }
@@ -9732,7 +9694,7 @@ fn assert_hierarchy_pairs(
 #[cfg(test)]
 mod entailment_guard_tests {
     use super::*;
-    use ontologos_parser::load_ontology;
+    use ontologos_parser::load_ontology_lenient as load_ontology;
     use std::path::PathBuf;
 
     fn wg(rel: &str) -> PathBuf {

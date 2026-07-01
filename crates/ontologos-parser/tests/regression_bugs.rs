@@ -4,7 +4,7 @@
 use std::path::Path;
 
 use ontologos_core::{EntityKind, ParseMeta};
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient;
 
 fn fixture(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -32,7 +32,7 @@ fn assert_kind_mismatch_without_misleading_skip(meta: &ParseMeta, misleading: &[
 /// Class/individual punning should map the assertion without kind-mismatch warnings.
 #[test]
 fn class_individual_punning_maps_class_assertion() {
-    let ontology = load_ontology(&fixture("class_individual_kind_clash.ttl")).expect("load");
+    let ontology = load_ontology_lenient(&fixture("class_individual_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
     assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
     assert_eq!(entity_kind(&ontology, "alice"), EntityKind::ClassIndividual);
@@ -41,7 +41,7 @@ fn class_individual_punning_maps_class_assertion() {
 /// SubClassOf with a punned class/individual IRI should map without kind mismatch.
 #[test]
 fn subclass_individual_punning_maps_subclass_of() {
-    let ontology = load_ontology(&fixture("subclass_individual_kind_clash.ttl")).expect("load");
+    let ontology = load_ontology_lenient(&fixture("subclass_individual_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
     assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
     assert_eq!(entity_kind(&ontology, "alice"), EntityKind::ClassIndividual);
@@ -51,7 +51,7 @@ fn subclass_individual_punning_maps_subclass_of() {
 #[test]
 fn property_class_punning_maps_object_property_assertion() {
     let ontology =
-        load_ontology(&fixture("property_assertion_class_kind_clash.ttl")).expect("load");
+        load_ontology_lenient(&fixture("property_assertion_class_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
     assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
     assert_eq!(
@@ -64,7 +64,7 @@ fn property_class_punning_maps_object_property_assertion() {
 #[test]
 fn inverse_properties_class_punning_maps_inverse_axiom() {
     let ontology =
-        load_ontology(&fixture("inverse_properties_class_kind_clash.ttl")).expect("load");
+        load_ontology_lenient(&fixture("inverse_properties_class_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
     assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
     assert_eq!(
@@ -101,22 +101,22 @@ fn assert_subclass_data_property_conflict(ontology: &ontologos_core::Ontology) -
 /// SubClassOf(:Y :X) with :X declared DataProperty must not depend on axiom visit order.
 #[test]
 fn subclass_data_property_conflict_is_order_independent_decl_first() {
-    let ontology = load_ontology(&fixture("subclass_data_property_decl_first.ofn")).expect("load");
+    let ontology = load_ontology_lenient(&fixture("subclass_data_property_decl_first.ofn")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
 }
 
 #[test]
 fn subclass_data_property_conflict_is_order_independent_axiom_first() {
-    let ontology = load_ontology(&fixture("subclass_data_property_axiom_first.ofn")).expect("load");
+    let ontology = load_ontology_lenient(&fixture("subclass_data_property_axiom_first.ofn")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
 }
 
 #[test]
 fn subclass_data_property_conflict_ofn_orderings_share_parse_meta() {
     let decl_first =
-        load_ontology(&fixture("subclass_data_property_decl_first.ofn")).expect("load");
+        load_ontology_lenient(&fixture("subclass_data_property_decl_first.ofn")).expect("load");
     let axiom_first =
-        load_ontology(&fixture("subclass_data_property_axiom_first.ofn")).expect("load");
+        load_ontology_lenient(&fixture("subclass_data_property_axiom_first.ofn")).expect("load");
     let meta_decl = assert_subclass_data_property_conflict(&decl_first);
     let meta_axiom = assert_subclass_data_property_conflict(&axiom_first);
     assert_eq!(meta_decl.warnings.len(), meta_axiom.warnings.len());
@@ -125,22 +125,22 @@ fn subclass_data_property_conflict_ofn_orderings_share_parse_meta() {
 
 #[test]
 fn subclass_data_property_conflict_is_order_independent_decl_first_turtle() {
-    let ontology = load_ontology(&fixture("subclass_data_property_decl_first.ttl")).expect("load");
+    let ontology = load_ontology_lenient(&fixture("subclass_data_property_decl_first.ttl")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
 }
 
 #[test]
 fn subclass_data_property_conflict_is_order_independent_axiom_first_turtle() {
-    let ontology = load_ontology(&fixture("subclass_data_property_axiom_first.ttl")).expect("load");
+    let ontology = load_ontology_lenient(&fixture("subclass_data_property_axiom_first.ttl")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
 }
 
 #[test]
 fn subclass_data_property_conflict_turtle_orderings_share_parse_meta() {
     let decl_first =
-        load_ontology(&fixture("subclass_data_property_decl_first.ttl")).expect("load");
+        load_ontology_lenient(&fixture("subclass_data_property_decl_first.ttl")).expect("load");
     let axiom_first =
-        load_ontology(&fixture("subclass_data_property_axiom_first.ttl")).expect("load");
+        load_ontology_lenient(&fixture("subclass_data_property_axiom_first.ttl")).expect("load");
     let meta_decl = assert_subclass_data_property_conflict(&decl_first);
     let meta_axiom = assert_subclass_data_property_conflict(&axiom_first);
     assert_eq!(meta_decl.warnings.len(), meta_axiom.warnings.len());
@@ -149,7 +149,7 @@ fn subclass_data_property_conflict_turtle_orderings_share_parse_meta() {
 
 #[test]
 fn subclass_named_classes_still_maps_when_declarations_precede_axiom() {
-    let ontology = load_ontology(&fixture("subclass_named_classes.ofn")).expect("load");
+    let ontology = load_ontology_lenient(&fixture("subclass_named_classes.ofn")).expect("load");
     assert_eq!(ontology.axiom_count(), 1);
     assert_eq!(entity_kind(&ontology, "X"), EntityKind::Class);
     assert_eq!(entity_kind(&ontology, "Y"), EntityKind::Class);
@@ -159,7 +159,7 @@ fn subclass_named_classes_still_maps_when_declarations_precede_axiom() {
 fn invalid_blank_nodes_conclusion_rejected() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/data/hermit/axioms/hermit_reasoner_entailmenttest_testinvalidblanknodes_conclusion.ofn");
-    let ontology = ontologos_parser::load_ontology(&path).expect("load");
+    let ontology = ontologos_parser::load_ontology_lenient(&path).expect("load");
     assert!(
         ontologos_parser::validate_loaded_ontology(&ontology).is_err(),
         "expected cyclic blank-node conclusion to fail validation"

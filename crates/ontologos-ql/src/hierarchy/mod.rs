@@ -9,8 +9,10 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Hierarchy navigation errors.
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Entity is missing or not a class.
     #[error("unknown entity {0:?}")]
     UnknownEntity(EntityId),
+    /// Underlying core error.
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),
 }
@@ -23,41 +25,50 @@ pub struct TaxonomyHierarchy<'a> {
 }
 
 impl<'a> TaxonomyHierarchy<'a> {
+    /// Build a hierarchy view over `ontology` and `taxonomy`.
     #[must_use]
     pub fn new(ontology: &'a Ontology, taxonomy: &'a Taxonomy) -> Self {
         Self { ontology, taxonomy }
     }
 
+    /// Underlying ontology.
     #[must_use]
     pub fn ontology(&self) -> &'a Ontology {
         self.ontology
     }
 
+    /// Classified taxonomy.
     #[must_use]
     pub fn taxonomy(&self) -> &'a Taxonomy {
         self.taxonomy
     }
 
+    /// Direct named subclasses of `class`.
     pub fn direct_subclasses(&self, class: EntityId) -> Result<Vec<EntityId>> {
         self.ensure_class(class)?;
         Ok(self.taxonomy.direct_subclasses(class))
     }
 
+    /// Direct named superclasses of `class`.
     pub fn direct_superclasses(&self, class: EntityId) -> Result<Vec<EntityId>> {
         self.ensure_class(class)?;
         Ok(self.taxonomy.direct_superclasses(class))
     }
 
+    /// Whether `sub` is subsumed by `sup` in the taxonomy.
     pub fn is_subsumed(&self, sub: EntityId, sup: EntityId) -> Result<bool> {
         self.ensure_class(sub)?;
         self.ensure_class(sup)?;
         Ok(self.taxonomy.is_subsumed(sub, sup))
     }
 
+    /// Resolve a class IRI to an entity id.
+    #[must_use]
     pub fn lookup(&self, iri: &str) -> Option<EntityId> {
         self.ontology.lookup_entity(iri)
     }
 
+    /// Named individuals with a class assertion to `class` or a subclass.
     pub fn instances_of(&self, class: EntityId) -> Result<Vec<EntityId>> {
         self.ensure_class(class)?;
         let mut out = Vec::new();
@@ -78,6 +89,7 @@ impl<'a> TaxonomyHierarchy<'a> {
         Ok(out)
     }
 
+    /// Named classes asserted on `individual`.
     pub fn types_of(&self, individual: EntityId) -> Result<Vec<EntityId>> {
         let record = self.ontology.entity(individual)?;
         if record.kind != EntityKind::Individual {
@@ -89,11 +101,9 @@ impl<'a> TaxonomyHierarchy<'a> {
                 individual: subj,
                 class,
             } = axiom
-            {
-                if *subj == individual {
+                && *subj == individual {
                     out.push(*class);
                 }
-            }
         }
         Ok(out)
     }

@@ -359,12 +359,15 @@ fn axiom_to_triples(
 pub struct MergeLimits {
     /// Maximum axioms allowed in the ontology after merge (including asserted).
     pub max_axioms: usize,
+    /// Maximum entities allowed in the ontology after merge.
+    pub max_entities: usize,
 }
 
 impl Default for MergeLimits {
     fn default() -> Self {
         Self {
             max_axioms: 10_000_000,
+            max_entities: 1_000_000,
         }
     }
 }
@@ -426,6 +429,13 @@ pub fn merge_triples_into_ontology_with_limits(
                 to_add.push(axiom);
             }
         }
+    }
+
+    if ontology.entity_count() > limits.max_entities {
+        return Err(Error::Bridge(format!(
+            "entity limit {} would be exceeded during merge",
+            limits.max_entities
+        )));
     }
 
     if ontology.axiom_count().saturating_add(to_add.len()) > limits.max_axioms {
@@ -492,11 +502,10 @@ fn collect_existential_axioms(ontology: &mut Ontology, triples: &[Triple]) -> Re
                 }
             }
             oxrdf::NamedOrBlankNode::NamedNode(subject) => {
-                if triple.predicate.as_str() == RDFS_SUBCLASS {
-                    if let Term::BlankNode(bnode) = &triple.object {
+                if triple.predicate.as_str() == RDFS_SUBCLASS
+                    && let Term::BlankNode(bnode) = &triple.object {
                         subclass_edges.push((subject.as_str().to_string(), blank_node_id(bnode)));
                     }
-                }
             }
         }
     }
@@ -698,10 +707,9 @@ fn lookup_or_insert(
 ) -> Result<Option<EntityId>> {
     if let Some(id) = ontology.lookup_entity(iri) {
         let record = ontology.entity(id)?;
-        if record.kind != kind {
+        if !record.kind.satisfies(kind) && EntityKind::merge_punning(record.kind, kind).is_none() {
             return Ok(None);
         }
-        return Ok(Some(id));
     }
     Ok(Some(ontology.entity_id(iri, kind)?))
 }
