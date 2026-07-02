@@ -17,7 +17,8 @@ pub struct ParseLimits {
     pub max_harvested_assertions: usize,
     /// When true, return an error if axioms or entities are skipped due to limits.
     pub strict: bool,
-    /// When true, resolve and merge `owl:imports` for RDF/XML ontologies (default).
+    /// When true, resolve and merge `owl:imports` for RDF/XML ontologies.
+    /// Default **false** — trusted `load_ontology*` helpers opt in with `true`.
     pub merge_imports: bool,
     /// When true, run post-load validation on successful parses.
     pub validate_output: bool,

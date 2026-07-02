@@ -72,7 +72,7 @@ Raise `ONTOLOGOS_TRUE_PARITY_MIN` as burndown progresses; switch `ONTOLOGOS_TRUE
 |------|------|--------|
 | **A** | v1.0.0 publish + tag | Checklist: [release-1.0-checklist.md](../project/release-1.0-checklist.md) |
 | **B** | Literal catalog 1019/1019 | In progress — **103** Java out-of-scope; **122** `#[ignore]`; Bob A/B hand test green |
-| **C** | Strict taxonomy (`--max-extra 0`) | Family **green** (`taxonomy_strict_pct = 100%`); pizza/go-subset extras remain |
+| **C** | Strict taxonomy (`--max-extra 0`) | **Informational** — sound superset is blocking; identity gate waived (26 extras on `family.owl` vs HermiT until 2.0) |
 | **D** | Perf + OWL API | Family DL **< 1.0 s** PR gate green; Pizza **< 30 s** nightly only |
 
 ## Remaining workstreams (5)

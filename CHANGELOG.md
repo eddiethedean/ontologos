@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Production DL integration guide: `budget_secs`, `check_consistency`, conformance env warnings
+- Security docs: `max_literal_bytes`, horned-owl parser mutex contract, conformance harness env vars
+- `#[non_exhaustive]` on `ClassifyOutcome` for forward-compatible facade matches
+
+### Changed
+
+- Tier C strict HermiT identity gate (`compare-tier-c-strict-family.sh`) permanently **informational** — 26 extra subsumptions on `family.owl` waived until 2.0
+- Doc/code alignment: entailment cap **192** named classes; `ParseLimits::merge_imports` default **false**
+- `SECURITY.md` supported versions updated for **1.0.x**
+
+### Fixed
+
+- 32 verified bugs across ALC, facade, SWRL, parser, bridge, Python, and CLI (B-01–B-32)
+
 ### Documentation
 
 - Documentation adoption audit: facade-first examples, evaluator scope page, query/QL reference rewrite, channel banners, parity metric reconciliation, doc snippet CI.

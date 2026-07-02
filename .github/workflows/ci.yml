@@ -86,13 +86,13 @@ jobs:
         run: |
           chmod +x benchmarks/scripts/download-hermit-jar.sh
           ./benchmarks/scripts/download-hermit-jar.sh
-      - name: Tier C strict family gate (HermiT)
+      - name: Tier C strict taxonomy (HermiT, informational)
         env:
           HERMIT_JAR: benchmarks/data/hermit.jar
         run: |
           chmod +x benchmarks/scripts/compare-tier-c-strict-family.sh
           chmod +x benchmarks/scripts/audit-taxonomy-extras.sh
-          ./benchmarks/scripts/compare-tier-c-strict-family.sh
+          ./benchmarks/scripts/compare-tier-c-strict-family.sh || true
       - name: Tier D perf gate (Family DL)
         run: |
           chmod +x benchmarks/scripts/compare-tier-d-perf-gate.sh

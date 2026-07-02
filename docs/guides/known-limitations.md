@@ -8,13 +8,13 @@ Canonical profile and channel guidance: [Profile stability matrix](profile-stabi
 
 Import handling depends on serialization format. See the canonical [OWL imports reference](../reference/owl-imports.md).
 
-| Format | Default behavior |
-|--------|------------------|
-| **RDF/XML** (`.owl`, `.rdf`, `.xml`) | Local `owl:imports` **merged by default** (`ParseLimits::merge_imports = true`) |
-| **Turtle**, **OWL Functional** | **Not merged** — only axioms in the loaded file |
-| **Remote import IRIs** | **Never fetched** over the network |
+| Format | `load_ontology` / `load_ontology_in` | `ParseLimits::default()` |
+|--------|--------------------------------------|--------------------------|
+| **RDF/XML** (`.owl`, `.rdf`, `.xml`) | Local `owl:imports` **merged** (`merge_imports: true`) | **`merge_imports: false`** — set explicitly for custom loaders |
+| **Turtle**, **OWL Functional** | **Not merged** — only axioms in the loaded file | Same |
+| **Remote import IRIs** | **Never fetched** over the network | Same |
 
-For multi-file ontologies with remote imports, merge upstream (e.g. [ROBOT](http://robot.obolibrary.org/)) before loading.
+For untrusted uploads, use `load_ontology_in` with `ParseLimits { merge_imports: false, .. }` unless sibling import files are trusted. For multi-file ontologies with remote imports, merge upstream (e.g. [ROBOT](http://robot.obolibrary.org/)) before loading.
 
 See [Load an OWL file](../getting-started/load-owl-file.md).
 

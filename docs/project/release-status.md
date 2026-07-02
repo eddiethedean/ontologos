@@ -38,7 +38,7 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Documented CE exclusions | **13** Ian/ComplexConcept + `testIanBackjumping3` (**70** `excluded` catalog cases) |
 | `check-1.0-release-gates.sh` | **Green** (blocking in CI) |
 
-**Remaining for v1.0.0 publish:** follow [release-1.0-checklist.md](release-1.0-checklist.md) (crates.io + PyPI, then annotated tag `v1.0.0`). After publish: [Post-1.0 doc update](post-1.0-doc-update.md). Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
+**Remaining for v1.0.0 publish:** architecture review prep complete on `main` — follow [release-1.0-checklist.md](release-1.0-checklist.md) (annotated tag `v1.0.0` triggers crates.io + PyPI). After publish: [Post-1.0 doc update](post-1.0-doc-update.md). Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
 
 ## Profile stability
 

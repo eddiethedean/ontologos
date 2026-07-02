@@ -1,6 +1,6 @@
 # Security Considerations
 
-OntoLogos v0.9.0 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
+OntoLogos v1.0.0 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
 
 ## JSON snapshots
 
@@ -25,6 +25,7 @@ let ontology = Ontology::from_json_with_limits(json, limits)?;
 | `max_axioms` | 10,000,000 | Cap axiom array size |
 | `max_iri_len` | 8,192 | Cap per-IRI string length |
 | `max_class_operands` | 10,000 | Cap equivalent/disjoint operands |
+| `max_literal_bytes` | 1 MiB | Cap lexical form length for data literals |
 
 ### IRI validation
 
@@ -53,13 +54,23 @@ Literal `datatype` IRIs in JSON snapshots are validated the same way as entity I
 
 `ontologos_parser::validate_load_path` canonicalizes paths and rejects traversal outside an optional base directory using **path-component containment** (not string-prefix matching).
 
-- `load_ontology` — no sandbox base (trusted local paths); **strict by default**
+- `load_ontology` — no sandbox base (trusted local paths); **strict by default**; merges local `owl:imports` for RDF/XML
 - `load_ontology_lenient` — same as `load_ontology` but allows skipped axioms with warnings
 - `load_ontology_in(base, path)` — constrain loads to stay under `base` (untrusted uploads)
 
-Loads validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/struct.ParseLimits.html), run a lightweight axiom/component pre-scan, then parse via horned-owl. Post-load lightweight validation runs on every successful load; expensive blank-node graph checks run when `strict` is true. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
+Loads validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/struct.ParseLimits.html), run a lightweight axiom/component pre-scan, then parse via horned-owl. Post-load lightweight validation runs on every successful load; expensive blank-node graph checks run when `strict` is true. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
 
-### Reasoning merge limits (v0.9.0)
+### Parser concurrency (server embedders)
+
+`ontologos-parser` serializes horned-owl reader entry points with a **process-wide mutex** (`HORNED_OWL_READ_LOCK`). Concurrent OWL file loads from multiple threads **block** on this lock; horned-owl may panic or corrupt internal state if invoked without serialization.
+
+**Production guidance:**
+
+- Treat OWL parsing as **single-threaded per process** (one load at a time), or isolate loads in **separate worker processes**
+- Do not assume `load_ontology_in` sandboxing alone makes parallel loads safe
+- JSON snapshot deserialization (`Ontology::from_json_with_limits`) does not use horned-owl and is not subject to this mutex
+
+### Reasoning merge limits (v0.9.0+)
 
 RL/RDFS saturation merges inferred axioms via `ontologos-bridge::MergeLimits` (default `max_axioms: 10_000_000`). Configure with `RdfsEngine::with_merge_limits` / `RlEngine::with_merge_limits` for untrusted workloads.
 
@@ -72,9 +83,24 @@ RL/RDFS saturation merges inferred axioms via `ontologos-bridge::MergeLimits` (d
 | `max_harvested_assertions` | 100,000 | Cap RDF/XML supplement harvest per load |
 | `max_axioms` | 10,000,000 | Cap stored axioms during mapping |
 | `max_entities` | 1,000,000 | Cap registered entities during mapping |
+| `merge_imports` | **false** in `ParseLimits::default()` | Opt in explicitly; trusted `load_ontology*` helpers set `true` |
 | `strict` | **true** | Fail on skipped axioms / incompatible declarations; use `load_ontology_lenient` to opt out |
 
-Use `load_ontology_with_limits` or `load_ontology_in` for untrusted uploads. Skipped axioms and parser warnings are recorded in `ParseMeta`; with `strict: true` (default) they fail the load instead.
+Use `load_ontology_with_limits` or `load_ontology_in` for untrusted uploads. For user-supplied paths, prefer **`load_ontology_in`** with a sandbox base and **`merge_imports: false`** unless you trust sibling import files. Skipped axioms and parser warnings are recorded in `ParseMeta`; with `strict: true` (default) they fail the load instead.
+
+## Conformance harness environment (do not set in production)
+
+DL consistency and classification paths may enable **WG corpus shortcuts** when `ONTOLOGOS_CONFORMANCE=1` (CI and local conformance runs). These shortcuts speed HermiT catalog cases and are **not** used for production reasoning when the variable is unset.
+
+**Do not set** in production or customer-facing services:
+
+| Variable | Purpose |
+|----------|---------|
+| `ONTOLOGOS_CONFORMANCE` | WG wine/import consistency shortcuts in DL |
+| `ONTOLOGOS_STRICT_TAXONOMY` | Tier C strict taxonomy comparison (harness only) |
+| `ONTOLOGOS_CI_PROMOTED_ONLY` | Subset conformance runs in CI |
+
+Validate DL results on **your own corpus** with `check_consistency` and `budget_secs` — see [Production integration](guides/production-integration.md#owl-dl-in-production).
 
 ## Reporting issues
 
@@ -85,3 +111,4 @@ Report security vulnerabilities privately — see [Security policy](project/secu
 - [JSON snapshot v3](json-snapshot-v3.md) · [v2 legacy](json-snapshot-v2.md)
 - [Load an OWL file](getting-started/load-owl-file.md)
 - [Error reference](reference/errors.md)
+- [Production integration](guides/production-integration.md)

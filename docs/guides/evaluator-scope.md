@@ -31,7 +31,8 @@ Composite minimum of:
 | Sub-metric | What it measures |
 |------------|------------------|
 | Literal catalog green | Active harness tests pass @ 30s |
-| Strict taxonomy | Tier C taxonomy comparison vs HermiT JAR |
+| Strict taxonomy | Tier C **sound superset** taxonomy vs HermiT JAR (PR gate allows extras) |
+| Strict taxonomy (identity) | `compare-tier-c-strict-family.sh` with `--max-extra 0` — **informational only** (waived: 26 extra edges on `family.owl` vs HermiT) |
 | Internal ports | Hand-written HermiT ports (RL, RDFS, EL) |
 | SWRL rules | DLSafe rule execution coverage |
 | Perf gate | Family DL wall-clock budget |
@@ -58,7 +59,7 @@ Composite minimum of:
 |------|------|-----------|
 | **A** | HermiT catalog + WG harness (`ontologos-conformance`) | Yes (PR CI) |
 | **B** | Classification fixture comparison | Yes |
-| **C** | HermiT JAR taxonomy cross-check (nightly) | Informational / gate scripts |
+| **C** | HermiT JAR taxonomy cross-check (nightly + PR) | PR: sound superset (`--max-missing 0`); strict identity (`--max-extra 0`) **informational** |
 | **Contract** | Public facade API (`ontologos-contract`) | Yes (every PR) |
 
 ## Channel availability for evaluators

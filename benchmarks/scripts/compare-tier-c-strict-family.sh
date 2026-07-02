@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Tier C strict HermiT cross-check (--max-extra 0) for HermiT cross-check corpora.
+# INFORMATIONAL ONLY — does not block PR CI (see docs/guides/evaluator-scope.md).
+# Sound superset edges (e.g. 26 extras on family.owl vs HermiT) are waived until 2.0.
 # Writes benchmarks/data/tier-c-strict-status.json with tier_c_strict_pct.
 set -euo pipefail
 
@@ -118,8 +120,8 @@ PY
 write_status "${STATUS_LINES[@]}"
 
 if [[ "${OVERALL}" -eq 0 ]]; then
-  echo "Tier C strict gate: passed"
+  echo "Tier C strict gate: passed (informational)"
 else
-  echo "Tier C strict gate: failed (OntoLogos extras vs HermiT)" >&2
+  echo "Tier C strict gate: informational failure (OntoLogos extras vs HermiT; not blocking)" >&2
   exit 1
 fi

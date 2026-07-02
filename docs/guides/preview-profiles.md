@@ -68,7 +68,7 @@ See [Facade API](facade-api.md) and [Classify quick start](../getting-started/cl
 |------------|-------------------|---------|
 | Incomplete tableau rules | `alc`, `dl-preview` | HasValue, HasKey, some cardinalities ignored |
 | Expansion budget | `alc`, `dl-preview` | `ResourceLimit` after 4096 expansions |
-| Entailment cap | `alc`, `dl-preview` | Pairwise subsumption skipped when >128 named classes |
+| Entailment cap | `alc`, `dl`, `dl-preview` | Pairwise subsumption skipped when >192 named classes (`MAX_CLASSES_FOR_ENTAILMENT_INFER`) |
 | Preview construct gate | `dl-preview` | `PreviewLimit` when EL-forbidden constructs present |
 | Partial OWL mapping | All | Skipped axioms in `parse_meta.warnings` |
 

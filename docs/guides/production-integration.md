@@ -92,6 +92,74 @@ match classify(&mut reasoner)? {
 }
 ```
 
+## OWL DL in production
+
+Stable **`--profile dl`** on workspace 1.0.0 uses bounded tableau reasoning. Follow this checklist before serving DL in production:
+
+1. **Always use `check_consistency`** — not `is_consistent`. Inspect `ConsistencyResult { consistent, complete }`. When `complete == false`, the check hit a wall-clock or tableau budget; do not treat the ontology as proven consistent.
+2. **Set a wall-clock budget** — `ReasonerConfig { budget_secs: Some(30), .. }` or `ONTOLOGOS_DL_BUDGET_SECS`. Without a budget, DL consistency may run until natural completion (unbounded on pathological inputs).
+3. **Never set conformance env vars** — leave `ONTOLOGOS_CONFORMANCE`, `ONTOLOGOS_STRICT_TAXONOMY`, and `ONTOLOGOS_CI_PROMOTED_ONLY` unset. CI shortcuts are not production semantics. See [Security](../security.md#conformance-harness-environment-do-not-set-in-production).
+4. **Validate on your corpus** — HermiT catalog parity (`parity_pct = 100%`) applies to gated test corpora only, not every real-world ontology. Run classify + consistency on your files before cutover.
+5. **Single-thread OWL loads** — horned-owl parsing is serialized by a process-wide mutex; use one load at a time or process-isolated workers. See [Security](../security.md#parser-concurrency-server-embedders).
+
+### Rust (DL service)
+
+```rust
+use ontologos_core::{Profile, Reasoner, ReasonerConfig};
+use ontologos_facade::{check_consistency, classify, ClassifyOutcome};
+use ontologos_parser::{load_ontology_in, ParseLimits};
+use std::path::Path;
+
+let base = Path::new("/var/uploads/sandbox");
+let ontology = load_ontology_in(
+    base,
+    Path::new("ontology.owl"),
+)?;
+
+let mut reasoner = Reasoner::builder()
+    .profile(Profile::Dl)
+    .config(ReasonerConfig {
+        budget_secs: Some(30),
+        ..ReasonerConfig::default()
+    })
+    .build(ontology)?;
+
+let result = check_consistency(&reasoner)?;
+if !result.complete {
+    return Err("DL consistency incomplete — increase budget_secs".into());
+}
+if !result.consistent {
+    return Err("ontology inconsistent".into());
+}
+
+match classify(&mut reasoner)? {
+    ClassifyOutcome::Taxonomy(t) => { /* use t */ }
+    _ => unreachable!("Profile::Dl yields Taxonomy"),
+}
+```
+
+### Python (DL service)
+
+```python
+from ontologos import Reasoner
+
+reasoner = Reasoner(
+    path="/data/ontology.owl",
+    profile="dl",
+    budget_secs=30,
+)
+consistency = reasoner.check_consistency()
+if not consistency["complete"]:
+    raise RuntimeError("DL consistency incomplete — increase budget_secs")
+if not consistency["consistent"]:
+    raise RuntimeError("ontology inconsistent")
+report = reasoner.classify()
+```
+
+CLI: `ontologos classify --profile dl --budget-secs 30 ontology.owl`
+
+See [Facade API](facade-api.md) · [Performance](performance.md) · [Evaluator scope](evaluator-scope.md).
+
 For direct engine access (no `Reasoner` wrapper):
 
 - RDFS: `ontologos_rdfs::RdfsEngine::materialize` or `classify_reasoner`

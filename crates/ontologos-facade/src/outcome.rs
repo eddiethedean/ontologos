@@ -6,6 +6,7 @@ use ontologos_rl::rdfs::MaterializationReport as RdfsReport;
 
 /// Outcome of [`crate::classify`].
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum ClassifyOutcome {
     /// OWL EL / DL / ALC / SWRL taxonomy from classification.
     Taxonomy(Taxonomy),
