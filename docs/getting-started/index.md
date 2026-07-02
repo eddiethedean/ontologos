@@ -109,7 +109,7 @@ From a clone with the CLI built:
 ./target/release/ontologos classify --profile rl benchmarks/data/family.owl
 ```
 
-Or use Python: `Reasoner(path="ontology.owl", profile="rl").classify()`.
+Or use Python: `Reasoner(path="family.owl", profile="rl").classify()`.
 
 ## I'm integrating in Rust
 

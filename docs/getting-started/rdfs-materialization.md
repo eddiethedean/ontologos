@@ -7,7 +7,12 @@ The engine delegates to [`reasonable`](https://crates.io/crates/reasonable) and 
 ## Prerequisites
 
 - Rust 1.88+
-- An OWL/RDF file (`.owl`, `.rdf`, `.ttl`, `.ofn`) or a repository clone for benchmark examples
+- Download a sample ontology:
+
+```bash
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
+```
 
 ## Run the CLI
 
@@ -30,7 +35,7 @@ inferred_axioms: 5
 inferred_by_rule: none
 ```
 
-> **Adapter note:** `ontologos-rdfs` delegates to **reasonable**. `inferred_by_rule` is empty until reasonable exposes rule-level diagnostics; use `inferred_axioms` and axiom counts. Some RDFS rules (e.g. transitive `subPropertyOf`) have known upstream gaps — see [dependency-first ADR](../internal/design/dependency-first.md).
+> **Adapter note:** `ontologos-rdfs` delegates to **reasonable**. `inferred_by_rule` is empty until reasonable exposes rule-level diagnostics; use `inferred_axioms` and axiom counts. Some RDFS rules (e.g. transitive `subPropertyOf`) have known upstream gaps — see [Reasonable adapter limits](../reference/reasonable-limits.md).
 
 JSON output: `./target/release/ontologos --format json materialize path/to/ontology.owl`
 
@@ -52,7 +57,7 @@ use ontologos_parser::load_ontology;
 use ontologos_rdfs::RdfsEngine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = std::path::Path::new("ontology.owl");
+    let path = std::path::Path::new("family.owl");
     let mut ontology = load_ontology(path)?;
 
     let initial = ontology.axiom_count();
@@ -110,10 +115,15 @@ println!("axioms: {}", reasoner.ontology().axiom_count());
 
 ## Python
 
+```bash
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
+```
+
 ```python
 from ontologos import Reasoner
 
-reasoner = Reasoner(path="ontology.owl", profile="rdfs")
+reasoner = Reasoner(path="family.owl", profile="rdfs")
 reasoner.classify()
 print(reasoner.parse_meta["mapped_axiom_count"])
 ```

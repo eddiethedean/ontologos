@@ -56,6 +56,13 @@ Explain inferences:
 
 ## Library (crates.io)
 
+Download Family (for `auto`/`rl` demos) or clone for Pizza:
+
+```bash
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
+```
+
 Add dependencies:
 
 ```toml
@@ -63,8 +70,9 @@ Add dependencies:
 ontologos-core = "0.9.0"
 ontologos-parser = "0.9.0"
 ontologos-el = "0.9.0"
-ontologos-ql = "0.9.0"
 ```
+
+Remove `ontologos-ql` unless you use `TaxonomyHierarchy` (see [Query API](../reference/query.md)).
 
 Load and classify:
 
@@ -73,7 +81,7 @@ use ontologos_el::ElClassifier;
 use ontologos_parser::load_ontology;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = std::path::Path::new("ontology.owl");
+    let path = std::path::Path::new("family.owl");
     let ontology = load_ontology(path)?;
 
     let taxonomy = ElClassifier::new().classify(&ontology)?;
@@ -143,34 +151,30 @@ IRIs are resolved via `ontology.iri(entity_id)` or Python `reasoner.taxonomy` af
 
 ## Python
 
-Download Pizza first (from a clone: `./benchmarks/scripts/download.sh`; or obtain `pizza.owl` from the benchmark corpus):
+**EL file demo (Pizza):** clone the repo and run `./benchmarks/scripts/download.sh`, then use `benchmarks/data/pizza.owl`. For a no-clone EL demo, use the in-memory builder from [Examples gallery](../examples/index.md).
 
-```bash
-# From a repository clone:
-./benchmarks/scripts/download.sh
+```python
+from ontologos import OntologyBuilder, Reasoner
+
+b = OntologyBuilder()
+b.add_class("http://example.org/Food")
+b.add_class("http://example.org/Pizza")
+b.subclass_of("http://example.org/Pizza", "http://example.org/Food")
+reasoner = Reasoner(ontology=b.build(), profile="el")
+taxonomy = reasoner.classify()
+print(taxonomy["subsumption_count"])
 ```
+
+**Pizza from clone:**
 
 ```python
 from ontologos import Reasoner
 
-reasoner = Reasoner(path="pizza.owl", profile="el")
+reasoner = Reasoner(path="benchmarks/data/pizza.owl", profile="el")
 taxonomy = reasoner.classify()
 print(taxonomy["subsumption_count"])
-
-# After classify, taxonomy property is also available
-print(reasoner.taxonomy["subsumptions"][:3])
-
 graph = reasoner.explain()
 print(graph["node_count"])
-```
-
-Incremental edits:
-
-```python
-reasoner = Reasoner(path="pizza.owl", profile="el", incremental=True)
-reasoner.classify()
-reasoner.add_subclass_of("http://example.org/VeggiePizza", "http://example.org/Pizza")
-reasoner.classify()
 ```
 
 See [Python guide](../guides/python.md) and [Incremental reasoning](../guides/incremental-reasoning.md).

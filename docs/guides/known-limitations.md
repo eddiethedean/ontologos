@@ -4,11 +4,17 @@ Read this before integrating OntoLogos in production. These are **by design**, n
 
 Canonical profile and channel guidance: [Profile stability matrix](profile-stability.md) · [Install and channels](install-channels.md).
 
-## `owl:imports` are not resolved
+## `owl:imports` behavior is format-dependent
 
-OntoLogos loads **one file** only. Imported ontologies are recorded in `parse_meta` but **not** fetched or merged. Axioms from imports are absent unless you merge files first.
+Import handling depends on serialization format. See the canonical [OWL imports reference](../reference/owl-imports.md).
 
-**Workaround:** Bundle imports with [ROBOT](http://robot.obolibrary.org/) (`robot merge --input ontology.owl --output merged.owl`) or OWL API, then load the merged file.
+| Format | Default behavior |
+|--------|------------------|
+| **RDF/XML** (`.owl`, `.rdf`, `.xml`) | Local `owl:imports` **merged by default** (`ParseLimits::merge_imports = true`) |
+| **Turtle**, **OWL Functional** | **Not merged** — only axioms in the loaded file |
+| **Remote import IRIs** | **Never fetched** over the network |
+
+For multi-file ontologies with remote imports, merge upstream (e.g. [ROBOT](http://robot.obolibrary.org/)) before loading.
 
 See [Load an OWL file](../getting-started/load-owl-file.md).
 

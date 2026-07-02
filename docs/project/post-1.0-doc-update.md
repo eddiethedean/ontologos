@@ -7,8 +7,8 @@ Runbook for maintainers when the annotated **v1.0.0** tag is published to crates
 | Location | Action |
 |----------|--------|
 | Workspace [`Cargo.toml`](../../Cargo.toml) | Already `1.0.0` before tag |
-| [`crates/ontologos-py/pyproject.toml`](../../crates/ontologos-py/pyproject.toml) | Bump to `1.0.0` |
-| [`crates/ontologos-py/python/ontologos/__init__.py`](../../crates/ontologos-py/python/ontologos/__init__.py) | Bump `__version__` |
+| [`crates/ontologos-py/pyproject.toml`](../../crates/ontologos-py/pyproject.toml) | Already `1.0.0` on `main` before tag — verify matches published PyPI |
+| [`crates/ontologos-py/python/ontologos/__init__.py`](../../crates/ontologos-py/python/ontologos/__init__.py) | Verify `__version__` matches tag |
 | [`docs/scripts/check-doc-versions.sh`](../scripts/check-doc-versions.sh) | Set `PUBLISHED_VERSION="1.0.0"` |
 | Published-pin files (see script) | Replace `0.9.0` → `1.0.0` in install blocks |
 | [`docs/snippets/channel-banner.md`](../snippets/channel-banner.md) | Update to single-channel messaging |
@@ -44,7 +44,7 @@ Or run a repo-wide replace after updating `PUBLISHED_VERSION` in `check-doc-vers
 ## 5. Migration hub
 
 - [`docs/migration/index.md`](../migration/index.md) — published = v1.0.0
-- Add note that v0.9.x users should follow [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md)
+- Add note that v0.9.x users should follow [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md)
 - [`CHANGELOG.md`](../../CHANGELOG.md) — move `[Unreleased]` into dated `[1.0.0]` if not already
 
 ## 6. CLI and PyPI

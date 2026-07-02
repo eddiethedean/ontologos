@@ -9,4 +9,7 @@ build:
     python: "3.11"
   commands:
     - pip install -r docs/requirements.txt
+    - chmod +x docs/scripts/check-doc-versions.sh docs/scripts/check-doc-snippets.sh
+    - ./docs/scripts/check-doc-versions.sh
+    - ./docs/scripts/check-doc-snippets.sh
     - NO_MKDOCS_2_WARNING=1 mkdocs build --strict --site-dir $READTHEDOCS_OUTPUT/html

@@ -98,6 +98,9 @@ nav:
       - CLI: reference/cli.md
       - Errors: reference/errors.md
       - Supported constructs: reference/supported-constructs.md
+      - OWL imports: reference/owl-imports.md
+      - Parser API: reference/parser.md
+      - Python API: reference/python.md
       - Reasonable adapter limits: reference/reasonable-limits.md
       - Explain API: reference/explain.md
       - Query API: reference/query.md

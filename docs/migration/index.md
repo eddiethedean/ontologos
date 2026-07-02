@@ -33,4 +33,4 @@ Older step-by-step guides: [Historical migrations](historical.md).
 - [CHANGELOG](../project/changelog.md)
 - [Release notes](../project/release-notes.md)
 - [Profile stability matrix](../guides/profile-stability.md)
-- [Post-1.0 doc update](post-1.0-doc-update.md) *(after tag ships)*
+- [Post-1.0 doc update](../project/post-1.0-doc-update.md) *(after tag ships)*

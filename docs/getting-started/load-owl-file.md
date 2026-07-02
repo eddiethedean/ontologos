@@ -4,10 +4,10 @@ Load OWL and RDF serializations into the core ontology model via [`ontologos-par
 
 > **Important:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Known limitations](../guides/known-limitations.md) and [Supported constructs](../reference/supported-constructs.md).
 
-!!! warning "`owl:imports` are not resolved"
-    Loading reads **one file** only. Imported ontologies are **not** fetched or merged automatically — axioms from imports will be missing.
+!!! note "`owl:imports` behavior"
+    Import handling is **format-dependent**. RDF/XML merges **local** imports by default (`ParseLimits::merge_imports`, default `true`). Turtle and OWL Functional do not merge imports. Remote URLs are never fetched.
 
-    **Workaround:** Merge with [ROBOT](http://robot.obolibrary.org/) (`robot merge --input ontology.owl --output merged.owl`) or OWL API, then load the merged file.
+    See [OWL imports reference](../reference/owl-imports.md).
 
 ## Prerequisites
 
@@ -64,7 +64,7 @@ Load and inspect:
 use ontologos_parser::load_ontology;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = std::path::Path::new("benchmarks/data/family.owl");
+    let path = std::path::Path::new("family.owl");
     let ontology = load_ontology(path)?;
 
     println!("entities: {}", ontology.entity_count());
@@ -106,7 +106,13 @@ Not every construct in the file becomes a core axiom. See [Supported constructs]
 
 ## OWL imports
 
-`owl:imports` declarations are recorded in `parse_meta.constructs` but **not resolved** — axioms from imported ontologies are not merged into the loaded ontology. Use a single self-contained file or merge ontologies upstream before loading.
+See [OWL imports reference](../reference/owl-imports.md) for the full format matrix.
+
+**RDF/XML:** local `owl:imports` are merged by default. Disable with `ParseLimits { merge_imports: false, .. }`.
+
+**Turtle / OWL Functional:** imports are not merged — use a single bundle file or merge upstream (e.g. ROBOT).
+
+**Remote import IRIs:** never fetched over the network.
 
 ## Untrusted files
 

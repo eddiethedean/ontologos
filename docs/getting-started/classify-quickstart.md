@@ -60,19 +60,30 @@ For EL taxonomies, use `Profile::El` with an EL-shaped ontology (in-memory build
 
 ## Classify with a profile crate directly
 
-For a single engine without the facade:
+For EL without the facade, use an **in-memory EL ontology** (Family.owl is RL-shaped — do not use it for EL demos):
+
+```toml
+# Add to Cargo.toml
+ontologos-el = "0.9.0"
+```
 
 ```rust
+use ontologos_core::Ontology;
 use ontologos_el::ElClassifier;
-use ontologos_parser::load_ontology;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let ontology = load_ontology("ontology.owl".as_ref())?;
+fn main() -> Result<(), ontologos_core::Error> {
+    let ontology = Ontology::builder()
+        .class("http://example.org/Food")?
+        .class("http://example.org/Pizza")?
+        .subclass_of("http://example.org/Pizza", "http://example.org/Food")?
+        .build()?;
     let taxonomy = ElClassifier::new().classify(&ontology)?;
     println!("subsumptions: {}", taxonomy.subsumption_count());
     Ok(())
 }
 ```
+
+For Pizza EL file-based demos, clone the repo and run `./benchmarks/scripts/download.sh`. See [OWL EL classification](owl-el-classification.md).
 
 ## Do not use
 

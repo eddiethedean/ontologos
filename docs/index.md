@@ -104,7 +104,7 @@ Use the sidebar for the full tree. Highlights:
 4. [RDFS materialization](getting-started/rdfs-materialization.md)
 5. [OWL RL saturation](getting-started/owl-rl-saturation.md)
 6. [OWL EL classification](getting-started/owl-el-classification.md)
-7. [First ontology](getting-started/first-ontology.md) *(clone optional)*
+7. [First ontology](getting-started/first-ontology.md) *(clone required for `pizza_builder` example; builder walkthrough works without clone)*
 8. [Profile detection](guides/profile-detection.md)
 9. [JSON snapshots](json-snapshot-v3.md) ([v2 legacy](json-snapshot-v2.md))
 10. [Error reference](reference/errors.md)

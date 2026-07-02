@@ -122,15 +122,17 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Does `pip install ontologos` work?
 
-The PyPI package is **v0.9.0** (pre-1.0). It supports file and in-memory ontologies, `profile="auto"|"el"|"rl"|"rdfs"|"alc"|"dl"|"dl-preview"|"swrl"`, incremental mutations, `explain()`, and optional pandas/polars export:
+Yes. The PyPI package is **v0.9.0**. It supports file and in-memory ontologies, incremental mutations, `explain()`, and optional pandas/polars export.
+
+**Profiles on PyPI 0.9.0:** `"auto"`, `"el"`, `"rl"`, and `"rdfs"` only.
+
+**Not on PyPI 0.9.0:** `"dl"`, `"swrl"`, `"alc"`, and `"dl-preview"` — build from `main` (workspace 1.0.0). See [Install and channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels/).
 
 ```python
 from ontologos import Reasoner, OntologyBuilder
 
-Reasoner(path="ontology.owl", profile="auto").classify()
-Reasoner(path="ontology.owl", profile="el").classify()
-Reasoner(path="ontology.owl", profile="rl").classify()
-Reasoner(path="ontology.owl", profile="dl-preview").classify()  # preview
+Reasoner(path="family.owl", profile="auto").classify()
+Reasoner(path="family.owl", profile="rl").classify()
 ```
 
 Optional extras: `pip install 'ontologos[pandas]'` or `'ontologos[polars]'`.

@@ -38,7 +38,9 @@ chmod +x docs/build-site.sh
 ./docs/build-site.sh
 ```
 
-`build-site.sh` runs `mkdocs build --strict`, fails on any `WARNING` line, and runs `docs/scripts/check-doc-versions.sh`.
+`build-site.sh` runs `mkdocs build --strict`, fails on any `WARNING` line, and runs `docs/scripts/check-doc-versions.sh` and `check-doc-snippets.sh`.
+
+Read the Docs (`.readthedocs.yaml`) runs the same version and snippet checks before `mkdocs build --strict`.
 
 Output directory: `site/` (gitignored).
 

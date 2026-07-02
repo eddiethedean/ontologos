@@ -108,7 +108,10 @@ pip install 'ontologos[pandas]'
 ```
 
 ```python
-df = Reasoner(path="family.owl", profile="el").taxonomy_dataframe()
+from ontologos import Reasoner, subsumptions_to_pandas
+
+taxonomy = Reasoner(path="family.owl", profile="auto").classify()
+df = subsumptions_to_pandas(taxonomy)
 ```
 
 ## CLI (clone or `cargo install --git ...`)

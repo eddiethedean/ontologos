@@ -17,7 +17,14 @@ Pick the path that matches how you work. Each link is a single next step—not t
 3. [Choosing an API](choosing-an-api.md) — which crate and entry point
 4. [Profile stability matrix](profile-stability.md) — production vs pre-release profiles
 
-CLI shortcut (from a clone): `ontologos classify --profile auto ontology.owl`
+CLI shortcut (requires git install — not on crates.io):
+
+```bash
+cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
+ontologos classify --profile auto family.owl
+```
+
+Or build from a clone. See [CLI reference](../reference/cli.md) and [Install and channels](install-channels.md).
 
 ## I am building ontologies in Rust
 

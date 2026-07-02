@@ -5,7 +5,8 @@ This guide walks through building a small ontology with the builder API.
 ## Prerequisites
 
 - Rust 1.88+
-- Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos) (for examples), or use the [crates.io quick start](../getting-started/index.md#cratesio-only-no-clone)
+- **Crates.io path:** follow the [builder walkthrough](#step-by-step) below — no clone required
+- **Clone path:** repository clone to run `cargo run -p ontologos-core --example pizza_builder`
 
 Unfamiliar with OWL terms (TBox, ABox, materialization)? See the [Glossary](../guides/glossary.md).
 
@@ -37,7 +38,7 @@ fn main() -> Result<(), Error> {
     let supers = ontology.direct_superclasses(pizza);
     assert_eq!(supers.len(), 1);
 
-    // 3. Round-trip through JSON v2
+    // 3. Round-trip through JSON (v3 writer on workspace 1.0.0; v2 still readable on 0.9.0)
     let json = ontology.to_json()?;
     let restored = Ontology::from_json(&json)?;
     assert_eq!(restored, ontology);
@@ -46,7 +47,7 @@ fn main() -> Result<(), Error> {
 }
 ```
 
-## ABox axioms (v0.4)
+## ABox axioms
 
 The builder supports named individuals and ABox assertions:
 
@@ -96,5 +97,5 @@ After building an RL-shaped ontology, saturate with [OWL RL saturation](owl-rl-s
 - [Load an OWL file](load-owl-file.md) — parse real ontologies
 - [OWL RL saturation](owl-rl-saturation.md) — forward-chaining on ABox + TBox
 - [Profile detection](../guides/profile-detection.md)
-- [JSON snapshots](../json-snapshot-v2.md)
+- [JSON snapshots](../json-snapshot-v3.md) ([v2 legacy](../json-snapshot-v2.md))
 - [Error reference](../reference/errors.md)

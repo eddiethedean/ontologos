@@ -77,7 +77,10 @@ for sub, sup in taxonomy["subsumptions"][:5]:
 Optional DataFrame export:
 
 ```python
-df = reasoner.taxonomy_dataframe()  # requires pandas or polars extra
+from ontologos import Reasoner, subsumptions_to_pandas
+
+taxonomy = Reasoner(path="family.owl", profile="auto").classify()
+df = subsumptions_to_pandas(taxonomy)  # pip install 'ontologos[pandas]'
 ```
 
 ## Related

@@ -86,6 +86,8 @@ print(graph["node_count"])
 
 ## API reference
 
+Site reference: [Python API](../reference/python.md). Narrative guide below.
+
 ### `Reasoner(path=None, ontology=None, profile=None, incremental=False, budget_secs=None)`
 
 Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly one of `path` or `ontology` is required.

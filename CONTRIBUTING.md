@@ -74,8 +74,8 @@ chmod +x docs/scripts/check-doc-versions.sh docs/scripts/check-doc-snippets.sh
 | `docs/` only | `./docs/build-site.sh` (includes version + snippet checks) |
 | Facade / CLI / Python public API | `cargo test -p ontologos-contract --release` |
 | Single engine crate | `cargo test -p ontologos-el` (or affected crate) |
-| HermiT catalog / DL internals | `cargo test -p ontologos-conformance --release` (~26 min) |
-| Full CI parity | `cargo test --workspace` + conformance release build |
+| HermiT catalog / DL internals | `cargo test -p ontologos-conformance --release` (~26 min; nightly/release CI) |
+| Full CI parity | See [Full CI parity](#full-ci-parity-engine-conformance-or-workspace-wide-changes) below |
 
 `ontologos-contract` is the **Tier 0 public API contract** — what CLI and Python depend on. `ontologos-conformance` is the HermiT parity harness for engine contributors.
 
@@ -95,18 +95,27 @@ cargo test -p <affected-crate>
 
 ### Full CI parity (engine, conformance, or workspace-wide changes)
 
-CI runs the following on every push to `main` (see [.github/workflows/ci.yml](.github/workflows/ci.yml)):
+CI on every push/PR to `main` (see [.github/workflows/ci.yml](.github/workflows/ci.yml)):
 
 ```bash
 ./benchmarks/scripts/download.sh
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace --locked
+cargo test --workspace --exclude ontologos-conformance --exclude ontologos-contract --locked
+cargo test -p ontologos-contract --release --locked
+./benchmarks/scripts/check-hermit-ignore-budget.sh
 ./benchmarks/scripts/compare-pizza-el-golden.sh
-cargo test -p ontologos-conformance --locked
+./benchmarks/scripts/compare-classification-fixtures.sh
+./benchmarks/scripts/check-pr-gates.sh
+./benchmarks/scripts/check-hermit-parity-phases.sh
+./benchmarks/scripts/check-hermit-catalog.sh
+./benchmarks/scripts/compare-tier-c-gate.sh
+./benchmarks/scripts/compare-hermit-tier-c.sh
 ./benchmarks/scripts/compare-reasonable.sh
 cargo test -p ontologos-el --test incremental_correctness --locked
 cargo build -p ontologos-cli --release
+# Tier C strict family gate requires Java 17 + HermiT JAR (CI only):
+# ./benchmarks/scripts/download-hermit-jar.sh && ./benchmarks/scripts/compare-tier-c-strict-family.sh
 chmod +x docs/scripts/check-doc-versions.sh docs/scripts/check-doc-snippets.sh
 ./docs/scripts/check-doc-versions.sh
 ./docs/scripts/check-doc-snippets.sh
@@ -114,12 +123,14 @@ chmod +x docs/build-site.sh
 ./docs/build-site.sh
 ```
 
+**Not on every PR:** `cargo test -p ontologos-conformance` runs on [conformance nightly](.github/workflows/conformance-nightly.yml) and release workflows (~26 min). Run locally when changing DL engine internals or HermiT catalog cases.
+
 Python (Linux CI parity):
 
 ```bash
 cd crates/ontologos-py
 python -m venv .venv && source .venv/bin/activate
-pip install 'maturin>=1.7,<2.0' pytest '.[pandas]'
+pip install 'maturin>=1.7,<2.0' pytest '.[pandas,polars]'
 maturin develop --release
 pytest tests/ -q
 ```
@@ -183,24 +194,23 @@ bash benchmarks/scripts/hermit-burndown.sh status   # parity %, backlog, next st
 bash benchmarks/scripts/hermit-burndown.sh loop     # daily fix-verify loop
 ```
 
-**Remember:** PR CI runs the **full** in-scope HermiT + OWL WG catalog @ 30s. Ian/ComplexConcept CE gaps are in `EXCLUDED_IDS` until tableau soundness closes. Run `hermit-burndown.sh promote` after fixing excluded cases.
+**Remember:** PR CI runs contract tests, gate scripts, and HermiT parity phase checks @ 30s — not the full `ontologos-conformance` crate (see nightly workflow). Ian/ComplexConcept CE gaps are in `EXCLUDED_IDS` until tableau soundness closes. Run `hermit-burndown.sh promote` after fixing excluded cases.
 
 Catalog mechanics: [tests/hermit/README.md](tests/hermit/README.md).
 
 ## Releases
 
-### Release checklist
+**Next publish:** follow [release-1.0-checklist.md](docs/project/release-1.0-checklist.md). Historical v0.9.0 procedure is summarized in [migration hub](docs/migration/index.md).
 
-Before tagging a release (e.g. `v0.9.0`):
+### Pre-release checks
 
 ```bash
 ./benchmarks/scripts/download.sh
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace --locked
-./benchmarks/scripts/compare-pizza-el-golden.sh
-cargo test -p ontologos-conformance --locked
-./benchmarks/scripts/compare-reasonable.sh
+cargo test --workspace --exclude ontologos-conformance --exclude ontologos-contract --locked
+cargo test -p ontologos-contract --release --locked
+./benchmarks/scripts/check-1.0-release-gates.sh
 ./docs/scripts/check-doc-versions.sh
 cargo publish -p ontologos-core --dry-run
 ```
@@ -208,6 +218,8 @@ cargo publish -p ontologos-core --dry-run
 Create or update [`.github/release/vX.Y.Z.md`](.github/release/) with highlights, version bumps, migration guide link, and pre-release checklist.
 
 `cargo publish --dry-run` for downstream crates requires prior crates at the new version on crates.io (or use `cargo package -p ontologos-core --allow-dirty` per crate in publish order). On release, CI publishes in dependency order via [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh).
+
+After tagging, run [post-1.0-doc-update.md](docs/project/post-1.0-doc-update.md) to collapse dual-channel messaging.
 
 Optional full local packaging check:
 
@@ -219,14 +231,14 @@ done
 
 Then:
 
-1. Bump `version` in workspace [Cargo.toml](Cargo.toml), [crates/ontologos-py/pyproject.toml](crates/ontologos-py/pyproject.toml), and [python/ontologos/__init__.py](crates/ontologos-py/python/ontologos/__init__.py).
+1. Bump `version` in workspace [Cargo.toml](Cargo.toml) if not already set (workspace is **1.0.0** on `main`).
 2. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated version section and empty `[Unreleased]`.
 3. Update version pins in `docs/getting-started/`, [FAQ.md](FAQ.md), and run `./docs/scripts/check-doc-versions.sh`.
 4. Commit release prep on `main`.
-5. Create an annotated tag: `git tag -a v0.9.0 -m "OntoLogos v0.9.0"`
-6. Push commit and tag: `git push origin main && git push origin v0.9.0`
+5. Create an annotated tag: `git tag -a v1.0.0 -m "OntoLogos v1.0.0"`
+6. Push commit and tag: `git push origin main && git push origin v1.0.0`
 7. The [release workflow](.github/workflows/release.yml) runs when the tag is pushed (requires GitHub secrets below).
-8. Create a GitHub Release from [`.github/release/v0.9.0.md`](.github/release/v0.9.0.md) (or the matching version file).
+8. Create a GitHub Release from [`.github/release/v1.0.0.md`](.github/release/v1.0.0.md).
 
 ### Release secrets
 

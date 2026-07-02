@@ -26,8 +26,8 @@ flowchart TB
     rl[ontologos_rl facade]
     el[ontologos_el in_house]
     alc[ontologos_alc preview]
-    dl[ontologos_dl preview]
-    swrl[ontologos_swrl preview]
+    dl[ontologos_dl stable_on_main]
+    swrl[ontologos_swrl stable_on_main]
   end
 
   subgraph external [External engines]
@@ -77,7 +77,7 @@ Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`, `ontol
 flowchart LR
   subgraph input [Input]
     builder[OntologyBuilder]
-    json[JSON_v2]
+    json[JSON_v2_and_v3]
     owl[OWL_RDF_files]
   end
 
@@ -129,7 +129,7 @@ Single embed-facing representation:
 | `ParseMeta` | Parser scan metadata (optional) |
 | `Taxonomy` | EL/DL classification output |
 
-Serialization: JSON snapshot v2 (`to_json` / `from_json`).
+Serialization: JSON snapshot v3 (`to_json` / `from_json`); v2 snapshots still readable.
 
 **Deliberate split:** `Ontology::from_file` returns `ParseNotAvailable`. File loading lives in `ontologos-parser`.
 
@@ -151,8 +151,8 @@ Owns conversions between models for parsing and RL/RDFS adapters:
 | OWL RL | `ontologos-rl` | `reasonable` |
 | OWL EL | `ontologos-el` | In-house ELK-style completion |
 | ALC | `ontologos-alc` | Tableau-lite (preview) |
-| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (preview) |
-| SWRL | `ontologos-swrl` | Preview stub |
+| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (**stable on `main` / 1.0.0**; not production on PyPI 0.9.0) |
+| SWRL | `ontologos-swrl` | DLSafe SWRL + DL (**stable on `main` / 1.0.0**) |
 | Query | `ontologos-query` | petgraph over `Taxonomy` |
 | Explain | `ontologos-explain` | petgraph proof graphs; EL inference traces |
 
@@ -171,7 +171,9 @@ Routing uses a two-layer design (DIP):
 | `El`, `Rdfs`, `Rl` | Respective engine adapter |
 | `Alc` | `ontologos-alc` |
 | `Dl` | `ontologos-dl` |
-| `Swrl` | `ontologos-swrl` (preview) |
+| `Swrl` | `ontologos-swrl` (stable on `main` / 1.0.0) |
+
+Profile stability by install channel: [Profile stability matrix](guides/profile-stability.md).
 
 `ClassifyOutcome` is re-exported from the facade (`ontologos_facade::ClassifyOutcome`).
 

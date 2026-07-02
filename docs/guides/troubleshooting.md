@@ -61,7 +61,9 @@ Inspect `ontology.parse_meta().warnings`. Warnings are non-fatal; the ontology l
 
 ## Missing axioms from imported ontologies
 
-`owl:imports` is recorded in `parse_meta` but **not resolved** — only axioms in the loaded file are mapped. Merge imports upstream or use a single bundle file.
+Import behavior is **format-dependent**. RDF/XML merges local `owl:imports` by default; Turtle and OWL Functional do not. Remote import URLs are never fetched.
+
+See [OWL imports reference](../reference/owl-imports.md). For remote or multi-format bundles, merge upstream with ROBOT or OWL API.
 
 ## `classify` / `explain` behavior
 

@@ -52,7 +52,7 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 | SWRL | **Stable** on workspace **1.0.0**; **not on PyPI 0.9.0** |
 | Python bindings, explain (EL) | **Stable** on v0.9.0 |
 
-**Production OWL DL today:** use **v0.9.0** pins for stable EL/RL/RDFS, or build **`main`** for gated-corpus DL (`profile="dl"`). See [FAQ](faq.md).
+**Production EL/RL/RDFS today:** use **v0.9.0** pins on crates.io/PyPI. **Production OWL DL and SWRL:** build from **`main`** until v1.0.0 publishes to crates.io/PyPI (`profile="dl"`). See [FAQ](faq.md).
 
 ## Conformance snapshot (live)
 

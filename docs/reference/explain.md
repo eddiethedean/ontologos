@@ -16,7 +16,7 @@ Proof graphs and explanation export via [`ontologos-explain`](https://docs.rs/on
 |---------|----------|
 | **EL** | Full inference traces from in-house completion → proof graph with IRI-resolved conclusions |
 | **RL / RDFS** | Proof graph seeds **asserted** axioms; inferred steps lack per-rule premises until reasonable exposes a trace API |
-| **auto** | Routes like `classify`; DL-only ontologies error |
+| **auto** | Routes like `classify`; on `main` / 1.0.0, DL-detected ontologies use the DL engine (preview traces on `dl-preview` / `alc`) |
 
 ## Rust API
 
