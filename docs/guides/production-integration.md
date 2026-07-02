@@ -1,6 +1,8 @@
 # Production Integration
 
-Patterns for embedding OntoLogos in services and pipelines. v0.9.0 is **pre-1.0** — validate against your ontologies and review [conformance coverage](../reference/conformance.md) before production deployment.
+Patterns for embedding OntoLogos in services and pipelines.
+
+--8<-- "snippets/channel-banner.md"
 
 ## Dependency selection
 
@@ -10,7 +12,7 @@ Patterns for embedding OntoLogos in services and pipelines. v0.9.0 is **pre-1.0*
 | Load OWL files | `+ ontologos-parser` |
 | RDFS materialization | `+ ontologos-rdfs` |
 | OWL RL saturation | `+ ontologos-rl` |
-| OWL EL taxonomy | `+ ontologos-el`, `+ ontologos-query` |
+| OWL EL taxonomy | `+ ontologos-el`, `+ ontologos-ql` |
 | Profile routing | `+ ontologos-profile` |
 | Explanations | `+ ontologos-explain` |
 
@@ -68,10 +70,10 @@ Use profile-aware routing instead of manual `match` on detected profiles:
 
 ```rust
 use ontologos_core::{Profile, Reasoner, ReasonerConfig};
-use ontologos_el::classify_with_profile;
+use ontologos_facade::{check_consistency, classify, ClassifyOutcome};
 use ontologos_parser::load_ontology;
 
-let mut ontology = load_ontology(path)?;
+let ontology = load_ontology(path)?;
 let mut reasoner = Reasoner::builder()
     .profile(Profile::Auto)
     .config(ReasonerConfig {
@@ -80,17 +82,25 @@ let mut reasoner = Reasoner::builder()
     })
     .build(ontology)?;
 
-let outcome = classify_with_profile(&mut reasoner)?;
-// outcome: EL taxonomy, RL report, or RDFS materialization depending on detection
+let consistency = check_consistency(&reasoner)?;
+if !consistency.complete || !consistency.consistent {
+    return Err("ontology inconsistent or consistency check incomplete".into());
+}
+
+match classify(&mut reasoner)? {
+    ClassifyOutcome::Taxonomy(t) => { /* EL or DL taxonomy */ }
+    ClassifyOutcome::Rl(r) => { /* RL saturation report */ }
+    ClassifyOutcome::Rdfs(r) => { /* RDFS materialization report */ }
+}
 ```
 
 For direct engine access (no `Reasoner` wrapper):
 
 - RDFS: `ontologos_rdfs::RdfsEngine::materialize` or `classify_reasoner`
 - RL: `ontologos_rl::RlEngine::saturate` or `classify_reasoner`
-- EL: `ontologos_el::ElClassifier::classify` or `classify_with_profile`
+- EL: `ontologos_el::ElClassifier::classify` or `ontologos_el::classify_reasoner`
 
-> **Note:** `ontologos_core::Reasoner::classify()` returns delegate hints for RDFS/RL and `NotImplemented` for EL. Use profile crates, CLI, or Python — not core `classify()` directly.
+> **Note:** Classification and consistency live in **`ontologos_facade`** — not on `ontologos_core::Reasoner`. See [Facade API](facade-api.md) and [Facade reference](../reference/facade.md).
 
 When merging triples from reasonable back into core, apply [merge limits](../security.md#reasoning-merge-limits-v090) to cap axiom growth on untrusted input.
 

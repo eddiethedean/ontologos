@@ -11,7 +11,7 @@ Single source of truth for `--profile` / `profile=` behavior. See [Release statu
 | `rl` | **Stable** | `ontologos-rl` → reasonable | N/A (RL) | Yes — OWL RL saturation |
 | `el` | **Stable** | `ontologos-el` (in-house) | EL-shaped corpora | Yes — OWL EL taxonomy |
 | `auto` | **Stable** | Detect → EL, RL, or DL | Depends on ontology | Yes — prefer explicit profile when known |
-| `dl` | **Stable** (v1.0.0 workspace; publish pending) | `ontologos-dl` | **100% in-scope catalog** gate — see [honest assessment](../internal/hermit-parity-honest-assessment.md) | `ontologos-dl = "1.0.0"` after tag; build from `main` today |
+| `dl` | **Stable** (engine on `main`; **v1.0.0 publish pending**) | `ontologos-dl` | **100% in-scope catalog** gate — see [Evaluator scope](evaluator-scope.md) | Build from `main` today; `ontologos-dl = "1.0.0"` after tag |
 | `dl-preview` | **Preview** | `ontologos-dl` (gated) | Same engine as `dl` + extra checks | No |
 | `alc` | **Preview** | `ontologos-alc` | Subset | No |
 | `swrl` | **Stable** | `ontologos-swrl` | 24/24 RulesTest @ Tier A | Yes — DLSafe SWRL forward chaining + DL consistency |
@@ -20,14 +20,14 @@ Single source of truth for `--profile` / `profile=` behavior. See [Release statu
 ## What “stable” means here
 
 - **Pre-release:** Reserved for profiles not yet at the in-scope gate. **`dl` is stable in the 1.0.0 workspace** pending crates.io publish.
-- **Stable:** Suitable for production embedding within OntoLogos’s mapped construct subset. **`dl`** passes the in-scope HermiT gate; validate on your corpus for everyday HermiT equivalence — see [honest assessment](../internal/hermit-parity-honest-assessment.md).
+- **Stable:** Suitable for production embedding within OntoLogos’s mapped construct subset. **`dl`** passes the in-scope HermiT gate on `main`; validate on your corpus — see [Evaluator scope](evaluator-scope.md).
 - **Preview:** Explicit gating, incomplete rules, or `PreviewLimit` / `NotImplemented` on common paths.
 
 ### What “100% HermiT parity” means for `dl`
 
 `parity_pct = 100%` counts only **889 in-scope** catalog cases (461 Java + 428 WG), not all 1019 HermiT-derived entries. **130 Java cases** are documented out of scope (`internal`, `excluded`, `migrated`). Tier C taxonomy checks allow OntoLogos to be a **sound superset** of HermiT, not identical output.
 
-For the full breakdown, see [Brutally honest HermiT parity assessment](../internal/hermit-parity-honest-assessment.md).
+For the full breakdown, see [Evaluator scope](evaluator-scope.md).
 
 ## CLI quick reference
 
@@ -41,7 +41,7 @@ ontologos classify --profile dl ontology.owl    # stable on main / v1.0.0 — ga
 
 ## Related
 
-- [HermiT parity assessment](../internal/hermit-parity-honest-assessment.md) — what 100% does and does not mean
+- [Evaluator scope](evaluator-scope.md) — what 100% does and does not mean
 - [Preview profiles](preview-profiles.md) — limitations and error types for DL/ALC/SWRL
 - [Comparison](../comparison.md) — vs ELK, HermiT, reasonable
 - [Choosing an API](choosing-an-api.md) — Rust entry points

@@ -5,7 +5,8 @@ OWL 2 RL forward-chaining via [`ontologos-rl`](https://docs.rs/ontologos-rl/0.9.
 ## Prerequisites
 
 - Rust 1.88+
-- Clone of the [OntoLogos repository](https://github.com/eddiethedean/ontologos) (Family corpus is vendored; no download required for this walkthrough)
+- **Clone path:** repository clone for `benchmarks/data/...` examples below
+- **Crates.io path:** `curl -L -o family.owl https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl` — then use `family.owl` in cwd (see [OWL RL saturation](owl-rl-saturation.md#library-cratesio))
 
 ## Run the example
 
@@ -33,7 +34,7 @@ detected profile: Rl
 
 `classify --profile rl` runs OWL RL saturation and prints subsumption counts or a materialization report. Use `--format json` for machine-readable output. See [CLI reference](../reference/cli.md).
 
-### Library
+### Library (clone)
 
 Add dependencies:
 
@@ -73,6 +74,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+### Library (crates.io) {#library-cratesio}
+
+Download Family to the current directory:
+
+```bash
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
+```
+
+Use `family.owl` instead of `benchmarks/data/family.owl` in the library example above.
 
 ### Via the reasoner facade
 

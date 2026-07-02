@@ -1,6 +1,8 @@
 # Classify in five minutes (Rust)
 
-Run OWL **classification** from crates.io — no repository clone. Uses `ontologos-facade` (not the deprecated `ontologos_core::Reasoner::classify` stub).
+Run OWL **classification** from crates.io — no repository clone. Uses `ontologos-facade::classify`.
+
+--8<-- "snippets/channel-banner.md"
 
 ## Prerequisites
 

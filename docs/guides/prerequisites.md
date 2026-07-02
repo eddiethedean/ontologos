@@ -2,6 +2,10 @@
 
 OntoLogos is a **Rust workspace** with optional **Python bindings**. Pick the row that matches your task.
 
+--8<-- "snippets/channel-banner.md"
+
+Unfamiliar with OWL terms? See the [Glossary](glossary.md).
+
 ## Decision table
 
 | Task | Rust | Python | Clone repo? |

@@ -177,7 +177,7 @@ Routing uses a two-layer design (DIP):
 
 See [Facade API](guides/facade-api.md), [Preview profiles](guides/preview-profiles.md), and [API stability ADR](internal/design/api-stability.md).
 
-**Do not** call `ontologos_core::Reasoner::classify()` — deprecated since 1.0.0; use the facade or profile crates.
+**Do not** call `ontologos_core::Reasoner::classify()` — removed in 1.0.0; use the facade or profile crates.
 
 ## CLI surface
 

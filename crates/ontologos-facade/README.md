@@ -17,6 +17,13 @@ Bump all `ontologos-*` pins together. On `main`, use `"1.0.0"` for DL and the fu
 
 ## Quick start
 
+Download `family.owl` first:
+
+```bash
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
+```
+
 ```rust
 use ontologos_core::{Profile, Reasoner};
 use ontologos_facade::ClassifyOutcome;

@@ -1,6 +1,10 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. **Published v0.9.0** covers stable EL/RL/RDFS. **`main` (1.0.0 workspace)** reaches **`parity_pct = 100%`** on the **in-scope** HermiT catalog gate (**916** cases, 0 planned) and passes **470** runnable Java + **428** OWL WG tests @ 30s on blocking CI. Composite **`true_parity_pct`** is **100%** on `main` (blocking CI gate). See [parity roadmap](internal/parity-roadmap.md). Not yet published to PyPI/crates.io as **v1.0.0** (no release tag per current plan). For ontologies outside the gated suite or ADR-waived exclusions, treat HermiT parity as best-effort — see [honest parity assessment](internal/hermit-parity-honest-assessment.md).
+Honest positioning for evaluators. **Published v0.9.0** covers stable EL, RL, and RDFS.
+
+**`main` (1.0.0 workspace, not yet tagged on PyPI)** passes the in-scope HermiT catalog gate (`parity_pct = 100%` on **889** cases) and the composite `true_parity_pct` gate at **100%** in blocking CI. Blocking CI runs **450** Java axiom + **428** OWL WG tests @ 30s.
+
+These metrics apply only to the **gated conformance corpora** — not every real-world ontology. See [Evaluator scope](guides/evaluator-scope.md) and [Release status](project/release-status.md).
 
 See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
 
@@ -13,8 +17,8 @@ See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs
 | OWL EL classification | **Yes** (in-house) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
 | OWL RL reasoning | **Yes** (via reasonable) | No | Partial | Partial | **Yes** | No | Via plugin |
 | RDFS materialization | **Yes** (via reasonable) | No | Yes | Yes | Partial | No | Yes |
-| OWL DL (pre-release) | **In-scope + true parity gates green** (`ontologos-dl` on `main`; 472+428 @ 30s; `true_parity_pct` 100%) | No | Yes (stagnant) | Yes | No | No | Via plugin |
-| OWL DL (production parity) | Planned **v1.0.0 tag** | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| OWL DL (workspace / gated corpora) | **In-scope + true parity gates green** (`ontologos-dl` on `main`; 450+428 @ 30s) | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| OWL DL (PyPI / crates.io today) | **v1.0.0 not yet published** — build from `main` for DL | No | Yes (stagnant) | Yes | No | No | Via plugin |
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
 | Unified multi-profile CLI/Python | **Yes** | No | No | No | RL only | EL only | Via plugins |
 | Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |
@@ -62,7 +66,7 @@ OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid ro
 
 ## OntoLogos target (1.0 vs 2.0)
 
-**1.0** delivers stable OWL DL HermiT parity on gated corpora (**in-scope gate green on `main`**, crates.io/PyPI publish not yet shipped). **`true_parity_pct`** (~19%) tracks everyday HermiT equivalence burndown toward 100%. **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
+**1.0** delivers OWL DL HermiT parity on gated corpora (**both parity gates green on `main`**; crates.io/PyPI **v1.0.0** publish not yet shipped). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
 
 Replace JVM-bound **batch** reasoning in Rust/Python pipelines via stable facade APIs, with CLI, Python, and Ontocode integration.
 

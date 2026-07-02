@@ -27,6 +27,7 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Metric | Value |
 |--------|------:|
 | Catalog `parity_pct` | **100%** (`java_planned = 0`, `wg_planned = 0`) |
+| Composite `true_parity_pct` | **100%** (blocking CI) |
 | `in_scope_total` | **889** |
 | Active conformance tests | **1009** / **1152** total (**143** `#[ignore]`) |
 | Runnable Java axiom + WG @ 30s | **450** + **428** (blocking CI, full suite) |
@@ -35,7 +36,7 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Documented CE exclusions | **13** Ian/ComplexConcept + `testIanBackjumping3` (**70** `excluded` catalog cases) |
 | `check-1.0-release-gates.sh` | **Green** (blocking in CI) |
 
-**Remaining for v1.0.0 publish:** follow [release-1.0-checklist.md](release-1.0-checklist.md) (crates.io + PyPI, then annotated tag `v1.0.0`). Post-1.0 literal catalog work: [parity-roadmap.md](../internal/parity-roadmap.md).
+**Remaining for v1.0.0 publish:** follow [release-1.0-checklist.md](release-1.0-checklist.md) (crates.io + PyPI, then annotated tag `v1.0.0`). Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
 
 ## Profile stability
 

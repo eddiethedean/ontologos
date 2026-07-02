@@ -14,16 +14,21 @@ Library-first orchestration: **load → detect profile → classify/materialize*
 
 > **Install channels**
 >
+> Latest tagged release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
+>
 > | Channel | Version | Use when |
 > |---------|---------|----------|
 > | **crates.io / PyPI** | **0.9.0** (latest tag) | Production EL, RL, RDFS today |
 > | **`main` git** | **1.0.0** workspace | DL, SWRL, full facade routing — build from source |
 >
 > **v1.0.0** publish to crates.io/PyPI is prepared; the git tag is not cut yet. See [release checklist](docs/project/release-1.0-checklist.md).
-
-> **Release channels:** Latest tagged release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
-> The `main` branch is the **1.0.0** workspace (**`parity_pct = 100%`** in-scope gate). **v1.0.0** publish is prepared; git tag not cut yet — see [release checklist](docs/project/release-1.0-checklist.md).
-> Use `ontologos-* = "0.9.0"` from crates.io today; use **`1.0.0`** when building from `main` for DL.
+>
+> | Install command | Profiles for production |
+> |-----------------|-------------------------|
+> | `pip install ontologos` or `ontologos-* = "0.9.0"` | EL, RL, RDFS |
+> | Build from `main` / `ontologos-* = "1.0.0"` | + DL, SWRL, full facade |
+>
+> `profile="dl"` on PyPI **0.9.0** is not HermiT parity. See [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html).
 
 **In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "0.9.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
 
@@ -283,12 +288,12 @@ See [Migration hub](https://ontologos.readthedocs.io/en/latest/migration/) for g
 | `ontologos-rl` | [yes](https://crates.io/crates/ontologos-rl) | OWL RL → reasonable |
 | `ontologos-el` | [yes](https://crates.io/crates/ontologos-el) | OWL EL completion |
 | `ontologos-explain` | [yes](https://crates.io/crates/ontologos-explain) | Proof graphs |
-| `ontologos-query` | [yes](https://crates.io/crates/ontologos-query) | Taxonomy queries |
 | `ontologos-facade` | [yes](https://crates.io/crates/ontologos-facade) | Unified classify routing |
 | `ontologos-bridge` | [yes](https://crates.io/crates/ontologos-bridge) | horned-owl / reasonable adapters |
 | `ontologos-abox` | [yes](https://crates.io/crates/ontologos-abox) | ABox helpers (RL-backed) |
 | `ontologos-alc` | [yes](https://crates.io/crates/ontologos-alc) | ALC tableau-lite (preview) |
-| `ontologos-dl` | [yes](https://crates.io/crates/ontologos-dl) | OWL 2 DL (workspace 1.0.0; crates.io after publish) |
+| `ontologos-dl` | [0.9.0](https://crates.io/crates/ontologos-dl) (library only; **DL engine stable on `main`**, publish **1.0.0** pending) | OWL 2 DL |
+| `ontologos-query` | [yes](https://crates.io/crates/ontologos-query) | Deprecated shim — use `ontologos-ql` |
 | `ontologos-swrl` | [yes](https://crates.io/crates/ontologos-swrl) | DLSafe SWRL + DL |
 | `ontologos-ql` | [yes](https://crates.io/crates/ontologos-ql) | OWL QL queries |
 | `ontologos-cli` | source only | CLI binary — `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` |

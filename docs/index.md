@@ -16,18 +16,7 @@
   <p style="margin-top:1rem;margin-bottom:0"><a href="guides/start-here/">Not sure? Start here</a></p>
 </div>
 
-> **Install channels**
->
-> | Channel | Version | Use when |
-> |---------|---------|----------|
-> | **crates.io / PyPI** | **0.9.0** (latest tag) | Production EL, RL, RDFS today |
-> | **`main` git** | **1.0.0** workspace | DL, SWRL, full facade — build from source |
->
-> **v1.0.0** publish is prepared; the git tag is not cut yet. See [Release status](project/release-status.md).
-
-> **Release channels:** Latest tagged release is **v0.9.0** on crates.io and PyPI.
-> The `main` branch is the **1.0.0** workspace: **`parity_pct = 100%`**; **1009** active conformance tests; blocking CI runs full HermiT + WG suite @ 30s. **v1.0.0** publish is prepared; git tag not cut yet.
-> Use `ontologos-* = "0.9.0"` for production today unless you build from git. See [Release status](project/release-status.md).
+--8<-- "snippets/channel-banner.md"
 
 Pick the path that matches how you work:
 
@@ -80,10 +69,10 @@ Pick the path that matches how you work:
 !!! warning "Integration DO / DON'T"
     **DO** use CLI `ontologos classify`, Python `Reasoner(path=...).classify()`, or `ontologos_facade::classify` / profile crates.
 
-    **DON'T** call `ontologos_core::Reasoner::classify()` directly — deprecated since 1.0.0; use the facade or profile crates. See [Choosing an API](guides/choosing-an-api.md).
+    **DON'T** call classification on `ontologos_core::Reasoner` — use the [facade](guides/facade-api.md) instead. See [Choosing an API](guides/choosing-an-api.md).
 
 !!! note "OWL DL / HermiT parity"
-    On `main`, **`parity_pct = 100%`** (catalog porting) and **450+428** active conformance tests pass @ 30s on the gated HermiT suite. **13** Ian/ComplexConcept CE cases are documented exclusions. Published **v0.9.0** on PyPI/crates.io is still EL/RL/RDFS-stable only. See [Profile stability matrix](guides/profile-stability.md), [FAQ](project/faq.md), and [Release status](project/release-status.md).
+    On `main`, **`parity_pct`** and **`true_parity_pct`** are **100%** on the gated catalog (**889** in-scope cases; **450+428** runnable @ 30s). Published **v0.9.0** on PyPI/crates.io is EL/RL/RDFS-stable only. See [Evaluator scope](guides/evaluator-scope.md), [Profile stability](guides/profile-stability.md), and [Release status](project/release-status.md).
 
 ## What you need
 
@@ -104,7 +93,7 @@ Use the sidebar for the full tree. Highlights:
 | New users | [Start here](guides/start-here.md) · [Prerequisites](guides/prerequisites.md) |
 | Examples | [Examples gallery](examples/index.md) |
 | API choice | [Choosing an API](guides/choosing-an-api.md) · [Profile stability](guides/profile-stability.md) |
-| Evaluate | [Evaluator playbook](guides/evaluator-playbook.md) · [Comparison](comparison.md) |
+| Evaluate | [Evaluator playbook](guides/evaluator-playbook.md) · [Evaluator scope](guides/evaluator-scope.md) · [Comparison](comparison.md) |
 | Upgrade | [Migration hub](migration/index.md) · [Release status](project/release-status.md) |
 
 ## Learning path

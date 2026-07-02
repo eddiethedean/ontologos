@@ -2,6 +2,8 @@
 
 Five-minute success paths for common goals.
 
+--8<-- "snippets/channel-banner.md"
+
 ## Crates.io only (no clone)
 
 Download a sample ontology, then build a minimal Rust project:

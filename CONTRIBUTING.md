@@ -59,12 +59,25 @@ NO_MKDOCS_2_WARNING=1 mkdocs serve
 
 See [docs/readthedocs.md](docs/readthedocs.md) for import instructions and local builds (also linked from [Contributing](docs/project/contributing.md)).
 
-When changing user-facing docs, run the version consistency check:
+When changing user-facing docs, run the version and snippet consistency checks:
 
 ```bash
-chmod +x docs/scripts/check-doc-versions.sh
+chmod +x docs/scripts/check-doc-versions.sh docs/scripts/check-doc-snippets.sh
 ./docs/scripts/check-doc-versions.sh
+./docs/scripts/check-doc-snippets.sh
 ```
+
+## Which tests to run
+
+| Change type | Usually enough |
+|-------------|----------------|
+| `docs/` only | `./docs/build-site.sh` (includes version + snippet checks) |
+| Facade / CLI / Python public API | `cargo test -p ontologos-contract --release` |
+| Single engine crate | `cargo test -p ontologos-el` (or affected crate) |
+| HermiT catalog / DL internals | `cargo test -p ontologos-conformance --release` (~26 min) |
+| Full CI parity | `cargo test --workspace` + conformance release build |
+
+`ontologos-contract` is the **Tier 0 public API contract** — what CLI and Python depend on. `ontologos-conformance` is the HermiT parity harness for engine contributors.
 
 ## Checks before opening a PR
 
@@ -77,6 +90,7 @@ cargo fmt --all -- --check
 cargo clippy -p <affected-crate> --all-targets -- -D warnings
 cargo test -p <affected-crate>
 ./docs/scripts/check-doc-versions.sh   # when docs/ or README version pins change
+./docs/scripts/check-doc-snippets.sh   # when docs/ examples or API references change
 ```
 
 ### Full CI parity (engine, conformance, or workspace-wide changes)
@@ -93,8 +107,9 @@ cargo test -p ontologos-conformance --locked
 ./benchmarks/scripts/compare-reasonable.sh
 cargo test -p ontologos-el --test incremental_correctness --locked
 cargo build -p ontologos-cli --release
-chmod +x docs/scripts/check-doc-versions.sh
+chmod +x docs/scripts/check-doc-versions.sh docs/scripts/check-doc-snippets.sh
 ./docs/scripts/check-doc-versions.sh
+./docs/scripts/check-doc-snippets.sh
 chmod +x docs/build-site.sh
 ./docs/build-site.sh
 ```
@@ -134,11 +149,12 @@ pytest tests/ -q
 | `crates/ontologos-swrl/` | DLSafe SWRL + DL |
 | `crates/ontologos-ql/` | OWL QL queries |
 | `crates/ontologos-facade/` | Unified classify routing |
-| `crates/ontologos-query/` | Taxonomy queries |
+| `crates/ontologos-query/` | Deprecated shim — use `ontologos-ql` |
 | `crates/ontologos-explain/` | Proof graphs and explanations |
 | `crates/ontologos-cli/` | CLI binary (not on crates.io) |
 | `crates/ontologos-py/` | Python bindings (PyPI) |
 | `crates/ontologos-watch/` | File-watch reload hook (workspace only) |
+| `crates/ontologos-contract/` | Public facade API contract tests (Tier 0) |
 | `crates/ontologos-conformance/` | HermiT-ported tests |
 | `docs/` | User and reference documentation |
 | `docs/internal/` | Maintainer roadmap, ADRs, parity notes |

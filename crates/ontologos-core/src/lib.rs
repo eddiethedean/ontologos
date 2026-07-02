@@ -1,7 +1,8 @@
 //! Core data model and reasoner API for OntoLogos.
 //!
 //! v0.4 provides an in-memory ontology representation with interned IRIs,
-//! typed entities, structured axioms, secondary indexes, and JSON v2 serialization.
+//! typed entities, structured axioms, secondary indexes, and JSON v3 serialization
+//! (v2 read supported).
 //!
 //! # Start here — load and reason
 //!

@@ -2,7 +2,14 @@
 
 RDFS TBox materialization for [OntoLogos](https://github.com/eddiethedean/ontologos): transitive `subClassOf` / `subPropertyOf`, and object-property domain/range inheritance along the property hierarchy.
 
-**v0.4 scope:** TBox rules only. Does not expand `EquivalentClasses` or data properties. ABox `rdf:type` propagation and equivalent-class expansion are handled by [`ontologos-rl`](../ontologos-rl).
+**Install (published v0.9.0):**
+
+```toml
+[dependencies]
+ontologos-rdfs = "0.9.0"
+```
+
+TBox RDFS rules via **reasonable**. ABox `rdf:type` propagation and equivalent-class expansion are handled by [`ontologos-rl`](../ontologos-rl).
 
 ```rust
 use ontologos_parser::load_ontology;
@@ -25,4 +32,4 @@ let mut reasoner = Reasoner::builder()
 classify_reasoner(&mut reasoner)?;
 ```
 
-See the [workspace README](../../README.md), [documentation site](https://ontologos.readthedocs.io/en/latest/), and [docs.rs](https://docs.rs/ontologos-rdfs).
+See the [workspace README](../../README.md), [documentation site](https://ontologos.readthedocs.io/en/latest/), and [docs.rs/ontologos-rdfs/0.9.0](https://docs.rs/ontologos-rdfs/0.9.0).

@@ -31,8 +31,10 @@ cargo doc -p ontologos-alc --no-deps
 ## Verify install
 
 ```bash
-cargo install ontologos-dl --version 1.0.0
+cargo new ontologos-dl-smoke && cd ontologos-dl-smoke
+cargo add ontologos-dl@1.0.0 ontologos-parser@1.0.0 ontologos-facade@1.0.0
 pip install ontologos==1.0.0
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli
 ontologos classify --profile dl family.owl
 ```
 

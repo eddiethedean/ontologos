@@ -1,8 +1,40 @@
 # Error Reference
 
+Classification and consistency live in **`ontologos_facade`** — not on `ontologos_core::Reasoner`. See [Facade reference](facade.md).
+
+## `ontologos_facade::Error`
+
+Transparent wrapper over profile engine errors. See [docs.rs](https://docs.rs/ontologos-facade/0.9.0/ontologos_facade/enum.Error.html).
+
+| Variant | Source | Typical cause |
+|---------|--------|---------------|
+| `El` | `ontologos_el::Error` | EL classification failure |
+| `Dl` | `ontologos_dl::Error` | DL inconsistency, preview limit, budget |
+| `Rl` | `ontologos_rl::Error` | Wrong profile or core error |
+| `Core` | `ontologos_core::Error` | Validation, incomplete consistency |
+
+### DL errors (via `Dl`)
+
+| Error | Cause | Recovery |
+|-------|-------|----------|
+| `Inconsistent` | Ontology proved inconsistent | Fix axioms; do not classify |
+| `PreviewLimit` | Construct outside preview scope | Use stable profile or simplify |
+| `IncompleteConsistency` | Budget or tableau limit (`complete == false`) | Increase `budget_secs`; use `check_consistency` |
+| `ResourceLimit` | Tableau expansion exhausted | Reduce ontology size |
+
+**Recovery for classification:** Use `ontologos_facade::classify` with the correct `Profile`. CLI: `ontologos classify --profile auto|el|rl|rdfs|dl`. Python: `Reasoner(path, profile="auto").classify()`.
+
+### Incomplete consistency
+
+**Cause:** `ontologos_facade::is_consistent` when `ConsistencyResult::complete == false` (DL budget).
+
+**Recovery:** Call `ontologos_facade::check_consistency` and inspect `complete`. Increase `ReasonerConfig::budget_secs`. Python: `check_consistency()` or catch `IncompleteReasoningError`.
+
+---
+
 ## `ontologos_core::Error`
 
-Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.9.0/ontologos_core/enum.Error.html).
+Errors from the core crate: [`Error`](https://docs.rs/ontologos-core/0.9.0/ontologos_core/enum.Error.html).
 
 ### `InvalidIri`
 
@@ -14,7 +46,7 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.9.0/on
 
 **Cause:** Same IRI registered with conflicting kinds (e.g. `Class` then `Individual`).
 
-**Recovery:** Use consistent kinds per IRI. Error includes the resolved IRI string.
+**Recovery:** Use consistent kinds per IRI.
 
 ### `UnknownEntity`
 
@@ -26,7 +58,7 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.9.0/on
 
 **Cause:** Axiom failed validation (wrong entity kind, duplicate operands, self-inverse property, unknown IRI in JSON axiom, etc.).
 
-**Recovery:** Check axiom shape against [SPEC.md](../project/spec.md) and [json-snapshot-v2.md](../json-snapshot-v2.md).
+**Recovery:** Check axiom shape against [SPEC.md](../project/spec.md) and [JSON snapshot](../json-snapshot-v3.md).
 
 ### `ParseNotAvailable`
 
@@ -38,28 +70,13 @@ Errors from the core crate use [`Error`](https://docs.rs/ontologos-core/0.9.0/on
 
 **Cause:** JSON parse failure, unsupported `format_version`, limit exceeded, unknown fields, duplicate entities.
 
-**Recovery:** Validate against [json-snapshot-v2.md](../json-snapshot-v2.md). Use `from_json_with_limits` for untrusted input.
+**Recovery:** Validate against [JSON snapshot v3](../json-snapshot-v3.md). Use `from_json_with_limits` for untrusted input. Format v1 is rejected.
 
 ### `NotImplemented`
 
-**Cause:** `Reasoner::classify()` on `ontologos-core` does not dispatch to profile engines (by design).
+**Cause:** Reserved for APIs not yet available on core (e.g. some SWRL paths).
 
-| API | Behavior |
-|-----|----------|
-| `Reasoner::classify()` with `Profile::El` | Returns `NotImplemented` |
-| `Reasoner::classify()` with `Profile::Auto` | Returns `NotImplemented` |
-
-**Recovery:** Use `ontologos_el::classify_reasoner`, `ontologos_rdfs::materialize_reasoner`, or `ontologos_rl::materialize_reasoner`. CLI: `ontologos classify --profile auto|el|rl|rdfs`. Python: `Reasoner(path, profile="auto")` routes via `classify_with_profile`.
-
-Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`Error::Message`](https://docs.rs/ontologos-core/0.9.0/ontologos_core/enum.Error.html#variant.Message) pointing at `ontologos_rdfs::classify_reasoner` or `ontologos_rl::classify_reasoner` (core does not link profile engines).
-
-`Reasoner::is_consistent()` is **deprecated** — it returns `NotImplemented`. Use `ontologos_facade::check_consistency` instead.
-
-### `IncompleteConsistency`
-
-**Cause:** `ConsistencyResult::into_bool()` or `ontologos_facade::is_consistent` when the consistency check did not finish (`complete == false`), typically due to DL wall-clock budget or tableau limits.
-
-**Recovery:** Call `ontologos_facade::check_consistency` and inspect `complete`. Increase `ReasonerConfig::budget_secs` or simplify the ontology. Python: use `check_consistency()` or catch `IncompleteReasoningError` from `is_consistent()`.
+**Recovery:** Use `ontologos_facade::classify` or the profile-specific engine crate.
 
 ### `OntologyNotLoaded`
 
@@ -67,9 +84,9 @@ Calling `Reasoner::classify()` with `Profile::Rdfs` or `Profile::Rl` returns [`E
 
 ### `Message`
 
-**Cause:** Generic validation failure (e.g. invalid `parallelism` in `ReasonerBuilder`) or `Reasoner::classify()` called with `Profile::Rdfs` / `Profile::Rl` (use profile-specific crates instead).
+**Cause:** Generic validation failure (e.g. invalid `parallelism` in `ReasonerBuilder`).
 
-**Recovery:** Read the message string; for parallelism, use bounds 1–64; for RDFS, call `ontologos_rdfs::classify_reasoner` or `materialize_reasoner`; for RL, call `ontologos_rl::classify_reasoner` or `RlEngine::saturate`.
+**Recovery:** Read the message string; for parallelism, use bounds 1–64.
 
 ### Lookup vs validation
 

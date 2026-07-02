@@ -2,6 +2,8 @@
 
 Completion-based **OWL EL taxonomy classification** via [`ontologos-el`](https://docs.rs/ontologos-el/0.9.0). The engine computes direct and indirect subsumptions, equivalence clusters, and unsatisfiable classes from mapped EL TBox axioms.
 
+--8<-- "snippets/channel-banner.md"
+
 ## Prerequisites
 
 - Rust 1.88+
@@ -63,7 +65,7 @@ Add dependencies:
 ontologos-core = "0.9.0"
 ontologos-parser = "0.9.0"
 ontologos-el = "0.9.0"
-ontologos-query = "0.9.0"
+ontologos-ql = "0.9.0"
 ```
 
 Load and classify:
@@ -87,13 +89,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Do **not** call `Reasoner::classify()` on core for EL — it returns `NotImplemented`. Use `ElClassifier::classify` or `ontologos_el::classify_with_profile`.
+For EL via the reasoner wrapper, use **`ontologos_facade::classify`** or **`ontologos_el::classify_reasoner`**. See [Facade API](../guides/facade-api.md).
 
 ### Via the reasoner facade
 
 ```rust
 use ontologos_core::{Profile, Reasoner, ReasonerConfig};
-use ontologos_el::classify_with_profile;
+use ontologos_facade::{classify, ClassifyOutcome};
 use ontologos_parser::load_ontology;
 
 let ontology = load_ontology(path)?;
@@ -102,8 +104,12 @@ let mut reasoner = Reasoner::builder()
     .config(ReasonerConfig::default())
     .build(ontology)?;
 
-let outcome = classify_with_profile(&mut reasoner)?;
-println!("subsumptions: {}", outcome.taxonomy.subsumption_count());
+match classify(&mut reasoner)? {
+    ClassifyOutcome::Taxonomy(t) => {
+        println!("subsumptions: {}", t.subsumption_count());
+    }
+    _ => unreachable!("EL profile yields taxonomy"),
+}
 ```
 
 ### Query the taxonomy
@@ -111,15 +117,16 @@ println!("subsumptions: {}", outcome.taxonomy.subsumption_count());
 ```rust
 use ontologos_el::ElClassifier;
 use ontologos_parser::load_ontology;
-use ontologos_query::QueryEngine;
+use ontologos_ql::TaxonomyHierarchy;
 
 let ontology = load_ontology(path)?;
 let taxonomy = ElClassifier::new().classify(&ontology)?;
-let engine = QueryEngine::new(&ontology, &taxonomy);
+let hierarchy = TaxonomyHierarchy::new(&ontology, &taxonomy);
 
-let pizza = engine.lookup("http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza")
+let pizza = hierarchy
+    .lookup("http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza")
     .expect("class registered");
-let supers = engine.direct_superclasses(pizza)?;
+let supers = hierarchy.direct_superclasses(pizza)?;
 println!("direct superclasses of Pizza: {supers:?}");
 ```
 
@@ -137,6 +144,13 @@ See [Query API reference](../reference/query.md).
 IRIs are resolved via `ontology.iri(entity_id)` or Python `reasoner.taxonomy` after `classify()`.
 
 ## Python
+
+Download Pizza first (from a clone: `./benchmarks/scripts/download.sh`; or obtain `pizza.owl` from the benchmark corpus):
+
+```bash
+# From a repository clone:
+./benchmarks/scripts/download.sh
+```
 
 ```python
 from ontologos import Reasoner

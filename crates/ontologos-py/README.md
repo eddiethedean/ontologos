@@ -5,7 +5,9 @@
 [![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/en/latest/guides/python/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](https://github.com/eddiethedean/ontologos/blob/main/LICENSE-MIT)
 
-Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a Rust-native OWL reasoner for **RDFS**, **OWL RL**, and **OWL EL** classification.
+Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a Rust-native OWL reasoner for **RDFS**, **OWL RL**, and **OWL EL** classification on **PyPI 0.9.0**. Build from `main` for **DL** and **SWRL**.
+
+> **Channel:** `pip install ontologos` installs **0.9.0** (EL, RL, RDFS). `profile="dl"` requires workspace **1.0.0** from `main`. See [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html).
 
 Load `.owl` / `.ttl` files or build ontologies in memory, run the same profile engines as the CLI, and export taxonomies to pandas or Polars. Powered by PyO3 and the stable Python ABI (`abi3`).
 
@@ -14,7 +16,7 @@ Load `.owl` / `.ttl` files or build ontologies in memory, run the same profile e
 ## Features
 
 - **File or in-memory** — `Reasoner(path=...)` or `Ontology` / `OntologyBuilder`
-- **Profiles** — `"rdfs"`, `"rl"`, `"el"`, `"alc"`, `"dl"`, `"dl-preview"`, `"swrl"`, or `"auto"` (detects EL vs RL vs DL)
+- **Profiles** — `"rdfs"`, `"rl"`, `"el"`, `"auto"` on **PyPI 0.9.0**; `"dl"`, `"dl-preview"`, `"alc"`, `"swrl"` on workspace **`main` / 1.0.0**
 - **Classify** — RDFS/RL materialization reports or EL taxonomy dicts
 - **Explain** — proof graph dicts with IRI-resolved conclusions (EL full traces)
 - **Incremental** — multi-pass `add_subclass_of` / `remove_subclass_of` with `incremental=True`
@@ -46,6 +48,13 @@ Pre-built wheels are published for:
 One `abi3` wheel per platform covers Python 3.10–3.13+. If no wheel matches, build from source (Rust + [maturin](https://github.com/PyO3/maturin)).
 
 ## Quick start
+
+Download Pizza for EL examples (from a clone: `./benchmarks/scripts/download.sh` at repo root):
+
+```bash
+# From repository clone only:
+./benchmarks/scripts/download.sh
+```
 
 ### Classify an OWL file
 

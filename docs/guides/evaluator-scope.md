@@ -1,0 +1,78 @@
+# Evaluator scope and parity metrics
+
+What HermiT parity claims mean — and what they do **not** mean. Canonical numbers live in [Release status](../project/release-status.md); verify live with:
+
+```bash
+bash benchmarks/scripts/hermit-burndown.sh status
+```
+
+## Two metrics — do not conflate them
+
+| Metric | Meaning | Current on `main` |
+|--------|---------|-------------------|
+| **`parity_pct`** | In-scope catalog harness complete (zero `planned` Java + WG cases) | **100%** |
+| **`true_parity_pct`** | Composite everyday HermiT equivalence (minimum of sub-metrics below) | **100%** |
+
+Both gates are **blocking in CI** on `main`. They apply to the **gated conformance corpora**, not every real-world ontology.
+
+### `parity_pct` formula
+
+```text
+in_scope_total = (591 Java − internal − excluded − migrated) + 428 WG = 889
+parity_pct = 100% when java_planned = 0 and wg_planned = 0
+```
+
+**889 in-scope cases** are not all 1019 HermiT-derived catalog entries. **130 Java cases** are documented out of scope (`internal`, `excluded`, `migrated`). Tier C taxonomy checks allow OntoLogos to be a **sound superset** of HermiT, not identical output.
+
+### `true_parity_pct` sub-metrics
+
+Composite minimum of:
+
+| Sub-metric | What it measures |
+|------------|------------------|
+| Literal catalog green | Active harness tests pass @ 30s |
+| Strict taxonomy | Tier C taxonomy comparison vs HermiT JAR |
+| Internal ports | Hand-written HermiT ports (RL, RDFS, EL) |
+| SWRL rules | DLSafe rule execution coverage |
+| Perf gate | Family DL wall-clock budget |
+
+## Runnable conformance @ 30s (blocking CI)
+
+| Suite | Count |
+|-------|------:|
+| Java axiom tests | **450** |
+| OWL WG tests | **428** |
+| Active conformance tests total | **1009** / **1152** defined (**143** `#[ignore]`) |
+
+## What 100% does **not** guarantee
+
+- Parity on ontologies **outside** the gated catalog
+- Identical taxonomy output to HermiT on every corpus (Tier C allows sound superset)
+- Production readiness on **PyPI 0.9.0** for OWL DL — DL requires **`main`** or future **v1.0.0** tag
+- Interactive editing (Protégé replacement)
+- Full SWRL beyond DLSafe subset
+
+## Tier overview
+
+| Tier | Role | Blocking? |
+|------|------|-----------|
+| **A** | HermiT catalog + WG harness (`ontologos-conformance`) | Yes (PR CI) |
+| **B** | Classification fixture comparison | Yes |
+| **C** | HermiT JAR taxonomy cross-check (nightly) | Informational / gate scripts |
+| **Contract** | Public facade API (`ontologos-contract`) | Yes (every PR) |
+
+## Channel availability for evaluators
+
+| Channel | DL evaluation | Command |
+|---------|---------------|---------|
+| PyPI **0.9.0** | EL/RL/RDFS only | `pip install ontologos==0.9.0` |
+| **`main` workspace** | Full DL + SWRL | Build from git; `ontologos classify --profile dl` |
+
+See [Evaluator playbook](evaluator-playbook.md) and [Comparison](../comparison.md).
+
+## Related
+
+- [Release status](../project/release-status.md) — canonical version and metric table
+- [Profile stability](profile-stability.md)
+- [Conformance reference](../reference/conformance.md)
+- [HermiT burndown](hermit-burndown.md) — contributors

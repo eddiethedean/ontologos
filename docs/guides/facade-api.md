@@ -3,7 +3,7 @@
 The **`ontologos-facade`** crate is the unified routing layer for CLI, Python, and multi-profile Rust apps. It avoids circular dependencies between EL and DL engines while exposing one `classify()` entry point.
 
 !!! note "Workspace crate"
-    `ontologos-facade` is published on crates.io in the workspace release set. Prefer it over calling `ontologos_el::classify_with_profile` directly when you need **DL**, **ALC**, or **SWRL** routing.
+    `ontologos-facade` is published on crates.io in the workspace release set. Prefer **`ontologos_facade::classify`** over profile-crate helpers when you need **DL**, **ALC**, or **SWRL** routing.
 
 ## When to use the facade
 
@@ -102,15 +102,14 @@ Preview limitations: [Preview profiles](preview-profiles.md).
 ## What not to do
 
 ```rust
-// DON'T — core stub is deprecated and returns NotImplemented
-reasoner.classify()?;
-reasoner.is_consistent()?;
+// DON'T — classification is not on ontologos_core::Reasoner
+// reasoner.classify()?;  // removed — use ontologos_facade::classify
 
 // DON'T — always fails; use ontologos_parser::load_ontology
 Ontology::from_file(path)?;
 
-// DON'T — EL router alone skips full DL hybrid for Profile::Dl
-ontologos_el::classify_with_profile(&mut reasoner)?; // when profile is Dl
+// DON'T — EL-only helpers skip full DL hybrid for Profile::Dl
+ontologos_el::classify_reasoner(&mut reasoner)?; // when profile is Dl
 ```
 
 Use **`ontologos_facade::classify`** or the profile-specific engine crate.

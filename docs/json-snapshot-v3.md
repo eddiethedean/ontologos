@@ -1,6 +1,8 @@
-# JSON snapshot v3 (planned)
+# JSON snapshot v3
 
-**Status:** Specification for v1.6 ABox milestone. Reader support lands with `FORMAT_VERSION = 3` in `ontologos-core`.
+**Status:** Shipped in workspace **1.0.0** (`FORMAT_VERSION = 3` in `ontologos-core`). Readers accept v2 and v3; writers emit v3.
+
+Legacy v2 format: [JSON snapshot v2](json-snapshot-v2.md).
 
 ## Changes from v2
 
@@ -16,8 +18,13 @@
 
 - v3 writers emit `format_version: 3`.
 - v3 readers accept v2 snapshots (upgrade on load).
-- v2 readers continue to work for v2-only snapshots.
+- v2-only snapshots remain readable.
 
-## Round-trip tests
+## Security
 
-Planned in `ontologos-core/src/serialize.rs` when ABox axioms move from `DlAxiom` to core `Axiom`.
+Untrusted uploads: use `Ontology::from_json_with_limits` — format v1 is rejected. See [Security](security.md).
+
+## Related
+
+- [JSON snapshot v2](json-snapshot-v2.md) — legacy reference
+- [Migration v0.9 → v1.0](migration/v0.9.x-to-v1.0.0.md)

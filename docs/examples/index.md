@@ -21,10 +21,13 @@ See [Getting started — crates.io only](../getting-started/index.md#cratesio-on
 
 ### OWL EL taxonomy
 
+Family is an **RL** corpus — use Pizza for EL demos. See [OWL EL classification](../getting-started/owl-el-classification.md).
+
 ```rust
 use ontologos_el::ElClassifier;
 use ontologos_parser::load_ontology;
 
+// After: curl -L -o family.owl https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
 let ontology = load_ontology("family.owl".as_ref())?;
 let taxonomy = ElClassifier::new().classify(&ontology)?;
 ```
@@ -34,8 +37,13 @@ For Pizza EL golden tests, clone the repo and run `./benchmarks/scripts/download
 ### JSON snapshot round-trip
 
 ```rust
+use ontologos_core::Ontology;
+
+let ontology = Ontology::builder()
+    .class("http://example.org/A")?
+    .build()?;
 let json = ontology.to_json()?;
-let restored = ontologos_core::Ontology::from_json(&json)?;
+let restored = Ontology::from_json(&json)?;
 ```
 
 See [JSON snapshot v2](../json-snapshot-v2.md).
@@ -84,7 +92,8 @@ r.classify()
 ### Explain
 
 ```python
-graph = Reasoner(path="family.owl", profile="el").explain()
+# EL explain works best on EL corpora (e.g. pizza.owl after download.sh)
+graph = Reasoner(path="family.owl", profile="rl").explain()
 print(graph["node_count"])
 ```
 

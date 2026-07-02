@@ -14,7 +14,7 @@ OntoLogos ships **stable** EL, RL, RDFS, and **SWRL** on the workspace **1.0.0**
 | `rl` | Stable | `ontologos-rl` | Materialization report |
 | `rdfs` | Stable | `ontologos-rdfs` | Materialization report |
 | `swrl` | Stable | `ontologos-swrl` | Rules + DL consistency |
-| `dl` | Pre-release | `ontologos-dl` | Taxonomy — **100%** catalog parity; gated suite @ 30s on `main` |
+| `dl` | Stable on `main` (channel publish pending) | `ontologos-dl` | Taxonomy — **100%** in-scope catalog parity; gated suite @ 30s |
 | `dl-preview` | Preview | `ontologos-dl` (gated) | Taxonomy + explicit preview checks |
 | `alc` | Preview | `ontologos-alc` | Taxonomy |
 

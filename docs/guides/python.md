@@ -1,6 +1,8 @@
 # Python Guide
 
-Python bindings for OntoLogos (PyPI **1.0.0** on `main`; **0.9.0** latest tag) via PyO3 (`pip install ontologos`).
+Python bindings for OntoLogos (PyPI **0.9.0** latest tag; workspace **1.0.0** on `main`) via PyO3 (`pip install ontologos`).
+
+--8<-- "snippets/channel-banner.md"
 
 OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
 (`ontologos-el` in-house EL, `ontologos-rl` / `ontologos-rdfs` → reasonable). Power users who need

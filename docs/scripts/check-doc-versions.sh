@@ -79,12 +79,21 @@ BANNER_MARKERS=(
 )
 for file in README.md docs/index.md; do
   if ! grep -q "Latest tagged release is \*\*v0.9.0\*\*" "$file"; then
-    echo "ERROR: ${file} missing release-channel banner (v0.9.0 published)"
-    FAIL=1
+    # docs/index.md may include the shared snippet instead of inline text.
+    if [[ "$file" == "docs/index.md" ]] && grep -q 'snippets/channel-banner.md' "$file"; then
+      :
+    else
+      echo "ERROR: ${file} missing release-channel banner (v0.9.0 published)"
+      FAIL=1
+    fi
   fi
   if ! grep -Eq 'main.*1\.0\.0' "$file"; then
-    echo "ERROR: ${file} missing main-branch 1.0.0 pre-release note"
-    FAIL=1
+    if [[ "$file" == "docs/index.md" ]] && grep -q 'snippets/channel-banner.md' "$file"; then
+      :
+    else
+      echo "ERROR: ${file} missing main-branch 1.0.0 pre-release note"
+      FAIL=1
+    fi
   fi
 done
 

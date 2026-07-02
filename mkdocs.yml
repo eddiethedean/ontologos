@@ -13,6 +13,7 @@ copyright: Copyright &copy; Odo Matthews
 docs_dir: docs
 
 exclude_docs: |
+  snippets/
   internal/research/
   internal/roadmap.md
   internal/upstream-reasonable-gaps.md
@@ -63,8 +64,7 @@ nav:
   - Getting started:
       - Start here: guides/start-here.md
       - Prerequisites: guides/prerequisites.md
-      - Release status: project/release-status.md
-      - getting-started/index.md
+      - Five-minute Rust guide: getting-started/index.md
       - Classify quick start: getting-started/classify-quickstart.md
       - Load an OWL file: getting-started/load-owl-file.md
       - RDFS materialization: getting-started/rdfs-materialization.md
@@ -76,8 +76,9 @@ nav:
   - Guides:
       - Choosing an API: guides/choosing-an-api.md
       - Profile stability: guides/profile-stability.md
-      - Facade API: guides/facade-api.md
       - Preview profiles: guides/preview-profiles.md
+      - Facade API: guides/facade-api.md
+      - Evaluator scope: guides/evaluator-scope.md
       - Evaluator playbook: guides/evaluator-playbook.md
       - Profile detection: guides/profile-detection.md
       - Python: guides/python.md
@@ -91,14 +92,16 @@ nav:
       - Security: security.md
   - Reference:
       - Architecture: architecture.md
+      - Facade API: reference/facade.md
       - CLI: reference/cli.md
       - Errors: reference/errors.md
       - Supported constructs: reference/supported-constructs.md
       - Reasonable adapter limits: reference/reasonable-limits.md
       - Explain API: reference/explain.md
       - Query API: reference/query.md
-      - JSON snapshot v2: json-snapshot-v2.md
-      - JSON snapshot v3 (planned): json-snapshot-v3.md
+      - QL API: reference/ql.md
+      - JSON snapshot v3: json-snapshot-v3.md
+      - JSON snapshot v2 (legacy): json-snapshot-v2.md
       - RL rules: reference/rl-rules.md
       - Conformance: reference/conformance.md
       - Taxonomy tolerance: reference/taxonomy-tolerance.md
@@ -127,6 +130,7 @@ nav:
   - Project:
       - FAQ: project/faq.md
       - Release status: project/release-status.md
+      - Release 1.0 checklist: project/release-1.0-checklist.md
       - Release notes: project/release-notes.md
       - Roadmap summary: project/roadmap-summary.md
       - Changelog: project/changelog.md

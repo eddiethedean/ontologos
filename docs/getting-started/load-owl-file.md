@@ -2,6 +2,8 @@
 
 Load OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser/0.9.0).
 
+--8<-- "snippets/channel-banner.md"
+
 > **Important:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](../reference/supported-constructs.md) before comparing results.
 
 !!! warning "`owl:imports` are not resolved"
@@ -44,6 +46,11 @@ diagnostics:
 Family ontology typically reports `detected profile: Rl`.
 
 ## Library
+
+!!! note "Path convention"
+    **Crates.io quick start:** download `family.owl` to the current directory (see [Getting started](index.md#cratesio-only-no-clone)) and use `family.owl`.
+
+    **Repository clone:** use `benchmarks/data/family.owl` after `./benchmarks/scripts/download.sh`.
 
 Add dependencies:
 

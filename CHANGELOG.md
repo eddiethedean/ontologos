@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- OSS maintainer review: fixed facade classify examples, install-channel clarity, SWRL stability alignment, GitHub issue/PR templates, `facade_auto` example, roadmap moved to `docs/internal/`.
+- Documentation adoption audit: facade-first examples, evaluator scope page, query/QL reference rewrite, channel banners, parity metric reconciliation, doc snippet CI.
 
 ## [1.0.0] - 2026-06-13
+
+> **STAGED — NOT PUBLISHED:** Workspace version **1.0.0** on `main`. crates.io and PyPI remain **0.9.0** until the annotated **v1.0.0** tag and publish complete. See [Release status](docs/project/release-status.md).
 
 ### Added
 

@@ -101,8 +101,30 @@ Read these before filing "missing feature" issues:
 
 1. [Supported constructs](../reference/supported-constructs.md)
 2. [Comparison](../comparison.md) — not HermiT replacement on arbitrary ontologies
-3. [HermiT parity assessment](../internal/hermit-parity-honest-assessment.md) — what `parity_pct = 100%` measures
+3. [Evaluator scope](/guides/evaluator-scope/) — what `parity_pct = 100%` measures
 4. [Protégé axiom counts](protege-axiom-counts.md) — count mismatches are expected
+
+## Step 8 — Evaluate DL on `main` (optional, 10 min)
+
+PyPI **0.9.0** does not ship production DL. Build from git:
+
+```bash
+git clone https://github.com/eddiethedean/ontologos.git
+cd ontologos
+./benchmarks/scripts/download.sh
+cargo build -p ontologos-cli --release
+export ONTOLOGOS_DL_BUDGET_SECS=30
+./target/release/ontologos consistent --profile dl benchmarks/data/pizza.owl
+./target/release/ontologos classify --profile dl benchmarks/data/pizza.owl
+./target/release/ontologos entail --sub http://www.co-ode.org/ontologies/pizza/pizza.owl#VegetarianPizza \
+  --sup http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza benchmarks/data/pizza.owl
+```
+
+Contract tests (facade API surface):
+
+```bash
+cargo test -p ontologos-contract --release
+```
 
 ## Pass / fail criteria
 

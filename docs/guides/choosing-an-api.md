@@ -164,7 +164,7 @@ use ontologos_facade;
 let outcome = ontologos_facade::classify(&mut reasoner)?;
 ```
 
-For EL-only routing without DL: `ontologos_el::classify_with_profile`.
+For EL-only routing without DL: `ontologos_el::classify_reasoner` or `ElClassifier::classify`.
 
 CLI: `ontologos classify --profile el`. Python: `Reasoner(path="file.owl", profile="el").classify()`.
 
