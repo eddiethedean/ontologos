@@ -25,7 +25,10 @@ fn disjoint_data_properties_premise_maps_data_property_disjointness() {
                 if props.contains(&has_name) && props.contains(&has_address)
         )
     });
-    assert!(disjoint, "expected DisjointDataProperties(hasName, hasAddress)");
+    assert!(
+        disjoint,
+        "expected DisjointDataProperties(hasName, hasAddress)"
+    );
 }
 
 #[test]

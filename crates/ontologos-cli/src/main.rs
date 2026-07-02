@@ -7,8 +7,8 @@ use ontologos_explain::{ProofGraph, explain_with_profile, render_text};
 use ontologos_facade::ClassifyOutcome;
 use ontologos_parser::load_ontology_lenient as load_ontology;
 use ontologos_profile::{ProfileReport, classify_hybrid, detect_profile};
-use ontologos_rl::rdfs::MaterializationReport as RdfsReport;
 use ontologos_rl::MaterializationReport as RlReport;
+use ontologos_rl::rdfs::MaterializationReport as RdfsReport;
 use serde::Serialize;
 use thiserror::Error;
 

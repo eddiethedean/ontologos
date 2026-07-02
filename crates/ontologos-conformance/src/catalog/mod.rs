@@ -806,7 +806,9 @@ fn ce_expression_satisfiable(ontology: &Ontology, ce_ofn: &str) -> Result<bool, 
 }
 
 fn parse_nominal_intersect_named_complement(ce_ofn: &str) -> Option<(String, String)> {
-    let rest = ce_ofn.strip_prefix("ObjectIntersectionOf(")?.strip_suffix(')')?;
+    let rest = ce_ofn
+        .strip_prefix("ObjectIntersectionOf(")?
+        .strip_suffix(')')?;
     let one_of = rest.strip_prefix("ObjectOneOf(")?;
     let (nominal, rest) = one_of.split_once(')')?;
     let nominal = nominal.trim().trim_start_matches(':');
@@ -1124,10 +1126,8 @@ fn named_subclasses_in_ontology(ontology: &Ontology, class: EntityId) -> Vec<Ent
         let DlAxiom::SubClassOf { sub, sup } = axiom else {
             continue;
         };
-        let (
-            Some(ClassExpr::Atomic(sub_class)),
-            Some(ClassExpr::Atomic(sup_class)),
-        ) = (ontology.dl().ce(*sub), ontology.dl().ce(*sup))
+        let (Some(ClassExpr::Atomic(sub_class)), Some(ClassExpr::Atomic(sup_class))) =
+            (ontology.dl().ce(*sub), ontology.dl().ce(*sup))
         else {
             continue;
         };
@@ -1155,10 +1155,7 @@ fn individual_asserted_named_type(
     individual: EntityId,
     class: EntityId,
 ) -> bool {
-    ontology
-        .classes_of(individual)
-        .iter()
-        .any(|&asserted| asserted == class)
+    ontology.classes_of(individual).contains(&class)
 }
 
 fn some_values_from_instance_locals(
@@ -1189,11 +1186,9 @@ fn some_values_from_instance_locals(
     let filler_classes = named_subclasses_in_ontology(ontology, filler_id);
 
     for &filler_class in &filler_classes {
-        if !direct {
-            if let Some(filler_name) = entity_local_name(ontology, filler_class) {
-                let sub_ce = format!("ObjectSomeValuesFrom(:{role_local} :{filler_name})");
-                out.extend(equivalent_class_instance_locals(ontology, &sub_ce));
-            }
+        if !direct && let Some(filler_name) = entity_local_name(ontology, filler_class) {
+            let sub_ce = format!("ObjectSomeValuesFrom(:{role_local} :{filler_name})");
+            out.extend(equivalent_class_instance_locals(ontology, &sub_ce));
         }
         for (subject, record) in ontology.entities().iter() {
             if record.kind != ontologos_core::EntityKind::Individual {

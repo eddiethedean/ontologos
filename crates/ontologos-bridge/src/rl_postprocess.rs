@@ -1339,7 +1339,10 @@ mod tests {
         );
         let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
         let added = apply_transitive_path_property_subsumption(&mut ontology).expect("postprocess");
-        assert!(added >= 1, "expected r ⊑ t from singleton domain/range + transitive path");
+        assert!(
+            added >= 1,
+            "expected r ⊑ t from singleton domain/range + transitive path"
+        );
         let r = ontology.lookup_entity("file:/c/test.owl#r").expect("r");
         let t = ontology.lookup_entity("file:/c/test.owl#t").expect("t");
         assert!(ontology.direct_superproperties(r).contains(&t));

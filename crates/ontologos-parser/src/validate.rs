@@ -57,8 +57,89 @@ fn validate_ontology_datatypes(ontology: &Ontology, strict: bool) -> Result<(), 
 /// Full validation including blank-node assertion and graph cycle checks.
 pub fn validate_loaded_ontology(ontology: &Ontology) -> Result<(), Error> {
     validate_loaded_ontology_light(ontology)?;
+    validate_data_oneof_homogeneity(ontology)?;
     validate_blank_node_assertions(ontology)?;
     validate_blank_object_property_graph(ontology)
+}
+
+fn validate_data_oneof_homogeneity(ontology: &Ontology) -> Result<(), Error> {
+    let store = ontology.dl();
+    for axiom in store.axioms() {
+        match axiom {
+            DlAxiom::DatatypeDefinition { range, .. } => {
+                validate_data_expr_oneof_homogeneity(ontology, *range)?;
+            }
+            DlAxiom::SubClassOf { sub, sup } => {
+                for id in [*sub, *sup] {
+                    if let Some(ce) = store.ce(id) {
+                        validate_ce_oneof_homogeneity(ontology, ce)?;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+fn validate_ce_oneof_homogeneity(ontology: &Ontology, ce: &ClassExpr) -> Result<(), Error> {
+    let store = ontology.dl();
+    match ce {
+        ClassExpr::DataSome { range, .. } | ClassExpr::DataAll { range, .. } => {
+            validate_data_expr_oneof_homogeneity(ontology, *range)?;
+        }
+        ClassExpr::DataHasValue { value, .. } => {
+            validate_data_expr_oneof_homogeneity(ontology, *value)?;
+        }
+        ClassExpr::And(ops) | ClassExpr::Or(ops) => {
+            for op in ops {
+                if let Some(inner) = store.ce(*op) {
+                    validate_ce_oneof_homogeneity(ontology, inner)?;
+                }
+            }
+        }
+        ClassExpr::Not(inner) => {
+            if let Some(inner_ce) = store.ce(*inner) {
+                validate_ce_oneof_homogeneity(ontology, inner_ce)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn validate_data_expr_oneof_homogeneity(
+    ontology: &Ontology,
+    de: ontologos_core::DeId,
+) -> Result<(), Error> {
+    let store = ontology.dl();
+    let Some(expr) = store.de(de) else {
+        return Ok(());
+    };
+    match expr {
+        DataExpr::Or(ops) | DataExpr::And(ops) => {
+            let mut literal_datatypes = Vec::new();
+            for &op in ops {
+                if let Some(DataExpr::Literal { datatype, .. }) = store.de(op) {
+                    literal_datatypes.push(*datatype);
+                } else {
+                    validate_data_expr_oneof_homogeneity(ontology, op)?;
+                }
+            }
+            if literal_datatypes.len() == ops.len() && literal_datatypes.len() > 1 {
+                let first = literal_datatypes[0];
+                if literal_datatypes.iter().any(|dt| *dt != first) {
+                    return Err(Error::Parse(
+                        "DataOneOf literals must share the same datatype".into(),
+                    ));
+                }
+            }
+        }
+        DataExpr::Not(inner) => validate_data_expr_oneof_homogeneity(ontology, *inner)?,
+        DataExpr::Facet { base, .. } => validate_data_expr_oneof_homogeneity(ontology, *base)?,
+        DataExpr::Literal { .. } | DataExpr::Datatype(_) | DataExpr::Top => {}
+    }
+    Ok(())
 }
 
 fn validate_blank_node_assertions(ontology: &Ontology) -> Result<(), Error> {
@@ -132,22 +213,12 @@ fn validate_data_expr(
             validate_literal_lexical(&dt, lexical)?;
         }
         DataExpr::Or(ops) | DataExpr::And(ops) => {
-            let mut literal_datatypes = Vec::new();
             for &op in ops {
                 if let Some(DataExpr::Literal { lexical, datatype }) = store.de(op) {
                     let dt = datatype_iri(ontology, *datatype);
                     validate_literal_lexical(&dt, lexical)?;
-                    literal_datatypes.push(*datatype);
                 } else {
                     validate_data_expr(ontology, op, _strict)?;
-                }
-            }
-            if literal_datatypes.len() == ops.len() && literal_datatypes.len() > 1 {
-                let first = literal_datatypes[0];
-                if literal_datatypes.iter().any(|dt| *dt != first) {
-                    return Err(Error::Parse(
-                        "DataOneOf literals must share the same datatype".into(),
-                    ));
                 }
             }
         }

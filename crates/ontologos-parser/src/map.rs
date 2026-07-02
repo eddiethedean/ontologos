@@ -903,9 +903,9 @@ impl Mapper<'_> {
             if ids.len() >= 2 {
                 self.push_axiom(Axiom::SameIndividual(ids));
             } else if !self.limits.strict {
-                self.report.meta.warn(
-                    "reflexive or degenerate SameIndividual ignored in lenient parse",
-                );
+                self.report
+                    .meta
+                    .warn("reflexive or degenerate SameIndividual ignored in lenient parse");
             }
         } else if self.map_dl_same_individual(individuals) {
         } else {
@@ -930,9 +930,9 @@ impl Mapper<'_> {
                 if self.limits.strict {
                     self.push_dl_axiom(DlAxiom::DifferentIndividuals(ids));
                 } else {
-                    self.report.meta.warn(
-                        "degenerate DifferentIndividuals ignored in lenient parse",
-                    );
+                    self.report
+                        .meta
+                        .warn("degenerate DifferentIndividuals ignored in lenient parse");
                     self.report.meta.note_trivial_abox_inconsistent();
                 }
                 return;
@@ -947,9 +947,9 @@ impl Mapper<'_> {
             resolved.dedup();
             if resolved.len() < 2 {
                 if !self.limits.strict {
-                    self.report.meta.warn(
-                        "degenerate DifferentIndividuals ignored in lenient parse",
-                    );
+                    self.report
+                        .meta
+                        .warn("degenerate DifferentIndividuals ignored in lenient parse");
                     self.report.meta.note_trivial_abox_inconsistent();
                 }
             } else {
@@ -1118,12 +1118,10 @@ impl Mapper<'_> {
             if record.kind.satisfies(kind) {
                 return Ok(id);
             }
-            if !self.limits.strict {
-                self.report.meta.warn(format!(
-                    "entity kind mismatch for {iri}: expected {kind:?}, found {:?}; using requested kind",
-                    record.kind
-                ));
-                let _ = self.ontology.set_entity_kind(id, kind);
+            if let Some(merged) = EntityKind::merge_punning(record.kind, kind) {
+                if merged != record.kind {
+                    let _ = self.ontology.set_entity_kind(id, merged);
+                }
                 return Ok(id);
             }
         }

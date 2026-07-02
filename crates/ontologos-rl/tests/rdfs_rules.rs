@@ -1,5 +1,7 @@
 use ontologos_core::{Axiom, Ontology, Profile, Reasoner};
-use ontologos_rl::rdfs::{MaterializationReport, RdfsEngine, classify_reasoner, materialize_reasoner};
+use ontologos_rl::rdfs::{
+    MaterializationReport, RdfsEngine, classify_reasoner, materialize_reasoner,
+};
 
 const NS: &str = "http://example.org/";
 
@@ -169,7 +171,10 @@ fn materialize_reasoner_requires_rdfs_profile() {
         .build(ontology)
         .expect("reasoner");
     let err = materialize_reasoner(&mut reasoner).expect_err("wrong profile");
-    assert!(matches!(err, ontologos_rl::rdfs::Error::WrongProfile { .. }));
+    assert!(matches!(
+        err,
+        ontologos_rl::rdfs::Error::WrongProfile { .. }
+    ));
 }
 
 #[test]

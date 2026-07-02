@@ -665,9 +665,9 @@ impl Mapper<'_> {
         ids.dedup();
         if ids.len() < 2 {
             if !self.limits.strict {
-                self.report.meta.warn(
-                    "reflexive or degenerate SameIndividual ignored in lenient parse",
-                );
+                self.report
+                    .meta
+                    .warn("reflexive or degenerate SameIndividual ignored in lenient parse");
                 return true;
             }
             return false;
@@ -691,9 +691,9 @@ impl Mapper<'_> {
         ids.dedup();
         if ids.len() < 2 {
             if !self.limits.strict {
-                self.report.meta.warn(
-                    "degenerate DifferentIndividuals ignored in lenient parse",
-                );
+                self.report
+                    .meta
+                    .warn("degenerate DifferentIndividuals ignored in lenient parse");
                 self.report.meta.note_trivial_abox_inconsistent();
                 return true;
             }
