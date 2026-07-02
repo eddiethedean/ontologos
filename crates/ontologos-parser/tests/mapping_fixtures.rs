@@ -104,9 +104,7 @@ fn minimal_subclass_owl_xml_maps_both_axioms() {
 #[test]
 fn minimal_subclass_rdf_xml_maps_both_axioms() {
     let ontology = load_ontology(&fixture("minimal_subclass.rdf")).expect("rdf/xml");
-    // RDF/XML also gets a harvested SubClassOf(C, restriction) supplement alongside
-    // the mapper's SubClassOfExistential for the same restriction.
-    assert_minimal_subclass_mapping(&ontology, "rdf/xml", 3);
+    assert_minimal_subclass_mapping(&ontology, "rdf/xml", 2);
 }
 
 #[test]
