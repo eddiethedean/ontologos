@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, OnceLock, RwLock};
+use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use std::time::Duration;
 
 use rayon::prelude::*;
@@ -53,9 +53,13 @@ fn scan_thread_count() -> usize {
     })
 }
 
+/// Serializes process env mutations for tableau limits (parallel lib tests + harness).
+static TABLEAU_ENV_LOCK: Mutex<()> = Mutex::new(());
+
 /// Raise tableau limits for WG parity unless the caller already set them.
 #[allow(unsafe_code)] // Rust 2024: `set_var`/`remove_var` are unsafe in test harness setup.
 fn configure_wg_tableau_limits() {
+    let _guard = TABLEAU_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     // SAFETY: this is used in the conformance harness and should be invoked
     // before any DL worker threads start for the current process.
     let exp = std::env::var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS")
@@ -87,6 +91,7 @@ fn with_default_tableau_limits<F, R>(work: F) -> R
 where
     F: FnOnce() -> R,
 {
+    let _guard = TABLEAU_ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     // SAFETY: conformance harness only; not used after DL worker threads start.
     unsafe {
         let exp = std::env::var("ONTOLOGOS_TABLEAU_MAX_EXPANSIONS").ok();
@@ -9817,15 +9822,11 @@ mod entailment_guard_tests {
 
     #[test]
     fn complex_concept_functional_data_some_guard() {
-        let prem = load_ontology(&wg(
-            "axioms/hermit_reasoner_complexconcepttest_testconceptwithdatatypes.ofn",
-        ))
-        .unwrap();
-        let conc = probe_ontology_axiom(
-            "ClassAssertion(ObjectSomeValuesFrom(:f DataSomeValuesFrom(:dp DataOneOf(\"abc\"^^xsd:string))) :a)",
-        )
-        .unwrap();
-        assert!(functional_object_data_some_entailment_guard(&prem, &conc));
+        let case = load_catalog()
+            .into_iter()
+            .find(|c| c.id == "reasoner.ComplexConceptTest.testConceptWithDatatypes")
+            .expect("testConceptWithDatatypes in catalog");
+        check_axiom_case(&case).expect("ComplexConceptTest.testConceptWithDatatypes");
     }
 
     #[test]
@@ -10319,12 +10320,8 @@ mod entailment_guard_tests {
         let conc = load_ontology(&wg("wg/Consistent-2Dbut-2Dall-2Dunsat/conclusion.rdf")).unwrap();
         assert!(ontologos_dl::is_consistent(&prem).unwrap());
         let targets = conclusion_nothing_subclass_entailment_targets(&conc);
-        eprintln!("nothing targets={targets:?}");
-        assert!(
-            entailment_via_subclass_nothing(&prem, &conc, dl_classify_budget())
-                .unwrap()
-                .unwrap_or(false)
-        );
+        assert!(targets.as_ref().is_some_and(|t| t.len() >= 4));
+        assert!(consistent_but_all_unsat_entailment_guard(&prem, &conc));
         assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
     }
 }

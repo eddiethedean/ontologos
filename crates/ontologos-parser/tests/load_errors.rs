@@ -133,6 +133,21 @@ fn owllink_primer_loads_with_families_import() {
 }
 
 #[test]
+fn agent_owl_self_inverse_knows_loads_strict() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data/hermit/reasoner/res/OWLLink/agent.owl");
+    let ontology = load_ontology(&path).expect("agent.owl strict load");
+    let meta = ontology.parse_meta().expect("parse meta");
+    assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
+    assert!(
+        ontology
+            .lookup_entity("http://www.iyouit.eu/agent.owl#knows")
+            .is_some(),
+        "expected knows property"
+    );
+}
+
+#[test]
 fn parse_limits_merge_imports_defaults_false() {
     let limits = ParseLimits::default();
     assert!(!limits.merge_imports);

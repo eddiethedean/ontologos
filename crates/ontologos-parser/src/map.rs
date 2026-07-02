@@ -634,10 +634,15 @@ impl Mapper<'_> {
         if let (Some(left_id), Some(right_id)) =
             (left_lookup.resolved_id(), right_lookup.resolved_id())
         {
-            self.push_axiom(Axiom::InverseObjectProperties {
-                left: left_id,
-                right: right_id,
-            });
+            if left_id == right_id {
+                // OWL RDF idiom: P owl:inverseOf P (common on symmetric properties, e.g. IYOUIT knows).
+                self.push_axiom(Axiom::SymmetricObjectProperty(left_id));
+            } else {
+                self.push_axiom(Axiom::InverseObjectProperties {
+                    left: left_id,
+                    right: right_id,
+                });
+            }
         } else {
             self.skip_if_unmapped(
                 &[left_lookup, right_lookup],

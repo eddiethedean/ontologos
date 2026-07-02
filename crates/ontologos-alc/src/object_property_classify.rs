@@ -3,7 +3,7 @@
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy};
+use ontologos_core::{Axiom, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy};
 
 use crate::Error;
 use crate::dl_ontology::DlOntology;
@@ -17,6 +17,101 @@ const FRESH_INDIVIDUAL: &str = "urn:ontologos:internal:fresh-individual";
 const SURROGATE_NS: &str = "urn:ontologos:internal:role-surrogate:";
 /// Full pairwise surrogate entailment is feasible below this role-expression count.
 const FULL_SURROGATE_PAIRWISE_LIMIT: usize = 96;
+
+fn query_object_property_entity(role: &RoleExpr) -> Option<EntityId> {
+    match role {
+        RoleExpr::Atomic(id) | RoleExpr::Inverse(id) => Some(*id),
+    }
+}
+
+/// RBox `SubObjectPropertyOf` edges from asserted axioms (HermiT also surfaces these in role queries).
+fn structural_sub_property_graph(ontology: &Ontology) -> HashMap<EntityId, HashSet<EntityId>> {
+    let mut supers_of: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+    let mut note = |sub: EntityId, sup: EntityId| {
+        supers_of.entry(sub).or_default().insert(sup);
+    };
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::SubObjectPropertyOf {
+            sub_property,
+            super_property,
+        } = axiom
+        {
+            note(*sub_property, *super_property);
+        }
+    }
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::SubObjectPropertyOf { sub, sup } = axiom {
+            if let (Some(sub), Some(sup)) = (
+                object_property_entity(ontology, sub),
+                object_property_entity(ontology, sup),
+            ) {
+                note(sub, sup);
+            }
+        }
+    }
+    supers_of
+}
+
+fn object_property_entity(ontology: &Ontology, role: &RoleExpr) -> Option<EntityId> {
+    match role {
+        RoleExpr::Atomic(id) => ontology
+            .entity(*id)
+            .ok()
+            .filter(|r| r.kind == EntityKind::ObjectProperty)
+            .map(|_| *id),
+        RoleExpr::Inverse(id) => object_property_entity(ontology, &RoleExpr::Atomic(*id)),
+    }
+}
+
+/// Asserted subproperties of `query`, as atomic + inverse role expressions (OWL API shape).
+fn structural_sub_role_exprs(
+    ontology: &Ontology,
+    query: EntityId,
+    direct: bool,
+) -> HashSet<RoleExpr> {
+    let supers_of = structural_sub_property_graph(ontology);
+    let mut children: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
+    for (&sub, sups) in &supers_of {
+        for &sup in sups {
+            children.entry(sup).or_default().insert(sub);
+        }
+    }
+    let mut props = HashSet::new();
+    if direct {
+        if let Some(kids) = children.get(&query) {
+            props.extend(kids);
+        }
+    } else {
+        let mut stack = vec![query];
+        while let Some(sup) = stack.pop() {
+            let Some(kids) = children.get(&sup) else {
+                continue;
+            };
+            for &kid in kids {
+                if props.insert(kid) {
+                    stack.push(kid);
+                }
+            }
+        }
+    }
+    let mut out = HashSet::new();
+    for prop in props {
+        out.insert(RoleExpr::Atomic(prop));
+        out.insert(RoleExpr::Inverse(prop));
+    }
+    if !direct {
+        let symmetric = ontology.axioms().iter().any(|(_, axiom)| {
+            matches!(
+                axiom,
+                Axiom::SymmetricObjectProperty(id) if *id == query
+            )
+        });
+        if symmetric {
+            out.insert(RoleExpr::Inverse(query));
+        }
+    }
+    out
+}
 
 fn build_surrogate_taxonomy(
     dl: &DlOntology,
@@ -507,11 +602,15 @@ impl RoleSurrogateContext {
             e.insert(computed);
         }
         let entry = cache.get(&query_surrogate).expect("query cache populated");
-        Ok(if direct {
+        let mut out = if direct {
             entry.direct.clone()
         } else {
             entry.all.clone()
-        })
+        };
+        if let Some(query_entity) = query_object_property_entity(property) {
+            out.extend(structural_sub_role_exprs(self.dl.core(), query_entity, direct));
+        }
+        Ok(out)
     }
 }
 
