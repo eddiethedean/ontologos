@@ -151,6 +151,12 @@ fn check_consistency_inner_impl(ontology: &Ontology) -> Result<ConsistencyResult
             return Ok(ConsistencyResult::inconsistent());
         }};
     }
+    if ontology
+        .parse_meta()
+        .is_some_and(|meta| meta.trivial_abox_inconsistent)
+    {
+        reject!("trivial_abox_inconsistent");
+    }
     if thing_equivalent_nothing(ontology) {
         reject!("thing_equivalent_nothing");
     }

@@ -69,7 +69,7 @@ See [OWL imports reference](../reference/owl-imports.md). For remote or multi-fo
 
 CLI **`classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl`** routes via `ontologos-facade`. Use **`materialize`** for explicit RDFS. **`explain`** is available in v0.9.0 (EL full traces; RL/RDFS asserted-only).
 
-Library users: call **`ontologos_facade::classify`** or profile crate helpers (`ontologos_el::classify_reasoner`, `ontologos_rdfs::classify_reasoner`, `ontologos_rl::classify_reasoner`, `ontologos_dl::classify`). Classification is **not** on `ontologos_core::Reasoner`. CLI and Python route via the facade. See [Facade API](facade-api.md), [CLI reference](../reference/cli.md), [errors.md](../reference/errors.md), and [Choosing an API](../guides/choosing-an-api.md).
+Library users: call **`ontologos_facade::classify`** or profile crate helpers (`ontologos_el::classify_reasoner`, `ontologos_rl::rdfs::classify_reasoner`, `ontologos_rl::classify_reasoner`, `ontologos_dl::classify`). Classification is **not** on `ontologos_core::Reasoner`. CLI and Python route via the facade. See [Facade API](facade-api.md), [CLI reference](../reference/cli.md), [errors.md](../reference/errors.md), and [Choosing an API](../guides/choosing-an-api.md).
 
 ## DL preview errors
 

@@ -1,0 +1,54 @@
+# Reference index
+
+API and CLI reference for OntoLogos. Install channels: [Install and channels](../guides/install-channels.md).
+
+--8<-- "snippets/channel-banner.md"
+
+## By persona
+
+| I need… | Start here |
+|---------|------------|
+| Pick a crate / entry point | [Choosing an API](../guides/choosing-an-api.md) |
+| Unified classify / consistency | [Facade API](facade.md) · [Facade guide](../guides/facade-api.md) |
+| Core data model | [Core API](core.md) |
+| Load OWL files | [Parser API](parser.md) |
+| OWL 2 DL | [DL API](dl.md) |
+| Python bindings | [Python API](python.md) · [Python guide](../guides/python.md) |
+| CLI | [CLI reference](cli.md) |
+| Errors | [Errors](errors.md) |
+| Supported OWL constructs | [Supported constructs](supported-constructs.md) |
+
+## Rust crates (docs.rs)
+
+Published channel links point to **0.9.0** until the v1.0.0 tag ships. Build from `main` for **1.0.0** API docs: `cargo doc --open -p ontologos-facade`.
+
+| Crate | Reference |
+|-------|-----------|
+| `ontologos-core` | [core.md](core.md) · [docs.rs](https://docs.rs/ontologos-core/0.9.0) |
+| `ontologos-parser` | [parser.md](parser.md) |
+| `ontologos-profile` | [Profile detection guide](../guides/profile-detection.md) |
+| `ontologos-facade` | [facade.md](facade.md) |
+| `ontologos-rl` | [RL rules](rl-rules.md) · RDFS via `ontologos_rl::rdfs` |
+| `ontologos-el` | [OWL EL quick start](../getting-started/owl-el-classification.md) |
+| `ontologos-dl` | [dl.md](dl.md) |
+| `ontologos-ql` | [ql.md](ql.md) · [query.md](query.md) |
+| `ontologos-explain` | [explain.md](explain.md) |
+| `ontologos-swrl` | [Preview profiles](../guides/preview-profiles.md) |
+
+## Interop and conformance
+
+| Topic | Page |
+|-------|------|
+| JSON snapshot v3 | [json-snapshot-v3.md](../json-snapshot-v3.md) |
+| JSON snapshot v2 (legacy) | [json-snapshot-v2.md](../json-snapshot-v2.md) |
+| Conformance / HermiT parity | [conformance.md](conformance.md) |
+| Evaluator scope | [Evaluator scope](../guides/evaluator-scope.md) |
+| Taxonomy tolerance | [taxonomy-tolerance.md](taxonomy-tolerance.md) |
+| OWL imports | [owl-imports.md](owl-imports.md) |
+| Reasonable adapter limits | [reasonable-limits.md](reasonable-limits.md) |
+
+## Related
+
+- [Architecture](../architecture.md)
+- [Production integration](../guides/production-integration.md)
+- [Troubleshooting](../guides/troubleshooting.md)

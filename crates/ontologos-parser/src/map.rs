@@ -54,9 +54,14 @@ pub fn map_to_core(
     }
     for (iri, kinds) in &declaration_kind_sets {
         if kinds.len() > 1 && !declaration_kinds_compatible(kinds) {
-            return Err(Error::Parse(format!(
-                "incompatible declaration kinds for {iri}: {kinds:?}"
-            )));
+            if limits.strict {
+                return Err(Error::Parse(format!(
+                    "incompatible declaration kinds for {iri}: {kinds:?}"
+                )));
+            }
+            declaration_warnings.push(format!(
+                "incompatible declaration kinds for {iri}: {kinds:?}; using last declaration"
+            ));
         }
     }
     let punned_class_individuals: HashSet<String> = declaration_kind_sets
@@ -892,8 +897,16 @@ impl Mapper<'_> {
             .iter()
             .map(|individual| self.named_individual(individual))
             .collect();
-        if let Some(ids) = collect_resolved(&lookups) {
-            self.push_axiom(Axiom::SameIndividual(ids));
+        if let Some(mut ids) = collect_resolved(&lookups) {
+            ids.sort_by_key(|id| id.0);
+            ids.dedup();
+            if ids.len() >= 2 {
+                self.push_axiom(Axiom::SameIndividual(ids));
+            } else if !self.limits.strict {
+                self.report.meta.warn(
+                    "reflexive or degenerate SameIndividual ignored in lenient parse",
+                );
+            }
         } else if self.map_dl_same_individual(individuals) {
         } else {
             self.skip_if_unmapped(
@@ -911,19 +924,37 @@ impl Mapper<'_> {
             .iter()
             .filter_map(|individual| self.map_individual_entity(individual))
             .collect();
-        if ids.len() == individuals.len()
-            && ids.len() >= 2
-            && ids.iter().copied().collect::<HashSet<_>>().len() < 2
-        {
-            self.push_dl_axiom(DlAxiom::DifferentIndividuals(ids));
-            return;
+        if ids.len() == individuals.len() && ids.len() >= 2 {
+            let distinct = ids.iter().copied().collect::<HashSet<_>>().len();
+            if distinct < 2 {
+                if self.limits.strict {
+                    self.push_dl_axiom(DlAxiom::DifferentIndividuals(ids));
+                } else {
+                    self.report.meta.warn(
+                        "degenerate DifferentIndividuals ignored in lenient parse",
+                    );
+                    self.report.meta.note_trivial_abox_inconsistent();
+                }
+                return;
+            }
         }
         let lookups: Vec<_> = individuals
             .iter()
             .map(|individual| self.named_individual(individual))
             .collect();
-        if let Some(resolved) = collect_resolved(&lookups) {
-            self.push_axiom(Axiom::DifferentIndividuals(resolved));
+        if let Some(mut resolved) = collect_resolved(&lookups) {
+            resolved.sort_by_key(|id| id.0);
+            resolved.dedup();
+            if resolved.len() < 2 {
+                if !self.limits.strict {
+                    self.report.meta.warn(
+                        "degenerate DifferentIndividuals ignored in lenient parse",
+                    );
+                    self.report.meta.note_trivial_abox_inconsistent();
+                }
+            } else {
+                self.push_axiom(Axiom::DifferentIndividuals(resolved));
+            }
         } else if self.map_dl_different_individuals(individuals) {
         } else {
             self.skip_if_unmapped(
@@ -1080,6 +1111,21 @@ impl Mapper<'_> {
                 .ontology
                 .entity_id(iri, EntityKind::ClassIndividual)
                 .map_err(|e: CoreError| Error::Parse(e.to_string()));
+        }
+        if let Some(id) = self.ontology.lookup_entity(iri)
+            && let Ok(record) = self.ontology.entity(id)
+        {
+            if record.kind.satisfies(kind) {
+                return Ok(id);
+            }
+            if !self.limits.strict {
+                self.report.meta.warn(format!(
+                    "entity kind mismatch for {iri}: expected {kind:?}, found {:?}; using requested kind",
+                    record.kind
+                ));
+                let _ = self.ontology.set_entity_kind(id, kind);
+                return Ok(id);
+            }
         }
         self.ontology
             .entity_id(iri, kind)

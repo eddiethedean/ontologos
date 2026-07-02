@@ -2,6 +2,8 @@
 
 Copy-paste workflows for Rust and Python. Install pins use **published v0.9.0** unless noted.
 
+Workflow pages: [DL evaluation](dl-evaluation.md) · [Contract tests](contract-tests.md)
+
 ## Download a sample ontology
 
 ```bash
@@ -13,7 +15,7 @@ curl -L -o family.owl \
 
 ### RDFS materialization
 
-See [Getting started — crates.io only](../getting-started/index.md#cratesio-only-no-clone). Crates: `ontologos-parser`, `ontologos-rdfs`.
+See [Getting started — crates.io only](../getting-started/index.md#cratesio-only-no-clone). Crates: `ontologos-parser`, `ontologos-rl` (`ontologos_rl::rdfs`).
 
 ### Classify (facade)
 
@@ -110,8 +112,9 @@ pip install 'ontologos[pandas]'
 ```python
 from ontologos import Reasoner, subsumptions_to_pandas
 
-taxonomy = Reasoner(path="family.owl", profile="auto").classify()
-df = subsumptions_to_pandas(taxonomy)
+# EL taxonomy export (requires pizza.owl — see download.sh or curl from repo)
+report = Reasoner(path="pizza.owl", profile="el").classify()
+df = subsumptions_to_pandas(report)
 ```
 
 ## CLI (clone or `cargo install --git ...`)
@@ -123,6 +126,49 @@ ontologos explain --profile el benchmarks/data/pizza.owl   # after download.sh
 ```
 
 See [CLI reference](../reference/cli.md) and [Evaluator playbook](../guides/evaluator-playbook.md).
+
+## OWL DL evaluation (`main` / 1.0.0)
+
+Requires build from `main` — not available on PyPI **0.9.0**. See [Install channels](../guides/install-channels.md).
+
+```bash
+git clone https://github.com/eddiethedean/ontologos.git
+cd ontologos
+./benchmarks/scripts/download.sh
+cargo build -p ontologos-cli --release
+./target/release/ontologos classify --profile dl --budget-secs 30 benchmarks/data/pizza.owl
+```
+
+```python
+from ontologos import Reasoner
+
+reasoner = Reasoner(path="benchmarks/data/pizza.owl", profile="dl", budget_secs=30)
+consistency = reasoner.check_consistency()
+assert consistency["complete"] and consistency["consistent"]
+report = reasoner.classify()
+```
+
+Full workflow: [Evaluator playbook](../guides/evaluator-playbook.md) · [DL API reference](../reference/dl.md).
+
+## Contract tests (contributors / evaluators)
+
+Public API contract (facade-routed, no HermiT JAR required):
+
+```bash
+cargo test -p ontologos-contract --release
+```
+
+Sample case IDs: `crates/ontologos-contract/data/case_ids.txt`. See [Conformance](../reference/conformance.md).
+
+## Channel-aware installs
+
+| Goal | Install |
+|------|---------|
+| EL / RL / RDFS production | `pip install ontologos==0.9.0` or `ontologos-* = "0.9.0"` |
+| DL / SWRL | Clone `main`, pin `"1.0.0"` on all workspace crates |
+| CLI | `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` |
+
+See [Install channels](../guides/install-channels.md).
 
 ## Related
 

@@ -79,8 +79,8 @@ Optional DataFrame export:
 ```python
 from ontologos import Reasoner, subsumptions_to_pandas
 
-taxonomy = Reasoner(path="family.owl", profile="auto").classify()
-df = subsumptions_to_pandas(taxonomy)  # pip install 'ontologos[pandas]'
+report = Reasoner(path="pizza.owl", profile="el").classify()
+df = subsumptions_to_pandas(report)  # pip install 'ontologos[pandas]'
 ```
 
 ## Related

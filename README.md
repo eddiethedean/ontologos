@@ -12,9 +12,9 @@ OntoLogos solves: *"We want OWL reasoning embedded in Rust or Python services—
 
 Library-first orchestration: **load → detect profile → classify/materialize**, not a Protégé replacement.
 
-**Install today:** `pip install ontologos` or `ontologos-core = "0.9.0"` — production-ready for **EL, RL, and RDFS**.
+**Install today:** `pip install ontologos` or `ontologos-core = "0.9.0"` — **production-ready for EL, RL, and RDFS** on crates.io/PyPI.
 
-**OWL 2 DL and SWRL** ship in workspace **1.0.0** on `main` (build from source; [v1.0.0 tag](docs/project/release-1.0-checklist.md) pending). See [Install and channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html).
+**OWL 2 DL and SWRL** require workspace **1.0.0** (build from `main` until the v1.0.0 tag publishes). See [Install channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html) before choosing a profile.
 
 > **Known limitations:** OntoLogos does not resolve `owl:imports` and maps a subset of OWL axioms. See [Known limitations](https://ontologos.readthedocs.io/en/latest/guides/known-limitations.html).
 
@@ -125,14 +125,14 @@ cargo new ontologos-demo && cd ontologos-demo
 [dependencies]
 ontologos-core = "0.9.0"
 ontologos-parser = "0.9.0"
-ontologos-rdfs = "0.9.0"
+ontologos-rl = "0.9.0"
 ```
 
 `src/main.rs`:
 
 ```rust
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut ontology = load_ontology(std::path::Path::new("family.owl"))?;

@@ -65,11 +65,11 @@ Pizza EL taxonomy is checked in CI via [`benchmarks/scripts/compare-pizza-el-gol
 
 The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL tools emit for orphan classes; HermiT vendored Pizza tests do not require those edges.
 
-## Known gaps (v0.5)
+## Known gaps
 
 | Area | Status |
 |------|--------|
-| Full OWL DL | Not shipped (2.0 target) |
+| Full OWL DL | Shipped in workspace **1.0.0** (`ontologos-dl`); published crates.io/PyPI still **0.9.0** — see [Install channels](../guides/install-channels.md) |
 | Complete OWL RL rule set | Partial — see [RL rules](rl-rules.md) |
 | Explanations | Available (EL traces; RL/RDFS asserted-only until reasonable exposes diagnostics) |
 | Large DL corpora (GALEN, SNOMED) | Optional stress tests only |

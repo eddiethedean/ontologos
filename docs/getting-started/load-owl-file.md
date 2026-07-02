@@ -5,7 +5,7 @@ Load OWL and RDF serializations into the core ontology model via [`ontologos-par
 > **Important:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Known limitations](../guides/known-limitations.md) and [Supported constructs](../reference/supported-constructs.md).
 
 !!! note "`owl:imports` behavior"
-    Import handling is **format-dependent**. RDF/XML merges **local** imports by default (`ParseLimits::merge_imports`, default `true`). Turtle and OWL Functional do not merge imports. Remote URLs are never fetched.
+    Import handling is **format-dependent**. `load_ontology()` merges **local** RDF/XML imports (`merge_imports: true`). `ParseLimits::default()` has `merge_imports: false`. Turtle and OWL Functional do not merge imports. Remote URLs are never fetched.
 
     See [OWL imports reference](../reference/owl-imports.md).
 

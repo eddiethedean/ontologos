@@ -52,7 +52,7 @@ Resource limits enforced during parse. See [Security](../security.md).
 | `max_preprocess_bytes` | 8× file size | Cumulative preprocess budget |
 | `max_harvested_assertions` | 100_000 | RDF/XML OFN supplement cap |
 | `strict` | `true` | Error when limits cause skips |
-| `merge_imports` | `true` | Merge local `owl:imports` for **RDF/XML** only |
+| `merge_imports` | `false` | Merge local `owl:imports` for **RDF/XML** only — `load_ontology()` sets `true` |
 | `validate_output` | `true` | Post-load validation |
 
 ```rust
@@ -72,7 +72,7 @@ let ontology = load_ontology_with_limits(path, limits)?;
 
 Import behavior is **format-dependent**. See [OWL imports reference](owl-imports.md).
 
-- **RDF/XML:** local imports merged by default (`merge_imports: true`)
+- **RDF/XML:** `load_ontology()` merges local imports (`merge_imports: true`); `ParseLimits::default()` does not — set `merge_imports: true` explicitly when needed
 - **Turtle / OWL Functional:** not merged
 - **Remote URLs:** never fetched
 

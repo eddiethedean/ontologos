@@ -103,6 +103,8 @@ pub struct ParseMeta {
     pub skipped_axiom_count: usize,
     /// Total logical components visited in the source (mapped + skipped).
     pub logical_axiom_count: usize,
+    /// Reflexive or otherwise degenerate `DifferentIndividuals` that cannot be stored as axioms.
+    pub trivial_abox_inconsistent: bool,
 }
 
 impl ParseMeta {
@@ -126,6 +128,11 @@ impl ParseMeta {
             return;
         }
         self.warnings.push(message.into());
+    }
+
+    /// Record a trivial ABox inconsistency detected during lenient parse.
+    pub fn note_trivial_abox_inconsistent(&mut self) {
+        self.trivial_abox_inconsistent = true;
     }
 }
 

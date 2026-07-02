@@ -21,7 +21,7 @@ See [Install and channels](install-channels.md) and [Release status](../project/
 
 | Profile | User-facing status | Engine | HermiT parity | Production recommendation |
 |---------|-------------------|--------|---------------|---------------------------|
-| `rdfs` | **Stable** | `ontologos-rdfs` → reasonable | N/A (RDFS) | Yes on 0.9.0 — embed RDFS materialization |
+| `rdfs` | **Stable** | `ontologos-rl` (`rdfs` module) → reasonable | N/A (RDFS) | Yes on 0.9.0 — embed RDFS materialization |
 | `rl` | **Stable** | `ontologos-rl` → reasonable | N/A (RL) | Yes on 0.9.0 — OWL RL saturation |
 | `el` | **Stable** | `ontologos-el` (in-house) | EL-shaped corpora | Yes on 0.9.0 — OWL EL taxonomy |
 | `auto` | **Stable** | Detect → EL, RL, or DL | Depends on ontology | Yes on 0.9.0 — prefer explicit profile when known |

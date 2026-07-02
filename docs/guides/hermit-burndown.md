@@ -15,7 +15,7 @@ The **HermiT burndown** is how we track that honestly:
 | Question | Answer |
 |----------|--------|
 | **What is the goal?** | `parity_pct = 100%` — zero `planned` cases in the Java + OWL WG catalogs |
-| **What blocks the v1.0 tag?** | [ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) — catalog parity **and** expressivity gates |
+| **What blocks the v1.0 tag?** | crates.io/PyPI publish + annotated git tag — engineering gates are green; see [Release checklist](../project/release-1.0-checklist.md) |
 | **What is “parity”?** | Every *in-scope* HermiT test has a runnable Rust conformance check that passes at the CI DL budget (30s) |
 | **Why promoted lists?** | `phase9_closure` hygiene — see [Two tracks](#two-tracks-catalog-vs-ci) below |
 

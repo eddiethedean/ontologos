@@ -75,6 +75,7 @@ Transparent wrapper over profile engine errors:
 | `El` | `ontologos_el::Error` |
 | `Dl` | `ontologos_dl::Error` |
 | `Rl` | `ontologos_rl::Error` |
+| `Swrl` | `ontologos_swrl::Error` |
 | `Core` | `ontologos_core::Error` |
 
 DL-specific variants (via `Dl`): `Inconsistent`, `PreviewLimit`, `IncompleteConsistency`, `ResourceLimit`.

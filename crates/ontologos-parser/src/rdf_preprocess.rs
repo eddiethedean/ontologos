@@ -3416,7 +3416,7 @@ fn rdfs_property_annotation_from_block(
     Some((prop_iri, class_iri))
 }
 
-/// Collect `DisjointObjectProperties` from `owl:propertyDisjointWith` on property resources.
+/// Collect `propertyDisjointWith` pairs from `owl:propertyDisjointWith` on property resources.
 pub(crate) fn collect_property_disjoint_pairs(rdf: &str) -> Vec<(String, String)> {
     let base = parse_xml_base(rdf);
     let mut out = Vec::new();

@@ -654,11 +654,22 @@ impl Mapper<'_> {
     }
 
     pub(crate) fn map_dl_same_individual(&mut self, individuals: &[Individual<RcStr>]) -> bool {
-        let ids: Vec<EntityId> = individuals
+        let mut ids: Vec<EntityId> = individuals
             .iter()
             .filter_map(|i| self.map_individual_entity(i))
             .collect();
         if ids.len() != individuals.len() {
+            return false;
+        }
+        ids.sort_by_key(|id| id.0);
+        ids.dedup();
+        if ids.len() < 2 {
+            if !self.limits.strict {
+                self.report.meta.warn(
+                    "reflexive or degenerate SameIndividual ignored in lenient parse",
+                );
+                return true;
+            }
             return false;
         }
         self.push_dl_axiom(DlAxiom::SameIndividual(ids));
@@ -669,11 +680,23 @@ impl Mapper<'_> {
         &mut self,
         individuals: &[Individual<RcStr>],
     ) -> bool {
-        let ids: Vec<EntityId> = individuals
+        let mut ids: Vec<EntityId> = individuals
             .iter()
             .filter_map(|i| self.map_individual_entity(i))
             .collect();
         if ids.len() != individuals.len() {
+            return false;
+        }
+        ids.sort_by_key(|id| id.0);
+        ids.dedup();
+        if ids.len() < 2 {
+            if !self.limits.strict {
+                self.report.meta.warn(
+                    "degenerate DifferentIndividuals ignored in lenient parse",
+                );
+                self.report.meta.note_trivial_abox_inconsistent();
+                return true;
+            }
             return false;
         }
         self.push_dl_axiom(DlAxiom::DifferentIndividuals(ids));

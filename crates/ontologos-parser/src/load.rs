@@ -578,7 +578,7 @@ fn supplement_rdf_dl_axioms(
     for (left, right) in crate::rdf_preprocess::collect_property_disjoint_pairs(preprocessed_rdf) {
         validate_supplement_iris([&left, &right])?;
         bump_harvested_assertions(&mut harvested, limits)?;
-        insert_disjoint_object_properties_supplement(ontology, report, &left, &right)?;
+        insert_property_disjoint_supplement(ontology, report, &left, &right)?;
     }
     for (property, domain) in
         crate::rdf_preprocess::collect_rdfs_object_property_domains(preprocessed_rdf)
@@ -893,6 +893,9 @@ fn insert_same_individual_supplement(
     left: &str,
     right: &str,
 ) -> Result<()> {
+    if left == right {
+        return Ok(());
+    }
     let left_id = ensure_entity(ontology, left, EntityKind::Individual)?;
     let right_id = ensure_entity(ontology, right, EntityKind::Individual)?;
     let before = ontology.axiom_count();
@@ -901,6 +904,38 @@ fn insert_same_individual_supplement(
         .map_err(|e| Error::Parse(e.to_string()))?;
     report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
     Ok(())
+}
+
+fn entity_kind_for_iri(ontology: &Ontology, iri: &str) -> Option<EntityKind> {
+    let id = ontology.lookup_entity(iri)?;
+    ontology.entity(id).ok().map(|record| record.kind)
+}
+
+fn insert_property_disjoint_supplement(
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    left: &str,
+    right: &str,
+) -> Result<()> {
+    let left_kind = entity_kind_for_iri(ontology, left);
+    let right_kind = entity_kind_for_iri(ontology, right);
+    let cross_kind = matches!(left_kind, Some(EntityKind::DataProperty))
+        && matches!(right_kind, Some(EntityKind::ObjectProperty))
+        || matches!(left_kind, Some(EntityKind::ObjectProperty))
+            && matches!(right_kind, Some(EntityKind::DataProperty));
+    if cross_kind {
+        report.meta.warn(
+            "propertyDisjointWith across data and object property kinds skipped in lenient parse",
+        );
+        return Ok(());
+    }
+    if matches!(left_kind, Some(EntityKind::DataProperty))
+        || matches!(right_kind, Some(EntityKind::DataProperty))
+    {
+        insert_disjoint_data_properties_supplement(ontology, report, left, right)
+    } else {
+        insert_disjoint_object_properties_supplement(ontology, report, left, right)
+    }
 }
 
 fn insert_disjoint_object_properties_supplement(
@@ -915,6 +950,22 @@ fn insert_disjoint_object_properties_supplement(
     ontology
         .dl_mut()
         .push_axiom(DlAxiom::DisjointObjectProperties(vec![left_id, right_id]));
+    report.meta.mapped_axiom_count += ontology.dl().axiom_count().saturating_sub(before);
+    Ok(())
+}
+
+fn insert_disjoint_data_properties_supplement(
+    ontology: &mut Ontology,
+    report: &mut ParseReport,
+    left: &str,
+    right: &str,
+) -> Result<()> {
+    let left_id = ensure_entity(ontology, left, EntityKind::DataProperty)?;
+    let right_id = ensure_entity(ontology, right, EntityKind::DataProperty)?;
+    let before = ontology.dl().axiom_count();
+    ontology
+        .dl_mut()
+        .push_axiom(DlAxiom::DisjointDataProperties(vec![left_id, right_id]));
     report.meta.mapped_axiom_count += ontology.dl().axiom_count().saturating_sub(before);
     Ok(())
 }

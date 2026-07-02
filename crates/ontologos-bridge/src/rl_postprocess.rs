@@ -193,7 +193,7 @@ pub fn apply_domain_range_nominal_subsumption(ontology: &mut Ontology) -> Result
     let props: Vec<EntityId> = ontology
         .entities()
         .iter()
-        .filter(|(_, r)| r.kind == ontologos_core::EntityKind::ObjectProperty)
+        .filter(|(_, r)| r.kind.is_object_property())
         .map(|(id, _)| id)
         .collect();
 
@@ -501,7 +501,7 @@ pub fn apply_singleton_domain_range_property_equivalence(ontology: &mut Ontology
     let mut props: Vec<EntityId> = ontology
         .entities()
         .iter()
-        .filter(|(_, r)| r.kind == ontologos_core::EntityKind::ObjectProperty)
+        .filter(|(_, r)| r.kind.is_object_property())
         .map(|(id, _)| id)
         .collect();
     props.sort_by_key(|id| id.0);
@@ -580,13 +580,15 @@ pub fn apply_transitive_path_property_subsumption(ontology: &mut Ontology) -> Re
     let props: Vec<EntityId> = ontology
         .entities()
         .iter()
-        .filter(|(_, r)| r.kind == ontologos_core::EntityKind::ObjectProperty)
+        .filter(|(_, r)| r.kind.is_object_property())
         .map(|(id, _)| id)
         .collect();
 
     let mut added = 0_usize;
     for &p in &props {
-        let Some((a, b)) = property_endpoint_singletons(ontology, p) else {
+        let Some((a, b)) = property_endpoint_singletons(ontology, p)
+            .or_else(|| property_assertion_endpoints(ontology, p))
+        else {
             continue;
         };
         for &q in &transitive {
@@ -654,6 +656,32 @@ fn property_endpoint_singletons(
         (Some(a), Some(b)) => Some((a, b)),
         _ => None,
     }
+}
+
+/// When a property has exactly one object-property assertion, use its subject/object as endpoints.
+fn property_assertion_endpoints(
+    ontology: &Ontology,
+    property: EntityId,
+) -> Option<(EntityId, EntityId)> {
+    let mut pair = None;
+    for (_, axiom) in ontology.axioms().iter() {
+        let Axiom::ObjectPropertyAssertion {
+            subject,
+            property: prop,
+            object,
+        } = axiom
+        else {
+            continue;
+        };
+        if *prop != property {
+            continue;
+        }
+        if pair.is_some() {
+            return None;
+        }
+        pair = Some((*subject, *object));
+    }
+    pair
 }
 
 /// Functional data subproperties inherit functionality from super data properties.
@@ -1280,6 +1308,41 @@ mod tests {
         let b = ontology.lookup_entity("file:/c/test.owl#B").expect("B");
         assert!(ontology.direct_superclasses(a).contains(&b));
         assert!(ontology.direct_superclasses(b).contains(&a));
+    }
+
+    #[test]
+    fn role_subsumption_transitive_path_after_rl_saturate() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testrolesubsumption.ofn",
+        );
+        let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
+        let session = crate::ReasonableSession::new_for_profile(ontologos_core::Profile::Rl);
+        crate::materialize_with_session(
+            &mut ontology,
+            session,
+            false,
+            crate::MergeLimits::default(),
+        )
+        .expect("materialize");
+        let r = ontology.lookup_entity("file:/c/test.owl#r").expect("r");
+        let t = ontology.lookup_entity("file:/c/test.owl#t").expect("t");
+        assert!(
+            ontology.direct_superproperties(r).contains(&t),
+            "expected r ⊑ t after RL saturate"
+        );
+    }
+
+    #[test]
+    fn role_subsumption_transitive_path() {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../benchmarks/data/hermit/axioms/hermit_reasoner_reasonertest_testrolesubsumption.ofn",
+        );
+        let mut ontology = ontologos_parser::load_ontology(&path).expect("load ofn");
+        let added = apply_transitive_path_property_subsumption(&mut ontology).expect("postprocess");
+        assert!(added >= 1, "expected r ⊑ t from singleton domain/range + transitive path");
+        let r = ontology.lookup_entity("file:/c/test.owl#r").expect("r");
+        let t = ontology.lookup_entity("file:/c/test.owl#t").expect("t");
+        assert!(ontology.direct_superproperties(r).contains(&t));
     }
 
     #[test]

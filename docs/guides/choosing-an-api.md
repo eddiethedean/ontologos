@@ -26,7 +26,7 @@ flowchart TD
   goal --> rdfsGoal[RDFS_TBox]
   goal --> rlGoal[OWL_RL]
   goal --> elGoal[OWL_EL_taxonomy]
-  goal --> dlGoal[OWL_DL_preview]
+  goal --> dlGoal[OWL_DL]
 
   none --> coreOnly[ontologos_core_only]
   profile --> detect[ontologos_profile_detect_profile]
@@ -94,12 +94,12 @@ Or CLI: `ontologos profile file.owl`
 
 ### RDFS TBox materialization
 
-**Crates:** `ontologos-rdfs` (+ parser if loading files)
+**Crates:** `ontologos-rl` (+ parser if loading files). RDFS lives in `ontologos_rl::rdfs` (workspace **1.0.0**). Published **0.9.0** also ships standalone `ontologos-rdfs` — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md).
 
 **Direct:**
 
 ```rust
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 let report = RdfsEngine::new().materialize(&mut ontology)?;
 ```
@@ -108,7 +108,7 @@ let report = RdfsEngine::new().materialize(&mut ontology)?;
 
 ```rust
 use ontologos_core::{Profile, Reasoner};
-use ontologos_rdfs::classify_reasoner;
+use ontologos_rl::rdfs::classify_reasoner;
 
 let mut reasoner = Reasoner::builder().profile(Profile::Rdfs).build(ontology)?;
 classify_reasoner(&mut reasoner)?;
@@ -148,7 +148,7 @@ See [OWL RL saturation](../getting-started/owl-rl-saturation.md).
 
 ### OWL EL taxonomy classification
 
-**Crates:** `ontologos-el`, `ontologos-query` (+ parser if loading files)
+**Crates:** `ontologos-el`, `ontologos-ql` (+ parser if loading files)
 
 ```rust
 use ontologos_el::ElClassifier;
@@ -193,9 +193,9 @@ See [Python guide](python.md) and [Preview profiles](preview-profiles.md).
 | Builder / JSON only | `ontologos-core` |
 | Load OWL files | `ontologos-core`, `ontologos-parser` |
 | + Profile detection | `+ ontologos-profile` |
-| + RDFS | `+ ontologos-rdfs` |
-| + OWL RL | `+ ontologos-rl` (pulls in rdfs transitively) |
-| + OWL EL + queries | `+ ontologos-el`, `+ ontologos-query` |
+| + RDFS | `+ ontologos-rl` (`ontologos_rl::rdfs`) |
+| + OWL RL | `+ ontologos-rl` |
+| + OWL EL + queries | `+ ontologos-el`, `+ ontologos-ql` |
 | + Multi-profile / DL preview | `+ ontologos-facade` (pulls el, dl, alc, swrl) |
 
 There is no single `ontologos` meta-crate on crates.io.

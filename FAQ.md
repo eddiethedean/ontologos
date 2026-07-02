@@ -25,8 +25,7 @@ For **published v0.9.0** use `0.9.0` pins. For **`main` branch (1.0.0 workspace)
 ontologos-core = "0.9.0"
 ontologos-parser = "0.9.0"   # OWL/RDF file loading
 ontologos-profile = "0.9.0"  # EL / RL / QL / DL detection
-ontologos-rdfs = "0.9.0"     # RDFS materialization
-ontologos-rl = "0.9.0"       # OWL RL saturation
+ontologos-rl = "0.9.0"       # OWL RL saturation + RDFS (`ontologos_rl::rdfs`)
 ontologos-el = "0.9.0"       # OWL EL classification
 ontologos-explain = "0.9.0"  # Proof graphs
 ontologos-ql = "0.9.0"        # Taxonomy queries and OWL QL
@@ -114,7 +113,7 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.9.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.9.0), [docs.rs/ontologos-rdfs](https://docs.rs/ontologos-rdfs/0.9.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.9.0), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/0.9.0), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/0.9.0), [docs.rs/ontologos-query](https://docs.rs/ontologos-query/0.9.0)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.9.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.9.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.9.0), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/0.9.0), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/0.9.0), [docs.rs/ontologos-ql](https://docs.rs/ontologos-ql/0.9.0), [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/0.9.0)
 - Site reference: [Explain API](https://ontologos.readthedocs.io/en/latest/reference/explain/) · [Query API](https://ontologos.readthedocs.io/en/latest/reference/query/) · [CLI](https://ontologos.readthedocs.io/en/latest/reference/cli/)
 - Guides: [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api/) · [Architecture](https://ontologos.readthedocs.io/en/latest/architecture/)
 - Local: `cargo doc -p ontologos-core --open`

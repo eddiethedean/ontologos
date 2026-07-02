@@ -1,7 +1,7 @@
 //! Tier-B HermiT fixture loads (parser smoke).
 
 use ontologos_conformance::vendored_hermit_test_path;
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient as load_ontology;
 
 /// HermiT OWLLink eval files often use `encoding='ISO-8859-1'`; horned-owl RDF/XML is UTF-8 only.
 fn is_utf8_owl_fixture(path: &std::path::Path) -> bool {

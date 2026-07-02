@@ -495,5 +495,6 @@ fn getting_started_classify_family_auto() {
         ClassifyOutcome::Rl(r) => {
             assert!(r.inferred_total() > 0);
         }
+        _ => panic!("unexpected classify outcome"),
     }
 }

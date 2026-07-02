@@ -40,7 +40,7 @@ Terms used across OntoLogos documentation. For OWL background, see the [W3C OWL 
 
 | Term | Crate | Scope |
 |------|-------|-------|
-| **RDFS materialization** | `ontologos-rdfs` | TBox: transitive subClass/subProperty, domain/range inheritance |
+| **RDFS materialization** | `ontologos-rl` (`rdfs` module) | TBox: transitive subClass/subProperty, domain/range inheritance |
 | **OWL RL saturation** | `ontologos-rl` | RDFS pass + RL TBox/ABox rules |
 | **OWL EL classification** | `ontologos-el` | Completion-based taxonomy |
 | **OWL DL classification** | `ontologos-dl` | Hybrid EL + saturation + tableau (`main` / 1.0.0) |

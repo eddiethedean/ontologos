@@ -2,7 +2,7 @@
 
 Binary: `ontologos` (from `ontologos-cli` crate).
 
-> **v1.0.0:** Eleven subcommands; `classify` routes by `--profile` (default `auto`). Use `check_consistency` semantics via `consistent` (JSON includes `complete`). Profile status: [Profile stability matrix](../guides/profile-stability.md).
+> **v1.0.0:** Ten subcommands; `classify` routes by `--profile` (default `auto`). Use `check_consistency` semantics via `consistent` (JSON includes `complete`). Profile status: [Profile stability matrix](../guides/profile-stability.md).
 
 ## Install
 
@@ -33,6 +33,7 @@ ontologos --help
 | `--profile` | `auto`, `el`, `rl`, `rdfs`, `alc`, `dl`, `dl-preview`, `swrl` | `auto` | Engine profile (see per-command notes) |
 | `--format` | `text`, `json` | `text` | Output format |
 | `--incremental` | flag | off | Incremental session (`classify`, `materialize` only; no-op elsewhere) |
+| `--budget-secs` | seconds | unlimited | Wall-clock budget for DL consistency/classify paths |
 
 **Exit codes:** `0` success, `1` any error (parse, incomplete consistency, inconsistent ontology, etc.). No differentiated exit codes in v1.0.
 
@@ -77,7 +78,7 @@ Detects the OWL 2 profile and hybrid module layout.
 |-------------|--------|--------|
 | `el` | `ontologos-el` | Taxonomy (subsumptions, equivalences, unsatisfiable) |
 | `rl` | `ontologos-rl` | Materialization report |
-| `rdfs` | `ontologos-rdfs` | Materialization report |
+| `rdfs` | `ontologos-rl` (`rdfs` module) | Materialization report |
 | `auto` | detect → EL, RL, or DL | Taxonomy or materialization report |
 | `dl-preview` | `ontologos-dl` (gated) | Taxonomy + preview warning on stderr |
 | `dl` | `ontologos-dl` | Taxonomy (stable on `main`; not on PyPI 0.9.0) |

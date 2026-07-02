@@ -28,6 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ClassifyOutcome::Rl(r) => {
             println!("RL: {} inferred axioms", r.inferred_total());
         }
+        _ => println!("unexpected classify outcome variant"),
     }
     Ok(())
 }

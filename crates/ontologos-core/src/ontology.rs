@@ -325,6 +325,12 @@ impl Ontology {
         self.entities.entity(id)
     }
 
+    /// Override the stored kind for an existing entity.
+    pub fn set_entity_kind(&mut self, id: EntityId, kind: EntityKind) -> Result<()> {
+        self.uniquify_shared();
+        Arc::make_mut(&mut self.entities).set_kind(id, kind)
+    }
+
     /// Get an axiom by id.
     pub fn axiom(&self, id: AxiomId) -> Result<&Axiom> {
         self.axioms.get(id)

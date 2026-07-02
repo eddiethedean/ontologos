@@ -37,7 +37,7 @@ $CLI profile benchmarks/data/pizza.owl
 $CLI --format json classify --profile rl benchmarks/data/family.owl
 ```
 
-**Expected JSON keys:** `status: "materialized"`, `initial_axiom_count`, `final_axiom_count`, `inferred_axioms` > 0.
+**Expected JSON keys:** `status: "classified"`, `initial_axiom_count`, `final_axiom_count`, `inferred_axioms` > 0.
 
 Family is the RL golden corpus — compare inferred counts with [benchmarks](../project/benchmarks.md) if curious.
 
@@ -101,7 +101,7 @@ Read these before filing "missing feature" issues:
 
 1. [Supported constructs](../reference/supported-constructs.md)
 2. [Comparison](../comparison.md) — not HermiT replacement on arbitrary ontologies
-3. [Evaluator scope](/guides/evaluator-scope/) — what `parity_pct = 100%` measures
+3. [Evaluator scope](evaluator-scope.md) — what `parity_pct = 100%` measures
 4. [Protégé axiom counts](protege-axiom-counts.md) — count mismatches are expected
 
 ## Step 8 — Evaluate DL on `main` (optional, 10 min)

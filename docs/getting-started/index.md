@@ -2,6 +2,8 @@
 
 Five-minute success paths for common goals. Install pins: [Install and channels](../guides/install-channels.md). Limitations: [Known limitations](../guides/known-limitations.md).
 
+--8<-- "snippets/channel-banner.md"
+
 ## Rust API in 60 seconds
 
 1. Load with `ontologos_parser::load_ontology` (not `Ontology::from_file`).
@@ -16,8 +18,9 @@ use ontologos_parser::load_ontology;
 let ontology = load_ontology("family.owl".as_ref())?;
 let mut reasoner = Reasoner::builder().profile(Profile::Auto).build(ontology)?;
 match classify(&mut reasoner)? {
-    ClassifyOutcome::Rl(r) => println!("inferred: {}", r.inferred_total()),
-    // ...
+    ClassifyOutcome::Taxonomy(t) => println!("taxonomy: {}", t.subsumption_count()),
+    ClassifyOutcome::Rdfs(r) => println!("rdfs inferred: {}", r.inferred_total()),
+    ClassifyOutcome::Rl(r) => println!("rl inferred: {}", r.inferred_total()),
 }
 ```
 
@@ -39,14 +42,14 @@ Add to `Cargo.toml`:
 [dependencies]
 ontologos-core = "0.9.0"
 ontologos-parser = "0.9.0"
-ontologos-rdfs = "0.9.0"
+ontologos-rl = "0.9.0"
 ```
 
 `src/main.rs`:
 
 ```rust
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut ontology = load_ontology(std::path::Path::new("family.owl"))?;

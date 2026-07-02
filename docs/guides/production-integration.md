@@ -162,7 +162,7 @@ See [Facade API](facade-api.md) · [Performance](performance.md) · [Evaluator s
 
 For direct engine access (no `Reasoner` wrapper):
 
-- RDFS: `ontologos_rdfs::RdfsEngine::materialize` or `classify_reasoner`
+- RDFS: `ontologos_rl::rdfs::RdfsEngine::materialize` or `ontologos_rl::rdfs::classify_reasoner`
 - RL: `ontologos_rl::RlEngine::saturate` or `classify_reasoner`
 - EL: `ontologos_el::ElClassifier::classify` or `ontologos_el::classify_reasoner`
 

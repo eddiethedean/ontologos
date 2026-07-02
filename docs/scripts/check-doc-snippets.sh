@@ -48,6 +48,7 @@ fi
 
 BANNER_PAGES=(
   docs/index.md
+  docs/getting-started/index.md
   docs/guides/install-channels.md
   docs/project/release-status.md
   docs/migration/index.md

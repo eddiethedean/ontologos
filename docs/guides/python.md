@@ -3,7 +3,7 @@
 Python bindings for OntoLogos (PyPI **0.9.0** latest tag; workspace **1.0.0** on `main`) via PyO3 (`pip install ontologos`). Install channels: [Install and channels](install-channels.md). Limitations: [Known limitations](known-limitations.md).
 
 OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
-(`ontologos-el` in-house EL, `ontologos-rl` / `ontologos-rdfs` → reasonable). Power users who need
+(`ontologos-el` in-house EL, `ontologos-rl` including RDFS via `ontologos_rl::rdfs` → reasonable). Power users who need
 direct engine access can use upstream crates ([reasonable](https://crates.io/crates/reasonable),
 [whelk-rs](https://github.com/INCATools/whelk-rs) as an EL peer) or horned-owl for parsing-only workflows.
 OntoLogos adds profile detection, the unified `Ontology` model, security limits, CLI, and wheels.
@@ -86,7 +86,7 @@ print(graph["node_count"])
 
 ## API reference
 
-Site reference: [Python API](../reference/python.md). Narrative guide below.
+Canonical API surface: [Python API reference](../reference/python.md). Summary below — see the reference for full method tables and exceptions.
 
 ### `Reasoner(path=None, ontology=None, profile=None, incremental=False, budget_secs=None)`
 
@@ -196,10 +196,11 @@ Exotic axioms (nominals, property characteristics, etc.) use `Ontology.from_json
 ### DataFrame export
 
 ```python
-from ontologos import subsumptions_to_pandas, subsumptions_to_polars
+from ontologos import Reasoner, subsumptions_to_pandas, subsumptions_to_polars
 
-taxonomy = reasoner.classify()
-df = subsumptions_to_pandas(taxonomy)
+reasoner = Reasoner(path="pizza.owl", profile="el")
+report = reasoner.classify()
+df = subsumptions_to_pandas(report)
 ```
 
 Requires optional `pandas` or `polars` install (`pip install 'ontologos[pandas]'`).
@@ -276,4 +277,4 @@ Common `RuntimeError` messages:
 - [Getting started](../getting-started/index.md)
 - [Incremental reasoning](incremental-reasoning.md)
 - [OWL EL classification](../getting-started/owl-el-classification.md)
-- [Migration v0.8 → v0.9](../migration/v0.8.x-to-v0.9.0.md)
+- [Migration v0.9 → v1.0](../migration/v0.9.x-to-v1.0.0.md)

@@ -54,8 +54,10 @@ Published at **[ontologos.readthedocs.io](https://ontologos.readthedocs.io/)** (
 
 ```bash
 pip install -r docs/requirements.txt
-NO_MKDOCS_2_WARNING=1 mkdocs serve
+./docs/serve-site.sh   # runs version + snippet checks, then mkdocs serve
 ```
+
+Or `NO_MKDOCS_2_WARNING=1 mkdocs serve` after running the check scripts manually.
 
 See [docs/readthedocs.md](docs/readthedocs.md) for import instructions and local builds (also linked from [Contributing](docs/project/contributing.md)).
 
@@ -139,9 +141,10 @@ pytest tests/ -q
 
 1. **Scope:** One logical change per PR when possible.
 2. **Tests:** Add or update tests for behavior changes (core, parser, profile, CLI, Python as appropriate).
-3. **Docs:** Update README, CHANGELOG, or `docs/` when user-visible behavior changes. Bump version pins to match [Cargo.toml](Cargo.toml).
-4. **Breaking changes:** Note them in CHANGELOG under `[Unreleased]` or the target version.
-5. **No `unsafe`:** The workspace forbids unsafe code.
+3. **Docs:** Update README, CHANGELOG, or `docs/` when user-visible behavior changes.
+4. **Version pins in docs:** Workspace [Cargo.toml](Cargo.toml) is **1.0.0** on `main`, but **published** install blocks must stay at **0.9.0** until the v1.0.0 tag ships (`docs/scripts/check-doc-versions.sh` enforces this). Note the `main` / `1.0.0` channel for DL, SWRL, and crate removals (`ontologos-rdfs` → `ontologos-rl`). After publish: [Post-1.0 doc update](docs/project/post-1.0-doc-update.md).
+5. **Breaking changes:** Note them in CHANGELOG under `[Unreleased]` or the target version.
+6. **No `unsafe`:** The workspace forbids unsafe code.
 
 ## Project structure
 

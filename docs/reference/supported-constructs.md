@@ -48,13 +48,13 @@ Still skipped or partial for **core-only** workflows (EL/RL without DL):
 
 Skipped flat axioms increment `parse_meta.skipped_axiom_count` and append to `parse_meta.warnings`.
 
-`owl:imports` for **RDF/XML** loads: local import documents are merged by default (`ParseLimits::merge_imports`, default **true**). Disable with `ParseLimits { merge_imports: false, .. }` for single-document loads only. **Turtle** and **OWL Functional** do not merge imports. **Remote import IRIs are never fetched.**
+`owl:imports` for **RDF/XML** loads: `load_ontology()` merges local import documents (`merge_imports: true`). `ParseLimits::default()` has `merge_imports: false` — set explicitly when using `load_ontology_with_limits`. Disable with `merge_imports: false` for single-document loads only. **Turtle** and **OWL Functional** do not merge imports. **Remote import IRIs are never fetched.**
 
 See [OWL imports reference](owl-imports.md).
 
 ## RDFS materialization scope
 
-`ontologos-rdfs` delegates to **reasonable**. The table below describes intended RDFS semantics; gaps are tracked in [Reasonable adapter limits](reasonable-limits.md) and the [dependency-first ADR](../internal/design/dependency-first.md).
+`ontologos_rl::rdfs` delegates to **reasonable**. The table below describes intended RDFS semantics; gaps are tracked in [Reasonable adapter limits](reasonable-limits.md) and the [dependency-first ADR](../internal/design/dependency-first.md).
 
 | Input in core | Intended materialization | Implemented via reasonable |
 |---------------|--------------------------|----------------------------|

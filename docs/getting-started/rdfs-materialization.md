@@ -1,6 +1,8 @@
 # RDFS Materialization
 
-RDFS TBox materialization via [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/0.9.0): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
+RDFS TBox materialization via [`ontologos-rl`](https://docs.rs/ontologos-rl/0.9.0) (`ontologos_rl::rdfs`): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
+
+> **0.9.0 legacy:** Published crates.io still ships standalone [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/0.9.0) (`use ontologos_rdfs::RdfsEngine`). Workspace **1.0.0** merges RDFS into `ontologos-rl` — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md).
 
 The engine delegates to [`reasonable`](https://crates.io/crates/reasonable) and applies bridge fallbacks for RDFS rules not yet upstream (transitive `subPropertyOf`, domain/range along property hierarchies). You may therefore see OWL RL-style inferences beyond strict RDFS on some corpora.
 
@@ -35,7 +37,7 @@ inferred_axioms: 5
 inferred_by_rule: none
 ```
 
-> **Adapter note:** `ontologos-rdfs` delegates to **reasonable**. `inferred_by_rule` is empty until reasonable exposes rule-level diagnostics; use `inferred_axioms` and axiom counts. Some RDFS rules (e.g. transitive `subPropertyOf`) have known upstream gaps — see [Reasonable adapter limits](../reference/reasonable-limits.md).
+> **Adapter note:** `ontologos_rl::rdfs` delegates to **reasonable**. `inferred_by_rule` is empty until reasonable exposes rule-level diagnostics; use `inferred_axioms` and axiom counts. Some RDFS rules (e.g. transitive `subPropertyOf`) have known upstream gaps — see [Reasonable adapter limits](../reference/reasonable-limits.md).
 
 JSON output: `./target/release/ontologos --format json materialize path/to/ontology.owl`
 
@@ -47,14 +49,14 @@ Add dependencies:
 [dependencies]
 ontologos-core = "0.9.0"
 ontologos-parser = "0.9.0"
-ontologos-rdfs = "0.9.0"
+ontologos-rl = "0.9.0"
 ```
 
 Load and materialize:
 
 ```rust
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let path = std::path::Path::new("family.owl");
@@ -74,14 +76,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Do **not** call `Reasoner::classify()` on core for RDFS — it returns a delegate hint. Use `RdfsEngine::materialize` or `ontologos_rdfs::classify_reasoner`.
+Do **not** call `Reasoner::classify()` on core for RDFS — it returns a delegate hint. Use `RdfsEngine::materialize` or `ontologos_rl::rdfs::classify_reasoner`.
 
 ### Via the reasoner facade
 
 ```rust
 use ontologos_core::{Profile, Reasoner};
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::classify_reasoner;
+use ontologos_rl::rdfs::classify_reasoner;
 
 let ontology = load_ontology(path)?;
 let mut reasoner = Reasoner::builder()

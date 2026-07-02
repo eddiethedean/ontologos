@@ -9,7 +9,7 @@ flowchart TB
   subgraph surfaces [Surfaces]
     cli[ontologos_cli]
     py[ontologos_py]
-    query[ontologos_query]
+    query[ontologos_ql]
     explain[ontologos_explain]
   end
 
@@ -22,8 +22,8 @@ flowchart TB
     parser[ontologos_parser]
     profile[ontologos_profile]
     bridge[ontologos_bridge]
-    rdfs[ontologos_rdfs facade]
-    rl[ontologos_rl facade]
+    rdfs[ontologos_rl_rdfs]
+    rl[ontologos_rl]
     el[ontologos_el in_house]
     alc[ontologos_alc preview]
     dl[ontologos_dl stable_on_main]
@@ -43,20 +43,17 @@ flowchart TB
   bridge --> reasonable
   bridge --> core
   el --> core
-  el --> rdfs
   el --> rl
   alc --> core
   dl --> el
   dl --> alc
   swrl --> dl
   rl --> bridge
-  rdfs --> bridge
   query --> petgraph
   explain --> petgraph
   explain --> el
   facade --> el
   facade --> rl
-  facade --> rdfs
   facade --> alc
   facade --> dl
   facade --> swrl
@@ -114,7 +111,7 @@ flowchart LR
 1. **Construct or load** an `Ontology` (builder, JSON, or parser).
 2. **Optionally detect profile** with `ontologos_profile::detect_profile`.
 3. **Route via facade** — `ontologos_facade::classify` dispatches to EL, RL/RDFS, DL, ALC, or SWRL engines.
-4. **Query** via `ontologos-query` (petgraph-backed hierarchy views).
+4. **Query** via `ontologos-ql` (petgraph-backed hierarchy views and OWL QL).
 
 ## Core model (`ontologos-core`)
 
@@ -147,13 +144,13 @@ Owns conversions between models for parsing and RL/RDFS adapters:
 
 | Profile | Facade crate | Implementation |
 |---------|--------------|----------------|
-| RDFS | `ontologos-rdfs` | `reasonable` (RDFS rules subset of RL) |
+| RDFS | `ontologos-rl` (`rdfs` module) | `reasonable` (RDFS rules subset of RL) |
 | OWL RL | `ontologos-rl` | `reasonable` |
 | OWL EL | `ontologos-el` | In-house ELK-style completion |
 | ALC | `ontologos-alc` | Tableau-lite (preview) |
 | DL | `ontologos-dl` | Hybrid EL + saturation + tableau (**stable on `main` / 1.0.0**; not production on PyPI 0.9.0) |
 | SWRL | `ontologos-swrl` | DLSafe SWRL + DL (**stable on `main` / 1.0.0**) |
-| Query | `ontologos-query` | petgraph over `Taxonomy` |
+| Query | `ontologos-ql` | petgraph over `Taxonomy`; OWL QL conjunctive queries |
 | Explain | `ontologos-explain` | petgraph proof graphs; EL inference traces |
 
 ## Unified facade (`ontologos-facade`)

@@ -26,7 +26,7 @@ Pick the path that matches how you work:
 
     ---
 
-    Download `family.owl`, add three crates, run RDFS materialization—no clone required.
+    Download `family.owl`, add `ontologos-core`, `ontologos-parser`, and `ontologos-rl`, run RDFS materialization—no clone required.
 
     [:octicons-arrow-right-24: Five-minute guide](getting-started/index.md#cratesio-only-no-clone)
 

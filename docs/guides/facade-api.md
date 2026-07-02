@@ -119,12 +119,19 @@ Use **`ontologos_facade::classify`** or the profile-specific engine crate.
 Default `load_ontology` is permissive. For production paths or user uploads:
 
 ```rust
-use ontologos_parser::load_ontology_with_limits;
+use ontologos_parser::{load_ontology_with_limits, ParseLimits};
 
-let ontology = load_ontology_with_limits(path, /* strict */ true)?;
+let limits = ParseLimits {
+    max_file_bytes: 10 * 1024 * 1024,
+    max_entities: 50_000,
+    max_axioms: 100_000,
+    merge_imports: false,
+    ..ParseLimits::default()
+};
+let ontology = load_ontology_with_limits(path, limits)?;
 ```
 
-See `load_ontology_with_limits` for byte/entity/axiom caps.
+See `ParseLimits` on [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.9.0) for byte/entity/axiom caps.
 
 ## Dependencies
 
@@ -135,7 +142,7 @@ ontologos-parser = "0.9.0"
 ontologos-facade = "0.9.0"
 ```
 
-On **`main`** (workspace **1.0.0**, pre-tag), use `"1.0.0"` pins or path/git dependencies after the release is published. The facade pulls in `ontologos-el`, `ontologos-dl`, `ontologos-alc`, `ontologos-swrl`, `ontologos-rdfs`, and `ontologos-rl` transitively.
+On **`main`** (workspace **1.0.0**, pre-tag), use `"1.0.0"` pins or path/git dependencies after the release is published. The facade pulls in `ontologos-el`, `ontologos-dl`, `ontologos-alc`, `ontologos-swrl`, and `ontologos-rl` (including RDFS) transitively.
 
 ## Related
 

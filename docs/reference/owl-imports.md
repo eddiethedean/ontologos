@@ -7,7 +7,7 @@ How OntoLogos handles imported ontologies when loading files.
 | Aspect | Behavior |
 |--------|----------|
 | **Remote URLs** | **Not fetched** — `http://` or `https://` import IRIs are not downloaded over the network |
-| **RDF/XML** (`.owl`, `.rdf`, `.xml`) | **Local imports merged by default** when resolvable on disk (`ParseLimits::merge_imports`, default `true`) |
+| **RDF/XML** (`.owl`, `.rdf`, `.xml`) | **Local imports merged** when using `load_ontology()` (`merge_imports: true`); `ParseLimits::default()` has `merge_imports: false` |
 | **Turtle** (`.ttl`, `.turtle`) | **Not merged** — only axioms in the loaded file |
 | **OWL Functional** (`.ofn`, `.func`) | **Not merged** — only axioms in the loaded file |
 | **Transitive imports** | RDF/XML merge follows import chains for **local** files only (visited-set deduplication) |
@@ -21,7 +21,7 @@ For RDF/XML loads, `load_ontology` merges **declared** `owl:imports` that resolv
 ```rust
 use ontologos_parser::{load_ontology, load_ontology_with_limits, ParseLimits};
 
-// Default: merge_imports = true
+// load_ontology() opts in to merge_imports = true for RDF/XML
 let ontology = load_ontology(path)?;
 
 // Single-document load only (no import merge)

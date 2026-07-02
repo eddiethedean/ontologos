@@ -38,7 +38,7 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Documented CE exclusions | **13** Ian/ComplexConcept + `testIanBackjumping3` (**70** `excluded` catalog cases) |
 | `check-1.0-release-gates.sh` | **Green** (blocking in CI) |
 
-**Remaining for v1.0.0 publish:** architecture review prep complete on `main` — follow [release-1.0-checklist.md](release-1.0-checklist.md) (annotated tag `v1.0.0` triggers crates.io + PyPI). After publish: [Post-1.0 doc update](post-1.0-doc-update.md). Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
+**Remaining for v1.0.0 publish:** engineering gates are green on `main` (see metrics below). The annotated **v1.0.0** git tag and crates.io/PyPI publish are **manual maintainer steps** — follow [release-1.0-checklist.md](release-1.0-checklist.md). Until publish completes, user-facing docs describe two channels: **0.9.0** (installable) and **1.0.0** (build from `main`). After publish: [Post-1.0 doc update](post-1.0-doc-update.md). Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
 
 ## Profile stability
 

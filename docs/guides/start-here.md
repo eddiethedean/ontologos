@@ -6,7 +6,7 @@ Pick the path that matches how you work. Each link is a single next step—not t
 
 ## Try it in five minutes (no clone)
 
-[Getting started — crates.io only](../getting-started/index.md#cratesio-only-no-clone) — download `family.owl`, add three crates to `Cargo.toml`, run RDFS materialization.
+[Getting started — crates.io only](../getting-started/index.md#cratesio-only-no-clone) — download `family.owl`, add `ontologos-core`, `ontologos-parser`, and `ontologos-rl`, run RDFS materialization.
 
 **Python instead:** `pip install ontologos` → [Python guide](python.md).
 
@@ -47,14 +47,14 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 
 [Evaluator playbook](evaluator-playbook.md) · [Comparison](../comparison.md) · [Conformance coverage](../reference/conformance.md)
 
-**Production OWL DL today:** use Protégé + HermiT or Konclude. OntoLogos DL is improving but not a drop-in HermiT replacement — see [Profile stability matrix](profile-stability.md).
+**Production OWL DL:** Not on PyPI **0.9.0**. On **`main` / workspace 1.0.0**, DL is gated for HermiT catalog parity — use the [Evaluator playbook](evaluator-playbook.md) on your corpus before production. For DL-only workflows today, HermiT/Konclude remain the default comparison baseline. See [Profile stability matrix](profile-stability.md).
 
 ## I am integrating in a service
 
 [Production integration](production-integration.md) · [Security](../security.md) · [Choosing an API](choosing-an-api.md)
 
 !!! warning "Do not call the core stub directly"
-    Use `ontologos_facade::classify`, profile crates (`ElClassifier`, `RlEngine`, `RdfsEngine`), CLI, or Python `Reasoner` — not `ontologos_core::Reasoner::classify()` (deprecated since 1.0.0).
+    Use `ontologos_facade::classify`, profile crates (`ElClassifier`, `RlEngine`, `ontologos_rl::rdfs::RdfsEngine`), CLI, or Python `Reasoner` — not `ontologos_core::Reasoner::classify()` (deprecated since 1.0.0).
 
 ## I want to contribute
 

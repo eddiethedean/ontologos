@@ -132,10 +132,22 @@ fn validate_data_expr(
             validate_literal_lexical(&dt, lexical)?;
         }
         DataExpr::Or(ops) | DataExpr::And(ops) => {
+            let mut literal_datatypes = Vec::new();
             for &op in ops {
                 if let Some(DataExpr::Literal { lexical, datatype }) = store.de(op) {
                     let dt = datatype_iri(ontology, *datatype);
                     validate_literal_lexical(&dt, lexical)?;
+                    literal_datatypes.push(*datatype);
+                } else {
+                    validate_data_expr(ontology, op, _strict)?;
+                }
+            }
+            if literal_datatypes.len() == ops.len() && literal_datatypes.len() > 1 {
+                let first = literal_datatypes[0];
+                if literal_datatypes.iter().any(|dt| *dt != first) {
+                    return Err(Error::Parse(
+                        "DataOneOf literals must share the same datatype".into(),
+                    ));
                 }
             }
         }

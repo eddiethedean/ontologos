@@ -1,6 +1,6 @@
 # Reasonable Adapter Limits
 
-Public summary of upstream gaps when `ontologos-rdfs` and `ontologos-rl` delegate to [**reasonable**](https://crates.io/crates/reasonable). Full rationale: [dependency-first ADR](../internal/design/dependency-first.md).
+Public summary of upstream gaps when `ontologos_rl::rdfs` and `ontologos-rl` delegate to [**reasonable**](https://crates.io/crates/reasonable). Full rationale: [dependency-first ADR](../internal/design/dependency-first.md).
 
 OntoLogos intentionally does **not** reimplement these rules in-tree. Gaps are tracked as upstream issues; HermiT-ported tests that depend on missing rules are marked `ignored` in CI.
 

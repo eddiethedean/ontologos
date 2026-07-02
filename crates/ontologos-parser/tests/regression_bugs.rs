@@ -171,3 +171,15 @@ fn invalid_blank_nodes_conclusion_rejected() {
         "expected cyclic blank-node conclusion to fail validation"
     );
 }
+
+#[test]
+fn mixed_datatype_literals_in_data_oneof_rejected() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+        "../../benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testliteralcustomdatatype.ofn",
+    );
+    let ontology = ontologos_parser::load_ontology_lenient(&path).expect("load");
+    assert!(
+        ontologos_parser::validate_loaded_ontology(&ontology).is_err(),
+        "expected mixed-type DataOneOf to fail validation"
+    );
+}

@@ -75,6 +75,8 @@ nav:
       - First ontology: getting-started/first-ontology.md
   - Examples:
       - Gallery: examples/index.md
+      - DL evaluation: examples/dl-evaluation.md
+      - Contract tests: examples/contract-tests.md
   - Guides:
       - Choosing an API: guides/choosing-an-api.md
       - Profile stability: guides/profile-stability.md
@@ -93,8 +95,11 @@ nav:
       - Comparison: comparison.md
       - Security: security.md
   - Reference:
+      - Reference index: reference/index.md
       - Architecture: architecture.md
+      - Core API: reference/core.md
       - Facade API: reference/facade.md
+      - OWL DL API: reference/dl.md
       - CLI: reference/cli.md
       - Errors: reference/errors.md
       - Supported constructs: reference/supported-constructs.md

@@ -25,6 +25,7 @@ fn production_facade_pattern_compiles() {
             ClassifyOutcome::Rdfs(_) | ClassifyOutcome::Rl(_) => {
                 panic!("EL profile should yield taxonomy");
             }
+            _ => panic!("unexpected classify outcome for EL profile"),
         }
         Ok(())
     }

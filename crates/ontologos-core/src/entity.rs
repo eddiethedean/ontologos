@@ -160,6 +160,16 @@ impl EntityRegistry {
             .ok_or(Error::UnknownEntity(id))
     }
 
+    /// Override the stored kind for an existing entity (lenient parser recovery).
+    pub fn set_kind(&mut self, id: EntityId, kind: EntityKind) -> Result<()> {
+        let record = self
+            .entities
+            .get_mut(id.0 as usize)
+            .ok_or(Error::UnknownEntity(id))?;
+        record.kind = kind;
+        Ok(())
+    }
+
     /// Register a new entity or return the existing id if the IRI is already registered.
     pub fn get_or_register(
         &mut self,
