@@ -50,7 +50,7 @@ The DIP engine registry refactor (v1.0.0) added without breaking existing public
 
 ## Related
 
-- [Facade API](../guides/facade-api.md)
-- [Choosing an API](../guides/choosing-an-api.md)
+- [Facade API](../../guides/facade-api.md)
+- [Choosing an API](../../guides/choosing-an-api.md)
 - [ALC vs DL boundary](alc-boundary.md)
 - [Dependency-first ADR](dependency-first.md)

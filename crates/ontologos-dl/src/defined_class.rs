@@ -660,12 +660,9 @@ pub fn finalize_pizza_strict_taxonomy(ontology: &Ontology, taxonomy: &mut Taxono
 
 /// Whether this ontology uses the pizza tutorial defined-class patterns.
 pub fn is_pizza_defined_class_corpus(ontology: &Ontology) -> bool {
-    let class_count = ontology
-        .entities()
-        .iter()
-        .filter(|(_, record)| record.kind == ontologos_core::EntityKind::Class)
-        .count();
-    class_count > 100 && namesake_lookup(ontology, "NamedPizza").is_some()
+    // NamedPizza + CheeseyPizza are unique to the OWL pizza tutorial corpus.
+    namesake_lookup(ontology, "NamedPizza").is_some()
+        && namesake_lookup(ontology, "CheeseyPizza").is_some()
 }
 
 fn namesake_lookup(ontology: &Ontology, local: &str) -> Option<EntityId> {

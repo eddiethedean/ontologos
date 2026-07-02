@@ -41,7 +41,7 @@ GALEN, Gene Ontology, and SNOMED subsets require manual download (see manifest n
 
 Profile **classification** uses mapped TBox shapes (`parse_meta.profile_constructs`). **Diagnostics** explain why EL/RL/QL do not apply (mapped violations) and may also report constructs seen in the full parse (`parse_meta.constructs`) that were not mapped into core. Pizza is detected as **DL** because mapped axioms mix EL and RL-forbidden shapes.
 
-Manifest `axiom_count_approx` values (e.g. Pizza `658`) are **mapper output** counts (`ontology.axiom_count()` / `mapped_axiom_count`), not raw OWL logical axiom totals from the source file.
+Manifest `axiom_count_approx` values (e.g. Pizza `669`) are **mapper output** counts (`ontology.axiom_count()` / `mapped_axiom_count`), not raw OWL logical axiom totals from the source file.
 
 ### Local testing
 
