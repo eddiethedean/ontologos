@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-02
+
+> **STAGED — NOT PUBLISHED:** Workspace version **1.0.0** on `main`. crates.io and PyPI remain **0.9.0** until the annotated **v1.0.0** tag and publish complete. See [Release status](docs/project/release-status.md).
+
 ### Added
 
+- **HermiT conformance:** auto-promotion pipeline (`promote_catalog`, `promoted_axiom_ids.txt`, `promote-hermit-catalog.sh`)
+- **DL engine:** datatype-aware profile detection, ⊤/⊥ seeding in clausification, consistency-only axiom checks
+- **RL/RDFS:** inverse-functional and irreflexive property characteristics; bottom object property chain detection
+- **Metrics:** DL OFN pass-rate report; conformance coverage by catalog status
 - Production DL integration guide: `budget_secs`, `check_consistency`, conformance env warnings
 - Security docs: `max_literal_bytes`, horned-owl parser mutex contract, conformance harness env vars
 - `#[non_exhaustive]` on `ClassifyOutcome` for forward-compatible facade matches
@@ -16,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Workspace and PyPI package bump to **1.0.0**
+- Active HermiT conformance tests: **1048** (100% catalog parity; **0** generated catalog ignores)
+- JSON snapshot format version **3** (readers accept v2/v3)
 - Tier C strict HermiT identity gate (`compare-tier-c-strict-family.sh`) permanently **informational** — 26 extra subsumptions on `family.owl` waived until 2.0
 - Doc/code alignment: entailment cap **192** named classes; `ParseLimits::merge_imports` default **false**
 - `SECURITY.md` supported versions updated for **1.0.x**
@@ -29,31 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- Documentation adoption audit: facade-first examples, evaluator scope page, query/QL reference rewrite, channel banners, parity metric reconciliation, doc snippet CI.
+- Release status and install pins updated for **1.0.0**
+- Documentation adoption audit: facade-first examples, evaluator scope page, query/QL reference rewrite, channel banners, parity metric reconciliation, doc snippet CI
 - Reconciled conformance metrics (**1048** active / **1** ignored; **0** generated catalog ignores) in release status and evaluator scope
 - Updated removed-crate references (`ontologos-rdfs`, `ontologos-abox`) in choosing-an-api, dependency-first ADR, and tests README
 - Documented reasonable `sameAs`/`differentFrom` clash reporting gap in reasonable-limits reference
-
-## [1.0.0] - 2026-06-13
-
-> **STAGED — NOT PUBLISHED:** Workspace version **1.0.0** on `main`. crates.io and PyPI remain **0.9.0** until the annotated **v1.0.0** tag and publish complete. See [Release status](docs/project/release-status.md).
-
-### Added
-
-- **HermiT conformance:** auto-promotion pipeline (`promote_catalog`, `promoted_axiom_ids.txt`, `promote-hermit-catalog.sh`)
-- **DL engine:** datatype-aware profile detection, ⊤/⊥ seeding in clausification, consistency-only axiom checks
-- **RL/RDFS:** inverse-functional and irreflexive property characteristics; bottom object property chain detection
-- **Metrics:** DL OFN pass-rate report; conformance coverage by catalog status
-
-### Changed
-
-- Workspace and PyPI package bump to **1.0.0**
-- Active HermiT conformance tests: **100** (32 catalog `axiom` cases)
-- JSON snapshot format version **3** (readers accept v2/v3)
-
-### Documentation
-
-- Release status and install pins updated for **1.0.0**
 
 ## [0.9.0] - 2026-06-13
 
@@ -348,7 +339,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/eddiethedean/ontologos/compare/v0.9.0...HEAD
 [0.9.0]: https://github.com/eddiethedean/ontologos/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/eddiethedean/ontologos/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/eddiethedean/ontologos/compare/v0.6.1...v0.7.0
