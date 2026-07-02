@@ -75,19 +75,25 @@ impl DlClauseEvaluator {
 }
 
 /// Run registered evaluators (HermiT `runCalculus` fragment).
-pub fn run_calculus(tableau: &Tableau, evaluators: &[DlClauseEvaluator]) -> bool {
+pub fn run_calculus(
+    tableau: &Tableau,
+    evaluators: &[DlClauseEvaluator],
+) -> Result<bool, crate::Error> {
     if tableau.extension_manager().contains_clash() {
-        return false;
+        return Ok(false);
     }
     let empty = tableau.empty_dependency_set();
     let ext = tableau.extension_manager();
     for evaluator in evaluators {
         evaluator.evaluate(&ext, empty.clone());
         if ext.contains_clash() {
-            return false;
+            return Ok(false);
+        }
+        if let Some(err) = ext.take_internal_error() {
+            return Err(err);
         }
     }
-    true
+    Ok(true)
 }
 
 /// Test ontology clause from HermiT `DLClauseEvaluationTest`.
@@ -157,26 +163,38 @@ pub fn derive_at_most_equalities(tableau: &Tableau) -> bool {
 }
 
 /// Single tableau iteration: clause derivation + NI processing + clash backtrack.
-pub fn do_iteration(tableau: &Tableau, evaluators: &[DlClauseEvaluator]) -> bool {
+pub fn do_iteration(
+    tableau: &Tableau,
+    evaluators: &[DlClauseEvaluator],
+) -> Result<bool, crate::Error> {
     if tableau.extension_manager().contains_clash() {
-        return tableau.handle_clash_backtrack();
+        return Ok(tableau.handle_clash_backtrack());
     }
     let mut progress = false;
     if derive_at_most_equalities(tableau) {
         progress = true;
     }
+    if let Some(err) = tableau.extension_manager().take_internal_error() {
+        return Err(err);
+    }
     for evaluator in evaluators {
         let empty = tableau.empty_dependency_set();
         evaluator.evaluate(&tableau.extension_manager(), empty);
         if tableau.extension_manager().contains_clash() {
-            return tableau.handle_clash_backtrack() || progress;
+            return Ok(tableau.handle_clash_backtrack() || progress);
+        }
+        if let Some(err) = tableau.extension_manager().take_internal_error() {
+            return Err(err);
         }
     }
     if tableau.ni_manager().process_annotated_equalities() {
         progress = true;
     }
-    if tableau.extension_manager().contains_clash() {
-        return tableau.handle_clash_backtrack() || progress;
+    if let Some(err) = tableau.extension_manager().take_internal_error() {
+        return Err(err);
     }
-    !tableau.extension_manager().contains_clash() || progress
+    if tableau.extension_manager().contains_clash() {
+        return Ok(tableau.handle_clash_backtrack() || progress);
+    }
+    Ok(!tableau.extension_manager().contains_clash() || progress)
 }

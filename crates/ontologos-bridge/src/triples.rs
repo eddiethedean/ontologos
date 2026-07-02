@@ -422,6 +422,7 @@ pub fn merge_triples_into_ontology_with_limits(
     limits: MergeLimits,
 ) -> Result<MergeReport> {
     let before = ontology.axiom_count();
+    let prev_limits = ontology.enforce_limits();
     ontology.set_enforce_limits(ontologos_core::Limits {
         max_entities: limits.max_entities,
         max_axioms: limits.max_axioms,
@@ -463,6 +464,7 @@ pub fn merge_triples_into_ontology_with_limits(
     }
 
     if ontology.entity_count() >= limits.max_entities {
+        ontology.restore_enforce_limits(prev_limits);
         return Err(Error::Bridge(format!(
             "entity limit {} would be exceeded during merge",
             limits.max_entities
@@ -470,6 +472,7 @@ pub fn merge_triples_into_ontology_with_limits(
     }
 
     if ontology.axiom_count().saturating_add(to_add.len()) > limits.max_axioms {
+        ontology.restore_enforce_limits(prev_limits);
         return Err(Error::Bridge(format!(
             "axiom limit {} would be exceeded during merge ({} new axioms)",
             limits.max_axioms,
@@ -478,8 +481,13 @@ pub fn merge_triples_into_ontology_with_limits(
     }
 
     for axiom in to_add {
-        ontology.add_inferred_axiom(axiom)?;
+        if let Err(e) = ontology.add_inferred_axiom(axiom) {
+            ontology.restore_enforce_limits(prev_limits);
+            return Err(Error::Core(e));
+        }
     }
+
+    ontology.restore_enforce_limits(prev_limits);
 
     let clashes = diagnostics
         .iter()

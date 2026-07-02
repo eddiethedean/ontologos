@@ -137,6 +137,11 @@ fn check_consistency_inner(ontology: &Ontology) -> Result<ConsistencyResult> {
 }
 
 fn check_consistency_inner_impl(ontology: &Ontology) -> Result<ConsistencyResult> {
+    if bounded::dl_cancel_requested() {
+        return Err(Error::IncompleteReasoning(
+            "dl operation cancelled (budget exceeded)".into(),
+        ));
+    }
     let trace = std::env::var("ONTOLOGOS_CONSISTENCY_TRACE").is_ok();
     macro_rules! reject {
         ($step:expr) => {{

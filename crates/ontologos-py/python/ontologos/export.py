@@ -10,7 +10,15 @@ if TYPE_CHECKING:
 
 
 def _subsumption_rows(taxonomy: dict[str, Any]) -> list[tuple[str, str]]:
-    subs = taxonomy.get("subsumptions", [])
+    if "subsumptions" not in taxonomy:
+        status = taxonomy.get("status", "unknown")
+        raise ValueError(
+            "taxonomy dict has no 'subsumptions' key; "
+            f"subsumptions_to_pandas requires an EL/DL taxonomy (got status={status!r})"
+        )
+    subs = taxonomy["subsumptions"]
+    if not isinstance(subs, list):
+        raise ValueError("taxonomy 'subsumptions' must be a list of [subclass, superclass] pairs")
     return [(str(sub), str(sup)) for sub, sup in subs]
 
 

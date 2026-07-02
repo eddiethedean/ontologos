@@ -134,19 +134,38 @@ pub fn validate_load_path(path: &Path, base: Option<&Path>) -> Result<PathBuf> {
     Ok(normalized)
 }
 
-/// Load an ontology from a validated file path.
+/// Load an ontology from a validated file path (trusted local file; merges `owl:imports`).
 pub fn load_ontology(path: &Path) -> Result<Ontology> {
-    load_ontology_with_limits(path, ParseLimits::default())
+    load_ontology_with_limits(
+        path,
+        ParseLimits {
+            merge_imports: true,
+            ..ParseLimits::default()
+        },
+    )
 }
 
 /// Load an ontology without failing on skipped axioms or incompatible declarations.
 pub fn load_ontology_lenient(path: &Path) -> Result<Ontology> {
-    load_ontology_with_limits(path, ParseLimits::lenient())
+    load_ontology_with_limits(
+        path,
+        ParseLimits {
+            merge_imports: true,
+            ..ParseLimits::lenient()
+        },
+    )
 }
 
 /// Load an ontology constrained to stay under `base` (untrusted uploads).
 pub fn load_ontology_in(base: &Path, path: &Path) -> Result<Ontology> {
-    load_ontology_with_limits_and_base(path, ParseLimits::default(), Some(base))
+    load_ontology_with_limits_and_base(
+        path,
+        ParseLimits {
+            merge_imports: true,
+            ..ParseLimits::default()
+        },
+        Some(base),
+    )
 }
 
 /// Lenient sandboxed load for untrusted uploads that may skip axioms with warnings.
@@ -165,7 +184,8 @@ pub fn load_ontology_with_limits_and_base(
     limits: ParseLimits,
     base: Option<&Path>,
 ) -> Result<Ontology> {
-    load_ontology_with_limits_and_base_inner(path, limits, base, limits.merge_imports)
+    let merge_imports = limits.merge_imports;
+    load_ontology_with_limits_and_base_inner(path, limits, base, merge_imports)
 }
 
 fn load_ontology_with_limits_and_base_inner(
@@ -317,7 +337,7 @@ fn merge_datatype_sameas_supplement(
          )"
     );
     let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-    merge_supplement_with_accounting(ontology, report, &supplement)?;
+    merge_supplement_with_accounting(ontology, report, limits, &supplement)?;
     Ok(true)
 }
 
@@ -365,7 +385,7 @@ fn merge_property_sameas_supplement(
          )"
     );
     let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-    merge_supplement_with_accounting(ontology, report, &supplement)?;
+    merge_supplement_with_accounting(ontology, report, limits, &supplement)?;
     Ok(true)
 }
 
@@ -378,7 +398,7 @@ fn merge_ofn_supplement(
 ) -> Result<()> {
     bump_harvested_assertions(harvested, limits)?;
     let supplement = load_ofn_from_str_with_limits(ofn, limits)?;
-    merge_supplement_with_accounting(ontology, report, &supplement)
+    merge_supplement_with_accounting(ontology, report, limits, &supplement)
 }
 
 fn supplement_rdf_dl_axioms(
@@ -504,13 +524,23 @@ fn supplement_rdf_dl_axioms(
         ));
     }
     if !opa_bodies.is_empty() {
-        let ofn = format!(
-            "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
-             Ontology(<http://example.org/opa-supplement>\n{}\n)",
-            opa_bodies.join("\n")
-        );
-        let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
-        merge_supplement_with_accounting(ontology, report, &supplement)?;
+        const OPA_CHUNK: usize = 500;
+        for chunk in opa_bodies.chunks(OPA_CHUNK) {
+            let body = chunk.join("\n");
+            if body.len() > limits.max_file_bytes {
+                return Err(Error::Parse(format!(
+                    "OPA supplement size {} exceeds file byte limit {}",
+                    body.len(),
+                    limits.max_file_bytes
+                )));
+            }
+            let ofn = format!(
+                "Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n\
+                 Ontology(<http://example.org/opa-supplement>\n{body}\n)"
+            );
+            let supplement = load_ofn_from_str_with_limits(&ofn, limits)?;
+            merge_supplement_with_accounting(ontology, report, limits, &supplement)?;
+        }
     }
     for (property, range) in
         crate::rdf_preprocess::collect_datatype_property_ranges(preprocessed_rdf)
@@ -739,6 +769,12 @@ fn supplement_rdf_dl_axioms(
     Ok(())
 }
 
+fn total_axiom_count(ontology: &Ontology) -> usize {
+    ontology
+        .axiom_count()
+        .saturating_add(ontology.dl().axiom_count())
+}
+
 fn merge_rdf_owl_imports(
     path: &Path,
     preprocessed_rdf: &str,
@@ -757,17 +793,15 @@ fn merge_rdf_owl_imports(
             continue;
         }
         let imported = load_ontology_with_limits_and_base_inner(&import_path, limits, base, false)?;
-        if ontology
-            .axiom_count()
-            .saturating_add(imported.axiom_count())
+        if total_axiom_count(ontology).saturating_add(total_axiom_count(&imported))
             > limits.max_axioms
         {
             if limits.strict {
                 return Err(Error::Parse(format!(
                     "import merge would exceed axiom limit {} (current {} + import {})",
                     limits.max_axioms,
-                    ontology.axiom_count(),
-                    imported.axiom_count()
+                    total_axiom_count(ontology),
+                    total_axiom_count(&imported)
                 )));
             }
             report.meta.warn(format!(
@@ -796,7 +830,7 @@ fn merge_rdf_owl_imports(
             continue;
         }
         let before = ontology.axiom_count();
-        merge_supplement_ontology(ontology, &imported)?;
+        merge_supplement_ontology(ontology, &imported, report, limits)?;
         report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
     }
     Ok(())
@@ -838,10 +872,11 @@ fn resolve_wg_import_path(current: &Path, import_iri: &str) -> Option<PathBuf> {
 fn merge_supplement_with_accounting(
     ontology: &mut Ontology,
     report: &mut ParseReport,
+    limits: ParseLimits,
     supplement: &Ontology,
 ) -> Result<()> {
     let before = ontology.axiom_count();
-    merge_supplement_ontology(ontology, supplement)?;
+    merge_supplement_ontology(ontology, supplement, report, limits)?;
     report.meta.mapped_axiom_count += ontology.axiom_count().saturating_sub(before);
     Ok(())
 }
@@ -884,13 +919,32 @@ fn insert_disjoint_object_properties_supplement(
     Ok(())
 }
 
-fn merge_supplement_ontology(target: &mut Ontology, source: &Ontology) -> Result<()> {
+fn merge_supplement_ontology(
+    target: &mut Ontology,
+    source: &Ontology,
+    report: &mut ParseReport,
+    limits: ParseLimits,
+) -> Result<()> {
+    use ontologos_core::EntityKind;
     use std::collections::HashMap;
     for (_, record) in source.entities().iter() {
         let iri = source
             .resolve_iri(record.iri)
             .map_err(|e| Error::Parse(e.to_string()))?;
-        if target.lookup_entity(iri).is_none() {
+        if let Some(existing) = target.lookup_entity(iri) {
+            let existing_kind = target.entity(existing)?.kind;
+            if !existing_kind.satisfies(record.kind) {
+                match EntityKind::merge_punning(existing_kind, record.kind) {
+                    Some(_) => {}
+                    None => {
+                        report.meta.warn(format!(
+                            "import entity kind conflict for {iri}: {:?} vs {:?}",
+                            existing_kind, record.kind
+                        ));
+                    }
+                }
+            }
+        } else {
             target
                 .entity_id(iri, record.kind)
                 .map_err(|e| Error::Parse(e.to_string()))?;
@@ -921,6 +975,13 @@ fn merge_supplement_ontology(target: &mut Ontology, source: &Ontology) -> Result
         let remapped = remap_supplement_axiom(axiom, &entity_map)?;
         if let Err(e) = target.add_axiom(remapped) {
             if matches!(axiom, Axiom::ObjectPropertyRange { .. }) {
+                report.meta.skipped_axiom_count += 1;
+                report.meta.warn(format!(
+                    "skipping conflicting ObjectPropertyRange during merge: {e}"
+                ));
+                if limits.strict {
+                    return Err(Error::Parse(e.to_string()));
+                }
                 continue;
             }
             return Err(Error::Parse(e.to_string()));

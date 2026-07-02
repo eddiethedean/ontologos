@@ -133,9 +133,9 @@ fn owllink_primer_loads_with_families_import() {
 }
 
 #[test]
-fn parse_limits_merge_imports_defaults_true() {
+fn parse_limits_merge_imports_defaults_false() {
     let limits = ParseLimits::default();
-    assert!(limits.merge_imports);
+    assert!(!limits.merge_imports);
     assert!(limits.strict);
 }
 

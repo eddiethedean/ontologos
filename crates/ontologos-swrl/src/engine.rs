@@ -7,8 +7,16 @@ use ontologos_core::{
     SwrlRule,
 };
 use ontologos_dl::{LiteralIndex, LiteralValue};
+use ontologos_rl::SameAsClosure;
 
 use crate::SwrlReport;
+
+/// Maximum forward-chaining rounds per `materialize_swrl_rules` call.
+const MAX_SWRL_ITERATIONS: usize = 10_000;
+/// Maximum bindings produced when matching one rule body.
+const MAX_BINDINGS_PER_RULE: usize = 10_000;
+/// Maximum total head applications per materialization.
+const MAX_TOTAL_INFERENCES: usize = 100_000;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct DataValue {
@@ -34,12 +42,31 @@ pub fn materialize_swrl_rules(ontology: &mut Ontology) -> ontologos_core::Result
     }
 
     let mut changed = true;
+    let mut iterations = 0usize;
     while changed {
+        iterations += 1;
+        if iterations > MAX_SWRL_ITERATIONS {
+            return Err(ontologos_core::Error::Message(format!(
+                "SWRL forward chaining exceeded {MAX_SWRL_ITERATIONS} iterations"
+            )));
+        }
         changed = false;
+        let same_as = ontologos_rl::same_as_closure(ontology);
         for rule in &rules {
-            for binding in match_rule_body(ontology, &rule.body) {
-                if apply_rule_head(ontology, &rule.head, &binding)? {
+            let bindings = match_rule_body(ontology, &rule.body, &same_as);
+            if bindings.len() > MAX_BINDINGS_PER_RULE {
+                return Err(ontologos_core::Error::Message(format!(
+                    "SWRL rule binding explosion exceeds {MAX_BINDINGS_PER_RULE} bindings"
+                )));
+            }
+            for binding in bindings {
+                if apply_rule_head(ontology, &rule.head, &binding, &same_as)? {
                     report.inferences_added += 1;
+                    if report.inferences_added > MAX_TOTAL_INFERENCES {
+                        return Err(ontologos_core::Error::Message(format!(
+                            "SWRL forward chaining exceeded {MAX_TOTAL_INFERENCES} inferences"
+                        )));
+                    }
                     changed = true;
                 }
             }
@@ -48,14 +75,18 @@ pub fn materialize_swrl_rules(ontology: &mut Ontology) -> ontologos_core::Result
     Ok(report)
 }
 
-fn match_rule_body(ontology: &Ontology, body: &[SwrlAtom]) -> Vec<RuleBinding> {
+fn match_rule_body(
+    ontology: &Ontology,
+    body: &[SwrlAtom],
+    same_as: &SameAsClosure,
+) -> Vec<RuleBinding> {
     let mut ordered: Vec<&SwrlAtom> = body.iter().collect();
     ordered.sort_by_key(|atom| atom_match_priority(atom));
     let mut bindings = vec![RuleBinding::default()];
     for atom in ordered {
         let mut next = Vec::new();
         for binding in bindings {
-            next.extend(extend_binding(ontology, atom, &binding));
+            next.extend(extend_binding(ontology, atom, &binding, same_as));
         }
         bindings = next;
         if bindings.is_empty() {
@@ -76,22 +107,27 @@ fn atom_match_priority(atom: &SwrlAtom) -> u8 {
     }
 }
 
-fn extend_binding(ontology: &Ontology, atom: &SwrlAtom, binding: &RuleBinding) -> Vec<RuleBinding> {
+fn extend_binding(
+    ontology: &Ontology,
+    atom: &SwrlAtom,
+    binding: &RuleBinding,
+    same_as: &SameAsClosure,
+) -> Vec<RuleBinding> {
     match atom {
         SwrlAtom::Class { class, arg } => extend_class(ontology, *class, arg, binding),
         SwrlAtom::ObjectProperty {
             property,
             subject,
             object,
-        } => extend_object_property(ontology, *property, subject, object, binding),
+        } => extend_object_property(ontology, *property, subject, object, binding, same_as),
         SwrlAtom::DataProperty {
             property,
             subject,
             value,
-        } => extend_data_property(ontology, *property, subject, value, binding),
+        } => extend_data_property(ontology, *property, subject, value, binding, same_as),
         SwrlAtom::DataRange { range, arg } => extend_data_range(ontology, *range, arg, binding),
-        SwrlAtom::SameIndividual(a, b) => unify_same(ontology, a, b, binding),
-        SwrlAtom::DifferentIndividuals(a, b) => unify_different(ontology, a, b, binding),
+        SwrlAtom::SameIndividual(a, b) => unify_same(ontology, a, b, binding, same_as),
+        SwrlAtom::DifferentIndividuals(a, b) => unify_different(ontology, a, b, binding, same_as),
     }
 }
 
@@ -131,6 +167,7 @@ fn extend_object_property(
     subject: &SwrlIArg,
     object: &SwrlIArg,
     binding: &RuleBinding,
+    same_as: &SameAsClosure,
 ) -> Vec<RuleBinding> {
     let assertions = ontology
         .axioms()
@@ -147,8 +184,20 @@ fn extend_object_property(
 
     let mut out = Vec::new();
     for (sub, obj) in assertions {
-        for b in unify_args(ontology, subject, &SwrlIArg::Individual(sub), binding) {
-            out.extend(unify_args(ontology, object, &SwrlIArg::Individual(obj), &b));
+        for b in unify_args(
+            ontology,
+            subject,
+            &SwrlIArg::Individual(sub),
+            binding,
+            same_as,
+        ) {
+            out.extend(unify_args(
+                ontology,
+                object,
+                &SwrlIArg::Individual(obj),
+                &b,
+                same_as,
+            ));
         }
     }
     out
@@ -203,13 +252,20 @@ fn extend_data_property(
     subject: &SwrlIArg,
     value: &SwrlDArg,
     binding: &RuleBinding,
+    same_as: &SameAsClosure,
 ) -> Vec<RuleBinding> {
     let mut out = Vec::new();
     for (sub, prop, fact) in data_property_facts(ontology) {
         if prop != property {
             continue;
         }
-        for b in unify_args(ontology, subject, &SwrlIArg::Individual(sub), binding) {
+        for b in unify_args(
+            ontology,
+            subject,
+            &SwrlIArg::Individual(sub),
+            binding,
+            same_as,
+        ) {
             out.extend(unify_darg(&fact, value, &b));
         }
     }
@@ -248,8 +304,9 @@ fn unify_same(
     left: &SwrlIArg,
     right: &SwrlIArg,
     binding: &RuleBinding,
+    same_as: &SameAsClosure,
 ) -> Vec<RuleBinding> {
-    let ind = unify_args(ontology, left, right, binding);
+    let ind = unify_args(ontology, left, right, binding, same_as);
     if !ind.is_empty() {
         return ind;
     }
@@ -373,10 +430,11 @@ fn unify_args(
     left: &SwrlIArg,
     right: &SwrlIArg,
     binding: &RuleBinding,
+    same_as: &SameAsClosure,
 ) -> Vec<RuleBinding> {
     match (left, right) {
         (SwrlIArg::Individual(a), SwrlIArg::Individual(b)) => {
-            if same_individuals(ontology, *a, *b) {
+            if same_individuals(same_as, *a, *b) {
                 vec![binding.clone()]
             } else {
                 vec![]
@@ -384,7 +442,7 @@ fn unify_args(
         }
         (SwrlIArg::Variable(v), SwrlIArg::Individual(i))
         | (SwrlIArg::Individual(i), SwrlIArg::Variable(v)) => {
-            unify_var_individual(ontology, v, *i, binding)
+            unify_var_individual(ontology, v, *i, binding, same_as)
         }
         (SwrlIArg::Variable(a), SwrlIArg::Variable(b)) => {
             if a == b {
@@ -392,11 +450,11 @@ fn unify_args(
             }
             let Some(&ia) = binding.individuals.get(a) else {
                 if let Some(&ib) = binding.individuals.get(b) {
-                    return unify_var_individual(ontology, a, ib, binding);
+                    return unify_var_individual(ontology, a, ib, binding, same_as);
                 }
                 return vec![];
             };
-            unify_var_individual(ontology, b, ia, binding)
+            unify_var_individual(ontology, b, ia, binding, same_as)
         }
     }
 }
@@ -406,8 +464,9 @@ fn unify_different(
     left: &SwrlIArg,
     right: &SwrlIArg,
     binding: &RuleBinding,
+    same_as: &SameAsClosure,
 ) -> Vec<RuleBinding> {
-    unify_args(ontology, left, right, binding)
+    unify_args(ontology, left, right, binding, same_as)
         .into_iter()
         .filter(|b| {
             let Some(l) = resolve_iarg(left, b) else {
@@ -416,19 +475,20 @@ fn unify_different(
             let Some(r) = resolve_iarg(right, b) else {
                 return false;
             };
-            l != r && !same_individuals(ontology, l, r)
+            l != r && !same_individuals(same_as, l, r)
         })
         .collect()
 }
 
 fn unify_var_individual(
-    ontology: &Ontology,
+    _ontology: &Ontology,
     var: &str,
     ind: EntityId,
     binding: &RuleBinding,
+    same_as: &SameAsClosure,
 ) -> Vec<RuleBinding> {
     if let Some(&bound) = binding.individuals.get(var) {
-        if same_individuals(ontology, bound, ind) {
+        if same_individuals(same_as, bound, ind) {
             vec![binding.clone()]
         } else {
             vec![]
@@ -451,10 +511,11 @@ fn apply_rule_head(
     ontology: &mut Ontology,
     head: &[SwrlAtom],
     binding: &RuleBinding,
+    same_as: &SameAsClosure,
 ) -> ontologos_core::Result<bool> {
     let mut added = false;
     for atom in head {
-        if apply_head_atom(ontology, atom, binding)? {
+        if apply_head_atom(ontology, atom, binding, same_as)? {
             added = true;
         }
     }
@@ -465,6 +526,7 @@ fn apply_head_atom(
     ontology: &mut Ontology,
     atom: &SwrlAtom,
     binding: &RuleBinding,
+    same_as: &SameAsClosure,
 ) -> ontologos_core::Result<bool> {
     match atom {
         SwrlAtom::Class { class, arg } => {
@@ -510,7 +572,7 @@ fn apply_head_atom(
             let (Some(x), Some(y)) = (resolve_iarg(a, binding), resolve_iarg(b, binding)) else {
                 return Ok(false);
             };
-            if same_individuals(ontology, x, y) {
+            if same_individuals(same_as, x, y) {
                 return Ok(false);
             }
             ontology.add_axiom(Axiom::SameIndividual(vec![x, y]))?;
@@ -520,7 +582,7 @@ fn apply_head_atom(
             let (Some(x), Some(y)) = (resolve_iarg(a, binding), resolve_iarg(b, binding)) else {
                 return Ok(false);
             };
-            if x == y || same_individuals(ontology, x, y) || has_different(ontology, x, y) {
+            if x == y || same_individuals(same_as, x, y) || has_different(ontology, x, y) {
                 return Ok(false);
             }
             ontology.add_axiom(Axiom::DifferentIndividuals(vec![x, y]))?;
@@ -608,24 +670,6 @@ fn has_different(ontology: &Ontology, a: EntityId, b: EntityId) -> bool {
     })
 }
 
-fn same_individuals(ontology: &Ontology, a: EntityId, b: EntityId) -> bool {
-    if a == b {
-        return true;
-    }
-    let mut clusters: Vec<HashSet<EntityId>> = Vec::new();
-    for (_, axiom) in ontology.axioms().iter() {
-        if let Axiom::SameIndividual(ids) = axiom
-            && (ids.contains(&a) || ids.contains(&b))
-        {
-            let mut cluster: HashSet<EntityId> = ids.iter().copied().collect();
-            cluster.insert(a);
-            cluster.insert(b);
-            if let Some(existing) = clusters.iter_mut().find(|c| !c.is_disjoint(&cluster)) {
-                existing.extend(cluster);
-            } else {
-                clusters.push(cluster);
-            }
-        }
-    }
-    clusters.iter().any(|c| c.contains(&a) && c.contains(&b))
+fn same_individuals(same_as: &SameAsClosure, a: EntityId, b: EntityId) -> bool {
+    a == b || same_as.representative(a) == same_as.representative(b)
 }

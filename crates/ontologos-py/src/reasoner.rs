@@ -8,7 +8,7 @@ use ontologos_explain::explain_with_profile;
 use ontologos_facade::ClassifyOutcome;
 use ontologos_parser::load_ontology_lenient as load_ontology;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyDict};
+use pyo3::types::{PyAny, PyDict, PyType};
 
 use crate::convert::{
     entity_iri, find_subclass_axiom_id, parse_meta_dict, parse_profile, proof_graph_dict, py_err,
@@ -48,6 +48,30 @@ fn build_reasoner(
 
 #[pymethods]
 impl PyReasoner {
+    #[classmethod]
+    #[pyo3(signature = (base, path, *, profile=None, incremental=false, budget_secs=None))]
+    fn load_in(
+        _cls: &Bound<'_, PyType>,
+        base: &str,
+        path: &str,
+        profile: Option<&str>,
+        incremental: bool,
+        budget_secs: Option<u64>,
+    ) -> PyResult<Self> {
+        let ontology = ontologos_parser::load_ontology_lenient_in(
+            std::path::Path::new(base),
+            std::path::Path::new(path),
+        )
+        .map_err(map_parser_py_err)?;
+        let reasoner = build_reasoner(ontology, profile, incremental, budget_secs)?;
+        Ok(Self {
+            reasoner,
+            last_taxonomy: None,
+            shared_ontology: None,
+            shared_revision: None,
+        })
+    }
+
     #[new]
     #[pyo3(signature = (path=None, ontology=None, profile=None, incremental=false, budget_secs=None))]
     fn new(
@@ -166,7 +190,8 @@ impl PyReasoner {
                 subclass: sub,
                 superclass: sup,
             })
-            .map_err(py_err)?;
+            .map_err(map_core_py_err)?;
+        self.invalidate_taxonomy_cache();
         self.sync_to_shared()?;
         Ok(())
     }
@@ -178,7 +203,8 @@ impl PyReasoner {
         self.reasoner
             .ontology_mut()
             .remove_axiom(id)
-            .map_err(py_err)?;
+            .map_err(map_core_py_err)?;
+        self.invalidate_taxonomy_cache();
         self.sync_to_shared()?;
         Ok(())
     }
@@ -187,11 +213,21 @@ impl PyReasoner {
         self.sync_from_shared()?;
         let json_mod = PyModule::import(py, "json")?;
         let axiom_json: String = json_mod.call_method1("dumps", (axiom,))?.extract()?;
+        let limits = ontologos_core::Limits::default();
+        if axiom_json.len() > limits.max_json_bytes {
+            return Err(map_core_py_err(ontologos_core::Error::Serialization(
+                format!(
+                    "axiom JSON exceeds maximum size of {} bytes",
+                    limits.max_json_bytes
+                ),
+            )));
+        }
         let snapshot: serde_json::Value =
             serde_json::from_str(&axiom_json).map_err(|e| py_err(e.to_string()))?;
 
         let ontology = self.reasoner.ontology_mut();
         apply_snapshot_axiom(ontology, &snapshot)?;
+        self.invalidate_taxonomy_cache();
         self.sync_to_shared()?;
         Ok(())
     }
@@ -279,6 +315,7 @@ impl PyReasoner {
             })?
         };
         *self.reasoner.ontology_mut() = ontology;
+        self.invalidate_taxonomy_cache();
         self.sync_to_shared()?;
         Ok(entailed)
     }
@@ -310,15 +347,24 @@ impl PyReasoner {
 }
 
 impl PyReasoner {
+    fn invalidate_taxonomy_cache(&mut self) {
+        self.last_taxonomy = None;
+    }
+
     fn sync_from_shared(&mut self) -> PyResult<()> {
         if let Some(shared) = &self.shared_ontology {
             let guard = shared
                 .lock()
                 .map_err(|e| py_err(format!("ontology lock poisoned: {e}")))?;
             let current = guard.revision();
-            if self.shared_revision != Some(current) {
+            let revision_changed = self.shared_revision != Some(current);
+            if revision_changed {
                 *self.reasoner.ontology_mut() = guard.clone();
                 self.shared_revision = Some(current);
+            }
+            drop(guard);
+            if revision_changed {
+                self.invalidate_taxonomy_cache();
             }
         }
         Ok(())

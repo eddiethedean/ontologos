@@ -231,6 +231,12 @@ impl Axiom {
             } => {
                 require_kind(registry, *individual, EntityKind::Individual, "individual")?;
                 require_kind(registry, *property, EntityKind::DataProperty, "property")?;
+                if value.lexical.len() > limits.max_literal_bytes {
+                    return Err(Error::InvalidAxiom(format!(
+                        "data literal exceeds maximum size of {} bytes",
+                        limits.max_literal_bytes
+                    )));
+                }
                 if value.lexical.is_empty() {
                     return Err(Error::InvalidAxiom(
                         "data property assertion requires non-empty literal".into(),
@@ -262,6 +268,12 @@ impl Axiom {
             } => {
                 require_kind(registry, *individual, EntityKind::Individual, "individual")?;
                 require_kind(registry, *property, EntityKind::DataProperty, "property")?;
+                if value.lexical.len() > limits.max_literal_bytes {
+                    return Err(Error::InvalidAxiom(format!(
+                        "data literal exceeds maximum size of {} bytes",
+                        limits.max_literal_bytes
+                    )));
+                }
                 if value.lexical.is_empty() || value.datatype.is_empty() {
                     return Err(Error::InvalidAxiom(
                         "negative data property assertion requires literal and datatype".into(),

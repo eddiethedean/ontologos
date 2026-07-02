@@ -70,7 +70,15 @@ impl PyOntology {
     ) -> PyResult<Self> {
         let json_mod = PyModule::import(py, "json")?;
         let json: String = json_mod.call_method1("dumps", (data,))?.extract()?;
-        Self::from_json_with_limits(_cls, &json, None, None, None, None)
+        let limits = ontologos_core::Limits::default();
+        Self::from_json_with_limits(
+            _cls,
+            &json,
+            Some(limits.max_json_bytes),
+            Some(limits.max_entities),
+            Some(limits.max_axioms),
+            Some(limits.max_iri_len),
+        )
     }
 
     #[classmethod]

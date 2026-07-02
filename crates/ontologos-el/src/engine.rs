@@ -1,6 +1,7 @@
 //! EL profile engine adapter (DIP unit struct).
 
 use ontologos_core::{Axiom, EntityId, Ontology, Reasoner, Taxonomy};
+use ontologos_rl::same_as_closure;
 
 use crate::{ElClassifier, ElReport};
 
@@ -26,20 +27,21 @@ impl ElEngine {
 
     /// Check consistency via EL classification (no unsatisfiable classes) plus disjoint clashes.
     pub fn is_consistent(&self, ontology: &Ontology) -> crate::Result<bool> {
-        if el_disjoint_abox_clash(ontology) {
-            return Ok(false);
-        }
         let taxonomy = ElClassifier::new().classify(ontology)?;
         if !taxonomy.unsatisfiable.is_empty() {
+            return Ok(false);
+        }
+        if el_disjoint_abox_clash(ontology, &taxonomy) {
             return Ok(false);
         }
         Ok(!el_disjoint_tbox_clash(ontology, &taxonomy))
     }
 }
 
-fn el_disjoint_abox_clash(ontology: &Ontology) -> bool {
-    use std::collections::HashMap;
+fn el_disjoint_abox_clash(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {
+    use std::collections::{HashMap, HashSet};
 
+    let same_as = same_as_closure(ontology);
     let mut disjoint_pairs: Vec<(EntityId, EntityId)> = Vec::new();
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::DisjointClasses(classes) = axiom {
@@ -56,23 +58,43 @@ fn el_disjoint_abox_clash(ontology: &Ontology) -> bool {
     if disjoint_pairs.is_empty() {
         return false;
     }
-    let disjoint: std::collections::HashSet<(EntityId, EntityId)> =
-        disjoint_pairs.into_iter().collect();
 
-    let mut types: HashMap<EntityId, Vec<EntityId>> = HashMap::new();
+    let mut types: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::ClassAssertion { individual, class } = axiom {
-            types.entry(*individual).or_default().push(*class);
+            let rep = same_as.representative(*individual);
+            types.entry(rep).or_default().insert(*class);
         }
     }
+
     for classes in types.values() {
-        for i in 0..classes.len() {
-            for j in (i + 1)..classes.len() {
-                let a = classes[i];
-                let b = classes[j];
-                let key = if a.0 <= b.0 { (a, b) } else { (b, a) };
-                if disjoint.contains(&key) {
-                    return true;
+        let mut expanded = HashSet::new();
+        for &class in classes {
+            expanded.insert(class);
+            for (_, axiom) in ontology.axioms().iter() {
+                let Axiom::SubClassOf {
+                    subclass,
+                    superclass,
+                } = axiom
+                else {
+                    continue;
+                };
+                if taxonomy.is_subsumed(class, *subclass) {
+                    expanded.insert(*superclass);
+                }
+            }
+        }
+        let expanded: Vec<EntityId> = expanded.into_iter().collect();
+        for i in 0..expanded.len() {
+            for j in (i + 1)..expanded.len() {
+                let a = expanded[i];
+                let b = expanded[j];
+                for &(d1, d2) in &disjoint_pairs {
+                    if (taxonomy.is_subsumed(a, d1) && taxonomy.is_subsumed(b, d2))
+                        || (taxonomy.is_subsumed(a, d2) && taxonomy.is_subsumed(b, d1))
+                    {
+                        return true;
+                    }
                 }
             }
         }

@@ -52,13 +52,11 @@ pub fn map_to_core(
             }
         }
     }
-    if limits.strict {
-        for (iri, kinds) in &declaration_kind_sets {
-            if kinds.len() > 1 && !declaration_kinds_compatible(kinds) {
-                return Err(Error::Parse(format!(
-                    "incompatible declaration kinds for {iri}: {kinds:?}"
-                )));
-            }
+    for (iri, kinds) in &declaration_kind_sets {
+        if kinds.len() > 1 && !declaration_kinds_compatible(kinds) {
+            return Err(Error::Parse(format!(
+                "incompatible declaration kinds for {iri}: {kinds:?}"
+            )));
         }
     }
     let punned_class_individuals: HashSet<String> = declaration_kind_sets
@@ -166,7 +164,7 @@ fn declaration_component(component: &Component<RcStr>) -> Option<(String, Entity
 pub(crate) struct Mapper<'a> {
     pub(crate) ontology: &'a mut Ontology,
     pub(crate) report: &'a mut ParseReport,
-    limits: ParseLimits,
+    pub(crate) limits: ParseLimits,
     punned_class_individuals: &'a HashSet<String>,
 }
 

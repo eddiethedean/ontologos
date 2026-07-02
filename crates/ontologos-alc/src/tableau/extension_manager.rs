@@ -650,7 +650,6 @@ impl TableauState {
     }
 
     /// Take the first tableau error recorded during expansion (if any).
-    #[allow(dead_code)] // reserved for DL error propagation from tableau internals
     pub(crate) fn take_tableau_error(&mut self) -> Option<crate::Error> {
         if let Some(err) = self.tuple_index_error.take() {
             return Some(err.into_alc_error());
@@ -1238,9 +1237,12 @@ impl Tableau {
     }
 
     /// Saturate description-graph tuples (HermiT `runCalculus` graph fragment).
-    pub fn saturate_description_graphs(&self) -> bool {
+    pub fn saturate_description_graphs(&self) -> Result<bool, crate::Error> {
         graph_merge::saturate_graph_merges(self);
-        !self.extension_manager().contains_clash()
+        if let Some(err) = self.extension_manager().take_internal_error() {
+            return Err(err);
+        }
+        Ok(!self.extension_manager().contains_clash())
     }
 }
 
@@ -1326,7 +1328,6 @@ impl ExtensionManagerRef {
     }
 
     /// Take a fatal tableau engine error (tuple index / merge), if any.
-    #[allow(dead_code)] // reserved for DL error propagation from tableau internals
     pub(crate) fn take_internal_error(&self) -> Option<crate::Error> {
         self.state.borrow_mut().take_tableau_error()
     }

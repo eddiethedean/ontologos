@@ -1167,6 +1167,9 @@ fn run_tbox_saturation(branch: &mut Branch<'_>) -> Result<bool, Error> {
             return Ok(false);
         }
     }
+    if block::is_budget_exhausted(branch) {
+        return Err(Error::ResourceLimit(block::max_expansions()));
+    }
     Ok(ok && !branch.clash)
 }
 
@@ -1290,7 +1293,7 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
         for _ in 0..256 {
             if block::at_world_limit(&branch) {
                 block::signal_resource_limit(&mut branch);
-                break;
+                return Err(Error::ResourceLimit(block::max_expansions()));
             }
             let before_edges = branch.edges.len();
             let before_labels: usize = branch.worlds.iter().map(|w| w.labels.len()).sum();
@@ -1327,7 +1330,7 @@ fn kb_consistent(dl: &DlOntology, seed: &TableauSeed) -> Result<bool, Error> {
     if trace {
         eprintln!("kb_consistent: ok={ok} clash={}", branch.clash);
     }
-    if block::is_budget_exhausted(&branch) && !ok {
+    if block::is_budget_exhausted(&branch) {
         return Err(Error::ResourceLimit(block::max_expansions()));
     }
     Ok(ok && !branch.clash)
@@ -2532,6 +2535,7 @@ impl<'a> Branch<'a> {
 
     fn expand(&mut self) -> Result<bool, Error> {
         let mut stall_steps = 0u32;
+        let mut discarded_blocked_ce = false;
         loop {
             if block::is_budget_exhausted(self) {
                 return Err(Error::ResourceLimit(block::max_expansions()));
@@ -2542,6 +2546,9 @@ impl<'a> Branch<'a> {
 
             let pending = self.next_pending();
             let Some((world, ce)) = pending else {
+                if discarded_blocked_ce && stall_steps > 0 {
+                    return Err(Error::ResourceLimit(block::max_expansions()));
+                }
                 return Ok(true);
             };
 
@@ -2553,11 +2560,12 @@ impl<'a> Branch<'a> {
                 // Blocked worlds are expansion-complete; drop pending concepts instead of
                 // re-queuing (re-queueing caused infinite stall loops on nominal cases).
                 block::mark_blocked(self, world);
+                discarded_blocked_ce = true;
                 let blocked_pending = self.worlds.iter().any(|w| w.blocked && !w.queue.is_empty());
                 if blocked_pending {
                     stall_steps += 1;
                     if stall_steps > block::max_stall_steps() {
-                        return Err(Error::ResourceLimit(block::max_stall_steps()));
+                        return Err(Error::ResourceLimit(block::max_expansions()));
                     }
                 } else {
                     stall_steps = 0;

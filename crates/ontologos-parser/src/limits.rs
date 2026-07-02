@@ -34,7 +34,7 @@ impl Default for ParseLimits {
             max_preprocess_bytes: max_file_bytes.saturating_mul(8),
             max_harvested_assertions: 100_000,
             strict: true,
-            merge_imports: true,
+            merge_imports: false,
             validate_output: true,
         }
     }

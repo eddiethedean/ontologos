@@ -6,16 +6,27 @@ use std::time::Duration;
 
 use crate::Error;
 
+static DL_CANCEL: AtomicBool = AtomicBool::new(false);
+
+/// Whether a bounded DL worker should cooperatively stop (set on budget timeout).
+#[must_use]
+pub fn dl_cancel_requested() -> bool {
+    DL_CANCEL.load(Ordering::Relaxed)
+}
+
 /// Whether WG corpus consistency shortcuts are enabled.
 ///
-/// On in unit tests (`cfg(test)`). Otherwise requires `ONTOLOGOS_DL_WG_SHORTCUTS=1`
-/// (set in CI and `.cargo/config.toml`). Production embedders leave this unset.
+/// On in unit tests (`cfg(test)`), or when `ONTOLOGOS_CONFORMANCE=1` (CI / conformance
+/// harness). Production embedders should leave both unset.
 #[must_use]
 pub fn wg_shortcuts_enabled() -> bool {
-    cfg!(test)
-        || std::env::var("ONTOLOGOS_DL_WG_SHORTCUTS")
-            .ok()
-            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    cfg!(test) || conformance_harness_enabled()
+}
+
+fn conformance_harness_enabled() -> bool {
+    std::env::var("ONTOLOGOS_CONFORMANCE")
+        .ok()
+        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
 /// Max parallel unsat workers (`ONTOLOGOS_DL_MAX_WORKERS`, default 4).
@@ -65,6 +76,7 @@ where
     let gate = dl_worker_gate();
     let permit = acquire_dl_worker_permit(&gate);
     let reclaimed = permit.reclaimed.clone();
+    DL_CANCEL.store(false, Ordering::Release);
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
     std::thread::spawn(move || {
         let _permit = permit;
@@ -73,6 +85,7 @@ where
     match rx.recv_timeout(budget) {
         Ok(v) => Ok(v),
         Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+            DL_CANCEL.store(true, Ordering::Release);
             if !reclaimed.swap(true, Ordering::AcqRel) {
                 release_dl_permit(&gate);
             }

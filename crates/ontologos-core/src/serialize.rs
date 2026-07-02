@@ -139,17 +139,16 @@ impl Ontology {
             )));
         }
 
-        if json.contains("\"format_version\": 1") || json.contains("\"format_version\":1") {
-            return Err(Error::Serialization(
-                "format_version 1 is not supported for untrusted input; use format_version 2"
-                    .into(),
-            ));
-        }
-
         Self::reject_duplicate_top_level_keys(json)?;
 
         let snapshot: OntologySnapshot =
             serde_json::from_str(json).map_err(|e| Error::Serialization(e.to_string()))?;
+        if snapshot.format_version == 1 {
+            return Err(Error::Serialization(
+                "format_version 1 is not supported for untrusted input; use format_version 2 or later"
+                    .into(),
+            ));
+        }
         Self::from_snapshot(snapshot, limits)
     }
 

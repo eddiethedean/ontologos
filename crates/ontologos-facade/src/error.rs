@@ -16,6 +16,9 @@ pub enum Error {
     /// RL/ABox engine error.
     #[error(transparent)]
     Rl(#[from] ontologos_rl::Error),
+    /// SWRL engine error.
+    #[error(transparent)]
+    Swrl(#[from] ontologos_swrl::Error),
     /// Core error (e.g. incomplete consistency folded to message).
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),

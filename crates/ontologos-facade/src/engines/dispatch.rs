@@ -12,6 +12,7 @@ use ontologos_el::ElClassifier;
 use ontologos_profile::resolve_route;
 use ontologos_rl::RlEngine;
 use ontologos_rl::rdfs::RdfsEngine;
+use ontologos_swrl::SwrlEngine;
 
 use crate::error::{Error, Result};
 use crate::lookup::index_sub_object_properties;
@@ -33,7 +34,7 @@ pub(crate) fn classify(route: ResolvedRoute, reasoner: &mut Reasoner) -> Result<
             ontologos_rl::saturate_routed(reasoner).map_err(Error::Rl)?,
         )),
         EngineKind::Alc | EngineKind::Dl => classify_dl(reasoner),
-        EngineKind::Swrl => classify_dl(reasoner),
+        EngineKind::Swrl => classify_swrl(reasoner),
         EngineKind::Hybrid => classify_hybrid_modules(reasoner.ontology()),
     }
 }
@@ -65,9 +66,15 @@ pub(crate) fn check_consistency(
             Ok(consistency_from_bool(consistent))
         }
         EngineKind::Rl => check_consistency_rl(reasoner),
-        EngineKind::Alc | EngineKind::Dl | EngineKind::Swrl => DlEngine
+        EngineKind::Alc | EngineKind::Dl => DlEngine
             .check_consistency(reasoner.ontology(), reasoner.config().budget_secs)
             .map_err(Error::Dl),
+        EngineKind::Swrl => {
+            let consistent = SwrlEngine
+                .is_consistent(reasoner.ontology())
+                .map_err(Error::Swrl)?;
+            Ok(consistency_from_bool(consistent))
+        }
         EngineKind::Hybrid => check_consistency_hybrid(route, reasoner),
     }
 }
@@ -99,17 +106,30 @@ pub(crate) fn sub_object_properties(
 }
 
 fn classify_el(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
-    if reasoner.config().incremental {
+    if reasoner.profile() == Profile::El {
         Ok(ClassifyOutcome::Taxonomy(
             ontologos_el::classify_with_report(reasoner)?.taxonomy,
         ))
-    } else {
+    } else if reasoner.config().incremental {
         Ok(ClassifyOutcome::Taxonomy(
             ElClassifier::new()
                 .classify(reasoner.ontology())
                 .map_err(Error::El)?,
         ))
+    } else {
+        let report = ElClassifier::new()
+            .classify_with_options(reasoner.ontology(), reasoner.config().explanations)
+            .map_err(Error::El)?;
+        reasoner.clear_session();
+        Ok(ClassifyOutcome::Taxonomy(report.taxonomy))
     }
+}
+
+fn classify_swrl(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
+    let (taxonomy, _report) = SwrlEngine
+        .classify_with_swrl(reasoner.ontology())
+        .map_err(Error::Swrl)?;
+    Ok(ClassifyOutcome::Taxonomy(taxonomy))
 }
 
 fn classify_dl(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {

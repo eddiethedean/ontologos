@@ -129,6 +129,11 @@ impl Ontology {
         self.enforce_limits
     }
 
+    /// Restore [`enforce_limits`](Self::enforce_limits) after a scoped operation.
+    pub fn restore_enforce_limits(&mut self, limits: Option<Limits>) {
+        self.enforce_limits = limits;
+    }
+
     /// Drop cached profile constructs after ontology mutation (forces re-scan).
     pub(crate) fn invalidate_profile_constructs(&mut self) {
         if let Some(meta) = self.parse_meta.as_mut() {

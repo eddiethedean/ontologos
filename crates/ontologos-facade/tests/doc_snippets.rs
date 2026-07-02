@@ -1,7 +1,7 @@
 //! Compile-check for canonical documentation examples (production facade pattern).
 
 use ontologos_core::{Profile, Reasoner};
-use ontologos_facade::{check_consistency, classify, ClassifyOutcome};
+use ontologos_facade::{ClassifyOutcome, check_consistency, classify};
 
 #[test]
 fn production_facade_pattern_compiles() {
@@ -12,9 +12,7 @@ fn production_facade_pattern_compiles() {
             .subclass_of("http://example.org/A", "http://example.org/B")?
             .build()?;
 
-        let mut reasoner = Reasoner::builder()
-            .profile(Profile::El)
-            .build(ontology)?;
+        let mut reasoner = Reasoner::builder().profile(Profile::El).build(ontology)?;
 
         let consistency = check_consistency(&reasoner)?;
         assert!(consistency.complete);

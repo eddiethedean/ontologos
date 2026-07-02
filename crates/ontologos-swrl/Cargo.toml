@@ -20,4 +20,5 @@ ontologos-core = { workspace = true }
 ontologos-dl = { workspace = true }
 ontologos-parser = { workspace = true }
 ontologos-profile = { workspace = true }
+ontologos-rl = { workspace = true }
 thiserror = { workspace = true }

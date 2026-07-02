@@ -212,6 +212,18 @@ impl Mapper<'_> {
 
     /// Push a DL axiom (stored in [`DlStore`], not core axiom count).
     pub(crate) fn push_dl_axiom(&mut self, axiom: DlAxiom) {
+        let total = self
+            .ontology
+            .axiom_count()
+            .saturating_add(self.ontology.dl().axiom_count());
+        if total >= self.limits.max_axioms {
+            self.report.meta.warn(format!(
+                "axiom limit {} reached; skipping further DL axioms",
+                self.limits.max_axioms
+            ));
+            self.report.meta.skipped_axiom_count += 1;
+            return;
+        }
         self.ontology.dl_mut().push_axiom(axiom);
     }
 

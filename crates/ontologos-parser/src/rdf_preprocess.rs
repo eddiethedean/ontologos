@@ -6,6 +6,13 @@ use crate::{Error, Result};
 
 const BUILTIN_PREFIXES: &[&str] = &["rdf", "owl", "rdfs", "xsd", "xml"];
 
+fn safe_xml_attr(value: &str) -> Option<String> {
+    if value.contains(['"', '\'', '&', '<', '>']) {
+        return None;
+    }
+    Some(value.replace('&', "&amp;"))
+}
+
 /// Expand `<!ENTITY ...>` declarations in RDF/XML prolog with an output size cap.
 pub fn expand_xml_entities(input: &str, max_bytes: usize) -> Result<String> {
     expand_xml_entities_with_limit(input, max_bytes)
@@ -372,17 +379,30 @@ pub fn inject_rdf_based_punning_declarations(input: &str) -> String {
     let mut class_list: Vec<_> = classes.into_iter().collect();
     class_list.sort();
     for iri in class_list {
-        injections.push_str(&format!("  <owl:Class rdf:about=\"{iri}\"/>\n"));
+        let Some(escaped) = safe_xml_attr(&iri) else {
+            continue;
+        };
+        injections.push_str(&format!("  <owl:Class rdf:about=\"{escaped}\"/>\n"));
     }
     let mut object_list: Vec<_> = object_props.into_iter().collect();
     object_list.sort();
     for iri in object_list {
-        injections.push_str(&format!("  <owl:ObjectProperty rdf:about=\"{iri}\"/>\n"));
+        let Some(escaped) = safe_xml_attr(&iri) else {
+            continue;
+        };
+        injections.push_str(&format!(
+            "  <owl:ObjectProperty rdf:about=\"{escaped}\"/>\n"
+        ));
     }
     let mut datatype_list: Vec<_> = datatype_props.into_iter().collect();
     datatype_list.sort();
     for iri in datatype_list {
-        injections.push_str(&format!("  <owl:DatatypeProperty rdf:about=\"{iri}\"/>\n"));
+        let Some(escaped) = safe_xml_attr(&iri) else {
+            continue;
+        };
+        injections.push_str(&format!(
+            "  <owl:DatatypeProperty rdf:about=\"{escaped}\"/>\n"
+        ));
     }
 
     let mut out = String::with_capacity(input.len() + injections.len());
@@ -407,7 +427,12 @@ pub fn inject_object_property_declarations_from_usage(input: &str) -> String {
     list.sort();
     let mut injections = String::new();
     for iri in list {
-        injections.push_str(&format!("  <owl:ObjectProperty rdf:about=\"{iri}\"/>\n"));
+        let Some(escaped) = safe_xml_attr(&iri) else {
+            continue;
+        };
+        injections.push_str(&format!(
+            "  <owl:ObjectProperty rdf:about=\"{escaped}\"/>\n"
+        ));
     }
     let Some(insert_at) = find_rdf_open_body_start(input) else {
         return input.to_owned();

@@ -927,6 +927,7 @@ dependencies = [
  "ontologos-core",
  "ontologos-parser",
  "ontologos-profile",
+ "ontologos-rl",
  "thiserror 2.0.18",
 ]
 
@@ -955,6 +956,7 @@ dependencies = [
  "ontologos-profile",
  "ontologos-ql",
  "ontologos-rl",
+ "ontologos-swrl",
  "serde",
  "thiserror 2.0.18",
  "tracing",
@@ -1050,6 +1052,7 @@ dependencies = [
  "ontologos-dl",
  "ontologos-parser",
  "ontologos-profile",
+ "ontologos-rl",
  "thiserror 2.0.18",
 ]
 

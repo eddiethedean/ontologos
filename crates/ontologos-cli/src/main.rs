@@ -121,6 +121,8 @@ enum CliProfile {
     Dl,
     /// OWL 2 DL preview (subset checks, explicit warning)
     DlPreview,
+    /// DLSafe SWRL profile (rules materialized before DL classification)
+    Swrl,
 }
 
 impl From<CliProfile> for Profile {
@@ -132,6 +134,7 @@ impl From<CliProfile> for Profile {
             CliProfile::Rdfs => Profile::Rdfs,
             CliProfile::Alc | CliProfile::Dl => Profile::Dl,
             CliProfile::DlPreview => Profile::DlPreview,
+            CliProfile::Swrl => Profile::Swrl,
         }
     }
 }
@@ -165,6 +168,9 @@ fn map_facade_error(error: ontologos_facade::Error) -> CliError {
         ontologos_facade::Error::El(inner) => CliError::El(inner),
         ontologos_facade::Error::Dl(inner) => CliError::Dl(inner),
         ontologos_facade::Error::Rl(inner) => CliError::Rl(inner),
+        ontologos_facade::Error::Swrl(inner) => {
+            CliError::Core(ontologos_core::Error::Message(inner.to_string()))
+        }
         ontologos_facade::Error::Core(inner) => CliError::Core(inner),
     }
 }
@@ -478,8 +484,9 @@ fn run() -> Result<(), CliError> {
             let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            // ABox RL lookup; global `--profile` does not affect this command.
-            let reasoner = Reasoner::builder().build(ontology)?;
+            let reasoner = Reasoner::builder()
+                .profile(cli.profile.into())
+                .build(ontology)?;
             let values = ontologos_facade::get_object_property_values(&reasoner, subject, property)
                 .map_err(map_facade_error)?;
             match cli.format {

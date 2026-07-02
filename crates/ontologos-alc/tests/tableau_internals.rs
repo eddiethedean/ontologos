@@ -843,7 +843,7 @@ fn hermit_ni_rule_test_ni_and_pruning() {
     ni.add_annotated_equality(eq_two_r_a(), &a1, &b11, &c, empty.clone());
     ext.add_assertion(DlPredicate::Equality, &b1, Some(&c), empty.clone(), false);
     assert!(b11.is_pruned());
-    assert!(do_iteration(&tableau, &[]));
+    assert!(do_iteration(&tableau, &[]).unwrap());
     assert!(a1.is_active());
     assert_eq!(ni.pending_annotated_equalities(), 1);
 }
@@ -896,7 +896,7 @@ fn hermit_dl_clause_evaluation_test_evaluator() {
     let evaluators = [DlClauseEvaluator::new(
         ontologos_alc::dl_clause_evaluation_test_clause(),
     )];
-    assert!(run_calculus(&tableau, &evaluators));
+    assert!(run_calculus(&tableau, &evaluators).unwrap());
     test_helpers::assert_retrieval(
         &ext.ternary_extension_table(),
         &[
@@ -939,7 +939,7 @@ fn hermit_graph_test_graph_merging() {
     let n7 = tableau.create_new_ni_node(empty.clone());
     ext.add_quaternary_tuple(graph.id(), &n1, &n7, &n6, empty.clone(), false);
     assert!(ext.contains_quaternary_tuple(graph.id(), &n1, &n2, &n3));
-    assert!(tableau.saturate_description_graphs());
+    assert!(tableau.saturate_description_graphs().unwrap());
     graph_merge::assert_graph_merging_canonicals(&tableau, &n1, &n2, &n3, &n4, &n5, &n6, &n7);
     assert!(ext.contains_quaternary_tuple(graph.id(), &n1, &n7, &n6));
 }
@@ -1156,7 +1156,7 @@ fn hermit_ni_rule_test_disjunctions_in_tree_part() {
         empty.clone(),
         false,
     );
-    assert!(do_iteration(&tableau, &[]));
+    assert!(do_iteration(&tableau, &[]).unwrap());
     assert_eq!(tableau.ni_manager().pending_annotated_equalities(), 0);
 }
 
