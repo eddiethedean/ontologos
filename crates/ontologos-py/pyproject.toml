@@ -33,6 +33,7 @@ dependencies = []
 [project.optional-dependencies]
 pandas = ["pandas>=2.0"]
 polars = ["polars>=0.20"]
+dev = ["pytest>=8.0", "maturin>=1.7,<2.0", "pyright>=1.1"]
 
 [project.urls]
 Homepage = "https://github.com/eddiethedean/ontologos"
@@ -44,3 +45,12 @@ Documentation = "https://ontologos.readthedocs.io/"
 features = ["pyo3/extension-module"]
 python-source = "python"
 module-name = "ontologos._ontologos"
+
+[tool.pyright]
+pythonVersion = "3.11"
+include = ["python", "tests"]
+extraPaths = ["python"]
+venvPath = "."
+venv = ".venv"
+reportMissingImports = "error"
+reportMissingModuleSource = "none"

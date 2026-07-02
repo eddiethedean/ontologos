@@ -81,7 +81,7 @@ fn ian_backjumping3_ce_is_unsatisfiable() {
 }
 
 #[test]
-#[ignore = "cardinality CE on empty TBox — tableau gap"]
+#[ignore = "cardinality min/max CE on empty TBox — ALC tableau gap; HermiT catalog case testIanBug3 excluded"]
 fn ianbug3_ce_is_satisfiable() {
     let ce = "ObjectIntersectionOf(ObjectSomeValuesFrom(:r :a) ObjectMinCardinality(3 :r :c) ObjectMinCardinality(3 :r :d) ObjectMinCardinality(2 :r ObjectIntersectionOf(:e ObjectComplementOf(ObjectIntersectionOf(:c :d)))) ObjectMaxCardinality(4 :r) ObjectMaxCardinality(2 :r ObjectIntersectionOf(:c :d)))";
     assert!(

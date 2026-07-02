@@ -1,43 +1,24 @@
-from typing import Any, TypedDict
+from typing import Any, Generic, Literal, TypeVar, overload
 
-class ParseMeta(TypedDict):
-    warnings: list[str]
-    mapped_axiom_count: int
-    skipped_axiom_count: int
-    logical_axiom_count: int
+from ontologos.types import (
+    ConsistencyResult,
+    ExplainResult,
+    MaterializeResult,
+    ParseMeta,
+    TaxonomyResult,
+)
 
-class ProofNode(TypedDict, total=False):
-    rule: str
-    premises: list[int]
-    conclusion_axiom: int
-    conclusion_sub: tuple[str, str]
-    conclusion_existential: tuple[str, str, str]
-    conclusion_subproperty: tuple[str, str]
-
-class ExplainResult(TypedDict, total=False):
-    node_count: int
-    nodes: list[ProofNode]
-    parse_meta: ParseMeta
-
-class TaxonomyResult(TypedDict):
-    status: str
-    subsumption_count: int
-    subsumptions: list[tuple[str, str]]
-    equivalences: list[list[str]]
-    unsatisfiable: list[str]
-
-class MaterializeResult(TypedDict, total=False):
-    status: str
-    initial_axiom_count: int
-    final_axiom_count: int
-    inferred_axioms: int
-    inferred_by_rule: dict[str, int]
-    clash_count: int
-    clashes: list[str]
-
-class ConsistencyResult(TypedDict):
-    consistent: bool
-    complete: bool
+MaterializeProfile = Literal["rdfs", "rl"]
+TaxonomyProfile = Literal["el", "dl", "dl-preview", "alc", "swrl"]
+AutoProfile = Literal["auto"]
+ProfileT = TypeVar(
+    "ProfileT",
+    MaterializeProfile,
+    TaxonomyProfile,
+    AutoProfile,
+    None,
+    default=None,
+)
 
 class Ontology:
     @classmethod
@@ -78,11 +59,103 @@ class OntologyBuilder:
     ) -> None: ...
     def build(self) -> Ontology: ...
 
-class Reasoner:
+class Reasoner(Generic[ProfileT]):
+    @overload
+    def __init__(
+        self: Reasoner[Literal["rdfs"]],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: Literal["rdfs"],
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: Reasoner[Literal["rl"]],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: Literal["rl"],
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: Reasoner[Literal["el"]],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: Literal["el"],
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: Reasoner[Literal["dl"]],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: Literal["dl"],
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: Reasoner[Literal["dl-preview"]],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: Literal["dl-preview"],
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: Reasoner[Literal["alc"]],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: Literal["alc"],
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: Reasoner[Literal["swrl"]],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: Literal["swrl"],
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: Reasoner[Literal["auto"]],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: Literal["auto"] = "auto",
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: Reasoner[None],
+        path: str | None = None,
+        ontology: Ontology | None = None,
+        *,
+        profile: None = None,
+        incremental: bool = False,
+        budget_secs: int | None = None,
+    ) -> None: ...
+    @overload
     def __init__(
         self,
         path: str | None = None,
         ontology: Ontology | None = None,
+        *,
         profile: str | None = None,
         incremental: bool = False,
         budget_secs: int | None = None,
@@ -91,6 +164,14 @@ class Reasoner:
     def parse_meta(self) -> ParseMeta: ...
     @property
     def taxonomy(self) -> TaxonomyResult | None: ...
+    @overload
+    def classify(self: Reasoner[MaterializeProfile]) -> MaterializeResult: ...
+    @overload
+    def classify(self: Reasoner[TaxonomyProfile]) -> TaxonomyResult: ...
+    @overload
+    def classify(self: Reasoner[AutoProfile]) -> TaxonomyResult | MaterializeResult: ...
+    @overload
+    def classify(self: Reasoner[None]) -> TaxonomyResult | MaterializeResult: ...
     def classify(self) -> TaxonomyResult | MaterializeResult: ...
     def explain(self) -> ExplainResult: ...
     def check_consistency(self) -> ConsistencyResult: ...

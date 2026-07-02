@@ -15,9 +15,9 @@ Single source of truth for version and distribution channels. Update this page w
 
 Published crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-CLI (`ontologos-cli`), Python (`ontologos-py`), conformance, and watch are **source-build only** — not on crates.io.
+CLI (`ontologos-cli`), Python (`ontologos-py`), and conformance are **source-build only** — not on crates.io.
 
-## HermiT parity snapshot (`main`, 2026-06-29)
+## HermiT parity snapshot (`main`, 2026-07-02)
 
 ```bash
 bash benchmarks/scripts/hermit-burndown.sh status
@@ -31,7 +31,8 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Catalog `parity_pct` | **100%** (`java_planned = 0`, `wg_planned = 0`) |
 | Composite `true_parity_pct` | **100%** (blocking CI) |
 | `in_scope_total` | **889** |
-| Active conformance tests | **1009** / **1152** total (**143** `#[ignore]`) |
+| Active conformance tests | **1048** / **1049** total (**1** hand-written `#[ignore]` in `hermit_owllink.rs`) |
+| Generated catalog `#[ignore]` | **0** (`check-hermit-ignore-budget.sh` ceiling **0**) |
 | Runnable Java axiom + WG @ 30s | **450** + **428** (blocking CI, full suite) |
 | Promoted IDs (`phase9_closure`) | **400** axiom + **428** WG |
 | DL OFN pass rate @ 30s | **277/277** |

@@ -71,7 +71,7 @@ Raise `ONTOLOGOS_TRUE_PARITY_MIN` as burndown progresses; switch `ONTOLOGOS_TRUE
 | Tier | Goal | Status |
 |------|------|--------|
 | **A** | v1.0.0 publish + tag | Checklist: [release-1.0-checklist.md](../project/release-1.0-checklist.md) |
-| **B** | Literal catalog 1019/1019 | In progress — **103** Java out-of-scope; **122** `#[ignore]`; Bob A/B hand test green |
+| **B** | Literal catalog 1019/1019 | **Complete** — **119** Java out-of-scope; **0** generated `#[ignore]`; **1** hand-written diagnostic ignore |
 | **C** | Strict taxonomy (`--max-extra 0`) | **Informational** — sound superset is blocking; identity gate waived (26 extras on `family.owl` vs HermiT until 2.0) |
 | **D** | Perf + OWL API | Family DL **< 1.0 s** PR gate green; Pizza **< 30 s** nightly only |
 
@@ -80,7 +80,7 @@ Raise `ONTOLOGOS_TRUE_PARITY_MIN` as burndown progresses; switch `ONTOLOGOS_TRUE
 | ID | Workstream | Verify |
 |----|------------|--------|
 | **B3** | Port `ClausificationTest` / `NormalizationTest` / `tableau/*` | **Complete (portable scope)** — 39 `migrated`; 7/7 hyper goldens; 23+3 inventory tests ([internal_ports.toml](https://github.com/eddiethedean/ontologos/blob/main/tests/hermit/internal_ports.toml)). **Bottleneck for true parity:** full `tableau.*` port (~19% internal_port_pct) |
-| **B4** | Burn down **122** `#[ignore]` tests; promote OWLLink cases | Harness metrics live; nightly `--ignored` job; Bob A/B **ported** |
+| **B4** | Promote OWLLink cases; keep generated ignore budget at **0** | Harness metrics live; nightly `--ignored` job (1 diagnostic); Bob A/B **ported** |
 | **C** | Strict taxonomy CI (`ONTOLOGOS_STRICT_TAXONOMY=1`, `--max-extra 0`) | `compare-tier-c-strict-family.sh` (PR informational); engine extras on pizza/go-subset remain |
 | **D1** | Criterion saturation/tableau benches; Pizza DL **< 30 s** PR gate | `compare-tier-d-perf-gate.sh` (Family **< 1.0 s** PR); `cargo bench -p ontologos-dl` |
 | **D2–D4** | Default `owl:imports`; SWRL / `RulesTest` or waiver; `isConsistent` / `isEntailed` / `query` facade | CLI `consistent`/`entail`; facade `is_entailed` + `query_engine`; SWRL deferred |

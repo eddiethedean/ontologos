@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from ontologos import OntologyBuilder, Reasoner
+from ontologos import Ontology, OntologyBuilder, Reasoner
 
 
-def _chain_ontology() -> object:
+def _chain_ontology() -> Ontology:
     builder = OntologyBuilder()
     builder.add_class("http://example.org/A")
     builder.add_class("http://example.org/B")

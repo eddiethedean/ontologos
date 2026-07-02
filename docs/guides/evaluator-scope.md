@@ -43,7 +43,7 @@ Composite minimum of:
 |-------|------:|
 | Java axiom tests | **450** |
 | OWL WG tests | **428** |
-| Active conformance tests total | **1009** / **1152** defined (**143** `#[ignore]`) |
+| Active conformance tests total | **1048** / **1049** defined (**1** hand-written `#[ignore]`; **0** in generated catalogs) |
 
 ## What 100% does **not** guarantee
 

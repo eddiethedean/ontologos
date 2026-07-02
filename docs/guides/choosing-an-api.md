@@ -94,7 +94,7 @@ Or CLI: `ontologos profile file.owl`
 
 ### RDFS TBox materialization
 
-**Crates:** `ontologos-rl` (+ parser if loading files). RDFS lives in `ontologos_rl::rdfs` (workspace **1.0.0**). Published **0.9.0** also ships standalone `ontologos-rdfs` — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md).
+**Crates:** `ontologos-rl` (+ parser if loading files). RDFS lives in `ontologos_rl::rdfs` (workspace **1.0.0** and published **0.9.0** via `ontologos-rl`) — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md) if you still depend on the removed `ontologos-rdfs` shim.
 
 **Direct:**
 

@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+
+from ontologos.types import TaxonomyResult
 
 if TYPE_CHECKING:
     import pandas as pd
     import polars as pl
 
 
-def _subsumption_rows(taxonomy: dict[str, Any]) -> list[tuple[str, str]]:
+def _subsumption_rows(taxonomy: TaxonomyResult) -> list[tuple[str, str]]:
     if "subsumptions" not in taxonomy:
         status = taxonomy.get("status", "unknown")
         raise ValueError(
@@ -22,7 +24,7 @@ def _subsumption_rows(taxonomy: dict[str, Any]) -> list[tuple[str, str]]:
     return [(str(sub), str(sup)) for sub, sup in subs]
 
 
-def subsumptions_to_pandas(taxonomy: dict[str, Any]) -> pd.DataFrame:
+def subsumptions_to_pandas(taxonomy: TaxonomyResult) -> pd.DataFrame:
     """Return a DataFrame with columns ``subclass`` and ``superclass``."""
     import pandas as pd
 
@@ -30,7 +32,7 @@ def subsumptions_to_pandas(taxonomy: dict[str, Any]) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["subclass", "superclass"])
 
 
-def subsumptions_to_polars(taxonomy: dict[str, Any]) -> pl.DataFrame:
+def subsumptions_to_polars(taxonomy: TaxonomyResult) -> pl.DataFrame:
     """Return a Polars DataFrame with columns ``subclass`` and ``superclass``."""
     import polars as pl
 

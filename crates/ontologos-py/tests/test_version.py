@@ -56,11 +56,14 @@ def test_classify_el_profile_returns_taxonomy() -> None:
 
 
 def test_classify_auto_profile_routes_el_fixture() -> None:
+    from typing import cast
+
     from ontologos import Reasoner
+    from ontologos.types import TaxonomyResult
 
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
     reasoner = Reasoner(path=str(FIXTURE), profile="auto")
-    result = reasoner.classify()
+    result = cast(TaxonomyResult, reasoner.classify())
     pairs = set(map(tuple, result["subsumptions"]))
     assert (
         "http://example.org/test#A",

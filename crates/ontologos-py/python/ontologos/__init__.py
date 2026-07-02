@@ -13,15 +13,22 @@ try:
         Reasoner,
         ResourceLimitError,
     )
-except ImportError:  # pragma: no cover - platform wheel not installed
-    Ontology = None  # type: ignore[assignment,misc]
-    OntologyBuilder = None  # type: ignore[assignment,misc]
-    Reasoner = None  # type: ignore[assignment,misc]
-    ParseError = None  # type: ignore[assignment,misc]
-    ResourceLimitError = None  # type: ignore[assignment,misc]
-    IncompleteReasoningError = None  # type: ignore[assignment,misc]
+except ImportError as exc:  # pragma: no cover - platform wheel not installed
+    raise ImportError(
+        "ontologos native extension is not installed; "
+        "run `maturin develop --release` from crates/ontologos-py"
+    ) from exc
 
 from ontologos.export import subsumptions_to_pandas, subsumptions_to_polars
+from ontologos.types import (
+    ClassifyResult,
+    ConsistencyResult,
+    ExplainResult,
+    MaterializeResult,
+    ParseMeta,
+    ProofNode,
+    TaxonomyResult,
+)
 
 __all__ = [
     "Ontology",
@@ -30,6 +37,13 @@ __all__ = [
     "ParseError",
     "ResourceLimitError",
     "IncompleteReasoningError",
+    "ClassifyResult",
+    "ConsistencyResult",
+    "ExplainResult",
+    "MaterializeResult",
+    "ParseMeta",
+    "ProofNode",
+    "TaxonomyResult",
     "__version__",
     "subsumptions_to_pandas",
     "subsumptions_to_polars",

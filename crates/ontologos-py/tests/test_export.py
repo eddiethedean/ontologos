@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import pytest
 
+from ontologos.types import TaxonomyResult
 
-def _sample_taxonomy() -> dict:
+
+def _sample_taxonomy() -> TaxonomyResult:
     return {
+        "status": "classified",
         "subsumption_count": 2,
         "subsumptions": [
             ("http://example.org/A", "http://example.org/B"),

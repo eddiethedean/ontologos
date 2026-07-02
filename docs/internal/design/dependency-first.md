@@ -20,7 +20,7 @@ Delegate profile-specific reasoning where a maintained crates.io dependency cove
 | Serialization | `serde` |
 | Python bindings | `pyo3` |
 
-Public crate names (`ontologos-el`, `ontologos-rl`, `ontologos-rdfs`) remain stable facades. Conversions for RL/RDFS live in `ontologos-bridge`.
+Public crate names (`ontologos-el`, `ontologos-rl`) remain stable facades. RDFS materialization lives in `ontologos_rl::rdfs`. Conversions for RL/RDFS live in `ontologos-bridge`.
 
 ## Rules
 
@@ -48,7 +48,7 @@ Public crate names (`ontologos-el`, `ontologos-rl`, `ontologos-rdfs`) remain sta
 | `subClassOf` / `equivalentClass` | Partial (no ∃ TBox) | Yes | EL for taxonomy |
 | Property characteristics | Yes (asserted) | N/A | No subProperty propagation |
 | Domain / range typing | Partial | Via EL domains | RL gaps in table above |
-| `sameAs` / `differentFrom` | Via `ontologos-abox` | N/A | RL saturation + closure |
+| `sameAs` / `differentFrom` | Via `ontologos-rl` ABox helpers | N/A | RL saturation + closure |
 | Complex DL (¬, nominals, cardinality) | No | No | `ontologos-dl` |
 
 `whelk` is not a runtime dependency; EL uses in-house completion aligned with ELK semantics.

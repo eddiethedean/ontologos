@@ -7,7 +7,7 @@ Workspace integration tests live in individual crates:
 | `ontologos-core` | `crates/ontologos-core/tests/` |
 | `ontologos-parser` | `crates/ontologos-parser/tests/` (mapping fixtures, manifest corpora) |
 | `ontologos-profile` | `crates/ontologos-profile/tests/` |
-| `ontologos-rdfs` | `crates/ontologos-rdfs/tests/` |
+| `ontologos-rl` | `crates/ontologos-rl/tests/` (OWL RL + RDFS `rdfs` module) |
 | `ontologos-cli` | `crates/ontologos-cli/tests/` |
 | `ontologos-conformance` | HermiT-ported tests — [tests/hermit/](hermit/) |
 

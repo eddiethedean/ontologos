@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Production DL integration guide: `budget_secs`, `check_consistency`, conformance env warnings
 - Security docs: `max_literal_bytes`, horned-owl parser mutex contract, conformance harness env vars
 - `#[non_exhaustive]` on `ClassifyOutcome` for forward-compatible facade matches
+- Python: `ontologos.types` TypedDict exports; profile-aware `Reasoner` stubs; Pyright CI on `python` + `tests`
 
 ### Changed
 
@@ -19,14 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Doc/code alignment: entailment cap **192** named classes; `ParseLimits::merge_imports` default **false**
 - `SECURITY.md` supported versions updated for **1.0.x**
 - **Removed workspace crates:** `ontologos-rdfs`, `ontologos-abox`, `ontologos-query` (empty shims — use `ontologos-rl` / `ontologos-ql`); `ontologos-watch` (unused orphan)
+- Python: `__init__.py` raises on missing native extension instead of exporting `None` placeholders
 
 ### Fixed
 
 - 32 verified bugs across ALC, facade, SWRL, parser, bridge, Python, and CLI (B-01–B-32)
+- Removed stale ignored `dl650_and_dl910_should_be_inconsistent` triage test (covered by `phase4_remaining_consistency_cases_fast`)
 
 ### Documentation
 
 - Documentation adoption audit: facade-first examples, evaluator scope page, query/QL reference rewrite, channel banners, parity metric reconciliation, doc snippet CI.
+- Reconciled conformance metrics (**1048** active / **1** ignored; **0** generated catalog ignores) in release status and evaluator scope
+- Updated removed-crate references (`ontologos-rdfs`, `ontologos-abox`) in choosing-an-api, dependency-first ADR, and tests README
+- Documented reasonable `sameAs`/`differentFrom` clash reporting gap in reasonable-limits reference
 
 ## [1.0.0] - 2026-06-13
 

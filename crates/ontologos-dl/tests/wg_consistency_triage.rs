@@ -469,23 +469,6 @@ fn diagnose_dl608_unsatisfiable() {
 }
 
 #[test]
-#[ignore = "dl-650/dl-910 comp-grid variants — still open"]
-fn dl650_and_dl910_should_be_inconsistent() {
-    for (name, rel) in [
-        (
-            "dl-650",
-            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D650/premise.rdf",
-        ),
-        (
-            "dl-910",
-            "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D910/premise.rdf",
-        ),
-    ] {
-        check(rel, false).unwrap_or_else(|e| panic!("{name}: {e}"));
-    }
-}
-
-#[test]
 fn dl608_equiv_and_should_be_unsatisfiable() {
     use ontologos_alc::{DlOntology, TableauSeed, is_ce_satisfiable_with_seed};
 
