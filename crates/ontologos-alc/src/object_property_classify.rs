@@ -3,7 +3,9 @@
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
-use ontologos_core::{Axiom, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy};
+use ontologos_core::{
+    Axiom, ClassExpr, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr, Taxonomy,
+};
 
 use crate::Error;
 use crate::dl_ontology::DlOntology;
@@ -40,13 +42,13 @@ fn structural_sub_property_graph(ontology: &Ontology) -> HashMap<EntityId, HashS
         }
     }
     for axiom in ontology.dl().axioms() {
-        if let DlAxiom::SubObjectPropertyOf { sub, sup } = axiom {
-            if let (Some(sub), Some(sup)) = (
+        if let DlAxiom::SubObjectPropertyOf { sub, sup } = axiom
+            && let (Some(sub), Some(sup)) = (
                 object_property_entity(ontology, sub),
                 object_property_entity(ontology, sup),
-            ) {
-                note(sub, sup);
-            }
+            )
+        {
+            note(sub, sup);
         }
     }
     supers_of
@@ -608,7 +610,11 @@ impl RoleSurrogateContext {
             entry.all.clone()
         };
         if let Some(query_entity) = query_object_property_entity(property) {
-            out.extend(structural_sub_role_exprs(self.dl.core(), query_entity, direct));
+            out.extend(structural_sub_role_exprs(
+                self.dl.core(),
+                query_entity,
+                direct,
+            ));
         }
         Ok(out)
     }

@@ -25,7 +25,8 @@ cargo doc -p ontologos-alc --no-deps
 
 1. Confirm [Cargo.toml](../../Cargo.toml) workspace `version = "1.0.0"`.
 2. Update [CHANGELOG.md](../../CHANGELOG.md) with v1.0.0 section (merge `[Unreleased]` if needed).
-3. Push annotated tag **`v1.0.0`** — triggers [.github/workflows/release.yml](../../.github/workflows/release.yml):
+3. Confirm GitHub Release notes at [`.github/release/v1.0.0.md`](../../.github/release/v1.0.0.md).
+4. Push annotated tag **`v1.0.0`** — triggers [.github/workflows/release.yml](../../.github/workflows/release.yml):
    - `verify` (full conformance @ 30s)
    - `publish-crates` (all `publish = true` crates including `ontologos-dl`, `ontologos-alc`, `ontologos-swrl`, `ontologos-ql`)
    - PyPI maturin wheels (`ontologos==1.0.0`)
