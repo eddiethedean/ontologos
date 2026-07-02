@@ -184,7 +184,13 @@ fn el_may_skip_tableau_taxonomy(ontology: &Ontology, constructs: &BTreeSet<OwlCo
         if defined_class::is_pizza_defined_class_corpus(ontology) {
             return true;
         }
-        return false;
+        // Medium EL-safe corpora (e.g. family.owl): saturation + EL merge matches HermiT without O(n²) tableau.
+        let class_count = ontology
+            .entities()
+            .iter()
+            .filter(|(_, record)| record.kind == ontologos_core::EntityKind::Class)
+            .count();
+        return class_count > 12;
     }
     !constructs.iter().any(|c| {
         matches!(
@@ -278,14 +284,6 @@ fn derive_union_equivalence_subsumptions(ontology: &Ontology) -> Vec<(EntityId, 
 fn enrich_taxonomy(ontology: &Ontology, taxonomy: &mut Taxonomy) {
     for (sub, sup) in derive_union_equivalence_subsumptions(ontology) {
         push_subsumption_if_missing(taxonomy, sub, sup);
-    }
-    for cluster in taxonomy.equivalences.clone() {
-        for i in 0..cluster.len() {
-            for j in (i + 1)..cluster.len() {
-                push_subsumption_if_missing(taxonomy, cluster[i], cluster[j]);
-                push_subsumption_if_missing(taxonomy, cluster[j], cluster[i]);
-            }
-        }
     }
     for (_, axiom) in ontology.axioms().iter() {
         let ontologos_core::Axiom::EquivalentClasses(classes) = axiom else {
