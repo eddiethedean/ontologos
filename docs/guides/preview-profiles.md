@@ -1,62 +1,55 @@
-# Preview profiles (DL and ALC)
+# Preview profiles (ALC and dl-preview)
 
-OntoLogos ships **stable** EL, RL, RDFS, and **SWRL** on the workspace **1.0.0** line (see [Profile stability matrix](profile-stability.md)). **DL**, **ALC**, and **dl-preview** are pre-release or preview — limitations below.
+Limitations for **preview** profiles only. Stable profiles (EL, RL, RDFS, `dl`, SWRL on `main`) are documented in the [Profile stability matrix](profile-stability.md).
 
-!!! warning "Preview only (DL / ALC)"
-    Preview DL/ALC engines may return `PreviewLimit` or `ResourceLimit`. Use Protégé + HermiT or Konclude when you need guaranteed production OWL DL equivalence. See [Comparison](../comparison.md) and [Release status](../project/release-status.md).
+!!! warning "Preview only (`alc`, `dl-preview`)"
+    Preview engines may return `PreviewLimit` or `ResourceLimit`. For production OWL DL on `main`, use `--profile dl` (stable on workspace 1.0.0). For PyPI 0.9.0, use EL/RL/RDFS only.
 
-## Profile summary
+## Profile summary (preview)
 
 | Profile | Status | Engine | Typical output |
 |---------|--------|--------|----------------|
-| `auto` | Stable | Detect → EL, RL, or DL | Taxonomy or materialization report |
-| `el` | Stable | `ontologos-el` | Taxonomy |
-| `rl` | Stable | `ontologos-rl` | Materialization report |
-| `rdfs` | Stable | `ontologos-rdfs` | Materialization report |
-| `swrl` | Stable | `ontologos-swrl` | Rules + DL consistency |
-| `dl` | Stable on `main` (channel publish pending) | `ontologos-dl` | Taxonomy — **100%** in-scope catalog parity; gated suite @ 30s |
 | `dl-preview` | Preview | `ontologos-dl` (gated) | Taxonomy + explicit preview checks |
-| `alc` | Preview | `ontologos-alc` | Taxonomy |
+| `alc` | Preview | `ontologos-alc` | Taxonomy (tableau-lite) |
 
-Full matrix with production recommendations: [Profile stability matrix](profile-stability.md).
+Stable `dl` (same engine, no extra gating): [Profile stability matrix](profile-stability.md).
 
 ## CLI
 
 ```bash
-# DL preview (explicit warning)
+# Explicit preview mode (extra gating checks)
 ontologos classify --profile dl-preview benchmarks/data/family.owl
-
-# Full DL path (same engine, no extra gating)
-ontologos classify --profile dl benchmarks/data/family.owl
 
 # ALC tableau-lite
 ontologos classify --profile alc ontology.owl
 ```
 
-`--profile auto` on a DL-detected ontology routes through the DL classifier (hybrid EL + saturation + tableau).
+For stable DL on `main`:
+
+```bash
+ontologos classify --profile dl ontology.owl
+```
 
 ## Python
 
 ```python
 from ontologos import Reasoner
 
-Reasoner(path="ontology.owl", profile="dl").classify()
-Reasoner(path="ontology.owl", profile="dl-preview").classify()  # gated preview mode
+# Preview only — requires workspace 1.0.0 / main
+Reasoner(path="ontology.owl", profile="dl-preview").classify()
 Reasoner(path="ontology.owl", profile="alc").classify()
 ```
 
-Use `profile="swrl"` when the ontology contains DLSafe SWRL rules; see [Profile stability matrix](profile-stability.md).
+On **PyPI 0.9.0**, these profiles typically error. See [Install and channels](install-channels.md).
 
 ## Rust
-
-Prefer the unified facade for multi-profile apps:
 
 ```rust
 use ontologos_core::{Profile, Reasoner};
 use ontologos_facade::{self, ClassifyOutcome};
 
 let mut reasoner = Reasoner::builder()
-    .profile(Profile::DlPreview)  // or Profile::Dl for full path
+    .profile(Profile::DlPreview)  // preview gating; use Profile::Dl for stable path on main
     .build(ontology)?;
 match ontologos_facade::classify(&mut reasoner)? {
     ClassifyOutcome::Taxonomy(t) => {
@@ -67,15 +60,15 @@ match ontologos_facade::classify(&mut reasoner)? {
 }
 ```
 
-See [Facade API](facade-api.md), [Classify quick start](../getting-started/classify-quickstart.md), and [Choosing an API](choosing-an-api.md).
+See [Facade API](facade-api.md) and [Classify quick start](../getting-started/classify-quickstart.md).
 
 ## Known limitations
 
 | Limitation | Affected profiles | Symptom |
 |------------|-------------------|---------|
-| Incomplete tableau rules | `dl`, `alc` | HasValue, HasKey, some cardinalities ignored |
-| Expansion budget | `dl`, `alc` | `ResourceLimit` after 4096 expansions |
-| Entailment cap | `dl`, `alc` | Pairwise subsumption skipped when >128 named classes |
+| Incomplete tableau rules | `alc`, `dl-preview` | HasValue, HasKey, some cardinalities ignored |
+| Expansion budget | `alc`, `dl-preview` | `ResourceLimit` after 4096 expansions |
+| Entailment cap | `alc`, `dl-preview` | Pairwise subsumption skipped when >128 named classes |
 | Preview construct gate | `dl-preview` | `PreviewLimit` when EL-forbidden constructs present |
 | Partial OWL mapping | All | Skipped axioms in `parse_meta.warnings` |
 
@@ -85,17 +78,14 @@ Full construct list: [Supported constructs](../reference/supported-constructs.md
 
 | Error | Meaning | Action |
 |-------|---------|--------|
-| `PreviewLimit` | Construct or feature not in preview scope | Use stable profile or wait for v1.0 publish |
-| `ResourceLimit` | Tableau expansion budget exhausted | Simplify ontology or retry later |
+| `PreviewLimit` | Construct or feature not in preview scope | Use stable profile — see [Profile stability](profile-stability.md) |
+| `ResourceLimit` | Tableau expansion budget exhausted | Simplify ontology or increase DL budget |
 | `Profile` / `WrongProfile` | Profile mismatch | Check `ontologos profile` output |
 
 See [Error reference](../reference/errors.md) and [Troubleshooting](troubleshooting.md).
 
 ## Related
 
-- [Profile stability matrix](profile-stability.md)
+- [Profile stability matrix](profile-stability.md) — canonical status for all profiles
 - [Facade API](facade-api.md)
-- [Architecture](../architecture.md)
 - [Evaluator playbook](evaluator-playbook.md)
-- [Roadmap summary](../project/roadmap-summary.md) — path to 1.0 HermiT parity
-

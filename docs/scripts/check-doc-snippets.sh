@@ -48,10 +48,9 @@ fi
 
 BANNER_PAGES=(
   docs/index.md
-  docs/getting-started/index.md
-  docs/guides/python.md
-  docs/guides/prerequisites.md
-  docs/guides/start-here.md
+  docs/guides/install-channels.md
+  docs/project/release-status.md
+  docs/migration/index.md
 )
 
 for file in "${BANNER_PAGES[@]}"; do
@@ -61,11 +60,13 @@ for file in "${BANNER_PAGES[@]}"; do
   fi
 done
 
-# Public evaluator scope page must exist.
-if [[ ! -f docs/guides/evaluator-scope.md ]]; then
-  echo "ERROR: missing docs/guides/evaluator-scope.md"
-  FAIL=1
-fi
+# Public evaluator scope and adoption pages must exist.
+for required in docs/guides/evaluator-scope.md docs/guides/install-channels.md docs/guides/known-limitations.md; do
+  if [[ ! -f "$required" ]]; then
+    echo "ERROR: missing ${required}"
+    FAIL=1
+  fi
+done
 
 # Compile-check canonical facade documentation pattern.
 echo "Running facade doc snippet compile check..."

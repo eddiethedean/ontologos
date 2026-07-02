@@ -1,8 +1,6 @@
 # Start here
 
-**Before you start:** See [Prerequisites](prerequisites.md) for Rust version and tooling. Unfamiliar with OWL terms? See the [Glossary](glossary.md). You do **not** need to clone this repository to try OntoLogos — `pip install ontologos` or crates.io dependencies are enough for most workflows.
-
---8<-- "snippets/channel-banner.md"
+**Before you start:** See [Prerequisites](prerequisites.md) for Rust version and tooling. Unfamiliar with OWL terms? See the [Glossary](glossary.md). You do **not** need to clone this repository to try OntoLogos — `pip install ontologos` or crates.io dependencies are enough for most workflows. Install channels: [Install and channels](install-channels.md).
 
 Pick the path that matches how you work. Each link is a single next step—not the full documentation map.
 

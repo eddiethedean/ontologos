@@ -2,8 +2,6 @@
 
 Completion-based **OWL EL taxonomy classification** via [`ontologos-el`](https://docs.rs/ontologos-el/0.9.0). The engine computes direct and indirect subsumptions, equivalence clusters, and unsatisfiable classes from mapped EL TBox axioms.
 
---8<-- "snippets/channel-banner.md"
-
 ## Prerequisites
 
 - Rust 1.88+

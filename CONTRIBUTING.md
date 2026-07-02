@@ -136,7 +136,7 @@ pytest tests/ -q
 
 | Path | Purpose |
 |------|---------|
-| `crates/ontologos-core/` | Data model, builder, JSON v2 |
+| `crates/ontologos-core/` | Data model, builder, JSON v3 (v2 read) |
 | `crates/ontologos-parser/` | OWL/RDF file loading |
 | `crates/ontologos-profile/` | Profile detection |
 | `crates/ontologos-bridge/` | core ↔ horned-owl/reasonable adapters |

@@ -1,6 +1,6 @@
 # ontologos-core
 
-In-memory OWL ontology model: interned IRIs, typed axioms, JSON v2 snapshots, and `Reasoner` builder.
+In-memory OWL ontology model: interned IRIs, typed axioms, JSON v3 snapshots (v2 readable), and `Reasoner` builder.
 
 **Docs:** [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) · [docs.rs](https://docs.rs/ontologos-core/0.9.0)
 

@@ -1,8 +1,6 @@
 # Python Guide
 
-Python bindings for OntoLogos (PyPI **0.9.0** latest tag; workspace **1.0.0** on `main`) via PyO3 (`pip install ontologos`).
-
---8<-- "snippets/channel-banner.md"
+Python bindings for OntoLogos (PyPI **0.9.0** latest tag; workspace **1.0.0** on `main`) via PyO3 (`pip install ontologos`). Install channels: [Install and channels](install-channels.md). Limitations: [Known limitations](known-limitations.md).
 
 OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
 (`ontologos-el` in-house EL, `ontologos-rl` / `ontologos-rdfs` → reasonable). Power users who need
@@ -100,16 +98,19 @@ Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly o
 | `incremental` | `bool` | `False` | Enable incremental session for multi-pass workflows |
 | `budget_secs` | `int` or `None` | `None` | Wall-clock budget for DL consistency/classify (mirrors `ReasonerConfig`) |
 
-**Profiles:**
+**Profiles** (canonical status: [Profile stability matrix](profile-stability.md)):
 
-| Profile | `classify()` return value |
-|---------|--------------------------|
-| `"rdfs"` | `dict` with `status`, `initial_axiom_count`, `final_axiom_count`, `inferred_axioms`, `inferred_by_rule`, `clash_count`, optional `clashes` |
-| `"rl"` | Same report shape as RDFS (includes RL inferences) |
-| `"el"` | `dict` with `status`, `subsumption_count`, `subsumptions`, `equivalences`, `unsatisfiable` |
-| `"auto"` | EL taxonomy, RL report, or DL taxonomy based on profile detection |
-| `"dl"`, `"dl-preview"`, `"alc"` | Taxonomy dict (preview — see [Preview profiles](preview-profiles.md)) |
-| `"swrl"` | Preview — usually errors (`NotImplemented` / `PreviewLimit`) |
+| Profile | PyPI 0.9.0 | `main` 1.0.0 | `classify()` return value |
+|---------|------------|--------------|---------------------------|
+| `"rdfs"` | Stable | Stable | Materialization report dict |
+| `"rl"` | Stable | Stable | Materialization report dict (includes RL inferences) |
+| `"el"` | Stable | Stable | Taxonomy dict (`subsumption_count`, `subsumptions`, …) |
+| `"auto"` | Stable | Stable | EL taxonomy, RL report, or DL taxonomy (by detection) |
+| `"dl"` | Not production-supported | Stable | Taxonomy dict |
+| `"swrl"` | Not available | Stable | Rules + DL consistency |
+| `"dl-preview"`, `"alc"` | Preview (errors common) | Preview | Taxonomy dict — see [Preview profiles](preview-profiles.md) |
+
+On **PyPI 0.9.0**, `"dl"`, `"swrl"`, `"alc"`, and `"dl-preview"` may error or behave differently than on `main`. Build from source for DL/SWRL — [Install and channels](install-channels.md).
 
 Invalid profile strings raise `RuntimeError`.
 
@@ -158,7 +159,7 @@ With `incremental=True`, edit the ontology between `classify()` calls:
 |--------|-------------|
 | `add_subclass_of(sub_iri, sup_iri)` | Add `SubClassOf` axiom |
 | `remove_subclass_of(sub_iri, sup_iri)` | Remove matching asserted axiom |
-| `add_axiom_json(axiom_dict)` | Add axiom using JSON v2 axiom object (e.g. `{"SubClassOf": {...}}`) |
+| `add_axiom_json(axiom_dict)` | Add axiom using JSON axiom object (v2/v3 shape, e.g. `{"SubClassOf": {...}}`) |
 
 ```python
 reasoner = ontologos.Reasoner(ontology=ont, profile="el", incremental=True)
@@ -173,9 +174,9 @@ See [Incremental reasoning](incremental-reasoning.md).
 
 | Method | Description |
 |--------|-------------|
-| `Ontology.from_json(str)` | Load from JSON v2 snapshot |
+| `Ontology.from_json(str)` | Load from JSON snapshot (v2 or v3) |
 | `Ontology.from_json_with_limits(str, *, max_json_bytes=..., max_entities=..., max_axioms=..., max_iri_len=...)` | Load with resource caps (preferred for untrusted input) |
-| `Ontology.from_dict(dict)` | Load from Python dict (same schema as JSON v2) |
+| `Ontology.from_dict(dict)` | Load from Python dict (same schema as JSON v2/v3) |
 | `to_json()` / `to_dict()` | Serialize |
 | `axiom_count` / `entity_count` | Size getters |
 

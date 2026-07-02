@@ -1,8 +1,27 @@
 # Getting Started
 
-Five-minute success paths for common goals.
+Five-minute success paths for common goals. Install pins: [Install and channels](../guides/install-channels.md). Limitations: [Known limitations](../guides/known-limitations.md).
 
---8<-- "snippets/channel-banner.md"
+## Rust API in 60 seconds
+
+1. Load with `ontologos_parser::load_ontology` (not `Ontology::from_file`).
+2. Build a `Reasoner` with `Reasoner::builder().profile(...).build(ontology)`.
+3. Call **`ontologos_facade::classify(&mut reasoner)`** — not `reasoner.classify()` on core.
+
+```rust
+use ontologos_core::{Profile, Reasoner};
+use ontologos_facade::{classify, ClassifyOutcome};
+use ontologos_parser::load_ontology;
+
+let ontology = load_ontology("family.owl".as_ref())?;
+let mut reasoner = Reasoner::builder().profile(Profile::Auto).build(ontology)?;
+match classify(&mut reasoner)? {
+    ClassifyOutcome::Rl(r) => println!("inferred: {}", r.inferred_total()),
+    // ...
+}
+```
+
+See [Classify quick start](classify-quickstart.md) and [Facade API](../guides/facade-api.md).
 
 ## Crates.io only (no clone)
 
@@ -43,6 +62,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 Then `cargo run`.
+
+**Expected output (family.owl):** mapped axioms ~57; `inferred` > 0. Counts differ from Protégé — see [Known limitations](../guides/known-limitations.md).
 
 For OWL RL saturation, add `ontologos-rl = "0.9.0"` and see [OWL RL saturation](owl-rl-saturation.md).
 
@@ -101,7 +122,7 @@ Read [Choosing an API](../guides/choosing-an-api.md) then the guide for your wor
 | RDFS materialization | [RDFS materialization](rdfs-materialization.md) |
 | OWL RL saturation | [OWL RL saturation](owl-rl-saturation.md) |
 | OWL EL classification | [OWL EL classification](owl-el-classification.md) |
-| JSON snapshots | [JSON snapshot v2](../json-snapshot-v2.md) |
+| JSON snapshots | [JSON snapshot v3](../json-snapshot-v3.md) ([v2 legacy](../json-snapshot-v2.md)) |
 
 ## I'm evaluating vs ELK / reasonable
 
@@ -133,7 +154,7 @@ r.add_subclass_of("http://example.org/VeggiePizza", "http://example.org/Pizza")
 r.classify()
 ```
 
-See [Python guide](../guides/python.md) and [v0.8→v0.9 migration](../migration/v0.8.x-to-v0.9.0.md).
+See [Python guide](../guides/python.md) and [Known limitations](../guides/known-limitations.md).
 
 ## Full learning path
 

@@ -15,13 +15,14 @@ Full history: [CHANGELOG](changelog.md) on GitHub.
 
 ## Since v0.9.0 tag (development on `main`)
 
-Documented in [Preview profiles](../guides/preview-profiles.md). Highlights:
+See [Profile stability matrix](../guides/profile-stability.md) for canonical status. Highlights:
 
 - **`ontologos-facade`:** unified `classify()` for CLI, Python, and multi-profile Rust apps
 - **`Profile::Auto` + DL:** DL-detected ontologies route through `ontologos-dl` hybrid classifier
-- **CLI/Python profiles:** `alc`, `dl`, `dl-preview`, `swrl` (preview; SWRL not executable)
+- **`dl` and `swrl`:** stable on workspace **1.0.0** / `main`; **not on PyPI 0.9.0**
+- **`alc`, `dl-preview`:** preview profiles — see [Preview profiles](../guides/preview-profiles.md)
 - **DL correctness fixes:** domain clause wildcards, role subsumption direction, `ResourceLimit` on budget exhaustion, taxonomy merge preserves equivalences
-- **Routing fixes:** EL path no longer misroutes `Profile::Dl`; SWRL returns explicit errors instead of silent DL classify
+- **Routing fixes:** EL path no longer misroutes `Profile::Dl`; SWRL uses dedicated engine on `main`
 
 See [Facade API](../guides/facade-api.md) and [Architecture](../architecture.md).
 

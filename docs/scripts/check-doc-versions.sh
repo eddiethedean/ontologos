@@ -72,28 +72,33 @@ done < <(
   find "${DOCSRS_SCAN_FILES[@]}" -type f \( -name '*.md' -o -name '*.yml' \) 2>/dev/null | sort
 )
 
-# Release-channel banner must appear on README and docs home.
-BANNER_MARKERS=(
-  "Latest tagged release is **v0.9.0**"
-  "main.*1.0.0"
-)
+# Release-channel messaging on README and docs home (banner snippet or Install channels page).
 for file in README.md docs/index.md; do
-  if ! grep -q "Latest tagged release is \*\*v0.9.0\*\*" "$file"; then
-    # docs/index.md may include the shared snippet instead of inline text.
-    if [[ "$file" == "docs/index.md" ]] && grep -q 'snippets/channel-banner.md' "$file"; then
-      :
-    else
-      echo "ERROR: ${file} missing release-channel banner (v0.9.0 published)"
-      FAIL=1
-    fi
+  has_banner=0
+  if grep -q 'snippets/channel-banner.md' "$file" 2>/dev/null; then
+    has_banner=1
   fi
-  if ! grep -Eq 'main.*1\.0\.0' "$file"; then
-    if [[ "$file" == "docs/index.md" ]] && grep -q 'snippets/channel-banner.md' "$file"; then
-      :
-    else
-      echo "ERROR: ${file} missing main-branch 1.0.0 pre-release note"
-      FAIL=1
-    fi
+  if grep -q 'install-channels' "$file" 2>/dev/null; then
+    has_banner=1
+  fi
+  if grep -q "Latest tagged release is \*\*v0.9.0\*\*" "$file" 2>/dev/null; then
+    has_banner=1
+  fi
+  if [[ "$has_banner" -eq 0 ]]; then
+    echo "ERROR: ${file} missing release-channel messaging (banner snippet or install-channels link)"
+    FAIL=1
+  fi
+  if ! grep -Eq 'main.*1\.0\.0|1\.0\.0.*main' "$file"; then
+    echo "ERROR: ${file} missing main-branch 1.0.0 pre-release note"
+    FAIL=1
+  fi
+done
+
+# Canonical channel and limitations pages must exist.
+for required in docs/guides/install-channels.md docs/guides/known-limitations.md docs/project/post-1.0-doc-update.md; do
+  if [[ ! -f "$required" ]]; then
+    echo "ERROR: missing required doc: ${required}"
+    FAIL=1
   fi
 done
 

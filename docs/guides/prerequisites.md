@@ -1,8 +1,6 @@
 # Prerequisites
 
-OntoLogos is a **Rust workspace** with optional **Python bindings**. Pick the row that matches your task.
-
---8<-- "snippets/channel-banner.md"
+OntoLogos is a **Rust workspace** with optional **Python bindings**. Pick the row that matches your task. Install channels: [Install and channels](install-channels.md).
 
 Unfamiliar with OWL terms? See the [Glossary](glossary.md).
 

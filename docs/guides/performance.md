@@ -1,6 +1,6 @@
 # Performance and Scaling
 
-Guidance for sizing OntoLogos workloads. **v0.8** adds optional incremental EL/RL/RDFS when `ReasonerConfig::incremental` is set. Benchmark numbers are indicative — run `cargo test -p ontologos-el --test incremental_bench -- --ignored` on your hardware.
+Guidance for sizing OntoLogos workloads. Optional incremental EL/RL/RDFS when `ReasonerConfig::incremental` is set. Benchmark numbers are indicative — run `cargo test -p ontologos-el --test incremental_bench -- --ignored` on your hardware.
 
 ## Default limits
 
@@ -13,7 +13,7 @@ Guidance for sizing OntoLogos workloads. **v0.8** adds optional incremental EL/R
 | `max_axioms` | 10,000,000 | `Limits::max_axioms` |
 | `max_iri_len` | 8,192 | `Limits::max_iri_len` |
 
-See [Security](../security.md) and [JSON snapshot v2](../json-snapshot-v2.md).
+See [Security](../security.md) and [JSON snapshot v3](../json-snapshot-v3.md).
 
 ### OWL file parsing
 
@@ -30,7 +30,7 @@ See [`ParseLimits`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/stru
 
 - **Complexity:** Depends on taxonomy depth and property hierarchy size; runs until TBox rules saturate.
 - **Memory:** In-place — inferred axioms are added to the same `Ontology`.
-- **Parallelism:** Sequential only in v0.4.
+- **Parallelism:** Sequential only.
 
 ### OWL RL (`RlEngine`)
 
@@ -43,7 +43,7 @@ let report = RlEngine::try_new(4)?.saturate(&mut ontology)?;
 
 For reproducible debugging, use `RlEngine::new(1)`.
 
-## Reference corpora (v0.4)
+## Reference corpora
 
 | Corpus | Mapped axioms (approx.) | Profile | Notes |
 |--------|-------------------------|---------|-------|
@@ -81,10 +81,10 @@ See [Conformance coverage](../reference/conformance.md).
 | Workload | Recommendation |
 |----------|----------------|
 | Small ontologies (< 10k mapped axioms) | Default limits; `RlEngine::new(1)` |
-| Medium batch jobs | Tune `ParseLimits`; snapshot to JSON v2 after saturation |
+| Medium batch jobs | Tune `ParseLimits`; snapshot to JSON v3 after saturation |
 | Untrusted uploads | `load_ontology_in(base, path)` + reduced limits — [Production integration](production-integration.md) |
-| Large DL corpora (GALEN, SNOMED) | Not production-ready in v0.4; optional `#[ignore]` stress tests only |
-| Incremental updates | v0.8+ library session API (`ReasonerConfig::incremental`); CLI `--watch` in v1.2 |
+| Large DL corpora | Set `ReasonerConfig::budget_secs` or `ONTOLOGOS_DL_BUDGET_SECS`; validate on your hardware |
+| Incremental updates | `ReasonerConfig::incremental`; CLI `--incremental` |
 
 ## Related
 

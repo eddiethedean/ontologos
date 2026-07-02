@@ -91,7 +91,7 @@ reasoner = Reasoner(ontology=ontology, profile="el")
 taxonomy = reasoner.classify()
 ```
 
-Load from JSON v2 dict instead of the builder:
+Load from JSON dict instead of the builder (v2 or v3; writers on workspace 1.0.0 emit v3):
 
 ```python
 from ontologos import Ontology, Reasoner
@@ -161,8 +161,8 @@ df = subsumptions_to_pandas(taxonomy)
 | `reasoner.taxonomy` | Last EL taxonomy (after `classify`) |
 | `reasoner.parse_meta` | Parser warnings and axiom counts |
 | `reasoner.add_subclass_of` / `remove_subclass_of` | Incremental axiom edits |
-| `reasoner.add_axiom_json` | Add axiom via JSON v2 object |
-| `Ontology.from_json` / `from_dict` | Load JSON v2 snapshot |
+| `reasoner.add_axiom_json` | Add axiom via JSON object (v2/v3 shape) |
+| `Ontology.from_json` / `from_dict` | Load JSON snapshot (v2 or v3) |
 | `OntologyBuilder` | Fluent builder → `build()` |
 | `subsumptions_to_pandas` / `subsumptions_to_polars` | Optional taxonomy export |
 

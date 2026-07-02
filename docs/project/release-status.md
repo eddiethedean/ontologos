@@ -1,5 +1,7 @@
 # Release status
 
+--8<-- "snippets/channel-banner.md"
+
 Single source of truth for version and distribution channels. Update this page when tagging releases.
 
 ## Current channels
@@ -36,7 +38,7 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Documented CE exclusions | **13** Ian/ComplexConcept + `testIanBackjumping3` (**70** `excluded` catalog cases) |
 | `check-1.0-release-gates.sh` | **Green** (blocking in CI) |
 
-**Remaining for v1.0.0 publish:** follow [release-1.0-checklist.md](release-1.0-checklist.md) (crates.io + PyPI, then annotated tag `v1.0.0`). Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
+**Remaining for v1.0.0 publish:** follow [release-1.0-checklist.md](release-1.0-checklist.md) (crates.io + PyPI, then annotated tag `v1.0.0`). After publish: [Post-1.0 doc update](post-1.0-doc-update.md). Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
 
 ## Profile stability
 
@@ -47,7 +49,7 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 | OWL EL, RL, RDFS | **Stable** on published **v0.9.0** |
 | OWL DL (`--profile dl`) on **`main`** | **Stable** (workspace) — publish pending; see [release checklist](release-1.0-checklist.md) |
 | ALC / `dl-preview` | **Preview** |
-| SWRL | **Stable** on workspace **1.0.0** (publish pending) |
+| SWRL | **Stable** on workspace **1.0.0**; **not on PyPI 0.9.0** |
 | Python bindings, explain (EL) | **Stable** on v0.9.0 |
 
 **Production OWL DL today:** use **v0.9.0** pins for stable EL/RL/RDFS, or build **`main`** for gated-corpus DL (`profile="dl"`). See [FAQ](faq.md).

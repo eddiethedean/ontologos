@@ -2,9 +2,7 @@
 
 Load OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser/0.9.0).
 
---8<-- "snippets/channel-banner.md"
-
-> **Important:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Supported constructs](../reference/supported-constructs.md) before comparing results.
+> **Important:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Known limitations](../guides/known-limitations.md) and [Supported constructs](../reference/supported-constructs.md).
 
 !!! warning "`owl:imports` are not resolved"
     Loading reads **one file** only. Imported ontologies are **not** fetched or merged automatically — axioms from imports will be missing.

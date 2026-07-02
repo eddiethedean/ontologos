@@ -1,5 +1,7 @@
 # Upgrade to the latest release
 
+--8<-- "snippets/channel-banner.md"
+
 **Published today (crates.io / PyPI):** v0.9.0  
 **In development on `main`:** 1.0.0 (HermiT parity **complete** on gated corpora; crates.io/PyPI not yet published)
 
@@ -31,3 +33,4 @@ Older step-by-step guides: [Historical migrations](historical.md).
 - [CHANGELOG](../project/changelog.md)
 - [Release notes](../project/release-notes.md)
 - [Profile stability matrix](../guides/profile-stability.md)
+- [Post-1.0 doc update](post-1.0-doc-update.md) *(after tag ships)*

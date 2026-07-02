@@ -1,5 +1,17 @@
 # Troubleshooting
 
+## `command not found: ontologos`
+
+The CLI is **not on crates.io**. Install from git (Rust 1.88+):
+
+```bash
+cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
+```
+
+Or build from a clone: `cargo build -p ontologos-cli --release` → `./target/release/ontologos`.
+
+See [CLI reference](../reference/cli.md) and [Install and channels](install-channels.md).
+
 ## `cargo test` fails on Pizza / Family tests
 
 **Symptom:** `missing benchmark corpus pizza at ...`
@@ -37,7 +49,7 @@ Use `ontologos_parser::load_ontology`. See [FAQ](../project/faq.md).
 
 ## JSON `from_json` fails
 
-Common causes: `format_version: 1`, invalid IRI, unknown entity in axiom, size limit. See [errors.md](../reference/errors.md) and [json-snapshot-v2.md](../json-snapshot-v2.md).
+Common causes: `format_version: 1`, invalid IRI, unknown entity in axiom, size limit. See [errors.md](../reference/errors.md) and [json-snapshot-v3.md](../json-snapshot-v3.md).
 
 ## Unsupported file extension
 
@@ -63,7 +75,7 @@ Library users: call **`ontologos_facade::classify`** or profile crate helpers (`
 |-------|---------|-----|
 | `PreviewLimit` | Construct not in preview scope | Use stable profile or simplify ontology |
 | `ResourceLimit` | Tableau expansion budget exhausted (4096) | Reduce ontology size or retry with smaller corpus |
-| `NotImplemented` (SWRL) | `--profile swrl` on **PyPI 0.9.0** | SWRL requires workspace **1.0.0** / `main` — use EL/RL/DL on published wheels |
+| `NotImplemented` (SWRL) | `--profile swrl` on **PyPI 0.9.0** | SWRL requires workspace **1.0.0** / `main` — see [Profile stability](profile-stability.md) |
 | Wrong profile on DL ontology | Unexpected taxonomy shape | Run `ontologos profile file.owl`; try `--profile dl-preview` |
 
 See [Preview profiles](preview-profiles.md).

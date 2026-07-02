@@ -24,7 +24,8 @@ See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs
 | Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |
 | Hybrid EL+DL routing | **Pre-release** (`main`) | No | No | Internal | No | No | MORe plugin |
 | Explanations | EL-first (v0.9.0+) | Yes | Yes | Partial | Limited | No | Yes |
-| Production-ready | **Pre-release** | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
+| Production-ready (EL/RL/RDFS on PyPI 0.9.0) | **Yes** (within mapped construct subset) | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
+| Production-ready (OWL DL on PyPI) | **No** — build from `main` / wait for v1.0.0 | No | Yes (stagnant) | Yes | No | No | Via plugin |
 
 CLI `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` routes via `ontologos-facade`. DL/ALC/SWRL status: [Profile stability matrix](guides/profile-stability.md). Use `materialize` for explicit RDFS.
 
@@ -33,7 +34,7 @@ CLI `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` routes via `onto
 | You need… | Use upstream directly | Use OntoLogos |
 |-----------|----------------------|---------------|
 | RL materialization only | `reasonable` crate or PyPI | Profile routing + core model + CLI |
-| EL classification only | ELK or whelk-rs + horned-owl | Taxonomy API + query + JSON v2 + explain |
+| EL classification only | ELK or whelk-rs + horned-owl | Taxonomy API + query + JSON v3 + explain |
 | Parse OWL safely | horned-owl + your limits | `ontologos-parser` with `ParseLimits` |
 | One CLI for all profiles | Multiple tools | `ontologos classify --profile auto` |
 | Python batch pipeline | `reasonable` / `py-whelk` separately | `pip install ontologos` unified facade |

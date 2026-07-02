@@ -12,23 +12,11 @@ OntoLogos solves: *"We want OWL reasoning embedded in Rust or Python services—
 
 Library-first orchestration: **load → detect profile → classify/materialize**, not a Protégé replacement.
 
-> **Install channels**
->
-> Latest tagged release is **v0.9.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
->
-> | Channel | Version | Use when |
-> |---------|---------|----------|
-> | **crates.io / PyPI** | **0.9.0** (latest tag) | Production EL, RL, RDFS today |
-> | **`main` git** | **1.0.0** workspace | DL, SWRL, full facade routing — build from source |
->
-> **v1.0.0** publish to crates.io/PyPI is prepared; the git tag is not cut yet. See [release checklist](docs/project/release-1.0-checklist.md).
->
-> | Install command | Profiles for production |
-> |-----------------|-------------------------|
-> | `pip install ontologos` or `ontologos-* = "0.9.0"` | EL, RL, RDFS |
-> | Build from `main` / `ontologos-* = "1.0.0"` | + DL, SWRL, full facade |
->
-> `profile="dl"` on PyPI **0.9.0** is not HermiT parity. See [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html).
+**Install today:** `pip install ontologos` or `ontologos-core = "0.9.0"` — production-ready for **EL, RL, and RDFS**.
+
+**OWL 2 DL and SWRL** ship in workspace **1.0.0** on `main` (build from source; [v1.0.0 tag](docs/project/release-1.0-checklist.md) pending). See [Install and channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html).
+
+> **Known limitations:** OntoLogos does not resolve `owl:imports` and maps a subset of OWL axioms. See [Known limitations](https://ontologos.readthedocs.io/en/latest/guides/known-limitations.html).
 
 **In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "0.9.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
 
@@ -52,7 +40,7 @@ Library-first orchestration: **load → detect profile → classify/materialize*
 | **Not sure?** | [Start here](https://ontologos.readthedocs.io/en/latest/guides/start-here.html) on Read the Docs |
 | **Rust (no clone)** | [5-minute crates.io guide](https://ontologos.readthedocs.io/en/latest/getting-started/#cratesio-only-no-clone) |
 | **Python** | `pip install ontologos` → [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html) |
-| **CLI** | `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` or clone → [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli.html) |
+| **CLI** *(requires git install — not on crates.io)* | `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` or clone → [CLI reference](https://ontologos.readthedocs.io/en/latest/reference/cli.html) |
 | **Evaluate vs HermiT/ELK** | [Evaluator playbook](https://ontologos.readthedocs.io/en/latest/guides/evaluator-playbook.html) · [Comparison](https://ontologos.readthedocs.io/en/latest/comparison.html) |
 | **Contribute** | Clone → [CONTRIBUTING](CONTRIBUTING.md) |
 
@@ -281,7 +269,7 @@ See [Migration hub](https://ontologos.readthedocs.io/en/latest/migration/) for g
 
 | Crate | crates.io | Description |
 |-------|-----------|-------------|
-| `ontologos-core` | [yes](https://crates.io/crates/ontologos-core) | Data model, builder, JSON v2 |
+| `ontologos-core` | [yes](https://crates.io/crates/ontologos-core) | Data model, builder, JSON v3 (v2 read) |
 | `ontologos-parser` | [yes](https://crates.io/crates/ontologos-parser) | OWL/RDF loading |
 | `ontologos-profile` | [yes](https://crates.io/crates/ontologos-profile) | Profile detection |
 | `ontologos-rdfs` | [yes](https://crates.io/crates/ontologos-rdfs) | RDFS → reasonable |

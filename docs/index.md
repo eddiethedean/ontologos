@@ -8,12 +8,12 @@
   </div>
   <p class="ol-hero-kicker">OntoLogos documentation</p>
   <p class="ol-hero-title">Native Rust ontology reasoning</p>
-  <p class="ol-lead">Load OWL files, detect profiles, and run RDFS materialization, OWL RL saturation, OWL EL taxonomy, and in-progress OWL DL—through stable Rust facades, CLI, and Python bindings.</p>
+  <p class="ol-lead">Load OWL files, detect profiles, and run RDFS materialization, OWL RL saturation, and OWL EL taxonomy—through stable Rust facades, CLI, and Python bindings. OWL 2 DL and SWRL are available on <code>main</code> (workspace 1.0.0).</p>
   <div class="ol-hero-actions">
     <a class="ol-hero-cta" href="getting-started/">Try in 5 minutes →</a>
     <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/python/">Python quickstart</a>
   </div>
-  <p style="margin-top:1rem;margin-bottom:0"><a href="guides/start-here/">Not sure? Start here</a></p>
+  <p style="margin-top:1rem;margin-bottom:0"><a href="guides/install-channels/">Install channels</a> · <a href="guides/start-here/">Not sure? Start here</a> · <a href="guides/known-limitations/">Known limitations</a></p>
 </div>
 
 --8<-- "snippets/channel-banner.md"
@@ -38,11 +38,11 @@ Pick the path that matches how you work:
 
     [:octicons-arrow-right-24: Python guide](guides/python.md)
 
--   :material-console: **CLI**
+-   :material-console: **CLI** *(git install)*
 
     ---
 
-    `classify`, `materialize`, `explain` — build from this repository (`ontologos-cli` is not on crates.io).
+    `classify`, `materialize`, `explain` — **not on crates.io**; `cargo install --git …` or clone.
 
     [:octicons-arrow-right-24: CLI reference](reference/cli.md)
 
@@ -71,8 +71,8 @@ Pick the path that matches how you work:
 
     **DON'T** call classification on `ontologos_core::Reasoner` — use the [facade](guides/facade-api.md) instead. See [Choosing an API](guides/choosing-an-api.md).
 
-!!! note "OWL DL / HermiT parity"
-    On `main`, **`parity_pct`** and **`true_parity_pct`** are **100%** on the gated catalog (**889** in-scope cases; **450+428** runnable @ 30s). Published **v0.9.0** on PyPI/crates.io is EL/RL/RDFS-stable only. See [Evaluator scope](guides/evaluator-scope.md), [Profile stability](guides/profile-stability.md), and [Release status](project/release-status.md).
+!!! note "OWL DL and SWRL"
+    **PyPI 0.9.0:** EL/RL/RDFS only. **OWL 2 DL and SWRL** require `main` / workspace 1.0.0. See [Install channels](guides/install-channels.md), [Profile stability](guides/profile-stability.md), and [Release status](project/release-status.md).
 
 ## What you need
 
@@ -90,7 +90,7 @@ Use the sidebar for the full tree. Highlights:
 
 | Area | Start here |
 |------|------------|
-| New users | [Start here](guides/start-here.md) · [Prerequisites](guides/prerequisites.md) |
+| New users | [Install channels](guides/install-channels.md) · [Start here](guides/start-here.md) · [Known limitations](guides/known-limitations.md) |
 | Examples | [Examples gallery](examples/index.md) |
 | API choice | [Choosing an API](guides/choosing-an-api.md) · [Profile stability](guides/profile-stability.md) |
 | Evaluate | [Evaluator playbook](guides/evaluator-playbook.md) · [Evaluator scope](guides/evaluator-scope.md) · [Comparison](comparison.md) |
@@ -106,7 +106,7 @@ Use the sidebar for the full tree. Highlights:
 6. [OWL EL classification](getting-started/owl-el-classification.md)
 7. [First ontology](getting-started/first-ontology.md) *(clone optional)*
 8. [Profile detection](guides/profile-detection.md)
-9. [JSON snapshots](json-snapshot-v2.md)
+9. [JSON snapshots](json-snapshot-v3.md) ([v2 legacy](json-snapshot-v2.md))
 10. [Error reference](reference/errors.md)
 
 ## Capability matrix (published v0.9.0)
@@ -118,7 +118,7 @@ Use the sidebar for the full tree. Highlights:
 | RDFS materialization | Yes | `materialize` | `profile="rdfs"` |
 | OWL RL saturation | Yes | `classify --profile rl` | `profile="rl"` |
 | OWL EL taxonomy | Yes | `classify --profile el` | `profile="el"` |
-| OWL DL (pre-release) | Yes | `classify --profile dl` | `profile="dl"` |
+| OWL DL (`main` / 1.0.0) | Build from source | `classify --profile dl` | Build from source |
 | Incremental reasoning | Yes | `--incremental` | `incremental=True` |
 | Explanations | Yes | `explain` | `explain()` |
 | Taxonomy DataFrame export | No | No | Yes (pandas/polars) |

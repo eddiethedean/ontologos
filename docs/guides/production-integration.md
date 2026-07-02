@@ -1,8 +1,6 @@
 # Production Integration
 
-Patterns for embedding OntoLogos in services and pipelines.
-
---8<-- "snippets/channel-banner.md"
+Patterns for embedding OntoLogos in services and pipelines. Profile status: [Profile stability matrix](profile-stability.md).
 
 ## Dependency selection
 
@@ -41,7 +39,7 @@ let ontology = load_ontology_with_limits_and_base(user_file, limits, Some(base))
 
 ## Untrusted JSON snapshots
 
-Use `from_json_with_limits` — format v1 is rejected; v2 keys axioms by IRI string.
+Use `from_json_with_limits` — format v1 is rejected. Writers emit **v3** on workspace 1.0.0; readers accept v2 and v3.
 
 ```rust
 use ontologos_core::{Limits, Ontology};
@@ -62,7 +60,7 @@ let json = ontology.to_json()?;
 std::fs::write("saturated.json", json)?;
 ```
 
-Reload later with `Ontology::from_json`. OWL export is not built in — keep JSON v2 or retain the source OWL plus processing metadata.
+Reload later with `Ontology::from_json`. OWL export is not built in — keep JSON snapshots or retain the source OWL plus processing metadata. See [JSON snapshot v3](../json-snapshot-v3.md).
 
 ## Reasoning workflow (Rust)
 

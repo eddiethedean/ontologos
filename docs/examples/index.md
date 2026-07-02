@@ -19,20 +19,24 @@ See [Getting started — crates.io only](../getting-started/index.md#cratesio-on
 
 [Classify quick start](../getting-started/classify-quickstart.md) — `ontologos-facade::classify` with `Profile::Auto`.
 
-### OWL EL taxonomy
+### OWL EL taxonomy (in-memory — no Pizza download)
 
-Family is an **RL** corpus — use Pizza for EL demos. See [OWL EL classification](../getting-started/owl-el-classification.md).
+Family.owl is an **RL** corpus — do not use it for EL demos.
 
 ```rust
+use ontologos_core::Ontology;
 use ontologos_el::ElClassifier;
-use ontologos_parser::load_ontology;
 
-// After: curl -L -o family.owl https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
-let ontology = load_ontology("family.owl".as_ref())?;
+let ontology = Ontology::builder()
+    .class("http://example.org/Food")?
+    .class("http://example.org/Pizza")?
+    .subclass_of("http://example.org/Pizza", "http://example.org/Food")?
+    .build()?;
 let taxonomy = ElClassifier::new().classify(&ontology)?;
+println!("subsumptions: {}", taxonomy.subsumption_count());
 ```
 
-For Pizza EL golden tests, clone the repo and run `./benchmarks/scripts/download.sh`.
+For Pizza EL golden tests, clone the repo and run `./benchmarks/scripts/download.sh`. See [OWL EL classification](../getting-started/owl-el-classification.md).
 
 ### JSON snapshot round-trip
 
@@ -46,7 +50,7 @@ let json = ontology.to_json()?;
 let restored = Ontology::from_json(&json)?;
 ```
 
-See [JSON snapshot v2](../json-snapshot-v2.md).
+See [JSON snapshot v3](../json-snapshot-v3.md) (writers emit v3; v2 still readable).
 
 ### Repository examples (clone required)
 

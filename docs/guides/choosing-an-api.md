@@ -62,7 +62,7 @@ let json = ontology.to_json()?;
 let restored = Ontology::from_json(&json)?;
 ```
 
-See [JSON snapshot v2](../json-snapshot-v2.md). Use `from_json_with_limits` for untrusted input.
+See [JSON snapshot v3](../json-snapshot-v3.md) (v2 legacy: [v2](../json-snapshot-v2.md)). Use `from_json_with_limits` for untrusted input.
 
 ### Load OWL/RDF files
 

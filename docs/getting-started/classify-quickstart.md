@@ -2,7 +2,8 @@
 
 Run OWL **classification** from crates.io — no repository clone. Uses `ontologos-facade::classify`.
 
---8<-- "snippets/channel-banner.md"
+!!! tip "Rust API in 60 seconds"
+    Build `Reasoner` with `Reasoner::builder()` → call **`ontologos_facade::classify(&mut reasoner)`**. Do **not** call `ontologos_core::Reasoner::classify()`. See [Facade API](../guides/facade-api.md).
 
 ## Prerequisites
 
@@ -53,7 +54,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-`Profile::Auto` detects RL for Family and runs saturation. For EL taxonomies, use `Profile::El` or load a Pizza-shaped ontology (clone + `./benchmarks/scripts/download.sh`).
+`Profile::Auto` detects RL for Family and runs saturation. **Expected:** `inferred` > 0; ~57 mapped axioms (normal for Family — not Protégé totals). See [Protégé axiom counts](../guides/protege-axiom-counts.md).
+
+For EL taxonomies, use `Profile::El` with an EL-shaped ontology (in-memory builder below, or Pizza after clone + `./benchmarks/scripts/download.sh`).
 
 ## Classify with a profile crate directly
 
@@ -82,6 +85,7 @@ See [Choosing an API](../guides/choosing-an-api.md).
 
 ## Next steps
 
-- [Load an OWL file](load-owl-file.md) — formats, `ParseMeta`, imports limitation
+- [Known limitations](../guides/known-limitations.md) — imports, mapping, axiom counts
+- [Load an OWL file](load-owl-file.md) — formats, `ParseMeta`
 - [Profile stability matrix](../guides/profile-stability.md) — which profiles are production-ready
 - [Examples gallery](../examples/index.md) — more copy-paste workflows

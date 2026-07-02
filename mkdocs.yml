@@ -63,6 +63,8 @@ nav:
   - Home: index.md
   - Getting started:
       - Start here: guides/start-here.md
+      - Install and channels: guides/install-channels.md
+      - Known limitations: guides/known-limitations.md
       - Prerequisites: guides/prerequisites.md
       - Five-minute Rust guide: getting-started/index.md
       - Classify quick start: getting-started/classify-quickstart.md
@@ -76,7 +78,7 @@ nav:
   - Guides:
       - Choosing an API: guides/choosing-an-api.md
       - Profile stability: guides/profile-stability.md
-      - Preview profiles: guides/preview-profiles.md
+      - Preview profiles (ALC, dl-preview): guides/preview-profiles.md
       - Facade API: guides/facade-api.md
       - Evaluator scope: guides/evaluator-scope.md
       - Evaluator playbook: guides/evaluator-playbook.md
@@ -131,6 +133,7 @@ nav:
       - FAQ: project/faq.md
       - Release status: project/release-status.md
       - Release 1.0 checklist: project/release-1.0-checklist.md
+      - Post-1.0 doc update: project/post-1.0-doc-update.md
       - Release notes: project/release-notes.md
       - Roadmap summary: project/roadmap-summary.md
       - Changelog: project/changelog.md

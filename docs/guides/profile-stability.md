@@ -1,20 +1,34 @@
 # Profile stability matrix
 
-Single source of truth for `--profile` / `profile=` behavior. See [Release status](../project/release-status.md) for crates.io vs `main` channel details.
+**Canonical source** for `--profile` / `profile=` behavior. Other pages link here — do not duplicate stability labels inline.
 
-!!! info "Production OWL DL"
-    **Published v0.9.0:** EL/RL/RDFS only on crates.io/PyPI. **`main` / upcoming v1.0.0:** gated HermiT conformance green @ 30s; `ontologos-dl` ready to publish. See [release checklist](../project/release-1.0-checklist.md) and [parity roadmap](../internal/parity-roadmap.md).
+See [Install and channels](install-channels.md) and [Release status](../project/release-status.md) for crates.io vs `main` details.
+
+## By install channel
+
+| Profile | PyPI / crates.io **0.9.0** | `main` workspace **1.0.0** |
+|---------|------------------------------|----------------------------|
+| `rdfs`, `rl`, `el`, `auto` | **Stable** — production-supported | **Stable** |
+| `dl` | **Not production-supported** (may error or differ) | **Stable** (gated HermiT catalog @ 30s) |
+| `swrl` | **Not available** | **Stable** (DLSafe subset) |
+| `dl-preview`, `alc` | **Preview** (errors common) | **Preview** |
+| `ql` (detection only) | Detection only | Detection only |
+
+!!! info "OWL DL on PyPI"
+    **`profile="dl"` on PyPI 0.9.0** is not HermiT parity. Build from `main` or wait for **v1.0.0** publish. See [release checklist](../project/release-1.0-checklist.md).
+
+## Full matrix
 
 | Profile | User-facing status | Engine | HermiT parity | Production recommendation |
 |---------|-------------------|--------|---------------|---------------------------|
-| `rdfs` | **Stable** | `ontologos-rdfs` → reasonable | N/A (RDFS) | Yes — embed RDFS materialization |
-| `rl` | **Stable** | `ontologos-rl` → reasonable | N/A (RL) | Yes — OWL RL saturation |
-| `el` | **Stable** | `ontologos-el` (in-house) | EL-shaped corpora | Yes — OWL EL taxonomy |
-| `auto` | **Stable** | Detect → EL, RL, or DL | Depends on ontology | Yes — prefer explicit profile when known |
-| `dl` | **Stable** (engine on `main`; **v1.0.0 publish pending**) | `ontologos-dl` | **100% in-scope catalog** gate — see [Evaluator scope](evaluator-scope.md) | Build from `main` today; `ontologos-dl = "1.0.0"` after tag |
+| `rdfs` | **Stable** | `ontologos-rdfs` → reasonable | N/A (RDFS) | Yes on 0.9.0 — embed RDFS materialization |
+| `rl` | **Stable** | `ontologos-rl` → reasonable | N/A (RL) | Yes on 0.9.0 — OWL RL saturation |
+| `el` | **Stable** | `ontologos-el` (in-house) | EL-shaped corpora | Yes on 0.9.0 — OWL EL taxonomy |
+| `auto` | **Stable** | Detect → EL, RL, or DL | Depends on ontology | Yes on 0.9.0 — prefer explicit profile when known |
+| `dl` | **Stable on `main`**; **not on PyPI 0.9.0** | `ontologos-dl` | **100% in-scope catalog** — [Evaluator scope](evaluator-scope.md) | Build from `main`; `ontologos-dl = "1.0.0"` after tag |
 | `dl-preview` | **Preview** | `ontologos-dl` (gated) | Same engine as `dl` + extra checks | No |
 | `alc` | **Preview** | `ontologos-alc` | Subset | No |
-| `swrl` | **Stable** | `ontologos-swrl` | 24/24 RulesTest @ Tier A | Yes — DLSafe SWRL forward chaining + DL consistency |
+| `swrl` | **Stable on `main`**; **not on PyPI 0.9.0** | `ontologos-swrl` | 24/24 RulesTest @ Tier A | Build from `main` for DLSafe SWRL |
 | `ql` (detection only) | **Detection only** | None | N/A | Use ELK or another QL reasoner |
 
 ## What “stable” means here
@@ -42,7 +56,7 @@ ontologos classify --profile dl ontology.owl    # stable on main / v1.0.0 — ga
 ## Related
 
 - [Evaluator scope](evaluator-scope.md) — what 100% does and does not mean
-- [Preview profiles](preview-profiles.md) — limitations and error types for DL/ALC/SWRL
+- [Preview profiles](preview-profiles.md) — ALC and `dl-preview` limitations
 - [Comparison](../comparison.md) — vs ELK, HermiT, reasonable
 - [Choosing an API](choosing-an-api.md) — Rust entry points
 - [Evaluator playbook](evaluator-playbook.md) — 30-minute evaluation

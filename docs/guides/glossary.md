@@ -30,21 +30,27 @@ Terms used across OntoLogos documentation. For OWL background, see the [W3C OWL 
 | **ParseMeta** | Parser scan metadata: mapped/skipped counts, warnings, construct sets |
 | **`profile_constructs`** | Constructs from **mapped** axioms — drives detected EL/RL/QL/DL |
 | **`constructs`** | Full source scan — used for **diagnostics** only |
-| **Delegate hint** | `Reasoner::classify()` error directing you to profile-specific crates |
-| **JSON snapshot v2** | Serialized ontology format (`to_json` / `from_json`) |
+| **Facade** | `ontologos-facade` — unified `classify()` routing for CLI, Python, and multi-profile Rust |
+| **Delegate hint** | `Reasoner::classify()` on core returns an error directing you to `ontologos_facade::classify` |
+| **JSON snapshot v3** | Current serialization format (`to_json` emits v3; `from_json` reads v2 and v3) |
+| **JSON snapshot v2** | Legacy format; still readable |
+| **`parity_pct`** | In-scope HermiT catalog harness completion — see [Evaluator scope](evaluator-scope.md) |
 
-## Engines (v0.9.0)
+## Engines
 
 | Term | Crate | Scope |
 |------|-------|-------|
 | **RDFS materialization** | `ontologos-rdfs` | TBox: transitive subClass/subProperty, domain/range inheritance |
 | **OWL RL saturation** | `ontologos-rl` | RDFS pass + RL TBox/ABox rules |
 | **OWL EL classification** | `ontologos-el` | Completion-based taxonomy |
+| **OWL DL classification** | `ontologos-dl` | Hybrid EL + saturation + tableau (`main` / 1.0.0) |
+| **SWRL** | `ontologos-swrl` | DLSafe rules + DL consistency (`main` / 1.0.0) |
 | **Incremental session** | core + profile crates | Delta re-classify via `ReasonerConfig::incremental` |
 | **Proof graph** | `ontologos-explain` | EL-first explanations; RL/RDFS partial |
 
 ## Related
 
 - [Choosing an API](choosing-an-api.md)
+- [Profile stability matrix](profile-stability.md)
 - [Architecture](../architecture.md)
 - [First ontology](../getting-started/first-ontology.md)

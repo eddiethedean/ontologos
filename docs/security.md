@@ -44,7 +44,7 @@ Literal `datatype` IRIs in JSON snapshots are validated the same way as entity I
 ### Format integrity
 
 - **Format v1 is rejected** — positional `iris[]` / entity index binding is unsafe for untrusted input
-- **Format v2** keys axioms by IRI string
+- **Format v3** (writers on workspace 1.0.0) and **v2** (legacy) key axioms by IRI string; readers accept both
 - Unknown JSON fields on snapshot structs are rejected
 - Duplicate entity IRIs are rejected
 - Duplicate axioms are deduplicated on load (idempotent)
@@ -82,6 +82,6 @@ Report security vulnerabilities privately — see [Security policy](project/secu
 
 ## Related
 
-- [JSON snapshot v2](json-snapshot-v2.md)
+- [JSON snapshot v3](json-snapshot-v3.md) · [v2 legacy](json-snapshot-v2.md)
 - [Load an OWL file](getting-started/load-owl-file.md)
 - [Error reference](reference/errors.md)
