@@ -1,7 +1,9 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use ontologos_parser::{Error, ParseLimits, load_ontology, load_ontology_lenient, load_ontology_with_limits};
+use ontologos_parser::{
+    Error, ParseLimits, load_ontology, load_ontology_lenient, load_ontology_with_limits,
+};
 
 fn fixture(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -63,7 +65,8 @@ fn legacy_galen_fixture_loads_after_entity_expansion() {
         .join("../../benchmarks/data/hermit/reasoner/res/galen-ians-full-undoctored.xml");
     assert!(path.exists(), "missing galen fixture at {}", path.display());
 
-    let ontology = load_ontology_lenient(&path).expect("galen.xml should load after entity expansion");
+    let ontology =
+        load_ontology_lenient(&path).expect("galen.xml should load after entity expansion");
     assert!(
         ontology.axiom_count() > 0,
         "expected mapped axioms from galen.xml"
@@ -80,7 +83,8 @@ fn legacy_propreo_fixture_loads_after_entity_expansion() {
         path.display()
     );
 
-    let ontology = load_ontology_lenient(&path).expect("propreo.xml should load after entity expansion");
+    let ontology =
+        load_ontology_lenient(&path).expect("propreo.xml should load after entity expansion");
     assert!(
         ontology.axiom_count() > 0,
         "expected mapped axioms from propreo.xml"
@@ -114,7 +118,8 @@ fn owllink_primer_loads_with_families_import() {
         path.display()
     );
 
-    let ontology = load_ontology_lenient(&path).expect("primer.owl should load with families import");
+    let ontology =
+        load_ontology_lenient(&path).expect("primer.owl should load with families import");
     assert!(
         ontology.axiom_count() > 0,
         "expected axioms from primer.owl"

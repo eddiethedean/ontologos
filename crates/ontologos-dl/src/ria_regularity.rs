@@ -174,10 +174,11 @@ fn extend_subprops_from_chains(
         }
         if chain.len() >= 2
             && let Some(RoleExpr::Atomic(last)) = chain.last()
-                && let RoleExpr::Atomic(b) = sup
-                    && !roles_equivalent(&RoleExpr::Atomic(*last), sup, inverses, equiv) {
-                        out.insert((*last, *b));
-                    }
+            && let RoleExpr::Atomic(b) = sup
+            && !roles_equivalent(&RoleExpr::Atomic(*last), sup, inverses, equiv)
+        {
+            out.insert((*last, *b));
+        }
     }
     out
 }
@@ -213,17 +214,20 @@ fn roles_are_inverse_adjacent(
     inverses: &HashMap<EntityId, EntityId>,
 ) -> bool {
     if let (RoleExpr::Atomic(a), RoleExpr::Atomic(b)) = (left, right)
-        && inverses.get(a) == Some(b) {
-            return true;
-        }
+        && inverses.get(a) == Some(b)
+    {
+        return true;
+    }
     if let RoleExpr::Inverse(inner) = right
-        && let RoleExpr::Atomic(a) = left {
-            return *inner == *a;
-        }
+        && let RoleExpr::Atomic(a) = left
+    {
+        return *inner == *a;
+    }
     if let RoleExpr::Inverse(inner) = left
-        && let RoleExpr::Atomic(b) = right {
-            return *inner == *b;
-        }
+        && let RoleExpr::Atomic(b) = right
+    {
+        return *inner == *b;
+    }
     false
 }
 
@@ -340,13 +344,15 @@ fn roles_equal(a: &RoleExpr, b: &RoleExpr, inverses: &HashMap<EntityId, EntityId
         return true;
     }
     if let Some(inv) = role_inverse(a, inverses)
-        && inv == *b {
-            return true;
-        }
+        && inv == *b
+    {
+        return true;
+    }
     if let Some(inv) = role_inverse(b, inverses)
-        && *a == inv {
-            return true;
-        }
+        && *a == inv
+    {
+        return true;
+    }
     false
 }
 
@@ -428,9 +434,11 @@ fn pair_chain_in_closure(
         }
     }
     if let (RoleExpr::Atomic(a), RoleExpr::Atomic(b)) = (&pair[0], &pair[1])
-        && closure.contains(&(*a, *b)) && roles_equal(&RoleExpr::Atomic(*b), target, inverses) {
-            return !pair_exempt_from_regularity(&pair[0], &pair[1], reflexive, transitive);
-        }
+        && closure.contains(&(*a, *b))
+        && roles_equal(&RoleExpr::Atomic(*b), target, inverses)
+    {
+        return !pair_exempt_from_regularity(&pair[0], &pair[1], reflexive, transitive);
+    }
     false
 }
 
@@ -442,9 +450,10 @@ fn pair_exempt_from_regularity(
 ) -> bool {
     if let RoleExpr::Atomic(id) = left
         && (reflexive.contains(id) || transitive.contains(id))
-            && let RoleExpr::Atomic(rid) = right {
-                return id == rid;
-            }
+        && let RoleExpr::Atomic(rid) = right
+    {
+        return id == rid;
+    }
     false
 }
 
@@ -541,9 +550,10 @@ fn compute_non_simple_roles(ontology: &Ontology) -> Result<HashSet<EntityId>> {
         for (chain, _) in &chains {
             for part in chain {
                 if let RoleExpr::Atomic(id) = part
-                    && non_simple.insert(*id) {
-                        changed = true;
-                    }
+                    && non_simple.insert(*id)
+                {
+                    changed = true;
+                }
             }
         }
     }

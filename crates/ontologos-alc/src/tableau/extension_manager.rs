@@ -436,9 +436,10 @@ impl ExtensionRetrieval<'_> {
         }
         for (pos, binding) in self.bindings.iter().enumerate() {
             if let Some(expected) = binding
-                && &self.tuple_buffer[pos] != expected {
-                    return false;
-                }
+                && &self.tuple_buffer[pos] != expected
+            {
+                return false;
+            }
         }
         true
     }
@@ -703,9 +704,10 @@ impl TableauState {
 
         if matches!(predicate, DlPredicate::Inequality) {
             if let (DlObject::Node(a), Some(DlObject::Node(b))) = (&tuple[1], tuple.get(2))
-                && a == b {
-                    self.set_clash(dependency);
-                }
+                && a == b
+            {
+                self.set_clash(dependency);
+            }
             return;
         }
 
@@ -918,9 +920,10 @@ impl TableauState {
             let mut out = Vec::new();
             while !retrieval.after_last() {
                 if let DlObject::Predicate(pred) = retrieval.tuple_buffer()[0].clone()
-                    && !matches!(pred, DlPredicate::DescriptionGraph(_)) {
-                        out.push((pred, retrieval.is_core()));
-                    }
+                    && !matches!(pred, DlPredicate::DescriptionGraph(_))
+                {
+                    out.push((pred, retrieval.is_core()));
+                }
                 retrieval.next();
             }
             out
@@ -1352,9 +1355,10 @@ impl ExtensionManagerRef {
         retrieval.open();
         while !retrieval.after_last() {
             if let DlObject::Predicate(DlPredicate::AtomicConcept(c)) = retrieval.tuple_buffer()[0]
-                && c == concept {
-                    return true;
-                }
+                && c == concept
+            {
+                return true;
+            }
             retrieval.next();
         }
         false
@@ -1374,9 +1378,10 @@ impl ExtensionManagerRef {
         retrieval.open();
         while !retrieval.after_last() {
             if let DlObject::Predicate(DlPredicate::AtomicRole(r)) = &retrieval.tuple_buffer()[0]
-                && *r == role {
-                    return true;
-                }
+                && *r == role
+            {
+                return true;
+            }
             retrieval.next();
         }
         false
@@ -1401,13 +1406,14 @@ impl ExtensionManagerRef {
         retrieval.open();
         while !retrieval.after_last() {
             if let DlObject::Predicate(DlPredicate::AtomicRole(r)) = &retrieval.tuple_buffer()[0]
-                && *r == role {
-                    let tuple = retrieval.tuple_buffer();
-                    return state
-                        .ternary_table
-                        .dependency_for_tuple(tuple)
-                        .unwrap_or_else(|| state.empty_set());
-                }
+                && *r == role
+            {
+                let tuple = retrieval.tuple_buffer();
+                return state
+                    .ternary_table
+                    .dependency_for_tuple(tuple)
+                    .unwrap_or_else(|| state.empty_set());
+            }
             retrieval.next();
         }
         state.empty_set()
@@ -1427,9 +1433,10 @@ impl ExtensionManagerRef {
         while !retrieval.after_last() {
             if let DlObject::Predicate(DlPredicate::AtomicRole(r)) = &retrieval.tuple_buffer()[0]
                 && *r == role
-                    && let DlObject::Node(to) = retrieval.tuple_buffer()[2] {
-                        out.push(state.nodes.borrow().node(to));
-                    }
+                && let DlObject::Node(to) = retrieval.tuple_buffer()[2]
+            {
+                out.push(state.nodes.borrow().node(to));
+            }
             retrieval.next();
         }
         out
@@ -1447,11 +1454,11 @@ impl ExtensionManagerRef {
         while !retrieval.after_last() {
             if let DlObject::Predicate(DlPredicate::AtomicRole(r)) = &retrieval.tuple_buffer()[0]
                 && *r == role
-                    && let (DlObject::Node(from), DlObject::Node(to)) =
-                        (&retrieval.tuple_buffer()[1], &retrieval.tuple_buffer()[2])
-                    {
-                        out.push((*from, *to));
-                    }
+                && let (DlObject::Node(from), DlObject::Node(to)) =
+                    (&retrieval.tuple_buffer()[1], &retrieval.tuple_buffer()[2])
+            {
+                out.push((*from, *to));
+            }
             retrieval.next();
         }
         out
@@ -1533,9 +1540,10 @@ impl ExtensionManagerRef {
         let mut out = Vec::new();
         while !retrieval.after_last() {
             if let DlObject::Predicate(DlPredicate::AtomicConcept(c)) = retrieval.tuple_buffer()[0]
-                && retrieval.is_core() {
-                    out.push(c);
-                }
+                && retrieval.is_core()
+            {
+                out.push(c);
+            }
             retrieval.next();
         }
         out.sort_unstable();

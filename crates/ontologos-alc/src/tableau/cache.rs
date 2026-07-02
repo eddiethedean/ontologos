@@ -39,15 +39,13 @@ impl UnsatCache {
 
     /// Record a world label set as unsatisfiable.
     pub fn record_unsat(&mut self, labels: &HashSet<CeId>, negated: &HashSet<CeId>) {
-        self.seen
-            .insert(LabelKey::from_labels(labels, negated));
+        self.seen.insert(LabelKey::from_labels(labels, negated));
     }
 
     /// Whether this label set was previously seen as unsatisfiable.
     #[must_use]
     pub fn is_unsat(&self, labels: &HashSet<CeId>, negated: &HashSet<CeId>) -> bool {
-        self.seen
-            .contains(&LabelKey::from_labels(labels, negated))
+        self.seen.contains(&LabelKey::from_labels(labels, negated))
     }
 
     /// Absorb entries from another cache.

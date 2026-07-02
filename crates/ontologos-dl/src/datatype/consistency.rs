@@ -39,15 +39,16 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
 
     for axiom in store.axioms() {
         if let DlAxiom::SubClassOf { sub, sup } = axiom
-            && let Some(class) = atomic_class_id(store, *sub) {
-                let class = canonical_class_restriction_key(ontology, class);
-                for (prop, restriction) in restrictions_from_ce(store, *sup) {
-                    class_restrictions
-                        .entry(class)
-                        .or_default()
-                        .push((prop, restriction));
-                }
+            && let Some(class) = atomic_class_id(store, *sub)
+        {
+            let class = canonical_class_restriction_key(ontology, class);
+            for (prop, restriction) in restrictions_from_ce(store, *sup) {
+                class_restrictions
+                    .entry(class)
+                    .or_default()
+                    .push((prop, restriction));
             }
+        }
     }
 
     let mut individual_restrictions: HashMap<EntityId, Vec<(EntityId, DataRestriction)>> =
@@ -71,12 +72,13 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
                 }
             }
             if let Some(thing) = owl_thing_id(ontology)
-                && let Some(restrictions) = class_restrictions.get(&thing) {
-                    individual_restrictions
-                        .entry(*individual)
-                        .or_default()
-                        .extend(restrictions.iter().cloned());
-                }
+                && let Some(restrictions) = class_restrictions.get(&thing)
+            {
+                individual_restrictions
+                    .entry(*individual)
+                    .or_default()
+                    .extend(restrictions.iter().cloned());
+            }
         }
         if let DlAxiom::DataPropertyAssertion {
             subject,
@@ -101,20 +103,20 @@ pub fn is_datatype_consistent(ontology: &Ontology) -> bool {
                     } if *ind == *individual
                 )
             });
-            if !dl_already_merged
-                && let Some(restrictions) = class_restrictions.get(class) {
-                    individual_restrictions
-                        .entry(*individual)
-                        .or_default()
-                        .extend(restrictions.iter().cloned());
-                }
+            if !dl_already_merged && let Some(restrictions) = class_restrictions.get(class) {
+                individual_restrictions
+                    .entry(*individual)
+                    .or_default()
+                    .extend(restrictions.iter().cloned());
+            }
             if let Some(thing) = owl_thing_id(ontology)
-                && let Some(restrictions) = class_restrictions.get(&thing) {
-                    individual_restrictions
-                        .entry(*individual)
-                        .or_default()
-                        .extend(restrictions.iter().cloned());
-                }
+                && let Some(restrictions) = class_restrictions.get(&thing)
+            {
+                individual_restrictions
+                    .entry(*individual)
+                    .or_default()
+                    .extend(restrictions.iter().cloned());
+            }
         }
     }
 
@@ -334,9 +336,10 @@ fn property_requires_literal(
 
     for value in &fixed_values {
         if let Some(fixed) = literal_from_de(ontology, value)
-            && literals_equal_local(&fixed, lit) {
-                return true;
-            }
+            && literals_equal_local(&fixed, lit)
+        {
+            return true;
+        }
     }
 
     if min_card > 0 {
@@ -408,9 +411,11 @@ fn multiple_literal_assertions_disjoint_exists_clash(
         if let DlAxiom::DataPropertyAssertion {
             subject, property, ..
         } = axiom
-            && *subject == individual && *property == left {
-                left_literals += 1;
-            }
+            && *subject == individual
+            && *property == left
+        {
+            left_literals += 1;
+        }
     }
     if left_literals < 2 {
         return false;
@@ -480,10 +485,12 @@ fn definite_literal_keys(
             property: prop,
             value,
         } = axiom
-            && *subject == individual && *prop == property
-                && let Some(lit) = literal_from_de(ontology, value) {
-                    keys.insert(distinct_literal_key(&lit));
-                }
+            && *subject == individual
+            && *prop == property
+            && let Some(lit) = literal_from_de(ontology, value)
+        {
+            keys.insert(distinct_literal_key(&lit));
+        }
     }
     for (prop, restriction) in restrictions {
         if *prop != property {
@@ -660,9 +667,10 @@ fn properties_in_use(
         if let DlAxiom::DataPropertyAssertion {
             subject, property, ..
         } = axiom
-            && *subject == individual {
-                props.insert(*property);
-            }
+            && *subject == individual
+        {
+            props.insert(*property);
+        }
     }
     for (prop, restriction) in restrictions {
         if property_requires_use(restriction) {
@@ -901,10 +909,12 @@ fn collect_disjoint_assertion_literals(
                 property: prop,
                 value,
             } = axiom
-                && *subject == individual && *prop == sibling
-                    && let Some(lit) = literal_from_de(ontology, value) {
-                        out.push(lit);
-                    }
+                && *subject == individual
+                && *prop == sibling
+                && let Some(lit) = literal_from_de(ontology, value)
+            {
+                out.push(lit);
+            }
         }
     }
     out
@@ -1015,9 +1025,10 @@ fn property_restrictions_satisfiable(
     }
 
     if let Some(max) = max_card
-        && min_card > max {
-            return false;
-        }
+        && min_card > max
+    {
+        return false;
+    }
 
     for range in all_ranges.iter().chain(some_ranges.iter()) {
         if !data_range_has_witness(ontology, idx, *range) {
@@ -1292,15 +1303,16 @@ fn conjunctive_sample_literals(
     if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive)
         && facet_base_iri(ontology, store, range)
             == Some("http://www.w3.org/2001/XMLSchema#dateTime".to_string())
-            && let Some(dt) = facet_base_datatype(ontology, store, range) {
-                return datetime_seed_lexicals(min, max)
-                    .into_iter()
-                    .map(|lex| LiteralValue {
-                        lexical: lex,
-                        datatype: dt,
-                    })
-                    .collect();
-            }
+        && let Some(dt) = facet_base_datatype(ontology, store, range)
+    {
+        return datetime_seed_lexicals(min, max)
+            .into_iter()
+            .map(|lex| LiteralValue {
+                lexical: lex,
+                datatype: dt,
+            })
+            .collect();
+    }
     sample_literals(ontology, idx, range)
 }
 
@@ -1317,10 +1329,12 @@ fn distinct_literal_key(lit: &LiteralValue) -> String {
     }
     let trimmed = lit.lexical.trim();
     let trimmed = trimmed.strip_prefix('+').unwrap_or(trimmed);
-    if !trimmed.contains('.') && !trimmed.contains('/')
-        && let Ok(v) = trimmed.parse::<i128>() {
-            return format!("q:{v}:1");
-        }
+    if !trimmed.contains('.')
+        && !trimmed.contains('/')
+        && let Ok(v) = trimmed.parse::<i128>()
+    {
+        return format!("q:{v}:1");
+    }
     if lexical_looks_numeric(&lit.lexical) {
         let n = parse_numeric(&lit.lexical);
         if n.is_finite() && !n.is_nan() {
@@ -1493,10 +1507,10 @@ fn facet_contradiction_on_base(
                 ..
             }) = store.de(base)
                 && other == "http://www.w3.org/2001/XMLSchema#maxInclusive"
-                    && numeric_compare(value, max) > 0
-                {
-                    return true;
-                }
+                && numeric_compare(value, max) > 0
+            {
+                return true;
+            }
         }
         "http://www.w3.org/2001/XMLSchema#maxInclusive" => {
             if let Some(DataExpr::Facet {
@@ -1505,10 +1519,10 @@ fn facet_contradiction_on_base(
                 ..
             }) = store.de(base)
                 && other == "http://www.w3.org/2001/XMLSchema#minInclusive"
-                    && numeric_compare(min, value) > 0
-                {
-                    return true;
-                }
+                && numeric_compare(min, value) > 0
+            {
+                return true;
+            }
         }
         _ => {}
     }
@@ -1621,14 +1635,15 @@ fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<
             }
             let mut out = sample_literals(ontology, idx, *base);
             if facet_iri == "http://www.w3.org/2001/XMLSchema#pattern"
-                && let Some(dt) = facet_base_datatype(ontology, store, *base) {
-                    for lex in pattern_witness_lexicals(value) {
-                        out.push(LiteralValue {
-                            lexical: lex,
-                            datatype: dt,
-                        });
-                    }
+                && let Some(dt) = facet_base_datatype(ontology, store, *base)
+            {
+                for lex in pattern_witness_lexicals(value) {
+                    out.push(LiteralValue {
+                        lexical: lex,
+                        datatype: dt,
+                    });
                 }
+            }
             if facet_iri == "http://www.w3.org/2001/XMLSchema#length" && value == "0" {
                 if let Some(dt) = facet_base_datatype(ontology, store, *base) {
                     out.push(LiteralValue {
@@ -1638,20 +1653,21 @@ fn sample_literals(ontology: &Ontology, idx: &LiteralIndex, range: DeId) -> Vec<
                 }
             } else if facet_iri == "http://www.w3.org/2001/XMLSchema#length"
                 && let Ok(n) = value.parse::<usize>()
-                    && let Some(dt) = facet_base_datatype(ontology, store, *base)
-                        && let Some(iri) = entity_iri(ontology, dt) {
-                            let lex = match iri.as_str() {
-                                "http://www.w3.org/2001/XMLSchema#hexBinary" => "00".repeat(n),
-                                "http://www.w3.org/2001/XMLSchema#base64Binary" => {
-                                    "A".repeat((n * 4).div_ceil(3))
-                                }
-                                _ => "a".repeat(n),
-                            };
-                            out.push(LiteralValue {
-                                lexical: lex,
-                                datatype: dt,
-                            });
-                        }
+                && let Some(dt) = facet_base_datatype(ontology, store, *base)
+                && let Some(iri) = entity_iri(ontology, dt)
+            {
+                let lex = match iri.as_str() {
+                    "http://www.w3.org/2001/XMLSchema#hexBinary" => "00".repeat(n),
+                    "http://www.w3.org/2001/XMLSchema#base64Binary" => {
+                        "A".repeat((n * 4).div_ceil(3))
+                    }
+                    _ => "a".repeat(n),
+                };
+                out.push(LiteralValue {
+                    lexical: lex,
+                    datatype: dt,
+                });
+            }
             out.extend(facet_bound_witness_literals(ontology, store, *base, range));
             if let Some(dt) = facet_base_datatype(ontology, store, *base) {
                 let candidate = LiteralValue {
@@ -1883,17 +1899,18 @@ fn estimated_facet_distinct_count(
     if let Some(len) = bounds.exact_length
         && (base_iri == "http://www.w3.org/2001/XMLSchema#hexBinary"
             || base_iri == "http://www.w3.org/2001/XMLSchema#base64Binary")
-            && let Some(dt) = facet_base_datatype(ontology, store, range) {
-                let mut count = 0_u32;
-                for lit in default_witness_literals(ontology, dt) {
-                    if super::facet_lexical_measure(&lit.lexical, Some(base_iri.as_str())) == len {
-                        count += 1;
-                    }
-                }
-                if count > 0 {
-                    return Some(count);
-                }
+        && let Some(dt) = facet_base_datatype(ontology, store, range)
+    {
+        let mut count = 0_u32;
+        for lit in default_witness_literals(ontology, dt) {
+            if super::facet_lexical_measure(&lit.lexical, Some(base_iri.as_str())) == len {
+                count += 1;
             }
+        }
+        if count > 0 {
+            return Some(count);
+        }
+    }
     if let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
         if base_iri == "http://www.w3.org/2001/XMLSchema#dateTime"
             && datetime_facet_range_empty(min, max)
@@ -2018,16 +2035,17 @@ fn facet_bound_witness_literals(
             );
         }
     } else if iri == "http://www.w3.org/2001/XMLSchema#double"
-        && let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive) {
-            out.extend(
-                ieee_witness_lexicals(parse_numeric(min), parse_numeric(max), false)
-                    .into_iter()
-                    .map(|lex| LiteralValue {
-                        lexical: lex,
-                        datatype: dt,
-                    }),
-            );
-        }
+        && let (Some(min), Some(max)) = (&bounds.min_inclusive, &bounds.max_inclusive)
+    {
+        out.extend(
+            ieee_witness_lexicals(parse_numeric(min), parse_numeric(max), false)
+                .into_iter()
+                .map(|lex| LiteralValue {
+                    lexical: lex,
+                    datatype: dt,
+                }),
+        );
+    }
     out
 }
 
@@ -2231,9 +2249,10 @@ fn increment_datetime_ms(p: &mut DateTimeParts) {
 fn strip_datetime_timezone(s: &str) -> &str {
     let s = s.strip_suffix('Z').unwrap_or(s);
     if let Some(t_pos) = s.find('T')
-        && let Some(off_pos) = s[t_pos..].rfind(['+', '-']) {
-            return &s[..t_pos + off_pos];
-        }
+        && let Some(off_pos) = s[t_pos..].rfind(['+', '-'])
+    {
+        return &s[..t_pos + off_pos];
+    }
     s
 }
 

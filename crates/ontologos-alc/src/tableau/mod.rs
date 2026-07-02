@@ -203,21 +203,21 @@ fn neg_exists_and_split_roles_sat(
                 let inner = effective_class_expression(dl, *inner);
                 if let Some(ClassExpr::Some { property, filler }) = store.ce(inner)
                     && matches!(property, RoleExpr::Atomic(_))
-                        && matches!(
-                            store.ce(*filler),
-                            Some(ClassExpr::And(ops))
-                                if ops.len() == 2
-                                    && ops.iter().all(|&op| {
-                                        matches!(
-                                            store.ce(op),
-                                            Some(ClassExpr::Atomic(_))
-                                        )
-                                    })
-                        )
-                    {
-                        neg_idx = Some(i);
-                        neg_role = Some(property.clone());
-                    }
+                    && matches!(
+                        store.ce(*filler),
+                        Some(ClassExpr::And(ops))
+                            if ops.len() == 2
+                                && ops.iter().all(|&op| {
+                                    matches!(
+                                        store.ce(op),
+                                        Some(ClassExpr::Atomic(_))
+                                    )
+                                })
+                    )
+                {
+                    neg_idx = Some(i);
+                    neg_role = Some(property.clone());
+                }
             }
             Some(ClassExpr::Some { property, filler })
                 if matches!(property, RoleExpr::Atomic(_))
@@ -502,9 +502,10 @@ fn iant6_functional_inverse_forall_unsat(dl: &DlOntology, ce: CeId) -> Option<bo
                     filler: inner,
                 }) = store.ce(*filler)
                     && functional.contains(f)
-                        && let Some(ClassExpr::Atomic(class)) = store.ce(*inner) {
-                            forall_filler = Some(*class);
-                        }
+                    && let Some(ClassExpr::Atomic(class)) = store.ce(*inner)
+                {
+                    forall_filler = Some(*class);
+                }
             }
             _ => {}
         }
@@ -536,9 +537,10 @@ fn iant13_dual_exists_unsat(dl: &DlOntology, ce: CeId) -> Option<bool> {
             property: RoleExpr::Atomic(_),
             filler,
         }) = store.ce(conj)
-            && iant13_pos_exists_filler(dl, *filler) {
-                pos_exists = true;
-            }
+            && iant13_pos_exists_filler(dl, *filler)
+        {
+            pos_exists = true;
+        }
     }
     if atomic_neg && pos_exists {
         Some(false)
@@ -571,11 +573,7 @@ fn equiv_ce_tree_has_negation(dl: &DlOntology, ce: CeId) -> bool {
     equiv_ce_tree_has_negation_inner(dl, ce, &mut HashSet::new())
 }
 
-fn equiv_ce_tree_has_negation_inner(
-    dl: &DlOntology,
-    ce: CeId,
-    seen: &mut HashSet<CeId>,
-) -> bool {
+fn equiv_ce_tree_has_negation_inner(dl: &DlOntology, ce: CeId, seen: &mut HashSet<CeId>) -> bool {
     let store = dl.core().dl();
     let ce = effective_class_expression(dl, ce);
     if !seen.insert(ce) {
@@ -1716,9 +1714,9 @@ fn individual_in_key_class(
             .ok()
             .and_then(|r| dl.core().resolve_iri(r.iri).ok())
             .is_some_and(|iri| iri == "http://www.w3.org/2002/07/owl#Thing")
-        {
-            return true;
-        }
+    {
+        return true;
+    }
     for &label in labels {
         if label_subsumes_key(branch, dl, label, key_class) {
             return true;
@@ -1752,9 +1750,10 @@ fn label_subsumes_key(branch: &Branch<'_>, dl: &DlOntology, sub: CeId, key: CeId
         }
         if let (Some(ClassExpr::Atomic(a)), Some(ClassExpr::Atomic(b))) =
             (dl.core().dl().ce(cur), dl.core().dl().ce(key))
-            && a == b {
-                return true;
-            }
+            && a == b
+        {
+            return true;
+        }
     }
     false
 }
@@ -1829,9 +1828,10 @@ fn run_tableau(
     let mut subsumptions = Vec::new();
     for clause in dl.clauses().clauses() {
         if let Clause::Subsumption { sub, sup } = clause
-            && let (Some(a), Some(b)) = (atomic_entity(dl, *sub), atomic_entity(dl, *sup)) {
-                subsumptions.push((a, b));
-            }
+            && let (Some(a), Some(b)) = (atomic_entity(dl, *sub), atomic_entity(dl, *sup))
+        {
+            subsumptions.push((a, b));
+        }
     }
     for &(sub, sup) in &seed.subsumptions {
         if let (Some(a), Some(b)) = (atomic_entity(dl, sub), atomic_entity(dl, sup)) {
@@ -1912,9 +1912,10 @@ pub fn structural_unsat_classes(
     let mut disjoint = Vec::new();
     for clause in dl.clauses().clauses() {
         if let Clause::Disjoint { left, right } = clause
-            && let (Some(a), Some(b)) = (atomic_entity(dl, *left), atomic_entity(dl, *right)) {
-                disjoint.push((a, b));
-            }
+            && let (Some(a), Some(b)) = (atomic_entity(dl, *left), atomic_entity(dl, *right))
+        {
+            disjoint.push((a, b));
+        }
     }
 
     let mut unsat = HashSet::new();
@@ -2566,7 +2567,10 @@ impl<'a> Branch<'a> {
             }
             stall_steps = 0;
 
-            if self.cache.is_unsat(&self.worlds[world].labels, &self.worlds[world].negated) {
+            if self
+                .cache
+                .is_unsat(&self.worlds[world].labels, &self.worlds[world].negated)
+            {
                 return Ok(false);
             }
 

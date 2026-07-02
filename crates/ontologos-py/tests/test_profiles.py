@@ -70,7 +70,7 @@ def test_classify_dl_preview_profile() -> None:
     )
 
 
-def test_classify_swrl_profile_errors_without_rules() -> None:
+def test_classify_swrl_profile_without_rules() -> None:
     from ontologos import OntologyBuilder, Reasoner
 
     builder = OntologyBuilder()
@@ -80,8 +80,8 @@ def test_classify_swrl_profile_errors_without_rules() -> None:
     ontology = builder.build()
 
     reasoner = Reasoner(ontology=ontology, profile="swrl")
-    with pytest.raises(RuntimeError, match="SWRL"):
-        reasoner.classify()
+    result = reasoner.classify()
+    assert result["subsumption_count"] >= 1
 
 
 def test_classify_el_asserts_known_subsumptions() -> None:

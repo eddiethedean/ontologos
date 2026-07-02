@@ -1,7 +1,7 @@
 //! Conjunctive query AST and evaluation.
 
-use ontologos_core::{EntityId, Ontology};
 use crate::hierarchy::TaxonomyHierarchy;
+use ontologos_core::{EntityId, Ontology};
 
 use crate::{Error, Result};
 

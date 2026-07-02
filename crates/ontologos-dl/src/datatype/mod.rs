@@ -171,9 +171,10 @@ fn facet_check(
             value,
         } => {
             if let Some(bounds) = datetime_bounds_from_facet_chain(store, defs, range)
-                && datetime_facet_range_empty(&bounds.0, &bounds.1) {
-                    return false;
-                }
+                && datetime_facet_range_empty(&bounds.0, &bounds.1)
+            {
+                return false;
+            }
             if !facet_check(lit, store, *base, ontology, defs) {
                 return false;
             }
@@ -779,9 +780,10 @@ fn parse_xml_tag_name_and_attrs(inner: &str) -> (String, Vec<(String, String)>) 
 /// Normalize plain literal forms: `abc@es` and `abc` with language tag.
 pub(crate) fn plain_literal_key(lex: &str, datatype_iri: Option<&str>) -> String {
     if let Some(iri) = datatype_iri
-        && (iri.contains("PlainLiteral") || iri.contains("langString")) {
-            return canonical_plain_literal(lex);
-        }
+        && (iri.contains("PlainLiteral") || iri.contains("langString"))
+    {
+        return canonical_plain_literal(lex);
+    }
     if lex.contains('@') {
         return canonical_plain_literal(lex);
     }
@@ -973,9 +975,10 @@ fn strip_datetime_timezone(s: &str) -> &str {
     let s = s.strip_suffix('Z').unwrap_or(s);
     if let Some(t_pos) = s.find('T')
         && let Some(off_pos) = s[t_pos..].rfind(['+', '-'])
-            && s[t_pos + off_pos..].contains(':') {
-                return &s[..t_pos + off_pos];
-            }
+        && s[t_pos + off_pos..].contains(':')
+    {
+        return &s[..t_pos + off_pos];
+    }
     s
 }
 

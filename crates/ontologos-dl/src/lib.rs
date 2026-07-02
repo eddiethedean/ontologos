@@ -12,9 +12,9 @@ mod dependency_index;
 mod engine;
 mod object_property_query;
 mod perf;
+mod reasoner;
 mod ria;
 mod ria_regularity;
-mod reasoner;
 mod saturation;
 mod union_csp;
 
@@ -27,7 +27,6 @@ use thiserror::Error;
 pub use bounded::{dl_max_workers, run_bounded};
 pub use classify::DlClassifier;
 pub use datatype::is_data_range_satisfiable;
-pub use ontologos_core::ConsistencyResult;
 pub use datatype::{
     LiteralIndex, LiteralValue, is_datatype_consistent, named_class_datatype_satisfiable,
 };
@@ -38,10 +37,11 @@ pub use object_property_query::{
     equivalent_object_property_expressions, inverse_object_property_expressions,
     sub_object_property_expressions,
 };
+pub use ontologos_core::ConsistencyResult;
 pub use perf::{DlPerfTimings, perf_enabled};
+pub use reasoner::{DlReport, classify_reasoner};
 pub use ria::RoleHierarchy;
 pub use ria_regularity::{is_property_hierarchy_regular, is_property_hierarchy_simple};
-pub use reasoner::{DlReport, classify_reasoner};
 pub use saturation::{SaturatedFacts, saturate};
 
 /// Result type for DL operations.
@@ -272,15 +272,14 @@ fn check_consistency_inner_impl(ontology: &Ontology) -> Result<ConsistencyResult
             ConsistencyResult::inconsistent()
         });
     }
-    let tableau = match ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed)
-        .map_err(Error::Alc)
-    {
-        Ok(consistent) => consistent,
-        Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {
-            return Ok(ConsistencyResult::incomplete());
-        }
-        Err(e) => return Err(e),
-    };
+    let tableau =
+        match ontologos_alc::tableau_is_consistent_with_seed(ontology, &seed).map_err(Error::Alc) {
+            Ok(consistent) => consistent,
+            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {
+                return Ok(ConsistencyResult::incomplete());
+            }
+            Err(e) => return Err(e),
+        };
     if trace {
         eprintln!("is_consistent: tableau => {tableau}");
     }
@@ -290,7 +289,8 @@ fn check_consistency_inner_impl(ontology: &Ontology) -> Result<ConsistencyResult
         {
             return Ok(ConsistencyResult::consistent());
         }
-        if bounded::wg_shortcuts_enabled() && wg_description_logic_605_consistency_fallback(ontology)
+        if bounded::wg_shortcuts_enabled()
+            && wg_description_logic_605_consistency_fallback(ontology)
         {
             return Ok(ConsistencyResult::consistent());
         }
@@ -395,9 +395,10 @@ fn named_classes_unsatisfiable_inner(ontology: &Ontology, classes: &[EntityId]) 
             && let (Some(a), Some(b)) = (
                 atomic_entity_from_clause(&dl, *sub),
                 atomic_entity_from_clause(&dl, *sup),
-            ) {
-                atomic_subs.push((a, b));
-            }
+            )
+        {
+            atomic_subs.push((a, b));
+        }
     }
     let structural = ontologos_alc::structural_unsat_classes(&dl, &seed, &atomic_subs);
     let pending: Vec<EntityId> = classes
@@ -415,9 +416,9 @@ fn named_classes_unsatisfiable_inner(ontology: &Ontology, classes: &[EntityId]) 
         ) {
             Ok(false) => Ok(true),
             Ok(true) => Ok(false),
-            Err(ontologos_alc::Error::ResourceLimit(_)) => {
-                Err(Error::IncompleteReasoning("parallel unsat resource limit".into()))
-            }
+            Err(ontologos_alc::Error::ResourceLimit(_)) => Err(Error::IncompleteReasoning(
+                "parallel unsat resource limit".into(),
+            )),
             Err(e) => Err(Error::Alc(e)),
         };
     }
@@ -438,8 +439,7 @@ fn parallel_named_class_unsat(
     let next = Arc::new(AtomicUsize::new(0));
     let all_unsat = Arc::new(AtomicBool::new(true));
     let incomplete = Arc::new(AtomicBool::new(false));
-    let worker_error: Arc<std::sync::Mutex<Option<Error>>> =
-        Arc::new(std::sync::Mutex::new(None));
+    let worker_error: Arc<std::sync::Mutex<Option<Error>>> = Arc::new(std::sync::Mutex::new(None));
 
     std::thread::scope(|scope| {
         for _ in 0..max_workers {
@@ -474,9 +474,10 @@ fn parallel_named_class_unsat(
                         }
                         Err(e) => {
                             if let Ok(mut slot) = worker_error.lock()
-                                && slot.is_none() {
-                                    *slot = Some(Error::Alc(e));
-                                }
+                                && slot.is_none()
+                            {
+                                *slot = Some(Error::Alc(e));
+                            }
                             return;
                         }
                     }
@@ -638,9 +639,10 @@ fn abox_asserted_exact_zero_equiv_class(ontology: &Ontology) -> bool {
             return true;
         }
         if let Some(ClassExpr::Atomic(entity)) = store.ce(*class)
-            && named_class_has_exact_zero_equiv(store, *entity) {
-                return true;
-            }
+            && named_class_has_exact_zero_equiv(store, *entity)
+        {
+            return true;
+        }
     }
     for (_, axiom) in ontology.axioms().iter() {
         let Axiom::ClassAssertion { class, .. } = axiom else {
@@ -649,10 +651,10 @@ fn abox_asserted_exact_zero_equiv_class(ontology: &Ontology) -> bool {
         if let Some(ce) = store.expressions().find_map(|(id, e)| match e {
             ClassExpr::Atomic(c) if *c == *class => Some(id),
             _ => None,
-        })
-            && ce_has_exact_zero_cardinality(store, ce) {
-                return true;
-            }
+        }) && ce_has_exact_zero_cardinality(store, ce)
+        {
+            return true;
+        }
         if named_class_has_exact_zero_equiv(store, *class) {
             return true;
         }
@@ -902,9 +904,10 @@ fn class_assertion_only_consistency(
             continue;
         };
         if let Some(ClassExpr::Atomic(entity)) = store.ce(*class)
-            && named_class_skip_atomic_unsat_precheck(store, *entity) {
-                continue;
-            }
+            && named_class_skip_atomic_unsat_precheck(store, *entity)
+        {
+            continue;
+        }
         if !class_assertion_type_satisfiable(dl, store, *class, &ce_seed)? {
             return Ok(Some(false));
         }
@@ -958,9 +961,9 @@ fn class_assertion_type_satisfiable(
         }
         _ => match ontologos_alc::is_ce_satisfiable_with_seed(dl, ce, seed).map_err(Error::Alc) {
             Ok(v) => Ok(v),
-            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => {
-                Err(Error::IncompleteReasoning("CE satisfiability resource limit".into()))
-            }
+            Err(Error::Alc(ontologos_alc::Error::ResourceLimit(_))) => Err(
+                Error::IncompleteReasoning("CE satisfiability resource limit".into()),
+            ),
             Err(e) => Err(e),
         },
     }
@@ -1134,9 +1137,9 @@ fn entity_subsumption_closure(
         if let DlAxiom::SubClassOf { sub, sup } = axiom
             && let (Some(sub_e), Some(sup_e)) =
                 (ce_atomic_entity(store, *sub), ce_atomic_entity(store, *sup))
-            {
-                edges.push((sub_e, sup_e));
-            }
+        {
+            edges.push((sub_e, sup_e));
+        }
     }
 
     let mut reach = HashSet::new();
@@ -1420,9 +1423,10 @@ fn abox_bottom_property_restriction(ontology: &Ontology) -> bool {
     let store = ontology.dl();
     for axiom in store.axioms() {
         if let DlAxiom::ClassAssertion { class, .. } = axiom
-            && ce_uses_bottom_property(store, ontology, *class) {
-                return true;
-            }
+            && ce_uses_bottom_property(store, ontology, *class)
+        {
+            return true;
+        }
     }
     false
 }
@@ -1712,9 +1716,10 @@ fn abox_positive_negative_property_clash(ontology: &Ontology) -> bool {
             property,
             object,
         } = axiom
-            && negative.contains(&(*subject, *property, *object)) {
-                return true;
-            }
+            && negative.contains(&(*subject, *property, *object))
+        {
+            return true;
+        }
     }
     false
 }
@@ -1731,9 +1736,10 @@ fn abox_positive_negative_data_clash(ontology: &Ontology) -> bool {
             property,
             value,
         } = axiom
-            && let Some(key) = data_assertion_key(store, *subject, *property, *value) {
-                negative.insert(key);
-            }
+            && let Some(key) = data_assertion_key(store, *subject, *property, *value)
+        {
+            negative.insert(key);
+        }
     }
     if negative.is_empty() {
         return false;
@@ -1745,9 +1751,10 @@ fn abox_positive_negative_data_clash(ontology: &Ontology) -> bool {
             value,
         } = axiom
             && let Some(key) = data_assertion_key(store, *subject, *property, *value)
-                && negative.contains(&key) {
-                    return true;
-                }
+            && negative.contains(&key)
+        {
+            return true;
+        }
     }
     false
 }
@@ -1773,9 +1780,10 @@ fn abox_property_self_disjoint_clash(ontology: &Ontology) -> bool {
     let mut self_disjoint = HashSet::new();
     for axiom in ontology.dl().axioms() {
         if let DlAxiom::DisjointObjectProperties(props) = axiom
-            && ((props.len() == 2 && props[0] == props[1]) || props.len() == 1) {
-                self_disjoint.insert(props[0]);
-            }
+            && ((props.len() == 2 && props[0] == props[1]) || props.len() == 1)
+        {
+            self_disjoint.insert(props[0]);
+        }
     }
     if self_disjoint.is_empty() {
         return false;
@@ -1792,9 +1800,10 @@ fn abox_property_self_disjoint_clash(ontology: &Ontology) -> bool {
     }
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::ObjectPropertyAssertion { property, .. } = axiom
-            && self_disjoint.contains(property) {
-                return true;
-            }
+            && self_disjoint.contains(property)
+        {
+            return true;
+        }
     }
     false
 }
@@ -1821,9 +1830,10 @@ fn abox_complement_typing_clash(ontology: &Ontology) -> bool {
             continue;
         };
         if let ClassExpr::Not(inner) = expr
-            && let Some(ClassExpr::Atomic(sup_e)) = store.ce(*inner) {
-                note_complement(sub_e, *sup_e);
-            }
+            && let Some(ClassExpr::Atomic(sup_e)) = store.ce(*inner)
+        {
+            note_complement(sub_e, *sup_e);
+        }
     }
 
     let mut individual_types: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
@@ -1851,9 +1861,10 @@ fn abox_complement_typing_clash(ontology: &Ontology) -> bool {
     for types in individual_types.values() {
         for &c in types {
             if let Some(comps) = complements.get(&c)
-                && comps.iter().any(|d| types.contains(d)) {
-                    return true;
-                }
+                && comps.iter().any(|d| types.contains(d))
+            {
+                return true;
+            }
         }
     }
     false
@@ -1932,9 +1943,10 @@ fn abox_complement_existential_property_clash(ontology: &Ontology) -> bool {
                     return true;
                 }
                 if let Some(inv) = inverse_property(ontology, prop)
-                    && props.contains(&inv) {
-                        return true;
-                    }
+                    && props.contains(&inv)
+                {
+                    return true;
+                }
             }
         }
         for (_, axiom) in ontology.axioms().iter() {
@@ -1957,9 +1969,10 @@ fn abox_complement_existential_property_clash(ontology: &Ontology) -> bool {
                     return true;
                 }
                 if let Some(inv) = inverse_property(ontology, *property)
-                    && props.contains(&inv) {
-                        return true;
-                    }
+                    && props.contains(&inv)
+                {
+                    return true;
+                }
             }
         }
     }
@@ -2101,9 +2114,10 @@ fn tbox_data_cardinality_clash_with_abox(ontology: &Ontology) -> bool {
             continue;
         };
         if let Some(ClassExpr::Atomic(entity)) = store.ce(*class)
-            && class_assertion_targets_unsatisfiable(ontology, *entity) {
-                return true;
-            }
+            && class_assertion_targets_unsatisfiable(ontology, *entity)
+        {
+            return true;
+        }
     }
     for (_, axiom) in ontology.axioms().iter() {
         let Axiom::ClassAssertion { class, .. } = axiom else {
@@ -2272,9 +2286,11 @@ fn thing_equivalent_nothing(ontology: &Ontology) -> bool {
     }
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::EquivalentClasses(classes) = axiom
-            && classes.contains(&thing) && classes.contains(&nothing) {
-                return true;
-            }
+            && classes.contains(&thing)
+            && classes.contains(&nothing)
+        {
+            return true;
+        }
     }
     false
 }
@@ -2313,9 +2329,10 @@ fn thing_equivalent_finite_nominal(ontology: &Ontology) -> bool {
         if let Some(members) = nominals
             && members.iter().any(|n| {
                 individual_is_asserted(ontology, *n) || individual_has_abox_assertions(ontology, *n)
-            }) {
-                continue;
-            }
+            })
+        {
+            continue;
+        }
         return true;
     }
     false

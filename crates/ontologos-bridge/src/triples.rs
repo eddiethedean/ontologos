@@ -66,10 +66,7 @@ fn data_property_triple(subject: &str, property: &str, value: &DataLiteral) -> R
     Ok(Triple {
         subject: nn(subject)?.into(),
         predicate: nn(property)?,
-        object: Term::Literal(Literal::new_typed_literal(
-            value.lexical.clone(),
-            datatype,
-        )),
+        object: Term::Literal(Literal::new_typed_literal(value.lexical.clone(), datatype)),
     })
 }
 
@@ -537,9 +534,10 @@ fn collect_existential_axioms(ontology: &mut Ontology, triples: &[Triple]) -> Re
             }
             oxrdf::NamedOrBlankNode::NamedNode(subject) => {
                 if triple.predicate.as_str() == RDFS_SUBCLASS
-                    && let Term::BlankNode(bnode) = &triple.object {
-                        subclass_edges.push((subject.as_str().to_string(), blank_node_id(bnode)));
-                    }
+                    && let Term::BlankNode(bnode) = &triple.object
+                {
+                    subclass_edges.push((subject.as_str().to_string(), blank_node_id(bnode)));
+                }
             }
         }
     }

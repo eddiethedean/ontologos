@@ -73,15 +73,16 @@ pub fn process(branch: &mut Branch<'_>, world: usize, ce: CeId) -> Result<(), cr
         ClassExpr::OneOf(individuals) => {
             let mut active_world = world;
             if individuals.len() == 1
-                && let Some(&named_world) = branch.named_worlds.get(&individuals[0]) {
-                    if named_world != active_world {
-                        branch.merge_worlds(named_world, active_world);
-                        if branch.clash {
-                            return Ok(());
-                        }
+                && let Some(&named_world) = branch.named_worlds.get(&individuals[0])
+            {
+                if named_world != active_world {
+                    branch.merge_worlds(named_world, active_world);
+                    if branch.clash {
+                        return Ok(());
                     }
-                    active_world = named_world;
                 }
+                active_world = named_world;
+            }
             for ind in individuals {
                 let nom = branch
                     .dl
@@ -975,9 +976,9 @@ fn push_saturated_role_edge(branch: &mut Branch<'_>, from: usize, property: Role
             .edges
             .iter()
             .any(|(f, role, t)| *f == to && role_exprs_equal(role, &inverse) && *t == from)
-        {
-            branch.edges.push((to, inverse, from));
-        }
+    {
+        branch.edges.push((to, inverse, from));
+    }
     recheck_cardinality_on_world(branch, from);
     recheck_cardinality_on_world(branch, to);
     recheck_functional_constraints(branch);
@@ -1750,12 +1751,13 @@ fn expand_disjunction(
                 return Ok(true);
             }
             Ok(false) => {
-                if child.cache.is_unsat(&child.worlds[world].labels, &child.worlds[world].negated)
+                if child
+                    .cache
+                    .is_unsat(&child.worlds[world].labels, &child.worlds[world].negated)
                 {
-                    branch.cache.record_unsat(
-                        &child.worlds[world].labels,
-                        &child.worlds[world].negated,
-                    );
+                    branch
+                        .cache
+                        .record_unsat(&child.worlds[world].labels, &child.worlds[world].negated);
                 }
             }
             Err(crate::Error::ResourceLimit(limit)) => {

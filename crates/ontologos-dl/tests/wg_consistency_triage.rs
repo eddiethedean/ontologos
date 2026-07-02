@@ -144,53 +144,49 @@ fn diagnose_dl005_is_consistent_steps() {
         if let Some(def) = def {
             for ax in store.axioms() {
                 if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax
-                    && ids.contains(&def) {
-                        for &other in ids {
-                            if other != def {
-                                eprintln!(
-                                    "Satisfiable equiv ce={other:?} expr={:?}",
-                                    store.ce(other)
-                                );
-                                if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
-                                    for op in ops {
-                                        eprintln!("  conjunct {op:?}: {:?}", store.ce(*op));
-                                    }
+                    && ids.contains(&def)
+                {
+                    for &other in ids {
+                        if other != def {
+                            eprintln!("Satisfiable equiv ce={other:?} expr={:?}", store.ce(other));
+                            if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
+                                for op in ops {
+                                    eprintln!("  conjunct {op:?}: {:?}", store.ce(*op));
                                 }
-                                eprintln!("  ce4={:?}", store.ce(CeId(4)));
-                                eprintln!("  ce3={:?}", store.ce(CeId(3)));
-                                eprintln!("  ce1={:?}", store.ce(CeId(1)));
-                                eprintln!("  ce2={:?}", store.ce(CeId(2)));
-                                let sat56 =
-                                    ontologos_alc::is_ce_intersection_satisfiable_with_seed(
-                                        &dl,
-                                        CeId(5),
-                                        CeId(6),
-                                        &seed,
-                                    )
-                                    .expect("sat");
-                                eprintln!("ce5 AND ce6 sat={sat56}");
-                                let sat57 =
-                                    ontologos_alc::is_ce_intersection_satisfiable_with_seed(
-                                        &dl,
-                                        CeId(5),
-                                        CeId(7),
-                                        &seed,
-                                    )
-                                    .expect("sat");
-                                eprintln!("ce5 AND ce7 sat={sat57}");
-                                for (label, ce) in [
-                                    ("ce5 alone", CeId(5)),
-                                    ("ce6 alone", CeId(6)),
-                                    ("full and", CeId(8)),
-                                ] {
-                                    let sat =
-                                        ontologos_alc::is_ce_satisfiable_with_seed(&dl, ce, &seed)
-                                            .expect("sat");
-                                    eprintln!("{label} sat={sat}");
-                                }
+                            }
+                            eprintln!("  ce4={:?}", store.ce(CeId(4)));
+                            eprintln!("  ce3={:?}", store.ce(CeId(3)));
+                            eprintln!("  ce1={:?}", store.ce(CeId(1)));
+                            eprintln!("  ce2={:?}", store.ce(CeId(2)));
+                            let sat56 = ontologos_alc::is_ce_intersection_satisfiable_with_seed(
+                                &dl,
+                                CeId(5),
+                                CeId(6),
+                                &seed,
+                            )
+                            .expect("sat");
+                            eprintln!("ce5 AND ce6 sat={sat56}");
+                            let sat57 = ontologos_alc::is_ce_intersection_satisfiable_with_seed(
+                                &dl,
+                                CeId(5),
+                                CeId(7),
+                                &seed,
+                            )
+                            .expect("sat");
+                            eprintln!("ce5 AND ce7 sat={sat57}");
+                            for (label, ce) in [
+                                ("ce5 alone", CeId(5)),
+                                ("ce6 alone", CeId(6)),
+                                ("full and", CeId(8)),
+                            ] {
+                                let sat =
+                                    ontologos_alc::is_ce_satisfiable_with_seed(&dl, ce, &seed)
+                                        .expect("sat");
+                                eprintln!("{label} sat={sat}");
                             }
                         }
                     }
+                }
             }
         }
     }
@@ -236,36 +232,33 @@ fn diagnose_dl018_tableau() {
         if let Some(def) = def {
             for ax in store.axioms() {
                 if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax
-                    && ids.contains(&def) {
-                        for &other in ids {
-                            if other != def {
-                                eprintln!("equiv {other:?} => {:?}", store.ce(other));
-                                if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
-                                    for op in ops {
-                                        if let Some(ontologos_core::ClassExpr::Some {
-                                            filler,
-                                            ..
-                                        }) = store.ce(*op)
-                                        {
-                                            eprintln!(
-                                                "  filler {filler:?}: {:?}",
-                                                store.ce(*filler)
-                                            );
-                                        }
+                    && ids.contains(&def)
+                {
+                    for &other in ids {
+                        if other != def {
+                            eprintln!("equiv {other:?} => {:?}", store.ce(other));
+                            if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
+                                for op in ops {
+                                    if let Some(ontologos_core::ClassExpr::Some {
+                                        filler, ..
+                                    }) = store.ce(*op)
+                                    {
+                                        eprintln!("  filler {filler:?}: {:?}", store.ce(*filler));
                                     }
-                                    eprintln!(
-                                        "  equiv And sat={:?}",
-                                        is_ce_satisfiable_with_seed(&dl, other, &seed)
-                                    );
                                 }
-                                if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
-                                    for op in ops {
-                                        eprintln!("  conjunct {op:?}: {:?}", store.ce(*op));
-                                    }
+                                eprintln!(
+                                    "  equiv And sat={:?}",
+                                    is_ce_satisfiable_with_seed(&dl, other, &seed)
+                                );
+                            }
+                            if let Some(ontologos_core::ClassExpr::And(ops)) = store.ce(other) {
+                                for op in ops {
+                                    eprintln!("  conjunct {op:?}: {:?}", store.ce(*op));
                                 }
                             }
                         }
                     }
+                }
             }
         }
     }
@@ -388,17 +381,18 @@ fn diagnose_dl608_unsatisfiable() {
     }) {
         for ax in store.axioms() {
             if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax
-                && ids.contains(&ce) {
-                    for &other in ids {
-                        if other != ce {
-                            eprintln!("equiv {other:?}: {:?}", store.ce(other));
-                            eprintln!(
-                                "  and sat={:?}",
-                                is_ce_satisfiable_with_seed(&dl, other, &seed)
-                            );
-                        }
+                && ids.contains(&ce)
+            {
+                for &other in ids {
+                    if other != ce {
+                        eprintln!("equiv {other:?}: {:?}", store.ce(other));
+                        eprintln!(
+                            "  and sat={:?}",
+                            is_ce_satisfiable_with_seed(&dl, other, &seed)
+                        );
                     }
                 }
+            }
         }
     }
     eprintln!("consistent={:?}", is_consistent(&ont));
@@ -427,16 +421,16 @@ fn diagnose_dl608_unsatisfiable() {
         }
         for ent in [p1, p2] {
             if let Ok(record) = dl.core().entity(ent)
-                && let Ok(iri) = dl.core().resolve_iri(record.iri) {
-                    eprintln!(
-                        "{iri} equiv ce: {:?}",
-                        store.expressions().find_map(|(id, e)| match e {
-                            ontologos_core::ClassExpr::Atomic(c) if *c == ent =>
-                                store.ce(id).cloned(),
-                            _ => None,
-                        })
-                    );
-                }
+                && let Ok(iri) = dl.core().resolve_iri(record.iri)
+            {
+                eprintln!(
+                    "{iri} equiv ce: {:?}",
+                    store.expressions().find_map(|(id, e)| match e {
+                        ontologos_core::ClassExpr::Atomic(c) if *c == ent => store.ce(id).cloned(),
+                        _ => None,
+                    })
+                );
+            }
         }
         let p2comp = store.expressions().find_map(|(id, e)| match e {
             ontologos_core::ClassExpr::Atomic(c) if c.0 == 4 => Some(id),
@@ -446,19 +440,21 @@ fn diagnose_dl608_unsatisfiable() {
             eprintln!("p2.comp ce {:?} = {:?}", p2comp, store.ce(p2comp));
             for ax in store.axioms() {
                 if let ontologos_core::DlAxiom::EquivalentClasses(ids) = ax
-                    && ids.contains(&p2comp) {
-                        for id in ids {
-                            eprintln!("  equiv partner {:?}: {:?}", id, store.ce(*id));
-                        }
+                    && ids.contains(&p2comp)
+                {
+                    for id in ids {
+                        eprintln!("  equiv partner {:?}: {:?}", id, store.ce(*id));
                     }
+                }
             }
         }
         for eid in [4u32, 19, 20, 23] {
             let e = ontologos_core::EntityId(eid);
             if let Ok(record) = dl.core().entity(e)
-                && let Ok(iri) = dl.core().resolve_iri(record.iri) {
-                    eprintln!("EntityId({eid}) = {iri}");
-                }
+                && let Ok(iri) = dl.core().resolve_iri(record.iri)
+            {
+                eprintln!("EntityId({eid}) = {iri}");
+            }
         }
         use ontologos_alc::TableauSeed;
         let seed = TableauSeed::default();

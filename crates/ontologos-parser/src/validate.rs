@@ -206,17 +206,21 @@ fn validate_blank_object_property_graph(ontology: &Ontology) -> Result<(), Error
         if let DlAxiom::ObjectPropertyAssertion {
             subject, object, ..
         } = axiom
-            && is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
-                graph.entry(*subject).or_default().push(*object);
-            }
+            && is_blank_individual(ontology, *subject)
+            && is_blank_individual(ontology, *object)
+        {
+            graph.entry(*subject).or_default().push(*object);
+        }
     }
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::ObjectPropertyAssertion {
             subject, object, ..
         } = axiom
-            && is_blank_individual(ontology, *subject) && is_blank_individual(ontology, *object) {
-                graph.entry(*subject).or_default().push(*object);
-            }
+            && is_blank_individual(ontology, *subject)
+            && is_blank_individual(ontology, *object)
+        {
+            graph.entry(*subject).or_default().push(*object);
+        }
     }
     for &start in graph.keys() {
         let mut stack = vec![(start, HashSet::from([start]))];

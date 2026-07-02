@@ -1,8 +1,8 @@
 //! Shared JSON report shapes for CLI and Python parity.
 
 use ontologos_core::{Ontology, ParseMetaSummary, Taxonomy};
-use ontologos_rl::rdfs::{MaterializationReport as RdfsReport, RdfsRule};
 use ontologos_rl::MaterializationReport as RlReport;
+use ontologos_rl::rdfs::{MaterializationReport as RdfsReport, RdfsRule};
 use serde::Serialize;
 use std::collections::BTreeMap;
 

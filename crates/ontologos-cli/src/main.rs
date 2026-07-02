@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use ontologos_core::ReasonerConfig;
 use ontologos_core::{EntityId, Ontology, ParseMetaSummary, Profile, Reasoner, Taxonomy};
-use ontologos_facade::ClassifyOutcome;
 use ontologos_explain::{ProofGraph, explain_with_profile, render_text};
+use ontologos_facade::ClassifyOutcome;
 use ontologos_parser::load_ontology_lenient as load_ontology;
 use ontologos_profile::{ProfileReport, classify_hybrid, detect_profile};
 use ontologos_rdfs::MaterializationReport as RdfsReport;
@@ -366,7 +366,9 @@ fn run() -> Result<(), CliError> {
             match cli.format {
                 OutputFormat::Text => {
                     if !result.complete {
-                        eprintln!("warning: consistency check incomplete (budget or tableau limit)");
+                        eprintln!(
+                            "warning: consistency check incomplete (budget or tableau limit)"
+                        );
                     }
                     println!("consistent: {}", result.consistent);
                     println!("complete: {}", result.complete);
@@ -478,9 +480,8 @@ fn run() -> Result<(), CliError> {
             emit_parse_meta_text(cli.format, &parse_meta);
             // ABox RL lookup; global `--profile` does not affect this command.
             let reasoner = Reasoner::builder().build(ontology)?;
-            let values =
-                ontologos_facade::get_object_property_values(&reasoner, subject, property)
-                    .map_err(map_facade_error)?;
+            let values = ontologos_facade::get_object_property_values(&reasoner, subject, property)
+                .map_err(map_facade_error)?;
             match cli.format {
                 OutputFormat::Text => {
                     println!("subject: {subject}");
@@ -670,8 +671,9 @@ fn emit_taxonomy(
             }
         }
         OutputFormat::Json => {
-            let output = ontologos_facade::taxonomy_json(status, taxonomy, ontology, Some(parse_meta))
-                .map_err(map_facade_error)?;
+            let output =
+                ontologos_facade::taxonomy_json(status, taxonomy, ontology, Some(parse_meta))
+                    .map_err(map_facade_error)?;
             emit_json(&output)?;
         }
     }
@@ -707,7 +709,8 @@ fn emit_rdfs_report(
             }
         }
         OutputFormat::Json => {
-            let output = ontologos_facade::rdfs_materialization_json(status, report, Some(parse_meta));
+            let output =
+                ontologos_facade::rdfs_materialization_json(status, report, Some(parse_meta));
             emit_json(&output)?;
         }
     }
@@ -743,7 +746,8 @@ fn emit_rl_report(
             }
         }
         OutputFormat::Json => {
-            let output = ontologos_facade::rl_materialization_json(status, report, Some(parse_meta));
+            let output =
+                ontologos_facade::rl_materialization_json(status, report, Some(parse_meta));
             emit_json(&output)?;
         }
     }

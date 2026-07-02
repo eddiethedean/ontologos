@@ -7,7 +7,7 @@
       "hermit_crosscheck": true,
       "namespace_prefix": "http://a.com/ontology#",
       "status": "classified",
-      "subsumption_count": 26,
+      "subsumption_count": 22,
       "subsumptions": [
         [
           "http://a.com/ontology#Aunt",
@@ -27,11 +27,7 @@
         ],
         [
           "http://a.com/ontology#Child",
-          "http://a.com/ontology#Relative"
-        ],
-        [
-          "http://a.com/ontology#Daugther",
-          "http://a.com/ontology#Child"
+          "http://a.com/ontology#Parent"
         ],
         [
           "http://a.com/ontology#Daugther",
@@ -42,16 +38,8 @@
           "http://a.com/ontology#Man"
         ],
         [
-          "http://a.com/ontology#Father",
-          "http://a.com/ontology#Parent"
-        ],
-        [
           "http://a.com/ontology#Man",
           "http://a.com/ontology#Person"
-        ],
-        [
-          "http://a.com/ontology#Mother",
-          "http://a.com/ontology#Parent"
         ],
         [
           "http://a.com/ontology#Mother",
@@ -75,7 +63,7 @@
         ],
         [
           "http://a.com/ontology#Parent",
-          "http://a.com/ontology#Relative"
+          "http://a.com/ontology#Child"
         ],
         [
           "http://a.com/ontology#Relative",
@@ -92,10 +80,6 @@
         [
           "http://a.com/ontology#Sister",
           "http://a.com/ontology#Woman"
-        ],
-        [
-          "http://a.com/ontology#Son",
-          "http://a.com/ontology#Child"
         ],
         [
           "http://a.com/ontology#Son",

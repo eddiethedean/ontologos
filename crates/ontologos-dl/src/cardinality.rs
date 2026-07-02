@@ -67,9 +67,9 @@ pub fn derive_cardinality_subsumptions(ontology: &Ontology) -> Vec<(EntityId, En
                 })
                 && let Some(sup) =
                     find_named_min_card(&equivalences, prop.clone(), n + 1, None, ontology)
-                {
-                    push_sub(&mut out, sub, sup);
-                }
+            {
+                push_sub(&mut out, sub, sup);
+            }
         }
 
         // complex2: MaxCard(n,r) ⊓ ∃r.C ⊓ ∃r.D with disjoint C,D  =>  ⊑ MaxCard(1,r,C) ⊓ MaxCard(1,r,D)
@@ -82,41 +82,44 @@ pub fn derive_cardinality_subsumptions(ontology: &Ontology) -> Vec<(EntityId, En
                 .collect();
             if some_entities.len() >= 2
                 && let (Some(c), Some(d)) = (some_entities.first(), some_entities.get(1))
-                    && (disjoint.contains(&(*c, *d)) || disjoint.contains(&(*d, *c)))
-                        && let Some(sup) =
-                            find_named_max_pair(&equivalences, prop.clone(), *c, *d, ontology)
-                        {
-                            push_sub(&mut out, sub, sup);
-                        }
+                && (disjoint.contains(&(*c, *d)) || disjoint.contains(&(*d, *c)))
+                && let Some(sup) =
+                    find_named_max_pair(&equivalences, prop.clone(), *c, *d, ontology)
+            {
+                push_sub(&mut out, sub, sup);
+            }
         }
 
         // complex3: ∀r.A ⊓ MinCard(n,r) ⊓ MaxCard(m,r,C) with A ⊑ C ⊔ D  =>  ⊑ MinCard(n-m,r,D)
         if let (Some((min_n, prop)), Some((max_m, max_prop, max_filler))) =
             (parts.min_unqualified.as_ref(), parts.max_qualified.first())
-            && prop == max_prop && *min_n > *max_m
-                && let Some((_, all_filler)) = parts.all_restriction
-                    && let Some(all_entity) = atomic_entity(ontology, all_filler) {
-                        for &(union_sub, union_a, union_b) in &subclass_unions {
-                            if union_sub != all_entity {
-                                continue;
-                            }
-                            for alt in [union_a, union_b] {
-                                if alt == *max_filler {
-                                    continue;
-                                }
-                                if let Some(alt_entity) = atomic_entity(ontology, alt)
-                                    && let Some(sup) = find_named_min_card(
-                                        &equivalences,
-                                        prop.clone(),
-                                        min_n - max_m,
-                                        Some(alt_entity),
-                                        ontology,
-                                    ) {
-                                        push_sub(&mut out, sub, sup);
-                                    }
-                            }
-                        }
+            && prop == max_prop
+            && *min_n > *max_m
+            && let Some((_, all_filler)) = parts.all_restriction
+            && let Some(all_entity) = atomic_entity(ontology, all_filler)
+        {
+            for &(union_sub, union_a, union_b) in &subclass_unions {
+                if union_sub != all_entity {
+                    continue;
+                }
+                for alt in [union_a, union_b] {
+                    if alt == *max_filler {
+                        continue;
                     }
+                    if let Some(alt_entity) = atomic_entity(ontology, alt)
+                        && let Some(sup) = find_named_min_card(
+                            &equivalences,
+                            prop.clone(),
+                            min_n - max_m,
+                            Some(alt_entity),
+                            ontology,
+                        )
+                    {
+                        push_sub(&mut out, sub, sup);
+                    }
+                }
+            }
+        }
     }
 
     for axiom in ontology.dl().axioms() {
@@ -478,10 +481,10 @@ fn fillers_disjoint(
     if let (Some(a), Some(b)) = (
         atomic_entity(ontology, left),
         atomic_entity(ontology, right),
-    )
-        && disjoint.contains(&(a, b)) {
-            return true;
-        }
+    ) && disjoint.contains(&(a, b))
+    {
+        return true;
+    }
     if let Some(ClassExpr::Not(inner)) = ontology.dl().ce(left) {
         if *inner == right {
             return true;

@@ -101,9 +101,10 @@ impl<'a> TaxonomyHierarchy<'a> {
                 individual: subj,
                 class,
             } = axiom
-                && *subj == individual {
-                    out.push(*class);
-                }
+                && *subj == individual
+            {
+                out.push(*class);
+            }
         }
         Ok(out)
     }

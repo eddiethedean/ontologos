@@ -31,25 +31,26 @@ pub fn map_to_core(
     let mut declaration_warnings: Vec<String> = Vec::new();
     for annotated in source.iter() {
         if is_declaration(&annotated.component)
-            && let Some((iri, kind)) = declaration_component(&annotated.component) {
-                declaration_kind_sets
-                    .entry(iri.clone())
-                    .or_default()
-                    .insert(kind);
-                if let Some(prev) = declaration_kinds.insert(iri.clone(), kind)
-                    && prev != kind {
-                        if limits.strict && !declaration_kinds_compatible(&declaration_kind_sets[&iri])
-                        {
-                            return Err(Error::Parse(format!(
-                                "incompatible declaration kinds for {iri}: {:?}",
-                                declaration_kind_sets[&iri]
-                            )));
-                        }
-                        declaration_warnings.push(format!(
+            && let Some((iri, kind)) = declaration_component(&annotated.component)
+        {
+            declaration_kind_sets
+                .entry(iri.clone())
+                .or_default()
+                .insert(kind);
+            if let Some(prev) = declaration_kinds.insert(iri.clone(), kind)
+                && prev != kind
+            {
+                if limits.strict && !declaration_kinds_compatible(&declaration_kind_sets[&iri]) {
+                    return Err(Error::Parse(format!(
+                        "incompatible declaration kinds for {iri}: {:?}",
+                        declaration_kind_sets[&iri]
+                    )));
+                }
+                declaration_warnings.push(format!(
                             "entity kind mismatch on declaration for {iri}: {prev:?} then {kind:?}; using last declaration"
                         ));
-                    }
             }
+        }
     }
     if limits.strict {
         for (iri, kinds) in &declaration_kind_sets {
@@ -450,12 +451,13 @@ impl Mapper<'_> {
         }
 
         if let Some(sub_id) = sub_lookup.resolved_id()
-            && self.map_intersection_superclass(sub_id, sup) {
-                // Keep the full DL subclass axiom when EL decomposition only maps a subset
-                // of intersection operands (e.g. cardinality restrictions in flower ontologies).
-                let _ = self.map_dl_subclass_of(sub, sup);
-                return;
-            }
+            && self.map_intersection_superclass(sub_id, sup)
+        {
+            // Keep the full DL subclass axiom when EL decomposition only maps a subset
+            // of intersection operands (e.g. cardinality restrictions in flower ontologies).
+            let _ = self.map_dl_subclass_of(sub, sup);
+            return;
+        }
 
         let mut lookups = vec![sub_lookup, sup_lookup];
         lookups.extend(existential.lookups());
@@ -560,9 +562,10 @@ impl Mapper<'_> {
             self.push_dl_axiom(DlAxiom::DisjointClasses(ids.clone()));
             let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();
             if let Some(entity_ids) = collect_resolved(&lookups)
-                && entity_ids.iter().copied().collect::<HashSet<_>>().len() >= 2 {
-                    self.push_axiom(Axiom::DisjointClasses(entity_ids));
-                }
+                && entity_ids.iter().copied().collect::<HashSet<_>>().len() >= 2
+            {
+                self.push_axiom(Axiom::DisjointClasses(entity_ids));
+            }
             return;
         }
         let lookups: Vec<_> = classes.iter().map(|ce| self.named_class(ce)).collect();

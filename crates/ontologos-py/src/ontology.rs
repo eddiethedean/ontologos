@@ -183,11 +183,15 @@ impl PyOntologyBuilder {
         property: &str,
         object: &str,
     ) -> PyResult<()> {
-        apply_builder(&mut slf, |b| b.object_property_assertion(subject, property, object))
+        apply_builder(&mut slf, |b| {
+            b.object_property_assertion(subject, property, object)
+        })
     }
 
     fn build(mut slf: PyRefMut<'_, Self>) -> PyResult<PyOntology> {
-        let inner = std::mem::take(&mut slf.builder).build().map_err(map_core_py_err)?;
+        let inner = std::mem::take(&mut slf.builder)
+            .build()
+            .map_err(map_core_py_err)?;
         Ok(PyOntology::from_owned(inner))
     }
 }

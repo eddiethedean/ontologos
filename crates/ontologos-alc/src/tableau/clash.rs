@@ -39,10 +39,11 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
                 return;
             }
             if let Some(ClassExpr::Not(inner)) = branch.dl.core().dl().ce(ce)
-                && world.labels.contains(inner) {
-                    branch.clash = true;
-                    return;
-                }
+                && world.labels.contains(inner)
+            {
+                branch.clash = true;
+                return;
+            }
         }
         for &neg_ce in &world.negated {
             let Some(expr) = branch.dl.core().dl().ce(neg_ce).cloned() else {
@@ -51,10 +52,11 @@ pub fn detect_clash(branch: &mut Branch<'_>) {
             if let ClassExpr::Some { property, filler } = expr
                 && super::expand::existential_already_satisfied(
                     branch, world_idx, &property, filler,
-                ) {
-                    branch.clash = true;
-                    return;
-                }
+                )
+            {
+                branch.clash = true;
+                return;
+            }
         }
         for &neg_ce in &world.negated {
             if super::expand::world_structurally_satisfies(branch, world_idx, neg_ce) {

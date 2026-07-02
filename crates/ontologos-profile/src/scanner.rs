@@ -24,10 +24,10 @@ pub fn scan_constructs(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
 
     // Freshly loaded ontologies are dirty but still carry parse-time profile tags
     // (e.g. datatype restrictions) that core axioms alone do not surface.
-    if ontology.dirty().is_dirty() {
-        if let Some(meta) = ontology.parse_meta() {
-            constructs.extend(meta.profile_constructs.iter().cloned());
-        }
+    if ontology.dirty().is_dirty()
+        && let Some(meta) = ontology.parse_meta()
+    {
+        constructs.extend(meta.profile_constructs.iter().cloned());
     }
 
     constructs

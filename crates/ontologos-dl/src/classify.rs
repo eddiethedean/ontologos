@@ -208,9 +208,8 @@ fn run_tableau_classify(
         .iter()
         .filter(|(_, record)| record.kind == ontologos_core::EntityKind::Class)
         .count();
-    let run = || {
-        ontologos_alc::classify_with_dl_and_seed(dl, seed, infer_pairwise).map_err(Error::Alc)
-    };
+    let run =
+        || ontologos_alc::classify_with_dl_and_seed(dl, seed, infer_pairwise).map_err(Error::Alc);
     if class_count <= 12 {
         return run();
     }

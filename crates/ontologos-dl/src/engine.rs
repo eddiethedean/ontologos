@@ -15,7 +15,10 @@ impl DlEngine {
     }
 
     /// Classify via reasoner when profile is DL.
-    pub fn classify_reasoner(&self, reasoner: &Reasoner) -> crate::Result<crate::reasoner::DlReport> {
+    pub fn classify_reasoner(
+        &self,
+        reasoner: &Reasoner,
+    ) -> crate::Result<crate::reasoner::DlReport> {
         crate::reasoner::classify_reasoner(reasoner)
     }
 

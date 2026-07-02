@@ -71,7 +71,9 @@ fn axiom_keys(ontology: &Ontology) -> std::collections::BTreeSet<String> {
             other => format!("{other:?}"),
         })
         // Reasonable may re-seed owl:Thing typing unevenly after axiom removal rebuilds.
-        .filter(|key| !(key.starts_with("ClassAssertion(") && key.ends_with(&format!("{OWL_THING})"))))
+        .filter(|key| {
+            !(key.starts_with("ClassAssertion(") && key.ends_with(&format!("{OWL_THING})")))
+        })
         .collect()
 }
 

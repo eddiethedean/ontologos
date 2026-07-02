@@ -54,17 +54,19 @@ pub fn dedupe_rdf_xml_ids(input: &str) -> String {
         };
         let tag = &input[start..start + tag_end + 1];
         if (tag.starts_with("<!--") || tag.starts_with("<!---"))
-            && let Some(close) = input[start..].find("-->") {
-                out.push_str(&input[start..start + close + 3]);
-                pos = start + close + 3;
-                continue;
-            }
+            && let Some(close) = input[start..].find("-->")
+        {
+            out.push_str(&input[start..start + close + 3]);
+            pos = start + close + 3;
+            continue;
+        }
         if let Some(id) = extract_rdf_id(tag)
             && !seen.insert(id.to_owned())
-                && let Some(end) = find_element_end(input, start) {
-                    pos = end;
-                    continue;
-                }
+            && let Some(end) = find_element_end(input, start)
+        {
+            pos = end;
+            continue;
+        }
         out.push_str(tag);
         pos = start + tag_end + 1;
     }
@@ -681,9 +683,10 @@ fn collect_punned_class_iris(
         }
         if let Some(name) = element_qname(tag)
             && let Some(iri) = expand_qname(name, xmlns)
-                && tag.contains("rdf:about=\"") {
-                    out.insert(iri);
-                }
+            && tag.contains("rdf:about=\"")
+        {
+            out.insert(iri);
+        }
         pos = start + tag_end + 1;
     }
 }
@@ -776,12 +779,14 @@ pub fn normalize_rdfs_class_elements(input: &str) -> String {
     let mut out = input
         .replace("<rdfs:Class", "<owl:Class")
         .replace("</rdfs:Class>", "</owl:Class>");
-    if out.contains("owl:Class") && !out.contains("xmlns:owl")
+    if out.contains("owl:Class")
+        && !out.contains("xmlns:owl")
         && let Some(root_start) = out.find("<rdf:RDF")
-            && let Some(rel_end) = out[root_start..].find('>') {
-                let insert_at = root_start + rel_end;
-                out.insert_str(insert_at, " xmlns:owl=\"http://www.w3.org/2002/07/owl#\"");
-            }
+        && let Some(rel_end) = out[root_start..].find('>')
+    {
+        let insert_at = root_start + rel_end;
+        out.insert_str(insert_at, " xmlns:owl=\"http://www.w3.org/2002/07/owl#\"");
+    }
     out
 }
 
@@ -854,30 +859,34 @@ pub fn materialize_typed_node_elements(input: &str) -> String {
         };
         let tag_end = start + tag_end_rel;
         let open_tag = &input[start..=tag_end];
-        if is_direct_rdf_document_child(input, start) && is_typed_node_element(open_tag)
-            && let Some(type_iri) = typed_node_class_iri(open_tag, &xmlns) {
-                counter += 1;
-                let iri = format!("{base}#_:tn{counter}");
-                out.push_str(&format!(
+        if is_direct_rdf_document_child(input, start)
+            && is_typed_node_element(open_tag)
+            && let Some(type_iri) = typed_node_class_iri(open_tag, &xmlns)
+        {
+            counter += 1;
+            let iri = format!("{base}#_:tn{counter}");
+            out.push_str(&format!(
                     "<rdf:Description rdf:about=\"{iri}\">\n  <rdf:type rdf:resource=\"{type_iri}\"/>\n</rdf:Description>"
                 ));
-                pos = tag_end + 1;
+            pos = tag_end + 1;
+            continue;
+        }
+        if let Some(qname) = element_qname(open_tag)
+            && is_direct_rdf_document_child(input, start)
+            && !open_tag.trim_end().ends_with("/>")
+        {
+            let end = find_element_end(input, start)
+                .filter(|&e| e <= input.len())
+                .unwrap_or(tag_end + 1);
+            let block = &input[start..end];
+            if let Some(rewritten) =
+                rewrite_typed_node_block(block, qname, &xmlns, &base, &mut counter)
+            {
+                out.push_str(&rewritten);
+                pos = end;
                 continue;
             }
-        if let Some(qname) = element_qname(open_tag)
-            && is_direct_rdf_document_child(input, start) && !open_tag.trim_end().ends_with("/>") {
-                let end = find_element_end(input, start)
-                    .filter(|&e| e <= input.len())
-                    .unwrap_or(tag_end + 1);
-                let block = &input[start..end];
-                if let Some(rewritten) =
-                    rewrite_typed_node_block(block, qname, &xmlns, &base, &mut counter)
-                {
-                    out.push_str(&rewritten);
-                    pos = end;
-                    continue;
-                }
-            }
+        }
         out.push_str(open_tag);
         pos = tag_end + 1;
     }
@@ -2203,9 +2212,10 @@ pub(crate) fn collect_datatype_property_ranges(rdf: &str) -> Vec<(String, String
         };
         let block = &rdf[start..end];
         if (block.contains("owl#DatatypeProperty") || block.contains("DatatypeProperty"))
-            && let Some(pair) = datatype_property_range_from_description_block(block, &base) {
-                out.push(pair);
-            }
+            && let Some(pair) = datatype_property_range_from_description_block(block, &base)
+        {
+            out.push(pair);
+        }
         pos = end;
     }
     out
@@ -2440,9 +2450,10 @@ fn parse_rdf_list_members_ofn(
     let mut rest_block = list_content;
     loop {
         if let Some((_, _, first_block)) = find_top_level_element_bounds(rest_block, "rdf:first")
-            && let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists) {
-                members.push(ofn);
-            }
+            && let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists)
+        {
+            members.push(ofn);
+        }
         let (_, _, rest_elem) = find_top_level_element_bounds(rest_block, "rdf:rest")?;
         if rest_elem.contains("rdf:nil")
             || rest_elem.contains("#nil")
@@ -2630,9 +2641,10 @@ fn member_block_to_ofn(
         }
     } else if block.contains("<owl:Class")
         && let Some((_, _, class_block)) = find_top_level_element_bounds(block, "owl:Class")
-            && let Some(ofn) = member_block_to_ofn(class_block, base, dt_props, node_lists) {
-                return Some(ofn);
-            }
+        && let Some(ofn) = member_block_to_ofn(class_block, base, dt_props, node_lists)
+    {
+        return Some(ofn);
+    }
     if block.contains("owl:onProperty") {
         return inline_restriction_ce_to_ofn(block, base, dt_props);
     }
@@ -2665,9 +2677,10 @@ fn build_rdf_collection_node_map(
         let close_start = block.rfind("</rdf:Description>").unwrap_or(block.len());
         let inner = &block[open_end + 1..close_start];
         if inner.contains("rdf:first")
-            && let Some(members) = parse_rdf_list_description(inner, base, dt_props, &map) {
-                map.insert(node, members);
-            }
+            && let Some(members) = parse_rdf_list_description(inner, base, dt_props, &map)
+        {
+            map.insert(node, members);
+        }
         pos = end;
     }
     map
@@ -2683,9 +2696,10 @@ fn parse_rdf_list_description(
     if let Some(first) = extract_property_resource(inner, "rdf:first", base) {
         members.push(ofn_entity_ref(&first));
     } else if let Some((_, _, first_block)) = find_top_level_element_bounds(inner, "rdf:first")
-        && let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists) {
-            members.push(ofn);
-        }
+        && let Some(ofn) = member_block_to_ofn(first_block, base, dt_props, node_lists)
+    {
+        members.push(ofn);
+    }
     let (_, _, rest_block) = find_top_level_element_bounds(inner, "rdf:rest")?;
     if rest_block.contains("parseType=\"Collection\"")
         || rest_block.contains("parseType='Collection'")
@@ -3689,9 +3703,10 @@ fn object_class_assertion_from_block(
             return Some((individual_iri, ce_ofn));
         }
         if !is_class_restriction_description(inner)
-            && let Some(ce_ofn) = inline_restriction_ce_to_ofn(inner, base, dt_props) {
-                return Some((individual_iri, ce_ofn));
-            }
+            && let Some(ce_ofn) = inline_restriction_ce_to_ofn(inner, base, dt_props)
+        {
+            return Some((individual_iri, ce_ofn));
+        }
     }
     None
 }
@@ -3742,9 +3757,10 @@ fn data_range_ofn(ce_block: &str, base: &str) -> Option<String> {
     let (_, _, avf_block) = find_top_level_element_bounds(ce_block, "owl:allValuesFrom")?;
     let mut inner = element_inner(avf_block, "owl:allValuesFrom");
     if (inner.contains("rdfs:Datatype") || inner.contains("<Datatype"))
-        && let Some((_, _, dt_block)) = find_top_level_element_bounds(&inner, "rdfs:Datatype") {
-            inner = element_inner(dt_block, "rdfs:Datatype");
-        }
+        && let Some((_, _, dt_block)) = find_top_level_element_bounds(&inner, "rdfs:Datatype")
+    {
+        inner = element_inner(dt_block, "rdfs:Datatype");
+    }
     if let Some(resource) = extract_attribute(
         avf_block
             .get(
@@ -3968,13 +3984,14 @@ fn restriction_ce_to_ofn(
         return Some(format!("ObjectSomeValuesFrom({role_ofn} {filler})"));
     }
     if role_ofn.contains("ObjectInverseOf")
-        && let Some((_, _, sv_block)) = find_top_level_element_bounds(&body, "owl:someValuesFrom") {
-            let inner = element_inner(sv_block, "owl:someValuesFrom");
-            let node_lists = std::collections::HashMap::new();
-            if let Some(filler) = member_block_to_ofn(inner.trim(), base, dt_props, &node_lists) {
-                return Some(format!("ObjectSomeValuesFrom({role_ofn} {filler})"));
-            }
+        && let Some((_, _, sv_block)) = find_top_level_element_bounds(&body, "owl:someValuesFrom")
+    {
+        let inner = element_inner(sv_block, "owl:someValuesFrom");
+        let node_lists = std::collections::HashMap::new();
+        if let Some(filler) = member_block_to_ofn(inner.trim(), base, dt_props, &node_lists) {
+            return Some(format!("ObjectSomeValuesFrom({role_ofn} {filler})"));
         }
+    }
     if let Some(filler) = extract_filler_ofn(&body, "owl:allValuesFrom", base) {
         return Some(format!("ObjectAllValuesFrom({role_ofn} {filler})"));
     }

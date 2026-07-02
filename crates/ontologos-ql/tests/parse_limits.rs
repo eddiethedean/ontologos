@@ -1,4 +1,4 @@
-use ontologos_ql::{parse_conjunctive_query, MAX_QUERY_ATOMS, MAX_QUERY_LEN};
+use ontologos_ql::{MAX_QUERY_ATOMS, MAX_QUERY_LEN, parse_conjunctive_query};
 
 #[test]
 fn rejects_query_exceeding_max_length() {

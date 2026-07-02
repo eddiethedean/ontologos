@@ -1,7 +1,7 @@
 //! Query rewriting over a classified taxonomy (OWL QL fragment).
 
-use ontologos_core::Taxonomy;
 use crate::hierarchy::TaxonomyHierarchy;
+use ontologos_core::Taxonomy;
 
 use crate::query::{ConjunctiveQuery, QueryAtom};
 use crate::{Error, Result};
@@ -17,9 +17,14 @@ pub fn rewrite_query(
             .atoms
             .iter()
             .find_map(|atom| match atom {
-                QueryAtom::Type { class, .. } | QueryAtom::Subsumed { superclass: class, .. } => {
-                    engine.ontology().lookup_entity(class).is_none().then(|| class.clone())
-                }
+                QueryAtom::Type { class, .. }
+                | QueryAtom::Subsumed {
+                    superclass: class, ..
+                } => engine
+                    .ontology()
+                    .lookup_entity(class)
+                    .is_none()
+                    .then(|| class.clone()),
             })
             .unwrap_or_else(|| "<unknown>".into());
         return Err(Error::UnknownClass(unknown));

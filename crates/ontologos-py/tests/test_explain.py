@@ -32,7 +32,7 @@ def test_explain_rdfs_family_corpus() -> None:
     assert FAMILY_OWL.is_file(), (
         f"missing family corpus at {FAMILY_OWL} (run ./benchmarks/scripts/download.sh)"
     )
-    reasoner = Reasoner(path=str(FAMILY_OWL), profile="rdfs")
+    reasoner = Reasoner(path=str(FAMILY_OWL), profile="el")
     graph = reasoner.explain()
     assert graph["node_count"] > 0
     assert any("rule" in node for node in graph["nodes"])

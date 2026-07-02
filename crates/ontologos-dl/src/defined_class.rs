@@ -7,9 +7,10 @@ fn entity_by_local_name(ontology: &Ontology) -> HashMap<String, EntityId> {
     let mut map = HashMap::new();
     for (id, record) in ontology.entities().iter() {
         if let Ok(iri) = ontology.resolve_iri(record.iri)
-            && let Some(local) = iri.rsplit('#').next() {
-                map.entry(local.to_string()).or_insert(id);
-            }
+            && let Some(local) = iri.rsplit('#').next()
+        {
+            map.entry(local.to_string()).or_insert(id);
+        }
     }
     map
 }
@@ -566,9 +567,10 @@ fn declared_existentials(ontology: &Ontology, sub: EntityId) -> Vec<(EntityId, E
             continue;
         };
         if let Some(ClassExpr::Atomic(f)) = store.ce(*filler)
-            && !out.iter().any(|&(p, g)| p == *prop && g == *f) {
-                out.push((*prop, *f));
-            }
+            && !out.iter().any(|&(p, g)| p == *prop && g == *f)
+        {
+            out.push((*prop, *f));
+        }
     }
     out
 }
@@ -589,17 +591,20 @@ fn derive_defined_class_preferred_supers(
             .existentials
             .iter()
             .any(|(_, filler)| is_meat_topping(ontology, taxonomy, *filler))
-            && let Some(nonveg) = lookup("NonVegetarianPizza") {
-                out.push((def, nonveg));
-            }
+            && let Some(nonveg) = lookup("NonVegetarianPizza")
+        {
+            out.push((def, nonveg));
+        }
         if let Some(thin) = lookup("ThinAndCrispyPizza")
-            && asserted_all_values_super(ontology, def, lookup("ThinAndCrispyBase")) {
-                out.push((def, thin));
-            }
+            && asserted_all_values_super(ontology, def, lookup("ThinAndCrispyBase"))
+        {
+            out.push((def, thin));
+        }
         if has_all_values_from(ontology, def, lookup("VegetarianTopping"))
-            && let Some(veg_pizza) = lookup("VegetarianPizza") {
-                out.push((def, veg_pizza));
-            }
+            && let Some(veg_pizza) = lookup("VegetarianPizza")
+        {
+            out.push((def, veg_pizza));
+        }
     }
 
     for axiom in store.axioms() {
@@ -618,13 +623,13 @@ fn derive_defined_class_preferred_supers(
         };
         if let Some(ClassExpr::Atomic(base)) = store.ce(*filler)
             && let Some(thin_pizza) = lookup("ThinAndCrispyPizza")
-                && ontology
-                    .resolve_iri(ontology.entity(*base).unwrap().iri)
-                    .ok()
-                    .is_some_and(|iri| iri.ends_with("#ThinAndCrispyBase"))
-                {
-                    out.push((*sub_e, thin_pizza));
-                }
+            && ontology
+                .resolve_iri(ontology.entity(*base).unwrap().iri)
+                .ok()
+                .is_some_and(|iri| iri.ends_with("#ThinAndCrispyBase"))
+        {
+            out.push((*sub_e, thin_pizza));
+        }
         let _ = _prop;
     }
 

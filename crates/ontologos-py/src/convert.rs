@@ -154,9 +154,11 @@ pub(crate) fn find_subclass_axiom_id(
             subclass: sub,
             superclass: sup,
         } = axiom
-            && *sub == subclass && *sup == superclass {
-                return Ok(Some(id));
-            }
+            && *sub == subclass
+            && *sup == superclass
+        {
+            return Ok(Some(id));
+        }
     }
     Ok(None)
 }
@@ -182,8 +184,8 @@ pub(crate) fn taxonomy_classify_dict<'py>(
     ontology: &Ontology,
     taxonomy: &Taxonomy,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let json = ontologos_facade::taxonomy_json("classified", taxonomy, ontology, None)
-        .map_err(py_err)?;
+    let json =
+        ontologos_facade::taxonomy_json("classified", taxonomy, ontology, None).map_err(py_err)?;
     let value = serde_json::to_value(&json).map_err(py_err)?;
     json_to_pydict(py, &value)
 }

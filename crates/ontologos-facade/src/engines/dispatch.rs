@@ -10,8 +10,8 @@ use ontologos_core::{
 use ontologos_dl::DlEngine;
 use ontologos_el::ElClassifier;
 use ontologos_profile::resolve_route;
-use ontologos_rl::rdfs::RdfsEngine;
 use ontologos_rl::RlEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 use crate::error::{Error, Result};
 use crate::lookup::index_sub_object_properties;
@@ -119,18 +119,14 @@ fn classify_dl(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
             .classify(reasoner.ontology())
             .map_err(Error::Dl)?
     } else {
-        DlEngine
-            .classify(reasoner.ontology())
-            .map_err(Error::Dl)?
+        DlEngine.classify(reasoner.ontology()).map_err(Error::Dl)?
     };
     Ok(ClassifyOutcome::Taxonomy(taxonomy))
 }
 
 fn check_consistency_rl(reasoner: &Reasoner) -> Result<ConsistencyResult> {
     let mut working = reasoner.ontology().clone();
-    let report = RlEngine::new(1)
-        .saturate(&mut working)
-        .map_err(Error::Rl)?;
+    let report = RlEngine::new(1).saturate(&mut working).map_err(Error::Rl)?;
     if !report.clashes.is_empty() || has_bottom_chain_violation(&working) {
         return Ok(ConsistencyResult::inconsistent());
     }

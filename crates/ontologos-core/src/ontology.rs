@@ -7,7 +7,7 @@ use crate::dl::DlStore;
 use crate::entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 use crate::error::{Error, Result};
 use crate::graph::{AxiomIndex, AxiomStore};
-use crate::iri::{InternPool, IriId, validate_iri};
+use crate::iri::{InternPool, IriId, normalize_iri_fragment_encoding, validate_iri};
 use crate::limits::Limits;
 use crate::parse_meta::ParseMeta;
 use crate::swrl::SwrlRule;
@@ -102,10 +102,7 @@ impl Ontology {
     /// Load an ontology from a file path.
     ///
     /// Use `ontologos_parser::load_ontology` for OWL/RDF file loading.
-    #[deprecated(
-        since = "1.0.0",
-        note = "use ontologos_parser::load_ontology instead"
-    )]
+    #[deprecated(since = "1.0.0", note = "use ontologos_parser::load_ontology instead")]
     pub fn from_file(_path: impl AsRef<Path>) -> Result<Self> {
         Err(Error::ParseNotAvailable)
     }
@@ -277,11 +274,12 @@ impl Ontology {
 
     /// Look up an entity by IRI string, registering it if absent.
     pub fn entity_id(&mut self, iri: &str, kind: EntityKind) -> Result<EntityId> {
+        let iri = normalize_iri_fragment_encoding(iri);
         self.uniquify_shared();
         if let Some(limits) = self.enforce_limits {
             let already_registered = self
                 .iris
-                .get(iri)
+                .get(iri.as_ref())
                 .and_then(|iri_id| self.entities.entity_by_iri(iri_id))
                 .is_some();
             if !already_registered && self.entity_count() >= limits.max_entities {
@@ -291,7 +289,7 @@ impl Ontology {
                 )));
             }
         }
-        let iri_id = Arc::make_mut(&mut self.iris).intern(iri)?;
+        let iri_id = Arc::make_mut(&mut self.iris).intern(iri.as_ref())?;
         let iri_str = self.iris.resolve(iri_id)?;
         Arc::make_mut(&mut self.entities).get_or_register(iri_id, iri_str, kind)
     }
@@ -301,10 +299,11 @@ impl Ontology {
     /// Returns `Err([Error::InvalidIri](crate::Error::InvalidIri))` for malformed IRIs,
     /// `Ok(None)` if the IRI is valid but not registered, or `Ok(Some(id))` on success.
     pub fn try_lookup_entity(&self, iri: &str) -> Result<Option<EntityId>> {
-        validate_iri(iri)?;
+        let iri = normalize_iri_fragment_encoding(iri);
+        validate_iri(iri.as_ref())?;
         Ok(self
             .iris
-            .get(iri)
+            .get(iri.as_ref())
             .and_then(|iri_id| self.entities.entity_by_iri(iri_id)))
     }
 

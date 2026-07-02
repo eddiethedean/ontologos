@@ -198,9 +198,32 @@ fn validate_iri_schemes(iri: &str, max_len: usize, allowed_schemes: &[&str]) -> 
     Ok(())
 }
 
+/// Normalize `%23` to `#` (RDF/XML fragment encoding artifact).
+///
+/// OWL/RDF loaders may emit the same logical IRI as `.../owl#Food` and `.../owl%23Food`.
+/// Entity registration collapses these to a single interned IRI.
+#[must_use]
+pub fn normalize_iri_fragment_encoding(iri: &str) -> std::borrow::Cow<'_, str> {
+    if iri.contains("%23") {
+        std::borrow::Cow::Owned(iri.replace("%23", "#"))
+    } else {
+        std::borrow::Cow::Borrowed(iri)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn normalize_iri_fragment_encoding_collapses_percent23() {
+        let a = "https://example.org/ont.owl#Food";
+        let b = "https://example.org/ont.owl%23Food";
+        assert_eq!(
+            normalize_iri_fragment_encoding(a).as_ref(),
+            normalize_iri_fragment_encoding(b).as_ref()
+        );
+    }
 
     #[test]
     fn intern_deduplicates() {

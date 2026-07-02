@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use ontologos_core::{
-    uses_dl_entailment, Axiom, ClassExpr, ConsistencyResult, DlAxiom, EngineKind, EntityId,
-    Ontology, Profile, Reasoner, Taxonomy,
+    Axiom, ClassExpr, ConsistencyResult, DlAxiom, EngineKind, EntityId, Ontology, Profile,
+    Reasoner, Taxonomy, uses_dl_entailment,
 };
 
 use crate::classify::{classify, taxonomy_from_outcome};
@@ -125,8 +125,7 @@ fn is_class_assertion_entailed(
     if uses_dl_entailment(route.kind) {
         return dl_entails_class_assertion(ontology, individual, class);
     }
-    if matches!(route.kind, EngineKind::El)
-        && needs_dl_class_assertion(ontology, individual, class)
+    if matches!(route.kind, EngineKind::El) && needs_dl_class_assertion(ontology, individual, class)
     {
         return dl_entails_class_assertion(ontology, individual, class);
     }
@@ -199,9 +198,10 @@ fn individual_entails_named_class(
             return true;
         }
         if let Some(tax) = taxonomy
-            && tax.is_subsumed(asserted, class) {
-                return true;
-            }
+            && tax.is_subsumed(asserted, class)
+        {
+            return true;
+        }
     }
     false
 }
@@ -282,12 +282,14 @@ fn individuals_entailed_same(
         return true;
     }
     if let Some(cluster) = ontology.same_as(left)
-        && cluster.contains(&right) {
-            return true;
-        }
+        && cluster.contains(&right)
+    {
+        return true;
+    }
     if let Some(cluster) = ontology.same_as(right)
-        && cluster.contains(&left) {
-            return true;
-        }
+        && cluster.contains(&left)
+    {
+        return true;
+    }
     false
 }

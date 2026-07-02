@@ -8,10 +8,10 @@ use ontologos_facade::{
 use ontologos_parser::load_ontology_lenient as load_ontology;
 
 use super::{
-    case_has_axiom_assertions, check_logical_entailment, configure_wg_tableau_limits,
-    dl_classify_budget, entailment_holds_with_budget_opts, hermit_data_path,
-    lookup_entity_flexible, ontology_for_incremental_consistency, ontology_is_axiom_empty,
-    resolve_local_iri, HermitCase, WgCase,
+    HermitCase, WgCase, case_has_axiom_assertions, check_logical_entailment,
+    configure_wg_tableau_limits, dl_classify_budget, entailment_holds_with_budget_opts,
+    hermit_data_path, lookup_entity_flexible, ontology_for_incremental_consistency,
+    ontology_is_axiom_empty, resolve_local_iri,
 };
 
 /// Map catalog `engine` field to a user-facing [`Profile`].
@@ -88,7 +88,10 @@ pub fn check_user_axiom_case(case: &HermitCase) -> Result<(), String> {
         && !case_has_axiom_assertions(case)
         && matches!(case.status.as_str(), "axiom" | "swrl");
     if !user_case_supported(case) && !swrl_vacuous_probe {
-        return Err(format!("{}: not supported by user contract runner", case.id));
+        return Err(format!(
+            "{}: not supported by user contract runner",
+            case.id
+        ));
     }
 
     let rel = case
@@ -104,9 +107,10 @@ pub fn check_user_axiom_case(case: &HermitCase) -> Result<(), String> {
         let loaded = load_ontology(&path);
         if loaded.is_ok()
             && let Ok(ontology) = loaded
-                && ontologos_parser::validate_loaded_ontology(&ontology).is_ok() {
-                    return Err(format!("{}: expected ontology load to fail", case.id));
-                }
+            && ontologos_parser::validate_loaded_ontology(&ontology).is_ok()
+        {
+            return Err(format!("{}: expected ontology load to fail", case.id));
+        }
         return Ok(());
     }
 
@@ -223,8 +227,7 @@ pub fn check_user_axiom_case(case: &HermitCase) -> Result<(), String> {
     }
 
     if let Some(expected) = case.consistent {
-        let consistency_ontology =
-            ontology_for_incremental_consistency(reasoner.ontology(), case)?;
+        let consistency_ontology = ontology_for_incremental_consistency(reasoner.ontology(), case)?;
         let reasoner = Reasoner::builder()
             .profile(profile)
             .build(consistency_ontology)
@@ -245,7 +248,10 @@ pub fn check_user_axiom_case(case: &HermitCase) -> Result<(), String> {
 /// WG catalog semantic check via the public facade API.
 pub fn check_user_wg_case(case: &WgCase) -> Result<(), String> {
     if !user_wg_case_supported(case) {
-        return Err(format!("{}: not supported by user WG contract runner", case.id));
+        return Err(format!(
+            "{}: not supported by user WG contract runner",
+            case.id
+        ));
     }
     configure_wg_tableau_limits();
     let premise = case

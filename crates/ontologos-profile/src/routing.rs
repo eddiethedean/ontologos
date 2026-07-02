@@ -21,7 +21,9 @@ pub fn resolve_route(profile: Profile, ontology: &Ontology) -> Result<ResolvedRo
         Profile::El => Ok(ResolvedRoute::explicit(EngineKind::El)),
         Profile::Rdfs => Ok(ResolvedRoute::explicit(EngineKind::Rdfs)),
         Profile::Rl => Ok(ResolvedRoute::explicit(EngineKind::Rl)),
-        Profile::Alc | Profile::Dl | Profile::DlPreview => Ok(ResolvedRoute::explicit(EngineKind::Dl)),
+        Profile::Alc | Profile::Dl | Profile::DlPreview => {
+            Ok(ResolvedRoute::explicit(EngineKind::Dl))
+        }
         Profile::Swrl => Ok(ResolvedRoute::explicit(EngineKind::Dl)),
         Profile::Auto => resolve_auto_route(ontology),
     }

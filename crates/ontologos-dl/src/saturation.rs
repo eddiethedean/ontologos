@@ -139,11 +139,10 @@ fn propagate_existential_role(
             continue;
         }
         if let RoleExpr::Atomic(sup_role) = chain_sup
-            && let Some(exists_sup) =
-                find_some_ce(ontology, RoleExpr::Atomic(*sup_role), filler)
-            {
-                worklist.push((sub, exists_sup));
-            }
+            && let Some(exists_sup) = find_some_ce(ontology, RoleExpr::Atomic(*sup_role), filler)
+        {
+            worklist.push((sub, exists_sup));
+        }
     }
 }
 
@@ -197,9 +196,10 @@ fn propagate_intersection(
             property: p2,
             filler: f2,
         }) = store.ce(sup)
-            && properties_related(property, p2, roles) {
-                worklist.push((*filler, *f2));
-            }
+        && properties_related(property, p2, roles)
+    {
+        worklist.push((*filler, *f2));
+    }
     if let Some(ClassExpr::Some {
         property: RoleExpr::Atomic(r),
         filler,
@@ -208,9 +208,11 @@ fn propagate_intersection(
             property: RoleExpr::Atomic(r2),
             filler: f2,
         }) = store.ce(sup).cloned()
-            && filler == f2 && roles.is_subrole(r, r2) {
-                worklist.push((sub, sup));
-            }
+        && filler == f2
+        && roles.is_subrole(r, r2)
+    {
+        worklist.push((sub, sup));
+    }
 }
 
 fn properties_related(a: &RoleExpr, b: &RoleExpr, roles: &RoleHierarchy) -> bool {

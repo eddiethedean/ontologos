@@ -375,9 +375,10 @@ fn individual_typed_with_class(ontology: &Ontology, class: EntityId) -> bool {
         if let ontologos_core::Axiom::ClassAssertion {
             class: asserted, ..
         } = axiom
-            && *asserted == class {
-                return true;
-            }
+            && *asserted == class
+        {
+            return true;
+        }
     }
     if let Some(class_iri) = class_iri {
         for (id, record) in ontology.entities().iter() {
@@ -426,10 +427,11 @@ fn oneof_all_different_functional_grid_inconsistent(ontology: &Ontology) -> Opti
         };
         for &id in ids {
             if let Some(members) = oneof_members(store, id)
-                && members.len() == 3 {
-                    triple_oneof = Some(members);
-                    break;
-                }
+                && members.len() == 3
+            {
+                triple_oneof = Some(members);
+                break;
+            }
         }
     }
     let nominals = triple_oneof?;

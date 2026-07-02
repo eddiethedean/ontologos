@@ -11,10 +11,11 @@ fn strip_xml_comments(input: &str) -> String {
         let start = pos + rel;
         out.push_str(&input[pos..start]);
         if (input[start..].starts_with("<!--") || input[start..].starts_with("<!---"))
-            && let Some(close) = input[start..].find("-->") {
-                pos = start + close + 3;
-                continue;
-            }
+            && let Some(close) = input[start..].find("-->")
+        {
+            pos = start + close + 3;
+            continue;
+        }
         if let Some(tag_end) = input[start..].find('>') {
             out.push_str(&input[start..start + tag_end + 1]);
             pos = start + tag_end + 1;
@@ -315,7 +316,8 @@ fn misc203_dpa_supplement_ofn_parses() {
              Ontology(<http://example.org/thing-data-literal-supplement>\n{body}\n)"
     );
     eprintln!("{ofn}");
-    let ont = crate::load_ofn_from_str_with_limits(&ofn, crate::ParseLimits::default()).expect("supplement ofn");
+    let ont = crate::load_ofn_from_str_with_limits(&ofn, crate::ParseLimits::default())
+        .expect("supplement ofn");
     assert!(
         ont.dl()
             .axioms()

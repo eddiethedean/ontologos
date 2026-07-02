@@ -71,32 +71,29 @@ pub fn parse_entailment_check(
         )));
     }
     if subclass {
-        let sub = sub.ok_or_else(|| {
-            Error::Core(ontologos_core::Error::Message("--sub required".into()))
-        })?;
-        let sup = sup.ok_or_else(|| {
-            Error::Core(ontologos_core::Error::Message("--sup required".into()))
-        })?;
+        let sub = sub
+            .ok_or_else(|| Error::Core(ontologos_core::Error::Message("--sub required".into())))?;
+        let sup = sup
+            .ok_or_else(|| Error::Core(ontologos_core::Error::Message("--sup required".into())))?;
         return Ok(EntailmentCheck::SubClassOf { sub, sup });
     }
     if class_assertion {
         let individual = individual.ok_or_else(|| {
-            Error::Core(ontologos_core::Error::Message("--individual required".into()))
+            Error::Core(ontologos_core::Error::Message(
+                "--individual required".into(),
+            ))
         })?;
         let class = class.ok_or_else(|| {
             Error::Core(ontologos_core::Error::Message("--class required".into()))
         })?;
         return Ok(EntailmentCheck::ClassAssertion { individual, class });
     }
-    let subject = subject.ok_or_else(|| {
-        Error::Core(ontologos_core::Error::Message("--subject required".into()))
-    })?;
-    let property = property.ok_or_else(|| {
-        Error::Core(ontologos_core::Error::Message("--property required".into()))
-    })?;
-    let object = object.ok_or_else(|| {
-        Error::Core(ontologos_core::Error::Message("--object required".into()))
-    })?;
+    let subject = subject
+        .ok_or_else(|| Error::Core(ontologos_core::Error::Message("--subject required".into())))?;
+    let property = property
+        .ok_or_else(|| Error::Core(ontologos_core::Error::Message("--property required".into())))?;
+    let object = object
+        .ok_or_else(|| Error::Core(ontologos_core::Error::Message("--object required".into())))?;
     Ok(EntailmentCheck::ObjectPropertyAssertion {
         subject,
         property,

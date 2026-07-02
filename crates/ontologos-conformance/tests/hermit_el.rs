@@ -4,7 +4,7 @@ use ontologos_conformance::{
     assert_subsumed, classification_fixture_path, classification_fixtures_available,
 };
 use ontologos_el::ElClassifier;
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient as load_ontology;
 use std::collections::HashSet;
 use std::fs;
 

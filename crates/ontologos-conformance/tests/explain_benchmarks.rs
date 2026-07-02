@@ -4,8 +4,8 @@ use ontologos_core::{EntityKind, Ontology, Profile, Reasoner, ReasonerConfig};
 use ontologos_el::ElClassifier;
 use ontologos_explain::{build_proof_graph, collect_trace, explain_el};
 use ontologos_parser::load_ontology;
-use ontologos_rl::rdfs::RdfsEngine;
 use ontologos_rl::RlEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 fn family_path() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/family.owl")

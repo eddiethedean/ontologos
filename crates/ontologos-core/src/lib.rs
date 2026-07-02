@@ -63,7 +63,9 @@ pub use engine::{DetectedProfileKind, EngineKind, ResolvedRoute, uses_dl_entailm
 pub use entity::{EntityId, EntityKind, EntityRecord, EntityRegistry};
 pub use error::{Error, Result};
 pub use graph::{AxiomIndex, AxiomStore};
-pub use iri::{InternPool, IriId, validate_iri, validate_snapshot_iri, validate_snapshot_iri_with_max_len};
+pub use iri::{
+    InternPool, IriId, validate_iri, validate_snapshot_iri, validate_snapshot_iri_with_max_len,
+};
 pub use limits::Limits;
 pub use ontology::{Ontology, OntologyBuilder};
 pub use parse_meta::{OwlConstruct, ParseMeta, ParseMetaSummary};

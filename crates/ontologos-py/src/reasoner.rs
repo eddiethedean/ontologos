@@ -1,8 +1,11 @@
 //! Python `Reasoner` bindings.
 
-use ontologos_core::{Axiom, ConsistencyResult, Ontology, OntologyRevision, ParseMetaSummary, Profile, Reasoner, ReasonerConfig};
-use ontologos_facade::ClassifyOutcome;
+use ontologos_core::{
+    Axiom, ConsistencyResult, Ontology, OntologyRevision, ParseMetaSummary, Profile, Reasoner,
+    ReasonerConfig,
+};
 use ontologos_explain::explain_with_profile;
+use ontologos_facade::ClassifyOutcome;
 use ontologos_parser::load_ontology_lenient as load_ontology;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
@@ -79,12 +82,7 @@ impl PyReasoner {
             (core_ontology, Some(shared), Some(revision))
         };
 
-        let reasoner = build_reasoner(
-            core_ontology,
-            profile,
-            incremental,
-            budget_secs,
-        )?;
+        let reasoner = build_reasoner(core_ontology, profile, incremental, budget_secs)?;
         Ok(Self {
             reasoner,
             last_taxonomy: None,
@@ -155,13 +153,7 @@ impl PyReasoner {
             .parse_meta()
             .map(ParseMetaSummary::from);
         self.sync_to_shared()?;
-        Ok(proof_graph_dict(
-            py,
-            self.reasoner.ontology(),
-            &graph,
-            parse_meta.as_ref(),
-        )?
-        .into())
+        Ok(proof_graph_dict(py, self.reasoner.ontology(), &graph, parse_meta.as_ref())?.into())
     }
 
     fn add_subclass_of(&mut self, subclass: &str, superclass: &str) -> PyResult<()> {
@@ -271,8 +263,8 @@ impl PyReasoner {
                 .config(config)
                 .build(ontology)
                 .map_err(py_err)?;
-            let entailed =
-                ontologos_facade::is_entailed_axiom(&mut reasoner, check).map_err(map_facade_py_err)?;
+            let entailed = ontologos_facade::is_entailed_axiom(&mut reasoner, check)
+                .map_err(map_facade_py_err)?;
             (entailed, reasoner.ontology().clone())
         } else {
             py.allow_threads(move || -> PyResult<(bool, Ontology)> {
@@ -281,8 +273,8 @@ impl PyReasoner {
                     .config(config)
                     .build(ontology)
                     .map_err(py_err)?;
-                let entailed =
-                    ontologos_facade::is_entailed_axiom(&mut reasoner, check).map_err(map_facade_py_err)?;
+                let entailed = ontologos_facade::is_entailed_axiom(&mut reasoner, check)
+                    .map_err(map_facade_py_err)?;
                 Ok((entailed, reasoner.ontology().clone()))
             })?
         };
@@ -320,13 +312,13 @@ impl PyReasoner {
 impl PyReasoner {
     fn sync_from_shared(&mut self) -> PyResult<()> {
         if let Some(shared) = &self.shared_ontology {
-            let mut guard = shared
+            let guard = shared
                 .lock()
                 .map_err(|e| py_err(format!("ontology lock poisoned: {e}")))?;
             let current = guard.revision();
             if self.shared_revision != Some(current) {
-                std::mem::swap(self.reasoner.ontology_mut(), &mut *guard);
-                self.shared_revision = Some(self.reasoner.ontology().revision());
+                *self.reasoner.ontology_mut() = guard.clone();
+                self.shared_revision = Some(current);
             }
         }
         Ok(())
@@ -339,7 +331,7 @@ impl PyReasoner {
                 let mut guard = shared
                     .lock()
                     .map_err(|e| py_err(format!("ontology lock poisoned: {e}")))?;
-                std::mem::swap(self.reasoner.ontology_mut(), &mut *guard);
+                *guard = self.reasoner.ontology().clone();
                 self.shared_revision = Some(reasoner_rev);
             }
         }
@@ -523,4 +515,3 @@ fn apply_snapshot_axiom(
         "unsupported axiom JSON; use format v2 axiom objects (e.g. {\"SubClassOf\": {...}})",
     ))
 }
-

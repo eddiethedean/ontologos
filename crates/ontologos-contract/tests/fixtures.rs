@@ -1,12 +1,14 @@
 //! Corpus fixture smoke tests via the facade.
 
 use ontologos_core::{Profile, Reasoner};
-use ontologos_facade::{classify, taxonomy_from_outcome, ClassifyOutcome};
+use ontologos_facade::{ClassifyOutcome, classify, taxonomy_from_outcome};
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;
 
 fn data_path(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data").join(name)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/data")
+        .join(name)
 }
 
 #[test]

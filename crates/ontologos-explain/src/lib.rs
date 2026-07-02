@@ -47,7 +47,11 @@ pub struct ProofNode {
     pub conclusion_sub: Option<(ontologos_core::EntityId, ontologos_core::EntityId)>,
     /// EL existential conclusion.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub conclusion_existential: Option<(ontologos_core::EntityId, ontologos_core::EntityId, ontologos_core::EntityId)>,
+    pub conclusion_existential: Option<(
+        ontologos_core::EntityId,
+        ontologos_core::EntityId,
+        ontologos_core::EntityId,
+    )>,
     /// EL subproperty conclusion.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub conclusion_subproperty: Option<(ontologos_core::EntityId, ontologos_core::EntityId)>,

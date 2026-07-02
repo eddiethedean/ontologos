@@ -11,7 +11,7 @@ use ontologos_core::{Ontology, Taxonomy};
 use thiserror::Error;
 
 pub use hierarchy::TaxonomyHierarchy;
-pub use parse::{parse_conjunctive_query, MAX_QUERY_ATOMS, MAX_QUERY_LEN};
+pub use parse::{MAX_QUERY_ATOMS, MAX_QUERY_LEN, parse_conjunctive_query};
 pub use query::{ConjunctiveQuery, QueryAnswer, QueryAtom};
 pub use rewrite::rewrite_query;
 

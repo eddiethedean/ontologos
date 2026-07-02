@@ -32,7 +32,8 @@ fn assert_kind_mismatch_without_misleading_skip(meta: &ParseMeta, misleading: &[
 /// Class/individual punning should map the assertion without kind-mismatch warnings.
 #[test]
 fn class_individual_punning_maps_class_assertion() {
-    let ontology = load_ontology_lenient(&fixture("class_individual_kind_clash.ttl")).expect("load");
+    let ontology =
+        load_ontology_lenient(&fixture("class_individual_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
     assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
     assert_eq!(entity_kind(&ontology, "alice"), EntityKind::ClassIndividual);
@@ -41,7 +42,8 @@ fn class_individual_punning_maps_class_assertion() {
 /// SubClassOf with a punned class/individual IRI should map without kind mismatch.
 #[test]
 fn subclass_individual_punning_maps_subclass_of() {
-    let ontology = load_ontology_lenient(&fixture("subclass_individual_kind_clash.ttl")).expect("load");
+    let ontology =
+        load_ontology_lenient(&fixture("subclass_individual_kind_clash.ttl")).expect("load");
     let meta = ontology.parse_meta().expect("parse_meta");
     assert_eq!(meta.skipped_axiom_count, 0, "warnings: {:?}", meta.warnings);
     assert_eq!(entity_kind(&ontology, "alice"), EntityKind::ClassIndividual);
@@ -101,13 +103,15 @@ fn assert_subclass_data_property_conflict(ontology: &ontologos_core::Ontology) -
 /// SubClassOf(:Y :X) with :X declared DataProperty must not depend on axiom visit order.
 #[test]
 fn subclass_data_property_conflict_is_order_independent_decl_first() {
-    let ontology = load_ontology_lenient(&fixture("subclass_data_property_decl_first.ofn")).expect("load");
+    let ontology =
+        load_ontology_lenient(&fixture("subclass_data_property_decl_first.ofn")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
 }
 
 #[test]
 fn subclass_data_property_conflict_is_order_independent_axiom_first() {
-    let ontology = load_ontology_lenient(&fixture("subclass_data_property_axiom_first.ofn")).expect("load");
+    let ontology =
+        load_ontology_lenient(&fixture("subclass_data_property_axiom_first.ofn")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
 }
 
@@ -125,13 +129,15 @@ fn subclass_data_property_conflict_ofn_orderings_share_parse_meta() {
 
 #[test]
 fn subclass_data_property_conflict_is_order_independent_decl_first_turtle() {
-    let ontology = load_ontology_lenient(&fixture("subclass_data_property_decl_first.ttl")).expect("load");
+    let ontology =
+        load_ontology_lenient(&fixture("subclass_data_property_decl_first.ttl")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
 }
 
 #[test]
 fn subclass_data_property_conflict_is_order_independent_axiom_first_turtle() {
-    let ontology = load_ontology_lenient(&fixture("subclass_data_property_axiom_first.ttl")).expect("load");
+    let ontology =
+        load_ontology_lenient(&fixture("subclass_data_property_axiom_first.ttl")).expect("load");
     assert_subclass_data_property_conflict(&ontology);
 }
 

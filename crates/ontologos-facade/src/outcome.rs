@@ -1,8 +1,8 @@
 //! Result of a profile-routed classification run.
 
 use ontologos_core::Taxonomy;
-use ontologos_rl::rdfs::MaterializationReport as RdfsReport;
 use ontologos_rl::MaterializationReport as RlReport;
+use ontologos_rl::rdfs::MaterializationReport as RdfsReport;
 
 /// Outcome of [`crate::classify`].
 #[derive(Debug)]

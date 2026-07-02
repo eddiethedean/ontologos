@@ -330,12 +330,13 @@ fn sameas_pair_is_property_entities(
     fn is_property_iri(ontology: &Ontology, preprocessed_rdf: &str, iri: &str) -> bool {
         if let Some(id) = ontology.lookup_entity(iri)
             && let Ok(rec) = ontology.entity(id)
-                && matches!(
-                    rec.kind,
-                    EntityKind::ObjectProperty | EntityKind::DataProperty
-                ) {
-                    return true;
-                }
+            && matches!(
+                rec.kind,
+                EntityKind::ObjectProperty | EntityKind::DataProperty
+            )
+        {
+            return true;
+        }
         crate::rdf_preprocess::collect_object_property_assertions(preprocessed_rdf)
             .iter()
             .any(|(_, property, _)| property == iri)
@@ -756,7 +757,11 @@ fn merge_rdf_owl_imports(
             continue;
         }
         let imported = load_ontology_with_limits_and_base_inner(&import_path, limits, base, false)?;
-        if ontology.axiom_count().saturating_add(imported.axiom_count()) > limits.max_axioms {
+        if ontology
+            .axiom_count()
+            .saturating_add(imported.axiom_count())
+            > limits.max_axioms
+        {
             if limits.strict {
                 return Err(Error::Parse(format!(
                     "import merge would exceed axiom limit {} (current {} + import {})",
@@ -771,7 +776,11 @@ fn merge_rdf_owl_imports(
             ));
             continue;
         }
-        if ontology.entity_count().saturating_add(imported.entity_count()) > limits.max_entities {
+        if ontology
+            .entity_count()
+            .saturating_add(imported.entity_count())
+            > limits.max_entities
+        {
             if limits.strict {
                 return Err(Error::Parse(format!(
                     "import merge would exceed entity limit {} (current {} + import {})",

@@ -335,12 +335,13 @@ fn point_literal_from_range(ontology: &Ontology, de: DeId) -> Option<DataValue> 
         .get("maxInclusive")
         .or_else(|| facets.get("maxExclusive"));
     if let (Some(lo), Some(hi)) = (min, max)
-        && lo == hi {
-            return Some(DataValue {
-                lexical: lo.clone(),
-                datatype,
-            });
-        }
+        && lo == hi
+    {
+        return Some(DataValue {
+            lexical: lo.clone(),
+            datatype,
+        });
+    }
     min.or(max).map(|lexical| DataValue {
         lexical: lexical.clone(),
         datatype,
@@ -537,9 +538,10 @@ fn individuals_of_class(ontology: &Ontology, class: EntityId) -> Vec<EntityId> {
             individual,
             class: c,
         } = axiom
-            && *c == class {
-                out.insert(*individual);
-            }
+            && *c == class
+        {
+            out.insert(*individual);
+        }
     }
     for ind in ontology.entities().iter().filter_map(|(id, r)| {
         if r.kind == ontologos_core::EntityKind::Individual {
@@ -613,16 +615,17 @@ fn same_individuals(ontology: &Ontology, a: EntityId, b: EntityId) -> bool {
     let mut clusters: Vec<HashSet<EntityId>> = Vec::new();
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::SameIndividual(ids) = axiom
-            && (ids.contains(&a) || ids.contains(&b)) {
-                let mut cluster: HashSet<EntityId> = ids.iter().copied().collect();
-                cluster.insert(a);
-                cluster.insert(b);
-                if let Some(existing) = clusters.iter_mut().find(|c| !c.is_disjoint(&cluster)) {
-                    existing.extend(cluster);
-                } else {
-                    clusters.push(cluster);
-                }
+            && (ids.contains(&a) || ids.contains(&b))
+        {
+            let mut cluster: HashSet<EntityId> = ids.iter().copied().collect();
+            cluster.insert(a);
+            cluster.insert(b);
+            if let Some(existing) = clusters.iter_mut().find(|c| !c.is_disjoint(&cluster)) {
+                existing.extend(cluster);
+            } else {
+                clusters.push(cluster);
             }
+        }
     }
     clusters.iter().any(|c| c.contains(&a) && c.contains(&b))
 }

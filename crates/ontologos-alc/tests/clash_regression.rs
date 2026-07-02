@@ -36,15 +36,18 @@ fn witness_materialization_clash_is_inconsistent() {
     });
     let a_ce = store.intern_ce(ClassExpr::Atomic(a));
     let a_and_max = store.intern_ce(ClassExpr::And(vec![
-        a_ce, max1_r, exists_r_b, exists_r_not_b,
+        a_ce,
+        max1_r,
+        exists_r_b,
+        exists_r_not_b,
     ]));
     store.push_axiom(DlAxiom::SubClassOf {
         sub: top,
         sup: a_and_max,
     });
 
-    let sat = tableau_is_consistent_with_seed(&ontology, &TableauSeed::default())
-        .expect("sat check");
+    let sat =
+        tableau_is_consistent_with_seed(&ontology, &TableauSeed::default()).expect("sat check");
     assert!(
         !sat,
         "conflicting ∃ witnesses under max=1 must be unsatisfiable, not consistent"
