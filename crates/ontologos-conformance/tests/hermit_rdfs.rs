@@ -7,7 +7,7 @@ use ontologos_conformance::{
     PORT_NS, assert_direct_subproperty, assert_subproperty, assert_subsumed, assert_typed,
 };
 use ontologos_core::Ontology;
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 fn iri(local: &str) -> String {
     format!("{PORT_NS}{local}")

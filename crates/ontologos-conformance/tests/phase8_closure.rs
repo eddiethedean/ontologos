@@ -14,7 +14,7 @@ fn phase8_alc_exit_tests_exist() {
 fn phase8_abox_family_exit_exists() {
     assert!(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../ontologos-abox/tests/family_exit.rs")
+            .join("../ontologos-rl/tests/abox_family_exit.rs")
             .is_file()
     );
 }

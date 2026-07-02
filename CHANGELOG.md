@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tier C strict HermiT identity gate (`compare-tier-c-strict-family.sh`) permanently **informational** — 26 extra subsumptions on `family.owl` waived until 2.0
 - Doc/code alignment: entailment cap **192** named classes; `ParseLimits::merge_imports` default **false**
 - `SECURITY.md` supported versions updated for **1.0.x**
+- **Removed workspace crates:** `ontologos-rdfs`, `ontologos-abox`, `ontologos-query` (empty shims — use `ontologos-rl` / `ontologos-ql`); `ontologos-watch` (unused orphan)
 
 ### Fixed
 

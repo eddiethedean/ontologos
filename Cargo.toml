@@ -5,16 +5,13 @@ members = [
     "crates/ontologos-bridge",
     "crates/ontologos-parser",
     "crates/ontologos-profile",
-    "crates/ontologos-rdfs",
     "crates/ontologos-rl",
     "crates/ontologos-el",
-    "crates/ontologos-abox",
     "crates/ontologos-alc",
     "crates/ontologos-ql",
     "crates/ontologos-dl",
     "crates/ontologos-swrl",
     "crates/ontologos-facade",
-    "crates/ontologos-query",
     "crates/ontologos-explain",
     "crates/ontologos-cli",
     "crates/ontologos-py",
@@ -50,16 +47,13 @@ ontologos-core = { path = "crates/ontologos-core", version = "1.0.0" }
 ontologos-bridge = { path = "crates/ontologos-bridge", version = "1.0.0" }
 ontologos-parser = { path = "crates/ontologos-parser", version = "1.0.0" }
 ontologos-profile = { path = "crates/ontologos-profile", version = "1.0.0" }
-ontologos-rdfs = { path = "crates/ontologos-rdfs", version = "1.0.0" }
 ontologos-rl = { path = "crates/ontologos-rl", version = "1.0.0" }
 ontologos-el = { path = "crates/ontologos-el", version = "1.0.0" }
-ontologos-abox = { path = "crates/ontologos-abox", version = "1.0.0" }
 ontologos-alc = { path = "crates/ontologos-alc", version = "1.0.0" }
 ontologos-ql = { path = "crates/ontologos-ql", version = "1.0.0" }
 ontologos-dl = { path = "crates/ontologos-dl", version = "1.0.0" }
 ontologos-swrl = { path = "crates/ontologos-swrl", version = "1.0.0" }
 ontologos-facade = { path = "crates/ontologos-facade", version = "1.0.0" }
-ontologos-query = { path = "crates/ontologos-query", version = "1.0.0" }
 ontologos-explain = { path = "crates/ontologos-explain", version = "1.0.0" }
 
 [workspace.lints.rust]

@@ -8,7 +8,7 @@ Patterns for embedding OntoLogos in services and pipelines. Profile status: [Pro
 |------|----------------|
 | Build/load JSON only | `ontologos-core` |
 | Load OWL files | `+ ontologos-parser` |
-| RDFS materialization | `+ ontologos-rdfs` |
+| RDFS materialization | `ontologos-rl` (`rdfs` module) |
 | OWL RL saturation | `+ ontologos-rl` |
 | OWL EL taxonomy | `+ ontologos-el`, `+ ontologos-ql` |
 | Profile routing | `+ ontologos-profile` |

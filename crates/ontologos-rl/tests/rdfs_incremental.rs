@@ -38,7 +38,7 @@ fn incremental_matches_full_after_axiom_addition() {
         .build()
         .unwrap();
 
-    ontologos_rdfs::RdfsEngine::new()
+    ontologos_rl::rdfs::RdfsEngine::new()
         .materialize(&mut full)
         .unwrap();
 
@@ -61,7 +61,7 @@ fn incremental_matches_full_after_axiom_addition() {
         )
         .unwrap();
 
-    ontologos_rdfs::materialize_reasoner(&mut reasoner).unwrap();
+    ontologos_rl::rdfs::materialize_reasoner(&mut reasoner).unwrap();
 
     let cat = reasoner
         .ontology_mut()
@@ -79,7 +79,7 @@ fn incremental_matches_full_after_axiom_addition() {
         })
         .unwrap();
 
-    ontologos_rdfs::materialize_reasoner(&mut reasoner).unwrap();
+    ontologos_rl::rdfs::materialize_reasoner(&mut reasoner).unwrap();
 
     let cat_full = full
         .entity_id("http://ex.org/Cat", EntityKind::Class)
@@ -92,7 +92,7 @@ fn incremental_matches_full_after_axiom_addition() {
         superclass: animal_full,
     })
     .unwrap();
-    ontologos_rdfs::RdfsEngine::new()
+    ontologos_rl::rdfs::RdfsEngine::new()
         .materialize(&mut full)
         .unwrap();
 

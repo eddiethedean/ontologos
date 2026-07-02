@@ -13,7 +13,7 @@ Single source of truth for version and distribution channels. Update this page w
 | **Latest git tag** | **v0.9.0** | Annotated semver tags on `main` |
 | **`main` branch** | **1.0.0** workspace (pre-release) | Engineering gates green; **v1.0.0 tag** pending crates.io + PyPI publish |
 
-Published crates (15, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-query`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-abox`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
+Published crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
 CLI (`ontologos-cli`), Python (`ontologos-py`), conformance, and watch are **source-build only** — not on crates.io.
 

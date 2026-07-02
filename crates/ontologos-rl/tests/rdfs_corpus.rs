@@ -2,7 +2,7 @@ use ontologos_core::Axiom;
 use std::path::Path;
 
 use ontologos_parser::load_ontology;
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 fn repo_root() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

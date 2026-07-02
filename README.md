@@ -68,7 +68,7 @@ Library-first orchestration: **load → detect profile → classify/materialize*
 |----------|--------------|
 | **Rust application developers** | Composable crates, `Ontology` / `OntologyBuilder`, JSON snapshots, incremental sessions |
 | **Python data pipelines** | `Reasoner`, `OntologyBuilder`, `explain()`, optional pandas/polars export |
-| **OWL RL / RDFS workflows** | Forward-chaining via **reasonable** through `ontologos-rl` / `ontologos-rdfs` |
+| **OWL RL / RDFS workflows** | Forward-chaining via **reasonable** through `ontologos-rl` (`rdfs` and `abox` modules) |
 | **OWL EL taxonomies** | In-house completion in `ontologos-el` (no Java) |
 | **Early DL adopters** | `ontologos-dl` on `main`: **100%** catalog parity, full gated conformance @ 30s — PyPI still **0.9.0**; validate on your corpus |
 
@@ -81,12 +81,12 @@ Library-first orchestration: **load → detect profile → classify/materialize*
 | Core ontology graph | `ontologos-core` |
 | Load `.owl` / `.ttl` | `ontologos-parser` |
 | Profile detection | `ontologos-profile` |
-| RDFS materialization | `ontologos-rdfs` |
+| RDFS materialization | `ontologos-rl` (`rdfs` module) |
 | OWL RL saturation | `ontologos-rl` |
 | OWL EL taxonomy | `ontologos-el` |
 | Multi-profile routing | `ontologos-facade` |
 | Explanations | `ontologos-explain` |
-| Taxonomy queries | `ontologos-query` |
+| Taxonomy queries | `ontologos-ql` |
 | CLI binary | Build `ontologos-cli` from this repo (not on crates.io) |
 | Python | `pip install ontologos` |
 
@@ -253,7 +253,7 @@ ontologos-parser = "0.9.0"
 ontologos-facade = "0.9.0"
 ```
 
-On crates.io the latest **tagged** release is **0.9.0**. Build from `main` with `"1.0.0"` pins for DL and the full 15-crate set — see [Release status](docs/project/release-status.md). **v1.0.0** publish is prepared but not tagged yet.
+On crates.io the latest **tagged** release is **0.9.0**. Build from `main` with `"1.0.0"` pins for DL and the full **12-crate** library set — see [Release status](docs/project/release-status.md).
 
 Do **not** call `ontologos_core::Reasoner::classify()` or `Reasoner::is_consistent()` — use `ontologos_facade::check_consistency` and `ontologos_facade::classify`. See [Facade API](https://ontologos.readthedocs.io/en/latest/guides/facade-api.html).
 
@@ -272,18 +272,15 @@ See [Migration hub](https://ontologos.readthedocs.io/en/latest/migration/) for g
 | `ontologos-core` | [yes](https://crates.io/crates/ontologos-core) | Data model, builder, JSON v3 (v2 read) |
 | `ontologos-parser` | [yes](https://crates.io/crates/ontologos-parser) | OWL/RDF loading |
 | `ontologos-profile` | [yes](https://crates.io/crates/ontologos-profile) | Profile detection |
-| `ontologos-rdfs` | [yes](https://crates.io/crates/ontologos-rdfs) | RDFS → reasonable |
-| `ontologos-rl` | [yes](https://crates.io/crates/ontologos-rl) | OWL RL → reasonable |
+| `ontologos-rl` | [yes](https://crates.io/crates/ontologos-rl) | OWL RL + RDFS + ABox (reasonable) |
 | `ontologos-el` | [yes](https://crates.io/crates/ontologos-el) | OWL EL completion |
 | `ontologos-explain` | [yes](https://crates.io/crates/ontologos-explain) | Proof graphs |
 | `ontologos-facade` | [yes](https://crates.io/crates/ontologos-facade) | Unified classify routing |
 | `ontologos-bridge` | [yes](https://crates.io/crates/ontologos-bridge) | horned-owl / reasonable adapters |
-| `ontologos-abox` | [yes](https://crates.io/crates/ontologos-abox) | ABox helpers (RL-backed) |
 | `ontologos-alc` | [yes](https://crates.io/crates/ontologos-alc) | ALC tableau-lite (preview) |
-| `ontologos-dl` | [0.9.0](https://crates.io/crates/ontologos-dl) (library only; **DL engine stable on `main`**, publish **1.0.0** pending) | OWL 2 DL |
-| `ontologos-query` | [yes](https://crates.io/crates/ontologos-query) | Deprecated shim — use `ontologos-ql` |
+| `ontologos-dl` | [yes](https://crates.io/crates/ontologos-dl) | OWL 2 DL |
 | `ontologos-swrl` | [yes](https://crates.io/crates/ontologos-swrl) | DLSafe SWRL + DL |
-| `ontologos-ql` | [yes](https://crates.io/crates/ontologos-ql) | OWL QL queries |
+| `ontologos-ql` | [yes](https://crates.io/crates/ontologos-ql) | OWL QL queries + taxonomy hierarchy |
 | `ontologos-cli` | source only | CLI binary — `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` |
 | `ontologos-py` | [PyPI](https://pypi.org/project/ontologos/) | Python bindings |
 

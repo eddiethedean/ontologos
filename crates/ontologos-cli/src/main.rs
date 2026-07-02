@@ -7,7 +7,7 @@ use ontologos_explain::{ProofGraph, explain_with_profile, render_text};
 use ontologos_facade::ClassifyOutcome;
 use ontologos_parser::load_ontology_lenient as load_ontology;
 use ontologos_profile::{ProfileReport, classify_hybrid, detect_profile};
-use ontologos_rdfs::MaterializationReport as RdfsReport;
+use ontologos_rl::rdfs::MaterializationReport as RdfsReport;
 use ontologos_rl::MaterializationReport as RlReport;
 use serde::Serialize;
 use thiserror::Error;
@@ -247,7 +247,7 @@ fn run() -> Result<(), CliError> {
                 .profile(Profile::Rdfs)
                 .config(reasoner_config(&cli))
                 .build(ontology)?;
-            let report = ontologos_rdfs::materialize_reasoner(&mut reasoner)?;
+            let report = ontologos_rl::rdfs::materialize_reasoner(&mut reasoner)?;
             emit_rdfs_report(cli.format, "materialized", &report, &parse_meta)?;
         }
         Command::Explain { ontology } => {
@@ -322,9 +322,9 @@ fn run() -> Result<(), CliError> {
             let mut ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            let report = ontologos_abox::materialize_abox(&mut ontology)
+            let report = ontologos_rl::materialize_abox(&mut ontology)
                 .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
-            let consistent = ontologos_abox::is_abox_consistent(&ontology)
+            let consistent = ontologos_rl::is_abox_consistent(&ontology)
                 .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
             match cli.format {
                 OutputFormat::Text => {
@@ -621,6 +621,9 @@ fn emit_classify_outcome(
         }
         ClassifyOutcome::Rdfs(report) => emit_rdfs_report(format, "classified", report, parse_meta),
         ClassifyOutcome::Rl(report) => emit_rl_report(format, "classified", report, parse_meta),
+        _ => Err(CliError::Core(ontologos_core::Error::Message(
+            "unsupported ClassifyOutcome variant".into(),
+        ))),
     }
 }
 

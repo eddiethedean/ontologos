@@ -22,7 +22,6 @@ crate-type = ["cdylib"]
 [dependencies]
 ontologos-core = { workspace = true }
 ontologos-parser = { workspace = true }
-ontologos-rdfs = { workspace = true }
 ontologos-rl = { workspace = true }
 ontologos-el = { workspace = true }
 ontologos-facade = { workspace = true }

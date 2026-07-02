@@ -10,7 +10,7 @@
 //!
 //! ```ignore
 //! use ontologos_parser::load_ontology;
-//! use ontologos_rdfs::RdfsEngine;
+//! use ontologos_rl::rdfs::RdfsEngine;
 //!
 //! let mut ontology = load_ontology(std::path::Path::new("ontology.owl"))?;
 //! let report = RdfsEngine::new().materialize(&mut ontology)?;

@@ -163,6 +163,9 @@ impl PyReasoner {
                 self.last_taxonomy = None;
                 Ok(rl_classify_dict(py, &report)?.into())
             }
+            _ => Err(pyo3::exceptions::PyRuntimeError::new_err(
+                "unsupported ClassifyOutcome variant",
+            )),
         };
         self.sync_to_shared()?;
         result

@@ -67,9 +67,9 @@ flowchart TB
   core --> serde
 ```
 
-Published to crates.io (15 crates): `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-bridge`, `ontologos-rdfs`, `ontologos-rl`, `ontologos-el`, `ontologos-abox`, `ontologos-alc`, `ontologos-dl`, `ontologos-swrl`, `ontologos-query`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
+Published to crates.io (12 crates): `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-bridge`, `ontologos-rl`, `ontologos-el`, `ontologos-alc`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`, `ontologos-watch`.
+Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`, `ontologos-contract`.
 
 ## Data flow
 

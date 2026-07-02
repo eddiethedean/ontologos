@@ -797,15 +797,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
-name = "ontologos-abox"
-version = "1.0.0"
-dependencies = [
- "ontologos-core",
- "ontologos-parser",
- "ontologos-rl",
-]
-
-[[package]]
 name = "ontologos-alc"
 version = "1.0.0"
 dependencies = [
@@ -840,7 +831,6 @@ version = "1.0.0"
 dependencies = [
  "assert_cmd",
  "clap",
- "ontologos-abox",
  "ontologos-alc",
  "ontologos-core",
  "ontologos-dl",
@@ -850,7 +840,6 @@ dependencies = [
  "ontologos-parser",
  "ontologos-profile",
  "ontologos-ql",
- "ontologos-rdfs",
  "ontologos-rl",
  "ontologos-swrl",
  "predicates",
@@ -872,7 +861,6 @@ dependencies = [
  "ontologos-explain",
  "ontologos-facade",
  "ontologos-parser",
- "ontologos-rdfs",
  "ontologos-rl",
  "ontologos-swrl",
  "rayon",
@@ -998,7 +986,6 @@ dependencies = [
  "ontologos-facade",
  "ontologos-parser",
  "ontologos-ql",
- "ontologos-rdfs",
  "ontologos-rl",
  "pyo3",
  "serde_json",
@@ -1012,22 +999,6 @@ dependencies = [
  "ontologos-el",
  "ontologos-parser",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "ontologos-query"
-version = "1.0.0"
-dependencies = [
- "ontologos-ql",
-]
-
-[[package]]
-name = "ontologos-rdfs"
-version = "1.0.0"
-dependencies = [
- "ontologos-core",
- "ontologos-parser",
- "ontologos-rl",
 ]
 
 [[package]]

@@ -20,7 +20,7 @@ USER_DOC_DIRS=(
   crates/ontologos-py/README.md
   crates/ontologos-facade/README.md
   crates/ontologos-rl/README.md
-  crates/ontologos-rdfs/README.md
+  crates/ontologos-rl/README.md
 )
 
 FORBIDDEN_API=(

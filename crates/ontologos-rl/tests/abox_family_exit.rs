@@ -1,6 +1,6 @@
 //! v1.6 ABox exit — Family corpus individuals and sameAs closure.
 
-use ontologos_abox::{is_abox_consistent, materialize_abox, same_as_closure};
+use ontologos_rl::{is_abox_consistent, materialize_abox, same_as_closure};
 use ontologos_parser::load_ontology;
 use std::path::PathBuf;
 

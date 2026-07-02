@@ -10,7 +10,7 @@ use rayon::prelude::*;
 
 use ontologos_core::{CeId, ClassExpr, DeId, DlAxiom, EntityId, EntityKind, Ontology, RoleExpr};
 use ontologos_parser::load_ontology_lenient as load_ontology;
-use ontologos_rdfs::RdfsEngine;
+use ontologos_rl::rdfs::RdfsEngine;
 
 use crate::{
     CatalogError, HERMIT_DEFAULT_NS, PropertyCharacteristic, assert_subproperty, assert_subsumed,
@@ -1790,7 +1790,7 @@ fn saturate_for_consistency(case: &HermitCase, ontology: &mut Ontology) -> bool 
                 .unwrap_or(false);
             saturated && !ontologos_bridge::has_bottom_chain_violation(ontology)
         }
-        "rdfs" => ontologos_rdfs::RdfsEngine::new()
+        "rdfs" => ontologos_rl::rdfs::RdfsEngine::new()
             .materialize(ontology)
             .map(|r| r.clashes.is_empty())
             .unwrap_or(false),
