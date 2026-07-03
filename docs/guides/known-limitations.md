@@ -37,13 +37,9 @@ OntoLogos is library-first orchestration for Rust/Python services. It does not p
 
 After reasoning, persist results with `Ontology::to_json()` (format v3 on workspace 1.0.0; v2 still readable). There is no built-in OWL/RDF serializer — retain the source OWL file plus processing metadata.
 
-## Rust: do not call `Reasoner::classify()` on core
+## Rust integration
 
-Use `ontologos_facade::classify`, profile crates (`RdfsEngine`, `RlEngine`, `ElClassifier`), CLI, or Python `Reasoner`. Core `Reasoner::classify()` is a stub.
-
-See [Facade API](facade-api.md) · [Rust API in 60 seconds](../getting-started/index.md#rust-api-in-60-seconds).
-
-## Profile availability by install channel
+Use `ontologos_facade::classify` — not `Reasoner::classify()` on core. See [Rust integration contract](rust-integration-contract.md).
 
 ## Profile availability
 

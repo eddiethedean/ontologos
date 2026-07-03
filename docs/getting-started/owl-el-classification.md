@@ -6,13 +6,16 @@ Completion-based **OWL EL taxonomy classification** via [`ontologos-el`](https:/
 
 - Rust 1.88+
 - An EL-shaped ontology (`.owl`, `.rdf`, `.ttl`, `.ofn`) or a repository clone for benchmark examples
-- For Pizza corpus: `./benchmarks/scripts/download.sh` (Family is vendored)
+
+Download Pizza (not bundled in pip/crates.io installs):
+
+--8<-- "snippets/pizza-owl-download.md"
 
 Verify profile before classifying:
 
 ```bash
 cargo build -p ontologos-cli --release
-./target/release/ontologos profile benchmarks/data/pizza.owl
+./target/release/ontologos profile pizza.owl
 ```
 
 Expected output (abbreviated):
@@ -27,8 +30,8 @@ Pizza often detects as **DL** because of inverse/functional properties in the so
 
 ```bash
 cargo build -p ontologos-cli --release
-./target/release/ontologos classify --profile el benchmarks/data/pizza.owl
-./target/release/ontologos classify --profile auto benchmarks/data/family.owl
+./target/release/ontologos classify --profile el pizza.owl
+./target/release/ontologos classify --profile auto family.owl
 ```
 
 `classify --profile auto` routes to EL taxonomy when detection reports EL, otherwise RL saturation. Use `--profile rdfs` for RDFS materialization, or `materialize` for explicit RDFS.

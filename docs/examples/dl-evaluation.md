@@ -7,29 +7,25 @@ Install: [Install channels](../guides/install-channels.md) · API: [DL reference
 ## Prerequisites
 
 - Rust **1.88+** (for CLI) or Python **3.10+**
-- Pizza corpus: clone repo and run `./benchmarks/scripts/download.sh`, or use your own DL ontology
 
-```bash
-git clone https://github.com/eddiethedean/ontologos.git
-cd ontologos
-./benchmarks/scripts/download.sh
-cargo build -p ontologos-cli --release
-```
+Download Pizza (not bundled in pip/crates.io installs):
 
-Or install CLI from git: `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli`
+--8<-- "snippets/pizza-owl-download.md"
+
+Or clone and run `./benchmarks/scripts/download.sh`. CLI install: [CLI installation](../getting-started/cli-install.md).
 
 ## CLI
 
 ```bash
 ontologos --format json classify \
-  --profile dl --budget-secs 30 benchmarks/data/pizza.owl
+  --profile dl --budget-secs 30 pizza.owl
 ```
 
 **Expected:** `status: "classified"`, `subsumption_count` > 0, consistency `complete: true` when run via `consistent` subcommand first.
 
 ```bash
 ontologos --format json consistent \
-  --budget-secs 30 benchmarks/data/pizza.owl
+  --budget-secs 30 pizza.owl
 ```
 
 ## Rust (facade)
@@ -45,7 +41,7 @@ let mut reasoner = Reasoner::builder()
         budget_secs: Some(30),
         ..ReasonerConfig::default()
     })
-    .build(load_ontology("benchmarks/data/pizza.owl".as_ref())?)?;
+    .build(load_ontology("pizza.owl".as_ref())?)?;
 
 let result = check_consistency(&reasoner)?;
 assert!(result.complete && result.consistent);
@@ -66,7 +62,7 @@ pip install ontologos==1.0.0
 from ontologos import Reasoner
 
 reasoner = Reasoner(
-    path="benchmarks/data/pizza.owl",
+    path="pizza.owl",
     profile="dl",
     budget_secs=30,
 )

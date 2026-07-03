@@ -41,7 +41,7 @@ cargo build -p ontologos-cli --release
 
 ## CLI install (not on crates.io)
 
-The `ontologos-cli` binary is **not published** to crates.io. Install options:
+See the dedicated [CLI installation](../getting-started/cli-install.md) guide.
 
 ```bash
 # Tagged release (requires Rust 1.88+)

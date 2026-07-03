@@ -25,6 +25,8 @@ rustup component add rustfmt clippy
 rustc --version   # must be >= 1.88.0
 ```
 
+If `rustc` is too old, see [Troubleshooting — rustc version](troubleshooting.md#rustc-version-too-old).
+
 New projects from crates.io only need a standard Cargo workspace—no fork of this repository.
 
 ## Python toolchain

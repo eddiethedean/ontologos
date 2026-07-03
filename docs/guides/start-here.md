@@ -17,14 +17,13 @@ Pick the path that matches how you work. Each link is a single next step—not t
 3. [Choosing an API](choosing-an-api.md) — which crate and entry point
 4. [Profile stability matrix](profile-stability.md) — production vs pre-release profiles
 
-CLI shortcut (requires git install — not on crates.io):
+CLI shortcut (not on crates.io):
+
+See [CLI installation](../getting-started/cli-install.md) — then:
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
 ontologos classify --profile auto family.owl
 ```
-
-Or build from a clone. See [CLI reference](../reference/cli.md) and [Install and channels](install-channels.md).
 
 ## I am building ontologies in Rust
 
@@ -43,9 +42,13 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 
 [OWL EL classification](../getting-started/owl-el-classification.md) — in-house completion engine in `ontologos-el`.
 
+## I need SWRL rules
+
+[SWRL quick start](../getting-started/swrl.md) — DLSafe rules + DL on v1.0.0.
+
 ## I am evaluating vs HermiT / ELK / reasonable
 
-[Evaluator playbook](evaluator-playbook.md) · [Comparison](../comparison.md) · [Conformance coverage](../reference/conformance.md)
+[Evaluator scope](evaluator-scope.md) · [Evaluator playbook](evaluator-playbook.md) · [When not to use OntoLogos](when-not-to-use.md) · [Comparison](../comparison.md)
 
 **Evaluate with Python only (no Rust, no clone):**
 
@@ -56,14 +59,11 @@ curl -L -o family.owl \
 python -c "from ontologos import Reasoner; r=Reasoner(path='family.owl',profile='rl').classify(); print(r)"
 ```
 
-**Production OWL DL:** Stable on **PyPI/crates.io 1.0.0** (`profile="dl"`). HermiT catalog parity applies to **889 gated in-scope cases** — validate on your corpus with the [Evaluator playbook](evaluator-playbook.md). See [Profile stability matrix](profile-stability.md).
+**Production OWL DL:** Stable on **PyPI/crates.io 1.0.0** (`profile="dl"`). HermiT catalog parity applies to **889 gated in-scope cases** — [validate on your corpus](evaluator-scope.md).
 
 ## I am integrating in a service
 
-[Production integration](production-integration.md) · [Security](../security.md) · [Choosing an API](choosing-an-api.md)
-
-!!! warning "Do not call the core stub directly"
-    Use `ontologos_facade::classify`, profile crates (`ElClassifier`, `RlEngine`, `ontologos_rl::rdfs::RdfsEngine`), CLI, or Python `Reasoner` — not `ontologos_core::Reasoner::classify()` (deprecated since 1.0.0).
+[Production integration](production-integration.md) · [Deployment](deployment.md) · [Security](../security.md) · [Rust integration contract](rust-integration-contract.md)
 
 ## I want to contribute
 

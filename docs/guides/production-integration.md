@@ -198,6 +198,8 @@ CLI: `ontologos classify --incremental ontology.owl` runs a single incremental p
 
 ## Observability
 
+For containers, health checks, DL budgets, and `tracing` setup, see [Deployment and observability](deployment.md).
+
 Inspect `parse_meta` after load:
 
 - `warnings` — skipped mapping shapes
@@ -207,6 +209,7 @@ Engine reports (`MaterializationReport`, EL taxonomy, proof graphs) expose count
 
 ## Related
 
+- [Deployment](deployment.md)
 - [Security](../security.md)
 - [Performance](performance.md)
 - [Comparison](../comparison.md)

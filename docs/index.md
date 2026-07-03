@@ -6,13 +6,13 @@
     <span class="ol-badge">Rust 1.88+</span>
   </div>
   <p class="ol-hero-kicker">OntoLogos documentation</p>
-  <p class="ol-hero-title">Native Rust ontology reasoning</p>
-  <p class="ol-lead">Load OWL files, detect profiles, and run RDFS materialization, OWL RL saturation, OWL EL taxonomy, OWL 2 DL, and SWRL—through stable Rust facades, CLI, and Python bindings.</p>
+  <p class="ol-hero-title">Embed OWL reasoning in Rust or Python</p>
+  <p class="ol-lead">Load OWL files, detect profiles, and classify or materialize in-process — no JVM. EL, RL, RDFS, OWL 2 DL, and SWRL on v1.0.0.</p>
   <div class="ol-hero-actions">
     <a class="ol-hero-cta" href="getting-started/">Try in 5 minutes →</a>
     <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/python/">Python quickstart</a>
   </div>
-  <p style="margin-top:1rem;margin-bottom:0"><a href="guides/install-channels/">Install channels</a> · <a href="guides/start-here/">Not sure? Start here</a> · <a href="guides/known-limitations/">Known limitations</a></p>
+  <p style="margin-top:1rem;margin-bottom:0"><a href="guides/install-channels/">Install channels</a> · <a href="getting-started/cli-install/">CLI install</a> · <a href="guides/evaluator-scope/">Evaluator scope</a> · <a href="guides/start-here/">Start here</a></p>
 </div>
 
 --8<-- "snippets/channel-banner.md"
@@ -41,9 +41,9 @@ Pick the path that matches how you work:
 
     ---
 
-    `classify`, `materialize`, `explain` — **not on crates.io**; `cargo install --git …` or clone.
+    `classify`, `materialize`, `explain` — install from git (not crates.io).
 
-    [:octicons-arrow-right-24: CLI reference](reference/cli.md)
+    [:octicons-arrow-right-24: CLI installation](getting-started/cli-install.md)
 
 -   :material-magnify: **Evaluate**
 
@@ -65,10 +65,8 @@ Pick the path that matches how you work:
 !!! warning "Mapped axiom counts ≠ Protégé totals"
     `axiom_count()` reflects **mapper output**, not every axiom Protégé displays. See [Supported constructs](reference/supported-constructs.md) and [Protégé axiom counts](guides/protege-axiom-counts.md).
 
-!!! warning "Integration DO / DON'T"
-    **DO** use CLI `ontologos classify`, Python `Reasoner(path=...).classify()`, or `ontologos_facade::classify` / profile crates.
-
-    **DON'T** call classification on `ontologos_core::Reasoner` — use the [facade](guides/facade-api.md) instead. See [Choosing an API](guides/choosing-an-api.md).
+!!! tip "Rust integrators"
+    See the [Rust integration contract](guides/rust-integration-contract.md) — one page for load, classify, and consistency rules.
 
 !!! note "Preview profiles"
     **`alc`** and **`dl-preview`** are experimental. Production OWL DL uses **`profile="dl"`**. See [Profile stability](guides/profile-stability.md).
@@ -103,10 +101,11 @@ Use the sidebar for the full tree. Highlights:
 4. [RDFS materialization](getting-started/rdfs-materialization.md)
 5. [OWL RL saturation](getting-started/owl-rl-saturation.md)
 6. [OWL EL classification](getting-started/owl-el-classification.md)
-7. [First ontology](getting-started/first-ontology.md) *(clone required for `pizza_builder` example; builder walkthrough works without clone)*
-8. [Profile detection](guides/profile-detection.md)
-9. [JSON snapshots](json-snapshot-v3.md) ([v2 legacy](json-snapshot-v2.md))
-10. [Error reference](reference/errors.md)
+7. [SWRL](getting-started/swrl.md)
+8. [First ontology](getting-started/first-ontology.md)
+9. [Profile detection](guides/profile-detection.md)
+10. [JSON snapshots](json-snapshot-v3.md) ([v2 legacy](json-snapshot-v2.md))
+11. [Error reference](reference/errors.md)
 
 ## Capability matrix (published v1.0.0)
 

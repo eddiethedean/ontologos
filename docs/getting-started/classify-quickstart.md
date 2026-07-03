@@ -2,12 +2,13 @@
 
 Run OWL **classification** from crates.io — no repository clone. Uses `ontologos-facade::classify`.
 
-!!! tip "Rust API in 60 seconds"
-    Build `Reasoner` with `Reasoner::builder()` → call **`ontologos_facade::classify(&mut reasoner)`**. Do **not** call `ontologos_core::Reasoner::classify()`. See [Facade API](../guides/facade-api.md).
+!!! info "The one rule for Rust integrators"
+    `Reasoner` holds config and ontology state. **Always** call `ontologos_facade::classify(&mut reasoner)` —
+    never `reasoner.classify()`. See [Rust integration contract](../guides/rust-integration-contract.md).
 
 ## Prerequisites
 
-- Rust **1.88+**
+- Rust **1.88+** (`rustc --version` must be >= 1.88.0)
 - OntoLogos crates — see [Release status](../project/release-status.md) for published **v1.0.0** pins
 
 ```bash

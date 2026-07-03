@@ -14,6 +14,18 @@ How OntoLogos handles imported ontologies when loading files.
 
 OntoLogos does **not** implement a full OWL catalog resolver. Import IRIs must map to files relative to the loaded document (or sandbox base directory).
 
+## Decision table: which loader?
+
+| I use… | `merge_imports` default | Local RDF/XML imports merged? | When to set `merge_imports: false` |
+|--------|-------------------------|-------------------------------|-------------------------------------|
+| `load_ontology(path)` on **RDF/XML** | `true` | **Yes** | Single-document load only |
+| `load_ontology(path)` on **Turtle / OFN** | n/a | **No** | — |
+| `load_ontology_with_limits(path, ParseLimits::default())` | `false` | **No** | Set `merge_imports: true` explicitly for RDF/XML bundles |
+| `load_ontology_in(base, path)` | same as above | Same rules | Untrusted uploads — prefer `false` unless sibling imports are trusted |
+
+!!! warning "Common mistake"
+    `load_ontology()` merges imports; `ParseLimits::default()` does **not**. If you switch to `load_ontology_with_limits` for size caps, set `merge_imports` explicitly.
+
 ## RDF/XML: default merge
 
 For RDF/XML loads, `load_ontology` merges **declared** `owl:imports` that resolve to local files:

@@ -24,15 +24,10 @@ match classify(&mut reasoner)? {
 }
 ```
 
-See [Classify quick start](classify-quickstart.md) and [Facade API](../guides/facade-api.md).
+See [Classify quick start](classify-quickstart.md) and [Rust integration contract](../guides/rust-integration-contract.md).
 
-!!! success "Production integration contract"
-    | Task | Use |
-    |------|-----|
-    | Load files | `ontologos_parser::load_ontology` |
-    | Classify / consistency | `ontologos_facade::classify`, `check_consistency` |
-    | CLI / Python | `ontologos classify`, `Reasoner(...).classify()` |
-    | **Do not use** | `ontologos_core::Reasoner::classify()` |
+!!! tip "Integration rules"
+    Full contract: [Rust integration contract](../guides/rust-integration-contract.md).
 
 ## Crates.io only (no clone)
 

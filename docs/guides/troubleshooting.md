@@ -1,16 +1,27 @@
 # Troubleshooting
 
-## `command not found: ontologos`
+## `rustc` version too old
 
-The CLI is **not on crates.io**. Install from git (Rust 1.88+):
+**Symptom:** `error: edition 2024 is unstable` or `package requires Rust 1.88`.
+
+**Fix:**
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
+rustup update stable
+rustc --version   # must be >= 1.88.0
+```
+
+See [Prerequisites](prerequisites.md).
+
+## `command not found: ontologos`
+
+The CLI is **not on crates.io**. See [CLI installation](../getting-started/cli-install.md).
+
+```bash
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli
 ```
 
 Or build from a clone: `cargo build -p ontologos-cli --release` → `./target/release/ontologos`.
-
-See [CLI reference](../reference/cli.md) and [Install and channels](install-channels.md).
 
 ## `cargo test` fails on Pizza / Family tests
 
@@ -27,7 +38,11 @@ CI runs `download.sh` automatically. See [benchmarks](../project/benchmarks.md).
 
 ## `ontologos profile` fails: file not found
 
-Pizza is not committed to the repo (gitignored). Run `./benchmarks/scripts/download.sh` or use `benchmarks/data/family.owl` (vendored).
+Pizza is not committed to the repo (gitignored). Fetch it:
+
+--8<-- "snippets/pizza-owl-download.md"
+
+Or use `benchmarks/data/family.owl` (vendored).
 
 ## Axiom count does not match Protégé
 

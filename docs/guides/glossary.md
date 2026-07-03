@@ -31,7 +31,7 @@ Terms used across OntoLogos documentation. For OWL background, see the [W3C OWL 
 | **`profile_constructs`** | Constructs from **mapped** axioms — drives detected EL/RL/QL/DL |
 | **`constructs`** | Full source scan — used for **diagnostics** only |
 | **Facade** | `ontologos-facade` — unified `classify()` routing for CLI, Python, and multi-profile Rust |
-| **Delegate hint** | `Reasoner::classify()` on core returns an error directing you to `ontologos_facade::classify` |
+| **Core Reasoner stub** | `Reasoner::classify()` on `ontologos-core` returns an error in 1.0.0 — use `ontologos_facade::classify` ([Rust integration contract](rust-integration-contract.md)) |
 | **JSON snapshot v3** | Current serialization format (`to_json` emits v3; `from_json` reads v2 and v3) |
 | **JSON snapshot v2** | Legacy format; still readable |
 | **`parity_pct`** | In-scope HermiT catalog harness completion — see [Evaluator scope](evaluator-scope.md) |

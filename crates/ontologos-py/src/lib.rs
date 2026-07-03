@@ -1,4 +1,4 @@
-//! Python bindings for OntoLogos (v0.9).
+//! Python bindings for OntoLogos (v1.0).
 
 mod convert;
 mod exceptions;

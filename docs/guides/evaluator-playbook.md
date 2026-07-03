@@ -2,6 +2,15 @@
 
 Evaluate OntoLogos against ELK/reasonable without reading the whole codebase. Allow **30 minutes** plus download time.
 
+## Step 1 — Honest scope check (5 min)
+
+Read these **before** running commands — they explain what pass/fail means:
+
+1. [Evaluator scope](evaluator-scope.md) — what `parity_pct = 100%` measures (and does not)
+2. [When not to use OntoLogos](when-not-to-use.md)
+3. [Supported constructs](../reference/supported-constructs.md)
+4. [Protégé axiom counts](protege-axiom-counts.md) — count mismatches are expected
+
 ## Prerequisites
 
 - Rust **1.88+** (for CLI) or Python **3.10+**
@@ -10,14 +19,14 @@ Evaluate OntoLogos against ELK/reasonable without reading the whole codebase. Al
 ```bash
 git clone https://github.com/eddiethedean/ontologos.git
 cd ontologos
-./benchmarks/scripts/download.sh   # Pizza only; Family is vendored
+./benchmarks/scripts/download.sh   # Pizza; Family is vendored
 cargo build -p ontologos-cli --release
 CLI=./target/release/ontologos
 ```
 
-Or install CLI from git: `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli`
+Or install CLI from git: see [CLI installation](../getting-started/cli-install.md).
 
-## Step 1 — Profile detection (2 min)
+## Step 2 — Profile detection (2 min)
 
 ```bash
 $CLI profile benchmarks/data/family.owl
@@ -25,13 +34,17 @@ $CLI profile benchmarks/data/family.owl
 
 **Expected:** `detected: RL` (text) or `"detected": "RL"` (JSON).
 
+Download Pizza first (not bundled in pip/crates.io installs):
+
+--8<-- "snippets/pizza-owl-download.md"
+
 ```bash
-$CLI profile benchmarks/data/pizza.owl
+$CLI profile pizza.owl
 ```
 
 **Expected:** `detected: DL` with diagnostics (Pizza mixes EL shapes with DL constructs).
 
-## Step 2 — OWL RL saturation on Family (5 min)
+## Step 3 — OWL RL saturation on Family (5 min)
 
 ```bash
 $CLI --format json classify --profile rl benchmarks/data/family.owl
@@ -41,19 +54,17 @@ $CLI --format json classify --profile rl benchmarks/data/family.owl
 
 Family is the RL golden corpus — compare inferred counts with [benchmarks](../project/benchmarks.md) if curious.
 
-## Step 3 — OWL EL taxonomy on Pizza (5 min)
-
-Requires `./benchmarks/scripts/download.sh` first.
+## Step 4 — OWL EL taxonomy on Pizza (5 min)
 
 ```bash
-$CLI --format json classify --profile el benchmarks/data/pizza.owl
+$CLI --format json classify --profile el pizza.owl
 ```
 
 **Expected:** `status: "classified"`, `subsumption_count` > 0, `subsumptions` array of IRI pairs.
 
 Golden reference: `crates/ontologos-conformance/golden/pizza-el-subsumptions.json` (maintainer CI).
 
-## Step 4 — RDFS materialization (3 min)
+## Step 5 — RDFS materialization (3 min)
 
 ```bash
 $CLI materialize benchmarks/data/family.owl
@@ -61,76 +72,64 @@ $CLI materialize benchmarks/data/family.owl
 
 **Expected:** materialization report with inferred axioms; same engine as `classify --profile rdfs`.
 
-## Step 5 — OWL DL classification (5 min)
-
-Requires `./benchmarks/scripts/download.sh` for Pizza.
+## Step 6 — OWL DL classification (5 min)
 
 ```bash
-$CLI classify --profile dl --budget-secs 30 benchmarks/data/pizza.owl
+$CLI classify --profile dl --budget-secs 30 pizza.owl
 ```
 
 **Expected:** taxonomy with `subsumption_count` > 0. For preview gating behavior only, use `--profile dl-preview` — see [Preview profiles](preview-profiles.md).
 
-## Step 6 — Python parity (5 min)
+## Step 7 — Python parity (5 min)
 
 ```bash
 pip install ontologos
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
 python - <<'PY'
 from ontologos import Reasoner
 
-r = Reasoner(path="benchmarks/data/family.owl", profile="rl")
+r = Reasoner(path="family.owl", profile="rl")
 report = r.classify()
 assert report["inferred_axioms"] > 0
 print("RL OK:", report["inferred_axioms"], "inferences")
-
-r = Reasoner(path="benchmarks/data/family.owl", profile="el")
-# Family is RL — force EL may error or return sparse taxonomy; use pizza for EL:
 PY
 ```
 
-For EL Python test, run from clone with Pizza downloaded:
+For EL Python test (after Pizza download above):
 
 ```python
 from ontologos import Reasoner
-tax = Reasoner(path="benchmarks/data/pizza.owl", profile="el").classify()
+tax = Reasoner(path="pizza.owl", profile="el").classify()
 assert tax["subsumption_count"] > 0
 print("EL OK:", tax["subsumption_count"], "subsumptions")
 ```
-
-## Step 7 — Honest scope check (5 min)
-
-Read these before filing "missing feature" issues:
-
-1. [Supported constructs](../reference/supported-constructs.md)
-2. [Comparison](../comparison.md) — not HermiT replacement on arbitrary ontologies
-3. [Evaluator scope](evaluator-scope.md) — what `parity_pct = 100%` measures
-4. [Protégé axiom counts](protege-axiom-counts.md) — count mismatches are expected
 
 ## Step 8 — DL consistency and entailment (optional, 5 min)
 
 ```bash
 export ONTOLOGOS_DL_BUDGET_SECS=30
-$CLI consistent --profile dl --budget-secs 30 benchmarks/data/pizza.owl
-$CLI entail --sub http://www.co-ode.org/ontologies/pizza/pizza.owl#VegetarianPizza \
-  --sup http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza benchmarks/data/pizza.owl
+$CLI consistent --profile dl --budget-secs 30 pizza.owl
 ```
 
-Python (PyPI **1.0.0**, from clone with Pizza downloaded):
+Python (PyPI **1.0.0**):
 
 ```python
 from ontologos import Reasoner
 
-r = Reasoner(path="benchmarks/data/pizza.owl", profile="dl", budget_secs=30)
+r = Reasoner(path="pizza.owl", profile="dl", budget_secs=30)
 c = r.check_consistency()
 assert c["complete"] and c["consistent"]
 r.classify()
 ```
 
-Contract tests (facade API surface):
+Contract tests (facade API surface, contributors):
 
 ```bash
 cargo test -p ontologos-contract --release
 ```
+
+See [Contract tests](../examples/contract-tests.md).
 
 ## Pass / fail criteria
 

@@ -7,8 +7,13 @@ cd "$ROOT"
 
 export NO_MKDOCS_2_WARNING=1
 
-SITE_DIR="${1:-site}"
-shift || true
+if [[ -n "${READTHEDOCS:-}" ]]; then
+  SITE_DIR="${READTHEDOCS_OUTPUT}/html"
+  SKIP_DOC_SNIPPET_CARGO="${SKIP_DOC_SNIPPET_CARGO:-1}"
+else
+  SITE_DIR="${1:-site}"
+  shift || true
+fi
 
 OUTPUT="$(
   mkdocs build --strict --site-dir "$SITE_DIR" "$@" 2>&1
@@ -18,7 +23,7 @@ OUTPUT="$(
 }
 echo "$OUTPUT"
 
-if echo "$OUTPUT" | grep -qiE '(^|[[:space:]])WARNING[[:space:]-]'; then
+if echo "$OUTPUT" | grep -qiE '(^|[[:space:]])WARNING[[:space:]-]|Warning from the Material|⚠[[:space:]]+Warning'; then
   echo "error: mkdocs build emitted warnings (see output above)" >&2
   exit 1
 fi
@@ -31,4 +36,8 @@ fi
 chmod +x docs/scripts/check-doc-versions.sh
 ./docs/scripts/check-doc-versions.sh
 chmod +x docs/scripts/check-doc-snippets.sh
-REQUIRE_DOC_SNIPPET_CARGO=1 ./docs/scripts/check-doc-snippets.sh
+if [[ "${SKIP_DOC_SNIPPET_CARGO:-}" == "1" ]]; then
+  ./docs/scripts/check-doc-snippets.sh
+else
+  REQUIRE_DOC_SNIPPET_CARGO=1 ./docs/scripts/check-doc-snippets.sh
+fi

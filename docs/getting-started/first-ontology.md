@@ -1,24 +1,16 @@
 # First Ontology
 
-This guide walks through building a small ontology with the builder API.
+This guide walks through building a small ontology with the builder API — **no repository clone required**.
 
 ## Prerequisites
 
-- Rust 1.88+
-- **Crates.io path:** follow the [builder walkthrough](#step-by-step) below — no clone required
-- **Clone path:** repository clone to run `cargo run -p ontologos-core --example pizza_builder`
+- Rust **1.88+** (`rustc --version` must be >= 1.88.0)
 
 Unfamiliar with OWL terms (TBox, ABox, materialization)? See the [Glossary](../guides/glossary.md).
 
-> **Note:** Classification lives in **`ontologos_facade`** — not on `ontologos_core::Reasoner`. For file-based workflows use **CLI** (`ontologos classify`), **Python** (`Reasoner(path=...).classify()`), **`ontologos_facade::classify`**, or profile crates (`ElClassifier`, `RlEngine`, `RdfsEngine`). See [Choosing an API](../guides/choosing-an-api.md).
+Classification: see [Rust integration contract](../guides/rust-integration-contract.md).
 
-## Run the example
-
-```bash
-cargo run -p ontologos-core --example pizza_builder
-```
-
-## Step by step
+## Step by step (crates.io)
 
 ```rust
 use ontologos_core::{Error, Ontology};
@@ -91,6 +83,14 @@ fn main() -> Result<(), Error> {
 Additional builder methods: `equivalent_object_properties`, `asymmetric_object_property`, `property_domain`, `property_range`, `subproperty_of`.
 
 After building an RL-shaped ontology, saturate with [OWL RL saturation](owl-rl-saturation.md).
+
+## Optional: repository example (clone required)
+
+From a clone:
+
+```bash
+cargo run -p ontologos-core --example pizza_builder
+```
 
 ## Next steps
 

@@ -109,32 +109,35 @@ print(graph["node_count"])
 pip install 'ontologos[pandas]'
 ```
 
+Download Pizza first (not bundled in pip installs):
+
+--8<-- "snippets/pizza-owl-download.md"
+
 ```python
 from ontologos import Reasoner, subsumptions_to_pandas
 
-# EL taxonomy export (requires pizza.owl — see download.sh or curl from repo)
 report = Reasoner(path="pizza.owl", profile="el").classify()
 df = subsumptions_to_pandas(report)
 ```
 
-## CLI (clone or `cargo install --git ...`)
+## CLI
+
+See [CLI installation](../getting-started/cli-install.md).
 
 ```bash
-ontologos classify --profile auto benchmarks/data/family.owl
-ontologos materialize benchmarks/data/family.owl
-ontologos explain --profile el benchmarks/data/pizza.owl   # after download.sh
+ontologos classify --profile auto family.owl
+ontologos materialize family.owl
+ontologos explain --profile el pizza.owl
 ```
-
-See [CLI reference](../reference/cli.md) and [Evaluator playbook](../guides/evaluator-playbook.md).
 
 ## OWL DL evaluation (v1.0.0)
 
-Available on PyPI and crates.io **1.0.0**. Pizza corpus requires clone + `./benchmarks/scripts/download.sh`. See [Install channels](../guides/install-channels.md).
+Available on PyPI and crates.io **1.0.0**.
+
+--8<-- "snippets/pizza-owl-download.md"
 
 ```bash
 pip install ontologos==1.0.0
-# Or with CLI from git:
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli
 ontologos classify --profile dl --budget-secs 30 pizza.owl
 ```
 
@@ -149,15 +152,9 @@ report = reasoner.classify()
 
 Full workflow: [Evaluator playbook](../guides/evaluator-playbook.md) · [DL API reference](../reference/dl.md).
 
-## Contract tests (contributors / evaluators)
+## Contract tests (contributors)
 
-Public API contract (facade-routed, no HermiT JAR required):
-
-```bash
-cargo test -p ontologos-contract --release
-```
-
-Sample case IDs: `crates/ontologos-contract/data/case_ids.txt`. See [Conformance](../reference/conformance.md).
+See [Contract tests](../examples/contract-tests.md) in the Reference section.
 
 ## Install pins
 

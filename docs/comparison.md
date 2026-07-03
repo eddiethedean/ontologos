@@ -1,12 +1,12 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. **Published v1.0.0** covers stable EL, RL, RDFS, **OWL 2 DL**, and **DLSafe SWRL** on crates.io and PyPI.
+Honest positioning for evaluators. **Read [Evaluator scope](guides/evaluator-scope.md) first** — HermiT parity metrics apply to **889 gated conformance cases**, not every real-world ontology.
+
+**Published v1.0.0** covers stable EL, RL, RDFS, **OWL 2 DL**, and **DLSafe SWRL** on crates.io and PyPI.
 
 OntoLogos passes the in-scope HermiT catalog gate (`parity_pct = 100%` on **889** cases) and the composite `true_parity_pct` gate at **100%** in blocking CI. Blocking CI runs **450** Java axiom + **428** OWL WG tests @ 30s.
 
-These metrics apply only to the **gated conformance corpora** — not every real-world ontology. See [Evaluator scope](guides/evaluator-scope.md) and [Release status](project/release-status.md).
-
-See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/research/landscape-2023.md) for the full reasoner survey.
+Before production DL cutover, validate on **your** corpus. See [When not to use OntoLogos](guides/when-not-to-use.md) and [Release status](project/release-status.md).
 
 ## Maturity matrix
 
@@ -60,6 +60,8 @@ OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid ro
 
 ## When to use incumbents directly
 
+See [When not to use OntoLogos](guides/when-not-to-use.md) for the full decision guide. Summary:
+
 - **ELK / whelk-rs:** EL-only workflows; maximum EL performance tuning
 - **reasonable:** RL-only; triple-store or incremental materialization without core model
 - **Konclude:** maximum DL performance on very large ontologies
@@ -72,4 +74,4 @@ OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid ro
 
 Replace JVM-bound **batch** reasoning in Rust/Python pipelines via stable facade APIs, with CLI, Python, and Ontocode integration.
 
-See [Roadmap summary](project/roadmap-summary.md) and [dependency-first ADR](internal/design/dependency-first.md).
+See [Roadmap summary](project/roadmap-summary.md).

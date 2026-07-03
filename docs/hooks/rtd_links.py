@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import re
 
 _REPO = "https://github.com/eddiethedean/ontologos"
+
+# Suppress Material for MkDocs 2.0 upgrade banner on every mkdocs invocation.
+os.environ.setdefault("NO_MKDOCS_2_WARNING", "1")
 
 # Repo-root markdown files included under docs/project/.
 _ROOT_SIBLING = {

@@ -1,4 +1,6 @@
-# MkDocs dependencies for Read the Docs and local doc builds
+# MkDocs dependencies for Read the Docs and local doc builds.
+# Material 9.7.2+ prints an MkDocs 2.0 banner unless NO_MKDOCS_2_WARNING=1
+# (set in docs/build-site.sh, docs/serve-site.sh, and docs/hooks/rtd_links.py).
 mkdocs>=1.6,<2
 mkdocs-material>=9.5,<10
 mkdocs-include-markdown-plugin>=7.0,<8

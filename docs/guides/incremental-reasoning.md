@@ -1,10 +1,10 @@
-# Incremental reasoning (v0.8)
+# Incremental reasoning
 
-OntoLogos **0.8** adds incremental re-classification and materialization when ontologies change between runs.
+Incremental re-classification and materialization when ontologies change between runs. **Stable on v1.0.0** (introduced in v0.8).
 
 ## Enable incremental mode
 
-Set `ReasonerConfig::incremental = true` (default `false` preserves v0.7 batch behavior).
+Set `ReasonerConfig::incremental = true` (default `false` preserves batch behavior).
 
 ```rust
 use ontologos_core::{Profile, Reasoner, ReasonerConfig};
@@ -27,7 +27,7 @@ classify_reasoner(&mut reasoner)?; // incremental path when session is warm
 
 **CLI / Python:** The `--incremental` flag and `incremental=True` enable session mode, but **single-shot** file classify/materialize still runs one pass only. Incremental benefit requires a **library workflow**: load once, classify/materialize, edit axioms, classify/materialize again.
 
-**Python (v0.9):**
+**Python:**
 
 ```python
 from ontologos import OntologyBuilder, Reasoner
