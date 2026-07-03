@@ -1,6 +1,6 @@
 # Python Guide
 
-Python bindings for OntoLogos (PyPI **0.9.0** latest tag; workspace **1.0.0** on `main`) via PyO3 (`pip install ontologos`). Install channels: [Install and channels](install-channels.md). Limitations: [Known limitations](known-limitations.md).
+Python bindings for OntoLogos ship on PyPI as **`ontologos==1.0.0`** via PyO3 (`pip install ontologos`). Install channels: [Install and channels](install-channels.md). Limitations: [Known limitations](known-limitations.md).
 
 OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
 (`ontologos-el` in-house EL, `ontologos-rl` including RDFS via `ontologos_rl::rdfs` → reasonable). Power users who need
@@ -102,17 +102,17 @@ Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly o
 
 **Profiles** (canonical status: [Profile stability matrix](profile-stability.md)):
 
-| Profile | PyPI 0.9.0 | `main` 1.0.0 | `classify()` return value |
-|---------|------------|--------------|---------------------------|
-| `"rdfs"` | Stable | Stable | Materialization report dict |
-| `"rl"` | Stable | Stable | Materialization report dict (includes RL inferences) |
-| `"el"` | Stable | Stable | Taxonomy dict (`subsumption_count`, `subsumptions`, …) |
-| `"auto"` | Stable | Stable | EL taxonomy, RL report, or DL taxonomy (by detection) |
-| `"dl"` | Not production-supported | Stable | Taxonomy dict |
-| `"swrl"` | Not available | Stable | Rules + DL consistency |
-| `"dl-preview"`, `"alc"` | Preview (errors common) | Preview | Taxonomy dict — see [Preview profiles](preview-profiles.md) |
+| Profile | Status on PyPI 1.0.0 | `classify()` return value |
+|---------|----------------------|---------------------------|
+| `"rdfs"` | Stable | Materialization report dict |
+| `"rl"` | Stable | Materialization report dict (includes RL inferences) |
+| `"el"` | Stable | Taxonomy dict (`subsumption_count`, `subsumptions`, …) |
+| `"auto"` | Stable | EL taxonomy, RL report, or DL taxonomy (by detection) |
+| `"dl"` | Stable | Taxonomy dict |
+| `"swrl"` | Stable | Rules + DL consistency |
+| `"dl-preview"`, `"alc"` | Preview | Taxonomy dict — see [Preview profiles](preview-profiles.md) |
 
-On **PyPI 0.9.0**, `"dl"`, `"swrl"`, `"alc"`, and `"dl-preview"` may error or behave differently than on `main`. Build from source for DL/SWRL — [Install and channels](install-channels.md).
+Upgrading from 0.9.x? See [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md).
 
 Invalid profile strings raise `RuntimeError`.
 

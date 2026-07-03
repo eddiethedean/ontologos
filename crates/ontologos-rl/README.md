@@ -2,7 +2,7 @@
 
 OWL 2 RL forward-chaining rule engine for [OntoLogos](https://github.com/eddiethedean/ontologos).
 
-**Install (published v0.9.0):**
+**Install (published v1.0.0):**
 
 ```toml
 [dependencies]

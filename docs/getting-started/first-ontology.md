@@ -38,7 +38,7 @@ fn main() -> Result<(), Error> {
     let supers = ontology.direct_superclasses(pizza);
     assert_eq!(supers.len(), 1);
 
-    // 3. Round-trip through JSON (v3 writer on workspace 1.0.0; v2 still readable on 0.9.0)
+    // 3. Round-trip through JSON (v3 writer on v1.0.0; v2 still readable)
     let json = ontology.to_json()?;
     let restored = Ontology::from_json(&json)?;
     assert_eq!(restored, ontology);

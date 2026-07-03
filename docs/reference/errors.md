@@ -58,7 +58,7 @@ Errors from the core crate: [`Error`](https://docs.rs/ontologos-core/1.0.0/ontol
 
 **Cause:** Axiom failed validation (wrong entity kind, duplicate operands, self-inverse property, unknown IRI in JSON axiom, etc.).
 
-**Recovery:** Check axiom shape against [SPEC.md](../project/spec.md) and [JSON snapshot](../json-snapshot-v3.md).
+**Recovery:** Check axiom shape against [SPEC.md](https://github.com/eddiethedean/ontologos/blob/main/SPEC.md) and [JSON snapshot](../json-snapshot-v3.md).
 
 ### `ParseNotAvailable`
 

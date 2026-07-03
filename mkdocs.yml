@@ -2,7 +2,7 @@
 # https://www.mkdocs.org/
 
 site_name: OntoLogos
-site_description: Modular Rust ontology reasoner — OWL EL, RL, and RDFS
+site_description: Modular Rust ontology reasoner — OWL EL, RL, RDFS, OWL 2 DL, and SWRL
 site_url: https://ontologos.readthedocs.io/
 repo_url: https://github.com/eddiethedean/ontologos
 repo_name: eddiethedean/ontologos
@@ -21,9 +21,13 @@ exclude_docs: |
   internal/hermit-parity-honest-assessment.md
   internal/planned-backlog-triage.md
   internal/v0.5-docs-plan.md
+  internal/parity-roadmap.md
   README.md
   project/overview.md
   project/roadmap.md
+  project/post-1.0-doc-update.md
+  project/release-1.0-checklist.md
+  project/spec.md
 
 theme:
   name: material
@@ -137,15 +141,12 @@ nav:
   - Project:
       - FAQ: project/faq.md
       - Release status: project/release-status.md
-      - Release 1.0 checklist: project/release-1.0-checklist.md
-      - Post-1.0 doc update: project/post-1.0-doc-update.md
       - Release notes: project/release-notes.md
       - Roadmap summary: project/roadmap-summary.md
       - Changelog: project/changelog.md
       - Contributing: project/contributing.md
       - HermiT burndown (contributors): guides/hermit-burndown.md
       - Documentation build: readthedocs.md
-      - Technical spec: project/spec.md
       - Benchmarks: project/benchmarks.md
       - Security policy: project/security-policy.md
       - Code of conduct: project/code-of-conduct.md

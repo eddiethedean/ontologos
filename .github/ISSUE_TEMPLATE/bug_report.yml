@@ -9,15 +9,15 @@ body:
       value: |
         Check [Troubleshooting](https://ontologos.readthedocs.io/en/latest/guides/troubleshooting.html) and [FAQ](https://ontologos.readthedocs.io/en/latest/project/faq.html) first.
 
-        **Which release channel?** Latest tag is **v0.9.0** on crates.io/PyPI; **`main`** is **1.0.0** workspace (DL, full facade). Say which you used.
+        **Which release channel?** Latest release is **v1.0.0** on crates.io/PyPI. Say which version you used.
 
   - type: dropdown
     id: channel
     attributes:
       label: Release channel
       options:
-        - crates.io / PyPI 0.9.0
-        - git main (1.0.0 workspace)
+        - crates.io / PyPI 1.0.0
+        - git main (development)
         - Other / not sure
     validations:
       required: true
@@ -38,7 +38,7 @@ body:
     id: version
     attributes:
       label: Version or commit
-      placeholder: e.g. ontologos==0.9.0 or git sha
+      placeholder: e.g. ontologos==1.0.0 or git sha
     validations:
       required: true
 

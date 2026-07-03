@@ -5,9 +5,9 @@
 [![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/en/latest/guides/python/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](https://github.com/eddiethedean/ontologos/blob/main/LICENSE-MIT)
 
-Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a Rust-native OWL reasoner for **RDFS**, **OWL RL**, and **OWL EL** classification on **PyPI 0.9.0**. Build from `main` for **DL** and **SWRL**.
+Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a Rust-native OWL reasoner for **RDFS**, **OWL RL**, **OWL EL**, **OWL 2 DL**, and **SWRL** on PyPI **1.0.0**.
 
-> **Channel:** `pip install ontologos` installs **0.9.0** (EL, RL, RDFS). `profile="dl"` requires workspace **1.0.0** from `main`. See [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html).
+> **Install:** `pip install ontologos` (v1.0.0). Production profiles: `rdfs`, `rl`, `el`, `auto`, `dl`, `swrl`. Preview: `alc`, `dl-preview`. See [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html).
 
 Load `.owl` / `.ttl` files or build ontologies in memory, run the same profile engines as the CLI, and export taxonomies to pandas or Polars. Powered by PyO3 and the stable Python ABI (`abi3`).
 
@@ -16,7 +16,7 @@ Load `.owl` / `.ttl` files or build ontologies in memory, run the same profile e
 ## Features
 
 - **File or in-memory** — `Reasoner(path=...)` or `Ontology` / `OntologyBuilder`
-- **Profiles** — `"rdfs"`, `"rl"`, `"el"`, `"auto"` on **PyPI 0.9.0**; `"dl"`, `"dl-preview"`, `"alc"`, `"swrl"` on workspace **`main` / 1.0.0**
+- **Profiles** — `"rdfs"`, `"rl"`, `"el"`, `"auto"`, `"dl"`, `"swrl"` on **PyPI 1.0.0**; `"dl-preview"`, `"alc"` are preview
 - **Classify** — RDFS/RL materialization reports or EL taxonomy dicts
 - **Explain** — proof graph dicts with IRI-resolved conclusions (EL full traces)
 - **Incremental** — multi-pass `add_subclass_of` / `remove_subclass_of` with `incremental=True`
@@ -192,7 +192,7 @@ pytest tests/test_pizza_golden.py -q
 
 ## What OntoLogos is (and is not)
 
-OntoLogos is an **orchestration layer**: profile detection, a unified ontology model, CLI, Python wheels, and security limits on top of in-house EL and **reasonable** for RL/RDFS. It maps a **subset** of OWL — not full OWL DL / HermiT replacement.
+OntoLogos is an **orchestration layer**: profile detection, a unified ontology model, CLI, Python wheels, and security limits on top of in-house EL, **ontologos-dl** for OWL 2 DL, and **reasonable** for RL/RDFS. It maps a **subset** of OWL — validate on your corpus before production cutover.
 
 For engine-only workflows, consider [reasonable](https://crates.io/crates/reasonable), [whelk-rs](https://github.com/INCATools/whelk-rs), or [horned-owl](https://crates.io/crates/horned-owl) directly.
 
@@ -202,7 +202,7 @@ For engine-only workflows, consider [reasonable](https://crates.io/crates/reason
 |----------|-----|
 | Python guide | [readthedocs — Python](https://ontologos.readthedocs.io/en/latest/guides/python/) |
 | Getting started | [readthedocs](https://ontologos.readthedocs.io/en/latest/getting-started/) |
-| Migration v0.8 → v0.9 | [migration guide](https://ontologos.readthedocs.io/en/latest/migration/v0.8.x-to-v0.9.0/) |
+| Migration v0.9 → v1.0 | [migration guide](https://ontologos.readthedocs.io/en/latest/migration/v0.9.x-to-v1.0.0/) |
 | Repository | [github.com/eddiethedean/ontologos](https://github.com/eddiethedean/ontologos) |
 | Rust crates | [crates.io — ontologos-core](https://crates.io/crates/ontologos-core) |
 | Changelog | [CHANGELOG.md](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) |

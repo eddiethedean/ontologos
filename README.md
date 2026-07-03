@@ -16,7 +16,7 @@ Library-first orchestration: **load → detect profile → classify/materialize*
 
 See [Install channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html) and [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html) for preview profiles (`alc`, `dl-preview`).
 
-> **Known limitations:** OntoLogos does not resolve `owl:imports` and maps a subset of OWL axioms. See [Known limitations](https://ontologos.readthedocs.io/en/latest/guides/known-limitations.html).
+> **Known limitations:** Remote `owl:imports` are never fetched. RDF/XML merges **local** import files only; Turtle and OWL Functional load a single file. OntoLogos maps a subset of OWL axioms. See [Known limitations](https://ontologos.readthedocs.io/en/latest/guides/known-limitations.html) and [OWL imports](https://ontologos.readthedocs.io/en/latest/reference/owl-imports.html).
 
 **In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "1.0.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
 
@@ -70,7 +70,7 @@ See [Install channels](https://ontologos.readthedocs.io/en/latest/guides/install
 | **Python data pipelines** | `Reasoner`, `OntologyBuilder`, `explain()`, optional pandas/polars export |
 | **OWL RL / RDFS workflows** | Forward-chaining via **reasonable** through `ontologos-rl` (`rdfs` and `abox` modules) |
 | **OWL EL taxonomies** | In-house completion in `ontologos-el` (no Java) |
-| **OWL 2 DL workflows** | `ontologos-dl` on **v1.0.0**: **100%** in-scope HermiT catalog parity @ 30s — validate on your corpus |
+| **OWL 2 DL workflows** | `ontologos-dl` on **v1.0.0**: **100%** in-scope HermiT catalog parity @ 30s on **889 gated cases** — validate on your corpus |
 
 ---
 

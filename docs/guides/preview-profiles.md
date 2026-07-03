@@ -3,7 +3,7 @@
 Limitations for **preview** profiles only. Stable profiles (EL, RL, RDFS, `dl`, SWRL on `main`) are documented in the [Profile stability matrix](profile-stability.md).
 
 !!! warning "Preview only (`alc`, `dl-preview`)"
-    Preview engines may return `PreviewLimit` or `ResourceLimit`. For production OWL DL on `main`, use `--profile dl` (stable on workspace 1.0.0). For PyPI 0.9.0, use EL/RL/RDFS only.
+    Preview engines may return `PreviewLimit` or `ResourceLimit`. For production OWL DL, use `--profile dl` (stable on v1.0.0). See [Profile stability matrix](profile-stability.md).
 
 ## Profile summary (preview)
 
@@ -24,7 +24,7 @@ ontologos classify --profile dl-preview benchmarks/data/family.owl
 ontologos classify --profile alc ontology.owl
 ```
 
-For stable DL on `main`:
+For stable DL on v1.0.0:
 
 ```bash
 ontologos classify --profile dl ontology.owl
@@ -35,12 +35,15 @@ ontologos classify --profile dl ontology.owl
 ```python
 from ontologos import Reasoner
 
-# Preview only — requires workspace 1.0.0 / main
+# Preview only
 Reasoner(path="ontology.owl", profile="dl-preview").classify()
 Reasoner(path="ontology.owl", profile="alc").classify()
+
+# Production OWL DL
+Reasoner(path="ontology.owl", profile="dl").classify()
 ```
 
-On **PyPI 0.9.0**, these profiles typically error. See [Install and channels](install-channels.md).
+See [Install and channels](install-channels.md) and [Profile stability matrix](profile-stability.md).
 
 ## Rust
 
@@ -49,7 +52,7 @@ use ontologos_core::{Profile, Reasoner};
 use ontologos_facade::{self, ClassifyOutcome};
 
 let mut reasoner = Reasoner::builder()
-    .profile(Profile::DlPreview)  // preview gating; use Profile::Dl for stable path on main
+    .profile(Profile::DlPreview)  // preview gating; use Profile::Dl for stable production path
     .build(ontology)?;
 match ontologos_facade::classify(&mut reasoner)? {
     ClassifyOutcome::Taxonomy(t) => {

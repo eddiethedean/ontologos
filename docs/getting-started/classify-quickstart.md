@@ -8,7 +8,7 @@ Run OWL **classification** from crates.io — no repository clone. Uses `ontolog
 ## Prerequisites
 
 - Rust **1.88+**
-- OntoLogos crates — see [Release status](../project/release-status.md) for published vs `main` pins
+- OntoLogos crates — see [Release status](../project/release-status.md) for published **v1.0.0** pins
 
 ```bash
 curl -L -o family.owl \
@@ -24,8 +24,6 @@ ontologos-core = "1.0.0"
 ontologos-parser = "1.0.0"
 ontologos-facade = "1.0.0"
 ```
-
-Build from `main`? Pin `"1.0.0"` on all `ontologos-*` crates instead.
 
 ## Classify with profile auto
 

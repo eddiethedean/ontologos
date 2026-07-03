@@ -94,7 +94,7 @@ Or CLI: `ontologos profile file.owl`
 
 ### RDFS TBox materialization
 
-**Crates:** `ontologos-rl` (+ parser if loading files). RDFS lives in `ontologos_rl::rdfs` (workspace **1.0.0** and published **0.9.0** via `ontologos-rl`) — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md) if you still depend on the removed `ontologos-rdfs` shim.
+**Crates:** `ontologos-rl` (+ parser if loading files). RDFS lives in `ontologos_rl::rdfs` — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md) if you still depend on the removed `ontologos-rdfs` shim.
 
 **Direct:**
 
@@ -172,7 +172,7 @@ See [OWL EL classification](../getting-started/owl-el-classification.md).
 
 ### Python
 
-**Package:** `pip install ontologos` (v0.9.0)
+**Package:** `pip install ontologos` (v1.0.0)
 
 ```python
 from ontologos import Reasoner
@@ -206,7 +206,7 @@ There is no single `ontologos` meta-crate on crates.io.
 |---------|-----|
 | `Ontology::from_file` | Use `ontologos_parser::load_ontology` |
 | `Reasoner::classify()` for RL/RDFS/EL/DL | Use `ontologos_facade::classify` or profile crate helpers |
-| Expect CLI `classify` to match HermiT DL | Preview only — see [Preview profiles](preview-profiles.md) |
+| Expect CLI `classify` to match HermiT on every ontology | Validate on your corpus — see [Evaluator scope](evaluator-scope.md) |
 | Compare axiom count to Protégé | See [supported constructs](../reference/supported-constructs.md) |
 | `Profile::Auto` on core reasoner | Use `ontologos_facade::classify`, CLI `classify --profile auto`, or Python `profile="auto"` |
 

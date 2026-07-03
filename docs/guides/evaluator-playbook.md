@@ -61,13 +61,15 @@ $CLI materialize benchmarks/data/family.owl
 
 **Expected:** materialization report with inferred axioms; same engine as `classify --profile rdfs`.
 
-## Step 5 — DL preview smoke (5 min, optional)
+## Step 5 — OWL DL classification (5 min)
+
+Requires `./benchmarks/scripts/download.sh` for Pizza.
 
 ```bash
-$CLI classify --profile dl-preview benchmarks/data/family.owl
+$CLI classify --profile dl --budget-secs 30 benchmarks/data/pizza.owl
 ```
 
-**Expected:** taxonomy output + preview warning on stderr. May hit `PreviewLimit` or `ResourceLimit` on larger DL ontologies — see [Preview profiles](preview-profiles.md).
+**Expected:** taxonomy with `subsumption_count` > 0. For preview gating behavior only, use `--profile dl-preview` — see [Preview profiles](preview-profiles.md).
 
 ## Step 6 — Python parity (5 min)
 
@@ -104,20 +106,24 @@ Read these before filing "missing feature" issues:
 3. [Evaluator scope](evaluator-scope.md) — what `parity_pct = 100%` measures
 4. [Protégé axiom counts](protege-axiom-counts.md) — count mismatches are expected
 
-## Step 8 — Evaluate DL on `main` (optional, 10 min)
-
-PyPI **0.9.0** does not ship production DL. Build from git:
+## Step 8 — DL consistency and entailment (optional, 5 min)
 
 ```bash
-git clone https://github.com/eddiethedean/ontologos.git
-cd ontologos
-./benchmarks/scripts/download.sh
-cargo build -p ontologos-cli --release
 export ONTOLOGOS_DL_BUDGET_SECS=30
-./target/release/ontologos consistent --profile dl benchmarks/data/pizza.owl
-./target/release/ontologos classify --profile dl benchmarks/data/pizza.owl
-./target/release/ontologos entail --sub http://www.co-ode.org/ontologies/pizza/pizza.owl#VegetarianPizza \
+$CLI consistent --profile dl --budget-secs 30 benchmarks/data/pizza.owl
+$CLI entail --sub http://www.co-ode.org/ontologies/pizza/pizza.owl#VegetarianPizza \
   --sup http://www.co-ode.org/ontologies/pizza/pizza.owl#Pizza benchmarks/data/pizza.owl
+```
+
+Python (PyPI **1.0.0**, from clone with Pizza downloaded):
+
+```python
+from ontologos import Reasoner
+
+r = Reasoner(path="benchmarks/data/pizza.owl", profile="dl", budget_secs=30)
+c = r.check_consistency()
+assert c["complete"] and c["consistent"]
+r.classify()
 ```
 
 Contract tests (facade API surface):
@@ -134,7 +140,7 @@ cargo test -p ontologos-contract --release
 | Pizza EL subsumptions | `subsumption_count > 0` |
 | Profile detection | Family → RL, Pizza → DL |
 | Python RL matches CLI | Same Family report shape |
-| DL preview | Runs or fails with documented error type |
+| DL stable on Pizza | `subsumption_count > 0` with `--profile dl` |
 
 ## Related
 

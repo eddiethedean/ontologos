@@ -170,7 +170,7 @@ pytest tests/ -q
 | `docs/internal/` | Maintainer roadmap, ADRs, parity notes |
 | `benchmarks/` | Benchmark ontology manifest and corpora |
 
-See [Roadmap summary](docs/project/roadmap-summary.md) (full checklist: [docs/internal/roadmap.md](docs/internal/roadmap.md)).
+See [Roadmap summary](docs/project/roadmap-summary.md) (full checklist: [internal roadmap](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/roadmap.md)).
 
 ## Issue labels
 
@@ -199,7 +199,7 @@ Catalog mechanics: [tests/hermit/README.md](tests/hermit/README.md).
 
 ## Releases
 
-**Next publish:** follow [release-1.0-checklist.md](docs/project/release-1.0-checklist.md) for future releases. See [migration hub](docs/migration/index.md) for upgrade paths.
+**Next publish:** follow [release-1.0-checklist](https://github.com/eddiethedean/ontologos/blob/main/docs/project/release-1.0-checklist.md) for future releases. See [migration hub](docs/migration/index.md) for upgrade paths.
 
 ### Pre-release checks
 
@@ -218,7 +218,7 @@ Create or update [`.github/release/vX.Y.Z.md`](.github/release/) with highlights
 
 `cargo publish --dry-run` for downstream crates requires prior crates at the new version on crates.io (or use `cargo package -p ontologos-core --allow-dirty` per crate in publish order). On release, CI publishes in dependency order via [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh).
 
-After tagging, run [post-1.0-doc-update.md](docs/project/post-1.0-doc-update.md) to collapse dual-channel messaging.
+After tagging, run [post-1.0-doc-update](https://github.com/eddiethedean/ontologos/blob/main/docs/project/post-1.0-doc-update.md) to collapse dual-channel messaging.
 
 Optional full local packaging check:
 

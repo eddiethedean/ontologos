@@ -67,7 +67,7 @@ See [OWL imports reference](../reference/owl-imports.md). For remote or multi-fo
 
 ## `classify` / `explain` behavior
 
-CLI **`classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl`** routes via `ontologos-facade`. Use **`materialize`** for explicit RDFS. **`explain`** is available in v0.9.0 (EL full traces; RL/RDFS asserted-only).
+CLI **`classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl`** routes via `ontologos-facade`. Use **`materialize`** for explicit RDFS. **`explain`** is available on v1.0.0 (EL full traces; RL/RDFS asserted-only).
 
 Library users: call **`ontologos_facade::classify`** or profile crate helpers (`ontologos_el::classify_reasoner`, `ontologos_rl::rdfs::classify_reasoner`, `ontologos_rl::classify_reasoner`, `ontologos_dl::classify`). Classification is **not** on `ontologos_core::Reasoner`. CLI and Python route via the facade. See [Facade API](facade-api.md), [CLI reference](../reference/cli.md), [errors.md](../reference/errors.md), and [Choosing an API](../guides/choosing-an-api.md).
 
@@ -75,10 +75,9 @@ Library users: call **`ontologos_facade::classify`** or profile crate helpers (`
 
 | Error | Symptom | Fix |
 |-------|---------|-----|
-| `PreviewLimit` | Construct not in preview scope | Use stable profile or simplify ontology |
+| `PreviewLimit` | Construct not in preview scope | Use stable `dl` profile or simplify ontology |
 | `ResourceLimit` | Tableau expansion budget exhausted (4096) | Reduce ontology size or retry with smaller corpus |
-| `NotImplemented` (SWRL) | `--profile swrl` on **PyPI 0.9.0** | SWRL requires workspace **1.0.0** / `main` — see [Profile stability](profile-stability.md) |
-| Wrong profile on DL ontology | Unexpected taxonomy shape | Run `ontologos profile file.owl`; try `--profile dl-preview` |
+| Wrong profile on DL ontology | Unexpected taxonomy shape | Run `ontologos profile file.owl`; use `--profile dl` |
 
 See [Preview profiles](preview-profiles.md).
 

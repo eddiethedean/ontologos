@@ -2,7 +2,7 @@
 
 RDFS TBox materialization via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.0.0) (`ontologos_rl::rdfs`): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
 
-> **0.9.0 legacy:** Published crates.io still ships standalone [`ontologos-rdfs`](https://docs.rs/ontologos-rdfs/1.0.0) (`use ontologos_rdfs::RdfsEngine`). Workspace **1.0.0** merges RDFS into `ontologos-rl` — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md).
+> **v0.9.x legacy:** The standalone `ontologos-rdfs` crate was removed in **1.0.0**. Use `ontologos_rl::rdfs::RdfsEngine` — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md).
 
 The engine delegates to [`reasonable`](https://crates.io/crates/reasonable) and applies bridge fallbacks for RDFS rules not yet upstream (transitive `subPropertyOf`, domain/range along property hierarchies). You may therefore see OWL RL-style inferences beyond strict RDFS on some corpora.
 

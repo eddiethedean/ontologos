@@ -172,7 +172,7 @@ When merging triples from reasonable back into core, apply [merge limits](../sec
 
 ## Python services
 
-v0.9.0 Python returns structured report dicts from `classify()`, supports `explain()`, incremental mutations, and optional DataFrame export:
+Python **1.0.0** returns structured report dicts from `classify()`, supports `explain()`, incremental mutations, and optional DataFrame export:
 
 ```python
 from ontologos import Reasoner
@@ -188,7 +188,7 @@ reasoner.classify()
 
 Positional `Reasoner("file.owl")` still works; prefer keyword `path=` for clarity.
 
-See [Python guide](python.md) and [v0.8→v0.9 migration](../migration/v0.8.x-to-v0.9.0.md).
+See [Python guide](python.md) and [v0.9.x → v1.0.0 migration](../migration/v0.9.x-to-v1.0.0.md).
 
 ## Incremental pipelines
 

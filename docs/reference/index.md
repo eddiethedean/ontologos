@@ -20,7 +20,7 @@ API and CLI reference for OntoLogos. Install channels: [Install and channels](..
 
 ## Rust crates (docs.rs)
 
-Published channel links point to **0.9.0** until the v1.0.0 tag ships. Build from `main` for **1.0.0** API docs: `cargo doc --open -p ontologos-facade`.
+Published API docs: [docs.rs/ontologos-core/1.0.0](https://docs.rs/ontologos-core/1.0.0). Local: `cargo doc --open -p ontologos-facade`.
 
 | Crate | Reference |
 |-------|-----------|

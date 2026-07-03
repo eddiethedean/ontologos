@@ -49,9 +49,9 @@ Composite minimum of:
 
 - Parity on ontologies **outside** the gated catalog
 - Identical taxonomy output to HermiT on every corpus (Tier C allows sound superset)
-- Production readiness on **PyPI 0.9.0** for OWL DL — DL requires **`main`** or future **v1.0.0** tag
-- Interactive editing (Protégé replacement)
+- Production readiness on arbitrary real-world ontologies — validate your corpus
 - Full SWRL beyond DLSafe subset
+- Interactive editing (Protégé replacement)
 
 ## Tier overview
 
@@ -66,8 +66,8 @@ Composite minimum of:
 
 | Channel | DL evaluation | Command |
 |---------|---------------|---------|
-| PyPI **0.9.0** | EL/RL/RDFS only | `pip install ontologos==1.0.0` |
-| **`main` workspace** | Full DL + SWRL | Build from git; `ontologos classify --profile dl` |
+| PyPI / crates.io **1.0.0** | Full DL + SWRL | `pip install ontologos==1.0.0` or `ontologos-* = "1.0.0"` |
+| CLI (git) | Full profiles | `cargo install --git … --tag v1.0.0 ontologos-cli` |
 
 See [Evaluator playbook](evaluator-playbook.md) and [Comparison](../comparison.md).
 

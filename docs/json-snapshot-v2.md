@@ -155,4 +155,4 @@ To migrate:
 ## Related
 
 - [Error reference](reference/errors.md)
-- [SPEC.md](project/spec.md) — core data model
+- [SPEC.md](https://github.com/eddiethedean/ontologos/blob/main/SPEC.md) — core data model

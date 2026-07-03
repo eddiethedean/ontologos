@@ -55,7 +55,7 @@ Classification reflects what the reasoner can use from the core model; diagnosti
 |---------|---------|
 | `El` | OWL 2 EL — in-house completion classification (`ontologos-el`) |
 | `Rl` | OWL 2 RL — rule-based materialization via reasonable |
-| `Ql` | OWL 2 QL — **detection only** (no reasoning engine in v0.9.0) |
+| `Ql` | OWL 2 QL — **detection only** (no QL reasoning engine; use ELK or another QL reasoner) |
 | `Dl` | Outside EL/RL/QL — **detection only** (full DL reasoning is v2.0) |
 
 ## QL and DL: detection only

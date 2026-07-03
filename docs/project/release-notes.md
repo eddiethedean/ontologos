@@ -4,7 +4,7 @@ Annotated release summaries live in the repository under [`.github/release/`](ht
 
 | Version | Theme | Notes |
 |---------|-------|-------|
-| v1.0.0 (workspace) | HermiT parity milestone | Auto-promotion pipeline, DL datatype fixes, 100 active conformance tests |
+| [v1.0.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.0.0.md) | HermiT parity milestone | DL + SWRL stable on crates.io/PyPI; 1048 active conformance tests |
 | [v0.9.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.9.0.md) | Python ecosystem | `Ontology`, `explain()`, incremental Python, DataFrame export |
 | [v0.8.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.8.0.md) | Incremental reasoning | Dirty tracking, sessions, `--incremental` |
 | [v0.7.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.7.0.md) | Dependency-first adapters | Bridge crate, semver alignment |
@@ -13,16 +13,14 @@ Annotated release summaries live in the repository under [`.github/release/`](ht
 
 Full history: [CHANGELOG](changelog.md) on GitHub.
 
-## Since v0.9.0 tag (development on `main`)
+## v1.0.0 highlights
 
 See [Profile stability matrix](../guides/profile-stability.md) for canonical status. Highlights:
 
 - **`ontologos-facade`:** unified `classify()` for CLI, Python, and multi-profile Rust apps
 - **`Profile::Auto` + DL:** DL-detected ontologies route through `ontologos-dl` hybrid classifier
-- **`dl` and `swrl`:** stable on workspace **1.0.0** / `main`; **not on PyPI 0.9.0**
+- **`dl` and `swrl`:** stable on **PyPI / crates.io 1.0.0**
 - **`alc`, `dl-preview`:** preview profiles — see [Preview profiles](../guides/preview-profiles.md)
-- **DL correctness fixes:** domain clause wildcards, role subsumption direction, `ResourceLimit` on budget exhaustion, taxonomy merge preserves equivalences
-- **Routing fixes:** EL path no longer misroutes `Profile::Dl`; SWRL uses dedicated engine on `main`
 
 See [Facade API](../guides/facade-api.md) and [Architecture](../architecture.md).
 

@@ -36,10 +36,10 @@ Facet enumeration / `ValueSpaceSubset.hasCardinalityAtLeast` checks stay waived.
 
 ## Related OWLLink exclusions (not datatype manager)
 
-`OWLLinkTest.testBobTestC` and `testBobTests` remain in `EXCLUDED_IDS` — DL ABox property-value retrieval and multi-fixture entailment on the Liebig corpus need inverse/transitive role materialization beyond current RL ABox saturation. See [parity-roadmap.md](../parity-roadmap.md).
+`OWLLinkTest.testBobTestC` and `testBobTests` remain in `EXCLUDED_IDS` — DL ABox property-value retrieval and multi-fixture entailment on the Liebig corpus need inverse/transitive role materialization beyond current RL ABox saturation. See [parity-roadmap](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/parity-roadmap.md).
 
 ## Related
 
 - [alc-boundary.md](alc-boundary.md) — ALC vs DL construct routing
-- [parity-roadmap.md](../parity-roadmap.md) — Tier B4 burn-down
+- [parity-roadmap](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/parity-roadmap.md) — Tier B4 burn-down
 - `tests/hermit/internal_ports.toml` — structural/clausification datatype goldens (B3)

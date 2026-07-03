@@ -39,7 +39,7 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**v1.0.0 (published)** — `ontologos-dl` passes the HermiT Tier A catalog (**450** runnable Java + **428** OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora** (`parity_pct = 100%` on **889** in-scope cases), not a guarantee for every real-world ontology. Composite **`true_parity_pct`** is **100%** (blocking CI). See [Evaluator scope](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope/) for what each metric measures. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, use `classify --profile dl` (or `profile="dl"` in Python). Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
+**v1.0.0 (published)** — `ontologos-dl` passes the HermiT Tier A catalog (**450** runnable Java + **428** OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora** (`parity_pct = 100%` on **889 in-scope cases**), not a guarantee for every real-world ontology. Composite **`true_parity_pct`** is **100%** (blocking CI). See [Evaluator scope](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope/) for what each metric measures. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, use `classify --profile dl` (or `profile="dl"` in Python). Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
 
 OntoLogos is for adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
 
@@ -168,9 +168,9 @@ No. Each `Reasoner` instance should be used from one thread at a time. Create se
 
 ## Why are axioms missing after I load an OWL file?
 
-**`owl:imports` are not resolved.** OntoLogos loads a single file only. Axioms from imported ontologies are absent unless you merge files first.
+**Remote `owl:imports` are never fetched.** RDF/XML (`.owl`, `.rdf`, `.xml`) merges **local** `owl:imports` when using `load_ontology()`. Turtle and OWL Functional load only the file you specify.
 
-**Workaround:** Bundle imports with [ROBOT](http://robot.obolibrary.org/) (`robot merge --input ontology.owl --output merged.owl`) or OWL API, then load the merged file. See [Load an OWL file](https://ontologos.readthedocs.io/en/latest/getting-started/load-owl-file/).
+**Workaround for remote or multi-format bundles:** merge with [ROBOT](http://robot.obolibrary.org/) (`robot merge --input ontology.owl --output merged.owl`) or OWL API, then load the merged file. See [OWL imports](https://ontologos.readthedocs.io/en/latest/reference/owl-imports.html) and [Load an OWL file](https://ontologos.readthedocs.io/en/latest/getting-started/load-owl-file/).
 
 ## Which version should I `cargo add` or `pip install`?
 

@@ -124,6 +124,26 @@ FORBIDDEN=(
   "Latest tagged release:** **v0.8.0"
   "Quick paths for upgrading to **v0.9.0**"
   "v0.9.0 on \`main\`"
+  "not on PyPI 0.9.0"
+  "PyPI **0.9.0**"
+  "PyPI 0.9.0"
+  "requires workspace **1.0.0** / \`main\`"
+  "Requires build from \`main\`"
+  "does not resolve \`owl:imports\`"
+)
+STALE_CHANNEL_SCAN=(
+  docs/getting-started
+  docs/guides
+  docs/reference
+  docs/examples
+  docs/comparison.md
+  docs/architecture.md
+  docs/index.md
+  docs/security.md
+  README.md
+  FAQ.md
+  crates/ontologos-py/README.md
+  .github/ISSUE_TEMPLATE
 )
 for phrase in "${FORBIDDEN[@]}"; do
   if grep -Rql --fixed-strings --exclude=check-doc-versions.sh \
@@ -132,6 +152,31 @@ for phrase in "${FORBIDDEN[@]}"; do
     FAIL=1
   fi
 done
+
+# Stale dual-channel messaging outside migration/historical docs.
+STALE_CHANNEL_PHRASES=(
+  "not on PyPI 0.9.0"
+  "PyPI **0.9.0**"
+  "PyPI 0.9.0"
+  "requires workspace **1.0.0** / \`main\`"
+  "Requires build from \`main\`"
+  "not available on PyPI **0.9.0**"
+)
+while IFS= read -r file; do
+  case "$file" in
+    docs/migration/*|docs/internal/*|docs/project/post-1.0-doc-update.md|docs/project/release-notes.md|docs/project/release-status.md|docs/project/spec.md)
+      continue
+      ;;
+  esac
+  for phrase in "${STALE_CHANNEL_PHRASES[@]}"; do
+    if grep -Fq "$phrase" "$file" 2>/dev/null; then
+      echo "ERROR: stale channel phrase in ${file}: ${phrase}"
+      FAIL=1
+    fi
+  done
+done < <(
+  find "${STALE_CHANNEL_SCAN[@]}" -type f \( -name '*.md' -o -name '*.yml' \) 2>/dev/null | sort
+)
 
 # Profile list must appear in canonical doc surfaces
 PROFILE_MARKERS=( "dl-preview" "alc" "swrl" )

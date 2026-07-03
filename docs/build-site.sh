@@ -23,6 +23,11 @@ if echo "$OUTPUT" | grep -qiE '(^|[[:space:]])WARNING[[:space:]-]'; then
   exit 1
 fi
 
+if echo "$OUTPUT" | grep -q 'excluded from the built site'; then
+  echo "error: mkdocs build has links to excluded documentation (see output above)" >&2
+  exit 1
+fi
+
 chmod +x docs/scripts/check-doc-versions.sh
 ./docs/scripts/check-doc-versions.sh
 chmod +x docs/scripts/check-doc-snippets.sh

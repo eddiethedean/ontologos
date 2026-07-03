@@ -49,7 +49,7 @@ Pick the path that matches how you work:
 
     ---
 
-    Compare vs ELK, reasonable, and HermiT fixtures; 30-minute Pizza/Family playbook.
+    Compare vs ELK, reasonable, and HermiT fixtures; 30-minute playbook. **No Rust required:** `pip install ontologos` + `family.owl`.
 
     [:octicons-arrow-right-24: Evaluator playbook](guides/evaluator-playbook.md)
 

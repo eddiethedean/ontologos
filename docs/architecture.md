@@ -148,8 +148,8 @@ Owns conversions between models for parsing and RL/RDFS adapters:
 | OWL RL | `ontologos-rl` | `reasonable` |
 | OWL EL | `ontologos-el` | In-house ELK-style completion |
 | ALC | `ontologos-alc` | Tableau-lite (preview) |
-| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (**stable on `main` / 1.0.0**; not production on PyPI 0.9.0) |
-| SWRL | `ontologos-swrl` | DLSafe SWRL + DL (**stable on `main` / 1.0.0**) |
+| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (**stable on v1.0.0**) |
+| SWRL | `ontologos-swrl` | DLSafe SWRL + DL (**stable on v1.0.0**) |
 | Query | `ontologos-ql` | petgraph over `Taxonomy`; OWL QL conjunctive queries |
 | Explain | `ontologos-explain` | petgraph proof graphs; EL inference traces |
 
@@ -202,4 +202,4 @@ See [Facade API](guides/facade-api.md), [Preview profiles](guides/preview-profil
 - [Choosing an API](guides/choosing-an-api.md)
 - [Supported constructs](reference/supported-constructs.md)
 - [Comparison with other tools](comparison.md)
-- [SPEC.md](project/spec.md)
+- [SPEC.md](https://github.com/eddiethedean/ontologos/blob/main/SPEC.md)

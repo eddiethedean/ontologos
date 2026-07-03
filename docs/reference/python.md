@@ -14,13 +14,9 @@ pip install 'ontologos[polars]'    # optional polars export
 
 Requires **Python 3.10+**.
 
-## Profiles by channel
+## Profiles
 
-| Profile | PyPI 0.9.0 | `main` / 1.0.0 |
-|---------|------------|----------------|
-| `"auto"`, `"rdfs"`, `"rl"`, `"el"` | Supported | Supported |
-| `"dl"`, `"swrl"` | Not available | Supported |
-| `"alc"`, `"dl-preview"` | Preview (errors common) | Preview |
+Published on PyPI **1.0.0**: `"auto"`, `"rdfs"`, `"rl"`, `"el"`, `"dl"`, and `"swrl"` are production-supported. `"alc"` and `"dl-preview"` are preview only.
 
 Full matrix: [Profile stability](../guides/profile-stability.md).
 
@@ -148,7 +144,7 @@ print(report)
 
 - Not thread-safe — one `Reasoner` per thread
 - Subproperty / property-value lookups: CLI and Rust facade only
-- DL/SWRL on PyPI 0.9.0: build from `main` — see [DL API](dl.md)
+- Validate DL results on your corpus before production — see [DL API](dl.md) and [Evaluator scope](../guides/evaluator-scope.md)
 
 ## Related
 

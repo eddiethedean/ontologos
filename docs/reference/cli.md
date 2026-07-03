@@ -81,9 +81,9 @@ Detects the OWL 2 profile and hybrid module layout.
 | `rdfs` | `ontologos-rl` (`rdfs` module) | Materialization report |
 | `auto` | detect → EL, RL, or DL | Taxonomy or materialization report |
 | `dl-preview` | `ontologos-dl` (gated) | Taxonomy + preview warning on stderr |
-| `dl` | `ontologos-dl` | Taxonomy (stable on `main`; not on PyPI 0.9.0) |
+| `dl` | `ontologos-dl` | Taxonomy (stable on v1.0.0) |
 | `alc` | `ontologos-alc` | Taxonomy (preview) |
-| `swrl` | `ontologos-swrl` | DLSafe rules + DL consistency (stable on `main`; not on PyPI 0.9.0) |
+| `swrl` | `ontologos-swrl` | DLSafe rules + DL consistency (stable on v1.0.0) |
 
 Profile status: [Profile stability matrix](../guides/profile-stability.md).
 

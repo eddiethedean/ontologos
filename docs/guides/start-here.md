@@ -47,7 +47,16 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 
 [Evaluator playbook](evaluator-playbook.md) · [Comparison](../comparison.md) · [Conformance coverage](../reference/conformance.md)
 
-**Production OWL DL:** Not on PyPI **0.9.0**. On **`main` / workspace 1.0.0**, DL is gated for HermiT catalog parity — use the [Evaluator playbook](evaluator-playbook.md) on your corpus before production. For DL-only workflows today, HermiT/Konclude remain the default comparison baseline. See [Profile stability matrix](profile-stability.md).
+**Evaluate with Python only (no Rust, no clone):**
+
+```bash
+pip install ontologos==1.0.0
+curl -L -o family.owl \
+  https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
+python -c "from ontologos import Reasoner; r=Reasoner(path='family.owl',profile='rl').classify(); print(r)"
+```
+
+**Production OWL DL:** Stable on **PyPI/crates.io 1.0.0** (`profile="dl"`). HermiT catalog parity applies to **889 gated in-scope cases** — validate on your corpus with the [Evaluator playbook](evaluator-playbook.md). See [Profile stability matrix](profile-stability.md).
 
 ## I am integrating in a service
 
@@ -62,7 +71,7 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 
 ## I am upgrading an existing integration
 
-[Upgrade to latest](../migration/index.md) — published **v1.0.0** and upcoming **v1.0.0** paths.
+[Upgrade to latest](../migration/index.md) — published **v1.0.0** on crates.io and PyPI.
 
 ## Common questions
 

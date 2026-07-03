@@ -1,6 +1,6 @@
 # Examples gallery
 
-Copy-paste workflows for Rust and Python. Install pins use **published v0.9.0** unless noted.
+Copy-paste workflows for Rust and Python. Install pins use **published v1.0.0** unless noted.
 
 Workflow pages: [DL evaluation](dl-evaluation.md) · [Contract tests](contract-tests.md)
 
@@ -127,22 +127,21 @@ ontologos explain --profile el benchmarks/data/pizza.owl   # after download.sh
 
 See [CLI reference](../reference/cli.md) and [Evaluator playbook](../guides/evaluator-playbook.md).
 
-## OWL DL evaluation (`main` / 1.0.0)
+## OWL DL evaluation (v1.0.0)
 
-Requires build from `main` — not available on PyPI **0.9.0**. See [Install channels](../guides/install-channels.md).
+Available on PyPI and crates.io **1.0.0**. Pizza corpus requires clone + `./benchmarks/scripts/download.sh`. See [Install channels](../guides/install-channels.md).
 
 ```bash
-git clone https://github.com/eddiethedean/ontologos.git
-cd ontologos
-./benchmarks/scripts/download.sh
-cargo build -p ontologos-cli --release
-./target/release/ontologos classify --profile dl --budget-secs 30 benchmarks/data/pizza.owl
+pip install ontologos==1.0.0
+# Or with CLI from git:
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli
+ontologos classify --profile dl --budget-secs 30 pizza.owl
 ```
 
 ```python
 from ontologos import Reasoner
 
-reasoner = Reasoner(path="benchmarks/data/pizza.owl", profile="dl", budget_secs=30)
+reasoner = Reasoner(path="pizza.owl", profile="dl", budget_secs=30)
 consistency = reasoner.check_consistency()
 assert consistency["complete"] and consistency["consistent"]
 report = reasoner.classify()
@@ -160,13 +159,12 @@ cargo test -p ontologos-contract --release
 
 Sample case IDs: `crates/ontologos-contract/data/case_ids.txt`. See [Conformance](../reference/conformance.md).
 
-## Channel-aware installs
+## Install pins
 
 | Goal | Install |
 |------|---------|
-| EL / RL / RDFS production | `pip install ontologos==1.0.0` or `ontologos-* = "0.9.0"` |
-| DL / SWRL | Clone `main`, pin `"1.0.0"` on all workspace crates |
-| CLI | `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` |
+| All production profiles (EL, RL, RDFS, DL, SWRL) | `pip install ontologos==1.0.0` or `ontologos-* = "1.0.0"` |
+| CLI | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli` |
 
 See [Install channels](../guides/install-channels.md).
 

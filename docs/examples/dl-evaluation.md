@@ -1,13 +1,13 @@
 # DL evaluation example
 
-OWL 2 DL classification on workspace **1.0.0** (`main`). Not available on PyPI **0.9.0**.
+OWL 2 DL classification on **PyPI / crates.io 1.0.0**.
 
 Install: [Install channels](../guides/install-channels.md) · API: [DL reference](../reference/dl.md).
 
 ## Prerequisites
 
-- Rust **1.88+**
-- Clone and download corpora:
+- Rust **1.88+** (for CLI) or Python **3.10+**
+- Pizza corpus: clone repo and run `./benchmarks/scripts/download.sh`, or use your own DL ontology
 
 ```bash
 git clone https://github.com/eddiethedean/ontologos.git
@@ -16,17 +16,19 @@ cd ontologos
 cargo build -p ontologos-cli --release
 ```
 
+Or install CLI from git: `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli`
+
 ## CLI
 
 ```bash
-./target/release/ontologos --format json classify \
+ontologos --format json classify \
   --profile dl --budget-secs 30 benchmarks/data/pizza.owl
 ```
 
 **Expected:** `status: "classified"`, `subsumption_count` > 0, consistency `complete: true` when run via `consistent` subcommand first.
 
 ```bash
-./target/release/ontologos --format json consistent \
+ontologos --format json consistent \
   --budget-secs 30 benchmarks/data/pizza.owl
 ```
 
@@ -56,7 +58,9 @@ match classify(&mut reasoner)? {
 
 ## Python
 
-Build `ontologos-py` from `main` (`maturin develop`) or wait for PyPI **1.0.0**:
+```bash
+pip install ontologos==1.0.0
+```
 
 ```python
 from ontologos import Reasoner

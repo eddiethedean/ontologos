@@ -45,12 +45,9 @@ See [Facade API](facade-api.md) · [Rust API in 60 seconds](../getting-started/i
 
 ## Profile availability by install channel
 
-| Profile | PyPI / crates.io 0.9.0 | `main` workspace 1.0.0 |
-|---------|------------------------|-------------------------|
-| `rdfs`, `rl`, `el`, `auto` | Production-supported | Production-supported |
-| `dl` | Not production-supported | Stable (gated conformance) |
-| `swrl` | Not available | Stable (DLSafe subset) |
-| `alc`, `dl-preview` | Preview / errors | Preview |
+## Profile availability
+
+Production profiles on **PyPI / crates.io 1.0.0**: `rdfs`, `rl`, `el`, `auto`, `dl`, and `swrl`. Preview: `alc`, `dl-preview`.
 
 Full matrix: [Profile stability](profile-stability.md).
 

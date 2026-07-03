@@ -26,6 +26,14 @@ match classify(&mut reasoner)? {
 
 See [Classify quick start](classify-quickstart.md) and [Facade API](../guides/facade-api.md).
 
+!!! success "Production integration contract"
+    | Task | Use |
+    |------|-----|
+    | Load files | `ontologos_parser::load_ontology` |
+    | Classify / consistency | `ontologos_facade::classify`, `check_consistency` |
+    | CLI / Python | `ontologos classify`, `Reasoner(...).classify()` |
+    | **Do not use** | `ontologos_core::Reasoner::classify()` |
+
 ## Crates.io only (no clone)
 
 Download a sample ontology, then build a minimal Rust project:
