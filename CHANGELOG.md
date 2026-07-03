@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-07-03
+
+> **STAGED — NOT PUBLISHED:** Workspace version **1.0.1** on `main`. crates.io and PyPI remain **1.0.0** until annotated **v1.0.1** publish completes. See [Release status](docs/project/release-status.md).
+
+### Fixed
+
+- Parser: map self-inverse RDF properties (`P owl:inverseOf P`) to `SymmetricObjectProperty` so IYOUIT `agent.owl` loads under strict parse
+- ALC role queries: merge asserted RBox `SubObjectPropertyOf` edges into `getSubObjectProperties` (OWLLink Bob `knows` **20** / **101**)
+- DL bounded cancel is per-operation so one timed-out case no longer poisons concurrent conformance scans
+- Promoted WG hygiene scan uses modest parallelism (4 threads) so 30s budgets are not starved on CI
+- Conformance guard unit tests: `consistent_but_all_unsat` and `complex_concept` assert production paths; serialize tableau env mutations
+- Optional profile-corpora tests skip cleanly when `galen.owl` / `go-subset.owl` are absent (nightly `--ignored`)
+- Tier C HermiT JAR cross-check: disable incomplete `pizza.owl` DL taxonomy check (tracked as post-1.0 work)
+
+### Changed
+
+- Workspace and PyPI package bump to **1.0.1**
+
 ## [1.0.0] - 2026-07-02
 
 ### Added
@@ -337,8 +355,9 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/eddiethedean/ontologos/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/eddiethedean/ontologos/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/eddiethedean/ontologos/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/eddiethedean/ontologos/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/eddiethedean/ontologos/compare/v0.6.1...v0.7.0

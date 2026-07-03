@@ -11,7 +11,7 @@ Single source of truth for version and distribution channels. Update this page w
 | **crates.io** (library crates) | **1.0.0** (published) | Latest installable release |
 | **PyPI** | **1.0.0** (published) | `pip install ontologos` |
 | **Latest git tag** | **v1.0.0** | Annotated semver tags on `main` |
-| **`main` branch** | **1.0.0** workspace | Development continues toward 1.1+ |
+| **`main` branch** | **1.0.1** workspace (pre-release) | Patch fixes staged; crates.io/PyPI still **1.0.0** until **v1.0.1** publish |
 
 Published crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 

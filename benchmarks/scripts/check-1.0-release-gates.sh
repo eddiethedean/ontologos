@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verify ROADMAP 1.0.0 exit criteria. Fails until all gates are green — do not tag 1.0.0 before this passes.
+# Verify 1.0.x release exit criteria. Fails until all gates are green — do not tag a 1.0.x release before this passes.
 # Release tagging and publish remain DEFERRED until this script exits 0.
 set -euo pipefail
 
@@ -17,8 +17,8 @@ check() {
   fi
 }
 
-# Workspace must be 1.0.0 once release gates pass.
-check "workspace version is 1.0.0" grep -q 'version = "1.0.0"' "${ROOT}/Cargo.toml"
+# Workspace must match the staged 1.0.x release version.
+check "workspace version is 1.0.1" grep -q 'version = "1.0.1"' "${ROOT}/Cargo.toml"
 
 # Conformance active test budget (target ≥400 at 1.0; nightly/release only).
 ACTIVE="$("${ROOT}/benchmarks/scripts/report-conformance-coverage.sh" 2>/dev/null | awk '/active parity \(nightly\)/ {print $NF}')"
@@ -63,8 +63,8 @@ check "Tier C harness" "${ROOT}/benchmarks/scripts/compare-hermit-tier-c.sh"
 
 if [[ "${FAIL}" -ne 0 ]]; then
   echo "" >&2
-  echo "1.0.0 release gates not met — see ROADMAP.md and docs/migration/v0.9.x-to-v1.0.0.md" >&2
+  echo "1.0.x release gates not met — see ROADMAP.md and docs/migration/v0.9.x-to-v1.0.0.md" >&2
   exit 1
 fi
 
-echo "All 1.0.0 release gates satisfied."
+echo "All 1.0.x release gates satisfied."

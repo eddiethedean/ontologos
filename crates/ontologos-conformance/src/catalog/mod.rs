@@ -2409,10 +2409,12 @@ pub fn scan_promoted_axiom_failures() -> Vec<(String, String)> {
 }
 
 /// Promoted OWL WG cases that fail semantic checks at the current DL budget.
+///
+/// Uses modest parallelism (default 4, matching Tier A `--test-threads`) so
+/// wall-clock budgets are not starved on CI runners. The global scan floor of
+/// 10 threads oversubscribed 30s budgets and produced false Timeout failures.
 pub fn scan_promoted_wg_failures() -> Vec<WgFailure> {
-    ensure_concurrent_scan_defaults();
     configure_wg_tableau_limits();
-    configure_scan_parallelism();
     let promoted = read_promoted_wg_ids();
     if promoted.is_empty() {
         return Vec::new();
@@ -2422,16 +2424,27 @@ pub fn scan_promoted_wg_failures() -> Vec<WgFailure> {
         .filter(|case| case.status == "wg" && wg_case_runnable(case))
         .filter(|case| promoted.contains(wg_case_short_id(&case.id)))
         .collect();
-    let mut failures: Vec<WgFailure> = active
-        .par_iter()
-        .filter_map(|case| {
-            check_wg_case(case).err().map(|err| WgFailure {
-                bucket: classify_wg_failure(case, &err),
-                id: case.id.clone(),
-                detail: err,
+    let threads = std::env::var("ONTOLOGOS_PROMOTED_SCAN_THREADS")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .filter(|&n| n > 0)
+        .unwrap_or(4);
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(threads)
+        .build()
+        .expect("promoted WG scan pool");
+    let mut failures: Vec<WgFailure> = pool.install(|| {
+        active
+            .par_iter()
+            .filter_map(|case| {
+                check_wg_case(case).err().map(|err| WgFailure {
+                    bucket: classify_wg_failure(case, &err),
+                    id: case.id.clone(),
+                    detail: err,
+                })
             })
-        })
-        .collect();
+            .collect()
+    });
     failures.sort_by(|a, b| a.id.cmp(&b.id));
     failures
 }

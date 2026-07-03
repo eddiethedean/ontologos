@@ -230,7 +230,7 @@ done
 
 Then:
 
-1. Bump `version` in workspace [Cargo.toml](Cargo.toml) if not already set (workspace is **1.0.0** on `main`).
+1. Bump `version` in workspace [Cargo.toml](Cargo.toml) if not already set (workspace is **1.0.1** on `main`).
 2. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated version section and empty `[Unreleased]`.
 3. Update version pins in `docs/getting-started/`, [FAQ.md](FAQ.md), and run `./docs/scripts/check-doc-versions.sh`.
 4. Commit release prep on `main`.
