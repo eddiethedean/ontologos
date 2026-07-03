@@ -1,6 +1,6 @@
 # OWL DL API Reference
 
-OWL 2 DL classification and consistency via [`ontologos-dl`](https://docs.rs/ontologos-dl/0.9.0), routed through [`ontologos-facade`](facade.md).
+OWL 2 DL classification and consistency via [`ontologos-dl`](https://docs.rs/ontologos-dl/1.0.0), routed through [`ontologos-facade`](facade.md).
 
 !!! note "Install channel"
     **PyPI / crates.io 0.9.0:** DL is not production-supported. **Workspace 1.0.0** on `main` ships stable `Profile::Dl`. See [Install channels](../guides/install-channels.md).

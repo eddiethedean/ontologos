@@ -24,7 +24,7 @@ Published channel links point to **0.9.0** until the v1.0.0 tag ships. Build fro
 
 | Crate | Reference |
 |-------|-----------|
-| `ontologos-core` | [core.md](core.md) · [docs.rs](https://docs.rs/ontologos-core/0.9.0) |
+| `ontologos-core` | [core.md](core.md) · [docs.rs](https://docs.rs/ontologos-core/1.0.0) |
 | `ontologos-parser` | [parser.md](parser.md) |
 | `ontologos-profile` | [Profile detection guide](../guides/profile-detection.md) |
 | `ontologos-facade` | [facade.md](facade.md) |

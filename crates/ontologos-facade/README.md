@@ -8,9 +8,9 @@ Unified OWL reasoner routing for OntoLogos — one `classify()` entry for EL, RL
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
-ontologos-facade = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
+ontologos-facade = "1.0.0"
 ```
 
 Bump all `ontologos-*` pins together. On `main`, use `"1.0.0"` for DL and the full engine set.

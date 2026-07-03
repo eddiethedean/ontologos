@@ -8,16 +8,16 @@ Single source of truth for version and distribution channels. Update this page w
 
 | Channel | Version | Notes |
 |---------|---------|-------|
-| **crates.io** (library crates) | **0.9.0** (published) | Latest installable release |
-| **PyPI** | **0.9.0** (published) | `pip install ontologos` |
-| **Latest git tag** | **v0.9.0** | Annotated semver tags on `main` |
-| **`main` branch** | **1.0.0** workspace (pre-release) | Engineering gates green; **v1.0.0 tag** pending crates.io + PyPI publish |
+| **crates.io** (library crates) | **1.0.0** (published) | Latest installable release |
+| **PyPI** | **1.0.0** (published) | `pip install ontologos` |
+| **Latest git tag** | **v1.0.0** | Annotated semver tags on `main` |
+| **`main` branch** | **1.0.0** workspace | Development continues toward 1.1+ |
 
 Published crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-CLI (`ontologos-cli`), Python (`ontologos-py`), and conformance are **source-build only** — not on crates.io.
+CLI (`ontologos-cli`), Python (`ontologos-py`), and conformance are **source-build only** — not on crates.io (Python wheels ship via PyPI).
 
-## HermiT parity snapshot (`main`, 2026-07-02)
+## HermiT parity snapshot (v1.0.0, 2026-07-03)
 
 ```bash
 bash benchmarks/scripts/hermit-burndown.sh status
@@ -39,7 +39,7 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Documented CE exclusions | **13** Ian/ComplexConcept + `testIanBackjumping3` (**70** `excluded` catalog cases) |
 | `check-1.0-release-gates.sh` | **Green** (blocking in CI) |
 
-**Remaining for v1.0.0 publish:** engineering gates are green on `main` (see metrics below). The annotated **v1.0.0** git tag and crates.io/PyPI publish are **manual maintainer steps** — follow [release-1.0-checklist.md](release-1.0-checklist.md). Until publish completes, user-facing docs describe two channels: **0.9.0** (installable) and **1.0.0** (build from `main`). After publish: [Post-1.0 doc update](post-1.0-doc-update.md). Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
+Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
 
 ## Profile stability
 
@@ -47,49 +47,32 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 
 | Area | Status |
 |------|--------|
-| OWL EL, RL, RDFS | **Stable** on published **v0.9.0** |
-| OWL DL (`--profile dl`) on **`main`** | **Stable** (workspace) — publish pending; see [release checklist](release-1.0-checklist.md) |
+| OWL EL, RL, RDFS | **Stable** on **v1.0.0** |
+| OWL DL (`--profile dl`) | **Stable** on **v1.0.0** |
+| SWRL | **Stable** on **v1.0.0** |
 | ALC / `dl-preview` | **Preview** |
-| SWRL | **Stable** on workspace **1.0.0**; **not on PyPI 0.9.0** |
-| Python bindings, explain (EL) | **Stable** on v0.9.0 |
-
-**Production EL/RL/RDFS today:** use **v0.9.0** pins on crates.io/PyPI. **Production OWL DL and SWRL:** build from **`main`** until v1.0.0 publishes to crates.io/PyPI (`profile="dl"`). See [FAQ](faq.md).
-
-## Conformance snapshot (live)
-
-```bash
-bash benchmarks/scripts/report-ci-gate-status.sh
-bash benchmarks/scripts/report-conformance-coverage.sh
-bash benchmarks/scripts/check-1.0-release-gates.sh
-bash benchmarks/scripts/check-hermit-parity-phases.sh
-```
+| Python bindings, explain (EL) | **Stable** on **v1.0.0** |
 
 ## Install pins
-
-### Published (production today)
 
 **Rust:**
 
 ```toml
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
 # … bump all ontologos-* crates together
 ```
 
 **Python:**
 
 ```bash
-pip install ontologos==0.9.0
+pip install ontologos==1.0.0
 ```
-
-### `main` branch (1.0.0 workspace)
-
-Build from git and pin `"1.0.0"` on all workspace crates, or use `cargo install --git ...`. PyPI **1.0.0** ships only when the v1.0.0 tag is published.
 
 **CLI (from git):**
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli
 ```
 
 Requires **Rust 1.88+**.
@@ -98,7 +81,7 @@ Requires **Rust 1.88+**.
 
 | Tag | Theme |
 |-----|-------|
-| v1.0.0 (pending) | HermiT parity milestone — publish + tag |
+| [v1.0.0](https://github.com/eddiethedean/ontologos/releases/tag/v1.0.0) | HermiT parity milestone — OWL 2 DL + SWRL |
 | [v0.9.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.9.0) | Python ecosystem |
 | [v0.8.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.8.0) | Incremental reasoning |
 | [v0.7.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.7.0) | Bridge adapters |

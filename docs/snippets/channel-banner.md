@@ -1,10 +1,9 @@
-> **Install channels**
+> **Install**
 >
-> Latest tagged release is **v0.9.0** on crates.io and PyPI. The **`main`** branch is the **1.0.0** workspace (pre-release; git tag not cut yet).
+> Latest release is **v1.0.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/).
 >
 > | Install command | Profiles available for production |
 > |-----------------|----------------------------------|
-> | `pip install ontologos` or `ontologos-* = "0.9.0"` | EL, RL, RDFS |
-> | Build from `main` / `ontologos-* = "1.0.0"` | + DL, SWRL, full facade routing |
+> | `pip install ontologos` or `ontologos-* = "1.0.0"` | EL, RL, RDFS, **DL**, **SWRL** |
 >
-> `profile="dl"` on PyPI **0.9.0** is not HermiT parity. See [Profile stability](/guides/profile-stability/) and [Release status](/project/release-status/).
+> Preview profiles (`alc`, `dl-preview`) remain experimental. See [Profile stability](/guides/profile-stability/).

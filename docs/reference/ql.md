@@ -1,6 +1,6 @@
 # OWL QL API Reference
 
-Conjunctive query answering via [`ontologos-ql`](https://docs.rs/ontologos-ql/0.9.0).
+Conjunctive query answering via [`ontologos-ql`](https://docs.rs/ontologos-ql/1.0.0).
 
 Requires a classified ontology (`Taxonomy` from EL or DL classification).
 

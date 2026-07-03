@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-07-02
 
-> **STAGED — NOT PUBLISHED:** Workspace version **1.0.0** on `main`. crates.io and PyPI remain **0.9.0** until the annotated **v1.0.0** tag and publish complete. See [Release status](docs/project/release-status.md).
-
 ### Added
 
 - **HermiT conformance:** auto-promotion pipeline (`promote_catalog`, `promoted_axiom_ids.txt`, `promote-hermit-catalog.sh`)

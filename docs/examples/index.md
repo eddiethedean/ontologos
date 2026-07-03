@@ -164,7 +164,7 @@ Sample case IDs: `crates/ontologos-contract/data/case_ids.txt`. See [Conformance
 
 | Goal | Install |
 |------|---------|
-| EL / RL / RDFS production | `pip install ontologos==0.9.0` or `ontologos-* = "0.9.0"` |
+| EL / RL / RDFS production | `pip install ontologos==1.0.0` or `ontologos-* = "0.9.0"` |
 | DL / SWRL | Clone `main`, pin `"1.0.0"` on all workspace crates |
 | CLI | `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` |
 

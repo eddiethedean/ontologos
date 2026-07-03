@@ -1,17 +1,17 @@
 # Parser API Reference
 
-OWL and RDF file loading via [`ontologos-parser`](https://docs.rs/ontologos-parser/0.9.0).
+OWL and RDF file loading via [`ontologos-parser`](https://docs.rs/ontologos-parser/1.0.0).
 
 ## Overview
 
 | Function | Purpose |
 |----------|---------|
-| [`load_ontology`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/fn.load_ontology.html) | Load with default `ParseLimits` |
-| [`load_ontology_with_limits`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/fn.load_ontology_with_limits.html) | Load with custom limits |
-| [`load_ontology_with_limits_and_base`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/fn.load_ontology_with_limits_and_base.html) | Load with sandbox base directory |
-| [`load_ontology_in`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/fn.load_ontology_in.html) | Load relative to a base directory |
-| [`load_ontology_lenient`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/fn.load_ontology_lenient.html) | Lenient limits (`strict: false`) |
-| [`load_ofn_from_str`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/fn.load_ofn_from_str.html) | Parse OWL Functional Syntax from a string |
+| [`load_ontology`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/fn.load_ontology.html) | Load with default `ParseLimits` |
+| [`load_ontology_with_limits`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/fn.load_ontology_with_limits.html) | Load with custom limits |
+| [`load_ontology_with_limits_and_base`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/fn.load_ontology_with_limits_and_base.html) | Load with sandbox base directory |
+| [`load_ontology_in`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/fn.load_ontology_in.html) | Load relative to a base directory |
+| [`load_ontology_lenient`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/fn.load_ontology_lenient.html) | Lenient limits (`strict: false`) |
+| [`load_ofn_from_str`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/fn.load_ofn_from_str.html) | Parse OWL Functional Syntax from a string |
 
 **Do not use** `ontologos_core::Ontology::from_file` — it returns `ParseNotAvailable`. Always use the parser crate.
 
@@ -102,4 +102,4 @@ See [Error reference](errors.md).
 - [Load an OWL file](../getting-started/load-owl-file.md)
 - [OWL imports](owl-imports.md)
 - [Supported constructs](supported-constructs.md)
-- [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.9.0)
+- [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/1.0.0)

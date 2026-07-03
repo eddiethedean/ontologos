@@ -6,7 +6,7 @@ OWL 2 RL forward-chaining rule engine for [OntoLogos](https://github.com/eddieth
 
 ```toml
 [dependencies]
-ontologos-rl = "0.9.0"
+ontologos-rl = "1.0.0"
 ```
 
 Runs RDFS materialization first, then applies OWL RL TBox and ABox rules until saturation.
@@ -36,6 +36,6 @@ assert!(report.inferred_total() >= 0);
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-For [`Reasoner`](https://docs.rs/ontologos-core/0.9.0/ontologos_core/struct.Reasoner.html) integration use `ontologos_rl::classify_reasoner`.
+For [`Reasoner`](https://docs.rs/ontologos-core/1.0.0/ontologos_core/struct.Reasoner.html) integration use `ontologos_rl::classify_reasoner`.
 
-Documentation: [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) · [docs.rs/ontologos-rl/0.9.0](https://docs.rs/ontologos-rl/0.9.0)
+Documentation: [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) · [docs.rs/ontologos-rl/1.0.0](https://docs.rs/ontologos-rl/1.0.0)

@@ -20,9 +20,9 @@ cargo new ontologos-classify-demo && cd ontologos-classify-demo
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
-ontologos-facade = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
+ontologos-facade = "1.0.0"
 ```
 
 Build from `main`? Pin `"1.0.0"` on all `ontologos-*` crates instead.
@@ -64,7 +64,7 @@ For EL without the facade, use an **in-memory EL ontology** (Family.owl is RL-sh
 
 ```toml
 # Add to Cargo.toml
-ontologos-el = "0.9.0"
+ontologos-el = "1.0.0"
 ```
 
 ```rust

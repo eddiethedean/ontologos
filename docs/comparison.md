@@ -1,8 +1,8 @@
 # Comparison with Existing Tools
 
-Honest positioning for evaluators. **Published v0.9.0** covers stable EL, RL, and RDFS.
+Honest positioning for evaluators. **Published v1.0.0** covers stable EL, RL, RDFS, **OWL 2 DL**, and **DLSafe SWRL** on crates.io and PyPI.
 
-**`main` (1.0.0 workspace, not yet tagged on PyPI)** passes the in-scope HermiT catalog gate (`parity_pct = 100%` on **889** cases) and the composite `true_parity_pct` gate at **100%** in blocking CI. Blocking CI runs **450** Java axiom + **428** OWL WG tests @ 30s.
+OntoLogos passes the in-scope HermiT catalog gate (`parity_pct = 100%` on **889** cases) and the composite `true_parity_pct` gate at **100%** in blocking CI. Blocking CI runs **450** Java axiom + **428** OWL WG tests @ 30s.
 
 These metrics apply only to the **gated conformance corpora** — not every real-world ontology. See [Evaluator scope](guides/evaluator-scope.md) and [Release status](project/release-status.md).
 
@@ -10,24 +10,24 @@ See [landscape-2023.md](https://github.com/eddiethedean/ontologos/blob/main/docs
 
 ## Maturity matrix
 
-| Capability | OntoLogos (v0.9.0 / `main`) | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
-|------------|-----------------|-----|--------|----------|------------|----------|---------|
+| Capability | OntoLogos (v1.0.0) | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+|------------|-------------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
 | OWL EL classification | **Yes** (in-house) | **Yes** | Slow/overkill | Yes | No | **Yes** | Via plugin |
 | OWL RL reasoning | **Yes** (via reasonable) | No | Partial | Partial | **Yes** | No | Via plugin |
 | RDFS materialization | **Yes** (via reasonable) | No | Yes | Yes | Partial | No | Yes |
-| OWL DL (workspace / gated corpora) | **In-scope + true parity gates green** (`ontologos-dl` on `main`; 450+428 @ 30s) | No | Yes (stagnant) | Yes | No | No | Via plugin |
-| OWL DL (PyPI / crates.io today) | **v1.0.0 not yet published** — build from `main` for DL | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| OWL DL (gated corpora) | **In-scope + true parity gates green** (`ontologos-dl`; 450+428 @ 30s) | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| OWL DL (PyPI / crates.io) | **Yes** (`profile="dl"`) | No | Yes (stagnant) | Yes | No | No | Via plugin |
 | Embeddable Rust API | **Yes** | JVM only | JVM only | C++/OWLlink | **Yes** | **Yes** | Desktop IDE |
 | Unified multi-profile CLI/Python | **Yes** | No | No | No | RL only | EL only | Via plugins |
 | Maintained (2026) | **Active** | **Active** | Stagnant | **Active** | **Active** | **Active** | Active (editor) |
-| Hybrid EL+DL routing | **Pre-release** (`main`) | No | No | Internal | No | No | MORe plugin |
-| Explanations | EL-first (v0.9.0+) | Yes | Yes | Partial | Limited | No | Yes |
-| Production-ready (EL/RL/RDFS on PyPI 0.9.0) | **Yes** (within mapped construct subset) | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
-| Production-ready (OWL DL on PyPI) | **No** — build from `main` / wait for v1.0.0 | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| Hybrid EL+DL routing | **Yes** | No | No | Internal | No | No | MORe plugin |
+| Explanations | EL-first | Yes | Yes | Partial | Limited | No | Yes |
+| Production-ready (EL/RL/RDFS) | **Yes** (within mapped construct subset) | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
+| Production-ready (OWL DL) | **Yes** on v1.0.0 (validate your corpus) | No | Yes (stagnant) | Yes | No | No | Via plugin |
 
-CLI `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` routes via `ontologos-facade`. DL/ALC/SWRL status: [Profile stability matrix](guides/profile-stability.md). Use `materialize` for explicit RDFS.
+CLI `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` routes via `ontologos-facade`. Preview profiles: [Profile stability matrix](guides/profile-stability.md). Use `materialize` for explicit RDFS.
 
 ## What OntoLogos adds over raw dependencies
 
@@ -54,20 +54,21 @@ OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid ro
 
 - Embedding an ontology **data model** in Rust with profile routing
 - Loading OWL files, detecting profiles, and classifying in one workspace
-- CLI or Python batch workflows across EL and RL
+- CLI or Python batch workflows across EL, RL, and DL
+- JVM-free HermiT replacement on gated corpora
 - Contributing to a unified open-source Rust ontology stack
 
 ## When to use incumbents directly
 
 - **ELK / whelk-rs:** EL-only workflows; maximum EL performance tuning
 - **reasonable:** RL-only; triple-store or incremental materialization without core model
-- **Konclude:** full DL batch reasoning today
+- **Konclude:** maximum DL performance on very large ontologies
 - **Protégé + HermiT/ELK:** interactive OWL editing
 - **owlready2:** Python-centric workflows with JVM backends
 
 ## OntoLogos target (1.0 vs 2.0)
 
-**1.0** delivers OWL DL HermiT parity on gated corpora (**both parity gates green on `main`**; crates.io/PyPI **v1.0.0** publish not yet shipped). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
+**1.0** delivers OWL DL HermiT parity on gated corpora (published **v1.0.0** on crates.io/PyPI). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
 
 Replace JVM-bound **batch** reasoning in Rust/Python pipelines via stable facade APIs, with CLI, Python, and Ontocode integration.
 

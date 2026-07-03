@@ -58,7 +58,7 @@ Literal `datatype` IRIs in JSON snapshots are validated the same way as entity I
 - `load_ontology_lenient` — same as `load_ontology` but allows skipped axioms with warnings
 - `load_ontology_in(base, path)` — constrain loads to stay under `base` (untrusted uploads)
 
-Loads validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/0.9.0/ontologos_parser/struct.ParseLimits.html), run a lightweight axiom/component pre-scan, then parse via horned-owl. Post-load lightweight validation runs on every successful load; expensive blank-node graph checks run when `strict` is true. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
+Loads validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/struct.ParseLimits.html), run a lightweight axiom/component pre-scan, then parse via horned-owl. Post-load lightweight validation runs on every successful load; expensive blank-node graph checks run when `strict` is true. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
 
 ### Parser concurrency (server embedders)
 

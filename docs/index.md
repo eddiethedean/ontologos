@@ -2,13 +2,12 @@
 
 <div class="ol-hero" markdown="0">
   <div class="ol-hero-badges">
-    <span class="ol-badge ol-badge--accent">v0.9.0 published</span>
-    <span class="ol-badge">main = 1.0.0 pre-release</span>
+    <span class="ol-badge ol-badge--accent">v1.0.0 published</span>
     <span class="ol-badge">Rust 1.88+</span>
   </div>
   <p class="ol-hero-kicker">OntoLogos documentation</p>
   <p class="ol-hero-title">Native Rust ontology reasoning</p>
-  <p class="ol-lead">Load OWL files, detect profiles, and run RDFS materialization, OWL RL saturation, and OWL EL taxonomy—through stable Rust facades, CLI, and Python bindings. OWL 2 DL and SWRL are available on <code>main</code> (workspace 1.0.0).</p>
+  <p class="ol-lead">Load OWL files, detect profiles, and run RDFS materialization, OWL RL saturation, OWL EL taxonomy, OWL 2 DL, and SWRL—through stable Rust facades, CLI, and Python bindings.</p>
   <div class="ol-hero-actions">
     <a class="ol-hero-cta" href="getting-started/">Try in 5 minutes →</a>
     <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/python/">Python quickstart</a>
@@ -71,8 +70,8 @@ Pick the path that matches how you work:
 
     **DON'T** call classification on `ontologos_core::Reasoner` — use the [facade](guides/facade-api.md) instead. See [Choosing an API](guides/choosing-an-api.md).
 
-!!! note "OWL DL and SWRL"
-    **PyPI 0.9.0:** EL/RL/RDFS only. **OWL 2 DL and SWRL** require `main` / workspace 1.0.0. See [Install channels](guides/install-channels.md), [Profile stability](guides/profile-stability.md), and [Release status](project/release-status.md).
+!!! note "Preview profiles"
+    **`alc`** and **`dl-preview`** are experimental. Production OWL DL uses **`profile="dl"`**. See [Profile stability](guides/profile-stability.md).
 
 ## What you need
 
@@ -81,7 +80,7 @@ Pick the path that matches how you work:
 | **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 | **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
 | **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
-| **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0) |
+| **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.0.0) |
 | **Changelog** | [project/changelog](project/changelog.md) · [GitHub](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) |
 
 ## Documentation map {#documentation-map}
@@ -109,7 +108,7 @@ Use the sidebar for the full tree. Highlights:
 9. [JSON snapshots](json-snapshot-v3.md) ([v2 legacy](json-snapshot-v2.md))
 10. [Error reference](reference/errors.md)
 
-## Capability matrix (published v0.9.0)
+## Capability matrix (published v1.0.0)
 
 | Capability | Library | CLI | Python |
 |------------|---------|-----|--------|
@@ -118,7 +117,8 @@ Use the sidebar for the full tree. Highlights:
 | RDFS materialization | Yes | `materialize` | `profile="rdfs"` |
 | OWL RL saturation | Yes | `classify --profile rl` | `profile="rl"` |
 | OWL EL taxonomy | Yes | `classify --profile el` | `profile="el"` |
-| OWL DL (`main` / 1.0.0) | Build from source | `classify --profile dl` | Build from source |
+| OWL DL | Yes | `classify --profile dl` | `profile="dl"` |
+| SWRL | Yes | `classify --profile swrl` | `profile="swrl"` |
 | Incremental reasoning | Yes | `--incremental` | `incremental=True` |
 | Explanations | Yes | `explain` | `explain()` |
 | Taxonomy DataFrame export | No | No | Yes (pandas/polars) |

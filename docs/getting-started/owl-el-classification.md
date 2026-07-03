@@ -1,6 +1,6 @@
 # OWL EL Classification
 
-Completion-based **OWL EL taxonomy classification** via [`ontologos-el`](https://docs.rs/ontologos-el/0.9.0). The engine computes direct and indirect subsumptions, equivalence clusters, and unsatisfiable classes from mapped EL TBox axioms.
+Completion-based **OWL EL taxonomy classification** via [`ontologos-el`](https://docs.rs/ontologos-el/1.0.0). The engine computes direct and indirect subsumptions, equivalence clusters, and unsatisfiable classes from mapped EL TBox axioms.
 
 ## Prerequisites
 
@@ -67,9 +67,9 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
-ontologos-el = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
+ontologos-el = "1.0.0"
 ```
 
 Remove `ontologos-ql` unless you use `TaxonomyHierarchy` (see [Query API](../reference/query.md)).

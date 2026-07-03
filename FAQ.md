@@ -18,19 +18,19 @@ See [Load an OWL file](https://ontologos.readthedocs.io/en/latest/getting-starte
 
 ## Which crate should I depend on?
 
-For **published v0.9.0** use `0.9.0` pins. For **`main` branch (1.0.0 workspace)** use `1.0.0` when building from git — see [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).
+For **published v1.0.0** use `1.0.0` pins on all `ontologos-*` crates — see [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"   # OWL/RDF file loading
-ontologos-profile = "0.9.0"  # EL / RL / QL / DL detection
-ontologos-rl = "0.9.0"       # OWL RL saturation + RDFS (`ontologos_rl::rdfs`)
-ontologos-el = "0.9.0"       # OWL EL classification
-ontologos-explain = "0.9.0"  # Proof graphs
-ontologos-ql = "0.9.0"        # Taxonomy queries and OWL QL
-ontologos-facade = "0.9.0"   # Unified classify routing
-ontologos-bridge = "0.9.0"   # Engine adapters (usually transitive)
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"   # OWL/RDF file loading
+ontologos-profile = "1.0.0"  # EL / RL / QL / DL detection
+ontologos-rl = "1.0.0"       # OWL RL saturation + RDFS (`ontologos_rl::rdfs`)
+ontologos-el = "1.0.0"       # OWL EL classification
+ontologos-explain = "1.0.0"  # Proof graphs
+ontologos-ql = "1.0.0"        # Taxonomy queries and OWL QL
+ontologos-facade = "1.0.0"   # Unified classify routing
+ontologos-bridge = "1.0.0"   # Engine adapters (usually transitive)
 ```
 
 Depend on **`ontologos-core` only** if you build ontologies programmatically or from JSON snapshots.
@@ -39,9 +39,7 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Published v0.9.0 — not yet for production OWL DL.** It loads OWL files, detects profiles, materializes RDFS/RL via reasonable, classifies OWL EL taxonomies via in-house completion, and builds proof graphs via `ontologos-explain`. DL and preview profiles are **not** HermiT parity on PyPI v0.9.0 — see [Profile stability matrix](https://ontologos.readthedocs.io/en/latest/guides/profile-stability/). Use Protégé with HermiT or Konclude for production OWL DL workflows until **v1.0.0** ships.
-
-**v1.0.0 (workspace / upcoming tag)** — `ontologos-dl` passes the HermiT Tier A catalog (**450** runnable Java + **428** OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora** (`parity_pct = 100%` on **889** in-scope cases), not a guarantee for every real-world ontology. Composite **`true_parity_pct`** is **100%** on `main` (blocking CI). See [Evaluator scope](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope/) for what each metric measures. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, build from `main` and use `classify --profile dl` (or `profile="dl"` in Python). Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
+**v1.0.0 (published)** — `ontologos-dl` passes the HermiT Tier A catalog (**450** runnable Java + **428** OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora** (`parity_pct = 100%` on **889** in-scope cases), not a guarantee for every real-world ontology. Composite **`true_parity_pct`** is **100%** (blocking CI). See [Evaluator scope](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope/) for what each metric measures. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, use `classify --profile dl` (or `profile="dl"` in Python). Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
 
 OntoLogos is for adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
 
@@ -113,7 +111,7 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/0.9.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.9.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/0.9.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/0.9.0), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/0.9.0), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/0.9.0), [docs.rs/ontologos-ql](https://docs.rs/ontologos-ql/0.9.0), [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/0.9.0)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.0.0), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/1.0.0), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/1.0.0), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/1.0.0), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/1.0.0), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/1.0.0), [docs.rs/ontologos-ql](https://docs.rs/ontologos-ql/1.0.0), [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/1.0.0)
 - Site reference: [Explain API](https://ontologos.readthedocs.io/en/latest/reference/explain/) · [Query API](https://ontologos.readthedocs.io/en/latest/reference/query/) · [CLI](https://ontologos.readthedocs.io/en/latest/reference/cli/)
 - Guides: [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api/) · [Architecture](https://ontologos.readthedocs.io/en/latest/architecture/)
 - Local: `cargo doc -p ontologos-core --open`
@@ -121,17 +119,17 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Does `pip install ontologos` work?
 
-Yes. The PyPI package is **v0.9.0**. It supports file and in-memory ontologies, incremental mutations, `explain()`, and optional pandas/polars export.
+Yes. The PyPI package is **v1.0.0**. It supports file and in-memory ontologies, incremental mutations, `explain()`, and optional pandas/polars export.
 
-**Profiles on PyPI 0.9.0:** `"auto"`, `"el"`, `"rl"`, and `"rdfs"` only.
+**Profiles on PyPI 1.0.0:** `"auto"`, `"el"`, `"rl"`, `"rdfs"`, `"dl"`, and `"swrl"`.
 
-**Not on PyPI 0.9.0:** `"dl"`, `"swrl"`, `"alc"`, and `"dl-preview"` — build from `main` (workspace 1.0.0). See [Install and channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels/).
+**Preview only:** `"alc"` and `"dl-preview"`. See [Install and channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels/).
 
 ```python
 from ontologos import Reasoner, OntologyBuilder
 
 Reasoner(path="family.owl", profile="auto").classify()
-Reasoner(path="family.owl", profile="rl").classify()
+Reasoner(path="family.owl", profile="dl").classify()
 ```
 
 Optional extras: `pip install 'ontologos[pandas]'` or `'ontologos[polars]'`.
@@ -178,8 +176,8 @@ No. Each `Reasoner` instance should be used from one thread at a time. Create se
 
 | Channel | Version | When |
 |---------|---------|------|
-| crates.io / PyPI (production) | **0.9.0** | Default for `cargo add` and `pip install ontologos` |
-| `main` git workspace | **1.0.0** | Building from clone before v1.0.0 tag |
+| crates.io / PyPI (production) | **1.0.0** | Default for `cargo add` and `pip install ontologos` |
+| `main` git workspace | **1.0.0+** | Unreleased development on `main` |
 
 See [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).
 

@@ -1,6 +1,6 @@
 # Contributing to OntoLogos
 
-Thank you for your interest in contributing. OntoLogos is in active development: **v0.9.0** is the latest published release on crates.io/PyPI; the **`main`** branch tracks workspace **1.0.0** (pre-release). High-impact contributions include conformance, Python bindings, documentation, and incremental reasoning polish.
+Thank you for your interest in contributing. OntoLogos is in active development: **v1.0.0** is the latest published release on crates.io/PyPI. High-impact contributions include conformance, Python bindings, documentation, and incremental reasoning polish.
 
 ## Prerequisites
 
@@ -142,7 +142,7 @@ pytest tests/ -q
 1. **Scope:** One logical change per PR when possible.
 2. **Tests:** Add or update tests for behavior changes (core, parser, profile, CLI, Python as appropriate).
 3. **Docs:** Update README, CHANGELOG, or `docs/` when user-visible behavior changes.
-4. **Version pins in docs:** Workspace [Cargo.toml](Cargo.toml) is **1.0.0** on `main`, but **published** install blocks must stay at **0.9.0** until the v1.0.0 tag ships (`docs/scripts/check-doc-versions.sh` enforces this). Note the `main` / `1.0.0` channel for DL, SWRL, and crate removals (`ontologos-rdfs` → `ontologos-rl`). After publish: [Post-1.0 doc update](docs/project/post-1.0-doc-update.md).
+4. **Version pins in docs:** Published install blocks must use **1.0.0** (`docs/scripts/check-doc-versions.sh` enforces this). Migration guides may reference older versions for upgrade paths.
 5. **Breaking changes:** Note them in CHANGELOG under `[Unreleased]` or the target version.
 6. **No `unsafe`:** The workspace forbids unsafe code.
 
@@ -199,7 +199,7 @@ Catalog mechanics: [tests/hermit/README.md](tests/hermit/README.md).
 
 ## Releases
 
-**Next publish:** follow [release-1.0-checklist.md](docs/project/release-1.0-checklist.md). Historical v0.9.0 procedure is summarized in [migration hub](docs/migration/index.md).
+**Next publish:** follow [release-1.0-checklist.md](docs/project/release-1.0-checklist.md) for future releases. See [migration hub](docs/migration/index.md) for upgrade paths.
 
 ### Pre-release checks
 

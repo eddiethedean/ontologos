@@ -62,7 +62,7 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 
 ## I am upgrading an existing integration
 
-[Upgrade to latest](../migration/index.md) — published **v0.9.0** and upcoming **v1.0.0** paths.
+[Upgrade to latest](../migration/index.md) — published **v1.0.0** and upcoming **v1.0.0** paths.
 
 ## Common questions
 

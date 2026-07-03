@@ -131,15 +131,15 @@ let limits = ParseLimits {
 let ontology = load_ontology_with_limits(path, limits)?;
 ```
 
-See `ParseLimits` on [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/0.9.0) for byte/entity/axiom caps.
+See `ParseLimits` on [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/1.0.0) for byte/entity/axiom caps.
 
 ## Dependencies
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
-ontologos-facade = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
+ontologos-facade = "1.0.0"
 ```
 
 On **`main`** (workspace **1.0.0**, pre-tag), use `"1.0.0"` pins or path/git dependencies after the release is published. The facade pulls in `ontologos-el`, `ontologos-dl`, `ontologos-alc`, `ontologos-swrl`, and `ontologos-rl` (including RDFS) transitively.
@@ -149,4 +149,4 @@ On **`main`** (workspace **1.0.0**, pre-tag), use `"1.0.0"` pins or path/git dep
 - [Choosing an API](choosing-an-api.md)
 - [Preview profiles](preview-profiles.md)
 - [Architecture](../architecture.md)
-- [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/0.9.0)
+- [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/1.0.0)

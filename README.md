@@ -12,20 +12,20 @@ OntoLogos solves: *"We want OWL reasoning embedded in Rust or Python services—
 
 Library-first orchestration: **load → detect profile → classify/materialize**, not a Protégé replacement.
 
-**Install today:** `pip install ontologos` or `ontologos-core = "0.9.0"` — **production-ready for EL, RL, and RDFS** on crates.io/PyPI.
+**Install today:** `pip install ontologos` or `ontologos-core = "1.0.0"` — **production-ready for EL, RL, RDFS, OWL 2 DL, and SWRL** on crates.io/PyPI.
 
-**OWL 2 DL and SWRL** require workspace **1.0.0** (build from `main` until the v1.0.0 tag publishes). See [Install channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html) before choosing a profile.
+See [Install channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html) and [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html) for preview profiles (`alc`, `dl-preview`).
 
 > **Known limitations:** OntoLogos does not resolve `owl:imports` and maps a subset of OWL axioms. See [Known limitations](https://ontologos.readthedocs.io/en/latest/guides/known-limitations.html).
 
-**In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "0.9.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
+**In 30 seconds:** `pip install ontologos` or add `ontologos-parser = "1.0.0"` to `Cargo.toml` and load `family.owl`. **Requires Rust 1.88+** for library users — see [Prerequisites](https://ontologos.readthedocs.io/en/latest/guides/prerequisites.html).
 
 > **Using OntoLogos in your app?** You do not need to clone this repo. Use crates.io / PyPI and follow the [5-minute guide](https://ontologos.readthedocs.io/en/latest/getting-started/). Clone only to contribute, run benchmarks, or build the CLI.
 
 | | |
 |---|---|
-| **Published** | **v0.9.0** on crates.io / PyPI |
-| **`main` workspace** | **1.0.0** pre-release · [CHANGELOG](CHANGELOG.md) |
+| **Published** | **v1.0.0** on crates.io / PyPI |
+| **Latest tag** | **v1.0.0** · [CHANGELOG](CHANGELOG.md) |
 | **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
 | **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
 | **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
@@ -70,7 +70,7 @@ Library-first orchestration: **load → detect profile → classify/materialize*
 | **Python data pipelines** | `Reasoner`, `OntologyBuilder`, `explain()`, optional pandas/polars export |
 | **OWL RL / RDFS workflows** | Forward-chaining via **reasonable** through `ontologos-rl` (`rdfs` and `abox` modules) |
 | **OWL EL taxonomies** | In-house completion in `ontologos-el` (no Java) |
-| **Early DL adopters** | `ontologos-dl` on `main`: **100%** catalog parity, full gated conformance @ 30s — PyPI still **0.9.0**; validate on your corpus |
+| **OWL 2 DL workflows** | `ontologos-dl` on **v1.0.0**: **100%** in-scope HermiT catalog parity @ 30s — validate on your corpus |
 
 ---
 
@@ -100,10 +100,10 @@ See [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing
 |------|----------|
 | **Loading** | OWL Functional, RDF/XML, Turtle via horned-owl |
 | **Profiles** | EL, RL, RDFS, QL detection; `auto` routing |
-| **Reasoning** | RDFS materialize, RL saturate, EL classify, OWL DL (on `main` / v1.0.0) |
+| **Reasoning** | RDFS materialize, RL saturate, EL classify, OWL DL, SWRL |
 | **Incremental** | Session state for EL/RL/RDFS mutations |
 | **Explain** | Proof graphs (EL full; RL/RDFS asserted-only) |
-| **Interop** | JSON snapshot v2, bridge adapters, Python wheels |
+| **Interop** | JSON snapshot v3 (v2 read), bridge adapters, Python wheels |
 
 Full construct matrix: [Supported constructs](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs.html).
 
@@ -123,9 +123,9 @@ cargo new ontologos-demo && cd ontologos-demo
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
-ontologos-rl = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
+ontologos-rl = "1.0.0"
 ```
 
 `src/main.rs`:
@@ -248,12 +248,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```toml
 [dependencies]
-ontologos-core = "0.9.0"
-ontologos-parser = "0.9.0"
-ontologos-facade = "0.9.0"
+ontologos-core = "1.0.0"
+ontologos-parser = "1.0.0"
+ontologos-facade = "1.0.0"
 ```
 
-On crates.io the latest **tagged** release is **0.9.0**. Build from `main` with `"1.0.0"` pins for DL and the full **12-crate** library set — see [Release status](docs/project/release-status.md).
+On crates.io the latest **tagged** release is **v1.0.0** — pin all `ontologos-*` crates at `"1.0.0"`. See [Release status](docs/project/release-status.md).
 
 Do **not** call `ontologos_core::Reasoner::classify()` or `Reasoner::is_consistent()` — use `ontologos_facade::check_consistency` and `ontologos_facade::classify`. See [Facade API](https://ontologos.readthedocs.io/en/latest/guides/facade-api.html).
 
@@ -281,7 +281,7 @@ See [Migration hub](https://ontologos.readthedocs.io/en/latest/migration/) for g
 | `ontologos-dl` | [yes](https://crates.io/crates/ontologos-dl) | OWL 2 DL |
 | `ontologos-swrl` | [yes](https://crates.io/crates/ontologos-swrl) | DLSafe SWRL + DL |
 | `ontologos-ql` | [yes](https://crates.io/crates/ontologos-ql) | OWL QL queries + taxonomy hierarchy |
-| `ontologos-cli` | source only | CLI binary — `cargo install --git https://github.com/eddiethedean/ontologos ontologos-cli` |
+| `ontologos-cli` | source only | CLI binary — `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli` |
 | `ontologos-py` | [PyPI](https://pypi.org/project/ontologos/) | Python bindings |
 
 ---

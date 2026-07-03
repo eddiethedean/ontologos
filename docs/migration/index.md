@@ -2,27 +2,24 @@
 
 --8<-- "snippets/channel-banner.md"
 
-**Published today (crates.io / PyPI):** v0.9.0  
-**In development on `main`:** 1.0.0 (HermiT parity **complete** on gated corpora; crates.io/PyPI not yet published)
+**Published today (crates.io / PyPI):** **v1.0.0**
 
 | Your situation | Guide |
 |----------------|-------|
-| Using v0.9.0 in production | Stay on `0.9.0` pins; read [Release status](../project/release-status.md) |
-| Upgrading from v0.8.x | [v0.8.x → v0.9.0](v0.8.x-to-v0.9.0.md) then optionally [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md) when tagged |
-| Tracking `main` / 1.0.0 workspace | [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md) |
-| Jump from v0.8.x directly | [v0.8.x → v1.0.0](v0.8.x-to-v1.0.0.md) |
+| Fresh install | Pin `ontologos-* = "1.0.0"` or `pip install ontologos==1.0.0` |
+| Upgrading from v0.9.x | [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md) |
+| Upgrading from v0.8.x | [v0.8.x → v1.0.0](v0.8.x-to-v1.0.0.md) |
+| Older releases | [Historical migrations](historical.md) |
 
-## v0.9.0 at a glance (published)
+## v1.0.0 at a glance (published)
 
-**Rust:** Bump all `ontologos-*` crate pins to `"0.9.0"` in `Cargo.toml`. No API changes from v0.8.0.
+**Rust:** Bump all `ontologos-*` crate pins to `"1.0.0"` in `Cargo.toml`. Use `ontologos_facade::classify` — `Reasoner::classify()` removed from core.
 
-**Python:** `pip install -U ontologos`. New: `Ontology`, `OntologyBuilder`, `explain()`, incremental mutations, optional pandas/polars export. See [Python guide](../guides/python.md).
+**Python:** `pip install -U ontologos`. `profile="dl"` and `profile="swrl"` are production-supported on PyPI **1.0.0**.
 
-**CLI:** Unchanged commands; `classify --profile auto|el|rl|rdfs`, `materialize`, `explain`.
+**CLI:** `classify --profile auto|el|rl|rdfs|dl|swrl`, `materialize`, `explain`, `query`.
 
-## v1.0.0 (when tagged)
-
-[ROADMAP Phase 9](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md#phase-9--v100-tag-100-in-scope-parity) engineering gates are **green** on `main` (`parity_pct = 100%`, full suite @ 30s). The **v1.0.0** git tag ships after crates.io + PyPI **1.0.0** publish. Until then, `main` uses workspace **1.0.0** semver without a matching installable release.
+**Breaking changes from 0.9.x:** JSON writers emit v3; shim crates removed (`ontologos-rdfs` → `ontologos-rl`, `ontologos-query` → `ontologos-ql`). See [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md).
 
 ## Historical migrations
 
@@ -33,4 +30,3 @@ Older step-by-step guides: [Historical migrations](historical.md).
 - [CHANGELOG](../project/changelog.md)
 - [Release notes](../project/release-notes.md)
 - [Profile stability matrix](../guides/profile-stability.md)
-- [Post-1.0 doc update](../project/post-1.0-doc-update.md) *(after tag ships)*

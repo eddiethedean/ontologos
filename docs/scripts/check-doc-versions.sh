@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 WORKSPACE_VERSION="$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')"
-PUBLISHED_VERSION="0.9.0"
+PUBLISHED_VERSION="1.0.0"
 echo "Workspace version: ${WORKSPACE_VERSION}"
 echo "Published version: ${PUBLISHED_VERSION}"
 
@@ -81,15 +81,18 @@ for file in README.md docs/index.md; do
   if grep -q 'install-channels' "$file" 2>/dev/null; then
     has_banner=1
   fi
-  if grep -q "Latest tagged release is \*\*v0.9.0\*\*" "$file" 2>/dev/null; then
+  if grep -q "Latest tagged release is \*\*v1.0.0\*\*" "$file" 2>/dev/null; then
+    has_banner=1
+  fi
+  if grep -q "Latest release is \*\*v1.0.0\*\*" "$file" 2>/dev/null; then
     has_banner=1
   fi
   if [[ "$has_banner" -eq 0 ]]; then
     echo "ERROR: ${file} missing release-channel messaging (banner snippet or install-channels link)"
     FAIL=1
   fi
-  if ! grep -Eq 'main.*1\.0\.0|1\.0\.0.*main' "$file"; then
-    echo "ERROR: ${file} missing main-branch 1.0.0 pre-release note"
+  if ! grep -Eq 'v1\.0\.0.*(published|crates\.io|PyPI)' "$file"; then
+    echo "ERROR: ${file} missing v1.0.0 published channel note"
     FAIL=1
   fi
 done

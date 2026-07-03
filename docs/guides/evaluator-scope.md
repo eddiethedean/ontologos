@@ -66,7 +66,7 @@ Composite minimum of:
 
 | Channel | DL evaluation | Command |
 |---------|---------------|---------|
-| PyPI **0.9.0** | EL/RL/RDFS only | `pip install ontologos==0.9.0` |
+| PyPI **0.9.0** | EL/RL/RDFS only | `pip install ontologos==1.0.0` |
 | **`main` workspace** | Full DL + SWRL | Build from git; `ontologos classify --profile dl` |
 
 See [Evaluator playbook](evaluator-playbook.md) and [Comparison](../comparison.md).
