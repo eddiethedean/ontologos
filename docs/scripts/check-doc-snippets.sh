@@ -69,9 +69,20 @@ for required in docs/guides/evaluator-scope.md docs/guides/install-channels.md d
   fi
 done
 
-# Compile-check canonical facade documentation pattern.
-echo "Running facade doc snippet compile check..."
-cargo test -p ontologos-facade --test doc_snippets --locked --quiet
+# Compile-check canonical facade documentation pattern (requires Rust toolchain).
+if [[ "${SKIP_DOC_SNIPPET_CARGO:-}" == "1" ]]; then
+  echo "Skipping facade doc snippet compile check (SKIP_DOC_SNIPPET_CARGO=1)"
+elif ! command -v cargo >/dev/null 2>&1; then
+  if [[ "${REQUIRE_DOC_SNIPPET_CARGO:-}" == "1" ]]; then
+    echo "ERROR: cargo required for facade doc snippet compile check"
+    FAIL=1
+  else
+    echo "Skipping facade doc snippet compile check (cargo not installed)"
+  fi
+else
+  echo "Running facade doc snippet compile check..."
+  cargo test -p ontologos-facade --test doc_snippets --locked --quiet
+fi
 
 if [[ "$FAIL" -ne 0 ]]; then
   exit 1

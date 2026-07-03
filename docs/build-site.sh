@@ -31,4 +31,4 @@ fi
 chmod +x docs/scripts/check-doc-versions.sh
 ./docs/scripts/check-doc-versions.sh
 chmod +x docs/scripts/check-doc-snippets.sh
-./docs/scripts/check-doc-snippets.sh
+REQUIRE_DOC_SNIPPET_CARGO=1 ./docs/scripts/check-doc-snippets.sh

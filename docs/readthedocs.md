@@ -40,7 +40,7 @@ chmod +x docs/build-site.sh
 
 `build-site.sh` runs `mkdocs build --strict`, fails on any `WARNING` line, and runs `docs/scripts/check-doc-versions.sh` and `check-doc-snippets.sh`.
 
-Read the Docs (`.readthedocs.yaml`) runs the same version and snippet checks before `mkdocs build --strict`.
+Read the Docs (`.readthedocs.yaml`) runs version checks and static snippet lint before `mkdocs build --strict`. The Rust facade snippet compile check runs in CI via `build-site.sh` (RTD has no Rust toolchain).
 
 Output directory: `site/` (gitignored).
 
