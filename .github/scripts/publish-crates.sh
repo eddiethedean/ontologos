@@ -5,9 +5,12 @@ set -euo pipefail
 # can lag behind uploads, so each crate is retried before failing the job.
 #
 # v1.0.x order (12 publish = true crates):
-#   core → profile → bridge → parser → rl → alc → el
+#   core → profile → parser → bridge → rl → el → alc
 #   → dl → swrl → explain → ql → facade
 #
+# profile must publish before parser (parser lists profile as a dev-dependency).
+# parser must publish before bridge/rl/el/alc (dev-dependency on parser).
+# alc must publish before dl (runtime dependency on alc).
 # ontologos-alc has no runtime dependency on ontologos-dl (dl is dev-only).
 # CLI, Python, and conformance are not published.
 # Removed shims (rdfs, abox, query) and ontologos-watch — use ontologos-rl / ontologos-ql.
@@ -15,11 +18,11 @@ set -euo pipefail
 CRATES=(
   ontologos-core
   ontologos-profile
-  ontologos-bridge
   ontologos-parser
+  ontologos-bridge
   ontologos-rl
-  ontologos-alc
   ontologos-el
+  ontologos-alc
   ontologos-dl
   ontologos-swrl
   ontologos-explain

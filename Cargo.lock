@@ -801,7 +801,6 @@ name = "ontologos-alc"
 version = "1.0.0"
 dependencies = [
  "ontologos-core",
- "ontologos-dl",
  "ontologos-parser",
  "ontologos-profile",
  "rayon",
@@ -861,6 +860,7 @@ dependencies = [
  "ontologos-explain",
  "ontologos-facade",
  "ontologos-parser",
+ "ontologos-profile",
  "ontologos-rl",
  "ontologos-swrl",
  "rayon",
@@ -958,7 +958,6 @@ dependencies = [
  "horned-owl",
  "libc",
  "ontologos-core",
- "ontologos-dl",
  "ontologos-profile",
  "oxrdfio",
  "thiserror 2.0.18",
@@ -969,7 +968,6 @@ name = "ontologos-profile"
 version = "1.0.0"
 dependencies = [
  "ontologos-core",
- "ontologos-parser",
  "serde",
  "thiserror 2.0.18",
 ]

@@ -1,9 +1,9 @@
-//! Real-corpus hybrid routing smoke (Phase 1.5).
+//! Profile detection and hybrid routing on benchmark corpora (moved from ontologos-profile).
 
 use std::path::{Path, PathBuf};
 
 use ontologos_parser::load_ontology;
-use ontologos_profile::{OwlProfile, classify_hybrid, detect_profile};
+use ontologos_profile::{OwlProfile, classify_hybrid, detect_profile, scanner::scan_constructs};
 
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -18,6 +18,26 @@ fn load_corpus(relative: &str) -> Option<ontologos_core::Ontology> {
         return None;
     }
     Some(load_ontology(&path).expect("load corpus"))
+}
+
+#[test]
+fn datatype_fixture_detected_as_dl_not_rl() {
+    let path = repo_root().join(
+        "benchmarks/data/hermit/axioms/hermit_reasoner_datatypestest_testallvaluesfrominteger1.ofn",
+    );
+    assert!(
+        path.is_file(),
+        "missing HermiT datatype fixture at {} (vendored with benchmarks/data/hermit)",
+        path.display()
+    );
+    let ontology = load_ontology(&path).expect("load");
+    let report = detect_profile(&ontology).expect("detect");
+    let constructs = scan_constructs(&ontology);
+    eprintln!("detected={:?} constructs={constructs:?}", report.detected);
+    if let Some(meta) = ontology.parse_meta() {
+        eprintln!("profile_constructs={:?}", meta.profile_constructs);
+    }
+    assert_ne!(report.detected, Some(OwlProfile::Rl));
 }
 
 #[test]

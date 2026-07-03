@@ -70,4 +70,5 @@ path = "src/bin/sync_promoted.rs"
 ontologos-conformance = { path = "." }
 ontologos-el = { workspace = true }
 ontologos-explain = { workspace = true }
+ontologos-profile = { workspace = true }
 ontologos-rl = { workspace = true }

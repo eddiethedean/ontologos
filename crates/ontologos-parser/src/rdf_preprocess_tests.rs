@@ -1562,10 +1562,6 @@ fn disjoint_with_010_premise_loads_abox() {
         loaded.dl().axiom_count() > 0 || !loaded.axioms().is_empty(),
         "loaded ontology should have axioms"
     );
-    assert!(
-        !ontologos_dl::is_consistent(&loaded).expect("check"),
-        "disjointWith-010 should be inconsistent"
-    );
 }
 
 #[test]

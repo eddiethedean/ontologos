@@ -23,8 +23,3 @@ thiserror = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 rayon = { workspace = true }
-
-[dev-dependencies]
-ontologos-dl = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
