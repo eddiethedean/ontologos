@@ -24,6 +24,8 @@ dist/
 !/benchmarks/data/go-subset.owl
 !/benchmarks/data/pizza-el-golden.json
 !/benchmarks/data/dl-taxonomy-golden.json
+!/benchmarks/data/tier-c-strict-status.json
+!/benchmarks/data/dl-perf-snapshot.json
 !/benchmarks/data/hermit/
 !/benchmarks/data/hermit/**
 

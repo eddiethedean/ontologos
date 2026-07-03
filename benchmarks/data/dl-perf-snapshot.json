@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-07-02T01:18:56.753989+00:00",
+  "cli": "ontologos --profile dl classify (release)",
+  "run_slow_dl_gates": false,
+  "results": [
+    {
+      "corpus": "family.owl",
+      "profile": "dl",
+      "elapsed_s": 0.038,
+      "target_s": 0.1,
+      "meets_target": true,
+      "pr_gate": true
+    },
+    {
+      "corpus": "pizza.owl",
+      "profile": "dl",
+      "elapsed_s": 0.698,
+      "target_s": 30.0,
+      "meets_target": true,
+      "pr_gate": false
+    },
+    {
+      "corpus": "go-subset.owl",
+      "profile": "dl",
+      "elapsed_s": 0.118,
+      "target_s": 10.0,
+      "meets_target": true,
+      "pr_gate": false
+    }
+  ]
+}
