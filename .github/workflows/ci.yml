@@ -162,6 +162,32 @@ jobs:
           pip install pyright
           pyright python tests
 
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Download benchmark corpora
+        run: ./benchmarks/scripts/download.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build and test Node bindings
+        working-directory: crates/ontologos-node
+        run: |
+          npm install
+          npm run build
+          npm test
+      - name: Build and test WASM package
+        working-directory: crates/ontologos-wasm
+        run: |
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          npm install
+          npm test
+      - name: Test shared JS binding logic
+        run: cargo test -p ontologos-js --locked
+
   python-macos:
     runs-on: macos-latest
     steps:

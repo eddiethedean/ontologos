@@ -1,0 +1,45 @@
+{
+  "name": "@ontologos/wasm",
+  "version": "1.0.1",
+  "description": "WebAssembly bindings for the OntoLogos OWL reasoner",
+  "type": "module",
+  "main": "./pkg/ontologos_wasm.js",
+  "types": "./pkg/ontologos_wasm.d.ts",
+  "files": [
+    "pkg",
+    "js"
+  ],
+  "exports": {
+    ".": {
+      "types": "./pkg/ontologos_wasm.d.ts",
+      "import": "./js/index.js"
+    },
+    "./init": {
+      "types": "./pkg/ontologos_wasm.d.ts",
+      "import": "./js/index.js"
+    },
+    "./pkg/ontologos_wasm.js": "./pkg/ontologos_wasm.js"
+  },
+  "scripts": {
+    "build": "wasm-pack build --target web --out-dir pkg --release",
+    "build:node": "wasm-pack build --target nodejs --out-dir pkg-node --release",
+    "test": "npm run build && node --test js/test.mjs"
+  },
+  "keywords": [
+    "owl",
+    "ontology",
+    "reasoner",
+    "wasm",
+    "semantic-web"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eddiethedean/ontologos.git",
+    "directory": "crates/ontologos-wasm"
+  },
+  "homepage": "https://ontologos.readthedocs.io/",
+  "engines": {
+    "node": ">=18"
+  }
+}

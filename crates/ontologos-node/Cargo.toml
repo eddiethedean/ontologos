@@ -1,0 +1,27 @@
+[package]
+name = "ontologos-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Node.js native bindings for OntoLogos"
+publish = false
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+ontologos-js = { workspace = true }
+napi = { workspace = true }
+napi-derive = { workspace = true }
+serde_json = { workspace = true }
+
+[build-dependencies]
+napi-build = { workspace = true }

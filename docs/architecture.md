@@ -9,6 +9,9 @@ flowchart TB
   subgraph surfaces [Surfaces]
     cli[ontologos_cli]
     py[ontologos_py]
+    js[ontologos_js]
+    node[ontologos_node]
+    wasm[ontologos_wasm]
     query[ontologos_ql]
     explain[ontologos_explain]
   end
@@ -61,12 +64,17 @@ flowchart TB
   cli --> profile
   cli --> explain
   py --> facade
+  js --> facade
+  js --> parser
+  js --> core
+  node --> js
+  wasm --> js
   core --> serde
 ```
 
 Published to crates.io (12 crates): `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-bridge`, `ontologos-rl`, `ontologos-el`, `ontologos-alc`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`, `ontologos-contract`.
+Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`, `ontologos-contract`, `ontologos-js`, `ontologos-node`, `ontologos-wasm`.
 
 ## Data flow
 

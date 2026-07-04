@@ -157,11 +157,11 @@ impl PyReasoner {
             }
             ClassifyOutcome::Rdfs(report) => {
                 self.last_taxonomy = None;
-                Ok(rdfs_classify_dict(py, &report)?.into())
+                Ok(rdfs_classify_dict(py, self.reasoner.ontology(), &report)?.into())
             }
             ClassifyOutcome::Rl(report) => {
                 self.last_taxonomy = None;
-                Ok(rl_classify_dict(py, &report)?.into())
+                Ok(rl_classify_dict(py, self.reasoner.ontology(), &report)?.into())
             }
             _ => Err(pyo3::exceptions::PyRuntimeError::new_err(
                 "unsupported ClassifyOutcome variant",

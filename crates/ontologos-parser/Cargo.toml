@@ -25,6 +25,9 @@ horned-owl = { workspace = true }
 oxrdfio = "0.2"
 thiserror = { workspace = true }
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+horned-owl = { workspace = true, features = ["remote"] }
+
 [target.'cfg(target_os = "macos")'.dependencies]
 libc = "0.2"
 

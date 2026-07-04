@@ -94,6 +94,8 @@ nav:
       - Evaluator playbook: guides/evaluator-playbook.md
       - Profile detection: guides/profile-detection.md
       - Python: guides/python.md
+      - Node.js: guides/node.md
+      - WebAssembly: guides/wasm.md
       - Glossary: guides/glossary.md
       - Incremental reasoning: guides/incremental-reasoning.md
       - Protégé axiom counts: guides/protege-axiom-counts.md

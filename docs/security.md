@@ -106,6 +106,36 @@ Validate DL results on **your own corpus** with `check_consistency` and `budget_
 
 Report security vulnerabilities privately — see [Security policy](project/security-policy.md) (not public GitHub issues).
 
+## JavaScript bindings (Node, WASM)
+
+Node (`ontologos-node`) and browser WASM (`@ontologos/wasm`) share `ontologos-js` and follow the same security model as Rust/Python with binding-specific caveats.
+
+### Untrusted input defaults
+
+| Surface | Recommended API | Parse mode |
+|---------|-----------------|------------|
+| Browser upload (bytes/text) | `Ontology.fromBytes` / `fromText` | Strict |
+| Node sandboxed file | `Ontology.loadIn(base, path)` | Strict + path containment |
+| Trusted local corpus | `Ontology.load`, `Reasoner.fromPath`, `fromBytesLenient` | Lenient |
+
+Use **`fromJsonWithLimits`** / **`fromObjectWithLimits`** (and byte loaders with custom `ParseLimits` when exposed) for user JSON snapshots. `fromObject` / `fromDict` serializes to JSON internally and rejects payloads above `max_json_bytes` **before** parsing.
+
+### Resource limits
+
+Defaults match `ontologos_core::Limits` and `ontologos_parser::ParseLimits` (16 MiB JSON, 64 MiB files, etc.). Tighten limits for browser uploads (1–4 MiB JSON is a practical starting point).
+
+### Threading and concurrency
+
+- **Single-threaded handles:** `Ontology` and `Reasoner` use `Rc<RefCell<…>>` in WASM and are not `Send`/`Sync`. Do not share across Node `worker_threads` or multiple WASM workers without separate instances.
+- **Parser mutex:** OWL file loads in Node serialize on a process-wide horned-owl lock (see [Parser concurrency](#parser-concurrency-server-embedders)). JSON/`fromBytes` paths do not use this lock.
+- **DL in WASM:** Full DL can block the UI thread — use `budgetSecs` and run in a dedicated Web Worker.
+
+### Typed errors
+
+Bindings map `ParseError`, `ResourceLimitError`, and `IncompleteReasoningError` to distinguishable exceptions (WASM: `Error.name` / `.code`; Node: message prefix + `errorCodeFromMessage`).
+
+Guides: [Node.js](guides/node.md) · [WebAssembly](guides/wasm.md)
+
 ## Related
 
 - [JSON snapshot v3](json-snapshot-v3.md) · [v2 legacy](json-snapshot-v2.md)

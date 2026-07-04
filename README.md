@@ -14,6 +14,8 @@ Built for services and data pipelines, not as a Protégé replacement.
 | Try now | Command |
 |---------|---------|
 | **Python** | `pip install ontologos` |
+| **Node.js** | Build `crates/ontologos-node` (see [Node guide](https://ontologos.readthedocs.io/en/latest/guides/node.html)) |
+| **WebAssembly** | Build `crates/ontologos-wasm` (see [WASM guide](https://ontologos.readthedocs.io/en/latest/guides/wasm.html)) |
 | **Rust** | Add `ontologos-parser`, `ontologos-facade` @ `1.0.0` to `Cargo.toml` |
 | **CLI** | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli` |
 | **Evaluate** | [30-minute playbook](https://ontologos.readthedocs.io/en/latest/guides/evaluator-playbook.html) |
@@ -35,6 +37,8 @@ Built for services and data pipelines, not as a Protégé replacement.
 | **Not sure?** | [Start here](https://ontologos.readthedocs.io/en/latest/guides/start-here.html) |
 | **Rust (no clone)** | [5-minute guide](https://ontologos.readthedocs.io/en/latest/getting-started/#cratesio-only-no-clone) |
 | **Python** | [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html) |
+| **Node.js** | [Node.js guide](https://ontologos.readthedocs.io/en/latest/guides/node.html) |
+| **WebAssembly** | [WASM guide](https://ontologos.readthedocs.io/en/latest/guides/wasm.html) |
 | **CLI** | [CLI installation](https://ontologos.readthedocs.io/en/latest/getting-started/cli-install.html) |
 | **Evaluate vs HermiT/ELK** | [Evaluator playbook](https://ontologos.readthedocs.io/en/latest/guides/evaluator-playbook.html) · [Evaluator scope](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope.html) |
 | **Contribute** | [CONTRIBUTING](CONTRIBUTING.md) |

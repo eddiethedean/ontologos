@@ -35,3 +35,9 @@ dist/
 # MkDocs build output
 /site/
 .venv-docs/
+
+# JavaScript / Node / WASM bindings
+crates/ontologos-node/node_modules/
+crates/ontologos-node/*.node
+crates/ontologos-wasm/pkg/
+crates/ontologos-wasm/pkg-node/

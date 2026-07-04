@@ -15,6 +15,9 @@ members = [
     "crates/ontologos-explain",
     "crates/ontologos-cli",
     "crates/ontologos-py",
+    "crates/ontologos-js",
+    "crates/ontologos-wasm",
+    "crates/ontologos-node",
     "crates/ontologos-conformance",
     "crates/ontologos-contract",
 ]
@@ -36,12 +39,20 @@ thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 clap = { version = "4", features = ["derive"] }
-horned-owl = "1.4"
+horned-owl = { version = "1.4", default-features = false }
 reasonable = "0.4"
 oxrdf = "0.3"
 petgraph = "0.7"
 rayon = "1"
 pyo3 = { version = "0.23" }
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+js-sys = "0.3"
+napi = { version = "2", default-features = false, features = ["napi4", "serde-json"] }
+napi-derive = "2"
+napi-build = "2"
+
+ontologos-js = { path = "crates/ontologos-js", version = "1.0.1" }
 
 ontologos-core = { path = "crates/ontologos-core", version = "1.0.1" }
 ontologos-bridge = { path = "crates/ontologos-bridge", version = "1.0.1" }

@@ -19,7 +19,7 @@ pub(crate) fn parse_profile(profile: Option<&str>) -> PyResult<ontologos_core::P
         "el" => Ok(Profile::El),
         "alc" | "dl" => Ok(Profile::Dl),
         "dl-preview" | "dl_preview" => Ok(Profile::DlPreview),
-        "swrl" => Ok(Profile::Dl),
+        "swrl" => Ok(Profile::Swrl),
         other => Err(py_err(format!(
             "unsupported profile {other:?}; use auto, rdfs, rl, el, dl, or dl-preview"
         ))),
@@ -179,31 +179,46 @@ pub(crate) fn json_to_pydict<'py>(
         .map_err(|e| py_err(e.to_string()))
 }
 
+pub(crate) fn parse_meta_from_ontology(ontology: &Ontology) -> Option<ParseMetaSummary> {
+    ontology.parse_meta().map(ParseMetaSummary::from)
+}
+
 pub(crate) fn taxonomy_classify_dict<'py>(
     py: Python<'py>,
     ontology: &Ontology,
     taxonomy: &Taxonomy,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let json =
-        ontologos_facade::taxonomy_json("classified", taxonomy, ontology, None).map_err(py_err)?;
+    let parse_meta = parse_meta_from_ontology(ontology);
+    let json = ontologos_facade::taxonomy_json(
+        "classified",
+        taxonomy,
+        ontology,
+        parse_meta.as_ref(),
+    )
+    .map_err(py_err)?;
     let value = serde_json::to_value(&json).map_err(py_err)?;
     json_to_pydict(py, &value)
 }
 
 pub(crate) fn rdfs_classify_dict<'py>(
     py: Python<'py>,
+    ontology: &Ontology,
     report: &ontologos_rl::rdfs::MaterializationReport,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let json = ontologos_facade::rdfs_materialization_json("classified", report, None);
+    let parse_meta = parse_meta_from_ontology(ontology);
+    let json =
+        ontologos_facade::rdfs_materialization_json("classified", report, parse_meta.as_ref());
     let value = serde_json::to_value(&json).map_err(py_err)?;
     json_to_pydict(py, &value)
 }
 
 pub(crate) fn rl_classify_dict<'py>(
     py: Python<'py>,
+    ontology: &Ontology,
     report: &ontologos_rl::MaterializationReport,
 ) -> PyResult<Bound<'py, PyDict>> {
-    let json = ontologos_facade::rl_materialization_json("classified", report, None);
+    let parse_meta = parse_meta_from_ontology(ontology);
+    let json = ontologos_facade::rl_materialization_json("classified", report, parse_meta.as_ref());
     let value = serde_json::to_value(&json).map_err(py_err)?;
     json_to_pydict(py, &value)
 }

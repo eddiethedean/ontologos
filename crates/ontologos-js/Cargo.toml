@@ -1,0 +1,28 @@
+[package]
+name = "ontologos-js"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "Shared JavaScript/WASM binding logic for OntoLogos"
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+ontologos-core = { workspace = true }
+ontologos-parser = { workspace = true }
+ontologos-facade = { workspace = true }
+ontologos-explain = { workspace = true }
+ontologos-ql = { workspace = true }
+ontologos-rl = { workspace = true }
+ontologos-dl = { workspace = true }
+ontologos-alc = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }

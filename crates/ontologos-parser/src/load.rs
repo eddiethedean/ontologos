@@ -158,8 +158,9 @@ pub fn load_ontology_lenient(path: &Path) -> Result<Ontology> {
 
 /// Load an ontology constrained to stay under `base` (untrusted uploads).
 pub fn load_ontology_in(base: &Path, path: &Path) -> Result<Ontology> {
+    let resolved = resolve_path_under_base(base, path);
     load_ontology_with_limits_and_base(
-        path,
+        &resolved,
         ParseLimits {
             merge_imports: true,
             ..ParseLimits::default()
@@ -170,7 +171,16 @@ pub fn load_ontology_in(base: &Path, path: &Path) -> Result<Ontology> {
 
 /// Lenient sandboxed load for untrusted uploads that may skip axioms with warnings.
 pub fn load_ontology_lenient_in(base: &Path, path: &Path) -> Result<Ontology> {
-    load_ontology_with_limits_and_base(path, ParseLimits::lenient(), Some(base))
+    let resolved = resolve_path_under_base(base, path);
+    load_ontology_with_limits_and_base(&resolved, ParseLimits::lenient(), Some(base))
+}
+
+fn resolve_path_under_base(base: &Path, path: &Path) -> PathBuf {
+    if path.is_relative() {
+        base.join(path)
+    } else {
+        path.to_path_buf()
+    }
 }
 
 /// Load an ontology with custom [`ParseLimits`].
@@ -1363,6 +1373,56 @@ pub fn load_ofn_from_str_with_limits(text: &str, limits: ParseLimits) -> Result<
     finalize_parsed_ontology(ontology, report, limits, false)
 }
 
+/// Parse an in-memory ontology document (OWL/XML, RDF/XML, Turtle, or Functional Syntax).
+///
+/// Format is detected from content; no filesystem access required (browser/WASM friendly).
+pub fn load_ontology_from_bytes(bytes: &[u8]) -> Result<Ontology> {
+    load_ontology_from_bytes_with_limits(bytes, ParseLimits::default(), true)
+}
+
+/// Lenient in-memory load (same limits as [`load_ontology_lenient`]).
+pub fn load_ontology_from_bytes_lenient(bytes: &[u8]) -> Result<Ontology> {
+    load_ontology_from_bytes_with_limits(bytes, ParseLimits::lenient(), false)
+}
+
+/// Parse in-memory ontology bytes with custom limits.
+pub fn load_ontology_from_bytes_with_limits(
+    bytes: &[u8],
+    limits: ParseLimits,
+    validate: bool,
+) -> Result<Ontology> {
+    if bytes.len() > limits.max_file_bytes {
+        return Err(Error::Parse(format!(
+            "in-memory ontology size {} exceeds limit of {} bytes",
+            bytes.len(),
+            limits.max_file_bytes
+        )));
+    }
+    let format = detect_format_from_bytes(bytes).ok_or_else(|| {
+        Error::Parse(
+            "could not detect ontology format from content; expected OWL/XML, RDF/XML, Turtle, or Functional Syntax"
+                .into(),
+        )
+    })?;
+    let set_ontology = read_horned_owl_from_reader(
+        &mut std::io::Cursor::new(bytes),
+        format,
+        limits,
+    )?;
+    let (ontology, report) = map_to_core(&set_ontology, limits)?;
+    finalize_parsed_ontology(ontology, report, limits, validate)
+}
+
+/// Parse an in-memory ontology document from a UTF-8 string.
+pub fn load_ontology_from_str(text: &str) -> Result<Ontology> {
+    load_ontology_from_bytes(text.as_bytes())
+}
+
+/// Lenient in-memory load from a UTF-8 string.
+pub fn load_ontology_from_str_lenient(text: &str) -> Result<Ontology> {
+    load_ontology_from_bytes_lenient(text.as_bytes())
+}
+
 /// Load an OFN ontology and append axioms from a second OFN fragment (same prefixes/IRIs).
 pub fn load_ofn_with_incremental(base: &Path, incremental: &Path) -> Result<Ontology> {
     load_ofn_with_incremental_and_limits(base, incremental, ParseLimits::default(), None)
@@ -1539,6 +1599,28 @@ mod tests {
 
         let _ = std::fs::remove_file(&file);
         let _ = std::fs::remove_dir(&nested);
+        let _ = std::fs::remove_dir(&base);
+    }
+
+    #[test]
+    fn load_in_resolves_relative_path_under_base() {
+        let parent = std::env::temp_dir();
+        let base = parent.join("ontologos_relative_base");
+        std::fs::create_dir_all(&base).expect("create base");
+        let ofn = concat!(
+            "Prefix(:=<http://example.org/>)\n",
+            "Ontology(<http://example.org/o>\n",
+            "  Declaration(Class(:A))\n",
+            "  Declaration(Class(:B))\n",
+            "  SubClassOf(:A :B)\n",
+            ")"
+        );
+        std::fs::write(base.join("test.ofn"), ofn).expect("write file");
+
+        let ontology = load_ontology_in(&base, Path::new("test.ofn")).expect("sandbox load");
+        assert!(ontology.axiom_count() >= 1);
+
+        let _ = std::fs::remove_file(base.join("test.ofn"));
         let _ = std::fs::remove_dir(&base);
     }
 
