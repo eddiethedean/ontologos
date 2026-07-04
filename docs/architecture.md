@@ -74,7 +74,7 @@ flowchart TB
 
 Published to crates.io (12 crates): `ontologos-core`, `ontologos-profile`, `ontologos-parser`, `ontologos-bridge`, `ontologos-rl`, `ontologos-el`, `ontologos-alc`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`, `ontologos-contract`, `ontologos-js`, `ontologos-node`, `ontologos-wasm`.
+Workspace-only: `ontologos-cli`, `ontologos-conformance`, `ontologos-py`, `ontologos-contract`, `ontologos-js`, `ontologos-node`, `ontologos-wasm`, `ontologos-jni`, `ontologos-dotnet`, `ontologos-ffi`, `ontologos-c`.
 
 ## Data flow
 
@@ -156,8 +156,8 @@ Owns conversions between models for parsing and RL/RDFS adapters:
 | OWL RL | `ontologos-rl` | `reasonable` |
 | OWL EL | `ontologos-el` | In-house ELK-style completion |
 | ALC | `ontologos-alc` | Tableau-lite (preview) |
-| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (**stable on v1.0.0**) |
-| SWRL | `ontologos-swrl` | DLSafe SWRL + DL (**stable on v1.0.0**) |
+| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (**stable on v1.1.0**) |
+| SWRL | `ontologos-swrl` | DLSafe SWRL + DL (**stable on v1.1.0**) |
 | Query | `ontologos-ql` | petgraph over `Taxonomy`; OWL QL conjunctive queries |
 | Explain | `ontologos-explain` | petgraph proof graphs; EL inference traces |
 

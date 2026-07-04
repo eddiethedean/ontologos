@@ -1,7 +1,7 @@
 //! Wall-clock budgets and capped parallelism for DL user paths.
 
 use std::cell::Cell;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
@@ -12,9 +12,17 @@ static NEXT_OP_ID: AtomicU64 = AtomicU64::new(1);
 /// Op id that should cooperatively cancel (0 = none). Per-op, not global, so parallel
 /// scans do not poison each other when one case times out.
 static CANCELLED_OP: AtomicU64 = AtomicU64::new(0);
+/// Timed-out jobs still executing on pool workers; reject new work when at capacity.
+static ORPHANED_WORKERS: AtomicUsize = AtomicUsize::new(0);
 
 thread_local! {
     static CURRENT_OP: Cell<u64> = const { Cell::new(0) };
+}
+
+type PoolJob = Box<dyn FnOnce() + Send>;
+
+struct DlThreadPool {
+    submit_tx: std::sync::mpsc::Sender<PoolJob>,
 }
 
 /// Whether the current DL worker should cooperatively stop (budget timeout for *this* op).
@@ -26,15 +34,25 @@ pub fn dl_cancel_requested() -> bool {
 
 /// Whether WG corpus consistency shortcuts are enabled.
 ///
-/// On in unit tests (`cfg(test)`), or when `ONTOLOGOS_CONFORMANCE=1` (CI / conformance
-/// harness). Production embedders should leave both unset.
+/// Enabled in unit tests (`cfg(test)`), or in debug builds when `ONTOLOGOS_WG_SHORTCUTS=1`.
+/// Production release builds never enable shortcuts via environment variables.
 #[must_use]
 pub fn wg_shortcuts_enabled() -> bool {
-    cfg!(test) || conformance_harness_enabled()
+    if cfg!(test) {
+        return true;
+    }
+    #[cfg(debug_assertions)]
+    {
+        wg_shortcuts_env_enabled()
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        false
+    }
 }
 
-fn conformance_harness_enabled() -> bool {
-    std::env::var("ONTOLOGOS_CONFORMANCE")
+fn wg_shortcuts_env_enabled() -> bool {
+    std::env::var("ONTOLOGOS_WG_SHORTCUTS")
         .ok()
         .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
@@ -50,8 +68,7 @@ pub fn dl_max_workers() -> usize {
 }
 
 /// Resolve wall-clock budget from config or `ONTOLOGOS_DL_BUDGET_SECS`.
-#[must_use]
-pub fn resolve_budget_secs(config: Option<u64>) -> Option<Duration> {
+pub fn resolve_budget_secs(config: Option<u64>) -> crate::Result<Option<Duration>> {
     let from_env = || {
         std::env::var("ONTOLOGOS_DL_BUDGET_SECS")
             .ok()
@@ -60,9 +77,11 @@ pub fn resolve_budget_secs(config: Option<u64>) -> Option<Duration> {
             .map(Duration::from_secs)
     };
     match config {
-        Some(0) => None,
-        Some(secs) => Some(Duration::from_secs(secs)),
-        None => from_env(),
+        Some(0) => Err(Error::Message(
+            "budget_secs must be > 0 when set; use None for unlimited".into(),
+        )),
+        Some(secs) => Ok(Some(Duration::from_secs(secs))),
+        None => Ok(from_env()),
     }
 }
 
@@ -72,7 +91,7 @@ where
     T: Send + 'static,
     F: FnOnce() -> T + Send + 'static,
 {
-    let Some(budget) = resolve_budget_secs(budget_secs) else {
+    let Some(budget) = resolve_budget_secs(budget_secs)? else {
         return Ok(work());
     };
     run_bounded_inner(budget, work)
@@ -83,22 +102,39 @@ where
     T: Send + 'static,
     F: FnOnce() -> T + Send + 'static,
 {
+    let max_workers = dl_max_workers();
+    if ORPHANED_WORKERS.load(Ordering::Acquire) >= max_workers {
+        return Err(Error::IncompleteReasoning(format!(
+            "dl worker pool saturated ({max_workers} timed-out workers still running)"
+        )));
+    }
+
     let gate = dl_worker_gate();
     let permit = acquire_dl_worker_permit(&gate);
     let reclaimed = permit.reclaimed.clone();
     let op_id = NEXT_OP_ID.fetch_add(1, Ordering::Relaxed);
+    let orphaned = Arc::new(AtomicBool::new(false));
+    let orphaned_flag = Arc::clone(&orphaned);
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
-    std::thread::spawn(move || {
-        let _permit = permit;
+    let job: PoolJob = Box::new(move || {
         CURRENT_OP.with(|c| c.set(op_id));
         let result = work();
         CURRENT_OP.with(|c| c.set(0));
+        if orphaned_flag.load(Ordering::Acquire) {
+            ORPHANED_WORKERS.fetch_sub(1, Ordering::AcqRel);
+        }
         let _ = tx.send(result);
     });
+    dl_thread_pool()
+        .submit_tx
+        .send(job)
+        .map_err(|_| Error::IncompleteReasoning("dl worker pool shut down".into()))?;
     match rx.recv_timeout(budget) {
         Ok(v) => Ok(v),
         Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
             CANCELLED_OP.store(op_id, Ordering::Release);
+            orphaned.store(true, Ordering::Release);
+            ORPHANED_WORKERS.fetch_add(1, Ordering::AcqRel);
             if !reclaimed.swap(true, Ordering::AcqRel) {
                 release_dl_permit(&gate);
             }
@@ -114,6 +150,31 @@ where
             Err(Error::IncompleteReasoning("dl worker disconnected".into()))
         }
     }
+}
+
+fn dl_thread_pool() -> &'static DlThreadPool {
+    static POOL: std::sync::OnceLock<DlThreadPool> = std::sync::OnceLock::new();
+    POOL.get_or_init(|| {
+        let (submit_tx, submit_rx) = std::sync::mpsc::channel::<PoolJob>();
+        let shared_rx = Arc::new(Mutex::new(submit_rx));
+        let max = dl_max_workers();
+        for worker in 0..max {
+            let rx = Arc::clone(&shared_rx);
+            std::thread::Builder::new()
+                .name(format!("ontologos-dl-{worker}"))
+                .spawn(move || {
+                    loop {
+                        let job = match rx.lock().expect("dl pool rx").recv() {
+                            Ok(job) => job,
+                            Err(_) => break,
+                        };
+                        job();
+                    }
+                })
+                .expect("spawn dl worker");
+        }
+        DlThreadPool { submit_tx }
+    })
 }
 
 struct DlWorkerPermit {
@@ -167,8 +228,9 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    fn budget_secs_zero_means_unlimited() {
-        assert_eq!(resolve_budget_secs(Some(0)), None);
+    fn budget_secs_zero_is_rejected() {
+        let err = resolve_budget_secs(Some(0)).unwrap_err();
+        assert!(err.to_string().contains("budget_secs"));
     }
 
     #[test]

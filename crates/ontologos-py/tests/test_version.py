@@ -30,7 +30,7 @@ PIZZA_MINIMAL_JSON = (
 def test_version_matches_release() -> None:
     import ontologos
 
-    assert ontologos.__version__ == "1.0.1"
+    assert ontologos.__version__ == "1.1.0"
 
 
 def test_reasoner_import() -> None:
@@ -45,7 +45,7 @@ def test_classify_el_profile_returns_taxonomy() -> None:
     from ontologos import Reasoner
 
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
-    reasoner = Reasoner(path=str(FIXTURE), profile="el")
+    reasoner = Reasoner(path=str(FIXTURE), profile="el", trusted=True, lenient=True)
     result = reasoner.classify()
     pairs = set(map(tuple, result["subsumptions"]))
     assert (
@@ -62,7 +62,7 @@ def test_classify_auto_profile_routes_el_fixture() -> None:
     from ontologos.types import TaxonomyResult
 
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
-    reasoner = Reasoner(path=str(FIXTURE), profile="auto")
+    reasoner = Reasoner(path=str(FIXTURE), profile="auto", trusted=True, lenient=True)
     result = cast(TaxonomyResult, reasoner.classify())
     pairs = set(map(tuple, result["subsumptions"]))
     assert (
@@ -75,7 +75,7 @@ def test_classify_rdfs_profile_materializes() -> None:
     from ontologos import Reasoner
 
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
-    reasoner = Reasoner(path=str(FIXTURE), profile="rdfs")
+    reasoner = Reasoner(path=str(FIXTURE), profile="rdfs", trusted=True, lenient=True)
     result = reasoner.classify()
     assert result["inferred_axioms"] >= 0
     assert result["final_axiom_count"] >= result["initial_axiom_count"]
@@ -93,7 +93,7 @@ def test_parse_meta_exposes_warnings_for_kind_clash() -> None:
         / "subclass_data_property_decl_first.ttl"
     )
     assert clash.is_file(), f"missing fixture: {clash}"
-    reasoner = Reasoner(path=str(clash), profile="rdfs")
+    reasoner = Reasoner(path=str(clash), profile="rdfs", trusted=True, lenient=True)
     meta = reasoner.parse_meta
     assert meta["skipped_axiom_count"] == 1
     assert meta["logical_axiom_count"] == 1

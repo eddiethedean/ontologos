@@ -27,10 +27,10 @@ export declare class Ontology {
   static fromBytesLenient(bytes: Buffer): Ontology
   static fromText(text: string): Ontology
   static fromTextLenient(text: string): Ontology
-  /** Load from a trusted local path (lenient parse; no sandbox). */
-  static load(path: string): Ontology
-  /** Sandboxed load constrained to `base` (strict; recommended for uploads). */
-  static loadIn(base: string, path: string): Ontology
+  /** Load from a trusted local path (strict parse by default). */
+  static load(path: string, lenient?: boolean | undefined | null): Ontology
+  /** Sandboxed load constrained to `base` (strict parse by default). */
+  static loadIn(base: string, path: string, lenient?: boolean | undefined | null): Ontology
   toJson(): string
   toObject(): any
   get axiomCount(): number
@@ -54,8 +54,8 @@ export declare class OntologyBuilder {
 /** OWL reasoner. */
 export declare class Reasoner {
   constructor(ontology: Ontology, profile?: string | undefined | null, incremental?: boolean | undefined | null, budgetSecs?: number | undefined | null)
-  static fromPath(path: string, profile?: string | undefined | null, incremental?: boolean | undefined | null, budgetSecs?: number | undefined | null): Reasoner
-  static loadIn(base: string, path: string, profile?: string | undefined | null, incremental?: boolean | undefined | null, budgetSecs?: number | undefined | null): Reasoner
+  static fromPath(path: string, profile?: string | undefined | null, incremental?: boolean | undefined | null, budgetSecs?: number | undefined | null, lenient?: boolean | undefined | null): Reasoner
+  static loadIn(base: string, path: string, profile?: string | undefined | null, incremental?: boolean | undefined | null, budgetSecs?: number | undefined | null, lenient?: boolean | undefined | null): Reasoner
   get parseMeta(): any
   get taxonomy(): any | null
   classify(): any

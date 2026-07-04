@@ -76,11 +76,11 @@ fn classify_rl_detects_disjoint_clash() {
     ontology
         .add_axiom(Axiom::DisjointClasses(vec![a, d]))
         .unwrap();
-    let reasoner = Reasoner::builder()
+    let mut reasoner = Reasoner::builder()
         .profile(Profile::Rl)
         .build(ontology)
         .unwrap();
-    assert!(!is_consistent(&reasoner).unwrap());
+    assert!(!is_consistent(&mut reasoner).unwrap());
 }
 
 #[test]
@@ -225,9 +225,9 @@ fn is_consistent_el_detects_unsatisfiable() {
             superclass: nothing,
         })
         .expect("A sub Nothing");
-    let reasoner = Reasoner::builder()
+    let mut reasoner = Reasoner::builder()
         .profile(Profile::El)
         .build(ontology)
         .unwrap();
-    assert!(!is_consistent(&reasoner).unwrap());
+    assert!(!is_consistent(&mut reasoner).unwrap());
 }

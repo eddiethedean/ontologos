@@ -1,6 +1,7 @@
 //! Typed Python exceptions for OntoLogos errors.
 
 use ontologos_core::Error as CoreError;
+use ontologos_explain::Error as ExplainError;
 use ontologos_facade::Error as FacadeError;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -8,6 +9,7 @@ use pyo3::prelude::*;
 pyo3::create_exception!(_ontologos, ParseError, PyException);
 pyo3::create_exception!(_ontologos, ResourceLimitError, PyException);
 pyo3::create_exception!(_ontologos, IncompleteReasoningError, PyException);
+pyo3::create_exception!(_ontologos, OntologyConflictError, PyException);
 
 pub(crate) fn register_exceptions(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("ParseError", m.py().get_type::<ParseError>())?;
@@ -18,6 +20,10 @@ pub(crate) fn register_exceptions(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add(
         "IncompleteReasoningError",
         m.py().get_type::<IncompleteReasoningError>(),
+    )?;
+    m.add(
+        "OntologyConflictError",
+        m.py().get_type::<OntologyConflictError>(),
     )?;
     Ok(())
 }
@@ -48,6 +54,14 @@ pub(crate) fn map_facade_py_err(error: FacadeError) -> PyErr {
             other => PyException::new_err(other.to_string()),
         },
         FacadeError::Core(e) => map_core_py_err(e),
+        other => PyException::new_err(other.to_string()),
+    }
+}
+
+pub(crate) fn map_explain_py_err(error: ExplainError) -> PyErr {
+    match error {
+        ExplainError::Core(e) => map_core_py_err(e),
+        ExplainError::El(ontologos_el::Error::Core(e)) => map_core_py_err(e),
         other => PyException::new_err(other.to_string()),
     }
 }

@@ -14,7 +14,7 @@ def test_explain_dl_family_corpus() -> None:
     assert FAMILY_OWL.is_file(), (
         f"missing family corpus at {FAMILY_OWL} (run ./benchmarks/scripts/download.sh)"
     )
-    reasoner = Reasoner(path=str(FAMILY_OWL), profile="el")
+    reasoner = Reasoner(path=str(FAMILY_OWL), profile="el", trusted=True, lenient=True)
     reasoner.classify()
     graph = reasoner.explain()
     assert graph["node_count"] > 0

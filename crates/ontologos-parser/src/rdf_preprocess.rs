@@ -242,6 +242,9 @@ fn is_direct_rdf_document_child(input: &str, element_start: usize) -> bool {
 
 /// Expand entities with an output size cap for untrusted RDF/XML.
 pub fn expand_xml_entities_with_limit(input: &str, max_bytes: usize) -> Result<String> {
+    const MAX_ENTITY_EXPANSIONS: usize = 10_000;
+    const MAX_ENTITY_NESTING_DEPTH: usize = 32;
+
     if !input.contains("<!ENTITY") {
         if input.len() > max_bytes {
             return Err(Error::Parse(format!(
@@ -269,11 +272,29 @@ pub fn expand_xml_entities_with_limit(input: &str, max_bytes: usize) -> Result<S
         }
         return Ok(strip_xml_internal_subset(input));
     }
+    let nesting_depth = entity_definition_nesting_depth(&entities);
+    if nesting_depth > MAX_ENTITY_NESTING_DEPTH {
+        return Err(Error::Parse(format!(
+            "entity definition nesting depth {nesting_depth} exceeds limit of {MAX_ENTITY_NESTING_DEPTH}"
+        )));
+    }
     let mut out = input.to_owned();
+    let mut total_replacements = 0usize;
     for _ in 0..8 {
         let before = out.clone();
         for (name, value) in &entities {
-            out = out.replace(&format!("&{name};"), value);
+            let needle = format!("&{name};");
+            let count = out.matches(&needle).count();
+            if count == 0 {
+                continue;
+            }
+            total_replacements = total_replacements.saturating_add(count);
+            if total_replacements > MAX_ENTITY_EXPANSIONS {
+                return Err(Error::Parse(format!(
+                    "entity expansion replacement count exceeds limit of {MAX_ENTITY_EXPANSIONS}"
+                )));
+            }
+            out = out.replace(&needle, value);
             if out.len() > max_bytes {
                 return Err(Error::Parse(format!(
                     "expanded RDF/XML size exceeds limit of {max_bytes} bytes during entity expansion"
@@ -285,6 +306,47 @@ pub fn expand_xml_entities_with_limit(input: &str, max_bytes: usize) -> Result<S
         }
     }
     Ok(strip_xml_internal_subset(&out))
+}
+
+fn entity_refs_in(value: &str) -> impl Iterator<Item = &str> {
+    value.split('&').skip(1).filter_map(|segment| {
+        let end = segment.find(';')?;
+        let name = &segment[..end];
+        if name.is_empty() || name.contains(|c: char| !c.is_alphanumeric() && c != '_' && c != '-')
+        {
+            return None;
+        }
+        Some(name)
+    })
+}
+
+fn entity_definition_nesting_depth(entities: &HashMap<String, String>) -> usize {
+    fn depth_of(
+        name: &str,
+        entities: &HashMap<String, String>,
+        visiting: &mut HashSet<String>,
+    ) -> usize {
+        if !visiting.insert(name.to_owned()) {
+            return 0;
+        }
+        let Some(value) = entities.get(name) else {
+            visiting.remove(name);
+            return 0;
+        };
+        let child_max = entity_refs_in(value)
+            .filter(|reference| entities.contains_key(*reference))
+            .map(|reference| depth_of(reference, entities, visiting))
+            .max()
+            .unwrap_or(0);
+        visiting.remove(name);
+        child_max.saturating_add(1)
+    }
+
+    entities
+        .keys()
+        .map(|name| depth_of(name, entities, &mut HashSet::new()))
+        .max()
+        .unwrap_or(0)
 }
 
 /// Remove `<!DOCTYPE ...>` after entity expansion so horned-owl does not re-parse declarations.

@@ -6,13 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: "0"
   # DL budget for contract catalog sample (WG entailment may classify twice).
   ONTOLOGOS_DL_BUDGET_SECS: "30"
-  # WG corpus consistency shortcuts (contract + conformance nightly; off in production embedders).
-  ONTOLOGOS_DL_WG_SHORTCUTS: "1"
+  # WG corpus consistency shortcuts (debug/tests only; see ontologos-dl bounded.rs).
+  ONTOLOGOS_WG_SHORTCUTS: "1"
   ONTOLOGOS_CONFORMANCE: "1"
 
 jobs:
@@ -34,6 +38,8 @@ jobs:
         run: cargo test --workspace --exclude ontologos-conformance --exclude ontologos-contract --locked
       - name: User API contract tests
         run: cargo test -p ontologos-contract --release --locked
+      - name: Build native binding libraries
+        run: cargo build -p ontologos-jni -p ontologos-dotnet -p ontologos-c --release --locked
       - name: HermiT ignore budget
         run: |
           chmod +x benchmarks/scripts/check-hermit-ignore-budget.sh
@@ -135,6 +141,8 @@ jobs:
         env:
           ONTOLOGOS_DL_BUDGET_SECS: "30"
         run: cargo test -p ontologos-contract --release --locked
+      - name: Build native binding libraries (MSRV)
+        run: cargo build -p ontologos-jni -p ontologos-dotnet -p ontologos-c --release --locked
 
   python:
     runs-on: ubuntu-latest
@@ -168,25 +176,33 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Download benchmark corpora
-        run: ./benchmarks/scripts/download.sh
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Build and test Node bindings
-        working-directory: crates/ontologos-node
-        run: |
-          npm install
-          npm run build
-          npm test
-      - name: Build and test WASM package
-        working-directory: crates/ontologos-wasm
+      - name: Build and test Node/WASM bindings
         run: |
           curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-          npm install
-          npm test
-      - name: Test shared JS binding logic
-        run: cargo test -p ontologos-js --locked
+          bash scripts/ci-node.sh
+
+  bindings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Install C/C++ build tools
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+      - name: Build and test Java, .NET, and C/C++ bindings
+        env:
+          ONTOLOGOS_REPO_ROOT: ${{ github.workspace }}
+        run: bash scripts/ci-bindings.sh
 
   python-macos:
     runs-on: macos-latest

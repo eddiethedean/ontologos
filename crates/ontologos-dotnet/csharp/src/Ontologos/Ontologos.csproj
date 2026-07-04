@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Ontologos</RootNamespace>
+    <AssemblyName>Ontologos</AssemblyName>
+    <Version>1.1.0</Version>
+    <Description>.NET bindings for the OntoLogos OWL reasoner</Description>
+    <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\..'))</RepoRoot>
+  </PropertyGroup>
+
+  <Target Name="BuildNative" BeforeTargets="Build">
+    <Exec Command="cargo build -p ontologos-dotnet --release --locked"
+          WorkingDirectory="$(RepoRoot)" />
+  </Target>
+
+</Project>

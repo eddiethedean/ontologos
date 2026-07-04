@@ -907,7 +907,9 @@ impl Mapper<'_> {
             ids.dedup();
             if ids.len() >= 2 {
                 self.push_axiom(Axiom::SameIndividual(ids));
-            } else if !self.limits.strict {
+            } else if self.limits.strict {
+                self.skip("reflexive or degenerate SameIndividual rejected in strict parse");
+            } else {
                 self.report
                     .meta
                     .warn("reflexive or degenerate SameIndividual ignored in lenient parse");
@@ -1005,6 +1007,9 @@ impl Mapper<'_> {
             .any(|lookup| matches!(lookup, NamedLookup::RegistrationFailed))
         {
             self.report.meta.skipped_axiom_count += 1;
+            self.report
+                .meta
+                .warn("axiom skipped due to entity registration failure during mapping");
         } else {
             self.skip(message);
         }
@@ -1083,6 +1088,9 @@ impl Mapper<'_> {
         match self.register_entity(iri, kind) {
             Ok(id) => Some(id),
             Err(err) => {
+                if self.limits.strict {
+                    self.report.meta.skipped_axiom_count += 1;
+                }
                 self.report
                     .meta
                     .warn(format!("failed to register entity {iri}: {err}"));

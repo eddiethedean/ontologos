@@ -1,6 +1,6 @@
 # SWRL quick start
 
-Run **DLSafe SWRL** rules with OWL 2 DL on **v1.0.0** (stable on crates.io and PyPI).
+Run **DLSafe SWRL** rules with OWL 2 DL on **v1.1.0** (stable on crates.io and PyPI).
 
 Profile matrix: [Profile stability](../guides/profile-stability.md). Constructs: [Supported constructs](../reference/supported-constructs.md).
 
@@ -14,7 +14,7 @@ SWRL support is **DLSafe** — rules must not bind variables to anonymous indivi
 ## Python
 
 ```bash
-pip install ontologos==1.0.0
+pip install ontologos==1.1.0
 ```
 
 ```python
@@ -40,9 +40,9 @@ print(reasoner.parse_meta.get("warnings", []))
 
 ```toml
 [dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
-ontologos-facade = "1.0.0"
+ontologos-core = "1.1.0"
+ontologos-parser = "1.1.0"
+ontologos-facade = "1.1.0"
 ```
 
 ```rust
@@ -70,7 +70,7 @@ See [Rust integration contract](../guides/rust-integration-contract.md).
 ## CLI
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli
 ontologos classify --profile swrl --budget-secs 30 my-rules.owl
 ```
 

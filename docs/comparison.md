@@ -2,7 +2,7 @@
 
 Honest positioning for evaluators. **Read [Evaluator scope](guides/evaluator-scope.md) first** — HermiT parity metrics apply to **889 gated conformance cases**, not every real-world ontology.
 
-**Published v1.0.0** covers stable EL, RL, RDFS, **OWL 2 DL**, and **DLSafe SWRL** on crates.io and PyPI.
+**Published v1.1.0** covers stable EL, RL, RDFS, **OWL 2 DL**, and **DLSafe SWRL** on crates.io and PyPI.
 
 OntoLogos passes the in-scope HermiT catalog gate (`parity_pct = 100%` on **889** cases) and the composite `true_parity_pct` gate at **100%** in blocking CI. Blocking CI runs **450** Java axiom + **428** OWL WG tests @ 30s.
 
@@ -10,7 +10,7 @@ Before production DL cutover, validate on **your** corpus. See [When not to use 
 
 ## Maturity matrix
 
-| Capability | OntoLogos (v1.0.0) | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
+| Capability | OntoLogos (v1.1.0) | ELK | HermiT | Konclude | reasonable | whelk-rs | Protégé |
 |------------|-------------------|-----|--------|----------|------------|----------|---------|
 | Load OWL files | **Yes** (partial mapping) | Yes | Yes | Yes | Yes | Yes | Yes |
 | OWL profile detection | **Yes** | No | No | No | No | No | Via plugin |
@@ -25,7 +25,7 @@ Before production DL cutover, validate on **your** corpus. See [When not to use 
 | Hybrid EL+DL routing | **Yes** | No | No | Internal | No | No | MORe plugin |
 | Explanations | EL-first | Yes | Yes | Partial | Limited | No | Yes |
 | Production-ready (EL/RL/RDFS) | **Yes** (within mapped construct subset) | Yes | Legacy | Yes | RL-focused | Experimental | Yes |
-| Production-ready (OWL DL) | **Yes** on v1.0.0 (validate your corpus) | No | Yes (stagnant) | Yes | No | No | Via plugin |
+| Production-ready (OWL DL) | **Yes** on v1.1.0 (validate your corpus) | No | Yes (stagnant) | Yes | No | No | Via plugin |
 
 CLI `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` routes via `ontologos-facade`. Preview profiles: [Profile stability matrix](guides/profile-stability.md). Use `materialize` for explicit RDFS.
 
@@ -70,7 +70,7 @@ See [When not to use OntoLogos](guides/when-not-to-use.md) for the full decision
 
 ## OntoLogos target (1.0 vs 2.0)
 
-**1.0** delivers OWL DL HermiT parity on gated corpora (published **v1.0.0** on crates.io/PyPI). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
+**1.0** delivers OWL DL HermiT parity on gated corpora (published **v1.1.0** on crates.io/PyPI). **2.0** extends beyond HermiT (Konclude-class performance, breaking API where needed).
 
 Replace JVM-bound **batch** reasoning in Rust/Python pipelines via stable facade APIs, with CLI, Python, and Ontocode integration.
 

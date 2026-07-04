@@ -284,6 +284,8 @@ fn is_blank_individual(ontology: &Ontology, id: EntityId) -> bool {
 fn validate_blank_object_property_graph(ontology: &Ontology) -> Result<(), Error> {
     use std::collections::{HashMap, HashSet};
 
+    const MAX_CHAIN_LEN: usize = 10_000;
+
     let mut graph: HashMap<EntityId, Vec<EntityId>> = HashMap::new();
     for axiom in ontology.dl().axioms() {
         if let DlAxiom::ObjectPropertyAssertion {
@@ -305,23 +307,47 @@ fn validate_blank_object_property_graph(ontology: &Ontology) -> Result<(), Error
             graph.entry(*subject).or_default().push(*object);
         }
     }
+
+    enum Frame {
+        Enter(EntityId),
+        Exit(EntityId),
+    }
+
     for &start in graph.keys() {
-        let mut stack = vec![(start, HashSet::from([start]))];
-        while let Some((node, path)) = stack.pop() {
-            for &next in graph.get(&node).into_iter().flatten() {
-                if next == start && path.len() > 1 {
-                    return Err(Error::Parse(
-                        "cyclic blank-node object property chain".into(),
-                    ));
+        let mut stack = vec![Frame::Enter(start)];
+        let mut on_path = HashSet::from([start]);
+        let mut chain_len = 0usize;
+        while let Some(frame) = stack.pop() {
+            match frame {
+                Frame::Enter(node) => {
+                    chain_len += 1;
+                    if chain_len > MAX_CHAIN_LEN {
+                        return Err(Error::Parse(format!(
+                            "blank-node object property chain exceeds limit of {MAX_CHAIN_LEN}"
+                        )));
+                    }
+                    stack.push(Frame::Exit(node));
+                    if let Some(neighbors) = graph.get(&node) {
+                        for &next in neighbors.iter().rev() {
+                            if next == start && on_path.len() > 1 {
+                                return Err(Error::Parse(
+                                    "cyclic blank-node object property chain".into(),
+                                ));
+                            }
+                            if on_path.contains(&next) {
+                                return Err(Error::Parse(
+                                    "cyclic blank-node object property chain".into(),
+                                ));
+                            }
+                            on_path.insert(next);
+                            stack.push(Frame::Enter(next));
+                        }
+                    }
                 }
-                if path.contains(&next) {
-                    return Err(Error::Parse(
-                        "cyclic blank-node object property chain".into(),
-                    ));
+                Frame::Exit(node) => {
+                    on_path.remove(&node);
+                    chain_len = chain_len.saturating_sub(1);
                 }
-                let mut next_path = path.clone();
-                next_path.insert(next);
-                stack.push((next, next_path));
             }
         }
     }

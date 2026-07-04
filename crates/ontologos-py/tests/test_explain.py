@@ -20,7 +20,7 @@ def test_explain_el_minimal_fixture() -> None:
     from ontologos import Reasoner
 
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
-    reasoner = Reasoner(path=str(FIXTURE), profile="el")
+    reasoner = Reasoner(path=str(FIXTURE), profile="el", trusted=True, lenient=True)
     graph = reasoner.explain()
     assert graph["node_count"] > 0
     assert any("rule" in node for node in graph["nodes"])
@@ -32,7 +32,7 @@ def test_explain_rdfs_family_corpus() -> None:
     assert FAMILY_OWL.is_file(), (
         f"missing family corpus at {FAMILY_OWL} (run ./benchmarks/scripts/download.sh)"
     )
-    reasoner = Reasoner(path=str(FAMILY_OWL), profile="el")
+    reasoner = Reasoner(path=str(FAMILY_OWL), profile="el", trusted=True, lenient=True)
     graph = reasoner.explain()
     assert graph["node_count"] > 0
     assert any("rule" in node for node in graph["nodes"])

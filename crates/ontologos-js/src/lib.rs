@@ -7,7 +7,7 @@ mod error;
 mod ontology;
 mod reasoner;
 
-pub use convert::{parse_profile, parse_meta_from_ontology, usize_to_u32};
+pub use convert::{parse_meta_from_ontology, parse_profile, usize_to_u32};
 pub use error::{JsError, Result};
 pub use ontology::{JsOntology, JsOntologyBuilder};
 pub use reasoner::JsReasoner;

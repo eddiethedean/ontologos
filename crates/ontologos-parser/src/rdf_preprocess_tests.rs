@@ -75,6 +75,33 @@ fn expansion_limit_rejects_blowup() {
 }
 
 #[test]
+fn expansion_rejects_deep_entity_nesting() {
+    let mut decls = String::from("<!ENTITY e0 \"x\">\n");
+    for i in 0..40 {
+        decls.push_str(&format!("<!ENTITY e{} \"&e{};\">\n", i + 1, i));
+    }
+    let input = format!(
+        r#"<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [{decls}]>
+<rdf:RDF>&e40;</rdf:RDF>"#
+    );
+    let err = expand_xml_entities_with_limit(&input, 1_000_000).expect_err("nesting");
+    assert!(err.to_string().contains("nesting depth"));
+}
+
+#[test]
+fn expansion_rejects_excessive_replacement_count() {
+    let repeats = "&x;".repeat(10_001);
+    let input = format!(
+        r#"<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [<!ENTITY x "a">]>
+<rdf:RDF>{repeats}</rdf:RDF>"#
+    );
+    let err = expand_xml_entities_with_limit(&input, 50_000_000).expect_err("replacements");
+    assert!(err.to_string().contains("replacement count"));
+}
+
+#[test]
 fn dedupe_removes_second_rdf_id_element() {
     let input = r##"<?xml version="1.0"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:owl="http://www.w3.org/2002/07/owl#">

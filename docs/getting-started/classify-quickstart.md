@@ -9,7 +9,7 @@ Run OWL **classification** from crates.io — no repository clone. Uses `ontolog
 ## Prerequisites
 
 - Rust **1.88+** (`rustc --version` must be >= 1.88.0)
-- OntoLogos crates — see [Release status](../project/release-status.md) for published **v1.0.0** pins
+- OntoLogos crates — see [Release status](../project/release-status.md) for published **v1.1.0** pins
 
 ```bash
 curl -L -o family.owl \
@@ -21,9 +21,9 @@ cargo new ontologos-classify-demo && cd ontologos-classify-demo
 
 ```toml
 [dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
-ontologos-facade = "1.0.0"
+ontologos-core = "1.1.0"
+ontologos-parser = "1.1.0"
+ontologos-facade = "1.1.0"
 ```
 
 ## Classify with profile auto
@@ -63,7 +63,7 @@ For EL without the facade, use an **in-memory EL ontology** (Family.owl is RL-sh
 
 ```toml
 # Add to Cargo.toml
-ontologos-el = "1.0.0"
+ontologos-el = "1.1.0"
 ```
 
 ```rust

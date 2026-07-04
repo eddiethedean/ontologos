@@ -1,21 +1,29 @@
 //! In-memory ontology handle for JavaScript bindings.
 
-use std::cell::RefCell;
 use std::path::Path;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use ontologos_core::{Limits, Ontology, OntologyBuilder};
 use ontologos_parser::{
-    load_ontology_from_bytes, load_ontology_from_bytes_lenient,
+    ParseLimits, load_ontology, load_ontology_from_bytes, load_ontology_from_bytes_lenient,
     load_ontology_from_bytes_with_limits, load_ontology_from_str, load_ontology_from_str_lenient,
-    load_ontology_in, load_ontology_lenient, ParseLimits,
+    load_ontology_in, load_ontology_lenient,
 };
 use serde_json::Value;
 
 use crate::error::{JsError, Result};
 
 /// Shared ontology reference used by [`JsReasoner`](crate::reasoner::JsReasoner).
-pub type SharedOntology = Rc<RefCell<Ontology>>;
+pub type SharedOntology = Arc<Mutex<Ontology>>;
+
+fn finalize_loaded(mut ontology: Ontology, limits: Limits) -> Ontology {
+    ontology.set_enforce_limits(limits);
+    ontology
+}
+
+fn limits_from_parse(limits: ParseLimits) -> Limits {
+    limits.into()
+}
 
 /// In-memory ontology for JavaScript bindings.
 pub struct JsOntology {
@@ -25,13 +33,18 @@ pub struct JsOntology {
 impl JsOntology {
     pub fn from_owned(ontology: Ontology) -> Self {
         Self {
-            inner: Rc::new(RefCell::new(ontology)),
+            inner: Arc::new(Mutex::new(ontology)),
         }
     }
 
+    fn from_owned_with_limits(ontology: Ontology, limits: Limits) -> Self {
+        Self::from_owned(finalize_loaded(ontology, limits))
+    }
+
     pub fn from_json(json: &str) -> Result<Self> {
-        let ontology = Ontology::from_json(json)?;
-        Ok(Self::from_owned(ontology))
+        let limits = Limits::default();
+        let ontology = Ontology::from_json_with_limits(json, limits)?;
+        Ok(Self::from_owned_with_limits(ontology, limits))
     }
 
     pub fn from_json_with_limits(
@@ -55,7 +68,7 @@ impl JsOntology {
             limits.max_iri_len = n;
         }
         let ontology = Ontology::from_json_with_limits(json, limits)?;
-        Ok(Self::from_owned(ontology))
+        Ok(Self::from_owned_with_limits(ontology, limits))
     }
 
     pub fn from_dict(value: &Value) -> Result<Self> {
@@ -78,61 +91,108 @@ impl JsOntology {
                 json.len()
             )));
         }
-        Self::from_json_with_limits(
-            &json,
-            Some(max_json),
-            max_entities,
-            max_axioms,
-            max_iri_len,
-        )
+        Self::from_json_with_limits(&json, Some(max_json), max_entities, max_axioms, max_iri_len)
     }
 
-    /// Load from a trusted local path (lenient parse).
-    pub fn load_path(path: &str) -> Result<Self> {
-        let ontology = load_ontology_lenient(Path::new(path))?;
-        Ok(Self::from_owned(ontology))
+    /// Load from a trusted local path (strict parse by default).
+    pub fn load_path(path: &str, lenient: bool) -> Result<Self> {
+        let path = Path::new(path);
+        let parse_limits = if lenient {
+            ParseLimits::lenient()
+        } else {
+            ParseLimits {
+                merge_imports: true,
+                ..ParseLimits::default()
+            }
+        };
+        let ontology = if lenient {
+            load_ontology_lenient(path)?
+        } else {
+            load_ontology(path)?
+        };
+        Ok(Self::from_owned_with_limits(
+            ontology,
+            limits_from_parse(parse_limits),
+        ))
     }
 
-    /// Sandboxed load constrained to `base` (strict parse; recommended for uploads).
-    pub fn load_in(base: &str, path: &str) -> Result<Self> {
-        let ontology = load_ontology_in(Path::new(base), Path::new(path))?;
-        Ok(Self::from_owned(ontology))
+    /// Sandboxed load constrained to `base` (strict parse by default).
+    pub fn load_in(base: &str, path: &str, lenient: bool) -> Result<Self> {
+        let base = Path::new(base);
+        let path = Path::new(path);
+        let parse_limits = if lenient {
+            ParseLimits::lenient()
+        } else {
+            ParseLimits {
+                merge_imports: true,
+                ..ParseLimits::default()
+            }
+        };
+        let ontology = if lenient {
+            ontologos_parser::load_ontology_lenient_in(base, path)?
+        } else {
+            load_ontology_in(base, path)?
+        };
+        Ok(Self::from_owned_with_limits(
+            ontology,
+            limits_from_parse(parse_limits),
+        ))
     }
 
     /// Parse in-memory bytes with strict defaults (recommended for untrusted input).
     pub fn load_bytes(bytes: &[u8]) -> Result<Self> {
+        let parse_limits = ParseLimits::default();
         let ontology = load_ontology_from_bytes(bytes)?;
-        Ok(Self::from_owned(ontology))
+        Ok(Self::from_owned_with_limits(
+            ontology,
+            limits_from_parse(parse_limits),
+        ))
     }
 
     /// Parse in-memory bytes leniently (trusted corpora only).
     pub fn load_bytes_lenient(bytes: &[u8]) -> Result<Self> {
+        let parse_limits = ParseLimits::lenient();
         let ontology = load_ontology_from_bytes_lenient(bytes)?;
-        Ok(Self::from_owned(ontology))
+        Ok(Self::from_owned_with_limits(
+            ontology,
+            limits_from_parse(parse_limits),
+        ))
     }
 
     /// Parse in-memory bytes with custom [`ParseLimits`].
     pub fn load_bytes_with_limits(bytes: &[u8], limits: ParseLimits) -> Result<Self> {
         let validate = limits.validate_output;
         let ontology = load_ontology_from_bytes_with_limits(bytes, limits, validate)?;
-        Ok(Self::from_owned(ontology))
+        Ok(Self::from_owned_with_limits(
+            ontology,
+            limits_from_parse(limits),
+        ))
     }
 
     /// Parse UTF-8 text with strict defaults (recommended for untrusted input).
     pub fn load_text(text: &str) -> Result<Self> {
+        let parse_limits = ParseLimits::default();
         let ontology = load_ontology_from_str(text)?;
-        Ok(Self::from_owned(ontology))
+        Ok(Self::from_owned_with_limits(
+            ontology,
+            limits_from_parse(parse_limits),
+        ))
     }
 
     /// Parse UTF-8 text leniently (trusted corpora only).
     pub fn load_text_lenient(text: &str) -> Result<Self> {
+        let parse_limits = ParseLimits::lenient();
         let ontology = load_ontology_from_str_lenient(text)?;
-        Ok(Self::from_owned(ontology))
+        Ok(Self::from_owned_with_limits(
+            ontology,
+            limits_from_parse(parse_limits),
+        ))
     }
 
     pub fn to_json(&self) -> Result<String> {
         self.inner
-            .borrow()
+            .lock()
+            .map_err(|e| JsError::Other(format!("ontology lock poisoned: {e}")))?
             .to_json()
             .map_err(JsError::from)
     }
@@ -143,11 +203,19 @@ impl JsOntology {
     }
 
     pub fn axiom_count(&self) -> Result<usize> {
-        Ok(self.inner.borrow().axiom_count())
+        Ok(self
+            .inner
+            .lock()
+            .map_err(|e| JsError::Other(format!("ontology lock poisoned: {e}")))?
+            .axiom_count())
     }
 
     pub fn entity_count(&self) -> Result<usize> {
-        Ok(self.inner.borrow().entity_count())
+        Ok(self
+            .inner
+            .lock()
+            .map_err(|e| JsError::Other(format!("ontology lock poisoned: {e}")))?
+            .entity_count())
     }
 }
 

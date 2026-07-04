@@ -174,6 +174,17 @@ impl Reasoner {
         self.session = None;
     }
 
+    /// Drop cached classification when the ontology revision no longer matches.
+    pub fn invalidate_stale_classify_cache(&mut self) {
+        let stale = self
+            .classify_cache
+            .as_ref()
+            .is_some_and(|cache| cache.revision != self.ontology.revision());
+        if stale {
+            self.classify_cache = None;
+        }
+    }
+
     /// Borrow cached taxonomy when revision matches the loaded ontology.
     #[must_use]
     pub fn cached_taxonomy(&self) -> Option<&Taxonomy> {

@@ -6,14 +6,22 @@ use wasm_bindgen::prelude::*;
 
 fn map_err(error: ontologos_js::JsError) -> JsValue {
     let err = js_sys::Error::new(&error.to_string());
-    let _ = js_sys::Reflect::set(&err, &JsValue::from_str("name"), &JsValue::from_str(error.code()));
-    let _ = js_sys::Reflect::set(&err, &JsValue::from_str("code"), &JsValue::from_str(error.code()));
+    let _ = js_sys::Reflect::set(
+        &err,
+        &JsValue::from_str("name"),
+        &JsValue::from_str(error.code()),
+    );
+    let _ = js_sys::Reflect::set(
+        &err,
+        &JsValue::from_str("code"),
+        &JsValue::from_str(error.code()),
+    );
     err.into()
 }
 
 fn to_js_value(value: Value) -> Result<JsValue, JsValue> {
     let json = serde_json::to_string(&value).map_err(|e| JsValue::from_str(&e.to_string()))?;
-    js_sys::JSON::parse(&json).map_err(|_| JsValue::from_str("failed to convert value to JSObject"))
+    js_sys::JSON::parse(&json).map_err(|e| JsValue::from_str(&format!("{e:?}")))
 }
 
 /// Package version string.
@@ -187,7 +195,9 @@ impl JsOntologyBuilderWrap {
 
     #[wasm_bindgen(js_name = subclassOf)]
     pub fn subclass_of(&mut self, subclass: &str, superclass: &str) -> Result<(), JsValue> {
-        self.inner.subclass_of(subclass, superclass).map_err(map_err)
+        self.inner
+            .subclass_of(subclass, superclass)
+            .map_err(map_err)
     }
 
     #[wasm_bindgen(js_name = subpropertyOf)]
@@ -197,7 +207,9 @@ impl JsOntologyBuilderWrap {
 
     #[wasm_bindgen(js_name = propertyDomain)]
     pub fn property_domain(&mut self, property: &str, domain: &str) -> Result<(), JsValue> {
-        self.inner.property_domain(property, domain).map_err(map_err)
+        self.inner
+            .property_domain(property, domain)
+            .map_err(map_err)
     }
 
     #[wasm_bindgen(js_name = propertyRange)]
@@ -207,7 +219,9 @@ impl JsOntologyBuilderWrap {
 
     #[wasm_bindgen(js_name = classAssertion)]
     pub fn class_assertion(&mut self, individual: &str, class: &str) -> Result<(), JsValue> {
-        self.inner.class_assertion(individual, class).map_err(map_err)
+        self.inner
+            .class_assertion(individual, class)
+            .map_err(map_err)
     }
 
     #[wasm_bindgen(js_name = objectPropertyAssertion)]
@@ -266,7 +280,7 @@ impl Reasoner {
 
     /// Taxonomy from the last EL/DL classification (`null` for RDFS/RL runs).
     #[wasm_bindgen(getter)]
-    pub fn taxonomy(&self) -> Result<JsValue, JsValue> {
+    pub fn taxonomy(&mut self) -> Result<JsValue, JsValue> {
         match self.inner.taxonomy().map_err(map_err)? {
             Some(value) => to_js_value(value),
             None => Ok(JsValue::NULL),

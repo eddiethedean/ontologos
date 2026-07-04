@@ -3,7 +3,7 @@ use ontologos_core::{Axiom, EntityKind, Ontology};
 #[test]
 fn add_axiom_marks_dirty_and_bumps_revision() {
     let mut ontology = Ontology::new();
-    assert_eq!(ontology.revision().0, 0);
+    assert_eq!(ontology.revision().counter(), 0);
     assert!(!ontology.dirty().is_dirty());
 
     let a = ontology
@@ -19,7 +19,7 @@ fn add_axiom_marks_dirty_and_bumps_revision() {
         })
         .unwrap();
 
-    assert_eq!(ontology.revision().0, 1);
+    assert_eq!(ontology.revision().counter(), 1);
     assert!(ontology.dirty().is_dirty());
     assert_eq!(ontology.dirty().added(), &[id]);
     ontology.clear_dirty();
@@ -47,7 +47,7 @@ fn remove_axiom_marks_dirty_and_rebuilds_index() {
     assert_eq!(ontology.axiom_count(), 0);
     assert!(ontology.dirty().has_removals());
     assert_eq!(ontology.index().direct_superclasses(a).len(), 0);
-    assert_eq!(ontology.revision().0, 2);
+    assert_eq!(ontology.revision().counter(), 2);
 }
 
 #[test]

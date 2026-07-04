@@ -4,7 +4,7 @@ Classification and consistency live in **`ontologos_facade`** — not on `ontolo
 
 ## `ontologos_facade::Error`
 
-Transparent wrapper over profile engine errors. See [docs.rs](https://docs.rs/ontologos-facade/1.0.0/ontologos_facade/enum.Error.html).
+Transparent wrapper over profile engine errors. See [docs.rs](https://docs.rs/ontologos-facade/1.1.0/ontologos_facade/enum.Error.html).
 
 | Variant | Source | Typical cause |
 |---------|--------|---------------|
@@ -34,7 +34,7 @@ Transparent wrapper over profile engine errors. See [docs.rs](https://docs.rs/on
 
 ## `ontologos_core::Error`
 
-Errors from the core crate: [`Error`](https://docs.rs/ontologos-core/1.0.0/ontologos_core/enum.Error.html).
+Errors from the core crate: [`Error`](https://docs.rs/ontologos-core/1.1.0/ontologos_core/enum.Error.html).
 
 ### `InvalidIri`
 

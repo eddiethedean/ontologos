@@ -22,7 +22,7 @@ def test_classify_rl_profile_infers_on_family() -> None:
     from ontologos import Reasoner
 
     assert FAMILY_OWL.is_file(), f"missing corpus: {FAMILY_OWL}"
-    reasoner = Reasoner(path=str(FAMILY_OWL), profile="rl")
+    reasoner = Reasoner(path=str(FAMILY_OWL), profile="rl", trusted=True, lenient=True)
     result = reasoner.classify()
     assert result["inferred_axioms"] > 0
     assert result["final_axiom_count"] > result["initial_axiom_count"]
@@ -48,7 +48,7 @@ def test_classify_dl_profile_family() -> None:
     from ontologos import Reasoner
 
     assert FAMILY_OWL.is_file(), f"missing corpus: {FAMILY_OWL}"
-    reasoner = Reasoner(path=str(FAMILY_OWL), profile="dl")
+    reasoner = Reasoner(path=str(FAMILY_OWL), profile="dl", trusted=True, lenient=True)
     result = reasoner.classify()
     assert result["subsumption_count"] > 0
     assert len(result["subsumptions"]) == result["subsumption_count"]
@@ -88,7 +88,7 @@ def test_classify_el_asserts_known_subsumptions() -> None:
     from ontologos import Reasoner
 
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
-    reasoner = Reasoner(path=str(FIXTURE), profile="el")
+    reasoner = Reasoner(path=str(FIXTURE), profile="el", trusted=True, lenient=True)
     result = reasoner.classify()
     pairs = set(map(tuple, result["subsumptions"]))
     assert (
@@ -115,4 +115,4 @@ def test_invalid_profile_raises() -> None:
     from ontologos import Reasoner
 
     with pytest.raises(RuntimeError, match="unsupported profile"):
-        Reasoner(path=str(FIXTURE), profile="bogus")
+        Reasoner(path=str(FIXTURE), profile="bogus", trusted=True, lenient=True)

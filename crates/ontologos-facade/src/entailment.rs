@@ -11,7 +11,8 @@ use crate::error::{EntailmentCheck, Error, Result};
 use crate::lookup::{lookup_class, lookup_individual, lookup_object_property};
 
 /// Check ontology consistency for the configured profile.
-pub fn check_consistency(reasoner: &Reasoner) -> Result<ConsistencyResult> {
+pub fn check_consistency(reasoner: &mut Reasoner) -> Result<ConsistencyResult> {
+    reasoner.invalidate_stale_classify_cache();
     let route = resolve(reasoner)?;
     let result = dispatch_check_consistency(route, reasoner)?;
     tracing::info!(
@@ -24,7 +25,7 @@ pub fn check_consistency(reasoner: &Reasoner) -> Result<ConsistencyResult> {
 }
 
 /// Check ontology consistency (errors when the answer is incomplete).
-pub fn is_consistent(reasoner: &Reasoner) -> Result<bool> {
+pub fn is_consistent(reasoner: &mut Reasoner) -> Result<bool> {
     check_consistency(reasoner)?
         .into_bool()
         .map_err(Error::Core)
@@ -36,6 +37,7 @@ pub fn is_subsumption_entailed(
     sub_iri: &str,
     sup_iri: &str,
 ) -> Result<bool> {
+    reasoner.invalidate_stale_classify_cache();
     let ontology = reasoner.ontology();
     let sub = ontology.lookup_entity(sub_iri).ok_or_else(|| {
         Error::El(ontologos_el::Error::Message(format!(
@@ -99,6 +101,7 @@ pub fn is_entailed(reasoner: &mut Reasoner, sub_iri: &str, sup_iri: &str) -> Res
 
 /// General `isEntailed` for common axiom types (`SubClassOf`, `ClassAssertion`, `ObjectPropertyAssertion`).
 pub fn is_entailed_axiom(reasoner: &mut Reasoner, check: EntailmentCheck) -> Result<bool> {
+    reasoner.invalidate_stale_classify_cache();
     match check {
         EntailmentCheck::SubClassOf { sub, sup } => is_subsumption_entailed(reasoner, &sub, &sup),
         EntailmentCheck::ClassAssertion { individual, class } => {
@@ -254,7 +257,7 @@ fn abox_entails_object_property_assertion(
     let values = ontologos_rl::abox::object_property_values(&mut working, subject, property)?;
     Ok(values
         .iter()
-        .any(|&candidate| individuals_entailed_same(ontology, candidate, object)))
+        .any(|&candidate| individuals_entailed_same(&working, candidate, object)))
 }
 
 fn dl_entails_object_property_assertion(

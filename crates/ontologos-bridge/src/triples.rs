@@ -78,6 +78,16 @@ fn blank_triple(subject: BlankNode, predicate: &str, object: &str) -> Result<Tri
     })
 }
 
+fn entity_id_pairs(items: &[EntityId]) -> Vec<(EntityId, EntityId)> {
+    let mut pairs = Vec::new();
+    for i in 0..items.len() {
+        for j in (i + 1)..items.len() {
+            pairs.push((items[i], items[j]));
+        }
+    }
+    pairs
+}
+
 fn existential_restriction_triples(
     ontology: &Ontology,
     subclass: EntityId,
@@ -212,11 +222,11 @@ fn axiom_to_triples(
             )?);
         }
         Axiom::EquivalentClasses(classes) => {
-            for pair in classes.windows(2) {
+            for (a, b) in entity_id_pairs(classes) {
                 out.push(triple(
-                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, a)?,
                     OWL_EQUIV_CLASS,
-                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, b)?,
                 )?);
             }
         }
@@ -338,14 +348,22 @@ fn axiom_to_triples(
                 value,
             )?);
         }
-        Axiom::NegativeObjectPropertyAssertion { .. }
-        | Axiom::NegativeDataPropertyAssertion { .. } => {}
+        Axiom::NegativeObjectPropertyAssertion { .. } => {
+            return Err(Error::Bridge(
+                "NegativeObjectPropertyAssertion is not supported in RL triple export".into(),
+            ));
+        }
+        Axiom::NegativeDataPropertyAssertion { .. } => {
+            return Err(Error::Bridge(
+                "NegativeDataPropertyAssertion is not supported in RL triple export".into(),
+            ));
+        }
         Axiom::SameIndividual(individuals) => {
-            for pair in individuals.windows(2) {
+            for (a, b) in entity_id_pairs(individuals) {
                 out.push(triple(
-                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, a)?,
                     OWL_SAME_AS,
-                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, b)?,
                 )?);
             }
         }
@@ -359,11 +377,11 @@ fn axiom_to_triples(
             )?);
         }
         Axiom::DisjointClasses(classes) => {
-            for pair in classes.windows(2) {
+            for (a, b) in entity_id_pairs(classes) {
                 out.push(triple(
-                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, a)?,
                     OWL_DISJOINT_WITH,
-                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, b)?,
                 )?);
             }
         }
@@ -428,6 +446,19 @@ pub fn merge_triples_into_ontology_with_limits(
         max_axioms: limits.max_axioms,
         ..ontologos_core::Limits::default()
     });
+
+    let report = merge_triples_into_ontology_inner(ontology, triples, diagnostics, limits, before);
+    ontology.restore_enforce_limits(prev_limits);
+    report
+}
+
+fn merge_triples_into_ontology_inner(
+    ontology: &mut Ontology,
+    triples: &[Triple],
+    diagnostics: &[reasonable::reasoner::ReasoningError],
+    limits: MergeLimits,
+    before: usize,
+) -> Result<MergeReport> {
     let mut seen: HashSet<(String, String, String)> = HashSet::new();
     let mut seen_entity: HashSet<u64> = HashSet::new();
 
@@ -440,8 +471,16 @@ pub fn merge_triples_into_ontology_with_limits(
         }
     }
 
+    if ontology.entity_count() >= limits.max_entities {
+        return Err(Error::Bridge(format!(
+            "entity limit {} would be exceeded during merge",
+            limits.max_entities
+        )));
+    }
+
     let mut to_add: Vec<Axiom> = Vec::new();
-    for axiom in collect_existential_axioms(ontology, triples)? {
+    let mut merge_clashes: Vec<String> = Vec::new();
+    for axiom in collect_existential_axioms(ontology, triples, &limits, &mut merge_clashes)? {
         let entity_key = axiom_entity_key(&axiom);
         let triple_key = axiom_triple_key(ontology, &axiom)?;
         let is_new = entity_key.map(|k| seen_entity.insert(k)).unwrap_or(true)
@@ -452,27 +491,31 @@ pub fn merge_triples_into_ontology_with_limits(
     }
 
     for t in triples {
-        if let Some(axiom) = triple_to_axiom(ontology, t)? {
-            let entity_key = axiom_entity_key(&axiom);
-            let triple_key = axiom_triple_key(ontology, &axiom)?;
-            let is_new = entity_key.map(|k| seen_entity.insert(k)).unwrap_or(true)
-                && triple_key.map(|k| seen.insert(k)).unwrap_or(true);
-            if is_new {
-                to_add.push(axiom);
+        match triple_to_axiom(ontology, t, &limits) {
+            Ok(Some(axiom)) => {
+                let entity_key = axiom_entity_key(&axiom);
+                let triple_key = axiom_triple_key(ontology, &axiom)?;
+                let is_new = entity_key.map(|k| seen_entity.insert(k)).unwrap_or(true)
+                    && triple_key.map(|k| seen.insert(k)).unwrap_or(true);
+                if is_new {
+                    to_add.push(axiom);
+                }
             }
+            Ok(None) => {}
+            Err(Error::Core(ontologos_core::Error::EntityKindMismatch {
+                iri,
+                expected,
+                found,
+            })) => {
+                merge_clashes.push(format!(
+                    "entity kind mismatch for {iri}: expected {expected:?}, found {found:?}"
+                ));
+            }
+            Err(e) => return Err(e),
         }
     }
 
-    if ontology.entity_count() >= limits.max_entities {
-        ontology.restore_enforce_limits(prev_limits);
-        return Err(Error::Bridge(format!(
-            "entity limit {} would be exceeded during merge",
-            limits.max_entities
-        )));
-    }
-
     if ontology.axiom_count().saturating_add(to_add.len()) > limits.max_axioms {
-        ontology.restore_enforce_limits(prev_limits);
         return Err(Error::Bridge(format!(
             "axiom limit {} would be exceeded during merge ({} new axioms)",
             limits.max_axioms,
@@ -481,18 +524,14 @@ pub fn merge_triples_into_ontology_with_limits(
     }
 
     for axiom in to_add {
-        if let Err(e) = ontology.add_inferred_axiom(axiom) {
-            ontology.restore_enforce_limits(prev_limits);
-            return Err(Error::Core(e));
-        }
+        ontology.add_inferred_axiom(axiom)?;
     }
 
-    ontology.restore_enforce_limits(prev_limits);
-
-    let clashes = diagnostics
+    let mut clashes: Vec<String> = diagnostics
         .iter()
         .map(|d| format!("{}: {}", d.rule(), d.message()))
         .collect();
+    clashes.extend(merge_clashes);
 
     Ok(MergeReport {
         inferred_axioms: ontology.axiom_count().saturating_sub(before),
@@ -518,7 +557,12 @@ struct RestrictionParts {
     filler: Option<String>,
 }
 
-fn collect_existential_axioms(ontology: &mut Ontology, triples: &[Triple]) -> Result<Vec<Axiom>> {
+fn collect_existential_axioms(
+    ontology: &mut Ontology,
+    triples: &[Triple],
+    limits: &MergeLimits,
+    merge_clashes: &mut Vec<String>,
+) -> Result<Vec<Axiom>> {
     let mut restrictions: HashMap<String, RestrictionParts> = HashMap::new();
     let mut subclass_edges: Vec<(String, String)> = Vec::new();
 
@@ -561,41 +605,80 @@ fn collect_existential_axioms(ontology: &mut Ontology, triples: &[Triple]) -> Re
         let (Some(property_iri), Some(filler_iri)) = (&parts.property, &parts.filler) else {
             continue;
         };
-        let subclass = lookup_or_insert(ontology, &subclass_iri, EntityKind::Class)?;
-        let property = lookup_or_insert(ontology, property_iri, EntityKind::ObjectProperty)?;
-        let filler = lookup_or_insert(ontology, filler_iri, EntityKind::Class)?;
-        if let (Some(subclass), Some(property), Some(filler)) = (subclass, property, filler) {
-            axioms.push(Axiom::SubClassOfExistential {
-                subclass,
-                property,
-                filler,
-            });
-        }
+        let subclass = match lookup_or_insert(ontology, &subclass_iri, EntityKind::Class, limits) {
+            Ok(id) => id,
+            Err(Error::Core(ontologos_core::Error::EntityKindMismatch {
+                iri,
+                expected,
+                found,
+            })) => {
+                merge_clashes.push(format!(
+                    "entity kind mismatch for {iri}: expected {expected:?}, found {found:?}"
+                ));
+                continue;
+            }
+            Err(e) => return Err(e),
+        };
+        let property =
+            match lookup_or_insert(ontology, property_iri, EntityKind::ObjectProperty, limits) {
+                Ok(id) => id,
+                Err(Error::Core(ontologos_core::Error::EntityKindMismatch {
+                    iri,
+                    expected,
+                    found,
+                })) => {
+                    merge_clashes.push(format!(
+                        "entity kind mismatch for {iri}: expected {expected:?}, found {found:?}"
+                    ));
+                    continue;
+                }
+                Err(e) => return Err(e),
+            };
+        let filler = match lookup_or_insert(ontology, filler_iri, EntityKind::Class, limits) {
+            Ok(id) => id,
+            Err(Error::Core(ontologos_core::Error::EntityKindMismatch {
+                iri,
+                expected,
+                found,
+            })) => {
+                merge_clashes.push(format!(
+                    "entity kind mismatch for {iri}: expected {expected:?}, found {found:?}"
+                ));
+                continue;
+            }
+            Err(e) => return Err(e),
+        };
+        axioms.push(Axiom::SubClassOfExistential {
+            subclass,
+            property,
+            filler,
+        });
     }
 
     Ok(axioms)
 }
 
-fn triple_to_axiom(ontology: &mut Ontology, triple: &Triple) -> Result<Option<Axiom>> {
+fn triple_to_axiom(
+    ontology: &mut Ontology,
+    triple: &Triple,
+    limits: &MergeLimits,
+) -> Result<Option<Axiom>> {
     let sub = match &triple.subject {
         oxrdf::NamedOrBlankNode::NamedNode(n) => n.as_str(),
         _ => return Ok(None),
     };
     let pred = triple.predicate.as_str();
     if let Term::Literal(lit) = &triple.object {
-        let individual = lookup_or_insert(ontology, sub, EntityKind::Individual)?;
-        let property = lookup_or_insert(ontology, pred, EntityKind::DataProperty)?;
-        return Ok(match (individual, property) {
-            (Some(individual), Some(property)) => Some(Axiom::DataPropertyAssertion {
-                individual,
-                property,
-                value: DataLiteral {
-                    lexical: lit.value().to_string(),
-                    datatype: lit.datatype().as_str().to_string(),
-                },
-            }),
-            _ => None,
-        });
+        let individual = lookup_or_insert(ontology, sub, EntityKind::Individual, limits)?;
+        let property = lookup_or_insert(ontology, pred, EntityKind::DataProperty, limits)?;
+        return Ok(Some(Axiom::DataPropertyAssertion {
+            individual,
+            property,
+            value: DataLiteral {
+                lexical: lit.value().to_string(),
+                datatype: lit.datatype().as_str().to_string(),
+            },
+        }));
     }
     let obj = match term_iri(&triple.object) {
         Some(o) => o,
@@ -603,154 +686,141 @@ fn triple_to_axiom(ontology: &mut Ontology, triple: &Triple) -> Result<Option<Ax
     };
 
     if pred == RDFS_SUBCLASS {
-        let subclass = lookup_or_insert(ontology, sub, EntityKind::Class)?;
-        let superclass = lookup_or_insert(ontology, &obj, EntityKind::Class)?;
-        return Ok(match (subclass, superclass) {
-            (Some(subclass), Some(superclass)) => Some(Axiom::SubClassOf {
-                subclass,
-                superclass,
-            }),
-            _ => None,
-        });
+        let subclass = lookup_or_insert(ontology, sub, EntityKind::Class, limits)?;
+        let superclass = lookup_or_insert(ontology, &obj, EntityKind::Class, limits)?;
+        return Ok(Some(Axiom::SubClassOf {
+            subclass,
+            superclass,
+        }));
     }
     if pred == RDFS_SUBPROPERTY {
-        let sub = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?;
-        let sup = lookup_or_insert(ontology, &obj, EntityKind::ObjectProperty)?;
-        return Ok(match (sub, sup) {
-            (Some(sub_property), Some(super_property)) => Some(Axiom::SubObjectPropertyOf {
-                sub_property,
-                super_property,
-            }),
-            _ => None,
-        });
+        let sub = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty, limits)?;
+        let sup = lookup_or_insert(ontology, &obj, EntityKind::ObjectProperty, limits)?;
+        return Ok(Some(Axiom::SubObjectPropertyOf {
+            sub_property: sub,
+            super_property: sup,
+        }));
     }
     if pred == RDFS_DOMAIN {
-        let property = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?;
-        let domain = lookup_or_insert(ontology, &obj, EntityKind::Class)?;
-        return Ok(match (property, domain) {
-            (Some(property), Some(domain)) => {
-                Some(Axiom::ObjectPropertyDomain { property, domain })
-            }
-            _ => None,
-        });
+        let property = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty, limits)?;
+        let domain = lookup_or_insert(ontology, &obj, EntityKind::Class, limits)?;
+        return Ok(Some(Axiom::ObjectPropertyDomain { property, domain }));
     }
     if pred == RDFS_RANGE {
-        let property = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?;
-        let range = lookup_or_insert(ontology, &obj, EntityKind::Class)?;
-        return Ok(match (property, range) {
-            (Some(property), Some(range)) => Some(Axiom::ObjectPropertyRange { property, range }),
-            _ => None,
-        });
+        let property = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty, limits)?;
+        let range = lookup_or_insert(ontology, &obj, EntityKind::Class, limits)?;
+        return Ok(Some(Axiom::ObjectPropertyRange { property, range }));
     }
     if pred == OWL_EQUIV_CLASS {
-        let a = lookup_or_insert(ontology, sub, EntityKind::Class)?;
-        let b = lookup_or_insert(ontology, &obj, EntityKind::Class)?;
-        return Ok(match (a, b) {
-            (Some(a), Some(b)) => Some(Axiom::EquivalentClasses(vec![a, b])),
-            _ => None,
-        });
+        let a = lookup_or_insert(ontology, sub, EntityKind::Class, limits)?;
+        let b = lookup_or_insert(ontology, &obj, EntityKind::Class, limits)?;
+        return Ok(Some(Axiom::EquivalentClasses(vec![a, b])));
     }
     if pred == OWL_EQUIV_PROP {
-        let a = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?;
-        let b = lookup_or_insert(ontology, &obj, EntityKind::ObjectProperty)?;
-        return Ok(match (a, b) {
-            (Some(a), Some(b)) => Some(Axiom::EquivalentObjectProperties(vec![a, b])),
-            _ => None,
-        });
+        let a = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty, limits)?;
+        let b = lookup_or_insert(ontology, &obj, EntityKind::ObjectProperty, limits)?;
+        return Ok(Some(Axiom::EquivalentObjectProperties(vec![a, b])));
     }
     if pred == OWL_INVERSE {
-        let left = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?;
-        let right = lookup_or_insert(ontology, &obj, EntityKind::ObjectProperty)?;
-        return Ok(match (left, right) {
-            (Some(left), Some(right)) => Some(Axiom::InverseObjectProperties { left, right }),
-            _ => None,
-        });
+        let left = lookup_or_insert(ontology, sub, EntityKind::ObjectProperty, limits)?;
+        let right = lookup_or_insert(ontology, &obj, EntityKind::ObjectProperty, limits)?;
+        return Ok(Some(Axiom::InverseObjectProperties { left, right }));
     }
     if pred == RDF_TYPE && obj == OWL_TRANSITIVE {
-        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
-            .map(Axiom::TransitiveObjectProperty));
+        return Ok(Some(Axiom::TransitiveObjectProperty(lookup_or_insert(
+            ontology,
+            sub,
+            EntityKind::ObjectProperty,
+            limits,
+        )?)));
     }
     if pred == RDF_TYPE && obj == OWL_SYMMETRIC {
-        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
-            .map(Axiom::SymmetricObjectProperty));
+        return Ok(Some(Axiom::SymmetricObjectProperty(lookup_or_insert(
+            ontology,
+            sub,
+            EntityKind::ObjectProperty,
+            limits,
+        )?)));
     }
     if pred == RDF_TYPE && obj == OWL_REFLEXIVE {
-        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
-            .map(Axiom::ReflexiveObjectProperty));
+        return Ok(Some(Axiom::ReflexiveObjectProperty(lookup_or_insert(
+            ontology,
+            sub,
+            EntityKind::ObjectProperty,
+            limits,
+        )?)));
     }
     if pred == RDF_TYPE && obj == OWL_FUNCTIONAL {
-        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
-            .map(Axiom::FunctionalObjectProperty));
+        return Ok(Some(Axiom::FunctionalObjectProperty(lookup_or_insert(
+            ontology,
+            sub,
+            EntityKind::ObjectProperty,
+            limits,
+        )?)));
     }
     if pred == RDF_TYPE && obj == OWL_INVERSE_FUNCTIONAL {
-        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
-            .map(Axiom::InverseFunctionalObjectProperty));
+        return Ok(Some(Axiom::InverseFunctionalObjectProperty(
+            lookup_or_insert(ontology, sub, EntityKind::ObjectProperty, limits)?,
+        )));
     }
     if pred == RDF_TYPE && obj == OWL_IRREFLEXIVE {
-        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
-            .map(Axiom::IrreflexiveObjectProperty));
+        return Ok(Some(Axiom::IrreflexiveObjectProperty(lookup_or_insert(
+            ontology,
+            sub,
+            EntityKind::ObjectProperty,
+            limits,
+        )?)));
     }
     if pred == RDF_TYPE && obj == OWL_ASYMMETRIC {
-        return Ok(lookup_or_insert(ontology, sub, EntityKind::ObjectProperty)?
-            .map(Axiom::AsymmetricObjectProperty));
+        return Ok(Some(Axiom::AsymmetricObjectProperty(lookup_or_insert(
+            ontology,
+            sub,
+            EntityKind::ObjectProperty,
+            limits,
+        )?)));
     }
     if pred == RDF_TYPE
         && obj != OWL_CLASS
         && obj != OWL_NAMED_INDIVIDUAL
         && obj != OWL_OBJECT_PROPERTY
     {
-        let individual = lookup_or_insert(ontology, sub, EntityKind::Individual)?;
-        let class = lookup_or_insert(ontology, &obj, EntityKind::Class)?;
-        return Ok(match (individual, class) {
-            (Some(individual), Some(class)) => Some(Axiom::ClassAssertion { individual, class }),
-            _ => None,
-        });
+        let individual = lookup_or_insert(ontology, sub, EntityKind::Individual, limits)?;
+        let class = lookup_or_insert(ontology, &obj, EntityKind::Class, limits)?;
+        return Ok(Some(Axiom::ClassAssertion { individual, class }));
     }
     if pred == OWL_SAME_AS {
         if sub == obj {
             return Ok(None);
         }
-        let left = lookup_or_insert(ontology, sub, EntityKind::Individual)?;
-        let right = lookup_or_insert(ontology, &obj, EntityKind::Individual)?;
-        return Ok(match (left, right) {
-            (Some(left), Some(right)) => Some(Axiom::SameIndividual(vec![left, right])),
-            _ => None,
-        });
+        let left = lookup_or_insert(ontology, sub, EntityKind::Individual, limits)?;
+        let right = lookup_or_insert(ontology, &obj, EntityKind::Individual, limits)?;
+        return Ok(Some(Axiom::SameIndividual(vec![left, right])));
     }
     if pred == OWL_DISJOINT_WITH {
         if sub == obj {
             return Ok(None);
         }
-        let left = lookup_or_insert(ontology, sub, EntityKind::Class)?;
-        let right = lookup_or_insert(ontology, &obj, EntityKind::Class)?;
-        return Ok(match (left, right) {
-            (Some(left), Some(right)) => Some(Axiom::DisjointClasses(vec![left, right])),
-            _ => None,
-        });
+        let left = lookup_or_insert(ontology, sub, EntityKind::Class, limits)?;
+        let right = lookup_or_insert(ontology, &obj, EntityKind::Class, limits)?;
+        return Ok(Some(Axiom::DisjointClasses(vec![left, right])));
     }
     if pred == OWL_DIFFERENT_FROM {
         if sub == obj {
             return Ok(None);
         }
-        let left = lookup_or_insert(ontology, sub, EntityKind::Individual)?;
-        let right = lookup_or_insert(ontology, &obj, EntityKind::Individual)?;
-        return Ok(match (left, right) {
-            (Some(left), Some(right)) => Some(Axiom::DifferentIndividuals(vec![left, right])),
-            _ => None,
-        });
+        let left = lookup_or_insert(ontology, sub, EntityKind::Individual, limits)?;
+        let right = lookup_or_insert(ontology, &obj, EntityKind::Individual, limits)?;
+        return Ok(Some(Axiom::DifferentIndividuals(vec![left, right])));
     }
     if pred != RDF_TYPE && pred != RDFS_SUBCLASS && pred != RDFS_SUBPROPERTY {
-        let subject = lookup_or_insert(ontology, sub, EntityKind::Individual)?;
-        let property = lookup_or_insert(ontology, pred, EntityKind::ObjectProperty)?;
-        let object = lookup_or_insert(ontology, &obj, EntityKind::Individual)?;
-        return Ok(match (subject, property, object) {
-            (Some(subject), Some(property), Some(object)) => Some(Axiom::ObjectPropertyAssertion {
-                subject,
-                property,
-                object,
-            }),
-            _ => None,
-        });
+        let subject = lookup_or_insert(ontology, sub, EntityKind::Individual, limits)?;
+        let property = lookup_or_insert(ontology, pred, EntityKind::ObjectProperty, limits)?;
+        let object = lookup_or_insert(ontology, &obj, EntityKind::Individual, limits)?;
+        return Ok(Some(Axiom::ObjectPropertyAssertion {
+            subject,
+            property,
+            object,
+        }));
     }
     Ok(None)
 }
@@ -759,14 +829,27 @@ fn lookup_or_insert(
     ontology: &mut Ontology,
     iri: &str,
     kind: EntityKind,
-) -> Result<Option<EntityId>> {
+    limits: &MergeLimits,
+) -> Result<EntityId> {
     if let Some(id) = ontology.lookup_entity(iri) {
         let record = ontology.entity(id)?;
-        if !record.kind.satisfies(kind) && EntityKind::merge_punning(record.kind, kind).is_none() {
-            return Ok(None);
+        if record.kind.satisfies(kind) {
+            return Ok(id);
         }
+        if EntityKind::merge_punning(record.kind, kind).is_none() {
+            return Err(Error::Core(ontologos_core::Error::EntityKindMismatch {
+                iri: iri.to_owned(),
+                expected: kind,
+                found: record.kind,
+            }));
+        }
+    } else if ontology.entity_count() >= limits.max_entities {
+        return Err(Error::Bridge(format!(
+            "entity limit {} would be exceeded during merge",
+            limits.max_entities
+        )));
     }
-    Ok(Some(ontology.entity_id(iri, kind)?))
+    Ok(ontology.entity_id(iri, kind)?)
 }
 
 fn axiom_entity_key(axiom: &Axiom) -> Option<u64> {
@@ -1116,5 +1199,117 @@ mod adapter_tests {
         )
         .unwrap();
         assert!(ontology.axiom_count() > 2);
+    }
+
+    #[test]
+    fn nary_equivalent_classes_emits_all_pairs() {
+        let mut ontology = Ontology::new();
+        let a = ontology
+            .entity_id("http://ex.org/A", EntityKind::Class)
+            .unwrap();
+        let b = ontology
+            .entity_id("http://ex.org/B", EntityKind::Class)
+            .unwrap();
+        let c = ontology
+            .entity_id("http://ex.org/C", EntityKind::Class)
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::EquivalentClasses(vec![a, b, c]))
+            .unwrap();
+
+        let triples = core_to_triples(&ontology).unwrap();
+        let equiv: Vec<_> = triples
+            .iter()
+            .filter(|t| t.predicate.as_str() == OWL_EQUIV_CLASS)
+            .map(|t| {
+                let sub = match &t.subject {
+                    oxrdf::NamedOrBlankNode::NamedNode(n) => n.as_str().to_string(),
+                    _ => panic!("expected named node subject"),
+                };
+                let obj = match &t.object {
+                    Term::NamedNode(n) => n.as_str().to_string(),
+                    _ => panic!("expected named node object"),
+                };
+                (sub, obj)
+            })
+            .collect();
+        assert_eq!(equiv.len(), 3);
+        assert!(equiv.contains(&("http://ex.org/A".into(), "http://ex.org/B".into())));
+        assert!(equiv.contains(&("http://ex.org/A".into(), "http://ex.org/C".into())));
+        assert!(equiv.contains(&("http://ex.org/B".into(), "http://ex.org/C".into())));
+    }
+
+    #[test]
+    fn negative_assertions_error_on_triple_export() {
+        let mut ontology = Ontology::new();
+        let a = ontology
+            .entity_id("http://ex.org/a", EntityKind::Individual)
+            .unwrap();
+        let b = ontology
+            .entity_id("http://ex.org/b", EntityKind::Individual)
+            .unwrap();
+        let p = ontology
+            .entity_id("http://ex.org/p", EntityKind::ObjectProperty)
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::NegativeObjectPropertyAssertion {
+                subject: a,
+                property: p,
+                object: b,
+            })
+            .unwrap();
+
+        let err = core_to_triples(&ontology).unwrap_err();
+        assert!(err.to_string().contains("NegativeObjectPropertyAssertion"));
+    }
+
+    #[test]
+    fn merge_entity_kind_conflict_records_clash() {
+        let mut ontology = Ontology::new();
+        ontology
+            .entity_id("http://ex.org/a", EntityKind::Individual)
+            .unwrap();
+        ontology
+            .entity_id("http://ex.org/p", EntityKind::ObjectProperty)
+            .unwrap();
+
+        let triples = vec![
+            data_property_triple(
+                "http://ex.org/a",
+                "http://ex.org/p",
+                &DataLiteral {
+                    lexical: "1".into(),
+                    datatype: "http://www.w3.org/2001/XMLSchema#integer".into(),
+                },
+            )
+            .unwrap(),
+        ];
+        let report = merge_triples_into_ontology(&mut ontology, &triples, &[]).unwrap();
+        assert!(
+            report
+                .clashes
+                .iter()
+                .any(|c| c.contains("entity kind mismatch"))
+        );
+        assert_eq!(report.inferred_axioms, 0);
+    }
+
+    #[test]
+    fn merge_entity_limit_checked_before_insert() {
+        let mut ontology = Ontology::new();
+        ontology
+            .entity_id("http://ex.org/existing", EntityKind::Class)
+            .unwrap();
+
+        let limits = MergeLimits {
+            max_entities: 1,
+            max_axioms: 10_000_000,
+        };
+        let triples =
+            vec![triple("http://ex.org/new", RDFS_SUBCLASS, "http://ex.org/existing").unwrap()];
+        let err = merge_triples_into_ontology_with_limits(&mut ontology, &triples, &[], limits)
+            .unwrap_err();
+        assert!(err.to_string().contains("entity limit"));
+        assert_eq!(ontology.entity_count(), 1);
     }
 }

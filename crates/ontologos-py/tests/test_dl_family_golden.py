@@ -19,7 +19,7 @@ def test_family_dl_matches_cli_golden() -> None:
     doc = json.loads(DL_GOLDEN.read_text())
     golden = doc["corpora"]["family.owl"]
 
-    reasoner = Reasoner(path=str(FAMILY_OWL), profile="dl")
+    reasoner = Reasoner(path=str(FAMILY_OWL), profile="dl", trusted=True, lenient=True)
     result = reasoner.classify()
 
     assert result["subsumption_count"] == golden["subsumption_count"]

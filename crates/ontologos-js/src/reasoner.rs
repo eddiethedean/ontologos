@@ -3,11 +3,14 @@
 use std::path::Path;
 
 use ontologos_core::{
-    Axiom, ConsistencyResult, Ontology, OntologyRevision, ParseMetaSummary, Reasoner, ReasonerConfig,
+    Axiom, ConsistencyResult, Ontology, OntologyRevision, ParseMetaSummary, Reasoner,
+    ReasonerConfig,
 };
 use ontologos_explain::explain_with_profile;
 use ontologos_facade::ClassifyOutcome;
-use ontologos_parser::load_ontology_lenient;
+use ontologos_parser::{
+    load_ontology, load_ontology_in, load_ontology_lenient, load_ontology_lenient_in,
+};
 use serde_json::{Value, json};
 
 use crate::convert::{
@@ -17,6 +20,15 @@ use crate::convert::{
 };
 use crate::error::{JsError, Result};
 use crate::ontology::{JsOntology, SharedOntology};
+
+fn validate_budget_secs(budget_secs: Option<u64>) -> Result<Option<u64>> {
+    if budget_secs == Some(0) {
+        return Err(JsError::Other(
+            "budget_secs must be greater than 0; omit for unlimited reasoning".into(),
+        ));
+    }
+    Ok(budget_secs)
+}
 
 /// OWL reasoner for JavaScript bindings.
 pub struct JsReasoner {
@@ -32,8 +44,14 @@ impl JsReasoner {
         profile: Option<&str>,
         incremental: bool,
         budget_secs: Option<u64>,
+        lenient: bool,
     ) -> Result<Self> {
-        let ontology = load_ontology_lenient(Path::new(path))?;
+        let path = Path::new(path);
+        let ontology = if lenient {
+            load_ontology_lenient(path)?
+        } else {
+            load_ontology(path)?
+        };
         Self::from_ontology_owned(ontology, profile, incremental, budget_secs, None)
     }
 
@@ -43,9 +61,15 @@ impl JsReasoner {
         profile: Option<&str>,
         incremental: bool,
         budget_secs: Option<u64>,
+        lenient: bool,
     ) -> Result<Self> {
-        let ontology =
-            ontologos_parser::load_ontology_in(Path::new(base), Path::new(path))?;
+        let base = Path::new(base);
+        let path = Path::new(path);
+        let ontology = if lenient {
+            load_ontology_lenient_in(base, path)?
+        } else {
+            load_ontology_in(base, path)?
+        };
         Self::from_ontology_owned(ontology, profile, incremental, budget_secs, None)
     }
 
@@ -57,7 +81,9 @@ impl JsReasoner {
     ) -> Result<Self> {
         let shared = ontology.inner.clone();
         let (core_ontology, revision) = {
-            let guard = shared.borrow();
+            let guard = shared
+                .lock()
+                .map_err(|e| JsError::Other(format!("ontology lock poisoned: {e}")))?;
             (guard.clone(), guard.revision())
         };
         Self::from_ontology_owned(
@@ -76,6 +102,7 @@ impl JsReasoner {
         budget_secs: Option<u64>,
         shared: Option<(SharedOntology, OntologyRevision)>,
     ) -> Result<Self> {
+        let budget_secs = validate_budget_secs(budget_secs)?;
         let reasoner = Reasoner::builder()
             .profile(parse_profile(profile)?)
             .config(ReasonerConfig {
@@ -97,16 +124,19 @@ impl JsReasoner {
     }
 
     pub fn parse_meta(&self) -> Result<Value> {
-        let summary = self
+        let Some(summary) = self
             .reasoner
             .ontology()
             .parse_meta()
             .map(ParseMetaSummary::from)
-            .ok_or_else(|| JsError::Other("ontology has no parse metadata".into()))?;
+        else {
+            return Ok(json!({}));
+        };
         Ok(parse_meta_value(&summary))
     }
 
-    pub fn taxonomy(&self) -> Result<Option<Value>> {
+    pub fn taxonomy(&mut self) -> Result<Option<Value>> {
+        self.sync_from_shared()?;
         let Some(ref taxonomy) = self.last_taxonomy else {
             return Ok(None);
         };
@@ -135,9 +165,7 @@ impl JsReasoner {
                 rl_classify_value(self.reasoner.ontology(), &report)?
             }
             _ => {
-                return Err(JsError::Other(
-                    "unsupported ClassifyOutcome variant".into(),
-                ));
+                return Err(JsError::Other("unsupported ClassifyOutcome variant".into()));
             }
         };
         self.sync_to_shared()?;
@@ -146,32 +174,27 @@ impl JsReasoner {
 
     pub fn explain(&mut self) -> Result<Value> {
         self.sync_from_shared()?;
-        let graph = explain_with_profile(&mut self.reasoner)
-            .map_err(|e| JsError::Other(e.to_string()))?;
+        let graph = explain_with_profile(&mut self.reasoner)?;
         let parse_meta = self
             .reasoner
             .ontology()
             .parse_meta()
             .map(ParseMetaSummary::from);
-        let value = proof_graph_value(
-            self.reasoner.ontology(),
-            &graph,
-            parse_meta.as_ref(),
-        )?;
+        let value = proof_graph_value(self.reasoner.ontology(), &graph, parse_meta.as_ref())?;
         self.sync_to_shared()?;
         Ok(value)
     }
 
     pub fn check_consistency(&mut self) -> Result<Value> {
         self.sync_from_shared()?;
-        let result = ontologos_facade::check_consistency(&self.reasoner)?;
+        let result = ontologos_facade::check_consistency(&mut self.reasoner)?;
         self.sync_to_shared()?;
         Ok(consistency_value(&result))
     }
 
     pub fn is_consistent(&mut self) -> Result<bool> {
         self.sync_from_shared()?;
-        let consistent = ontologos_facade::is_consistent(&self.reasoner)?;
+        let consistent = ontologos_facade::is_consistent(&mut self.reasoner)?;
         self.sync_to_shared()?;
         Ok(consistent)
     }
@@ -205,22 +228,22 @@ impl JsReasoner {
 
     pub fn query(&mut self, query: &str) -> Result<Value> {
         self.sync_from_shared()?;
-        if self.last_taxonomy.is_none() {
-            self.classify()?;
-        }
-        let taxonomy = self
-            .last_taxonomy
-            .as_ref()
-            .ok_or_else(|| JsError::Other("query requires taxonomy classification outcome".into()))?;
-        let cq = ontologos_ql::parse_conjunctive_query(query).map_err(|e| JsError::Other(e.to_string()))?;
-        let answers =
-            ontologos_ql::answer_query(self.reasoner.ontology(), taxonomy, &cq).map_err(|e| JsError::Other(e.to_string()))?;
+        let taxonomy = self.last_taxonomy.as_ref().ok_or_else(|| {
+            JsError::Other("query requires prior classify() with taxonomy outcome".into())
+        })?;
+        let cq = ontologos_ql::parse_conjunctive_query(query)
+            .map_err(|e| JsError::Other(e.to_string()))?;
+        let answers = ontologos_ql::answer_query(self.reasoner.ontology(), taxonomy, &cq)
+            .map_err(|e| JsError::Other(e.to_string()))?;
         let bindings: Vec<Value> = answers
             .into_iter()
             .map(|answer| {
                 let mut map = serde_json::Map::new();
                 for (var, id) in answer.bindings {
-                    map.insert(var, Value::String(entity_iri(self.reasoner.ontology(), id)?));
+                    map.insert(
+                        var,
+                        Value::String(entity_iri(self.reasoner.ontology(), id)?),
+                    );
                 }
                 Ok(Value::Object(map))
             })
@@ -278,7 +301,9 @@ impl JsReasoner {
 
     fn sync_from_shared(&mut self) -> Result<()> {
         if let Some(shared) = &self.shared_ontology {
-            let guard = shared.borrow();
+            let guard = shared
+                .lock()
+                .map_err(|e| JsError::Other(format!("ontology lock poisoned: {e}")))?;
             let current = guard.revision();
             let revision_changed = self.shared_revision != Some(current);
             if revision_changed {
@@ -296,10 +321,20 @@ impl JsReasoner {
     fn sync_to_shared(&mut self) -> Result<()> {
         if let Some(shared) = &self.shared_ontology {
             let reasoner_rev = self.reasoner.ontology().revision();
-            if self.shared_revision != Some(reasoner_rev) {
-                *shared.borrow_mut() = self.reasoner.ontology().clone();
-                self.shared_revision = Some(reasoner_rev);
+            if self.shared_revision == Some(reasoner_rev) {
+                return Ok(());
             }
+            let base_rev = self.shared_revision.ok_or_else(|| {
+                JsError::Other("shared ontology sync state missing base revision".into())
+            })?;
+            let mut guard = shared
+                .lock()
+                .map_err(|e| JsError::Other(format!("ontology lock poisoned: {e}")))?;
+            if guard.revision() != base_rev {
+                return Err(JsError::OntologyConflict);
+            }
+            *guard = self.reasoner.ontology().clone();
+            self.shared_revision = Some(reasoner_rev);
         }
         Ok(())
     }

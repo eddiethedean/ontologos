@@ -189,13 +189,9 @@ pub(crate) fn taxonomy_classify_dict<'py>(
     taxonomy: &Taxonomy,
 ) -> PyResult<Bound<'py, PyDict>> {
     let parse_meta = parse_meta_from_ontology(ontology);
-    let json = ontologos_facade::taxonomy_json(
-        "classified",
-        taxonomy,
-        ontology,
-        parse_meta.as_ref(),
-    )
-    .map_err(py_err)?;
+    let json =
+        ontologos_facade::taxonomy_json("classified", taxonomy, ontology, parse_meta.as_ref())
+            .map_err(py_err)?;
     let value = serde_json::to_value(&json).map_err(py_err)?;
     json_to_pydict(py, &value)
 }

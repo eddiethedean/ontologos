@@ -19,6 +19,9 @@ pub enum JsError {
     /// General failure.
     #[error("{0}")]
     Other(String),
+    /// Shared ontology was modified concurrently.
+    #[error("shared ontology was modified concurrently; re-sync or use a single writer")]
+    OntologyConflict,
 }
 
 impl JsError {
@@ -29,6 +32,7 @@ impl JsError {
             Self::Parse(_) => "ParseError",
             Self::ResourceLimit(_) => "ResourceLimitError",
             Self::IncompleteReasoning => "IncompleteReasoningError",
+            Self::OntologyConflict => "OntologyConflictError",
             Self::Other(_) => "Error",
         }
     }
@@ -64,6 +68,15 @@ impl From<FacadeError> for JsError {
                 inner,
             ))) => Self::ResourceLimit(inner.to_string()),
             FacadeError::Core(e) => e.into(),
+            other => Self::Other(other.to_string()),
+        }
+    }
+}
+
+impl From<ontologos_explain::Error> for JsError {
+    fn from(error: ontologos_explain::Error) -> Self {
+        match error {
+            ontologos_explain::Error::Core(e) => e.into(),
             other => Self::Other(other.to_string()),
         }
     }

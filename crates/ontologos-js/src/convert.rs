@@ -24,7 +24,9 @@ pub fn parse_profile(profile: Option<&str>) -> Result<Profile> {
 }
 
 pub fn entity_iri(ontology: &Ontology, id: EntityId) -> Result<String> {
-    let record = ontology.entity(id).map_err(|e| JsError::Other(e.to_string()))?;
+    let record = ontology
+        .entity(id)
+        .map_err(|e| JsError::Other(e.to_string()))?;
     ontology
         .resolve_iri(record.iri)
         .map(|s| s.to_owned())
@@ -74,10 +76,10 @@ fn optional_entity_triple(
 fn proof_node_value(ontology: &Ontology, node: &ProofNode) -> Result<Value> {
     let mut obj = json!({
         "rule": node.rule,
-        "premises": node.premises.iter().map(|id| id.0).collect::<Vec<_>>(),
+        "premises": node.premises.iter().map(|id| id.0.to_string()).collect::<Vec<_>>(),
     });
     if let Some(axiom_id) = node.conclusion_axiom {
-        obj["conclusion_axiom"] = json!(axiom_id.index());
+        obj["conclusion_axiom"] = json!(axiom_id.index().to_string());
     }
     if let Some(pair) = optional_entity_pair(ontology, node.conclusion_sub)? {
         obj["conclusion_sub"] = json!(pair);
@@ -157,18 +159,11 @@ pub fn find_subclass_axiom_id(
     Ok(None)
 }
 
-pub fn taxonomy_classify_value(
-    ontology: &Ontology,
-    taxonomy: &Taxonomy,
-) -> Result<Value> {
+pub fn taxonomy_classify_value(ontology: &Ontology, taxonomy: &Taxonomy) -> Result<Value> {
     let parse_meta = parse_meta_from_ontology(ontology);
-    let json = ontologos_facade::taxonomy_json(
-        "classified",
-        taxonomy,
-        ontology,
-        parse_meta.as_ref(),
-    )
-    .map_err(JsError::from)?;
+    let json =
+        ontologos_facade::taxonomy_json("classified", taxonomy, ontology, parse_meta.as_ref())
+            .map_err(JsError::from)?;
     serde_json::to_value(&json).map_err(|e| JsError::Other(e.to_string()))
 }
 
@@ -193,7 +188,6 @@ pub fn rl_classify_value(
 
 /// Convert a usize count to u32 for JS bindings, rejecting overflow.
 pub fn usize_to_u32(count: usize) -> Result<u32> {
-    u32::try_from(count).map_err(|_| {
-        JsError::ResourceLimit(format!("count {count} exceeds maximum u32 value"))
-    })
+    u32::try_from(count)
+        .map_err(|_| JsError::ResourceLimit(format!("count {count} exceeds maximum u32 value")))
 }

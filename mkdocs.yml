@@ -95,6 +95,9 @@ nav:
       - Profile detection: guides/profile-detection.md
       - Python: guides/python.md
       - Node.js: guides/node.md
+      - Java: guides/java.md
+      - .NET: guides/dotnet.md
+      - C/C++: guides/c-cpp.md
       - WebAssembly: guides/wasm.md
       - Glossary: guides/glossary.md
       - Incremental reasoning: guides/incremental-reasoning.md
@@ -132,24 +135,25 @@ nav:
       - Contract tests: examples/contract-tests.md
       - Taxonomy tolerance: reference/taxonomy-tolerance.md
       - Rust API (docs.rs):
-          - ontologos-core: https://docs.rs/ontologos-core/1.0.0
-          - ontologos-profile: https://docs.rs/ontologos-profile/1.0.0
-          - ontologos-parser: https://docs.rs/ontologos-parser/1.0.0
-          - ontologos-bridge: https://docs.rs/ontologos-bridge/1.0.0
-          - ontologos-rl: https://docs.rs/ontologos-rl/1.0.0
-          - ontologos-el: https://docs.rs/ontologos-el/1.0.0
-          - ontologos-alc: https://docs.rs/ontologos-alc/1.0.0
-          - ontologos-dl: https://docs.rs/ontologos-dl/1.0.0
-          - ontologos-swrl: https://docs.rs/ontologos-swrl/1.0.0
-          - ontologos-explain: https://docs.rs/ontologos-explain/1.0.0
-          - ontologos-ql: https://docs.rs/ontologos-ql/1.0.0
-          - ontologos-facade: https://docs.rs/ontologos-facade/1.0.0
+          - ontologos-core: https://docs.rs/ontologos-core/1.1.0
+          - ontologos-profile: https://docs.rs/ontologos-profile/1.1.0
+          - ontologos-parser: https://docs.rs/ontologos-parser/1.1.0
+          - ontologos-bridge: https://docs.rs/ontologos-bridge/1.1.0
+          - ontologos-rl: https://docs.rs/ontologos-rl/1.1.0
+          - ontologos-el: https://docs.rs/ontologos-el/1.1.0
+          - ontologos-alc: https://docs.rs/ontologos-alc/1.1.0
+          - ontologos-dl: https://docs.rs/ontologos-dl/1.1.0
+          - ontologos-swrl: https://docs.rs/ontologos-swrl/1.1.0
+          - ontologos-explain: https://docs.rs/ontologos-explain/1.1.0
+          - ontologos-ql: https://docs.rs/ontologos-ql/1.1.0
+          - ontologos-facade: https://docs.rs/ontologos-facade/1.1.0
   - Migration:
       - Upgrade to latest: migration/index.md
       - Historical migrations: migration/historical.md
       - v0.8.x to v0.9.0: migration/v0.8.x-to-v0.9.0.md
       - v0.8.x to v1.0.0: migration/v0.8.x-to-v1.0.0.md
       - v0.9.x to v1.0.0: migration/v0.9.x-to-v1.0.0.md
+      - v1.0.x to v1.1.0: migration/v1.0.x-to-v1.1.0.md
   - Project:
       - FAQ: project/faq.md
       - Release status: project/release-status.md
@@ -194,7 +198,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/eddiethedean/ontologos
     - icon: fontawesome/brands/rust
-      link: https://docs.rs/ontologos-core/1.0.0
+      link: https://docs.rs/ontologos-core/1.1.0
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/ontologos/
 

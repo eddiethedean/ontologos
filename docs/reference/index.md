@@ -18,19 +18,24 @@ API and CLI reference for OntoLogos. Install channels: [Install and channels](..
 | OWL 2 DL | [DL API](dl.md) |
 | SWRL | [SWRL API](swrl.md) |
 | Python bindings | [Python API](python.md) · [Python guide](../guides/python.md) |
+| Node.js bindings | [Node guide](../guides/node.md) |
+| Java bindings | [Java guide](../guides/java.md) |
+| .NET bindings | [.NET guide](../guides/dotnet.md) |
+| C/C++ bindings | [C/C++ guide](../guides/c-cpp.md) |
+| WebAssembly | [WASM guide](../guides/wasm.md) |
 | CLI | [CLI reference](cli.md) |
 | Errors | [Errors](errors.md) |
 | Supported OWL constructs | [Supported constructs](supported-constructs.md) |
 
 ## Rust crates (docs.rs)
 
-Published API docs: [docs.rs/ontologos-core/1.0.0](https://docs.rs/ontologos-core/1.0.0). Local: `cargo doc --open -p ontologos-facade`.
+Published API docs: [docs.rs/ontologos-core/1.1.0](https://docs.rs/ontologos-core/1.1.0). Local: `cargo doc --open -p ontologos-facade`.
 
 | Crate | Reference |
 |-------|-----------|
-| `ontologos-core` | [core.md](core.md) · [docs.rs](https://docs.rs/ontologos-core/1.0.0) |
+| `ontologos-core` | [core.md](core.md) · [docs.rs](https://docs.rs/ontologos-core/1.1.0) |
 | `ontologos-parser` | [parser.md](parser.md) |
-| `ontologos-profile` | [profile.md](profile.md) · [docs.rs](https://docs.rs/ontologos-profile/1.0.0) |
+| `ontologos-profile` | [profile.md](profile.md) · [docs.rs](https://docs.rs/ontologos-profile/1.1.0) |
 | `ontologos-facade` | [facade.md](facade.md) |
 | `ontologos-rl` | [rl.md](rl.md) · [RL rules](rl-rules.md) |
 | `ontologos-el` | [el.md](el.md) |
@@ -38,6 +43,8 @@ Published API docs: [docs.rs/ontologos-core/1.0.0](https://docs.rs/ontologos-cor
 | `ontologos-ql` | [ql.md](ql.md) · [query.md](query.md) |
 | `ontologos-explain` | [explain.md](explain.md) |
 | `ontologos-swrl` | [swrl.md](swrl.md) |
+
+**Source-build binding crates:** `ontologos-js`, `ontologos-ffi`, `ontologos-node`, `ontologos-wasm`, `ontologos-jni`, `ontologos-dotnet`, `ontologos-c`.
 
 ## Interop and conformance
 

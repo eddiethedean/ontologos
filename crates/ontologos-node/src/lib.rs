@@ -9,7 +9,9 @@ use napi_derive::napi;
 use ontologos_js::{JsOntology, JsOntologyBuilder, JsReasoner, VERSION, usize_to_u32};
 use serde_json::Value;
 
-use crate::errors::{map_err, u32_to_usize};
+use crate::errors::{OntologosStatus, map_err, u32_to_usize, validate_budget_secs};
+
+type Result<T> = std::result::Result<T, Error<OntologosStatus>>;
 
 fn to_json_value(value: Value) -> Result<serde_json::Value> {
     Ok(value)
@@ -111,19 +113,19 @@ impl Ontology {
         })
     }
 
-    /// Load from a trusted local path (lenient parse; no sandbox).
+    /// Load from a trusted local path (strict parse by default).
     #[napi(factory)]
-    pub fn load(path: String) -> Result<Self> {
+    pub fn load(path: String, lenient: Option<bool>) -> Result<Self> {
         Ok(Self {
-            inner: JsOntology::load_path(&path).map_err(map_err)?,
+            inner: JsOntology::load_path(&path, lenient.unwrap_or(false)).map_err(map_err)?,
         })
     }
 
-    /// Sandboxed load constrained to `base` (strict; recommended for uploads).
+    /// Sandboxed load constrained to `base` (strict parse by default).
     #[napi(factory, js_name = "loadIn")]
-    pub fn load_in(base: String, path: String) -> Result<Self> {
+    pub fn load_in(base: String, path: String, lenient: Option<bool>) -> Result<Self> {
         Ok(Self {
-            inner: JsOntology::load_in(&base, &path).map_err(map_err)?,
+            inner: JsOntology::load_in(&base, &path, lenient.unwrap_or(false)).map_err(map_err)?,
         })
     }
 
@@ -205,7 +207,9 @@ impl JsOntologyBuilderWrap {
 
     #[napi(js_name = "propertyRange")]
     pub fn property_range(&mut self, property: String, range: String) -> Result<()> {
-        self.inner.property_range(&property, &range).map_err(map_err)
+        self.inner
+            .property_range(&property, &range)
+            .map_err(map_err)
     }
 
     #[napi(js_name = "classAssertion")]
@@ -263,6 +267,7 @@ impl Reasoner {
         incremental: Option<bool>,
         budget_secs: Option<u32>,
     ) -> Result<Self> {
+        validate_budget_secs(budget_secs)?;
         Ok(Self {
             inner: JsReasoner::from_ontology(
                 &ontology.inner,
@@ -280,13 +285,16 @@ impl Reasoner {
         profile: Option<String>,
         incremental: Option<bool>,
         budget_secs: Option<u32>,
+        lenient: Option<bool>,
     ) -> Result<Self> {
+        validate_budget_secs(budget_secs)?;
         Ok(Self {
             inner: JsReasoner::from_path(
                 &path,
                 profile.as_deref(),
                 incremental.unwrap_or(false),
                 budget_secs.map(u64::from),
+                lenient.unwrap_or(false),
             )
             .map_err(map_err)?,
         })
@@ -299,7 +307,9 @@ impl Reasoner {
         profile: Option<String>,
         incremental: Option<bool>,
         budget_secs: Option<u32>,
+        lenient: Option<bool>,
     ) -> Result<Self> {
+        validate_budget_secs(budget_secs)?;
         Ok(Self {
             inner: JsReasoner::load_in(
                 &base,
@@ -307,6 +317,7 @@ impl Reasoner {
                 profile.as_deref(),
                 incremental.unwrap_or(false),
                 budget_secs.map(u64::from),
+                lenient.unwrap_or(false),
             )
             .map_err(map_err)?,
         })
@@ -318,7 +329,7 @@ impl Reasoner {
     }
 
     #[napi(getter)]
-    pub fn taxonomy(&self) -> Result<Option<serde_json::Value>> {
+    pub fn taxonomy(&mut self) -> Result<Option<serde_json::Value>> {
         match self.inner.taxonomy().map_err(map_err)? {
             Some(value) => Ok(Some(to_json_value(value)?)),
             None => Ok(None),
@@ -366,7 +377,7 @@ impl Reasoner {
         match value {
             Value::Array(items) => Ok(items),
             other => Err(Error::new(
-                Status::GenericFailure,
+                OntologosStatus::Error,
                 format!("unexpected query result shape: {other}"),
             )),
         }

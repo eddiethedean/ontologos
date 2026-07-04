@@ -19,7 +19,7 @@ def test_pizza_el_matches_cli_golden() -> None:
     assert PIZZA_GOLDEN.is_file(), f"missing golden file: {PIZZA_GOLDEN}"
 
     golden = json.loads(PIZZA_GOLDEN.read_text())
-    reasoner = Reasoner(path=str(PIZZA_OWL), profile="el")
+    reasoner = Reasoner(path=str(PIZZA_OWL), profile="el", trusted=True, lenient=True)
     result = reasoner.classify()
 
     assert result["subsumption_count"] == golden["subsumption_count"]

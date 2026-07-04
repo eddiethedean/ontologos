@@ -1,0 +1,22 @@
+[package]
+name = "ontologos-c"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "C/C++ native library for OntoLogos"
+publish = false
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+name = "ontologos_c"
+
+[dependencies]
+ontologos-ffi = { path = "../ontologos-ffi" }

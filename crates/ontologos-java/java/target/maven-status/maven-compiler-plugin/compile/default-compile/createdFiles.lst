@@ -1,0 +1,12 @@
+dev/ontologos/OntologyBuilder.class
+dev/ontologos/EntailmentCheck$Builder.class
+dev/ontologos/ParseException.class
+dev/ontologos/Ontology.class
+dev/ontologos/EntailmentCheck.class
+dev/ontologos/OntologosException.class
+dev/ontologos/ResourceLimitException.class
+dev/ontologos/NativeLoader.class
+dev/ontologos/Reasoner.class
+dev/ontologos/IncompleteReasoningException.class
+dev/ontologos/Ontologos.class
+dev/ontologos/OntologyConflictException.class

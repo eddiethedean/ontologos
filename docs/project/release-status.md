@@ -8,16 +8,29 @@ Single source of truth for version and distribution channels. Update this page w
 
 | Channel | Version | Notes |
 |---------|---------|-------|
-| **crates.io** (library crates) | **1.0.0** (published) | Latest installable release |
-| **PyPI** | **1.0.0** (published) | `pip install ontologos` |
-| **Latest git tag** | **v1.0.0** | Annotated semver tags on `main` |
-| **`main` branch** | **1.0.1** workspace (pre-release) | Patch fixes staged; crates.io/PyPI still **1.0.0** until **v1.0.1** publish |
+| **crates.io** (library crates) | **1.1.0** (staged) | Publish with annotated **v1.1.0** tag |
+| **PyPI** | **1.1.0** (staged) | `pip install ontologos` after publish |
+| **Latest git tag** | **v1.0.0** | **v1.1.0** annotated tag next |
+| **`main` branch** | **1.1.0** workspace | Multi-language bindings + shared FFI |
 
-Published crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
+Published library crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-CLI (`ontologos-cli`), Python (`ontologos-py`), and conformance are **source-build only** — not on crates.io (Python wheels ship via PyPI).
+**Source-build / PyPI wheels:** CLI (`ontologos-cli`), Python (`ontologos-py`), Node (`ontologos-node`), WASM (`ontologos-wasm`), Java (`ontologos-jni`), .NET (`ontologos-dotnet`), C/C++ (`ontologos-c` + `ontologos-ffi`).
 
-## HermiT parity snapshot (v1.0.0, 2026-07-03)
+## v1.1.0 highlights
+
+| Area | What's new |
+|------|------------|
+| **Shared FFI** | `ontologos-ffi` — stable C ABI for native bindings |
+| **Java** | JNI + Maven (`dev.ontologos:ontologos`) |
+| **.NET** | P/Invoke + C# API (`Ontologos`) |
+| **C/C++** | `libontologos_c` + `ontologos.h` / `ontologos.hpp` |
+| **Node / WASM** | N-API and wasm-pack bindings over `ontologos-js` |
+| **CI** | Unified `scripts/ci-bindings.sh` and `scripts/ci-node.sh` |
+
+See [CHANGELOG](../../CHANGELOG.md) and [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md).
+
+## HermiT parity snapshot (v1.1.0, 2026-07-04)
 
 ```bash
 bash benchmarks/scripts/hermit-burndown.sh status
@@ -47,32 +60,32 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 
 | Area | Status |
 |------|--------|
-| OWL EL, RL, RDFS | **Stable** on **v1.0.0** |
-| OWL DL (`--profile dl`) | **Stable** on **v1.0.0** |
-| SWRL | **Stable** on **v1.0.0** |
+| OWL EL, RL, RDFS | **Stable** on **v1.1.0** |
+| OWL DL (`--profile dl`) | **Stable** on **v1.1.0** |
+| SWRL | **Stable** on **v1.1.0** |
 | ALC / `dl-preview` | **Preview** |
-| Python bindings, explain (EL) | **Stable** on **v1.0.0** |
+| Python, Node, Java, .NET, C/C++, WASM bindings | **Stable** (source-build; PyPI for Python) |
 
 ## Install pins
 
 **Rust:**
 
 ```toml
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
+ontologos-core = "1.1.0"
+ontologos-parser = "1.1.0"
 # … bump all ontologos-* crates together
 ```
 
 **Python:**
 
 ```bash
-pip install ontologos==1.0.0
+pip install ontologos==1.1.0
 ```
 
 **CLI (from git):**
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli
 ```
 
 Requires **Rust 1.88+**.
@@ -81,6 +94,7 @@ Requires **Rust 1.88+**.
 
 | Tag | Theme |
 |-----|-------|
+| [v1.1.0](https://github.com/eddiethedean/ontologos/releases/tag/v1.1.0) | Multi-language bindings (Java, .NET, C/C++, shared FFI) |
 | [v1.0.0](https://github.com/eddiethedean/ontologos/releases/tag/v1.0.0) | HermiT parity milestone — OWL 2 DL + SWRL |
 | [v0.9.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.9.0) | Python ecosystem |
 | [v0.8.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.8.0) | Incremental reasoning |

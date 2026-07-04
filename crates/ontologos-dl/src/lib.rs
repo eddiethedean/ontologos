@@ -114,7 +114,7 @@ pub fn check_consistency(
     ontology: &Ontology,
     budget_secs: Option<u64>,
 ) -> Result<ConsistencyResult> {
-    if bounded::resolve_budget_secs(budget_secs).is_none() {
+    if bounded::resolve_budget_secs(budget_secs)?.is_none() {
         return check_consistency_inner(ontology);
     }
     let ontology = ontology.clone();

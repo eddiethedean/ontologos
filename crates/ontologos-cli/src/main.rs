@@ -16,7 +16,7 @@ use thiserror::Error;
 #[command(
     name = "ontologos",
     about = "Modular Rust ontology reasoner",
-    after_help = "v1.0.1: profile (detect), materialize (RDFS), classify (auto|el|rl|rdfs|alc|dl|dl-preview|swrl), \
+    after_help = "v1.1.0: profile (detect), materialize (RDFS), classify (auto|el|rl|rdfs|alc|dl|dl-preview|swrl), \
                   explain (proof graphs). Preview profiles: see docs/guides/preview-profiles.md. \
                   Use --incremental for delta re-classify. \
                   Docs: https://ontologos.readthedocs.io/en/latest/reference/cli/"
@@ -363,12 +363,12 @@ fn run() -> Result<(), CliError> {
             let ontology = load_ontology(ontology)?;
             let parse_meta = parse_meta_summary(&ontology);
             emit_parse_meta_text(cli.format, &parse_meta);
-            let reasoner = Reasoner::builder()
+            let mut reasoner = Reasoner::builder()
                 .profile(cli.profile.into())
                 .config(reasoner_config(&cli))
                 .build(ontology)?;
             let result =
-                ontologos_facade::check_consistency(&reasoner).map_err(map_facade_error)?;
+                ontologos_facade::check_consistency(&mut reasoner).map_err(map_facade_error)?;
             match cli.format {
                 OutputFormat::Text => {
                     if !result.complete {

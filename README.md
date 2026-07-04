@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
 ![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)
 
-**Embed OWL reasoning in Rust or Python — no JVM.**
+**Embed OWL reasoning in Rust, Python, Node.js, Java, .NET, C/C++, or WASM — no JVM.**
 
 Load `.owl` files, detect EL/RL/DL profiles, and classify or materialize in-process.
 Built for services and data pipelines, not as a Protégé replacement.
@@ -15,14 +15,17 @@ Built for services and data pipelines, not as a Protégé replacement.
 |---------|---------|
 | **Python** | `pip install ontologos` |
 | **Node.js** | Build `crates/ontologos-node` (see [Node guide](https://ontologos.readthedocs.io/en/latest/guides/node.html)) |
+| **Java** | Build `crates/ontologos-java` (see [Java guide](https://ontologos.readthedocs.io/en/latest/guides/java.html)) |
+| **.NET** | Build `crates/ontologos-dotnet` (see [.NET guide](https://ontologos.readthedocs.io/en/latest/guides/dotnet.html)) |
+| **C/C++** | Build `crates/ontologos-c` (see [C/C++ guide](https://ontologos.readthedocs.io/en/latest/guides/c-cpp.html)) |
 | **WebAssembly** | Build `crates/ontologos-wasm` (see [WASM guide](https://ontologos.readthedocs.io/en/latest/guides/wasm.html)) |
-| **Rust** | Add `ontologos-parser`, `ontologos-facade` @ `1.0.0` to `Cargo.toml` |
-| **CLI** | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli` |
+| **Rust** | Add `ontologos-parser`, `ontologos-facade` @ `1.1.0` to `Cargo.toml` |
+| **CLI** | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli` |
 | **Evaluate** | [30-minute playbook](https://ontologos.readthedocs.io/en/latest/guides/evaluator-playbook.html) |
 
 **Requires Rust 1.88+** for library users · **Full docs:** [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/)
 
-**v1.0.0** published on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/). Install channels: [guide](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html).
+**v1.1.0** published on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/). Install channels: [guide](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html).
 
 > **OWL DL:** validated on 889 gated HermiT conformance cases — [validate on your corpus](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope.html) before production.
 
@@ -38,6 +41,9 @@ Built for services and data pipelines, not as a Protégé replacement.
 | **Rust (no clone)** | [5-minute guide](https://ontologos.readthedocs.io/en/latest/getting-started/#cratesio-only-no-clone) |
 | **Python** | [Python guide](https://ontologos.readthedocs.io/en/latest/guides/python.html) |
 | **Node.js** | [Node.js guide](https://ontologos.readthedocs.io/en/latest/guides/node.html) |
+| **Java** | [Java guide](https://ontologos.readthedocs.io/en/latest/guides/java.html) |
+| **.NET** | [.NET guide](https://ontologos.readthedocs.io/en/latest/guides/dotnet.html) |
+| **C/C++** | [C/C++ guide](https://ontologos.readthedocs.io/en/latest/guides/c-cpp.html) |
 | **WebAssembly** | [WASM guide](https://ontologos.readthedocs.io/en/latest/guides/wasm.html) |
 | **CLI** | [CLI installation](https://ontologos.readthedocs.io/en/latest/getting-started/cli-install.html) |
 | **Evaluate vs HermiT/ELK** | [Evaluator playbook](https://ontologos.readthedocs.io/en/latest/guides/evaluator-playbook.html) · [Evaluator scope](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope.html) |
@@ -66,7 +72,7 @@ Rust, CLI, and profile-specific guides: [Getting started](https://ontologos.read
 
 ---
 
-## Capabilities (v1.0.0)
+## Capabilities (v1.1.0)
 
 | Profile | Use case | Status |
 |---------|----------|--------|
@@ -94,7 +100,7 @@ See the [Rust integration contract](https://ontologos.readthedocs.io/en/latest/g
 |-------|------|
 | **Full site** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 | Crate picker | [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api.html) |
-| Packages (12 crates) | [Reference index](https://ontologos.readthedocs.io/en/latest/reference/) |
+| Packages (12 library crates + bindings) | [Reference index](https://ontologos.readthedocs.io/en/latest/reference/) |
 | Migration | [Upgrade hub](https://ontologos.readthedocs.io/en/latest/migration/) |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |
 

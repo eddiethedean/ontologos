@@ -25,6 +25,12 @@ impl PyOntology {
             inner: Arc::new(Mutex::new(ontology)),
         }
     }
+
+    fn from_owned_with_limits(ontology: Ontology, limits: Limits) -> Self {
+        let mut ontology = ontology;
+        ontology.set_enforce_limits(limits);
+        Self::from_owned(ontology)
+    }
 }
 
 #[pymethods]
@@ -59,7 +65,7 @@ impl PyOntology {
             limits.max_iri_len = n;
         }
         let inner = Ontology::from_json_with_limits(json, limits).map_err(map_core_py_err)?;
-        Ok(Self::from_owned(inner))
+        Ok(Self::from_owned_with_limits(inner, limits))
     }
 
     #[classmethod]
@@ -83,12 +89,13 @@ impl PyOntology {
 
     #[classmethod]
     fn load_in(_cls: &Bound<'_, PyType>, base: &str, path: &str) -> PyResult<Self> {
+        let limits = Limits::default();
         let ontology = ontologos_parser::load_ontology_in(
             std::path::Path::new(base),
             std::path::Path::new(path),
         )
         .map_err(map_parser_py_err)?;
-        Ok(Self::from_owned(ontology))
+        Ok(Self::from_owned_with_limits(ontology, limits))
     }
 
     fn to_json(&self) -> PyResult<String> {

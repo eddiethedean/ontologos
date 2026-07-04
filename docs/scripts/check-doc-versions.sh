@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 WORKSPACE_VERSION="$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')"
-PUBLISHED_VERSION="1.0.0"
+PUBLISHED_VERSION="1.1.0"
 echo "Workspace version: ${WORKSPACE_VERSION}"
 echo "Published version: ${PUBLISHED_VERSION}"
 
@@ -81,18 +81,18 @@ for file in README.md docs/index.md; do
   if grep -q 'install-channels' "$file" 2>/dev/null; then
     has_banner=1
   fi
-  if grep -q "Latest tagged release is \*\*v1.0.0\*\*" "$file" 2>/dev/null; then
+  if grep -q "Latest tagged release is \*\*v1.1.0\*\*" "$file" 2>/dev/null; then
     has_banner=1
   fi
-  if grep -q "Latest release is \*\*v1.0.0\*\*" "$file" 2>/dev/null; then
+  if grep -q "Latest release is \*\*v1.1.0\*\*" "$file" 2>/dev/null; then
     has_banner=1
   fi
   if [[ "$has_banner" -eq 0 ]]; then
     echo "ERROR: ${file} missing release-channel messaging (banner snippet or install-channels link)"
     FAIL=1
   fi
-  if ! grep -Eq 'v1\.0\.0.*(published|crates\.io|PyPI)' "$file"; then
-    echo "ERROR: ${file} missing v1.0.0 published channel note"
+  if ! grep -Eq 'v1\.1\.0.*(published|crates\.io|PyPI)' "$file"; then
+    echo "ERROR: ${file} missing v1.1.0 published channel note"
     FAIL=1
   fi
 done
@@ -195,9 +195,13 @@ if ! grep -q "v${WORKSPACE_VERSION}:" crates/ontologos-cli/src/main.rs; then
   FAIL=1
 fi
 
-# Migration hub must reference v1.0.0 upgrade path.
+# Migration hub must reference v1.0.0 and v1.1.0 upgrade paths.
 if ! grep -q "v0.9.x → v1.0.0" docs/migration/index.md; then
   echo "ERROR: migration hub missing v0.9.x → v1.0.0 path"
+  FAIL=1
+fi
+if ! grep -q "v1.0.x → v1.1.0" docs/migration/index.md; then
+  echo "ERROR: migration hub missing v1.0.x → v1.1.0 path"
   FAIL=1
 fi
 

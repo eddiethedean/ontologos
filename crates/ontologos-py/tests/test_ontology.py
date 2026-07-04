@@ -24,7 +24,7 @@ def test_ontology_from_json_round_trip() -> None:
     assert ontology.axiom_count == 2
     assert ontology.entity_count == 4
     restored = json.loads(ontology.to_json())
-    assert restored["format_version"] == 3
+    assert restored["format_version"] == 4
     assert len(restored["axioms"]) == 2
 
 

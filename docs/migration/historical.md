@@ -15,3 +15,4 @@ Step-by-step upgrades between early 0.x releases. For current channels, start at
 | v0.8.x → v0.9.0 | [v0.8.x to v0.9.0](v0.8.x-to-v0.9.0.md) |
 | v0.8.x → v1.0.0 | [v0.8.x to v1.0.0](v0.8.x-to-v1.0.0.md) |
 | v0.9.x → v1.0.0 | [v0.9.x to v1.0.0](v0.9.x-to-v1.0.0.md) |
+| v1.0.x → v1.1.0 | [v1.0.x to v1.1.0](v1.0.x-to-v1.1.0.md) |

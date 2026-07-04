@@ -7,6 +7,7 @@ use crate::outcome::ClassifyOutcome;
 /// Classify using any supported profile (EL, RL, RDFS, ALC, DL, SWRL, Auto).
 #[tracing::instrument(skip(reasoner), fields(profile = ?reasoner.profile()))]
 pub fn classify(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
+    reasoner.invalidate_stale_classify_cache();
     let route = resolve(reasoner)?;
     tracing::debug!(engine = ?route.kind, "resolved classify route");
     let outcome = dispatch_classify(route, reasoner)?;

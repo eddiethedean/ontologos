@@ -148,26 +148,26 @@ fn taxonomy_from_outcome_none_for_rdfs() {
 
 #[test]
 fn is_consistent_el_uses_el_classifier() {
-    let reasoner = el_reasoner();
-    assert!(is_consistent(&reasoner).unwrap());
+    let mut reasoner = el_reasoner();
+    assert!(is_consistent(&mut reasoner).unwrap());
 }
 
 #[test]
 fn is_consistent_el_detects_unsatisfiable() {
-    let reasoner = Reasoner::builder()
+    let mut reasoner = Reasoner::builder()
         .profile(Profile::El)
         .build(unsatisfiable_el_ontology())
         .unwrap();
-    assert!(!is_consistent(&reasoner).unwrap());
+    assert!(!is_consistent(&mut reasoner).unwrap());
 }
 
 #[test]
 fn is_consistent_auto_routes_el_to_el_classifier() {
-    let reasoner = Reasoner::builder()
+    let mut reasoner = Reasoner::builder()
         .profile(Profile::Auto)
         .build(el_ontology())
         .unwrap();
-    assert!(is_consistent(&reasoner).unwrap());
+    assert!(is_consistent(&mut reasoner).unwrap());
 }
 
 #[test]
@@ -177,11 +177,11 @@ fn is_consistent_rl_saturates_without_dl_tableau() {
         .unwrap()
         .build()
         .unwrap();
-    let reasoner = Reasoner::builder()
+    let mut reasoner = Reasoner::builder()
         .profile(Profile::Rl)
         .build(ontology)
         .unwrap();
-    assert!(is_consistent(&reasoner).unwrap());
+    assert!(is_consistent(&mut reasoner).unwrap());
 }
 
 #[test]
@@ -210,11 +210,11 @@ fn is_consistent_rl_detects_disjoint_clash() {
     ontology
         .add_axiom(Axiom::DisjointClasses(vec![a, d]))
         .unwrap();
-    let reasoner = Reasoner::builder()
+    let mut reasoner = Reasoner::builder()
         .profile(Profile::Rl)
         .build(ontology)
         .unwrap();
-    assert!(!is_consistent(&reasoner).unwrap());
+    assert!(!is_consistent(&mut reasoner).unwrap());
 }
 
 #[test]
@@ -224,11 +224,11 @@ fn is_consistent_dl_profile_routes_to_dl_engine() {
         .unwrap()
         .build()
         .unwrap();
-    let reasoner = Reasoner::builder()
+    let mut reasoner = Reasoner::builder()
         .profile(Profile::Alc)
         .build(ontology)
         .unwrap();
-    assert!(is_consistent(&reasoner).unwrap());
+    assert!(is_consistent(&mut reasoner).unwrap());
 }
 
 #[test]

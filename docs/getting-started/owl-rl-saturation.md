@@ -1,6 +1,6 @@
 # OWL RL Saturation
 
-OWL 2 RL forward-chaining via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.0.0). The engine runs RDFS materialization first, then applies RL TBox and ABox rules until a fixed point.
+OWL 2 RL forward-chaining via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.1.0). The engine runs RDFS materialization first, then applies RL TBox and ABox rules until a fixed point.
 
 ## Prerequisites
 
@@ -40,9 +40,9 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
-ontologos-rl = "1.0.0"
+ontologos-core = "1.1.0"
+ontologos-parser = "1.1.0"
+ontologos-rl = "1.1.0"
 ```
 
 Load and saturate:

@@ -16,25 +16,104 @@ use crate::{
 
 struct PreprocessBudget {
     limit: usize,
-    used: usize,
+    peak: usize,
 }
 
 impl PreprocessBudget {
     fn new(limit: usize) -> Self {
-        Self { limit, used: 0 }
+        Self { limit, peak: 0 }
     }
 
     fn track(&mut self, stage: &str) -> Result<()> {
-        self.used = self.used.saturating_add(stage.len());
-        if self.used > self.limit {
+        self.peak = self.peak.max(stage.len());
+        if self.peak > self.limit {
             Err(Error::Parse(format!(
                 "RDF/XML preprocessing allocation {} bytes exceeds limit of {} bytes",
-                self.used, self.limit
+                self.peak, self.limit
             )))
         } else {
             Ok(())
         }
     }
+}
+
+/// Run the RDF/XML preprocessing pipeline shared by file and in-memory loaders.
+fn preprocess_rdf_xml_text(text: &str, limits: ParseLimits) -> Result<(String, bool)> {
+    let mut budget = PreprocessBudget::new(limits.max_preprocess_bytes);
+    budget.track(text)?;
+    let mut current = crate::rdf_preprocess::normalize_multiline_rdf_root_tag(text);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::dedupe_rdf_xml_ids(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::normalize_invalid_rdf_ids(&current);
+    budget.track(&current)?;
+    current =
+        crate::rdf_preprocess::expand_xml_entities_with_limit(&current, limits.max_expanded_bytes)?;
+    budget.track(&current)?;
+    let ill_founded_list = crate::rdf_preprocess::contains_ill_founded_rdf_list(&current);
+    current = crate::rdf_preprocess::normalize_relative_owl_uris(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::normalize_rdfs_class_elements(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::materialize_typed_about_elements(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::materialize_typed_node_elements(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::normalize_class_intersection_definitions(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::normalize_class_same_as(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::materialize_named_individual_descriptions(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::materialize_anonymous_individual_descriptions(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::normalize_all_different_members(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::expand_all_disjoint_collections(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::inject_object_property_declarations_from_usage(&current);
+    budget.track(&current)?;
+    current = crate::rdf_preprocess::normalize_property_same_as(&current);
+    budget.track(&current)?;
+    Ok((current, ill_founded_list))
+}
+
+fn load_rdf_xml_from_preprocessed(
+    preprocessed_rdf: &str,
+    limits: ParseLimits,
+    ill_founded_list: bool,
+    import_path: Option<&Path>,
+    base: Option<&Path>,
+    merge_imports: bool,
+) -> Result<(Ontology, ParseReport)> {
+    let set_ontology = read_horned_owl_from_reader(
+        &mut std::io::Cursor::new(preprocessed_rdf.as_bytes()),
+        Format::RdfXml,
+        limits,
+    )?;
+    let (mut ontology, mut report) = map_to_core(&set_ontology, limits)?;
+    supplement_rdf_dl_axioms(
+        preprocessed_rdf,
+        &mut ontology,
+        &mut report,
+        limits,
+        ill_founded_list,
+    )?;
+    if merge_imports && let Some(path) = import_path {
+        merge_rdf_owl_imports(
+            path,
+            preprocessed_rdf,
+            &mut ontology,
+            &mut report,
+            limits,
+            base,
+        )?;
+    }
+    report.meta.logical_axiom_count =
+        report.meta.mapped_axiom_count + report.meta.skipped_axiom_count;
+    Ok((ontology, report))
 }
 
 fn finalize_parsed_ontology(
@@ -80,16 +159,24 @@ fn bump_harvested_assertions(count: &mut usize, limits: ParseLimits) -> Result<(
     }
 }
 
-fn read_text_file_with_limit(path: &Path, limits: ParseLimits) -> Result<String> {
-    let metadata = std::fs::metadata(path).map_err(|e| Error::Parse(e.to_string()))?;
-    if metadata.len() as usize > limits.max_file_bytes {
+fn read_text_file_with_limit(
+    path: &Path,
+    limits: ParseLimits,
+    base: Option<&Path>,
+) -> Result<String> {
+    let file = open_for_load(path, base)?;
+    let file_len = file
+        .metadata()
+        .map_err(|e| Error::Parse(e.to_string()))?
+        .len();
+    if file_len > limits.max_file_bytes as u64 {
         return Err(Error::Parse(format!(
-            "file size {} exceeds limit of {} bytes",
-            metadata.len(),
+            "file size {file_len} exceeds limit of {} bytes",
             limits.max_file_bytes
         )));
     }
-    std::fs::read_to_string(path).map_err(|e| Error::Parse(e.to_string()))
+    let bytes = crate::read::read_bounded_bytes(file, limits.max_file_bytes)?;
+    String::from_utf8(bytes).map_err(|e| Error::Parse(e.to_string()))
 }
 
 const SUPPLEMENT_STANDARD_PREFIXES: &str = "\
@@ -214,7 +301,7 @@ fn load_ontology_with_limits_and_base_inner(
         .metadata()
         .map_err(|e| Error::Parse(e.to_string()))?
         .len();
-    if file_len as usize > limits.max_file_bytes {
+    if file_len > limits.max_file_bytes as u64 {
         return Err(Error::Parse(format!(
             "file size {file_len} exceeds limit of {} bytes",
             limits.max_file_bytes
@@ -235,76 +322,15 @@ fn load_ontology_with_limits_and_base_inner(
             )));
         }
         let text = String::from_utf8(bytes).map_err(|e| Error::Parse(e.to_string()))?;
-        let mut budget = PreprocessBudget::new(limits.max_preprocess_bytes);
-        budget.track(&text)?;
-        let root_tag = crate::rdf_preprocess::normalize_multiline_rdf_root_tag(&text);
-        budget.track(&root_tag)?;
-        let deduped = crate::rdf_preprocess::dedupe_rdf_xml_ids(&root_tag);
-        budget.track(&deduped)?;
-        let normalized_ids = crate::rdf_preprocess::normalize_invalid_rdf_ids(&deduped);
-        budget.track(&normalized_ids)?;
-        let expanded = crate::rdf_preprocess::expand_xml_entities_with_limit(
-            &normalized_ids,
-            limits.max_expanded_bytes,
-        )?;
-        budget.track(&expanded)?;
-        let ill_founded_list = crate::rdf_preprocess::contains_ill_founded_rdf_list(&expanded);
-        let relative_uris = crate::rdf_preprocess::normalize_relative_owl_uris(&expanded);
-        budget.track(&relative_uris)?;
-        let rdfs_classes = crate::rdf_preprocess::normalize_rdfs_class_elements(&relative_uris);
-        budget.track(&rdfs_classes)?;
-        let injected = crate::rdf_preprocess::inject_rdf_based_punning_declarations(&rdfs_classes);
-        budget.track(&injected)?;
-        let typed_about = crate::rdf_preprocess::materialize_typed_about_elements(&injected);
-        budget.track(&typed_about)?;
-        let typed_nodes = crate::rdf_preprocess::materialize_typed_node_elements(&typed_about);
-        budget.track(&typed_nodes)?;
-        let intersections =
-            crate::rdf_preprocess::normalize_class_intersection_definitions(&typed_nodes);
-        budget.track(&intersections)?;
-        let same_as = crate::rdf_preprocess::normalize_class_same_as(&intersections);
-        budget.track(&same_as)?;
-        let named_individuals =
-            crate::rdf_preprocess::materialize_named_individual_descriptions(&same_as);
-        budget.track(&named_individuals)?;
-        let individuals = crate::rdf_preprocess::materialize_anonymous_individual_descriptions(
-            &named_individuals,
-        );
-        budget.track(&individuals)?;
-        let normalized = crate::rdf_preprocess::normalize_all_different_members(&individuals);
-        budget.track(&normalized)?;
-        let disjoint = crate::rdf_preprocess::expand_all_disjoint_collections(&normalized);
-        budget.track(&disjoint)?;
-        let property_usage =
-            crate::rdf_preprocess::inject_object_property_declarations_from_usage(&disjoint);
-        budget.track(&property_usage)?;
-        let preprocessed_rdf = crate::rdf_preprocess::normalize_property_same_as(&property_usage);
-        budget.track(&preprocessed_rdf)?;
-        let set_ontology = read_horned_owl_from_reader(
-            &mut std::io::Cursor::new(preprocessed_rdf.as_bytes()),
-            format,
-            limits,
-        )?;
-        let (mut ontology, mut report) = map_to_core(&set_ontology, limits)?;
-        supplement_rdf_dl_axioms(
+        let (preprocessed_rdf, ill_founded_list) = preprocess_rdf_xml_text(&text, limits)?;
+        let (ontology, report) = load_rdf_xml_from_preprocessed(
             &preprocessed_rdf,
-            &mut ontology,
-            &mut report,
             limits,
             ill_founded_list,
+            Some(path),
+            base,
+            merge_imports,
         )?;
-        if merge_imports {
-            merge_rdf_owl_imports(
-                path,
-                &preprocessed_rdf,
-                &mut ontology,
-                &mut report,
-                limits,
-                base,
-            )?;
-        }
-        report.meta.logical_axiom_count =
-            report.meta.mapped_axiom_count + report.meta.skipped_axiom_count;
         return finish_loaded_ontology(ontology, report, limits);
     }
     file.seek(SeekFrom::Start(0))
@@ -588,7 +614,7 @@ fn supplement_rdf_dl_axioms(
     for (left, right) in crate::rdf_preprocess::collect_property_disjoint_pairs(preprocessed_rdf) {
         validate_supplement_iris([&left, &right])?;
         bump_harvested_assertions(&mut harvested, limits)?;
-        insert_property_disjoint_supplement(ontology, report, &left, &right)?;
+        insert_property_disjoint_supplement(ontology, report, limits, &left, &right)?;
     }
     for (property, domain) in
         crate::rdf_preprocess::collect_rdfs_object_property_domains(preprocessed_rdf)
@@ -738,21 +764,33 @@ fn supplement_rdf_dl_axioms(
         merge_ofn_supplement(ontology, report, limits, &mut harvested, &ofn)?;
     }
     if ill_founded_list {
-        let thing = ontology
-            .entity_id("http://www.w3.org/2002/07/owl#Thing", EntityKind::Class)
-            .map_err(|e| Error::Parse(e.to_string()))?;
-        let nothing = ontology
-            .entity_id("http://www.w3.org/2002/07/owl#Nothing", EntityKind::Class)
-            .map_err(|e| Error::Parse(e.to_string()))?;
-        ontology
-            .add_axiom(Axiom::EquivalentClasses(vec![thing, nothing]))
-            .map_err(|e| Error::Parse(e.to_string()))?;
-        let thing_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(thing));
-        let nothing_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(nothing));
-        ontology
-            .dl_mut()
-            .push_axiom(DlAxiom::EquivalentClasses(vec![thing_ce, nothing_ce]));
-        report.meta.mapped_axiom_count += 1;
+        if total_axiom_count(ontology).saturating_add(2) > limits.max_axioms {
+            if limits.strict {
+                return Err(Error::Parse(format!(
+                    "ill-founded RDF list supplement would exceed axiom limit of {}",
+                    limits.max_axioms
+                )));
+            }
+            report.meta.warn(
+                "ill-founded RDF list detected; Thing≡Nothing supplement skipped due to axiom limit",
+            );
+        } else {
+            let thing = ontology
+                .entity_id("http://www.w3.org/2002/07/owl#Thing", EntityKind::Class)
+                .map_err(|e| Error::Parse(e.to_string()))?;
+            let nothing = ontology
+                .entity_id("http://www.w3.org/2002/07/owl#Nothing", EntityKind::Class)
+                .map_err(|e| Error::Parse(e.to_string()))?;
+            ontology
+                .add_axiom(Axiom::EquivalentClasses(vec![thing, nothing]))
+                .map_err(|e| Error::Parse(e.to_string()))?;
+            let thing_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(thing));
+            let nothing_ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(nothing));
+            ontology
+                .dl_mut()
+                .push_axiom(DlAxiom::EquivalentClasses(vec![thing_ce, nothing_ce]));
+            report.meta.mapped_axiom_count += 1;
+        }
     }
     for npa in crate::rdf_preprocess::collect_reified_npas(preprocessed_rdf) {
         validate_supplement_iris([&npa.subject, &npa.object, &npa.property])?;
@@ -797,6 +835,15 @@ fn merge_rdf_owl_imports(
     let mut visited = HashSet::from([path.to_path_buf()]);
     for import_iri in crate::rdf_preprocess::collect_owl_imports(preprocessed_rdf) {
         let Some(import_path) = resolve_owl_import_path(path, &import_iri) else {
+            let is_remote = import_iri.starts_with("http://") || import_iri.starts_with("https://");
+            if limits.strict && !is_remote {
+                return Err(Error::Parse(format!(
+                    "strict parse: unresolved owl:imports IRI {import_iri}"
+                )));
+            }
+            report.meta.warn(format!(
+                "unresolved owl:imports IRI {import_iri}; import skipped"
+            ));
             continue;
         };
         if !visited.insert(import_path.clone()) {
@@ -924,6 +971,7 @@ fn entity_kind_for_iri(ontology: &Ontology, iri: &str) -> Option<EntityKind> {
 fn insert_property_disjoint_supplement(
     ontology: &mut Ontology,
     report: &mut ParseReport,
+    limits: ParseLimits,
     left: &str,
     right: &str,
 ) -> Result<()> {
@@ -934,9 +982,13 @@ fn insert_property_disjoint_supplement(
         || matches!(left_kind, Some(EntityKind::ObjectProperty))
             && matches!(right_kind, Some(EntityKind::DataProperty));
     if cross_kind {
-        report.meta.warn(
-            "propertyDisjointWith across data and object property kinds skipped in lenient parse",
-        );
+        let msg = "propertyDisjointWith across data and object property kinds skipped";
+        if limits.strict {
+            report.meta.skipped_axiom_count += 1;
+            report.meta.warn(format!("{msg} in strict parse"));
+        } else {
+            report.meta.warn(format!("{msg} in lenient parse"));
+        }
         return Ok(());
     }
     if matches!(left_kind, Some(EntityKind::DataProperty))
@@ -1404,11 +1456,22 @@ pub fn load_ontology_from_bytes_with_limits(
                 .into(),
         )
     })?;
-    let set_ontology = read_horned_owl_from_reader(
-        &mut std::io::Cursor::new(bytes),
-        format,
-        limits,
-    )?;
+    if format == Format::RdfXml {
+        let text = std::str::from_utf8(bytes)
+            .map_err(|e| Error::Parse(format!("RDF/XML must be valid UTF-8: {e}")))?;
+        let (preprocessed_rdf, ill_founded_list) = preprocess_rdf_xml_text(text, limits)?;
+        let (ontology, report) = load_rdf_xml_from_preprocessed(
+            &preprocessed_rdf,
+            limits,
+            ill_founded_list,
+            None,
+            None,
+            false,
+        )?;
+        return finalize_parsed_ontology(ontology, report, limits, validate);
+    }
+    let set_ontology =
+        read_horned_owl_from_reader(&mut std::io::Cursor::new(bytes), format, limits)?;
     let (ontology, report) = map_to_core(&set_ontology, limits)?;
     finalize_parsed_ontology(ontology, report, limits, validate)
 }
@@ -1437,8 +1500,8 @@ pub fn load_ofn_with_incremental_and_limits(
 ) -> Result<Ontology> {
     let base_path = validate_load_path(base, sandbox_base)?;
     let inc_path = validate_load_path(incremental, sandbox_base)?;
-    let base_text = read_text_file_with_limit(&base_path, limits)?;
-    let inc_text = read_text_file_with_limit(&inc_path, limits)?;
+    let base_text = read_text_file_with_limit(&base_path, limits, sandbox_base)?;
+    let inc_text = read_text_file_with_limit(&inc_path, limits, sandbox_base)?;
     let merged = merge_ofn_documents(&base_text, &inc_text)?;
     if merged.len() > limits.max_file_bytes {
         return Err(Error::Parse(format!(

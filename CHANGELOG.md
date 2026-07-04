@@ -7,9 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-04
+
+> **STAGED — NOT PUBLISHED:** Workspace version **1.1.0** on `main`. crates.io and PyPI remain **1.0.0** until annotated **v1.1.0** publish completes. See [Release status](docs/project/release-status.md).
+
+### Added
+
+- **`ontologos-ffi`:** shared stable C ABI for native language bindings (ontology, builder, reasoner, error handling)
+- **Java bindings:** JNI cdylib (`ontologos-jni`) + Maven project (`dev.ontologos:ontologos`)
+- **.NET bindings:** P/Invoke cdylib (`ontologos-dotnet`) + C# API with `DllImportResolver`
+- **C/C++ bindings:** `ontologos-c` cdylib with `ontologos.h` / `ontologos.hpp`, CMake smoke tests
+- **CI:** `scripts/ci-bindings.sh` (Java, .NET, C/C++ + ontologos-js), `scripts/ci-node.sh` (Node + WASM); consolidated GitHub Actions bindings job
+- **Docs:** guides for [Java](docs/guides/java.md), [.NET](docs/guides/dotnet.md), [C/C++](docs/guides/c-cpp.md); security sections for new bindings
+
+### Changed
+
+- Workspace and binding package versions bump to **1.1.0**
+- Node, WASM, Java, .NET, and C bindings delegate through **`ontologos-js`** (same architecture as Python)
+- WASM `classify()` JSON round-trip returns plain JS objects (matches Node/Python semantics)
+- Local CI (`run-ci-local.sh`) includes bindings and node jobs
+
+### Fixed
+
+- Clippy: FFI pointer-deref lint, `const` thread-local in `ontologos-ffi`, test `mut` cleanup
+
 ## [1.0.1] - 2026-07-03
 
-> **STAGED — NOT PUBLISHED:** Workspace version **1.0.1** on `main`. crates.io and PyPI remain **1.0.0** until annotated **v1.0.1** publish completes. See [Release status](docs/project/release-status.md).
+> **SUPERSEDED:** Patch release notes retained for history; **1.1.0** is the current workspace target.
 
 ### Fixed
 
@@ -355,8 +379,9 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.0.1...HEAD
-[1.0.1]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...v1.1.0
+[1.0.1]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/eddiethedean/ontologos/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/eddiethedean/ontologos/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/eddiethedean/ontologos/compare/v0.7.0...v0.8.0

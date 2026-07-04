@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-02T01:18:56.753989+00:00",
+  "generated_at": "2026-07-04T20:10:59.558761+00:00",
   "cli": "ontologos --profile dl classify (release)",
   "run_slow_dl_gates": false,
   "results": [
     {
       "corpus": "family.owl",
       "profile": "dl",
-      "elapsed_s": 0.038,
+      "elapsed_s": 0.036,
       "target_s": 0.1,
       "meets_target": true,
       "pr_gate": true
@@ -14,7 +14,7 @@
     {
       "corpus": "pizza.owl",
       "profile": "dl",
-      "elapsed_s": 0.698,
+      "elapsed_s": 0.515,
       "target_s": 30.0,
       "meets_target": true,
       "pr_gate": false
@@ -22,7 +22,7 @@
     {
       "corpus": "go-subset.owl",
       "profile": "dl",
-      "elapsed_s": 0.118,
+      "elapsed_s": 0.113,
       "target_s": 10.0,
       "meets_target": true,
       "pr_gate": false

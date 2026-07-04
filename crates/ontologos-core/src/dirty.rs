@@ -5,12 +5,33 @@ use crate::entity::EntityId;
 
 /// Monotonic ontology edit counter (incremented on every add/remove).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct OntologyRevision(pub u64);
+pub struct OntologyRevision {
+    counter: u64,
+    overflowed: bool,
+}
 
 impl OntologyRevision {
+    /// Current revision counter.
+    #[must_use]
+    pub fn counter(&self) -> u64 {
+        self.counter
+    }
+
+    /// Whether the counter overflowed `u64` (forces cache/session invalidation).
+    #[must_use]
+    pub fn overflowed(&self) -> bool {
+        self.overflowed
+    }
+
     /// Advance to the next revision.
     pub fn bump(&mut self) {
-        self.0 = self.0.saturating_add(1);
+        match self.counter.checked_add(1) {
+            Some(next) => self.counter = next,
+            None => {
+                self.counter = u64::MAX;
+                self.overflowed = true;
+            }
+        }
     }
 }
 
@@ -18,21 +39,23 @@ impl OntologyRevision {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct DirtySet {
     added: Vec<AxiomId>,
+    added_ids: HashSet<AxiomId>,
     removed: Vec<AxiomId>,
+    removed_ids: HashSet<AxiomId>,
     has_removals: bool,
 }
 
 impl DirtySet {
     /// Record a newly added axiom.
     pub fn record_add(&mut self, id: AxiomId) {
-        if !self.added.contains(&id) {
+        if self.added_ids.insert(id) {
             self.added.push(id);
         }
     }
 
     /// Record a removed axiom.
     pub fn record_remove(&mut self, id: AxiomId) {
-        if !self.removed.contains(&id) {
+        if self.removed_ids.insert(id) {
             self.removed.push(id);
         }
         self.has_removals = true;
@@ -65,7 +88,9 @@ impl DirtySet {
     /// Clear pending edits after engines consume them.
     pub fn clear(&mut self) {
         self.added.clear();
+        self.added_ids.clear();
         self.removed.clear();
+        self.removed_ids.clear();
         self.has_removals = false;
     }
 }
@@ -198,5 +223,27 @@ mod tests {
         assert_eq!(sig.len(), 2);
         assert!(sig.contains(&EntityId(1)));
         assert!(sig.contains(&EntityId(2)));
+    }
+
+    #[test]
+    fn dirty_set_dedupes_repeated_add_and_remove() {
+        let mut dirty = DirtySet::default();
+        dirty.record_add(AxiomId(0));
+        dirty.record_add(AxiomId(0));
+        dirty.record_remove(AxiomId(1));
+        dirty.record_remove(AxiomId(1));
+        assert_eq!(dirty.added(), &[AxiomId(0)]);
+        assert_eq!(dirty.removed(), &[AxiomId(1)]);
+    }
+
+    #[test]
+    fn revision_overflow_sets_overflow_flag() {
+        let mut revision = OntologyRevision {
+            counter: u64::MAX,
+            ..Default::default()
+        };
+        revision.bump();
+        assert_eq!(revision.counter(), u64::MAX);
+        assert!(revision.overflowed());
     }
 }

@@ -1,6 +1,6 @@
 # Security Considerations
 
-OntoLogos v1.0.0 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
+OntoLogos v1.1.0 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
 
 ## JSON snapshots
 
@@ -58,7 +58,7 @@ Literal `datatype` IRIs in JSON snapshots are validated the same way as entity I
 - `load_ontology_lenient` — same as `load_ontology` but allows skipped axioms with warnings
 - `load_ontology_in(base, path)` — constrain loads to stay under `base` (untrusted uploads)
 
-Loads validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/1.0.0/ontologos_parser/struct.ParseLimits.html), run a lightweight axiom/component pre-scan, then parse via horned-owl. Post-load lightweight validation runs on every successful load; expensive blank-node graph checks run when `strict` is true. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
+Loads validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/1.1.0/ontologos_parser/struct.ParseLimits.html), run a lightweight axiom/component pre-scan, then parse via horned-owl. Post-load lightweight validation runs on every successful load; expensive blank-node graph checks run when `strict` is true. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
 
 ### Parser concurrency (server embedders)
 
@@ -135,6 +135,93 @@ Defaults match `ontologos_core::Limits` and `ontologos_parser::ParseLimits` (16 
 Bindings map `ParseError`, `ResourceLimitError`, and `IncompleteReasoningError` to distinguishable exceptions (WASM: `Error.name` / `.code`; Node: message prefix + `errorCodeFromMessage`).
 
 Guides: [Node.js](guides/node.md) · [WebAssembly](guides/wasm.md)
+
+## Java bindings
+
+Java (`ontologos-jni`, package `dev.ontologos`) shares `ontologos-js` with Node/WASM and follows the same security model as Rust/Python.
+
+### Untrusted input defaults
+
+| Surface | Recommended API | Parse mode |
+|---------|-----------------|------------|
+| In-memory upload (bytes/text) | `Ontology.fromBytes` / `fromText` | Strict |
+| Sandboxed file | `Ontology.loadIn(base, path)` | Strict + path containment |
+| Trusted local corpus | `Ontology.load`, `Reasoner.fromPath`, `fromBytesLenient` | Lenient |
+
+Use **`fromJsonWithLimits`** / **`fromObjectWithLimits`** for user JSON snapshots.
+
+### Resource limits
+
+Defaults match `ontologos_core::Limits` and `ontologos_parser::ParseLimits` (16 MiB JSON, 64 MiB files, etc.).
+
+### Threading and concurrency
+
+- **Single-threaded handles:** `Ontology` and `Reasoner` use `Rc<RefCell<…>>` internally. Do not share across threads without separate instances.
+- **Parser mutex:** OWL file loads serialize on a process-wide horned-owl lock (see [Parser concurrency](#parser-concurrency-server-embedders)). JSON/`fromBytes` paths do not use this lock.
+
+### Typed errors
+
+Bindings map `ParseError`, `ResourceLimitError`, `IncompleteReasoningError`, and `OntologyConflictError` to typed Java exceptions. Use `Ontologos.errorCodeFromMessage` for message-prefix parsing.
+
+Guide: [Java](guides/java.md)
+
+## .NET bindings {#dotnet-bindings}
+
+.NET (`ontologos-dotnet`, namespace `Ontologos`) shares `ontologos-js` with Node/WASM/Java and follows the same security model as Rust/Python.
+
+### Untrusted input defaults
+
+| Surface | Recommended API | Parse mode |
+|---------|-----------------|------------|
+| In-memory upload (bytes/text) | `Ontology.FromBytes` / `FromText` | Strict |
+| Sandboxed file | `Ontology.LoadIn(base, path)` | Strict + path containment |
+| Trusted local corpus | `Ontology.Load`, `Reasoner.FromPath`, `FromBytesLenient` | Lenient |
+
+Use **`FromJsonWithLimits`** for user JSON snapshots.
+
+### Resource limits
+
+Defaults match `ontologos_core::Limits` and `ontologos_parser::ParseLimits` (16 MiB JSON, 64 MiB files, etc.).
+
+### Threading and concurrency
+
+- **Single-threaded handles:** `Ontology` and `Reasoner` use `Rc<RefCell<…>>` internally. Do not share across threads without separate instances.
+- **Parser mutex:** OWL file loads serialize on a process-wide horned-owl lock (see [Parser concurrency](#parser-concurrency-server-embedders)). JSON/`FromBytes` paths do not use this lock.
+
+### Typed errors
+
+Bindings map `ParseError`, `ResourceLimitError`, `IncompleteReasoningError`, and `OntologyConflictError` to typed .NET exceptions. Use `OntologosInfo.ErrorCodeFromMessage` for message-prefix parsing.
+
+Guide: [.NET](guides/dotnet.md)
+
+## C/C++ bindings {#c-c-bindings}
+
+C/C++ (`ontologos-c`, header `ontologos.h`) shares `ontologos-ffi` with .NET and follows the same security model as Rust/Python.
+
+### Untrusted input defaults
+
+| Surface | Recommended API | Parse mode |
+|---------|-----------------|------------|
+| In-memory upload (bytes/text) | `ontologos_ontology_from_bytes` / `from_text` | Strict |
+| Sandboxed file | `ontologos_ontology_load_in` | Strict + path containment |
+| Trusted local corpus | `ontologos_ontology_load`, `ontologos_reasoner_from_path`, lenient loaders | Lenient |
+
+Use **`ontologos_ontology_from_json_with_limits`** for user JSON snapshots.
+
+### Resource limits
+
+Defaults match `ontologos_core::Limits` and `ontologos_parser::ParseLimits`.
+
+### Threading and concurrency
+
+- **Single-threaded handles:** do not share ontology/reasoner handles across threads without separate instances.
+- **Parser mutex:** OWL file loads serialize on a process-wide horned-owl lock.
+
+### Errors
+
+Failures set thread-local `ontologos_last_error_code()` / `ontologos_last_error_message()`. Free returned strings with `ontologos_string_free`.
+
+Guide: [C/C++](guides/c-cpp.md)
 
 ## Related
 

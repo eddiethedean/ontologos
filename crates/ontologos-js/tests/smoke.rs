@@ -90,17 +90,19 @@ fn is_entailed_subclass_chain() {
         .unwrap();
     let ontology = builder.build().unwrap();
     let mut reasoner = JsReasoner::from_ontology(&ontology, Some("el"), false, None).unwrap();
-    assert!(reasoner
-        .is_entailed(
-            Some("http://example.org/A"),
-            Some("http://example.org/C"),
-            None,
-            None,
-            None,
-            None,
-            None,
-        )
-        .unwrap());
+    assert!(
+        reasoner
+            .is_entailed(
+                Some("http://example.org/A"),
+                Some("http://example.org/C"),
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            .unwrap()
+    );
 }
 
 #[test]
@@ -113,9 +115,37 @@ fn query_after_classify() {
         .unwrap();
     let ontology = builder.build().unwrap();
     let mut reasoner = JsReasoner::from_ontology(&ontology, Some("el"), false, None).unwrap();
+    reasoner.classify().unwrap();
     let answers = reasoner.query("Type(?x, http://example.org/B)").unwrap();
     let arr = answers.as_array().unwrap();
     assert!(!arr.is_empty());
+}
+
+#[test]
+fn query_requires_classify() {
+    let mut builder = JsOntologyBuilder::new();
+    builder.add_class("http://example.org/A").unwrap();
+    builder.add_class("http://example.org/B").unwrap();
+    builder
+        .subclass_of("http://example.org/A", "http://example.org/B")
+        .unwrap();
+    let ontology = builder.build().unwrap();
+    let mut reasoner = JsReasoner::from_ontology(&ontology, Some("el"), false, None).unwrap();
+    match reasoner.query("Type(?x, http://example.org/B)") {
+        Err(ontologos_js::JsError::Other(msg)) => {
+            assert!(msg.contains("classify"));
+        }
+        other => panic!("expected query error before classify, got {other:?}"),
+    }
+}
+
+#[test]
+fn parse_meta_empty_for_builder_ontology() {
+    let mut builder = JsOntologyBuilder::new();
+    builder.add_class("http://example.org/A").unwrap();
+    let ontology = builder.build().unwrap();
+    let reasoner = JsReasoner::from_ontology(&ontology, Some("el"), false, None).unwrap();
+    assert_eq!(reasoner.parse_meta().unwrap(), json!({}));
 }
 
 #[test]

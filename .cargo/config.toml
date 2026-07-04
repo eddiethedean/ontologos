@@ -1,4 +1,4 @@
 # Match CI workflow env for local `cargo test` (see .github/workflows/ci.yml).
 [env]
-ONTOLOGOS_DL_WG_SHORTCUTS = "1"
+ONTOLOGOS_WG_SHORTCUTS = "1"
 ONTOLOGOS_CONFORMANCE = "1"

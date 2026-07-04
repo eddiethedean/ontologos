@@ -49,16 +49,25 @@ pub fn read_horned_owl_from_reader<R: Read>(
 ) -> Result<SetOntology<RcStr>> {
     let bytes = read_bounded_bytes(reader, limits.max_file_bytes)?;
     prescan_axiom_estimate(&bytes, format, limits)?;
-    read_horned_owl_from_bytes(&bytes, format)
+    let set_ontology = read_horned_owl_from_bytes(&bytes, format)?;
+    let axiom_count = set_ontology.iter().len();
+    if axiom_count > limits.max_axioms {
+        return Err(Error::Parse(format!(
+            "parsed ontology contains {axiom_count} components, exceeding axiom limit of {}",
+            limits.max_axioms
+        )));
+    }
+    Ok(set_ontology)
 }
 
-fn read_bounded_bytes<R: Read>(reader: R, max_bytes: usize) -> Result<Vec<u8>> {
-    let mut limited = reader.take(max_bytes.saturating_add(1) as u64);
+pub(crate) fn read_bounded_bytes<R: Read>(reader: R, max_bytes: usize) -> Result<Vec<u8>> {
+    let max = max_bytes as u64;
+    let mut limited = reader.take(max.saturating_add(1));
     let mut bytes = Vec::new();
     limited
         .read_to_end(&mut bytes)
         .map_err(|e| Error::Parse(e.to_string()))?;
-    if bytes.len() > max_bytes {
+    if (bytes.len() as u64) > max {
         return Err(Error::Parse(format!(
             "input size {} exceeds limit of {max_bytes} bytes",
             bytes.len()
@@ -203,7 +212,7 @@ fn panic_payload_message(payload: Box<dyn std::any::Any + Send>) -> String {
 }
 
 fn check_file_size(len: u64, limits: ParseLimits) -> Result<()> {
-    if len as usize > limits.max_file_bytes {
+    if len > limits.max_file_bytes as u64 {
         return Err(Error::Parse(format!(
             "file size {len} exceeds limit of {} bytes",
             limits.max_file_bytes
@@ -274,4 +283,33 @@ pub fn sniff_and_rewind(reader: &mut (impl Read + Seek), max: usize) -> Result<V
         .seek(SeekFrom::Start(0))
         .map_err(|e| Error::Parse(e.to_string()))?;
     Ok(header)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn read_horned_owl_rejects_actual_axiom_count_over_limit() {
+        let mut ofn =
+            String::from("Prefix(:=<http://example.org/>)\nOntology(<http://example.org/o>\n");
+        for i in 0..20 {
+            ofn.push_str(&format!("SubClassOf(:C{i} :Thing)\n"));
+        }
+        ofn.push(')');
+        let limits = ParseLimits {
+            max_axioms: 5,
+            max_file_bytes: ofn.len() + 1024,
+            ..ParseLimits::default()
+        };
+        let err =
+            read_horned_owl_from_reader(Cursor::new(ofn.as_bytes()), Format::Functional, limits)
+                .expect_err("axiom limit");
+        let message = err.to_string();
+        assert!(
+            message.contains("exceeding axiom limit") || message.contains("pre-scan estimate"),
+            "unexpected: {message}"
+        );
+    }
 }

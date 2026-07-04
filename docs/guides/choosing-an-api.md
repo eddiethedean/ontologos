@@ -172,7 +172,7 @@ See [OWL EL classification](../getting-started/owl-el-classification.md).
 
 ### Python
 
-**Package:** `pip install ontologos` (v1.0.0)
+**Package:** `pip install ontologos` (v1.1.0)
 
 ```python
 from ontologos import Reasoner
@@ -186,6 +186,73 @@ Reasoner(path="file.owl", profile="dl-preview").classify()  # preview
 
 See [Python guide](python.md) and [Preview profiles](preview-profiles.md).
 
+### Java
+
+**Crate:** `ontologos-jni` (Maven `dev.ontologos:ontologos`)
+
+```java
+import dev.ontologos.Reasoner;
+
+try (Reasoner reasoner = Reasoner.fromPath("file.owl", "el")) {
+    reasoner.classify();
+}
+```
+
+See [Java guide](java.md) and [Preview profiles](preview-profiles.md).
+
+### .NET
+
+**Crate:** `ontologos-dotnet` (NuGet `Ontologos`)
+
+```csharp
+using Ontologos;
+
+using var reasoner = Reasoner.FromPath("file.owl", "el");
+reasoner.Classify();
+```
+
+See [.NET guide](dotnet.md) and [Preview profiles](preview-profiles.md).
+
+### Node.js
+
+**Crate:** `ontologos-node` (N-API)
+
+```javascript
+import { Reasoner } from "ontologos";
+
+const reasoner = new Reasoner({ path: "file.owl", profile: "el" });
+const report = reasoner.classify();
+```
+
+See [Node.js guide](node.md).
+
+### WebAssembly
+
+**Package:** `@ontologos/wasm`
+
+```javascript
+import init, { OntologyBuilder, Reasoner } from "@ontologos/wasm";
+await init();
+```
+
+See [WASM guide](wasm.md).
+
+### C/C++
+
+**Crates:** `ontologos-c` (cdylib), `ontologos-ffi` (shared C ABI)
+
+```c
+#include "ontologos.h"
+
+ontologos_handle_t reasoner =
+    ontologos_reasoner_from_path("file.owl", "el", 0, -1, 0);
+char *report = ontologos_reasoner_classify(reasoner);
+ontologos_string_free(report);
+ontologos_reasoner_close(reasoner);
+```
+
+See [C/C++ guide](c-cpp.md) and [Preview profiles](preview-profiles.md).
+
 ## Dependency cheat sheet
 
 | Workflow | Minimum dependencies |
@@ -197,6 +264,7 @@ See [Python guide](python.md) and [Preview profiles](preview-profiles.md).
 | + OWL RL | `+ ontologos-rl` |
 | + OWL EL + queries | `+ ontologos-el`, `+ ontologos-ql` |
 | + Multi-profile / DL preview | `+ ontologos-facade` (pulls el, dl, alc, swrl) |
+| + Node / WASM / Java / .NET / C | Build `ontologos-js` + language crate (see guides) |
 
 There is no single `ontologos` meta-crate on crates.io.
 

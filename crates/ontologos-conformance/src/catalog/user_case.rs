@@ -228,12 +228,12 @@ pub fn check_user_axiom_case(case: &HermitCase) -> Result<(), String> {
 
     if let Some(expected) = case.consistent {
         let consistency_ontology = ontology_for_incremental_consistency(reasoner.ontology(), case)?;
-        let reasoner = Reasoner::builder()
+        let mut reasoner = Reasoner::builder()
             .profile(profile)
             .build(consistency_ontology)
             .map_err(|e| format!("{}: consistency reasoner: {e}", case.id))?;
         let actual =
-            is_consistent(&reasoner).map_err(|e| format!("{}: consistency: {e}", case.id))?;
+            is_consistent(&mut reasoner).map_err(|e| format!("{}: consistency: {e}", case.id))?;
         if actual != expected {
             return Err(format!(
                 "{}: consistency expected {expected}, got {actual}",
@@ -265,12 +265,12 @@ pub fn check_user_wg_case(case: &WgCase) -> Result<(), String> {
     let ontology = load_ontology(&path).map_err(|e| format!("{}: load premise: {e}", case.id))?;
 
     if let Some(expected) = case.expected_consistent {
-        let reasoner = Reasoner::builder()
+        let mut reasoner = Reasoner::builder()
             .profile(Profile::Dl)
             .build(ontology)
             .map_err(|e| format!("{}: reasoner: {e}", case.id))?;
         let actual =
-            is_consistent(&reasoner).map_err(|e| format!("{}: consistency: {e}", case.id))?;
+            is_consistent(&mut reasoner).map_err(|e| format!("{}: consistency: {e}", case.id))?;
         if actual != expected {
             return Err(format!(
                 "{}: consistency expected {expected}, got {actual}",

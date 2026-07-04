@@ -133,6 +133,11 @@ fn classify_swrl(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
 }
 
 fn classify_dl(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
+    if reasoner.config().incremental {
+        tracing::warn!(
+            "incremental classification is not supported for OWL DL; performing full classify"
+        );
+    }
     let taxonomy = if reasoner.profile() == Profile::DlPreview {
         ontologos_dl::DlClassifier::new()
             .preview(true)

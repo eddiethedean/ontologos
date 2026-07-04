@@ -3,21 +3,27 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::axiom::{Axiom, DataLiteral};
+use crate::dl::DlStore;
 use crate::entity::{EntityId, EntityKind};
 use crate::error::{Error, Result};
 use crate::limits::Limits;
 use crate::ontology::Ontology;
+use crate::swrl::SwrlRule;
 
-const FORMAT_VERSION: u32 = 3;
+const FORMAT_VERSION: u32 = 4;
 const MIN_READ_FORMAT_VERSION: u32 = 2;
 
-/// JSON snapshot format for ontology round-trip (format version 2).
+/// JSON snapshot format for ontology round-trip (format version 4).
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct OntologySnapshot {
     format_version: u32,
     entities: Vec<SnapshotEntity>,
     axioms: Vec<SnapshotAxiom>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    dl: Option<DlStore>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    swrl_rules: Option<Vec<SwrlRule>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -153,15 +159,76 @@ impl Ontology {
     }
 
     fn reject_duplicate_top_level_keys(json: &str) -> Result<()> {
-        for key in ["format_version", "entities", "axioms"] {
-            let needle = format!("\"{key}\"");
-            if json.match_indices(&needle).count() > 1 {
+        let keys = Self::top_level_json_keys(json)?;
+        let mut seen = std::collections::HashSet::new();
+        for key in keys {
+            if !seen.insert(key.clone()) {
                 return Err(Error::Serialization(format!(
                     "duplicate top-level key {key:?} in JSON snapshot"
                 )));
             }
         }
         Ok(())
+    }
+
+    /// Extract top-level object keys from a JSON object (depth 0 only).
+    fn top_level_json_keys(json: &str) -> Result<Vec<String>> {
+        let trimmed = json.trim_start();
+        if !trimmed.starts_with('{') {
+            return Err(Error::Serialization(
+                "JSON snapshot must be a top-level object".into(),
+            ));
+        }
+        let mut keys = Vec::new();
+        let mut depth = 0i32;
+        let mut in_string = false;
+        let mut escape = false;
+        let bytes = trimmed.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            let b = bytes[i];
+            if in_string {
+                if escape {
+                    escape = false;
+                } else if b == b'\\' {
+                    escape = true;
+                } else if b == b'"' {
+                    in_string = false;
+                }
+                i += 1;
+                continue;
+            }
+            match b {
+                b'"' if depth == 1 => {
+                    let start = i + 1;
+                    i += 1;
+                    while i < bytes.len() {
+                        if bytes[i] == b'\\' {
+                            i += 2;
+                            continue;
+                        }
+                        if bytes[i] == b'"' {
+                            let key = std::str::from_utf8(&bytes[start..i])
+                                .map_err(|e| Error::Serialization(e.to_string()))?;
+                            keys.push(key.to_owned());
+                            break;
+                        }
+                        i += 1;
+                    }
+                }
+                b'{' => depth += 1,
+                b'}' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        break;
+                    }
+                }
+                b'"' => in_string = true,
+                _ => {}
+            }
+            i += 1;
+        }
+        Ok(keys)
     }
 
     fn to_snapshot(&self) -> Result<OntologySnapshot> {
@@ -177,13 +244,28 @@ impl Ontology {
             .collect::<Result<Vec<_>>>()?;
         let axioms = self
             .axioms
-            .iter()
+            .iter_asserted()
             .map(|(_, axiom)| axiom_to_snapshot(axiom, self))
             .collect::<Result<Vec<_>>>()?;
+        let dl = if self.dl().axiom_count() > 0
+            || self.dl().ce_count() > 0
+            || self.dl().de_count() > 0
+        {
+            Some(self.dl().clone())
+        } else {
+            None
+        };
+        let swrl_rules = if self.swrl_rules().is_empty() {
+            None
+        } else {
+            Some(self.swrl_rules().to_vec())
+        };
         Ok(OntologySnapshot {
             format_version: FORMAT_VERSION,
             entities,
             axioms,
+            dl,
+            swrl_rules,
         })
     }
 
@@ -234,6 +316,14 @@ impl Ontology {
             ontology.add_axiom(axiom)?;
         }
 
+        if let Some(dl) = snapshot.dl {
+            *Arc::make_mut(&mut ontology.dl) = dl;
+        }
+        if let Some(rules) = snapshot.swrl_rules {
+            ontology.swrl_rules = rules;
+        }
+
+        ontology.clear_dirty();
         Ok(ontology)
     }
 }
@@ -517,7 +607,7 @@ mod tests {
 
     #[test]
     fn round_trip_json_preserves_semantics() {
-        let ontology = Ontology::builder()
+        let mut ontology = Ontology::builder()
             .class("http://example.org/Pizza")
             .expect("class")
             .class("http://example.org/Food")
@@ -532,7 +622,8 @@ mod tests {
             .expect("build");
 
         let json = ontology.to_json().expect("to_json");
-        assert!(json.contains("\"format_version\": 3"));
+        assert!(json.contains("\"format_version\": 4"));
+        ontology.clear_dirty();
         let restored = Ontology::from_json(&json).expect("from_json");
         assert_eq!(restored, ontology);
 
@@ -748,5 +839,74 @@ mod tests {
             restored.index().by_kind("FunctionalObjectProperty").len(),
             1
         );
+    }
+
+    #[test]
+    fn round_trip_json_preserves_dl_store_and_swrl_rules() {
+        use crate::dl::{ClassExpr, DlAxiom};
+
+        let mut ontology = Ontology::builder()
+            .class("http://example.org/A")
+            .expect("class")
+            .class("http://example.org/B")
+            .expect("class")
+            .build()
+            .expect("build");
+        let a = ontology.lookup_entity("http://example.org/A").expect("A");
+        let b = ontology.lookup_entity("http://example.org/B").expect("B");
+        let ce_a = ontology.dl_mut().intern_ce(ClassExpr::Atomic(a));
+        let ce_b = ontology.dl_mut().intern_ce(ClassExpr::Atomic(b));
+        ontology.dl_mut().push_axiom(DlAxiom::SubClassOf {
+            sub: ce_a,
+            sup: ce_b,
+        });
+        ontology
+            .push_swrl_rule(crate::swrl::SwrlRule {
+                body: vec![crate::swrl::SwrlAtom::Class {
+                    class: a,
+                    arg: crate::swrl::SwrlIArg::Individual(a),
+                }],
+                head: vec![crate::swrl::SwrlAtom::Class {
+                    class: b,
+                    arg: crate::swrl::SwrlIArg::Individual(a),
+                }],
+            })
+            .expect("swrl");
+
+        let json = ontology.to_json().expect("to_json");
+        assert!(json.contains("\"dl\""));
+        assert!(json.contains("\"swrl_rules\""));
+        let restored = Ontology::from_json(&json).expect("from_json");
+        assert_eq!(restored.dl().axiom_count(), 1);
+        assert_eq!(restored.swrl_rules().len(), 1);
+        assert!(!restored.dirty().is_dirty());
+    }
+
+    #[test]
+    fn to_json_omits_inferred_axioms() {
+        let mut ontology = Ontology::builder()
+            .class("http://example.org/A")
+            .expect("class")
+            .class("http://example.org/B")
+            .expect("class")
+            .class("http://example.org/C")
+            .expect("class")
+            .subclass_of("http://example.org/A", "http://example.org/B")
+            .expect("sub")
+            .build()
+            .expect("build");
+        let c = ontology.lookup_entity("http://example.org/C").expect("C");
+        let b = ontology.lookup_entity("http://example.org/B").expect("B");
+        ontology
+            .add_inferred_axiom(crate::axiom::Axiom::SubClassOf {
+                subclass: c,
+                superclass: b,
+            })
+            .expect("inferred");
+        assert_eq!(ontology.axiom_count(), 2);
+        let json = ontology.to_json().expect("to_json");
+        let restored = Ontology::from_json(&json).expect("from_json");
+        assert_eq!(restored.axiom_count(), 1);
+        assert!(restored.lookup_entity("http://example.org/C").is_some());
     }
 }

@@ -2,20 +2,24 @@
 
 <div class="ol-hero" markdown="0">
   <div class="ol-hero-badges">
-    <span class="ol-badge ol-badge--accent">v1.0.0 published</span>
+    <span class="ol-badge ol-badge--accent">v1.1.0</span>
     <span class="ol-badge">Rust 1.88+</span>
+    <span class="ol-badge">Java · .NET · C/C++ · Node · WASM</span>
   </div>
   <p class="ol-hero-kicker">OntoLogos documentation</p>
-  <p class="ol-hero-title">Embed OWL reasoning in Rust or Python</p>
-  <p class="ol-lead">Load OWL files, detect profiles, and classify or materialize in-process — no JVM. EL, RL, RDFS, OWL 2 DL, and SWRL on v1.0.0.</p>
+  <p class="ol-hero-title">Embed OWL reasoning in your stack</p>
+  <p class="ol-lead">Load OWL files, detect profiles, and classify or materialize in-process — no JVM. Rust, Python, Node.js, Java, .NET, C/C++, and WASM on v1.1.0.</p>
   <div class="ol-hero-actions">
     <a class="ol-hero-cta" href="getting-started/">Try in 5 minutes →</a>
     <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/python/">Python quickstart</a>
+    <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/install-channels/">All bindings</a>
   </div>
   <p style="margin-top:1rem;margin-bottom:0"><a href="guides/install-channels/">Install channels</a> · <a href="getting-started/cli-install/">CLI install</a> · <a href="guides/evaluator-scope/">Evaluator scope</a> · <a href="guides/start-here/">Start here</a></p>
 </div>
 
 --8<-- "snippets/channel-banner.md"
+
+**v1.1.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/) — see [install channels](guides/install-channels.md) for Node, Java, .NET, C/C++, and WASM.
 
 Pick the path that matches how you work:
 
@@ -78,7 +82,7 @@ Pick the path that matches how you work:
 | **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 | **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
 | **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
-| **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.0.0) |
+| **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.1.0) |
 | **Changelog** | [project/changelog](project/changelog.md) · [GitHub](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) |
 
 ## Documentation map {#documentation-map}
@@ -107,7 +111,7 @@ Use the sidebar for the full tree. Highlights:
 10. [JSON snapshots](json-snapshot-v3.md) ([v2 legacy](json-snapshot-v2.md))
 11. [Error reference](reference/errors.md)
 
-## Capability matrix (published v1.0.0)
+## Capability matrix (published v1.1.0)
 
 | Capability | Library | CLI | Python |
 |------------|---------|-----|--------|

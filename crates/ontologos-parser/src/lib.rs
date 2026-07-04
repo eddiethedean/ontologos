@@ -33,10 +33,10 @@ pub use limits::ParseLimits;
 pub use load::{
     load_ofn_from_str, load_ofn_from_str_with_limits, load_ofn_with_incremental,
     load_ofn_with_incremental_and_limits, load_ontology, load_ontology_from_bytes,
-    load_ontology_from_bytes_lenient, load_ontology_from_bytes_with_limits,
-    load_ontology_from_str, load_ontology_from_str_lenient, load_ontology_in,
-    load_ontology_lenient, load_ontology_lenient_in, load_ontology_with_limits,
-    load_ontology_with_limits_and_base, validate_load_path,
+    load_ontology_from_bytes_lenient, load_ontology_from_bytes_with_limits, load_ontology_from_str,
+    load_ontology_from_str_lenient, load_ontology_in, load_ontology_lenient,
+    load_ontology_lenient_in, load_ontology_with_limits, load_ontology_with_limits_and_base,
+    validate_load_path,
 };
 pub use rdf_preprocess::{expand_xml_entities, expand_xml_entities_with_limit};
 pub use read::{detect_turtle_from_bytes, read_horned_owl_from_reader, sniff_file_header};
@@ -61,18 +61,59 @@ pub fn detect_format_from_bytes(header: &[u8]) -> Option<Format> {
     if detect_functional_from_bytes(header) {
         return Some(Format::Functional);
     }
-    let text = std::str::from_utf8(header).ok()?;
-    let trimmed = text.trim_start();
-    if trimmed.contains("rdf:RDF") || trimmed.contains("<rdf:RDF") {
-        return Some(Format::RdfXml);
-    }
-    if trimmed.contains("<Ontology ") || trimmed.contains(":Ontology ") {
-        return Some(Format::OwlXml);
+    if let Some(format) = detect_xml_format_from_bytes(header) {
+        return Some(format);
     }
     if detect_turtle_from_bytes(header) {
         return Some(Format::Turtle);
     }
     None
+}
+
+fn strip_utf8_bom_bytes(header: &[u8]) -> &[u8] {
+    header.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(header)
+}
+
+fn trimmed_xml_header(header: &[u8]) -> Option<&str> {
+    let header = strip_utf8_bom_bytes(header);
+    std::str::from_utf8(header).ok().map(str::trim_start)
+}
+
+fn is_rdf_xml_bytes(header: &[u8]) -> bool {
+    let Some(text) = trimmed_xml_header(header) else {
+        return false;
+    };
+    if text.starts_with("<rdf:RDF") {
+        return true;
+    }
+    text.starts_with("<?xml") && text.contains("<rdf:RDF")
+}
+
+fn is_owl_xml_bytes(header: &[u8]) -> bool {
+    let Some(text) = trimmed_xml_header(header) else {
+        return false;
+    };
+    if text.contains("<rdf:RDF") {
+        return false;
+    }
+    if text.starts_with("<?xml") {
+        return text.contains("<Ontology ")
+            || text.contains(":Ontology ")
+            || text.contains("<owl:Ontology");
+    }
+    text.starts_with("<Ontology ")
+        || text.starts_with("<owl:Ontology")
+        || text.starts_with(":Ontology ")
+}
+
+fn detect_xml_format_from_bytes(header: &[u8]) -> Option<Format> {
+    let rdf = is_rdf_xml_bytes(header);
+    let owl = is_owl_xml_bytes(header);
+    match (rdf, owl) {
+        (true, _) => Some(Format::RdfXml),
+        (false, true) => Some(Format::OwlXml),
+        (false, false) => None,
+    }
 }
 
 /// Detect OWL Functional Syntax from a file header.
@@ -136,6 +177,21 @@ mod tests {
     #[test]
     fn detect_format_from_bytes_rdf_xml() {
         let header = br#"<?xml version="1.0"?><rdf:RDF/>"#;
+        assert_eq!(detect_format_from_bytes(header), Some(Format::RdfXml));
+    }
+
+    #[test]
+    fn detect_format_from_bytes_rejects_non_root_rdf_marker() {
+        let header = br#"<config><rdf:RDF/></config>"#;
+        assert_eq!(detect_format_from_bytes(header), None);
+    }
+
+    #[test]
+    fn detect_format_from_bytes_rdf_with_embedded_owl_ontology() {
+        let header = br#"<?xml version="1.0"?>
+<rdf:RDF xmlns:owl="http://www.w3.org/2002/07/owl#">
+  <owl:Ontology rdf:about="http://example.org/o"/>
+</rdf:RDF>"#;
         assert_eq!(detect_format_from_bytes(header), Some(Format::RdfXml));
     }
 

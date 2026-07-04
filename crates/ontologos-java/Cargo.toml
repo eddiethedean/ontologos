@@ -1,0 +1,24 @@
+[package]
+name = "ontologos-jni"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+description = "JNI native library for OntoLogos Java bindings"
+publish = false
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+name = "ontologos_jni"
+
+[dependencies]
+ontologos-js = { workspace = true }
+jni = { workspace = true }
+serde_json = { workspace = true }

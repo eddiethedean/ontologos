@@ -14,7 +14,7 @@ fn production_facade_pattern_compiles() {
 
         let mut reasoner = Reasoner::builder().profile(Profile::El).build(ontology)?;
 
-        let consistency = check_consistency(&reasoner)?;
+        let consistency = check_consistency(&mut reasoner)?;
         assert!(consistency.complete);
         assert!(consistency.consistent);
 

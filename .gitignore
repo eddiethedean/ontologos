@@ -41,3 +41,11 @@ crates/ontologos-node/node_modules/
 crates/ontologos-node/*.node
 crates/ontologos-wasm/pkg/
 crates/ontologos-wasm/pkg-node/
+
+# .NET bindings
+**/bin/
+**/obj/
+
+# C/C++ bindings
+crates/ontologos-c/build/
+crates/ontologos-c/target/

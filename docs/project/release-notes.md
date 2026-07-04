@@ -4,6 +4,7 @@ Annotated release summaries live in the repository under [`.github/release/`](ht
 
 | Version | Theme | Notes |
 |---------|-------|-------|
+| [v1.1.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.0.md) | Multi-language bindings | Java, .NET, C/C++, shared FFI; Node/WASM over `ontologos-js` |
 | [v1.0.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.0.0.md) | HermiT parity milestone | DL + SWRL stable on crates.io/PyPI; 1048 active conformance tests |
 | [v0.9.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.9.0.md) | Python ecosystem | `Ontology`, `explain()`, incremental Python, DataFrame export |
 | [v0.8.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.8.0.md) | Incremental reasoning | Dirty tracking, sessions, `--incremental` |
@@ -12,6 +13,15 @@ Annotated release summaries live in the repository under [`.github/release/`](ht
 | [v0.5.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.5.0.md) | OWL EL & query | EL classification, CLI profile routing |
 
 Full history: [CHANGELOG](changelog.md) on GitHub.
+
+## v1.1.0 highlights
+
+- **`ontologos-ffi`:** shared C ABI for Java, .NET, and C/C++ hosts
+- **Java / .NET / C/C++:** native bindings with smoke tests in CI (`scripts/ci-bindings.sh`)
+- **Node / WASM:** version bump; WASM JSON round-trip returns plain objects
+- **No breaking Rust/Python API changes** — bump pins to `"1.1.0"`
+
+See [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md) and [Install channels](../guides/install-channels.md).
 
 ## v1.0.0 highlights
 
@@ -26,4 +36,4 @@ See [Facade API](../guides/facade-api.md) and [Architecture](../architecture.md)
 
 ## Latest upgrade
 
-Most users upgrading today: [v0.9.x → v1.0.0 migration](../migration/v0.9.x-to-v1.0.0.md).
+Most users upgrading today: [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md).
