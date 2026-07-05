@@ -72,6 +72,8 @@ jobs:
           --test-threads=1
           --skip phase9_true_parity_pct_is_100
       - name: 1.0 release gates (conformance)
+        env:
+          ONTOLOGOS_SKIP_TIER_A_RETEST: "1"
         run: |
           chmod +x benchmarks/scripts/check-1.0-release-gates.sh
           ./benchmarks/scripts/check-1.0-release-gates.sh

@@ -30,27 +30,40 @@ else
 fi
 
 # Tier A: full HermiT + OWL WG catalog @ 30s + phase closures (Phase 9).
-check "Tier A full conformance" bash -c "
-  set -euo pipefail
-  export ONTOLOGOS_DL_BUDGET_SECS=30
-  export ONTOLOGOS_WG_SHORTCUTS=1
-  export ONTOLOGOS_CONFORMANCE=1
-  unset ONTOLOGOS_CI_PROMOTED_ONLY
-  cargo test -p ontologos-conformance --release --quiet --locked \\
-    --test hermit_generated \\
-    --test hermit_rdfs \\
-    --test hermit_rl \\
-    --test hermit_el \\
-    --test hermit_parser \\
-    --test hermit_wg_generated \\
-    -- \\
-    --test-threads=4 \\
-    --skip planned_engine_failure_scan \\
-    --skip ian_backjumping3_axiom_check_completes_within_budget
-  cargo test -p ontologos-conformance --release --quiet --locked \\
-    --test phase3_closure --test phase4_closure --test phase8_closure --test phase9_closure \\
-    -- --skip phase9_true_parity_pct_is_100
-"
+# Nightly CI sets ONTOLOGOS_SKIP_TIER_A_RETEST=1 when the same job already ran Tier A above.
+if [[ "${ONTOLOGOS_SKIP_TIER_A_RETEST:-0}" == "1" ]]; then
+  check "Tier A phase closures (retest skipped)" bash -c "
+    set -euo pipefail
+    export ONTOLOGOS_DL_BUDGET_SECS=30
+    export ONTOLOGOS_WG_SHORTCUTS=1
+    export ONTOLOGOS_CONFORMANCE=1
+    cargo test -p ontologos-conformance --release --quiet --locked \\
+      --test phase4_closure --test phase8_closure \\
+      -- --skip phase9_true_parity_pct_is_100
+  "
+else
+  check "Tier A full conformance" bash -c "
+    set -euo pipefail
+    export ONTOLOGOS_DL_BUDGET_SECS=30
+    export ONTOLOGOS_WG_SHORTCUTS=1
+    export ONTOLOGOS_CONFORMANCE=1
+    unset ONTOLOGOS_CI_PROMOTED_ONLY
+    cargo test -p ontologos-conformance --release --quiet --locked \\
+      --test hermit_generated \\
+      --test hermit_rdfs \\
+      --test hermit_rl \\
+      --test hermit_el \\
+      --test hermit_parser \\
+      --test hermit_wg_generated \\
+      -- \\
+      --test-threads=4 \\
+      --skip planned_engine_failure_scan \\
+      --skip ian_backjumping3_axiom_check_completes_within_budget
+    cargo test -p ontologos-conformance --release --quiet --locked \\
+      --test phase3_closure --test phase4_closure --test phase8_closure --test phase9_closure \\
+      -- --skip phase9_true_parity_pct_is_100
+  "
+fi
 
 # Tier B/C harness.
 check "Tier B classification gate script" test -x "${ROOT}/benchmarks/scripts/compare-classification-fixtures.sh"
