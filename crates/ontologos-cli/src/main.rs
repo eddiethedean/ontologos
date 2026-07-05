@@ -178,7 +178,7 @@ fn map_facade_error(error: ontologos_facade::Error) -> CliError {
 fn reasoner_config(cli: &Cli) -> ReasonerConfig {
     ReasonerConfig {
         incremental: cli.incremental,
-        budget_secs: cli.budget_secs,
+        budget_secs: cli.budget_secs.filter(|&secs| secs > 0),
         ..ReasonerConfig::default()
     }
 }
