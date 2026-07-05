@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-05T00:31:05.367951+00:00",
+  "generated_at": "2026-07-05T01:45:21.620929+00:00",
   "cli": "ontologos --profile dl classify (release)",
   "run_slow_dl_gates": false,
   "results": [
     {
       "corpus": "family.owl",
       "profile": "dl",
-      "elapsed_s": 0.038,
+      "elapsed_s": 0.035,
       "target_s": 0.1,
       "meets_target": true,
       "pr_gate": true
@@ -14,7 +14,7 @@
     {
       "corpus": "pizza.owl",
       "profile": "dl",
-      "elapsed_s": 0.856,
+      "elapsed_s": 0.899,
       "target_s": 30.0,
       "meets_target": true,
       "pr_gate": false
