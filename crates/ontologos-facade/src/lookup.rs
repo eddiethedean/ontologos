@@ -1,4 +1,4 @@
-use ontologos_core::{EntityId, EntityKind, Reasoner, RoleExpr};
+use ontologos_core::{EntityId, EntityKind, Profile, Reasoner, RoleExpr};
 
 use crate::engines::{resolve, sub_object_properties as dispatch_sub_object_properties};
 use crate::error::{Error, Result};
@@ -13,7 +13,12 @@ pub fn get_object_property_values(
     let subject = lookup_individual(ontology, subject_iri)?;
     let property = lookup_object_property(ontology, property_iri)?;
     let mut working = ontology.clone();
-    let values = ontologos_rl::abox::object_property_values(&mut working, subject, property)?;
+    let values = match reasoner.profile() {
+        Profile::Rdfs => {
+            ontologos_rl::rdfs_object_property_values(&mut working, subject, property)?
+        }
+        _ => ontologos_rl::abox::object_property_values(&mut working, subject, property)?,
+    };
     values.iter().map(|id| entity_iri(ontology, *id)).collect()
 }
 

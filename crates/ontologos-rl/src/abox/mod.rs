@@ -35,13 +35,26 @@ pub fn object_property_values(
     property: EntityId,
 ) -> Result<Vec<EntityId>> {
     materialize_abox(ontology)?;
-    let mut subjects = vec![subject];
-    if let Some(cluster) = ontology.same_as(subject) {
-        subjects.extend(cluster.iter().copied());
-    }
-    subjects.sort_by_key(|id| id.0);
-    subjects.dedup();
+    object_property_values_materialized(ontology, subject, property, true)
+}
 
+/// Object property values after RDFS materialization (no RL inverse/symmetric expansion).
+pub fn rdfs_object_property_values(
+    ontology: &mut Ontology,
+    subject: EntityId,
+    property: EntityId,
+) -> Result<Vec<EntityId>> {
+    crate::rdfs::RdfsEngine::new().materialize(ontology)?;
+    object_property_values_materialized(ontology, subject, property, false)
+}
+
+fn object_property_values_materialized(
+    ontology: &Ontology,
+    subject: EntityId,
+    property: EntityId,
+    rl_rich: bool,
+) -> Result<Vec<EntityId>> {
+    let subjects = same_as_subjects(ontology, subject);
     let mut objects = Vec::new();
     let mut seen = std::collections::HashSet::new();
     for subj in &subjects {
@@ -51,9 +64,21 @@ pub fn object_property_values(
             }
         }
     }
-    collect_inverse_property_fillers(ontology, &subjects, property, &mut objects, &mut seen);
+    if rl_rich {
+        collect_inverse_property_fillers(ontology, &subjects, property, &mut objects, &mut seen);
+    }
     objects.sort_by_key(|id| id.0);
     Ok(objects)
+}
+
+fn same_as_subjects(ontology: &Ontology, subject: EntityId) -> Vec<EntityId> {
+    let mut subjects = vec![subject];
+    if let Some(cluster) = ontology.same_as(subject) {
+        subjects.extend(cluster.iter().copied());
+    }
+    subjects.sort_by_key(|id| id.0);
+    subjects.dedup();
+    subjects
 }
 
 fn collect_inverse_property_fillers(
@@ -180,5 +205,34 @@ mod tests {
         o.add_axiom(Axiom::SameIndividual(vec![a, b])).unwrap();
         let c = same_as_closure(&o);
         assert_eq!(c.representative(a), c.representative(b));
+    }
+
+    #[test]
+    fn rl_rich_lookup_applies_inverse_fillers_without_materializing() {
+        let mut o = Ontology::new();
+        let c = o
+            .entity_id("http://ex.org/c", EntityKind::Individual)
+            .unwrap();
+        let d = o
+            .entity_id("http://ex.org/d", EntityKind::Individual)
+            .unwrap();
+        let p = o
+            .entity_id("http://ex.org/p", EntityKind::ObjectProperty)
+            .unwrap();
+        let q = o
+            .entity_id("http://ex.org/q", EntityKind::ObjectProperty)
+            .unwrap();
+        o.add_axiom(Axiom::InverseObjectProperties { left: p, right: q })
+            .unwrap();
+        o.add_axiom(Axiom::ObjectPropertyAssertion {
+            subject: c,
+            property: p,
+            object: d,
+        })
+        .unwrap();
+        let sparse = object_property_values_materialized(&o, d, q, false).unwrap();
+        assert!(sparse.is_empty());
+        let rich = object_property_values_materialized(&o, d, q, true).unwrap();
+        assert_eq!(rich, vec![c]);
     }
 }

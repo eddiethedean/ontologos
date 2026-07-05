@@ -31,6 +31,23 @@ pub fn is_consistent(reasoner: &mut Reasoner) -> Result<bool> {
         .map_err(Error::Core)
 }
 
+fn materialize_working_for_profile(profile: Profile, ontology: &mut Ontology) -> Result<()> {
+    match profile {
+        Profile::Rl => {
+            ontologos_rl::RlEngine::new(1)
+                .saturate(ontology)
+                .map_err(Error::Rl)?;
+        }
+        Profile::Rdfs => {
+            ontologos_rl::rdfs::RdfsEngine::new()
+                .materialize(ontology)
+                .map_err(Error::Rl)?;
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
 /// Whether named class `sub_iri` is entailed to be subsumed by `sup_iri` after classification.
 pub fn is_subsumption_entailed(
     reasoner: &mut Reasoner,
@@ -51,8 +68,14 @@ pub fn is_subsumption_entailed(
     })?;
     let route = resolve(reasoner)?;
     if matches!(route.kind, EngineKind::Rl | EngineKind::Rdfs) {
-        classify(reasoner)?;
-        return Ok(named_class_subsumed(reasoner.ontology(), sub, sup));
+        let profile = if route.kind == EngineKind::Rdfs {
+            Profile::Rdfs
+        } else {
+            Profile::Rl
+        };
+        let mut working = reasoner.ontology().clone();
+        materialize_working_for_profile(profile, &mut working)?;
+        return Ok(named_class_subsumed(&working, sub, sup));
     }
     if let Some(taxonomy) = reasoner.cached_taxonomy() {
         return Ok(taxonomy.is_subsumed(sub, sup));
@@ -159,9 +182,7 @@ fn taxonomy_entails_class_assertion(
 ) -> Result<bool> {
     if matches!(reasoner.profile(), Profile::Rl | Profile::Rdfs) {
         let mut working = reasoner.ontology().clone();
-        if reasoner.profile() == Profile::Rl {
-            ontologos_rl::abox::materialize_abox(&mut working)?;
-        }
+        materialize_working_for_profile(reasoner.profile(), &mut working)?;
         return Ok(individual_entails_named_class(
             &working, individual, class, None,
         ));
@@ -190,20 +211,32 @@ fn taxonomy_entails_class_assertion(
     ))
 }
 
+fn same_as_individuals(ontology: &Ontology, individual: EntityId) -> Vec<EntityId> {
+    let mut individuals = vec![individual];
+    if let Some(cluster) = ontology.same_as(individual) {
+        individuals.extend(cluster.iter().copied());
+    }
+    individuals.sort_by_key(|id| id.0);
+    individuals.dedup();
+    individuals
+}
+
 fn individual_entails_named_class(
     ontology: &ontologos_core::Ontology,
     individual: EntityId,
     class: EntityId,
     taxonomy: Option<&Taxonomy>,
 ) -> bool {
-    for &asserted in ontology.classes_of(individual) {
-        if asserted == class {
-            return true;
-        }
-        if let Some(tax) = taxonomy
-            && tax.is_subsumed(asserted, class)
-        {
-            return true;
+    for alias in same_as_individuals(ontology, individual) {
+        for &asserted in ontology.classes_of(alias) {
+            if asserted == class {
+                return true;
+            }
+            if let Some(tax) = taxonomy
+                && tax.is_subsumed(asserted, class)
+            {
+                return true;
+            }
         }
     }
     false
@@ -244,7 +277,7 @@ fn is_object_property_assertion_entailed(
     if uses_dl_entailment(route.kind) {
         return dl_entails_object_property_assertion(ontology, subject, property, object);
     }
-    abox_entails_object_property_assertion(ontology, subject, property, object)
+    abox_entails_object_property_assertion(ontology, subject, property, object, reasoner.profile())
 }
 
 fn abox_entails_object_property_assertion(
@@ -252,9 +285,15 @@ fn abox_entails_object_property_assertion(
     subject: EntityId,
     property: EntityId,
     object: EntityId,
+    profile: Profile,
 ) -> Result<bool> {
     let mut working = ontology.clone();
-    let values = ontologos_rl::abox::object_property_values(&mut working, subject, property)?;
+    let values = match profile {
+        Profile::Rdfs => {
+            ontologos_rl::rdfs_object_property_values(&mut working, subject, property)?
+        }
+        _ => ontologos_rl::abox::object_property_values(&mut working, subject, property)?,
+    };
     Ok(values
         .iter()
         .any(|&candidate| individuals_entailed_same(&working, candidate, object)))
