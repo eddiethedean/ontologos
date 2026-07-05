@@ -727,6 +727,59 @@ impl AxiomIndex {
     pub fn by_kind(&self, kind: &str) -> &[AxiomId] {
         self.by_kind.get(kind).map_or(&[], Vec::as_slice)
     }
+
+    /// Index ABox-shaped DL axioms into secondary indexes.
+    ///
+    /// Atomic `ClassAssertion` axioms update `classes_of` / `individuals_of`; other
+    /// supported shapes mirror core [`Axiom`] index updates where applicable.
+    pub fn index_dl_abox(&mut self, store: &crate::dl::DlStore) {
+        use crate::dl::{ClassExpr, DlAxiom, RoleExpr};
+
+        for axiom in store.axioms() {
+            match axiom {
+                DlAxiom::ClassAssertion { individual, class } => {
+                    if let Some(ClassExpr::Atomic(class)) = store.ce(*class) {
+                        self.classes_of.push_unique(*individual, *class);
+                        self.individuals_of.push_unique(*class, *individual);
+                    }
+                }
+                DlAxiom::ObjectPropertyAssertion {
+                    subject,
+                    property: RoleExpr::Atomic(property),
+                    object,
+                } => {
+                    let pair = (*property, *object);
+                    let entry = self
+                        .object_assertions_by_subject
+                        .entry(*subject)
+                        .or_default();
+                    if !entry.contains(&pair) {
+                        entry.push(pair);
+                    }
+                    let reverse = (*property, *subject);
+                    let entry = self.object_assertions_by_object.entry(*object).or_default();
+                    if !entry.contains(&reverse) {
+                        entry.push(reverse);
+                    }
+                }
+                DlAxiom::SameIndividual(individuals) => {
+                    self.same_as.merge(individuals);
+                }
+                DlAxiom::DifferentIndividuals(individuals) => {
+                    for i in 0..individuals.len() {
+                        for j in (i + 1)..individuals.len() {
+                            link_symmetric(
+                                &mut self.different_from,
+                                individuals[i],
+                                individuals[j],
+                            );
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 //! EL profile engine adapter (DIP unit struct).
 
-use ontologos_core::{Axiom, EntityId, Ontology, Reasoner, Taxonomy};
+use ontologos_core::{Axiom, EntityId, EntityKind, Ontology, Reasoner, Taxonomy};
 use ontologos_rl::same_as_closure;
 
 use crate::{ElClassifier, ElReport};
@@ -84,10 +84,14 @@ fn el_disjoint_abox_clash(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {
     }
 
     let mut types: HashMap<EntityId, HashSet<EntityId>> = HashMap::new();
-    for (_, axiom) in ontology.axioms().iter() {
-        if let Axiom::ClassAssertion { individual, class } = axiom {
-            let rep = same_as.representative(*individual);
-            types.entry(rep).or_default().insert(*class);
+    for (id, record) in ontology.entities().iter() {
+        if !record.kind.satisfies(EntityKind::Individual) {
+            continue;
+        }
+        let rep = same_as.representative(id);
+        let entry = types.entry(rep).or_default();
+        for &class in ontology.classes_of(id) {
+            entry.insert(class);
         }
     }
 
@@ -137,4 +141,45 @@ fn el_disjoint_tbox_clash(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {
         }
     }
     false
+}
+
+#[cfg(test)]
+mod dl_abox_index_tests {
+    use ontologos_core::{Axiom, ClassExpr, DlAxiom, EntityKind, Ontology};
+
+    use super::ElEngine;
+
+    #[test]
+    fn el_disjoint_abox_clash_sees_dl_store_class_assertion() {
+        let mut ontology = Ontology::new();
+        let a = ontology
+            .entity_id("http://ex/a", EntityKind::Individual)
+            .unwrap();
+        let d1 = ontology
+            .entity_id("http://ex/D1", EntityKind::Class)
+            .unwrap();
+        let d2 = ontology
+            .entity_id("http://ex/D2", EntityKind::Class)
+            .unwrap();
+        ontology
+            .add_axiom(Axiom::DisjointClasses(vec![d1, d2]))
+            .unwrap();
+        let ce1 = ontology.dl_mut().intern_ce(ClassExpr::Atomic(d1));
+        let ce2 = ontology.dl_mut().intern_ce(ClassExpr::Atomic(d2));
+        ontology.dl_mut().push_axiom(DlAxiom::ClassAssertion {
+            individual: a,
+            class: ce1,
+        });
+        ontology.dl_mut().push_axiom(DlAxiom::ClassAssertion {
+            individual: a,
+            class: ce2,
+        });
+        ontology.reindex_dl_abox();
+
+        let engine = ElEngine;
+        assert!(
+            !engine.is_consistent(&ontology).expect("consistent"),
+            "expected disjoint ABox clash from DL-store assertions"
+        );
+    }
 }

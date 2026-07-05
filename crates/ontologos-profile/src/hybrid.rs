@@ -262,6 +262,7 @@ pub fn subontology_with_axioms(
     if include_dl_store && ontology.dl().axiom_count() > 0 {
         out.dl_mut()
             .import_axioms_from(ontology.dl(), |entity| entity);
+        out.reindex_dl_abox();
     }
     Ok(out)
 }

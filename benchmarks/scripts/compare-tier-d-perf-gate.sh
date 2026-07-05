@@ -9,6 +9,8 @@ JSON_OUT="${JSON_OUT:-${DATA}/dl-perf-snapshot.json}"
 
 # ROADMAP small-corpus target (Family < 100 ms); gate uses 0.1s with release CLI overhead.
 FAMILY_BUDGET_S="${ONTOLOGOS_FAMILY_DL_BUDGET_S:-0.1}"
+# Repeat timed runs and take the median to absorb subprocess / scheduler jitter.
+PERF_ITERATIONS="${ONTOLOGOS_TIER_D_PERF_ITERATIONS:-3}"
 
 if [[ ! -f "${DATA}/family.owl" ]]; then
   echo "missing ${DATA}/family.owl (run benchmarks/scripts/download.sh)" >&2
@@ -27,13 +29,38 @@ measure() {
     echo "skip ${corpus}: missing file" >&2
     return 0
   fi
-  # Warm release CLI + JIT caches before timed run.
+  # Warm release CLI + OS caches before timed runs.
   "${CLI}" --profile "${profile}" --format json classify "${owl}" >/dev/null
-  local start end elapsed
-  start="$(python3 -c 'import time; print(time.perf_counter())')"
-  "${CLI}" --profile "${profile}" --format json classify "${owl}" >/dev/null
-  end="$(python3 -c 'import time; print(time.perf_counter())')"
-  elapsed="$(python3 -c "print(round(${end} - ${start}, 3))")"
+
+  local samples=() elapsed
+  local i
+  for ((i = 0; i < PERF_ITERATIONS; i++)); do
+    elapsed="$(python3 - "${CLI}" "${profile}" "${owl}" <<'PY'
+import subprocess
+import sys
+import time
+
+cli, profile, owl = sys.argv[1:4]
+start = time.perf_counter()
+subprocess.run(
+    [cli, "--profile", profile, "--format", "json", "classify", owl],
+    stdout=subprocess.DEVNULL,
+    check=True,
+)
+print(round(time.perf_counter() - start, 3))
+PY
+)"
+    samples+=("${elapsed}")
+  done
+
+  elapsed="$(python3 - "${samples[@]}" <<'PY'
+import statistics
+import sys
+
+samples = [float(x) for x in sys.argv[1:] if x]
+print(round(statistics.median(samples), 3))
+PY
+)"
   echo "${corpus}|${profile}|${elapsed}"
 }
 

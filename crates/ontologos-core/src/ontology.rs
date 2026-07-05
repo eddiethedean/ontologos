@@ -164,6 +164,11 @@ impl Ontology {
         Arc::make_mut(&mut self.dl)
     }
 
+    /// Rebuild ABox secondary indexes from DL-store assertions.
+    pub fn reindex_dl_abox(&mut self) {
+        self.index.index_dl_abox(&self.dl);
+    }
+
     /// DLSafe SWRL rules parsed from the ontology.
     #[must_use]
     pub fn swrl_rules(&self) -> &[SwrlRule] {

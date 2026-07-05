@@ -118,7 +118,7 @@ fn load_rdf_xml_from_preprocessed(
 
 fn finalize_parsed_ontology(
     ontology: Ontology,
-    report: ParseReport,
+    mut report: ParseReport,
     limits: ParseLimits,
     validate: bool,
 ) -> Result<Ontology> {
@@ -129,8 +129,16 @@ fn finalize_parsed_ontology(
         )));
     }
     let mut ontology = ontology;
+    if ontology.axiom_count() == 0 && ontology.dl().axiom_count() > 0 {
+        report.meta.mapped_axiom_count = ontology.dl().axiom_count();
+        report.meta.logical_axiom_count =
+            report.meta.mapped_axiom_count + report.meta.skipped_axiom_count;
+    }
     ontology.set_parse_meta(report.into_meta());
     ontology.clear_dirty();
+    if ontology.dl().axiom_count() > 0 {
+        ontology.reindex_dl_abox();
+    }
     if validate {
         validate_loaded_ontology_light(&ontology)?;
         if limits.strict {
@@ -1627,6 +1635,21 @@ mod tests {
         );
         let ontology = load_ofn_from_str(ofn).expect("parse");
         assert!(ontology.axiom_count() > 0);
+    }
+
+    #[test]
+    fn dl_only_ontology_reports_mapped_axiom_count() {
+        let ofn = concat!(
+            "Prefix(:=<http://example.org/>)\n",
+            "Ontology(<http://example.org/test>\n",
+            "SubClassOf(:A ObjectComplementOf(:B))\n",
+            ")"
+        );
+        let ontology = load_ofn_from_str(ofn).expect("parse");
+        assert_eq!(ontology.axiom_count(), 0);
+        assert!(ontology.dl().axiom_count() >= 1);
+        let meta = ontology.parse_meta().expect("parse_meta");
+        assert_eq!(meta.mapped_axiom_count, ontology.dl().axiom_count());
     }
 
     #[test]
