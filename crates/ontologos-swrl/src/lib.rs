@@ -63,12 +63,16 @@ pub fn is_consistent_with_swrl(ontology: &Ontology) -> Result<bool> {
     if !scan_constructs(ontology).contains(&OwlConstruct::SwrlRule)
         && ontology.swrl_rules().is_empty()
     {
-        return ontologos_el::ElEngine.is_consistent(ontology).map_err(Error::El);
+        return ontologos_el::ElEngine
+            .is_consistent(ontology)
+            .map_err(Error::El);
     }
     let mut working = ontology.clone();
     let report = apply_swrl_rules(&mut working)?;
     if report.rules_found == 0 && ontology.swrl_rules().is_empty() {
-        return ontologos_el::ElEngine.is_consistent(ontology).map_err(Error::El);
+        return ontologos_el::ElEngine
+            .is_consistent(ontology)
+            .map_err(Error::El);
     }
     Ok(ontologos_dl::is_consistent(&working)?)
 }
