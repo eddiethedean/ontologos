@@ -130,6 +130,7 @@ fn finalize_parsed_ontology(
     }
     let mut ontology = ontology;
     ontology.set_parse_meta(report.into_meta());
+    ontology.clear_dirty();
     if validate {
         validate_loaded_ontology_light(&ontology)?;
         if limits.strict {

@@ -82,6 +82,10 @@ fn dl_store_requires_dl(ontology: &Ontology) -> bool {
         .any(|axiom| !el_classification_forbidden_in(&dl_axiom_constructs(store, axiom)).is_empty())
 }
 
+fn should_include_dl_store_module(ontology: &Ontology) -> bool {
+    ontology.dirty().is_dirty() || ontology.parse_meta().is_none()
+}
+
 fn axiom_is_rl_rich(axiom: &Axiom) -> bool {
     matches!(
         axiom,
@@ -290,9 +294,11 @@ pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
             profile: OwlProfile::Dl,
             signature: signature_for_axioms(ontology, &dl_ids),
             axiom_ids: dl_ids,
-            include_dl_store: dl_store_has_axioms(ontology),
+            include_dl_store: dl_store_has_axioms(ontology)
+                && should_include_dl_store_module(ontology),
         });
     } else if dl_store_has_axioms(ontology)
+        && should_include_dl_store_module(ontology)
         && (dl_store_requires_dl(ontology) || modules.is_empty())
     {
         modules.push(ClassifiedModule {

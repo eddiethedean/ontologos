@@ -30,8 +30,6 @@ pub fn scan_constructs(ontology: &Ontology) -> BTreeSet<OwlConstruct> {
         constructs.extend(meta.profile_constructs.iter().cloned());
     }
 
-    constructs.extend(scan_constructs_from_dl(ontology));
-
     constructs
 }
 

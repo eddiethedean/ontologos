@@ -43,18 +43,9 @@ fn resolve_auto_route(ontology: &Ontology) -> Result<ResolvedRoute> {
             .modules
             .first()
             .map(|module| match module.profile {
-                OwlProfile::Dl if module.include_dl_store || ontology.dl().axiom_count() > 0 => {
-                    EngineKind::Dl
-                }
                 OwlProfile::Dl => EngineKind::Dl,
                 OwlProfile::Rl => EngineKind::Rl,
-                OwlProfile::El | OwlProfile::Ql => {
-                    if ontology.dl().axiom_count() > 0 {
-                        EngineKind::Dl
-                    } else {
-                        EngineKind::El
-                    }
-                }
+                OwlProfile::El | OwlProfile::Ql => EngineKind::El,
             })
             .unwrap_or(EngineKind::Dl);
         return Ok(ResolvedRoute::auto(kind, detected_kind));
