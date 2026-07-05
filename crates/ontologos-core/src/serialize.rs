@@ -356,6 +356,7 @@ impl Ontology {
                 )));
             }
             *Arc::make_mut(&mut ontology.dl) = dl;
+            ontology.reindex_dl_abox();
         }
         if let Some(rules) = snapshot.swrl_rules {
             if rules.len() > limits.max_swrl_rules {
@@ -892,6 +893,35 @@ mod tests {
             restored.index().by_kind("FunctionalObjectProperty").len(),
             1
         );
+    }
+
+    #[test]
+    fn round_trip_json_preserves_dl_class_assertion_index() {
+        use crate::dl::{ClassExpr, DlAxiom};
+
+        let mut ontology = Ontology::builder()
+            .individual("http://example.org/alice")
+            .expect("alice")
+            .class("http://example.org/Person")
+            .expect("Person")
+            .build()
+            .expect("build");
+        let alice = ontology
+            .lookup_entity("http://example.org/alice")
+            .expect("alice");
+        let person = ontology
+            .lookup_entity("http://example.org/Person")
+            .expect("Person");
+        let ce = ontology.dl_mut().intern_ce(ClassExpr::Atomic(person));
+        ontology.dl_mut().push_axiom(DlAxiom::ClassAssertion {
+            individual: alice,
+            class: ce,
+        });
+        ontology.reindex_dl_abox();
+
+        let json = ontology.to_json().expect("to_json");
+        let restored = Ontology::from_json(&json).expect("from_json");
+        assert_eq!(restored.classes_of(alice), &[person]);
     }
 
     #[test]
