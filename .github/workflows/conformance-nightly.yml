@@ -10,6 +10,7 @@ env:
   ONTOLOGOS_DL_BUDGET_SECS: "120"
   ONTOLOGOS_WG_SHORTCUTS: "1"
   ONTOLOGOS_CONFORMANCE: "1"
+  ONTOLOGOS_DL_MAX_WORKERS: "10"
 
 jobs:
   ignored-conformance:
@@ -55,7 +56,7 @@ jobs:
           --test dl_subsumption_cases
           --test explain_benchmarks
           --
-          --test-threads=4
+          --test-threads=2
           --skip planned_engine_failure_scan
           --skip ian_backjumping3_axiom_check_completes_within_budget
       - name: Phase 3 closure gate

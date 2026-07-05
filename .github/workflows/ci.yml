@@ -18,6 +18,7 @@ env:
   # WG corpus consistency shortcuts (conformance CI only; see ontologos-dl bounded.rs).
   ONTOLOGOS_WG_SHORTCUTS: "1"
   ONTOLOGOS_CONFORMANCE: "1"
+  ONTOLOGOS_DL_MAX_WORKERS: "10"
 
 jobs:
   check:

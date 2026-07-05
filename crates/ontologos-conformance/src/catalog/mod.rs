@@ -2284,6 +2284,7 @@ fn run_wg_runnable(case: &WgCase) {
 }
 
 pub fn check_wg_case(case: &WgCase) -> Result<(), String> {
+    ensure_concurrent_scan_defaults();
     configure_wg_tableau_limits();
     let premise = case
         .premise_ofn
