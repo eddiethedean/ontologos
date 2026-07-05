@@ -176,10 +176,11 @@ impl Reasoner {
 
     /// Drop cached classification when the ontology revision no longer matches.
     pub fn invalidate_stale_classify_cache(&mut self) {
-        let stale = self
-            .classify_cache
-            .as_ref()
-            .is_some_and(|cache| cache.revision != self.ontology.revision());
+        let stale = self.ontology.revision().overflowed()
+            || self
+                .classify_cache
+                .as_ref()
+                .is_some_and(|cache| cache.revision != self.ontology.revision());
         if stale {
             self.classify_cache = None;
         }

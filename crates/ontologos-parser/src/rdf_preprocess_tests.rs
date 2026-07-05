@@ -1502,7 +1502,7 @@ fn collect_opa_from_owl_thing_with_blank_node_object() {
         1,
         "expected one OPA, got {preprocessed_opas:?}"
     );
-    let loaded = crate::load_ontology(&path).expect("load conclusion");
+    let loaded = crate::load_ontology_lenient(&path).expect("load conclusion");
     let has_opa = loaded
         .dl()
         .axioms()
@@ -1524,7 +1524,7 @@ fn collect_nested_opa_from_somevalues_conclusion() {
     assert_eq!(opas.len(), 2, "expected two OPAs, got {opas:?}");
     assert!(opas[0].0.contains("fred"));
     assert!(opas[0].1.contains("parent"));
-    let loaded = crate::load_ontology(&path).expect("load conclusion");
+    let loaded = crate::load_ontology_lenient(&path).expect("load conclusion");
     let opa_count = loaded
         .axioms()
         .iter()
@@ -1584,7 +1584,7 @@ fn disjoint_with_010_premise_loads_abox() {
         1,
         "expected one class assertion, got {typing:?}"
     );
-    let loaded = crate::load_ontology(&path).expect("load");
+    let loaded = crate::load_ontology_lenient(&path).expect("load");
     assert!(
         loaded.dl().axiom_count() > 0 || !loaded.axioms().is_empty(),
         "loaded ontology should have axioms"

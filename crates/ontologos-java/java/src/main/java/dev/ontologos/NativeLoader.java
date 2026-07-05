@@ -22,6 +22,10 @@ final class NativeLoader {
             }
             String override = System.getProperty("ontologos.native.path");
             if (override != null && !override.isBlank()) {
+                if (!Boolean.getBoolean("ontologos.native.allowOverride")) {
+                    throw new UnsatisfiedLinkError(
+                            "ontologos.native.path override disabled; set -Dontologos.native.allowOverride=true for local development");
+                }
                 System.load(Path.of(override).toAbsolutePath().toString());
                 loaded = true;
                 return;

@@ -69,6 +69,8 @@ class Reasoner(Generic[ProfileT]):
         profile: Literal["rdfs"],
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -79,6 +81,8 @@ class Reasoner(Generic[ProfileT]):
         profile: Literal["rl"],
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -89,6 +93,8 @@ class Reasoner(Generic[ProfileT]):
         profile: Literal["el"],
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -99,6 +105,8 @@ class Reasoner(Generic[ProfileT]):
         profile: Literal["dl"],
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -109,6 +117,8 @@ class Reasoner(Generic[ProfileT]):
         profile: Literal["dl-preview"],
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -119,6 +129,8 @@ class Reasoner(Generic[ProfileT]):
         profile: Literal["alc"],
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -129,6 +141,8 @@ class Reasoner(Generic[ProfileT]):
         profile: Literal["swrl"],
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -139,6 +153,8 @@ class Reasoner(Generic[ProfileT]):
         profile: Literal["auto"] = "auto",
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -149,6 +165,8 @@ class Reasoner(Generic[ProfileT]):
         profile: None = None,
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @overload
     def __init__(
@@ -159,6 +177,8 @@ class Reasoner(Generic[ProfileT]):
         profile: str | None = None,
         incremental: bool = False,
         budget_secs: int | None = None,
+        trusted: bool = False,
+        lenient: bool = False,
     ) -> None: ...
     @property
     def parse_meta(self) -> ParseMeta: ...

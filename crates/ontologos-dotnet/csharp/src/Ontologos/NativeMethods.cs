@@ -19,6 +19,9 @@ internal static partial class NativeMethods
     [DllImport(LibraryName, EntryPoint = "ontologos_last_error_message")]
     internal static extern IntPtr LastErrorMessage();
 
+    [DllImport(LibraryName, EntryPoint = "ontologos_last_error_copy")]
+    internal static extern IntPtr LastErrorCopy();
+
     [DllImport(LibraryName, EntryPoint = "ontologos_clear_last_error")]
     internal static extern void ClearLastError();
 
@@ -54,7 +57,8 @@ internal static partial class NativeMethods
     [DllImport(LibraryName, EntryPoint = "ontologos_ontology_load")]
     internal static extern long OntologyLoadNative(
         [MarshalAs(UnmanagedType.LPUTF8Str)] string path,
-        int lenient);
+        int lenient,
+        int trusted);
 
     [DllImport(LibraryName, EntryPoint = "ontologos_ontology_load_in")]
     internal static extern long OntologyLoadInNative(
@@ -148,7 +152,8 @@ internal static partial class NativeMethods
         [MarshalAs(UnmanagedType.LPUTF8Str)] string? profile,
         int incremental,
         long budgetSecs,
-        int lenient);
+        int lenient,
+        int trusted);
 
     [DllImport(LibraryName, EntryPoint = "ontologos_reasoner_load_in")]
     internal static extern long ReasonerLoadInNative(

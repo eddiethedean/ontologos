@@ -3,8 +3,8 @@
 use std::collections::{HashMap, HashSet};
 
 use ontologos_core::{
-    Axiom, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology, SwrlAtom, SwrlDArg, SwrlIArg,
-    SwrlRule,
+    Axiom, ClassExpr, DataExpr, DeId, DlAxiom, EntityId, Ontology, RoleExpr, SwrlAtom, SwrlDArg,
+    SwrlIArg, SwrlRule, Taxonomy,
 };
 use ontologos_dl::{LiteralIndex, LiteralValue};
 use ontologos_rl::SameAsClosure;
@@ -52,8 +52,9 @@ pub fn materialize_swrl_rules(ontology: &mut Ontology) -> ontologos_core::Result
         }
         changed = false;
         let same_as = ontologos_rl::same_as_closure(ontology);
+        let taxonomy = ontologos_el::ElClassifier::new().classify(ontology).ok();
         for rule in &rules {
-            let bindings = match_rule_body(ontology, &rule.body, &same_as);
+            let bindings = match_rule_body(ontology, &rule.body, &same_as, taxonomy.as_ref());
             if bindings.len() > MAX_BINDINGS_PER_RULE {
                 return Err(ontologos_core::Error::Message(format!(
                     "SWRL rule binding explosion exceeds {MAX_BINDINGS_PER_RULE} bindings"
@@ -79,6 +80,7 @@ fn match_rule_body(
     ontology: &Ontology,
     body: &[SwrlAtom],
     same_as: &SameAsClosure,
+    taxonomy: Option<&Taxonomy>,
 ) -> Vec<RuleBinding> {
     let mut ordered: Vec<&SwrlAtom> = body.iter().collect();
     ordered.sort_by_key(|atom| atom_match_priority(atom));
@@ -86,7 +88,7 @@ fn match_rule_body(
     for atom in ordered {
         let mut next = Vec::new();
         for binding in bindings {
-            next.extend(extend_binding(ontology, atom, &binding, same_as));
+            next.extend(extend_binding(ontology, atom, &binding, same_as, taxonomy));
         }
         bindings = next;
         if bindings.is_empty() {
@@ -112,9 +114,10 @@ fn extend_binding(
     atom: &SwrlAtom,
     binding: &RuleBinding,
     same_as: &SameAsClosure,
+    taxonomy: Option<&Taxonomy>,
 ) -> Vec<RuleBinding> {
     match atom {
-        SwrlAtom::Class { class, arg } => extend_class(ontology, *class, arg, binding),
+        SwrlAtom::Class { class, arg } => extend_class(ontology, *class, arg, binding, taxonomy),
         SwrlAtom::ObjectProperty {
             property,
             subject,
@@ -136,10 +139,11 @@ fn extend_class(
     class: EntityId,
     arg: &SwrlIArg,
     binding: &RuleBinding,
+    taxonomy: Option<&Taxonomy>,
 ) -> Vec<RuleBinding> {
     match arg {
         SwrlIArg::Individual(ind) => {
-            if is_individual_typed(ontology, *ind, class) {
+            if is_individual_typed(ontology, *ind, class, taxonomy) {
                 vec![binding.clone()]
             } else {
                 vec![]
@@ -147,9 +151,15 @@ fn extend_class(
         }
         SwrlIArg::Variable(var) => {
             if let Some(&ind) = binding.individuals.get(var) {
-                return extend_class(ontology, class, &SwrlIArg::Individual(ind), binding);
+                return extend_class(
+                    ontology,
+                    class,
+                    &SwrlIArg::Individual(ind),
+                    binding,
+                    taxonomy,
+                );
             }
-            individuals_of_class(ontology, class)
+            individuals_of_class(ontology, class, taxonomy)
                 .into_iter()
                 .map(|ind| {
                     let mut b = binding.clone();
@@ -161,6 +171,36 @@ fn extend_class(
     }
 }
 
+fn object_property_assertions(
+    ontology: &Ontology,
+    property: EntityId,
+) -> Vec<(EntityId, EntityId)> {
+    let mut out = Vec::new();
+    for (_, axiom) in ontology.axioms().iter() {
+        if let Axiom::ObjectPropertyAssertion {
+            subject,
+            property: p,
+            object,
+        } = axiom
+            && *p == property
+        {
+            out.push((*subject, *object));
+        }
+    }
+    for axiom in ontology.dl().axioms() {
+        if let DlAxiom::ObjectPropertyAssertion {
+            subject,
+            property: p,
+            object,
+        } = axiom
+            && *p == RoleExpr::Atomic(property)
+        {
+            out.push((*subject, *object));
+        }
+    }
+    out
+}
+
 fn extend_object_property(
     ontology: &Ontology,
     property: EntityId,
@@ -169,18 +209,7 @@ fn extend_object_property(
     binding: &RuleBinding,
     same_as: &SameAsClosure,
 ) -> Vec<RuleBinding> {
-    let assertions = ontology
-        .axioms()
-        .iter()
-        .filter_map(|(_, axiom)| match axiom {
-            Axiom::ObjectPropertyAssertion {
-                subject: s,
-                property: p,
-                object: o,
-            } if *p == property => Some((*s, *o)),
-            _ => None,
-        })
-        .collect::<Vec<_>>();
+    let assertions = object_property_assertions(ontology, property);
 
     let mut out = Vec::new();
     for (sub, obj) in assertions {
@@ -533,7 +562,7 @@ fn apply_head_atom(
             let Some(ind) = resolve_iarg(arg, binding) else {
                 return Ok(false);
             };
-            if is_individual_typed(ontology, ind, *class) {
+            if is_individual_typed(ontology, ind, *class, None) {
                 return Ok(false);
             }
             ontology.add_axiom(Axiom::ClassAssertion {
@@ -593,7 +622,11 @@ fn apply_head_atom(
     }
 }
 
-fn individuals_of_class(ontology: &Ontology, class: EntityId) -> Vec<EntityId> {
+fn individuals_of_class(
+    ontology: &Ontology,
+    class: EntityId,
+    taxonomy: Option<&Taxonomy>,
+) -> Vec<EntityId> {
     let mut out = HashSet::new();
     for (_, axiom) in ontology.axioms().iter() {
         if let Axiom::ClassAssertion {
@@ -615,7 +648,7 @@ fn individuals_of_class(ontology: &Ontology, class: EntityId) -> Vec<EntityId> {
         if ontology
             .classes_of(ind)
             .iter()
-            .any(|&c| is_subsumed(ontology, c, class))
+            .any(|&c| is_subsumed(ontology, c, class, taxonomy))
         {
             out.insert(ind);
         }
@@ -623,7 +656,15 @@ fn individuals_of_class(ontology: &Ontology, class: EntityId) -> Vec<EntityId> {
     out.into_iter().collect()
 }
 
-fn is_subsumed(ontology: &Ontology, sub: EntityId, sup: EntityId) -> bool {
+fn is_subsumed(
+    ontology: &Ontology,
+    sub: EntityId,
+    sup: EntityId,
+    taxonomy: Option<&Taxonomy>,
+) -> bool {
+    if let Some(tax) = taxonomy {
+        return tax.is_subsumed(sub, sup);
+    }
     if sub == sup {
         return true;
     }
@@ -642,11 +683,16 @@ fn is_subsumed(ontology: &Ontology, sub: EntityId, sup: EntityId) -> bool {
     false
 }
 
-fn is_individual_typed(ontology: &Ontology, individual: EntityId, class: EntityId) -> bool {
+fn is_individual_typed(
+    ontology: &Ontology,
+    individual: EntityId,
+    class: EntityId,
+    taxonomy: Option<&Taxonomy>,
+) -> bool {
     ontology
         .classes_of(individual)
         .iter()
-        .any(|&c| is_subsumed(ontology, c, class))
+        .any(|&c| is_subsumed(ontology, c, class, taxonomy))
 }
 
 fn has_object_assertion(

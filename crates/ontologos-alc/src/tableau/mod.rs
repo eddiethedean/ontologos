@@ -2535,8 +2535,10 @@ impl<'a> Branch<'a> {
 
     fn expand(&mut self) -> Result<bool, Error> {
         let mut stall_steps = 0u32;
-        let mut discarded_blocked_ce = false;
         loop {
+            if ontologos_core::cancel_requested() {
+                return Err(Error::ResourceLimit(block::max_expansions()));
+            }
             if block::is_budget_exhausted(self) {
                 return Err(Error::ResourceLimit(block::max_expansions()));
             }
@@ -2546,7 +2548,8 @@ impl<'a> Branch<'a> {
 
             let pending = self.next_pending();
             let Some((world, ce)) = pending else {
-                if discarded_blocked_ce && stall_steps > 0 {
+                let blocked_pending = self.worlds.iter().any(|w| w.blocked && !w.queue.is_empty());
+                if blocked_pending {
                     return Err(Error::ResourceLimit(block::max_expansions()));
                 }
                 return Ok(true);
@@ -2560,7 +2563,6 @@ impl<'a> Branch<'a> {
                 // Blocked worlds are expansion-complete; drop pending concepts instead of
                 // re-queuing (re-queueing caused infinite stall loops on nominal cases).
                 block::mark_blocked(self, world);
-                discarded_blocked_ce = true;
                 let blocked_pending = self.worlds.iter().any(|w| w.blocked && !w.queue.is_empty());
                 if blocked_pending {
                     stall_steps += 1;

@@ -30,8 +30,15 @@ pub fn java_string(env: &mut JNIEnv, value: &str) -> jni::errors::Result<jni::sy
 }
 
 pub fn read_string(env: &mut JNIEnv, value: &jni::objects::JString) -> jni::errors::Result<String> {
-    env.get_string(value)
-        .map(|s| s.to_string_lossy().into_owned())
+    let java = env.get_string(value)?;
+    match java.to_str() {
+        Ok(s) => Ok(s.to_owned()),
+        Err(_) => {
+            let class = env.find_class("dev/ontologos/ParseException")?;
+            env.throw_new(class, "invalid UTF-8 in Java string")?;
+            Err(jni::errors::Error::JavaException)
+        }
+    }
 }
 
 pub fn optional_usize(value: i64) -> Option<usize> {

@@ -94,6 +94,9 @@ public final class OntologyBuilder implements AutoCloseable {
     public Ontology build() {
         ensureOpen();
         long ontologyHandle = nativeBuild(handle);
+        if (ontologyHandle == 0L) {
+            throw new OntologosException("ontology build failed");
+        }
         handle = 0L;
         closed = true;
         return new Ontology(ontologyHandle);

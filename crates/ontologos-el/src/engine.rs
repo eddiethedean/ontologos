@@ -38,6 +38,30 @@ impl ElEngine {
     }
 }
 
+fn expand_taxonomy_ancestors(
+    taxonomy: &Taxonomy,
+    start: EntityId,
+) -> std::collections::HashSet<EntityId> {
+    use std::collections::HashSet;
+    let mut expanded = HashSet::from([start]);
+    let mut stack = vec![start];
+    while let Some(current) = stack.pop() {
+        if let Some(cluster) = taxonomy.equivalent_classes(current) {
+            for &eq in cluster {
+                if expanded.insert(eq) {
+                    stack.push(eq);
+                }
+            }
+        }
+        for sup in taxonomy.direct_superclasses(current) {
+            if expanded.insert(sup) {
+                stack.push(sup);
+            }
+        }
+    }
+    expanded
+}
+
 fn el_disjoint_abox_clash(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {
     use std::collections::{HashMap, HashSet};
 
@@ -70,17 +94,12 @@ fn el_disjoint_abox_clash(ontology: &Ontology, taxonomy: &Taxonomy) -> bool {
     for classes in types.values() {
         let mut expanded = HashSet::new();
         for &class in classes {
-            expanded.insert(class);
-            for (_, axiom) in ontology.axioms().iter() {
-                let Axiom::SubClassOf {
-                    subclass,
-                    superclass,
-                } = axiom
-                else {
-                    continue;
-                };
-                if taxonomy.is_subsumed(class, *subclass) {
-                    expanded.insert(*superclass);
+            expanded.extend(expand_taxonomy_ancestors(taxonomy, class));
+        }
+        for &t in &expanded {
+            for &(d1, d2) in &disjoint_pairs {
+                if taxonomy.is_subsumed(t, d1) && taxonomy.is_subsumed(t, d2) {
+                    return true;
                 }
             }
         }

@@ -228,11 +228,10 @@ fn check_consistency_inner_impl(ontology: &Ontology) -> Result<ConsistencyResult
     let roles = ria::RoleHierarchy::from_clauses(dl.clauses());
     let facts = saturation::saturate(ontology, dl.clauses(), &roles)?;
     let seed = classify::build_tableau_seed(ontology, &dl, &facts, &roles)?;
-    if matches!(
-        abox_exists_forall_role_clash(ontology, &dl, &seed)?,
-        Some(true)
-    ) {
-        reject!("exists_forall_role_clash");
+    match abox_exists_forall_role_clash(ontology, &dl, &seed)? {
+        Some(true) => reject!("exists_forall_role_clash"),
+        None => return Ok(ConsistencyResult::incomplete()),
+        Some(false) => {}
     }
     if abox_asserted_exact_zero_equiv_class(ontology) {
         reject!("abox_exact_zero_equiv");

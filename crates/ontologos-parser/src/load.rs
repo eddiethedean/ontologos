@@ -901,6 +901,9 @@ fn resolve_owl_import_path(current: &Path, import_iri: &str) -> Option<PathBuf> 
         }
     }
     if let Some(filename) = import_iri.strip_prefix("http://www.iyouit.eu/") {
+        if filename.split('/').any(|part| part == "..") {
+            return None;
+        }
         let candidate = current.parent()?.join(filename);
         if candidate.is_file() {
             return Some(candidate);
@@ -1050,6 +1053,12 @@ fn merge_supplement_ontology(
                 match EntityKind::merge_punning(existing_kind, record.kind) {
                     Some(_) => {}
                     None => {
+                        if limits.strict {
+                            return Err(Error::Parse(format!(
+                                "import entity kind conflict for {iri}: {:?} vs {:?}",
+                                existing_kind, record.kind
+                            )));
+                        }
                         report.meta.warn(format!(
                             "import entity kind conflict for {iri}: {:?} vs {:?}",
                             existing_kind, record.kind

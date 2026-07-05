@@ -31,14 +31,16 @@ public sealed class Reasoner : IDisposable
         string? profile,
         bool incremental = false,
         long? budgetSecs = null,
-        bool lenient = false) =>
+        bool lenient = false,
+        bool trusted = false) =>
         new(
             NativeMethods.ReasonerFromPathNative(
                 path,
                 profile,
                 incremental ? 1 : 0,
                 NativeInterop.ToNativeOptional(budgetSecs),
-                lenient ? 1 : 0));
+                lenient ? 1 : 0,
+                trusted ? 1 : 0));
 
     public static Reasoner LoadIn(
         string baseDir,
@@ -89,14 +91,20 @@ public sealed class Reasoner : IDisposable
     public bool IsConsistent()
     {
         EnsureOpen();
-        return NativeMethods.ReasonerIsConsistentNative(_handle) != 0;
+        var result = NativeMethods.ReasonerIsConsistentNative(_handle);
+        if (result < 0)
+        {
+            NativeInterop.ThrowIfError();
+        }
+
+        return result != 0;
     }
 
     public bool IsEntailed(EntailmentCheck check)
     {
         ArgumentNullException.ThrowIfNull(check);
         EnsureOpen();
-        return NativeMethods.ReasonerIsEntailedNative(
+        var result = NativeMethods.ReasonerIsEntailedNative(
             _handle,
             check.Sub,
             check.Sup,
@@ -104,7 +112,13 @@ public sealed class Reasoner : IDisposable
             check.ClassIri,
             check.Subject,
             check.Property,
-            check.Object) != 0;
+            check.Object);
+        if (result < 0)
+        {
+            NativeInterop.ThrowIfError();
+        }
+
+        return result != 0;
     }
 
     public string Query(string query)

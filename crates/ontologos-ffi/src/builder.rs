@@ -5,10 +5,12 @@ use std::os::raw::{c_char, c_longlong};
 use ontologos_js::JsOntologyBuilder;
 
 use crate::error::{clear_error, set_error, set_message_error};
-use crate::handles::{borrow_handle, drop_handle, into_handle};
+use crate::handles::{
+    drop_builder_handle, into_builder_handle, into_ontology_handle, with_builder,
+};
 use crate::strings::read_required_cstr;
 
-fn with_builder<F>(handle: c_longlong, f: F) -> c_longlong
+fn with_builder_op<F>(handle: c_longlong, f: F) -> c_longlong
 where
     F: FnOnce(&mut JsOntologyBuilder) -> ontologos_js::Result<()>,
 {
@@ -17,12 +19,15 @@ where
         set_message_error("invalid builder handle");
         return 0;
     }
-    let builder = unsafe { borrow_handle::<JsOntologyBuilder>(handle) };
-    match f(builder) {
-        Ok(()) => handle,
-        Err(error) => {
+    match with_builder(handle, f) {
+        Ok(Ok(())) => handle,
+        Ok(Err(error)) => {
             set_error(error);
             handle
+        }
+        Err(()) => {
+            set_message_error("invalid or stale builder handle");
+            0
         }
     }
 }
@@ -30,7 +35,7 @@ where
 #[unsafe(no_mangle)]
 pub extern "C" fn ontologos_builder_new() -> c_longlong {
     clear_error();
-    into_handle(JsOntologyBuilder::new())
+    into_builder_handle(JsOntologyBuilder::new())
 }
 
 #[unsafe(no_mangle)]
@@ -39,9 +44,9 @@ pub extern "C" fn ontologos_builder_add_class(
     iri: *const c_char,
 ) -> c_longlong {
     let Some(iri) = (unsafe { read_required_cstr(iri, "iri") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| builder.add_class(&iri))
+    with_builder_op(handle, |builder| builder.add_class(&iri))
 }
 
 #[unsafe(no_mangle)]
@@ -50,9 +55,9 @@ pub extern "C" fn ontologos_builder_individual(
     iri: *const c_char,
 ) -> c_longlong {
     let Some(iri) = (unsafe { read_required_cstr(iri, "iri") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| builder.individual(&iri))
+    with_builder_op(handle, |builder| builder.individual(&iri))
 }
 
 #[unsafe(no_mangle)]
@@ -61,9 +66,9 @@ pub extern "C" fn ontologos_builder_object_property(
     iri: *const c_char,
 ) -> c_longlong {
     let Some(iri) = (unsafe { read_required_cstr(iri, "iri") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| builder.object_property(&iri))
+    with_builder_op(handle, |builder| builder.object_property(&iri))
 }
 
 #[unsafe(no_mangle)]
@@ -73,12 +78,12 @@ pub extern "C" fn ontologos_builder_subclass_of(
     superclass: *const c_char,
 ) -> c_longlong {
     let Some(subclass) = (unsafe { read_required_cstr(subclass, "subclass") }) else {
-        return 0;
+        return handle;
     };
     let Some(superclass) = (unsafe { read_required_cstr(superclass, "superclass") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| {
+    with_builder_op(handle, |builder| {
         builder.subclass_of(&subclass, &superclass)
     })
 }
@@ -90,12 +95,12 @@ pub extern "C" fn ontologos_builder_subproperty_of(
     sup: *const c_char,
 ) -> c_longlong {
     let Some(sub) = (unsafe { read_required_cstr(sub, "sub") }) else {
-        return 0;
+        return handle;
     };
     let Some(sup) = (unsafe { read_required_cstr(sup, "sup") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| builder.subproperty_of(&sub, &sup))
+    with_builder_op(handle, |builder| builder.subproperty_of(&sub, &sup))
 }
 
 #[unsafe(no_mangle)]
@@ -105,12 +110,12 @@ pub extern "C" fn ontologos_builder_property_domain(
     domain: *const c_char,
 ) -> c_longlong {
     let Some(property) = (unsafe { read_required_cstr(property, "property") }) else {
-        return 0;
+        return handle;
     };
     let Some(domain) = (unsafe { read_required_cstr(domain, "domain") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| {
+    with_builder_op(handle, |builder| {
         builder.property_domain(&property, &domain)
     })
 }
@@ -122,12 +127,12 @@ pub extern "C" fn ontologos_builder_property_range(
     range: *const c_char,
 ) -> c_longlong {
     let Some(property) = (unsafe { read_required_cstr(property, "property") }) else {
-        return 0;
+        return handle;
     };
     let Some(range) = (unsafe { read_required_cstr(range, "range") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| builder.property_range(&property, &range))
+    with_builder_op(handle, |builder| builder.property_range(&property, &range))
 }
 
 #[unsafe(no_mangle)]
@@ -137,12 +142,12 @@ pub extern "C" fn ontologos_builder_class_assertion(
     class_iri: *const c_char,
 ) -> c_longlong {
     let Some(individual) = (unsafe { read_required_cstr(individual, "individual") }) else {
-        return 0;
+        return handle;
     };
     let Some(class_iri) = (unsafe { read_required_cstr(class_iri, "class") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| {
+    with_builder_op(handle, |builder| {
         builder.class_assertion(&individual, &class_iri)
     })
 }
@@ -155,15 +160,15 @@ pub extern "C" fn ontologos_builder_object_property_assertion(
     object: *const c_char,
 ) -> c_longlong {
     let Some(subject) = (unsafe { read_required_cstr(subject, "subject") }) else {
-        return 0;
+        return handle;
     };
     let Some(property) = (unsafe { read_required_cstr(property, "property") }) else {
-        return 0;
+        return handle;
     };
     let Some(object) = (unsafe { read_required_cstr(object, "object") }) else {
-        return 0;
+        return handle;
     };
-    with_builder(handle, |builder| {
+    with_builder_op(handle, |builder| {
         builder.object_property_assertion(&subject, &property, &object)
     })
 }
@@ -175,16 +180,17 @@ pub extern "C" fn ontologos_builder_build(handle: c_longlong) -> c_longlong {
         set_message_error("invalid builder handle");
         return 0;
     }
-    let builder = unsafe { borrow_handle::<JsOntologyBuilder>(handle) };
-    match builder.build() {
-        Ok(ontology) => {
-            unsafe {
-                drop_handle::<JsOntologyBuilder>(handle);
-            }
-            into_handle(ontology)
+    match with_builder(handle, |builder| builder.build()) {
+        Ok(Ok(ontology)) => {
+            drop_builder_handle(handle);
+            into_ontology_handle(ontology)
         }
-        Err(error) => {
+        Ok(Err(error)) => {
             set_error(error);
+            0
+        }
+        Err(()) => {
+            set_message_error("invalid or stale builder handle");
             0
         }
     }
@@ -192,7 +198,7 @@ pub extern "C" fn ontologos_builder_build(handle: c_longlong) -> c_longlong {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ontologos_builder_close(handle: c_longlong) {
-    unsafe {
-        drop_handle::<JsOntologyBuilder>(handle);
+    if handle != 0 {
+        let _ = drop_builder_handle(handle);
     }
 }

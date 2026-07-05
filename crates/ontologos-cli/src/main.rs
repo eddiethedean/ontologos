@@ -261,6 +261,15 @@ fn run() -> Result<(), CliError> {
                     ..reasoner_config(&cli)
                 })
                 .build(ontology)?;
+            let route =
+                ontologos_profile::resolve_route(reasoner.profile(), reasoner.ontology())
+                    .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
+            if route.kind != ontologos_core::EngineKind::El {
+                return Err(CliError::Core(ontologos_core::Error::Message(format!(
+                    "explain requires EL profile (resolved to {:?}); use --profile el",
+                    route.kind
+                ))));
+            }
             let graph = explain_with_profile(&mut reasoner)?;
             emit_explain(cli.format, reasoner.ontology(), &graph, &parse_meta)?;
         }
@@ -280,7 +289,10 @@ fn run() -> Result<(), CliError> {
                     "query requires taxonomy classification outcome".into(),
                 ))
             })?;
-            let answers = ontologos_ql::answer_query(reasoner.ontology(), taxonomy, &cq)
+            let engine = ontologos_ql::TaxonomyHierarchy::new(reasoner.ontology(), taxonomy);
+            let rewritten = ontologos_ql::rewrite_query(&engine, taxonomy, &cq)
+                .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
+            let answers = ontologos_ql::answer_query(reasoner.ontology(), taxonomy, &rewritten)
                 .map_err(|e| CliError::Core(ontologos_core::Error::Message(e.to_string())))?;
             match cli.format {
                 OutputFormat::Text => {
@@ -351,12 +363,42 @@ fn run() -> Result<(), CliError> {
                         }
                     }
                 }
-                OutputFormat::Json => emit_json(&InstancesCliOutput {
-                    consistent,
-                    rl_inferences: report.rl_inferences,
-                    same_as_clusters: report.same_as_clusters.len(),
-                    parse_meta: &parse_meta,
-                })?,
+                OutputFormat::Json => {
+                    let clusters: Vec<Vec<String>> = report
+                        .same_as_clusters
+                        .iter()
+                        .map(|cluster| {
+                            cluster
+                                .iter()
+                                .filter_map(|id| {
+                                    ontology
+                                        .entity(*id)
+                                        .ok()
+                                        .and_then(|r| ontology.resolve_iri(r.iri).ok())
+                                        .map(str::to_owned)
+                                })
+                                .collect()
+                        })
+                        .collect();
+                    let mut class_assertions = Vec::new();
+                    for (_, axiom) in ontology.axioms().iter() {
+                        if let ontologos_core::Axiom::ClassAssertion { individual, class } = axiom {
+                            class_assertions.push(format!(
+                                "{} : {}",
+                                entity_iri(&ontology, *individual)?,
+                                entity_iri(&ontology, *class)?
+                            ));
+                        }
+                    }
+                    emit_json(&InstancesCliOutput {
+                        consistent,
+                        rl_inferences: report.rl_inferences,
+                        same_as_clusters: report.same_as_clusters.len(),
+                        clusters,
+                        class_assertions,
+                        parse_meta: &parse_meta,
+                    })?
+                }
             }
         }
         Command::Consistent { ontology } => {
@@ -561,6 +603,8 @@ struct InstancesCliOutput<'a> {
     consistent: bool,
     rl_inferences: usize,
     same_as_clusters: usize,
+    clusters: Vec<Vec<String>>,
+    class_assertions: Vec<String>,
     #[serde(skip_serializing_if = "skip_clean_parse_meta")]
     parse_meta: &'a ParseMetaSummary,
 }

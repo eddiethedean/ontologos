@@ -18,6 +18,7 @@ char *ontologos_error_code_from_message(const char *message);
 /** Thread-local error state (valid until the next API call). */
 const char *ontologos_last_error_code(void);
 const char *ontologos_last_error_message(void);
+char *ontologos_last_error_copy(void);
 void ontologos_clear_last_error(void);
 
 /** Free strings returned by this library. */
@@ -35,7 +36,7 @@ ontologos_handle_t ontologos_ontology_from_bytes(const uint8_t *data, size_t len
 ontologos_handle_t ontologos_ontology_from_bytes_lenient(const uint8_t *data, size_t len);
 ontologos_handle_t ontologos_ontology_from_text(const char *text);
 ontologos_handle_t ontologos_ontology_from_text_lenient(const char *text);
-ontologos_handle_t ontologos_ontology_load(const char *path, int lenient);
+ontologos_handle_t ontologos_ontology_load(const char *path, int lenient, int trusted);
 ontologos_handle_t ontologos_ontology_load_in(const char *base, const char *path, int lenient);
 char *ontologos_ontology_to_json(ontologos_handle_t handle);
 int64_t ontologos_ontology_axiom_count(ontologos_handle_t handle);
@@ -86,7 +87,8 @@ ontologos_handle_t ontologos_reasoner_from_path(
     const char *profile,
     int incremental,
     int64_t budget_secs,
-    int lenient);
+    int lenient,
+    int trusted);
 ontologos_handle_t ontologos_reasoner_load_in(
     const char *base,
     const char *path,
@@ -99,6 +101,7 @@ char *ontologos_reasoner_taxonomy(ontologos_handle_t handle);
 char *ontologos_reasoner_classify(ontologos_handle_t handle);
 char *ontologos_reasoner_explain(ontologos_handle_t handle);
 char *ontologos_reasoner_check_consistency(ontologos_handle_t handle);
+/** Returns 1 if consistent/entailed, 0 if not, -1 on error. */
 int ontologos_reasoner_is_consistent(ontologos_handle_t handle);
 int ontologos_reasoner_is_entailed(
     ontologos_handle_t handle,

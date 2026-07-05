@@ -4,8 +4,8 @@ use std::collections::HashSet;
 
 use ontologos_bridge::has_bottom_chain_violation;
 use ontologos_core::{
-    ClassExpr, ConsistencyResult, DlAxiom, EngineKind, EntityId, Profile, Reasoner, ResolvedRoute,
-    RoleExpr,
+    ClassExpr, ConsistencyResult, DlAxiom, EngineKind, EntityId, Ontology, Profile, Reasoner,
+    ResolvedRoute, RoleExpr,
 };
 use ontologos_dl::DlEngine;
 use ontologos_el::ElClassifier;
@@ -50,31 +50,37 @@ pub(crate) fn check_consistency(
                     .check_consistency(reasoner.ontology(), reasoner.config().budget_secs)
                     .map_err(Error::Dl);
             }
-            let consistent = ontologos_el::ElEngine
-                .is_consistent(reasoner.ontology())
-                .map_err(Error::El)?;
-            Ok(consistency_from_bool(consistent))
+            match ontologos_el::ElEngine.is_consistent(reasoner.ontology()) {
+                Ok(consistent) => Ok(consistency_from_bool(consistent)),
+                Err(e) => {
+                    tracing::warn!("EL consistency check incomplete: {e}");
+                    Ok(ConsistencyResult::incomplete())
+                }
+            }
         }
         EngineKind::Rdfs => {
-            let consistent = {
-                let mut working = reasoner.ontology().clone();
-                let report = RdfsEngine::new()
-                    .materialize(&mut working)
-                    .map_err(Error::Rl)?;
-                report.clashes.is_empty()
-            };
-            Ok(consistency_from_bool(consistent))
+            let mut working = reasoner.ontology().clone();
+            match RdfsEngine::new().materialize(&mut working) {
+                Ok(report) => Ok(consistency_from_bool(
+                    !ontologos_rl::clashes_indicate_inconsistency(&report.clashes),
+                )),
+                Err(e) => {
+                    tracing::warn!("RDFS consistency check incomplete: {e}");
+                    Ok(ConsistencyResult::incomplete())
+                }
+            }
         }
         EngineKind::Rl => check_consistency_rl(reasoner),
         EngineKind::Alc | EngineKind::Dl => DlEngine
             .check_consistency(reasoner.ontology(), reasoner.config().budget_secs)
             .map_err(Error::Dl),
-        EngineKind::Swrl => {
-            let consistent = SwrlEngine
-                .is_consistent(reasoner.ontology())
-                .map_err(Error::Swrl)?;
-            Ok(consistency_from_bool(consistent))
-        }
+        EngineKind::Swrl => match SwrlEngine.is_consistent(reasoner.ontology()) {
+            Ok(consistent) => Ok(consistency_from_bool(consistent)),
+            Err(e) => {
+                tracing::warn!("SWRL consistency check incomplete: {e}");
+                Ok(ConsistencyResult::incomplete())
+            }
+        },
         EngineKind::Hybrid => check_consistency_hybrid(route, reasoner),
     }
 }
@@ -106,15 +112,9 @@ pub(crate) fn sub_object_properties(
 }
 
 fn classify_el(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
-    if reasoner.profile() == Profile::El {
+    if reasoner.config().incremental || reasoner.profile() == Profile::El {
         Ok(ClassifyOutcome::Taxonomy(
             ontologos_el::classify_with_report(reasoner)?.taxonomy,
-        ))
-    } else if reasoner.config().incremental {
-        Ok(ClassifyOutcome::Taxonomy(
-            ElClassifier::new()
-                .classify(reasoner.ontology())
-                .map_err(Error::El)?,
         ))
     } else {
         let report = ElClassifier::new()
@@ -138,25 +138,47 @@ fn classify_dl(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
             "incremental classification is not supported for OWL DL; performing full classify"
         );
     }
-    let taxonomy = if reasoner.profile() == Profile::DlPreview {
-        ontologos_dl::DlClassifier::new()
-            .preview(true)
-            .classify(reasoner.ontology())
-            .map_err(Error::Dl)?
-    } else {
-        DlEngine.classify(reasoner.ontology()).map_err(Error::Dl)?
+    let budget = reasoner.config().budget_secs;
+    let preview = reasoner.profile() == Profile::DlPreview;
+    let dl_classify = move |ontology: &Ontology| {
+        if preview {
+            ontologos_dl::DlClassifier::new()
+                .preview(true)
+                .classify(ontology)
+        } else {
+            ontologos_dl::classify(ontology)
+        }
     };
-    Ok(ClassifyOutcome::Taxonomy(taxonomy))
+    let taxonomy_result = if budget.is_some() {
+        let ontology = reasoner.ontology().clone();
+        ontologos_dl::run_bounded(budget, move || dl_classify(&ontology))?
+    } else {
+        dl_classify(reasoner.ontology())
+    };
+    Ok(ClassifyOutcome::Taxonomy(
+        taxonomy_result.map_err(Error::Dl)?,
+    ))
 }
 
 fn check_consistency_rl(reasoner: &Reasoner) -> Result<ConsistencyResult> {
     let mut working = reasoner.ontology().clone();
     let report = RlEngine::new(1).saturate(&mut working).map_err(Error::Rl)?;
-    if !report.clashes.is_empty() || has_bottom_chain_violation(&working) {
+    if ontologos_rl::clashes_indicate_inconsistency(&report.clashes)
+        || has_bottom_chain_violation(&working)
+    {
         return Ok(ConsistencyResult::inconsistent());
     }
-    let consistent = ontologos_rl::abox::is_abox_consistent(&working).map_err(Error::Rl)?;
-    Ok(consistency_from_bool(consistent))
+    let abox_ok = ontologos_rl::abox::is_abox_consistent(&working).map_err(Error::Rl)?;
+    if !abox_ok {
+        return Ok(ConsistencyResult::inconsistent());
+    }
+    let taxonomy = ontologos_el::ElClassifier::new()
+        .classify(&working)
+        .map_err(Error::El)?;
+    if !taxonomy.unsatisfiable.is_empty() {
+        return Ok(ConsistencyResult::inconsistent());
+    }
+    Ok(ConsistencyResult::consistent())
 }
 
 fn check_consistency_hybrid(
@@ -204,7 +226,7 @@ mod tests {
             (Profile::Alc, EngineKind::Dl),
             (Profile::Dl, EngineKind::Dl),
             (Profile::DlPreview, EngineKind::Dl),
-            (Profile::Swrl, EngineKind::Dl),
+            (Profile::Swrl, EngineKind::Swrl),
         ] {
             let reasoner = Reasoner::builder()
                 .profile(profile)

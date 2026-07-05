@@ -41,6 +41,29 @@ fn json_v4_round_trips_dl_and_swrl() {
 }
 
 #[test]
+fn json_v4_round_trips_parse_meta() {
+    let mut ontology = Ontology::builder()
+        .class("http://example.org/A")
+        .expect("class")
+        .build()
+        .expect("build");
+    ontology.set_parse_meta(ontologos_core::ParseMeta {
+        warnings: vec!["skipped test axiom".into()],
+        mapped_axiom_count: 1,
+        skipped_axiom_count: 1,
+        logical_axiom_count: 2,
+        ..Default::default()
+    });
+
+    let json = ontology.to_json().expect("to_json");
+    assert!(json.contains("\"parse_meta\""));
+    let restored = Ontology::from_json(&json).expect("from_json");
+    let meta = restored.parse_meta().expect("parse_meta");
+    assert_eq!(meta.skipped_axiom_count, 1);
+    assert_eq!(meta.warnings.len(), 1);
+}
+
+#[test]
 fn json_export_omits_inferred_axioms() {
     let mut ontology = Ontology::builder()
         .class("http://example.org/A")

@@ -246,13 +246,14 @@ pub fn expand_xml_entities_with_limit(input: &str, max_bytes: usize) -> Result<S
     const MAX_ENTITY_NESTING_DEPTH: usize = 32;
 
     if !input.contains("<!ENTITY") {
-        if input.len() > max_bytes {
+        let stripped = strip_xml_internal_subset(input);
+        if stripped.len() > max_bytes {
             return Err(Error::Parse(format!(
                 "expanded RDF/XML size {} exceeds limit of {max_bytes} bytes",
-                input.len()
+                stripped.len()
             )));
         }
-        return Ok(input.to_owned());
+        return Ok(stripped);
     }
     let mut entities = HashMap::new();
     for line in input.lines() {
@@ -4669,6 +4670,10 @@ fn expand_disjoint_block(
         return input.to_owned();
     };
     let container_end = start + container_end_rel + close_container.len();
+
+    if iris.len() > 256 {
+        return input.to_owned();
+    }
 
     let mut injections = String::new();
     for iri in &iris {

@@ -8,10 +8,15 @@ use crate::entity::{EntityId, EntityKind};
 use crate::error::{Error, Result};
 use crate::limits::Limits;
 use crate::ontology::Ontology;
+use crate::parse_meta::{ParseMeta, ParseMetaSummary};
 use crate::swrl::SwrlRule;
 
 const FORMAT_VERSION: u32 = 4;
 const MIN_READ_FORMAT_VERSION: u32 = 2;
+
+fn skip_parse_meta(meta: &Option<ParseMetaSummary>) -> bool {
+    meta.as_ref().is_none_or(ParseMetaSummary::omit_from_json)
+}
 
 /// JSON snapshot format for ontology round-trip (format version 4).
 #[derive(Debug, Serialize, Deserialize)]
@@ -24,6 +29,8 @@ struct OntologySnapshot {
     dl: Option<DlStore>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     swrl_rules: Option<Vec<SwrlRule>>,
+    #[serde(default, skip_serializing_if = "skip_parse_meta")]
+    parse_meta: Option<ParseMetaSummary>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -102,8 +109,19 @@ enum SnapshotAxiom {
 }
 
 impl Ontology {
-    /// Serialize the ontology to a JSON string (format version 2).
+    /// Serialize the ontology to a JSON string (format version 4).
     pub fn to_json(&self) -> Result<String> {
+        let inferred = self
+            .axioms()
+            .iter()
+            .filter(|(id, _)| self.axioms().is_inferred(*id))
+            .count();
+        if inferred > 0 {
+            tracing::warn!(
+                inferred_axiom_count = inferred,
+                "JSON export omits inferred axioms; round-trip will not preserve materialized axioms"
+            );
+        }
         let snapshot = self.to_snapshot()?;
         serde_json::to_string_pretty(&snapshot).map_err(|e| Error::Serialization(e.to_string()))
     }
@@ -260,12 +278,17 @@ impl Ontology {
         } else {
             Some(self.swrl_rules().to_vec())
         };
+        let parse_meta = self
+            .parse_meta()
+            .map(ParseMetaSummary::from)
+            .filter(|meta| !meta.omit_from_json());
         Ok(OntologySnapshot {
             format_version: FORMAT_VERSION,
             entities,
             axioms,
             dl,
             swrl_rules,
+            parse_meta,
         })
     }
 
@@ -295,6 +318,7 @@ impl Ontology {
 
         let mut ontology = Self::new();
         let mut seen_iris = std::collections::HashSet::new();
+        let axiom_count = snapshot.axioms.len();
 
         for entity in snapshot.entities {
             if !seen_iris.insert(entity.iri.clone()) {
@@ -317,10 +341,39 @@ impl Ontology {
         }
 
         if let Some(dl) = snapshot.dl {
+            let dl_axioms = dl.axiom_count();
+            let total = axiom_count.saturating_add(dl_axioms);
+            if total > limits.max_axioms {
+                return Err(Error::ResourceLimit(format!(
+                    "combined axiom count exceeds maximum of {}",
+                    limits.max_axioms
+                )));
+            }
+            if dl.ce_count() > limits.max_entities || dl.de_count() > limits.max_entities {
+                return Err(Error::ResourceLimit(format!(
+                    "DL expression count exceeds maximum of {}",
+                    limits.max_entities
+                )));
+            }
             *Arc::make_mut(&mut ontology.dl) = dl;
         }
         if let Some(rules) = snapshot.swrl_rules {
+            if rules.len() > limits.max_swrl_rules {
+                return Err(Error::ResourceLimit(format!(
+                    "SWRL rule count exceeds maximum of {}",
+                    limits.max_swrl_rules
+                )));
+            }
             ontology.swrl_rules = rules;
+        }
+        if let Some(summary) = snapshot.parse_meta {
+            ontology.set_parse_meta(ParseMeta {
+                warnings: summary.warnings,
+                mapped_axiom_count: summary.mapped_axiom_count,
+                skipped_axiom_count: summary.skipped_axiom_count,
+                logical_axiom_count: summary.logical_axiom_count,
+                ..ParseMeta::default()
+            });
         }
 
         ontology.clear_dirty();

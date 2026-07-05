@@ -41,6 +41,14 @@ internal static class NativeLoader
         var overridePath = Environment.GetEnvironmentVariable("ONTOLOGOS_NATIVE_PATH");
         if (!string.IsNullOrWhiteSpace(overridePath))
         {
+            if (!string.Equals(
+                    Environment.GetEnvironmentVariable("ONTOLOGOS_NATIVE_ALLOW_OVERRIDE"),
+                    "true",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new DllNotFoundException(
+                    "ONTOLOGOS_NATIVE_PATH override disabled; set ONTOLOGOS_NATIVE_ALLOW_OVERRIDE=true for local development");
+            }
             return Path.GetFullPath(overridePath);
         }
 

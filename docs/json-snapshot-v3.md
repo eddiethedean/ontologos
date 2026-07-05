@@ -1,6 +1,6 @@
 # JSON snapshot v3
 
-**Status:** Shipped in workspace **1.1.0** (`FORMAT_VERSION = 3` in `ontologos-core`). Readers accept v2 and v3; writers emit v3.
+**Status:** Superseded by [JSON snapshot v4](json-snapshot-v4.md). Readers still accept v3; writers emit v4.
 
 Legacy v2 format: [JSON snapshot v2](json-snapshot-v2.md).
 

@@ -38,6 +38,7 @@
 #![warn(missing_docs)]
 
 mod axiom;
+mod cancel;
 mod consistency;
 mod dirty;
 mod dl;
@@ -57,6 +58,7 @@ mod taxonomy;
 mod trace;
 
 pub use axiom::{Axiom, AxiomId, DataLiteral};
+pub use cancel::{cancel_requested, set_current_cancel};
 pub use consistency::ConsistencyResult;
 pub use dirty::{DirtySet, OntologyRevision, axiom_signature};
 pub use dl::{CeId, ClassExpr, DataExpr, DeId, DlAxiom, DlStore, RoleExpr};

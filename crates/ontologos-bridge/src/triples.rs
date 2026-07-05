@@ -311,11 +311,11 @@ fn axiom_to_triples(
             )?);
         }
         Axiom::EquivalentObjectProperties(properties) => {
-            for pair in properties.windows(2) {
+            for (a, b) in entity_id_pairs(properties) {
                 out.push(triple(
-                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, a)?,
                     OWL_EQUIV_PROP,
-                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, b)?,
                 )?);
             }
         }
@@ -386,11 +386,11 @@ fn axiom_to_triples(
             }
         }
         Axiom::DifferentIndividuals(individuals) => {
-            for pair in individuals.windows(2) {
+            for (a, b) in entity_id_pairs(individuals) {
                 out.push(triple(
-                    &entity_iri_cached(iri_cache, ontology, pair[0])?,
+                    &entity_iri_cached(iri_cache, ontology, a)?,
                     OWL_DIFFERENT_FROM,
-                    &entity_iri_cached(iri_cache, ontology, pair[1])?,
+                    &entity_iri_cached(iri_cache, ontology, b)?,
                 )?);
             }
         }

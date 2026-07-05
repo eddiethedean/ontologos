@@ -51,8 +51,8 @@ public sealed class Ontology : IDisposable
     public static Ontology FromTextLenient(string text) =>
         new(NativeMethods.OntologyFromTextLenientNative(text));
 
-    public static Ontology Load(string path, bool lenient = false) =>
-        new(NativeMethods.OntologyLoadNative(path, lenient ? 1 : 0));
+    public static Ontology Load(string path, bool lenient = false, bool trusted = false) =>
+        new(NativeMethods.OntologyLoadNative(path, lenient ? 1 : 0, trusted ? 1 : 0));
 
     public static Ontology LoadIn(string baseDir, string path, bool lenient = false) =>
         new(NativeMethods.OntologyLoadInNative(baseDir, path, lenient ? 1 : 0));

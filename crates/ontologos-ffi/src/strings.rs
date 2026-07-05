@@ -41,9 +41,13 @@ pub unsafe fn read_required_cstr(value: *const c_char, arg: &str) -> Option<Stri
 
 /// Return an owned C string for the caller (must free with [`ontologos_string_free`]).
 pub fn return_string(value: String) -> *mut c_char {
-    CString::new(value)
-        .map(CString::into_raw)
-        .unwrap_or(std::ptr::null_mut())
+    match CString::new(value) {
+        Ok(text) => text.into_raw(),
+        Err(_) => {
+            set_message_error("string contains embedded NUL byte");
+            std::ptr::null_mut()
+        }
+    }
 }
 
 /// Free a string previously returned by this library.

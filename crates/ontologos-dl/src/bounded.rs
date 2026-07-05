@@ -5,13 +5,12 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
+use ontologos_core::set_current_cancel;
+
 use crate::Error;
 
 /// Monotonic id for each bounded DL operation (0 = no active op on this thread).
 static NEXT_OP_ID: AtomicU64 = AtomicU64::new(1);
-/// Op id that should cooperatively cancel (0 = none). Per-op, not global, so parallel
-/// scans do not poison each other when one case times out.
-static CANCELLED_OP: AtomicU64 = AtomicU64::new(0);
 /// Timed-out jobs still executing on pool workers; reject new work when at capacity.
 static ORPHANED_WORKERS: AtomicUsize = AtomicUsize::new(0);
 
@@ -28,8 +27,7 @@ struct DlThreadPool {
 /// Whether the current DL worker should cooperatively stop (budget timeout for *this* op).
 #[must_use]
 pub fn dl_cancel_requested() -> bool {
-    let op = CURRENT_OP.with(Cell::get);
-    op != 0 && CANCELLED_OP.load(Ordering::Acquire) == op
+    ontologos_core::cancel_requested()
 }
 
 /// Whether WG corpus consistency shortcuts are enabled.
@@ -51,6 +49,7 @@ pub fn wg_shortcuts_enabled() -> bool {
     }
 }
 
+#[cfg(debug_assertions)]
 fn wg_shortcuts_env_enabled() -> bool {
     std::env::var("ONTOLOGOS_WG_SHORTCUTS")
         .ok()
@@ -113,12 +112,16 @@ where
     let permit = acquire_dl_worker_permit(&gate);
     let reclaimed = permit.reclaimed.clone();
     let op_id = NEXT_OP_ID.fetch_add(1, Ordering::Relaxed);
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+    let cancel_worker = Arc::clone(&cancel_flag);
     let orphaned = Arc::new(AtomicBool::new(false));
     let orphaned_flag = Arc::clone(&orphaned);
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
     let job: PoolJob = Box::new(move || {
         CURRENT_OP.with(|c| c.set(op_id));
+        set_current_cancel(Some(cancel_worker));
         let result = work();
+        set_current_cancel(None);
         CURRENT_OP.with(|c| c.set(0));
         if orphaned_flag.load(Ordering::Acquire) {
             ORPHANED_WORKERS.fetch_sub(1, Ordering::AcqRel);
@@ -132,7 +135,7 @@ where
     match rx.recv_timeout(budget) {
         Ok(v) => Ok(v),
         Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
-            CANCELLED_OP.store(op_id, Ordering::Release);
+            cancel_flag.store(true, Ordering::Release);
             orphaned.store(true, Ordering::Release);
             ORPHANED_WORKERS.fetch_add(1, Ordering::AcqRel);
             if !reclaimed.swap(true, Ordering::AcqRel) {

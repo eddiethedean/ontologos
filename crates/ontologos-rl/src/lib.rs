@@ -33,7 +33,7 @@ pub use rdfs::{
     materialize_routed as rdfs_materialize_routed,
 };
 pub use reasoner::{classify_reasoner, materialize_reasoner, saturate_routed};
-pub use report::{InferenceRecord, MaterializationReport, RlRule};
+pub use report::{InferenceRecord, MaterializationReport, RlRule, clashes_indicate_inconsistency};
 
 use ontologos_core::Error as CoreError;
 use thiserror::Error;

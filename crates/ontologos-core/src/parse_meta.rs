@@ -137,7 +137,7 @@ impl ParseMeta {
 }
 
 /// User-facing parse metadata for CLI and Python bindings.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ParseMetaSummary {
     /// Non-fatal parse warnings (skipped axioms, unsupported shapes).
     pub warnings: Vec<String>,

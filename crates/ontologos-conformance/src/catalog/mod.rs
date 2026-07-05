@@ -1879,13 +1879,13 @@ fn saturate_for_consistency(case: &HermitCase, ontology: &mut Ontology) -> bool 
         "rl" => {
             let saturated = ontologos_rl::RlEngine::new(1)
                 .saturate(ontology)
-                .map(|r| r.clashes.is_empty())
+                .map(|r| !ontologos_rl::clashes_indicate_inconsistency(&r.clashes))
                 .unwrap_or(false);
             saturated && !ontologos_bridge::has_bottom_chain_violation(ontology)
         }
         "rdfs" => ontologos_rl::rdfs::RdfsEngine::new()
             .materialize(ontology)
-            .map(|r| r.clashes.is_empty())
+            .map(|r| !ontologos_rl::clashes_indicate_inconsistency(&r.clashes))
             .unwrap_or(false),
         _ => true,
     }

@@ -48,6 +48,19 @@ pub extern "C" fn ontologos_last_error_message() -> *const c_char {
     last_field(1)
 }
 
+/// Copy the last error message into a newly allocated string (free with [`crate::strings::ontologos_string_free`]).
+#[unsafe(no_mangle)]
+pub extern "C" fn ontologos_last_error_copy() -> *mut c_char {
+    use crate::strings::return_string;
+    LAST_ERROR.with(|slot| {
+        slot.borrow()
+            .as_ref()
+            .map_or(std::ptr::null_mut(), |(_, message)| {
+                return_string(message.to_string_lossy().into_owned())
+            })
+    })
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn ontologos_clear_last_error() {
     clear_error();

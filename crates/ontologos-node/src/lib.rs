@@ -8,10 +8,20 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use ontologos_js::{JsOntology, JsOntologyBuilder, JsReasoner, VERSION, usize_to_u32};
 use serde_json::Value;
+use std::sync::Mutex;
 
 use crate::errors::{OntologosStatus, map_err, u32_to_usize, validate_budget_secs};
 
 type Result<T> = std::result::Result<T, Error<OntologosStatus>>;
+
+fn lock_reasoner(inner: &Mutex<JsReasoner>) -> Result<std::sync::MutexGuard<'_, JsReasoner>> {
+    inner.lock().map_err(|e| {
+        Error::new(
+            OntologosStatus::Error,
+            format!("reasoner lock poisoned: {e}"),
+        )
+    })
+}
 
 fn to_json_value(value: Value) -> Result<serde_json::Value> {
     Ok(value)
@@ -252,10 +262,10 @@ pub struct EntailmentCheck {
     pub object: Option<String>,
 }
 
-/// OWL reasoner.
+/// OWL reasoner. Methods are serialized with an internal mutex for thread safety.
 #[napi]
 pub struct Reasoner {
-    inner: JsReasoner,
+    inner: Mutex<JsReasoner>,
 }
 
 #[napi]
@@ -269,13 +279,15 @@ impl Reasoner {
     ) -> Result<Self> {
         validate_budget_secs(budget_secs)?;
         Ok(Self {
-            inner: JsReasoner::from_ontology(
-                &ontology.inner,
-                profile.as_deref(),
-                incremental.unwrap_or(false),
-                budget_secs.map(u64::from),
-            )
-            .map_err(map_err)?,
+            inner: Mutex::new(
+                JsReasoner::from_ontology(
+                    &ontology.inner,
+                    profile.as_deref(),
+                    incremental.unwrap_or(false),
+                    budget_secs.map(u64::from),
+                )
+                .map_err(map_err)?,
+            ),
         })
     }
 
@@ -289,14 +301,16 @@ impl Reasoner {
     ) -> Result<Self> {
         validate_budget_secs(budget_secs)?;
         Ok(Self {
-            inner: JsReasoner::from_path(
-                &path,
-                profile.as_deref(),
-                incremental.unwrap_or(false),
-                budget_secs.map(u64::from),
-                lenient.unwrap_or(false),
-            )
-            .map_err(map_err)?,
+            inner: Mutex::new(
+                JsReasoner::from_path(
+                    &path,
+                    profile.as_deref(),
+                    incremental.unwrap_or(false),
+                    budget_secs.map(u64::from),
+                    lenient.unwrap_or(false),
+                )
+                .map_err(map_err)?,
+            ),
         })
     }
 
@@ -311,26 +325,28 @@ impl Reasoner {
     ) -> Result<Self> {
         validate_budget_secs(budget_secs)?;
         Ok(Self {
-            inner: JsReasoner::load_in(
-                &base,
-                &path,
-                profile.as_deref(),
-                incremental.unwrap_or(false),
-                budget_secs.map(u64::from),
-                lenient.unwrap_or(false),
-            )
-            .map_err(map_err)?,
+            inner: Mutex::new(
+                JsReasoner::load_in(
+                    &base,
+                    &path,
+                    profile.as_deref(),
+                    incremental.unwrap_or(false),
+                    budget_secs.map(u64::from),
+                    lenient.unwrap_or(false),
+                )
+                .map_err(map_err)?,
+            ),
         })
     }
 
     #[napi(getter, js_name = "parseMeta")]
     pub fn parse_meta(&self) -> Result<serde_json::Value> {
-        to_json_value(self.inner.parse_meta().map_err(map_err)?)
+        to_json_value(lock_reasoner(&self.inner)?.parse_meta().map_err(map_err)?)
     }
 
     #[napi(getter)]
     pub fn taxonomy(&mut self) -> Result<Option<serde_json::Value>> {
-        match self.inner.taxonomy().map_err(map_err)? {
+        match lock_reasoner(&self.inner)?.taxonomy().map_err(map_err)? {
             Some(value) => Ok(Some(to_json_value(value)?)),
             None => Ok(None),
         }
@@ -338,27 +354,31 @@ impl Reasoner {
 
     #[napi]
     pub fn classify(&mut self) -> Result<serde_json::Value> {
-        to_json_value(self.inner.classify().map_err(map_err)?)
+        to_json_value(lock_reasoner(&self.inner)?.classify().map_err(map_err)?)
     }
 
     #[napi]
     pub fn explain(&mut self) -> Result<serde_json::Value> {
-        to_json_value(self.inner.explain().map_err(map_err)?)
+        to_json_value(lock_reasoner(&self.inner)?.explain().map_err(map_err)?)
     }
 
     #[napi(js_name = "checkConsistency")]
     pub fn check_consistency(&mut self) -> Result<serde_json::Value> {
-        to_json_value(self.inner.check_consistency().map_err(map_err)?)
+        to_json_value(
+            lock_reasoner(&self.inner)?
+                .check_consistency()
+                .map_err(map_err)?,
+        )
     }
 
     #[napi(js_name = "isConsistent")]
     pub fn is_consistent(&mut self) -> Result<bool> {
-        self.inner.is_consistent().map_err(map_err)
+        lock_reasoner(&self.inner)?.is_consistent().map_err(map_err)
     }
 
     #[napi(js_name = "isEntailed")]
     pub fn is_entailed(&mut self, check: EntailmentCheck) -> Result<bool> {
-        self.inner
+        lock_reasoner(&self.inner)?
             .is_entailed(
                 check.sub.as_deref(),
                 check.sup.as_deref(),
@@ -373,7 +393,7 @@ impl Reasoner {
 
     #[napi]
     pub fn query(&mut self, query: String) -> Result<Vec<serde_json::Value>> {
-        let value = self.inner.query(&query).map_err(map_err)?;
+        let value = lock_reasoner(&self.inner)?.query(&query).map_err(map_err)?;
         match value {
             Value::Array(items) => Ok(items),
             other => Err(Error::new(
@@ -385,21 +405,23 @@ impl Reasoner {
 
     #[napi(js_name = "addSubclassOf")]
     pub fn add_subclass_of(&mut self, subclass: String, superclass: String) -> Result<()> {
-        self.inner
+        lock_reasoner(&self.inner)?
             .add_subclass_of(&subclass, &superclass)
             .map_err(map_err)
     }
 
     #[napi(js_name = "removeSubclassOf")]
     pub fn remove_subclass_of(&mut self, subclass: String, superclass: String) -> Result<()> {
-        self.inner
+        lock_reasoner(&self.inner)?
             .remove_subclass_of(&subclass, &superclass)
             .map_err(map_err)
     }
 
     #[napi(js_name = "addAxiomJson")]
     pub fn add_axiom_json(&mut self, axiom: serde_json::Value) -> Result<()> {
-        self.inner.add_axiom_json(&axiom).map_err(map_err)
+        lock_reasoner(&self.inner)?
+            .add_axiom_json(&axiom)
+            .map_err(map_err)
     }
 }
 

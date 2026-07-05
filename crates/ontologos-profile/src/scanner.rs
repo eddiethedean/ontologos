@@ -110,12 +110,8 @@ fn note_axiom_construct(axiom: &ontologos_core::Axiom, constructs: &mut BTreeSet
         Axiom::DataPropertyAssertion { .. } => {
             constructs.insert(OwlConstruct::DataPropertyAssertion);
         }
-        Axiom::NegativeObjectPropertyAssertion { .. } => {
-            constructs.insert(OwlConstruct::ObjectPropertyAssertion);
-        }
-        Axiom::NegativeDataPropertyAssertion { .. } => {
-            constructs.insert(OwlConstruct::DataPropertyAssertion);
-        }
+        Axiom::NegativeObjectPropertyAssertion { .. } => {}
+        Axiom::NegativeDataPropertyAssertion { .. } => {}
         Axiom::SameIndividual(_) | Axiom::DifferentIndividuals(_) => {
             constructs.insert(OwlConstruct::IndividualEquality);
         }

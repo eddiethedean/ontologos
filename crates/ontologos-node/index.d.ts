@@ -51,7 +51,7 @@ export declare class OntologyBuilder {
   objectPropertyAssertion(subject: string, property: string, object: string): void
   build(): Ontology
 }
-/** OWL reasoner. */
+/** OWL reasoner. Methods are serialized with an internal mutex for thread safety. */
 export declare class Reasoner {
   constructor(ontology: Ontology, profile?: string | undefined | null, incremental?: boolean | undefined | null, budgetSecs?: number | undefined | null)
   static fromPath(path: string, profile?: string | undefined | null, incremental?: boolean | undefined | null, budgetSecs?: number | undefined | null, lenient?: boolean | undefined | null): Reasoner

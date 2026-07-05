@@ -1,7 +1,7 @@
 //! Triage harness for WG consistency cases listed in phase 4 burndown.
 
 use ontologos_dl::{is_consistent, is_datatype_consistent};
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient;
 use std::path::PathBuf;
 
 fn wg_premise(rel: &str) -> PathBuf {
@@ -12,7 +12,7 @@ fn wg_premise(rel: &str) -> PathBuf {
 
 fn check(rel: &str, expected: bool) -> Result<(), String> {
     let path = wg_premise(rel);
-    let ont = load_ontology(&path).map_err(|e| format!("{rel}: load: {e}"))?;
+    let ont = load_ontology_lenient(&path).map_err(|e| format!("{rel}: load: {e}"))?;
     let dt = is_datatype_consistent(&ont);
     let actual = is_consistent(&ont).map_err(|e| format!("{rel}: check: {e}"))?;
     if actual == expected {
@@ -125,7 +125,7 @@ fn diagnose_dl005_is_consistent_steps() {
     use ontologos_core::CeId;
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf";
-    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let seed = TableauSeed::default();
     eprintln!("is_consistent={:?}", is_consistent(&ont));
@@ -200,7 +200,7 @@ fn diagnose_dl018_tableau() {
     };
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf";
-    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let seed = TableauSeed::default();
     eprintln!("kb={:?}", tableau_is_consistent_with_seed(&ont, &seed));
@@ -269,7 +269,7 @@ fn dl601_unsatisfiable_class_sat() {
     use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D601/premise.rdf";
-    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let id = ont
         .lookup_entity("http://oiled.man.example.net/test#Unsatisfiable")
@@ -282,7 +282,7 @@ fn dl601_unsatisfiable_class_sat() {
 #[test]
 fn dl018_is_consistent() {
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D018/premise.rdf";
-    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
     assert!(is_consistent(&ont).expect("check"));
 }
 
@@ -351,7 +351,7 @@ fn spot_check_consistency_fixes() {
         ),
     ];
     for (name, rel, expected) in cases {
-        let ont = load_ontology(&wg_premise(rel)).expect("load");
+        let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
         let actual = is_consistent(&ont).expect("check");
         assert_eq!(actual, expected, "{name}");
     }
@@ -364,7 +364,7 @@ fn diagnose_dl608_unsatisfiable() {
     };
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf";
-    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let store = ont.dl();
     let id = ont
@@ -473,7 +473,7 @@ fn dl608_equiv_and_should_be_unsatisfiable() {
     use ontologos_alc::{DlOntology, TableauSeed, is_ce_satisfiable_with_seed};
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D608/premise.rdf";
-    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let store = ont.dl();
     let unsat = ont
@@ -520,7 +520,7 @@ fn diagnose_flower_and_one_equals_two() {
         ),
     ];
     for (name, rel, expected) in cases {
-        let ont = load_ontology(&wg_premise(rel)).expect("load");
+        let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
         let actual = is_consistent(&ont).expect("check");
         eprintln!(
             "{name}: expected={expected} actual={actual} datatype={}",
@@ -535,7 +535,7 @@ fn diagnose_satisfiable_class_sat() {
     use ontologos_core::EntityKind;
 
     let rel = "wg/TestCase-3AWebOnt-2Ddescription-2Dlogic-2D005/premise.rdf";
-    let ont = load_ontology(&wg_premise(rel)).expect("load");
+    let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
     let dl = DlOntology::from_ontology(&ont).expect("dl");
     let seed = TableauSeed::default();
     for (id, rec) in ont.entities().iter() {
@@ -573,7 +573,7 @@ fn diagnose_priority_cases() {
         ),
     ];
     for (name, rel) in cases {
-        let ont = load_ontology(&wg_premise(rel)).expect("load");
+        let ont = load_ontology_lenient(&wg_premise(rel)).expect("load");
         eprintln!("\n=== {name} ===");
         eprintln!("dl axioms={}", ont.dl().axiom_count());
         for ax in ont.dl().axioms() {

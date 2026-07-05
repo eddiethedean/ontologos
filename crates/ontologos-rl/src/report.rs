@@ -96,6 +96,17 @@ fn trace_is_empty(trace: &InferenceTrace) -> bool {
     trace.steps.is_empty()
 }
 
+/// Whether materialization merge clashes indicate logical inconsistency.
+///
+/// Skipped triples that fail entity-kind validation are recorded for diagnostics but do
+/// not refute consistency (OWL punning can cause reasonable to emit unusable triples).
+#[must_use]
+pub fn clashes_indicate_inconsistency(clashes: &[String]) -> bool {
+    clashes
+        .iter()
+        .any(|clash| !clash.starts_with("entity kind mismatch"))
+}
+
 impl MaterializationReport {
     #[must_use]
     pub fn inferred_total(&self) -> usize {

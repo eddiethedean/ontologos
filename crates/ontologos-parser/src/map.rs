@@ -972,7 +972,11 @@ impl Mapper<'_> {
     }
 
     fn push_axiom(&mut self, axiom: Axiom) {
-        if self.ontology.axiom_count() >= self.limits.max_axioms {
+        let total = self
+            .ontology
+            .axiom_count()
+            .saturating_add(self.ontology.dl().axiom_count());
+        if total >= self.limits.max_axioms {
             self.report.meta.warn(format!(
                 "axiom limit {} reached; skipping further axioms",
                 self.limits.max_axioms

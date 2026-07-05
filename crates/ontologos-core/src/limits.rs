@@ -16,6 +16,8 @@ pub struct Limits {
     pub max_class_operands: usize,
     /// Maximum lexical form length for data literals.
     pub max_literal_bytes: usize,
+    /// Maximum SWRL rules in a JSON snapshot.
+    pub max_swrl_rules: usize,
 }
 
 impl Default for Limits {
@@ -27,6 +29,7 @@ impl Default for Limits {
             max_iri_len: 8_192,
             max_class_operands: MAX_CLASS_OPERANDS,
             max_literal_bytes: 1024 * 1024,
+            max_swrl_rules: 100_000,
         }
     }
 }

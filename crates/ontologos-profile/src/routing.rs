@@ -24,16 +24,14 @@ pub fn resolve_route(profile: Profile, ontology: &Ontology) -> Result<ResolvedRo
         Profile::Alc | Profile::Dl | Profile::DlPreview => {
             Ok(ResolvedRoute::explicit(EngineKind::Dl))
         }
-        Profile::Swrl => Ok(ResolvedRoute::explicit(EngineKind::Dl)),
+        Profile::Swrl => Ok(ResolvedRoute::explicit(EngineKind::Swrl)),
         Profile::Auto => resolve_auto_route(ontology),
     }
 }
 
 fn resolve_auto_route(ontology: &Ontology) -> Result<ResolvedRoute> {
     let report = detect_profile(ontology)?;
-    let detected = report
-        .detected
-        .ok_or_else(|| crate::Error::Message("no profile detected".into()))?;
+    let detected = report.detected.unwrap_or(OwlProfile::El);
     let detected_kind = detected_profile_kind(detected);
 
     if detected == OwlProfile::Dl {
@@ -80,6 +78,14 @@ mod tests {
         let ontology = Ontology::default();
         let route = resolve_route(Profile::Dl, &ontology).expect("route");
         assert_eq!(route.kind, EngineKind::Dl);
+    }
+
+    #[test]
+    fn explicit_swrl_route() {
+        let ontology = Ontology::default();
+        let route = resolve_route(Profile::Swrl, &ontology).expect("route");
+        assert_eq!(route.kind, EngineKind::Swrl);
+        assert!(route.detected.is_none());
     }
 
     #[test]

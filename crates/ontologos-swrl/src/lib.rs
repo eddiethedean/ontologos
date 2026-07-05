@@ -23,6 +23,9 @@ pub enum Error {
     /// DL classification error.
     #[error(transparent)]
     Dl(#[from] ontologos_dl::Error),
+    /// EL classification error.
+    #[error(transparent)]
+    El(#[from] ontologos_el::Error),
     /// Core error.
     #[error(transparent)]
     Core(#[from] ontologos_core::Error),
@@ -41,7 +44,8 @@ pub fn classify_with_swrl(ontology: &Ontology) -> Result<(ontologos_core::Taxono
     if !scan_constructs(ontology).contains(&OwlConstruct::SwrlRule)
         && ontology.swrl_rules().is_empty()
     {
-        return Err(Error::NotImplemented);
+        let taxonomy = ontologos_el::ElClassifier::new().classify(ontology)?;
+        return Ok((taxonomy, SwrlReport::default()));
     }
     let mut working = ontology.clone();
     let report = apply_swrl_rules(&mut working)?;
@@ -56,10 +60,15 @@ pub fn classify_with_swrl(ontology: &Ontology) -> Result<(ontologos_core::Taxono
 
 /// Apply SWRL rules and check DL consistency on the materialized ontology.
 pub fn is_consistent_with_swrl(ontology: &Ontology) -> Result<bool> {
+    if !scan_constructs(ontology).contains(&OwlConstruct::SwrlRule)
+        && ontology.swrl_rules().is_empty()
+    {
+        return ontologos_el::ElEngine.is_consistent(ontology).map_err(Error::El);
+    }
     let mut working = ontology.clone();
     let report = apply_swrl_rules(&mut working)?;
     if report.rules_found == 0 && ontology.swrl_rules().is_empty() {
-        return Err(Error::NotImplemented);
+        return ontologos_el::ElEngine.is_consistent(ontology).map_err(Error::El);
     }
     Ok(ontologos_dl::is_consistent(&working)?)
 }

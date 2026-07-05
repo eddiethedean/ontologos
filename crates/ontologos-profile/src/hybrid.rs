@@ -337,10 +337,6 @@ pub fn merge_taxonomies(mut parts: Vec<Taxonomy>) -> Taxonomy {
             union(cluster[0], cluster[i], &mut parent);
         }
     }
-    for &(sub, sup) in &subsumptions {
-        union(sub, sup, &mut parent);
-        union(sup, sub, &mut parent);
-    }
 
     let mut clusters: HashMap<u32, Vec<EntityId>> = HashMap::new();
     for cluster in equivalence_clusters {
@@ -348,11 +344,6 @@ pub fn merge_taxonomies(mut parts: Vec<Taxonomy>) -> Taxonomy {
             let root = find(id.0, &mut parent);
             clusters.entry(root).or_default().push(id);
         }
-    }
-    for &(sub, sup) in &subsumptions {
-        let root = find(sub.0, &mut parent);
-        clusters.entry(root).or_default().push(sub);
-        clusters.entry(root).or_default().push(sup);
     }
 
     let mut equivalences: Vec<Vec<EntityId>> = clusters

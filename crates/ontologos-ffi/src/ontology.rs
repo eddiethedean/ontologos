@@ -5,17 +5,30 @@ use std::os::raw::{c_char, c_int, c_longlong};
 use ontologos_js::JsOntology;
 
 use crate::error::{clear_error, set_error, set_message_error};
-use crate::handles::{borrow_handle, drop_handle, into_handle};
+use crate::handles::{drop_ontology_handle, into_ontology_handle, with_ontology};
 use crate::strings::{optional_usize, read_required_cstr, return_string};
+
+const DEFAULT_MAX_BYTES: usize = 64 * 1024 * 1024;
 
 fn load_ontology(build: impl FnOnce() -> ontologos_js::Result<JsOntology>) -> c_longlong {
     clear_error();
     match build() {
-        Ok(ontology) => into_handle(ontology),
+        Ok(ontology) => into_ontology_handle(ontology),
         Err(error) => {
             set_error(error);
             0
         }
+    }
+}
+
+fn validate_byte_len(len: usize) -> Result<(), ()> {
+    if len > DEFAULT_MAX_BYTES {
+        set_message_error(format!(
+            "byte length {len} exceeds limit of {DEFAULT_MAX_BYTES} bytes"
+        ));
+        Err(())
+    } else {
+        Ok(())
     }
 }
 
@@ -56,6 +69,9 @@ pub extern "C" fn ontologos_ontology_from_bytes(data: *const u8, len: usize) -> 
         set_message_error("null bytes argument");
         return 0;
     }
+    if validate_byte_len(len).is_err() {
+        return 0;
+    }
     let bytes = if len == 0 {
         &[]
     } else {
@@ -69,6 +85,9 @@ pub extern "C" fn ontologos_ontology_from_bytes_lenient(data: *const u8, len: us
     clear_error();
     if data.is_null() && len > 0 {
         set_message_error("null bytes argument");
+        return 0;
+    }
+    if validate_byte_len(len).is_err() {
         return 0;
     }
     let bytes = if len == 0 {
@@ -96,10 +115,20 @@ pub extern "C" fn ontologos_ontology_from_text_lenient(text: *const c_char) -> c
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ontologos_ontology_load(path: *const c_char, lenient: c_int) -> c_longlong {
+pub extern "C" fn ontologos_ontology_load(
+    path: *const c_char,
+    lenient: c_int,
+    trusted: c_int,
+) -> c_longlong {
     let Some(path) = (unsafe { read_required_cstr(path, "path") }) else {
         return 0;
     };
+    if trusted == 0 {
+        set_message_error(
+            "unsandboxed path load rejected; pass trusted=1 for local trusted paths or use ontologos_ontology_load_in",
+        );
+        return 0;
+    }
     load_ontology(|| JsOntology::load_path(&path, lenient != 0))
 }
 
@@ -125,11 +154,14 @@ pub extern "C" fn ontologos_ontology_to_json(handle: c_longlong) -> *mut c_char 
         set_message_error("invalid ontology handle");
         return std::ptr::null_mut();
     }
-    let ontology = unsafe { borrow_handle::<JsOntology>(handle) };
-    match ontology.to_json() {
-        Ok(json) => return_string(json),
-        Err(error) => {
+    match with_ontology(handle, |ontology| ontology.to_json()) {
+        Ok(Ok(json)) => return_string(json),
+        Ok(Err(error)) => {
             set_error(error);
+            std::ptr::null_mut()
+        }
+        Err(()) => {
+            set_message_error("invalid or stale ontology handle");
             std::ptr::null_mut()
         }
     }
@@ -142,11 +174,14 @@ pub extern "C" fn ontologos_ontology_axiom_count(handle: c_longlong) -> c_longlo
         set_message_error("invalid ontology handle");
         return -1;
     }
-    let ontology = unsafe { borrow_handle::<JsOntology>(handle) };
-    match ontology.axiom_count() {
-        Ok(count) => count as c_longlong,
-        Err(error) => {
+    match with_ontology(handle, |ontology| ontology.axiom_count()) {
+        Ok(Ok(count)) => count as c_longlong,
+        Ok(Err(error)) => {
             set_error(error);
+            -1
+        }
+        Err(()) => {
+            set_message_error("invalid or stale ontology handle");
             -1
         }
     }
@@ -159,11 +194,14 @@ pub extern "C" fn ontologos_ontology_entity_count(handle: c_longlong) -> c_longl
         set_message_error("invalid ontology handle");
         return -1;
     }
-    let ontology = unsafe { borrow_handle::<JsOntology>(handle) };
-    match ontology.entity_count() {
-        Ok(count) => count as c_longlong,
-        Err(error) => {
+    match with_ontology(handle, |ontology| ontology.entity_count()) {
+        Ok(Ok(count)) => count as c_longlong,
+        Ok(Err(error)) => {
             set_error(error);
+            -1
+        }
+        Err(()) => {
+            set_message_error("invalid or stale ontology handle");
             -1
         }
     }
@@ -171,7 +209,7 @@ pub extern "C" fn ontologos_ontology_entity_count(handle: c_longlong) -> c_longl
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ontologos_ontology_close(handle: c_longlong) {
-    unsafe {
-        drop_handle::<JsOntology>(handle);
+    if handle != 0 {
+        let _ = drop_ontology_handle(handle);
     }
 }
