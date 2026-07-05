@@ -57,7 +57,7 @@ jobs:
       - name: HermiT conformance (Tier A — full catalog @ 30s)
         env:
           ONTOLOGOS_DL_BUDGET_SECS: "30"
-          ONTOLOGOS_DL_WG_SHORTCUTS: "1"
+          ONTOLOGOS_WG_SHORTCUTS: "1"
         run: cargo test -p ontologos-conformance --release --locked
 
       - name: Conformance coverage and 1.0 gates

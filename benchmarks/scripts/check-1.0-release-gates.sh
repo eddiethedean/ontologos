@@ -33,6 +33,8 @@ fi
 check "Tier A full conformance" bash -c "
   set -euo pipefail
   export ONTOLOGOS_DL_BUDGET_SECS=30
+  export ONTOLOGOS_WG_SHORTCUTS=1
+  export ONTOLOGOS_CONFORMANCE=1
   unset ONTOLOGOS_CI_PROMOTED_ONLY
   cargo test -p ontologos-conformance --release --quiet --locked \\
     --test hermit_generated \\

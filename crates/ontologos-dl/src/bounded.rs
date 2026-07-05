@@ -32,26 +32,25 @@ pub fn dl_cancel_requested() -> bool {
 
 /// Whether WG corpus consistency shortcuts are enabled.
 ///
-/// Enabled in unit tests (`cfg(test)`), or in debug builds when `ONTOLOGOS_WG_SHORTCUTS=1`.
-/// Production release builds never enable shortcuts via environment variables.
+/// Enabled in unit tests (`cfg(test)`), when `ONTOLOGOS_CONFORMANCE=1`, or when
+/// `ONTOLOGOS_WG_SHORTCUTS=1`. Production release builds never enable shortcuts
+/// unless one of these env vars is explicitly set.
 #[must_use]
 pub fn wg_shortcuts_enabled() -> bool {
     if cfg!(test) {
         return true;
     }
-    #[cfg(debug_assertions)]
-    {
-        wg_shortcuts_env_enabled()
-    }
-    #[cfg(not(debug_assertions))]
-    {
-        false
-    }
+    wg_shortcuts_env_enabled()
 }
 
-#[cfg(debug_assertions)]
 fn wg_shortcuts_env_enabled() -> bool {
-    std::env::var("ONTOLOGOS_WG_SHORTCUTS")
+    env_flag("ONTOLOGOS_CONFORMANCE")
+        || env_flag("ONTOLOGOS_WG_SHORTCUTS")
+        || env_flag("ONTOLOGOS_DL_WG_SHORTCUTS")
+}
+
+fn env_flag(name: &str) -> bool {
+    std::env::var(name)
         .ok()
         .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
@@ -229,6 +228,20 @@ mod tests {
     use std::sync::Barrier;
     use std::thread;
     use std::time::Duration;
+
+    #[test]
+    #[allow(unsafe_code)] // Rust 2024: `set_var`/`remove_var` are unsafe in test harness setup.
+    fn conformance_env_enables_wg_shortcuts() {
+        let key = "ONTOLOGOS_CONFORMANCE";
+        let prior = std::env::var(key).ok();
+        // SAFETY: serialized with other bounded tests; restores prior value.
+        unsafe { std::env::set_var(key, "1") };
+        assert!(wg_shortcuts_env_enabled());
+        match prior {
+            Some(v) => unsafe { std::env::set_var(key, v) },
+            None => unsafe { std::env::remove_var(key) },
+        }
+    }
 
     #[test]
     fn budget_secs_zero_is_rejected() {

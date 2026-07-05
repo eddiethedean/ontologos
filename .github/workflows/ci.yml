@@ -15,7 +15,7 @@ env:
   CARGO_INCREMENTAL: "0"
   # DL budget for contract catalog sample (WG entailment may classify twice).
   ONTOLOGOS_DL_BUDGET_SECS: "30"
-  # WG corpus consistency shortcuts (debug/tests only; see ontologos-dl bounded.rs).
+  # WG corpus consistency shortcuts (conformance CI only; see ontologos-dl bounded.rs).
   ONTOLOGOS_WG_SHORTCUTS: "1"
   ONTOLOGOS_CONFORMANCE: "1"
 

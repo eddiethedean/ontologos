@@ -8,7 +8,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   ONTOLOGOS_DL_BUDGET_SECS: "120"
-  ONTOLOGOS_DL_WG_SHORTCUTS: "1"
+  ONTOLOGOS_WG_SHORTCUTS: "1"
   ONTOLOGOS_CONFORMANCE: "1"
 
 jobs:
@@ -35,6 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ONTOLOGOS_DL_BUDGET_SECS: "30"
+      ONTOLOGOS_WG_SHORTCUTS: "1"
+      ONTOLOGOS_CONFORMANCE: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
