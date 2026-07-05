@@ -768,7 +768,11 @@ impl AxiomIndex {
                 DlAxiom::DifferentIndividuals(individuals) => {
                     for i in 0..individuals.len() {
                         for j in (i + 1)..individuals.len() {
-                            link_symmetric(&mut self.different_from, individuals[i], individuals[j]);
+                            link_symmetric(
+                                &mut self.different_from,
+                                individuals[i],
+                                individuals[j],
+                            );
                         }
                     }
                 }
