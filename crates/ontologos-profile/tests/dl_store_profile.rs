@@ -1,8 +1,8 @@
 use ontologos_core::{ClassExpr, DlAxiom, EntityKind, Ontology, OwlConstruct, Profile};
+use ontologos_core::{DetectedProfileKind, EngineKind};
 use ontologos_profile::{
     OwlProfile, classify_hybrid, detect_profile, resolve_route, subontology_with_axioms,
 };
-use ontologos_core::{DetectedProfileKind, EngineKind};
 
 fn ontology_with_dl_union() -> Ontology {
     let mut ontology = Ontology::builder()

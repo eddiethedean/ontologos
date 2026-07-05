@@ -77,9 +77,9 @@ fn dl_store_has_axioms(ontology: &Ontology) -> bool {
 
 fn dl_store_requires_dl(ontology: &Ontology) -> bool {
     let store = ontology.dl();
-    store.axioms().any(|axiom| {
-        !el_classification_forbidden_in(&dl_axiom_constructs(store, axiom)).is_empty()
-    })
+    store
+        .axioms()
+        .any(|axiom| !el_classification_forbidden_in(&dl_axiom_constructs(store, axiom)).is_empty())
 }
 
 fn axiom_is_rl_rich(axiom: &Axiom) -> bool {
