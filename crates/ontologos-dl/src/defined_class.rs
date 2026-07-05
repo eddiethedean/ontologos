@@ -623,10 +623,7 @@ fn derive_defined_class_preferred_supers(
         };
         if let Some(ClassExpr::Atomic(base)) = store.ce(*filler)
             && let Some(thin_pizza) = lookup("ThinAndCrispyPizza")
-            && ontology
-                .resolve_iri(ontology.entity(*base).unwrap().iri)
-                .ok()
-                .is_some_and(|iri| iri.ends_with("#ThinAndCrispyBase"))
+            && entity_iri_ends_with(ontology, *base, "#ThinAndCrispyBase")
         {
             out.push((*sub_e, thin_pizza));
         }
@@ -636,12 +633,16 @@ fn derive_defined_class_preferred_supers(
     out
 }
 
-fn is_meat_topping(ontology: &Ontology, taxonomy: &Taxonomy, entity: EntityId) -> bool {
-    if ontology
-        .resolve_iri(ontology.entity(entity).unwrap().iri)
+fn entity_iri_ends_with(ontology: &Ontology, entity: EntityId, suffix: &str) -> bool {
+    ontology
+        .entity(entity)
         .ok()
-        .is_some_and(|iri| iri.ends_with("#MeatTopping"))
-    {
+        .and_then(|record| ontology.resolve_iri(record.iri).ok())
+        .is_some_and(|iri| iri.ends_with(suffix))
+}
+
+fn is_meat_topping(ontology: &Ontology, taxonomy: &Taxonomy, entity: EntityId) -> bool {
+    if entity_iri_ends_with(ontology, entity, "#MeatTopping") {
         return true;
     }
     namesake_lookup(ontology, "MeatTopping").is_some_and(|meat| taxonomy.is_subsumed(entity, meat))
@@ -880,4 +881,24 @@ pub fn prune_orphan_pizza_shortcuts(ontology: &Ontology, taxonomy: &mut Taxonomy
     taxonomy
         .subsumptions
         .retain(|&(sub, sup)| !(sup == pizza && drop_subs.contains(&sub)));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ontologos_core::Taxonomy;
+
+    #[test]
+    fn is_meat_topping_does_not_panic_on_missing_entity() {
+        let ontology = Ontology::builder().build().unwrap();
+        let bogus = EntityId(999_999);
+        assert!(!is_meat_topping(&ontology, &Taxonomy::default(), bogus));
+    }
+
+    #[test]
+    fn derive_defined_class_preferred_supers_skips_missing_entity() {
+        let ontology = Ontology::builder().build().unwrap();
+        let taxonomy = Taxonomy::default();
+        let _ = derive_defined_class_preferred_supers(&ontology, &taxonomy);
+    }
 }
