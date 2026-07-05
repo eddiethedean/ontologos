@@ -45,8 +45,7 @@ fn resolve_auto_route(ontology: &Ontology) -> Result<ResolvedRoute> {
             .map(|module| match module.profile {
                 OwlProfile::Dl => EngineKind::Dl,
                 OwlProfile::Rl => EngineKind::Rl,
-                OwlProfile::El => EngineKind::El,
-                OwlProfile::Ql => EngineKind::El,
+                OwlProfile::El | OwlProfile::Ql => EngineKind::El,
             })
             .unwrap_or(EngineKind::Dl);
         return Ok(ResolvedRoute::auto(kind, detected_kind));
