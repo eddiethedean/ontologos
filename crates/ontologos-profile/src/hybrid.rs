@@ -6,7 +6,7 @@ use ontologos_core::axiom_signature;
 use ontologos_core::{Axiom, AxiomId, EntityId, EntityKind, Ontology, Taxonomy};
 
 use crate::rules::el_classification_forbidden_in;
-use crate::scanner::axiom_constructs;
+use crate::scanner::{axiom_constructs, dl_axiom_constructs};
 use crate::{OwlProfile, Result, detect_profile};
 
 /// One classified module in a hybrid ontology.
@@ -18,6 +18,8 @@ pub struct ClassifiedModule {
     pub signature: Vec<String>,
     /// Axioms belonging to this module.
     pub axiom_ids: Vec<AxiomId>,
+    /// When true, copy the parent ontology's DL axiom store into extracted sub-ontologies.
+    pub include_dl_store: bool,
 }
 
 /// Hybrid classification report (per-module routing).
@@ -67,6 +69,17 @@ pub fn extract_signature(ontology: &Ontology) -> Vec<String> {
 
 fn axiom_requires_dl(axiom: &Axiom) -> bool {
     !el_classification_forbidden_in(&axiom_constructs(axiom)).is_empty()
+}
+
+fn dl_store_has_axioms(ontology: &Ontology) -> bool {
+    ontology.dl().axiom_count() > 0
+}
+
+fn dl_store_requires_dl(ontology: &Ontology) -> bool {
+    let store = ontology.dl();
+    store.axioms().any(|axiom| {
+        !el_classification_forbidden_in(&dl_axiom_constructs(store, axiom)).is_empty()
+    })
 }
 
 fn axiom_is_rl_rich(axiom: &Axiom) -> bool {
@@ -220,7 +233,11 @@ pub fn bottom_module_class_seeds(
 }
 
 /// Build a sub-ontology containing only the given axioms (entity ids preserved).
-pub fn subontology_with_axioms(ontology: &Ontology, axiom_ids: &[AxiomId]) -> Result<Ontology> {
+pub fn subontology_with_axioms(
+    ontology: &Ontology,
+    axiom_ids: &[AxiomId],
+    include_dl_store: bool,
+) -> Result<Ontology> {
     let mut out = Ontology::new();
     for (_, record) in ontology.entities().iter() {
         let iri = ontology
@@ -238,6 +255,10 @@ pub fn subontology_with_axioms(ontology: &Ontology, axiom_ids: &[AxiomId]) -> Re
         out.add_axiom(axiom)
             .map_err(|e| crate::Error::Message(e.to_string()))?;
     }
+    if include_dl_store && ontology.dl().axiom_count() > 0 {
+        out.dl_mut()
+            .import_axioms_from(ontology.dl(), |entity| entity);
+    }
     Ok(out)
 }
 
@@ -253,6 +274,7 @@ pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
             profile: OwlProfile::El,
             signature: signature_for_axioms(ontology, &pure_el_ids),
             axiom_ids: pure_el_ids,
+            include_dl_store: false,
         });
     }
     if !rl_ids.is_empty() {
@@ -260,6 +282,7 @@ pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
             profile: OwlProfile::Rl,
             signature: signature_for_axioms(ontology, &rl_ids),
             axiom_ids: rl_ids,
+            include_dl_store: false,
         });
     }
     if !dl_ids.is_empty() {
@@ -267,6 +290,16 @@ pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
             profile: OwlProfile::Dl,
             signature: signature_for_axioms(ontology, &dl_ids),
             axiom_ids: dl_ids,
+            include_dl_store: dl_store_has_axioms(ontology),
+        });
+    } else if dl_store_has_axioms(ontology)
+        && (dl_store_requires_dl(ontology) || modules.is_empty())
+    {
+        modules.push(ClassifiedModule {
+            profile: OwlProfile::Dl,
+            signature: extract_signature(ontology),
+            axiom_ids: Vec::new(),
+            include_dl_store: true,
         });
     }
     if modules.is_empty() && ontology.entity_count() > 0 {
@@ -279,6 +312,7 @@ pub fn classify_hybrid(ontology: &Ontology) -> Result<HybridReport> {
             profile: OwlProfile::El,
             signature: extract_signature(ontology),
             axiom_ids: Vec::new(),
+            include_dl_store: false,
         });
     }
 

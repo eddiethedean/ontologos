@@ -17,7 +17,7 @@ pub(crate) fn classify_hybrid_modules(ontology: &Ontology) -> Result<ClassifyOut
 
     let mut taxonomies = Vec::with_capacity(report.modules.len());
     for module in &report.modules {
-        let sub = subontology_with_axioms(ontology, &module.axiom_ids)
+        let sub = subontology_with_axioms(ontology, &module.axiom_ids, module.include_dl_store)
             .map_err(|e| Error::El(e.into()))?;
         let taxonomy = match module.profile {
             OwlProfile::El | OwlProfile::Ql => ontologos_el::ElClassifier::new()
