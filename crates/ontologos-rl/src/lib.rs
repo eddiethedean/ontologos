@@ -23,7 +23,7 @@ mod report;
 
 pub use abox::{
     AboxReport, SameAsClosure, is_abox_consistent, materialize_abox, object_property_values,
-    same_as_closure,
+    rdfs_object_property_values, same_as_closure,
 };
 pub use engine::RlEngine;
 pub use native_eval::transitive_subclass_closure;
