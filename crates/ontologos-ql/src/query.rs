@@ -5,6 +5,20 @@ use ontologos_core::{EntityId, Ontology};
 
 use crate::{Error, Result};
 
+/// Built-in `owl:Nothing` IRI used by query rewrite.
+pub const OWL_NOTHING_IRI: &str = "http://www.w3.org/2002/07/owl#Nothing";
+
+fn lookup_query_class(ontology: &Ontology, class: &str) -> Result<EntityId> {
+    ontology
+        .lookup_entity(class)
+        .or_else(|| match class {
+            "owl:Nothing" => ontology.lookup_entity(OWL_NOTHING_IRI),
+            "owl:Thing" => ontology.lookup_entity("http://www.w3.org/2002/07/owl#Thing"),
+            _ => None,
+        })
+        .ok_or_else(|| Error::UnknownClass(class.to_owned()))
+}
+
 /// A conjunctive query atom: `Class(var)` or `SubClassOf(var, class)`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum QueryAtom {
@@ -55,9 +69,10 @@ pub fn evaluate(
     let atom = &query.atoms[0];
     match atom {
         QueryAtom::Type { var, class } => {
-            let class_id = ontology
-                .lookup_entity(class)
-                .ok_or_else(|| Error::UnknownClass(class.clone()))?;
+            let class_id = lookup_query_class(ontology, class)?;
+            if engine.taxonomy().unsatisfiable.contains(&class_id) {
+                return Ok(Vec::new());
+            }
             let subs = engine.direct_subclasses(class_id)?;
             let mut answers = Vec::new();
             for sub in subs {
@@ -68,9 +83,10 @@ pub fn evaluate(
             Ok(answers)
         }
         QueryAtom::Subsumed { var, superclass } => {
-            let sup_id = ontology
-                .lookup_entity(superclass)
-                .ok_or_else(|| Error::UnknownClass(superclass.clone()))?;
+            let sup_id = lookup_query_class(ontology, superclass)?;
+            if engine.taxonomy().unsatisfiable.contains(&sup_id) {
+                return Ok(Vec::new());
+            }
             let subs = engine.direct_subclasses(sup_id)?;
             let mut answers = Vec::new();
             for sub in subs {

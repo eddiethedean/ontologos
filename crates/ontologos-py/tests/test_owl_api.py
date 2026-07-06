@@ -56,3 +56,17 @@ def test_query_direct_subclasses_after_classify() -> None:
     reasoner = Reasoner(ontology=builder.build(), profile="el")
     answers = reasoner.query("Type(?x, http://example.org/B)")
     assert {"x": "http://example.org/A"} in answers
+
+
+def test_query_unsatisfiable_class_returns_empty() -> None:
+    from ontologos import OntologyBuilder, Reasoner
+
+    nothing = "http://www.w3.org/2002/07/owl#Nothing"
+    builder = OntologyBuilder()
+    builder.add_class("http://example.org/A")
+    builder.add_class("http://example.org/B")
+    builder.subclass_of("http://example.org/A", nothing)
+    builder.subclass_of("http://example.org/B", "http://example.org/A")
+    reasoner = Reasoner(ontology=builder.build(), profile="el")
+    answers = reasoner.query("Type(?x, http://example.org/A)")
+    assert answers == []

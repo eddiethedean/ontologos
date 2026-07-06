@@ -12,7 +12,7 @@ use thiserror::Error;
 
 pub use hierarchy::TaxonomyHierarchy;
 pub use parse::{MAX_QUERY_ATOMS, MAX_QUERY_LEN, parse_conjunctive_query};
-pub use query::{ConjunctiveQuery, QueryAnswer, QueryAtom};
+pub use query::{ConjunctiveQuery, OWL_NOTHING_IRI, QueryAnswer, QueryAtom};
 pub use rewrite::rewrite_query;
 
 /// Result type for QL operations.

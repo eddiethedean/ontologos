@@ -3,7 +3,7 @@
 use crate::hierarchy::TaxonomyHierarchy;
 use ontologos_core::Taxonomy;
 
-use crate::query::{ConjunctiveQuery, QueryAtom};
+use crate::query::{ConjunctiveQuery, OWL_NOTHING_IRI, QueryAtom};
 use crate::{Error, Result};
 
 /// Rewrite CQ atoms to subsume queries over named classes using the taxonomy.
@@ -50,7 +50,7 @@ fn rewrite_atom(
             if taxonomy.unsatisfiable.contains(&class_id) {
                 return Ok(QueryAtom::Type {
                     var: var.clone(),
-                    class: "owl:Nothing".into(),
+                    class: OWL_NOTHING_IRI.into(),
                 });
             }
             Ok(atom.clone())
@@ -63,7 +63,7 @@ fn rewrite_atom(
             if taxonomy.unsatisfiable.contains(&sup) {
                 return Ok(QueryAtom::Subsumed {
                     var: var.clone(),
-                    superclass: "owl:Nothing".into(),
+                    superclass: OWL_NOTHING_IRI.into(),
                 });
             }
             Ok(atom.clone())
