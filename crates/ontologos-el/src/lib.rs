@@ -29,7 +29,7 @@ use ontologos_core::{Ontology, Taxonomy};
 use thiserror::Error;
 
 pub use engine::ElEngine;
-pub use reasoner::{classify_reasoner, classify_with_report};
+pub use reasoner::{classify_reasoner, classify_routed, classify_with_report};
 pub use session::{ElSession, take_el_session};
 pub use trace::ElReport;
 

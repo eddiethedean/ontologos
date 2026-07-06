@@ -114,7 +114,7 @@ pub(crate) fn sub_object_properties(
 fn classify_el(reasoner: &mut Reasoner) -> Result<ClassifyOutcome> {
     if reasoner.config().incremental || reasoner.profile() == Profile::El {
         Ok(ClassifyOutcome::Taxonomy(
-            ontologos_el::classify_with_report(reasoner)?.taxonomy,
+            ontologos_el::classify_routed(reasoner)?.taxonomy,
         ))
     } else {
         let report = ElClassifier::new()
