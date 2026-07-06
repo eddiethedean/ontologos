@@ -1,19 +1,24 @@
 # Prerequisites
 
-OntoLogos is a **Rust workspace** with optional **Python bindings**. Pick the row that matches your task. Install channels: [Install and channels](install-channels.md).
+OntoLogos is a **Rust workspace** with optional **Python bindings** and **source-build native bindings** (v1.1.0 on `main`). Pick the row that matches your task. Install channels: [Install and channels](install-channels.md).
 
 Unfamiliar with OWL terms? See the [Glossary](glossary.md).
 
 ## Decision table
 
-| Task | Rust | Python | Clone repo? |
-|------|------|--------|-------------|
-| Embed reasoning in a Rust app (crates.io) | **1.88+** | — | No |
-| `pip install ontologos` | — | **3.10+** (wheels on Linux/macOS/Windows) | No |
-| Build `ontologos-cli` from source | **1.88+** | — | Yes |
-| Run full conformance / benchmarks | **1.88+** | 3.10+ optional | Yes + `./benchmarks/scripts/download.sh` |
-| MSRV CI gate | **1.88** exactly | — | Yes |
-| Contribute (fmt, clippy, tests) | **stable** (1.88+) | 3.10+ for `ontologos-py` | Yes |
+| Task | Rust | Python | Other toolchain | Clone repo? |
+|------|------|--------|-----------------|-------------|
+| Embed reasoning in a Rust app (crates.io) | **1.88+** | — | — | No |
+| `pip install ontologos` | — | **3.10+** (wheels on Linux/macOS/Windows) | — | No |
+| Build `ontologos-cli` from source | **1.88+** | — | — | Yes |
+| Build **Node.js** bindings | **1.88+** | — | **Node.js 18+**, npm | Yes |
+| Build **Java** bindings | **1.88+** | — | **JDK 17+**, **Maven 3.9+** | Yes |
+| Build **.NET** bindings | **1.88+** | — | **.NET 8+** SDK | Yes |
+| Build **C/C++** bindings | **1.88+** | — | C/C++ compiler, CMake (optional) | Yes |
+| Build **WASM** bindings | **1.88+** + `wasm32-unknown-unknown` | — | **wasm-pack**, Node.js | Yes |
+| Run full conformance / benchmarks | **1.88+** | 3.10+ optional | JDK 17+ for Tier C (optional) | Yes + `./benchmarks/scripts/download.sh` |
+| MSRV CI gate | **1.88** exactly | — | — | Yes |
+| Contribute (fmt, clippy, tests) | **stable** (1.88+) | 3.10+ for `ontologos-py` | Per binding row above | Yes |
 
 **MSRV:** Rust **1.88** (workspace `Cargo.toml` `rust-version`; CI `msrv` job enforces exactly 1.88).
 
@@ -49,6 +54,12 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos --help
 ```
 
+Tagged install: [CLI installation](../getting-started/cli-install.md) (`--tag v1.1.0`).
+
+## Native bindings (source-build)
+
+See [Bindings overview](bindings-overview.md) for end-to-end build steps per language.
+
 ## Benchmark corpora (clone only)
 
 Family ontology is vendored. Pizza and other HermiT fixtures:
@@ -64,6 +75,7 @@ Family ontology is vendored. Pizza and other HermiT fixtures:
 | Protégé installed | Optional for authoring OWL; not required to run OntoLogos |
 | Java / HermiT | OntoLogos does not embed HermiT; conformance tests compare against ported fixtures |
 | Every crate on crates.io | `ontologos-cli` and `ontologos-conformance` are source-build only |
+| npm/Maven/NuGet packages | Bindings are source-build until v1.1.0 publishes |
 
 ## Next step
 

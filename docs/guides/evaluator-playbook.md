@@ -112,7 +112,7 @@ export ONTOLOGOS_DL_BUDGET_SECS=30
 $CLI consistent --profile dl --budget-secs 30 pizza.owl
 ```
 
-Python (PyPI **1.0.0**):
+Python (PyPI **1.1.0**):
 
 ```python
 from ontologos import Reasoner

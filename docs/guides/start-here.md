@@ -1,6 +1,16 @@
 # Start here
 
-**Before you start:** See [Prerequisites](prerequisites.md) for Rust version and tooling. Unfamiliar with OWL terms? See the [Glossary](glossary.md). You do **not** need to clone this repository to try OntoLogos — `pip install ontologos` or crates.io dependencies are enough for most workflows. Install channels: [Install and channels](install-channels.md).
+**Before you start:** Read [Before you integrate](before-you-integrate.md). See [Prerequisites](prerequisites.md) for Rust version and tooling. Unfamiliar with OWL terms? See the [Glossary](glossary.md) and [When not to use OntoLogos](when-not-to-use.md). You do **not** need to clone this repository to try OntoLogos — `pip install ontologos` or crates.io dependencies are enough for most workflows. Install channels: [Install and channels](install-channels.md).
+
+## New to OWL?
+
+1. [Glossary](glossary.md) — classes, profiles, subsumption
+2. [When not to use OntoLogos](when-not-to-use.md) — honest fit check
+3. [Python guide](python.md) or [Rust quickstart](../getting-started/index.md#cratesio-only-no-clone) — five-minute try
+
+## Bindings (Node, Java, .NET, C, WASM)
+
+Source-build from a clone — see [Bindings overview](bindings-overview.md). Rust and Python are on crates.io/PyPI at **v1.1.0**.
 
 Pick the path that matches how you work. Each link is a single next step—not the full documentation map.
 
@@ -53,7 +63,7 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 **Evaluate with Python only (no Rust, no clone):**
 
 ```bash
-pip install ontologos==1.0.0
+pip install ontologos==1.1.0
 curl -L -o family.owl \
   https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
 python -c "from ontologos import Reasoner; r=Reasoner(path='family.owl',profile='rl').classify(); print(r)"
@@ -71,7 +81,7 @@ python -c "from ontologos import Reasoner; r=Reasoner(path='family.owl',profile=
 
 ## I am upgrading an existing integration
 
-[Upgrade to latest](../migration/index.md) — published **v1.0.0** on crates.io and PyPI.
+[Upgrade to latest](../migration/index.md) — **v1.1.0** published on crates.io and PyPI; see [v1.0.x → v1.1.0](../migration/v1.0.x-to-v1.1.0.md) if upgrading from 1.0.
 
 ## Common questions
 

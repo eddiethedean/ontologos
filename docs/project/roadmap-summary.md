@@ -1,32 +1,34 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest tagged release:** **v1.0.0** · See [Release status](release-status.md) for crates.io, PyPI, and parity metrics.
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest release:** **v1.1.0** on crates.io/PyPI · See [Release status](release-status.md).
 
-## v1.0.0 shipped (2026-07-03)
+## v1.1.0 shipped (2026-07-04)
 
-**`parity_pct = 100%`** — HermiT parity milestone on gated corpora. Published to crates.io (12 crates) and PyPI.
-
-| Phase | Status | Milestone |
-|-------|--------|-----------|
-| 0–9 | Complete | Catalog, WG, expressivity, publish + tag **v1.0.0** |
-
-Verify: `bash benchmarks/scripts/check-hermit-parity-phases.sh` · `bash benchmarks/scripts/hermit-burndown.sh status`
-
-## Shipped in v1.0.0
+Multi-language native bindings over shared FFI.
 
 | Area | Status |
 |------|--------|
-| OWL 2 DL (`ontologos-dl`) | **Stable** on crates.io/PyPI |
-| DLSafe SWRL | **Stable** |
-| Python `profile="dl"` / `profile="swrl"` | **Stable** |
-| HermiT conformance @ 30s | **1048** active tests, blocking CI |
-| JSON snapshot v3 | Writers on 1.0.0; v2 read supported |
+| Shared FFI (`ontologos-ffi`) | **Shipped** |
+| Java / .NET / C/C++ / Node / WASM | **Source-build** with CI smoke |
+| Rust / Python API | **Unchanged** — bump pins to `"1.1.0"` |
 
-## After 1.0
+See [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md) and [Bindings overview](../guides/bindings-overview.md).
+
+## v1.0.0 (2026-07-03)
+
+**`parity_pct = 100%`** — HermiT parity milestone on gated corpora.
+
+| Area | Status |
+|------|--------|
+| OWL 2 DL (`ontologos-dl`) | **Stable** |
+| DLSafe SWRL | **Stable** |
+| HermiT conformance @ 30s | **1048** active tests, blocking CI |
+
+## After 1.1
 
 | Version | Theme |
 |---------|-------|
-| **1.1–1.2** | Performance, CLI polish |
+| **1.2** | Performance, CLI polish, binding registry publish |
 | **1.3–1.4** | Ontocode LSP, Python maturity |
 | **2.0** | Beyond HermiT (Konclude-class performance, breaking API where needed) |
 

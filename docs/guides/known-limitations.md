@@ -35,7 +35,7 @@ OntoLogos is library-first orchestration for Rust/Python services. It does not p
 
 ## No OWL export
 
-After reasoning, persist results with `Ontology::to_json()` (format v3 on workspace 1.0.0; v2 still readable). There is no built-in OWL/RDF serializer — retain the source OWL file plus processing metadata.
+After reasoning, persist results with `Ontology::to_json()` (format v3 on published **1.0.0**; v2 still readable). There is no built-in OWL/RDF serializer — retain the source OWL file plus processing metadata.
 
 ## Rust integration
 
@@ -43,7 +43,7 @@ Use `ontologos_facade::classify` — not `Reasoner::classify()` on core. See [Ru
 
 ## Profile availability
 
-Production profiles on **PyPI / crates.io 1.0.0**: `rdfs`, `rl`, `el`, `auto`, `dl`, and `swrl`. Preview: `alc`, `dl-preview`.
+Production profiles on **PyPI / crates.io** (published **1.0.0**): `rdfs`, `rl`, `el`, `auto`, `dl`, and `swrl`. Preview: `alc`, `dl-preview`.
 
 Full matrix: [Profile stability](profile-stability.md).
 

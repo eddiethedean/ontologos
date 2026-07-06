@@ -18,7 +18,7 @@ See [Prerequisites](prerequisites.md).
 The CLI is **not on crates.io**. See [CLI installation](../getting-started/cli-install.md).
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.0.0 ontologos-cli
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli
 ```
 
 Or build from a clone: `cargo build -p ontologos-cli --release` → `./target/release/ontologos`.
@@ -99,3 +99,25 @@ See [Preview profiles](preview-profiles.md).
 ## RDFS does not expand `EquivalentClasses`
 
 RDFS materializes primarily `subClassOf` transitive closure via reasonable. Some RDFS rules (`subPropertyOf` transitivity, domain/range inheritance) have [upstream gaps](../reference/reasonable-limits.md). Named `EquivalentClasses` axioms are expanded into mutual subsumption by `ontologos-rl` during saturation. ABox `rdf:type` propagation is handled by RL rules when using `ontologos-rl` or Python `profile="rl"`.
+
+## What version am I running?
+
+| Surface | Command |
+|---------|---------|
+| **Python** | `python -c "import ontologos; print(ontologos.__version__)"` |
+| **CLI** | `ontologos --version` |
+| **Rust dependency** | `cargo tree -p ontologos-core \| head -1` |
+
+Expected from registries today: **1.0.0**. See [Release status](../project/release-status.md).
+
+## Binding build failures
+
+| Symptom | Fix |
+|---------|-----|
+| Java: `UnsatisfiedLinkError` / cannot load native library | Build JNI first: `cargo build -p ontologos-jni --release`. Set `java.library.path` or `-Dontologos.native.path=…` — see [Java guide](java.md) |
+| Node: `Cannot find module 'ontologos'` or addon load error | Run `npm run build` in `crates/ontologos-node` after any Rust change |
+| WASM: bundler cannot resolve `.wasm` | Follow wasm-bindgen docs for your bundler — see [WASM guide](wasm.md) |
+| .NET: `DllNotFoundException` | `cargo build -p ontologos-dotnet --release` before `dotnet test` |
+| C/C++: linker error for `libontologos_c` | `cargo build -p ontologos-c --release`; add `-L target/release` |
+
+Full binding matrix: [Bindings overview](bindings-overview.md).

@@ -1,5 +1,7 @@
 # SWRL quick start
 
+
+--8<-- "snippets/before-integrate-callout.md"
 Run **DLSafe SWRL** rules with OWL 2 DL on **v1.1.0** (stable on crates.io and PyPI).
 
 Profile matrix: [Profile stability](../guides/profile-stability.md). Constructs: [Supported constructs](../reference/supported-constructs.md).

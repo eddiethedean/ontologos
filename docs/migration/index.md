@@ -18,13 +18,13 @@
 
 **Python:** `pip install -U ontologos`. Same `Reasoner` / `Ontology` API.
 
-**New bindings:** Java (JNI), .NET (P/Invoke), C/C++ (cdylib), Node (N-API), WASM — see [Choosing an API](../guides/choosing-an-api.md).
+**New bindings:** Java (JNI), .NET (P/Invoke), C/C++ (cdylib), Node (N-API), WASM — see [Bindings overview](../guides/bindings-overview.md).
 
 **CLI:** `classify --profile auto|el|rl|rdfs|dl|swrl`, `materialize`, `explain`, `query`.
 
-## v1.0.0 at a glance (prior major)
+## v1.0.0 at a glance (prior release)
 
-**Breaking changes from 0.9.x:** JSON writers emit v3; shim crates removed (`ontologos-rdfs` → `ontologos-rl`, `ontologos-query` → `ontologos-ql`). See [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md).
+HermiT parity milestone — OWL 2 DL + SWRL stable. See [v0.9.x → v1.0.0](v0.9.x-to-v1.0.0.md) for breaking changes from 0.9.x.
 
 ## Historical migrations
 

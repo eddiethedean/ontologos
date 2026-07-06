@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2026-07-04
 
-> **STAGED — NOT PUBLISHED:** Workspace version **1.1.0** on `main`. crates.io and PyPI remain **1.0.0** until annotated **v1.1.0** publish completes. See [Release status](docs/project/release-status.md).
-
 ### Added
 
 - **`ontologos-ffi`:** shared stable C ABI for native language bindings (ontology, builder, reasoner, error handling)

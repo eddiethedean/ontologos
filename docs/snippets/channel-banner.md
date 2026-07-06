@@ -7,3 +7,5 @@
 > | `pip install ontologos` or `ontologos-* = "1.1.0"` | EL, RL, RDFS, **DL**, **SWRL** |
 >
 > Preview profiles (`alc`, `dl-preview`) remain experimental. See [Profile stability](/guides/profile-stability/).
+>
+> Node, Java, .NET, C/C++, and WASM bindings: [Bindings overview](/guides/bindings-overview/) (source-build).

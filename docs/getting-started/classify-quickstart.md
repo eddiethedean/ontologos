@@ -1,5 +1,7 @@
 # Classify in five minutes (Rust)
 
+
+--8<-- "snippets/before-integrate-callout.md"
 Run OWL **classification** from crates.io — no repository clone. Uses `ontologos-facade::classify`.
 
 !!! info "The one rule for Rust integrators"
@@ -9,7 +11,7 @@ Run OWL **classification** from crates.io — no repository clone. Uses `ontolog
 ## Prerequisites
 
 - Rust **1.88+** (`rustc --version` must be >= 1.88.0)
-- OntoLogos crates — see [Release status](../project/release-status.md) for published **v1.1.0** pins
+- OntoLogos crates — see [Release status](../project/release-status.md) for published **v1.0.0** pins
 
 ```bash
 curl -L -o family.owl \

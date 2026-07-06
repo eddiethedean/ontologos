@@ -1,6 +1,6 @@
 # Examples gallery
 
-Copy-paste workflows for Rust and Python. Install pins use **published v1.1.0** unless noted.
+Copy-paste workflows for Rust and Python. Install pins use **v1.1.0** unless noted.
 
 Workflow pages: [DL evaluation](dl-evaluation.md) · [Contract tests](contract-tests.md)
 
@@ -132,7 +132,7 @@ ontologos explain --profile el pizza.owl
 
 ## OWL DL evaluation (v1.1.0)
 
-Available on PyPI and crates.io **1.1.0**.
+Available on PyPI and crates.io **1.0.0**.
 
 --8<-- "snippets/pizza-owl-download.md"
 

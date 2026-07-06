@@ -1,5 +1,7 @@
 # OWL EL Classification
 
+
+--8<-- "snippets/before-integrate-callout.md"
 Completion-based **OWL EL taxonomy classification** via [`ontologos-el`](https://docs.rs/ontologos-el/1.1.0). The engine computes direct and indirect subsumptions, equivalence clusters, and unsatisfiable classes from mapped EL TBox axioms.
 
 ## Prerequisites

@@ -1,6 +1,6 @@
 # Python Guide
 
-Python bindings for OntoLogos ship on PyPI as **`ontologos==1.0.0`** via PyO3 (`pip install ontologos`). Install channels: [Install and channels](install-channels.md). Limitations: [Known limitations](known-limitations.md).
+Python bindings for OntoLogos ship on [PyPI](https://pypi.org/project/ontologos/) via PyO3 (`pip install ontologos`). See [Release status](../project/release-status.md) for the current version. Install channels: [Install and channels](install-channels.md). Limitations: [Known limitations](known-limitations.md).
 
 OntoLogos is an **orchestration layer**: the Python API routes to the same Rust facades as the CLI
 (`ontologos-el` in-house EL, `ontologos-rl` including RDFS via `ontologos_rl::rdfs` → reasonable). Power users who need
@@ -102,7 +102,7 @@ Constructs a reasoner from a file path **or** an in-memory `Ontology`. Exactly o
 
 **Profiles** (canonical status: [Profile stability matrix](profile-stability.md)):
 
-| Profile | Status on PyPI 1.0.0 | `classify()` return value |
+| Profile | Status on PyPI | `classify()` return value |
 |---------|----------------------|---------------------------|
 | `"rdfs"` | Stable | Materialization report dict |
 | `"rl"` | Stable | Materialization report dict (includes RL inferences) |
@@ -216,7 +216,7 @@ Read-only dict after load:
 | `skipped_axiom_count` | `int` | Logical components not mapped |
 | `logical_axiom_count` | `int` | Mapped + skipped |
 
-## Limitations (v1.0.0)
+## Limitations (v1.1.0)
 
 | Capability | Rust | Python |
 |------------|------|--------|

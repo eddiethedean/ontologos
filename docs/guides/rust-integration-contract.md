@@ -52,9 +52,9 @@ if consistency.complete && consistency.consistent {
 
 ```toml
 [dependencies]
-ontologos-core = "1.0.0"
-ontologos-parser = "1.0.0"
-ontologos-facade = "1.0.0"
+ontologos-core = "1.1.0"
+ontologos-parser = "1.1.0"
+ontologos-facade = "1.1.0"
 ```
 
 ## When to skip the facade

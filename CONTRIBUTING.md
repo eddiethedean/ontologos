@@ -1,6 +1,6 @@
 # Contributing to OntoLogos
 
-Thank you for your interest in contributing. OntoLogos is in active development: **v1.0.0** is the latest published release on crates.io/PyPI. High-impact contributions include conformance, Python bindings, documentation, and incremental reasoning polish.
+Thank you for your interest in contributing. OntoLogos is in active development: **v1.1.0** is the current release on crates.io/PyPI and the **`main`** workspace. See [Release status](docs/project/release-status.md). High-impact contributions include conformance, bindings, documentation, and incremental reasoning polish.
 
 ## Prerequisites
 
@@ -60,6 +60,8 @@ pip install -r docs/requirements.txt
 Or `NO_MKDOCS_2_WARNING=1 mkdocs serve` after running the check scripts manually.
 
 See [docs/readthedocs.md](docs/readthedocs.md) for import instructions and local builds (also linked from [Contributing](docs/project/contributing.md)).
+
+**FAQ and CONTRIBUTING:** Edit the root [`FAQ.md`](FAQ.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md) only — the docs site includes them via `include-markdown`. Do not duplicate content in `docs/project/faq.md`.
 
 When changing user-facing docs, run the version and snippet consistency checks:
 
@@ -142,7 +144,7 @@ pytest tests/ -q
 1. **Scope:** One logical change per PR when possible.
 2. **Tests:** Add or update tests for behavior changes (core, parser, profile, CLI, Python as appropriate).
 3. **Docs:** Update README, CHANGELOG, or `docs/` when user-visible behavior changes.
-4. **Version pins in docs:** Published install blocks must use **1.0.0** (`docs/scripts/check-doc-versions.sh` enforces this). Migration guides may reference older versions for upgrade paths.
+4. **Version pins in docs:** Published install blocks must use **1.1.0** (`docs/scripts/check-doc-versions.sh` enforces this). Migration guides may reference older versions for upgrade paths.
 5. **Breaking changes:** Note them in CHANGELOG under `[Unreleased]` or the target version.
 6. **No `unsafe`:** The workspace forbids unsafe code.
 
@@ -199,7 +201,7 @@ Catalog mechanics: [tests/hermit/README.md](tests/hermit/README.md).
 
 ## Releases
 
-**Next publish:** follow [release-1.0-checklist](https://github.com/eddiethedean/ontologos/blob/main/docs/project/release-1.0-checklist.md) for future releases. See [migration hub](docs/migration/index.md) for upgrade paths.
+**Next publish:** follow [release-1.1-checklist](docs/project/release-1.1-checklist.md). See [migration hub](docs/migration/index.md) for upgrade paths.
 
 ### Pre-release checks
 
@@ -210,15 +212,16 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace --exclude ontologos-conformance --exclude ontologos-contract --locked
 cargo test -p ontologos-contract --release --locked
 ./benchmarks/scripts/check-1.0-release-gates.sh
+bash scripts/ci-bindings.sh
+bash scripts/ci-node.sh
 ./docs/scripts/check-doc-versions.sh
+./docs/scripts/check-doc-snippets.sh
 cargo publish -p ontologos-core --dry-run
 ```
 
 Create or update [`.github/release/vX.Y.Z.md`](.github/release/) with highlights, version bumps, migration guide link, and pre-release checklist.
 
 `cargo publish --dry-run` for downstream crates requires prior crates at the new version on crates.io (or use `cargo package -p ontologos-core --allow-dirty` per crate in publish order). On release, CI publishes in dependency order via [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh).
-
-After tagging, run [post-1.0-doc-update](https://github.com/eddiethedean/ontologos/blob/main/docs/project/post-1.0-doc-update.md) to collapse dual-channel messaging.
 
 Optional full local packaging check:
 
@@ -230,14 +233,14 @@ done
 
 Then:
 
-1. Bump `version` in workspace [Cargo.toml](Cargo.toml) if not already set (workspace is **1.0.1** on `main`).
-2. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated version section and empty `[Unreleased]`.
-3. Update version pins in `docs/getting-started/`, [FAQ.md](FAQ.md), and run `./docs/scripts/check-doc-versions.sh`.
+1. Confirm workspace [Cargo.toml](Cargo.toml) `version = "1.1.0"`.
+2. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated `[1.1.0]` section and empty `[Unreleased]`.
+3. Run `./docs/scripts/check-doc-versions.sh` and `./docs/scripts/check-doc-snippets.sh`.
 4. Commit release prep on `main`.
-5. Create an annotated tag: `git tag -a v1.0.0 -m "OntoLogos v1.0.0"`
-6. Push commit and tag: `git push origin main && git push origin v1.0.0`
+5. Create an annotated tag: `git tag -a v1.1.0 -m "OntoLogos v1.1.0"`
+6. Push commit and tag: `git push origin main && git push origin v1.1.0`
 7. The [release workflow](.github/workflows/release.yml) runs when the tag is pushed (requires GitHub secrets below).
-8. Create a GitHub Release from [`.github/release/v1.0.0.md`](.github/release/v1.0.0.md).
+8. Create a GitHub Release from [`.github/release/v1.1.0.md`](.github/release/v1.1.0.md).
 
 ### Release secrets
 

@@ -5,9 +5,9 @@
 [![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/en/latest/guides/python/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](https://github.com/eddiethedean/ontologos/blob/main/LICENSE-MIT)
 
-Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a Rust-native OWL reasoner for **RDFS**, **OWL RL**, **OWL EL**, **OWL 2 DL**, and **SWRL** on PyPI **1.0.0**.
+Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a Rust-native OWL reasoner for **RDFS**, **OWL RL**, **OWL EL**, **OWL 2 DL**, and **SWRL** on [PyPI](https://pypi.org/project/ontologos/) (**1.1.0** published).
 
-> **Install:** `pip install ontologos` (v1.0.0). Production profiles: `rdfs`, `rl`, `el`, `auto`, `dl`, `swrl`. Preview: `alc`, `dl-preview`. See [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html).
+> **Install:** `pip install ontologos`. Production profiles: `rdfs`, `rl`, `el`, `auto`, `dl`, `swrl`. Preview: `alc`, `dl-preview`. See [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/) and [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html).
 
 Load `.owl` / `.ttl` files or build ontologies in memory, run the same profile engines as the CLI, and export taxonomies to pandas or Polars. Powered by PyO3 and the stable Python ABI (`abi3`).
 
@@ -16,7 +16,7 @@ Load `.owl` / `.ttl` files or build ontologies in memory, run the same profile e
 ## Features
 
 - **File or in-memory** — `Reasoner(path=...)` or `Ontology` / `OntologyBuilder`
-- **Profiles** — `"rdfs"`, `"rl"`, `"el"`, `"auto"`, `"dl"`, `"swrl"` on **PyPI 1.0.0**; `"dl-preview"`, `"alc"` are preview
+- **Profiles** — `"rdfs"`, `"rl"`, `"el"`, `"auto"`, `"dl"`, `"swrl"` on **PyPI**; `"dl-preview"`, `"alc"` are preview
 - **Classify** — RDFS/RL materialization reports or EL taxonomy dicts
 - **Explain** — proof graph dicts with IRI-resolved conclusions (EL full traces)
 - **Incremental** — multi-pass `add_subclass_of` / `remove_subclass_of` with `incremental=True`
@@ -91,7 +91,7 @@ reasoner = Reasoner(ontology=ontology, profile="el")
 taxonomy = reasoner.classify()
 ```
 
-Load from JSON dict instead of the builder (v2 or v3; writers on workspace 1.0.0 emit v3):
+Load from JSON dict instead of the builder (v2 or v3; writers on workspace 1.1.0 emit v3):
 
 ```python
 from ontologos import Ontology, Reasoner

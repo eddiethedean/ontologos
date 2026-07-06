@@ -1,5 +1,7 @@
 # CLI installation
 
+
+--8<-- "snippets/before-integrate-callout.md"
 The `ontologos` command-line tool is **not published to crates.io**. Install from git or build from a clone.
 
 Install channels: [Install and channels](../guides/install-channels.md). Command reference: [CLI](../reference/cli.md).
@@ -18,7 +20,7 @@ If `rustc` is too old, see [Troubleshooting — rustc version](../guides/trouble
 
 ## Option 1 — Install from git (recommended)
 
-Tagged release (matches PyPI/crates.io **1.1.0**):
+Tagged release (matches PyPI/crates.io **1.0.0**):
 
 ```bash
 cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli

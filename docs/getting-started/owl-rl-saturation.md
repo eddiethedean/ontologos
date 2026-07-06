@@ -1,5 +1,7 @@
 # OWL RL Saturation
 
+
+--8<-- "snippets/before-integrate-callout.md"
 OWL 2 RL forward-chaining via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.1.0). The engine runs RDFS materialization first, then applies RL TBox and ABox rules until a fixed point.
 
 ## Prerequisites

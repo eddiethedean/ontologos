@@ -2,35 +2,75 @@
 
 --8<-- "snippets/channel-banner.md"
 
-Single source of truth for version and distribution channels. Update this page when tagging releases.
+**Single source of truth** for version and distribution channels. Update this page when tagging releases.
 
 ## Current channels
 
 | Channel | Version | Notes |
 |---------|---------|-------|
-| **crates.io** (library crates) | **1.1.0** (staged) | Publish with annotated **v1.1.0** tag |
-| **PyPI** | **1.1.0** (staged) | `pip install ontologos` after publish |
-| **Latest git tag** | **v1.0.0** | **v1.1.0** annotated tag next |
+| **crates.io** (12 library crates) | **1.1.0** | Publish with annotated **v1.1.0** tag |
+| **PyPI** | **1.1.0** | `pip install ontologos` |
+| **docs.rs** | **1.1.0** | Matches crates.io |
+| **Latest git tag** | **v1.1.0** | Annotated release on GitHub |
 | **`main` branch** | **1.1.0** workspace | Multi-language bindings + shared FFI |
 
 Published library crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
 **Source-build / PyPI wheels:** CLI (`ontologos-cli`), Python (`ontologos-py`), Node (`ontologos-node`), WASM (`ontologos-wasm`), Java (`ontologos-jni`), .NET (`ontologos-dotnet`), C/C++ (`ontologos-c` + `ontologos-ffi`).
 
+## What version am I running?
+
+| Surface | Command |
+|---------|---------|
+| **Python** | `python -c "import ontologos; print(ontologos.__version__)"` |
+| **CLI** | `ontologos --version` |
+| **Rust dependency** | `cargo tree -p ontologos-core \| head -1` |
+| **crates.io latest** | [crates.io/crates/ontologos-core](https://crates.io/crates/ontologos-core) |
+| **PyPI latest** | [pypi.org/project/ontologos](https://pypi.org/project/ontologos/) |
+
+Expected: **1.1.0** from registries after publish.
+
 ## v1.1.0 highlights
 
 | Area | What's new |
 |------|------------|
 | **Shared FFI** | `ontologos-ffi` — stable C ABI for native bindings |
-| **Java** | JNI + Maven (`dev.ontologos:ontologos`) |
-| **.NET** | P/Invoke + C# API (`Ontologos`) |
-| **C/C++** | `libontologos_c` + `ontologos.h` / `ontologos.hpp` |
-| **Node / WASM** | N-API and wasm-pack bindings over `ontologos-js` |
-| **CI** | Unified `scripts/ci-bindings.sh` and `scripts/ci-node.sh` |
+| **Java** | JNI + Maven (`dev.ontologos:ontologos`) — source-build |
+| **.NET** | P/Invoke + C# API — source-build |
+| **C/C++** | `libontologos_c` + headers — source-build |
+| **Node / WASM** | N-API and wasm-pack over `ontologos-js` |
+| **CI** | `scripts/ci-bindings.sh`, `scripts/ci-node.sh` |
 
 See [CHANGELOG](../../CHANGELOG.md) and [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md).
 
-## HermiT parity snapshot (v1.1.0, 2026-07-04)
+## Install pins
+
+**Rust:**
+
+```toml
+ontologos-core = "1.1.0"
+ontologos-parser = "1.1.0"
+ontologos-facade = "1.1.0"
+# … bump all ontologos-* crates together
+```
+
+**Python:**
+
+```bash
+pip install ontologos
+# or pin explicitly:
+pip install ontologos==1.1.0
+```
+
+**CLI (from git — not on crates.io):**
+
+```bash
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli
+```
+
+Requires **Rust 1.88+**.
+
+## HermiT parity snapshot (2026-07-04)
 
 ```bash
 bash benchmarks/scripts/hermit-burndown.sh status
@@ -44,13 +84,6 @@ bash benchmarks/scripts/check-hermit-parity-phases.sh
 | Catalog `parity_pct` | **100%** (`java_planned = 0`, `wg_planned = 0`) |
 | Composite `true_parity_pct` | **100%** (blocking CI) |
 | `in_scope_total` | **889** |
-| Active conformance tests | **1048** / **1049** total (**1** hand-written `#[ignore]` in `hermit_owllink.rs`) |
-| Generated catalog `#[ignore]` | **0** (`check-hermit-ignore-budget.sh` ceiling **0**) |
-| Runnable Java axiom + WG @ 30s | **450** + **428** (blocking CI, full suite) |
-| Promoted IDs (`phase9_closure`) | **400** axiom + **428** WG |
-| DL OFN pass rate @ 30s | **277/277** |
-| Documented CE exclusions | **13** Ian/ComplexConcept + `testIanBackjumping3` (**70** `excluded` catalog cases) |
-| `check-1.0-release-gates.sh` | **Green** (blocking in CI) |
 
 Metric definitions: [Evaluator scope](../guides/evaluator-scope.md).
 
@@ -61,34 +94,11 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 | Area | Status |
 |------|--------|
 | OWL EL, RL, RDFS | **Stable** on **v1.1.0** |
-| OWL DL (`--profile dl`) | **Stable** on **v1.1.0** |
-| SWRL | **Stable** on **v1.1.0** |
+| OWL DL (`--profile dl`) | **Stable** — validate on your corpus |
+| SWRL | **Stable** |
 | ALC / `dl-preview` | **Preview** |
-| Python, Node, Java, .NET, C/C++, WASM bindings | **Stable** (source-build; PyPI for Python) |
-
-## Install pins
-
-**Rust:**
-
-```toml
-ontologos-core = "1.1.0"
-ontologos-parser = "1.1.0"
-# … bump all ontologos-* crates together
-```
-
-**Python:**
-
-```bash
-pip install ontologos==1.1.0
-```
-
-**CLI (from git):**
-
-```bash
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli
-```
-
-Requires **Rust 1.88+**.
+| Python | **Stable** on PyPI |
+| Node, Java, .NET, C/C++, WASM | **Stable** (source-build) |
 
 ## Release history
 
@@ -97,11 +107,9 @@ Requires **Rust 1.88+**.
 | [v1.1.0](https://github.com/eddiethedean/ontologos/releases/tag/v1.1.0) | Multi-language bindings (Java, .NET, C/C++, shared FFI) |
 | [v1.0.0](https://github.com/eddiethedean/ontologos/releases/tag/v1.0.0) | HermiT parity milestone — OWL 2 DL + SWRL |
 | [v0.9.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.9.0) | Python ecosystem |
-| [v0.8.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.8.0) | Incremental reasoning |
-| [v0.7.0](https://github.com/eddiethedean/ontologos/releases/tag/v0.7.0) | Bridge adapters |
 
 Full notes: [Release notes](release-notes.md) · [CHANGELOG](changelog.md)
 
 ## Maintainer tagging
 
-See [Contributing — Release checklist](../../CONTRIBUTING.md) for the full tag and publish workflow.
+See [Contributing — Release checklist](../../CONTRIBUTING.md) and [v1.1.0 release checklist](release-1.1-checklist.md).

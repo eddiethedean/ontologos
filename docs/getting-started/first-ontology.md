@@ -1,5 +1,7 @@
 # First Ontology
 
+
+--8<-- "snippets/before-integrate-callout.md"
 This guide walks through building a small ontology with the builder API — **no repository clone required**.
 
 ## Prerequisites

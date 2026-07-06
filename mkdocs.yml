@@ -67,11 +67,13 @@ nav:
   - Home: index.md
   - Getting started:
       - Start here: guides/start-here.md
+      - Before you integrate: guides/before-you-integrate.md
       - Install and channels: guides/install-channels.md
+      - Release status: project/release-status.md
       - CLI installation: getting-started/cli-install.md
       - Known limitations: guides/known-limitations.md
       - Prerequisites: guides/prerequisites.md
-      - Five-minute Rust guide: getting-started/index.md
+      - Rust quickstart (5 min): getting-started/index.md
       - Classify quick start: getting-started/classify-quickstart.md
       - Load an OWL file: getting-started/load-owl-file.md
       - First ontology: getting-started/first-ontology.md
@@ -80,6 +82,14 @@ nav:
           - OWL RL saturation: getting-started/owl-rl-saturation.md
           - OWL EL classification: getting-started/owl-el-classification.md
           - SWRL: getting-started/swrl.md
+  - Bindings:
+      - Overview: guides/bindings-overview.md
+      - Python: guides/python.md
+      - Node.js: guides/node.md
+      - Java: guides/java.md
+      - .NET: guides/dotnet.md
+      - C/C++: guides/c-cpp.md
+      - WebAssembly: guides/wasm.md
   - Examples:
       - Gallery: examples/index.md
       - DL evaluation: examples/dl-evaluation.md
@@ -93,12 +103,6 @@ nav:
       - Evaluator scope: guides/evaluator-scope.md
       - Evaluator playbook: guides/evaluator-playbook.md
       - Profile detection: guides/profile-detection.md
-      - Python: guides/python.md
-      - Node.js: guides/node.md
-      - Java: guides/java.md
-      - .NET: guides/dotnet.md
-      - C/C++: guides/c-cpp.md
-      - WebAssembly: guides/wasm.md
       - Glossary: guides/glossary.md
       - Incremental reasoning: guides/incremental-reasoning.md
       - Protégé axiom counts: guides/protege-axiom-counts.md
@@ -124,11 +128,17 @@ nav:
       - OWL imports: reference/owl-imports.md
       - Parser API: reference/parser.md
       - Python API: reference/python.md
+      - Node.js API: reference/node.md
+      - Java API: reference/java.md
+      - .NET API: reference/dotnet.md
+      - C/C++ API: reference/c.md
+      - WASM API: reference/wasm.md
       - Reasonable adapter limits: reference/reasonable-limits.md
       - Explain API: reference/explain.md
       - Query API: reference/query.md
       - QL API: reference/ql.md
       - JSON snapshot v3: json-snapshot-v3.md
+      - JSON snapshot v4 (draft): json-snapshot-v4.md
       - JSON snapshot v2 (legacy): json-snapshot-v2.md
       - RL rules: reference/rl-rules.md
       - Conformance: reference/conformance.md
@@ -157,6 +167,7 @@ nav:
   - Project:
       - FAQ: project/faq.md
       - Release status: project/release-status.md
+      - v1.1.0 release checklist: project/release-1.1-checklist.md
       - Release notes: project/release-notes.md
       - Roadmap summary: project/roadmap-summary.md
       - Changelog: project/changelog.md

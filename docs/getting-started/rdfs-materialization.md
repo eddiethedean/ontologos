@@ -1,5 +1,7 @@
 # RDFS Materialization
 
+
+--8<-- "snippets/before-integrate-callout.md"
 RDFS TBox materialization via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.1.0) (`ontologos_rl::rdfs`): transitive `subClassOf` / `subPropertyOf` closure and object-property domain/range inheritance.
 
 > **v0.9.x legacy:** The standalone `ontologos-rdfs` crate was removed in **1.1.0**. Use `ontologos_rl::rdfs::RdfsEngine` — see [v0.9.x → v1.0.0](../migration/v0.9.x-to-v1.0.0.md).

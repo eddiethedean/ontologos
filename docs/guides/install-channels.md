@@ -1,6 +1,6 @@
 # Install and release channels
 
-Single source of truth for **what you can install today**.
+Single source of truth for **what you can install today**. Canonical version table: [Release status](../project/release-status.md).
 
 --8<-- "snippets/channel-banner.md"
 
@@ -11,13 +11,13 @@ Single source of truth for **what you can install today**.
 | Embed in Rust (crates.io) | `ontologos-* = "1.1.0"` in `Cargo.toml` | **EL, RL, RDFS, DL, SWRL** |
 | Use from Python (PyPI) | `pip install ontologos` | **EL, RL, RDFS, DL, SWRL** |
 | Use from Node.js | Build `crates/ontologos-node` | Same as Python |
-| Use from Java / .NET / C/C++ | Build binding crate (see guides) | Same as Python |
+| Use from Java / .NET / C/C++ | Build binding crate (see [Bindings overview](bindings-overview.md)) | Same as Python |
 | Run the CLI | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli` or clone + build | All profiles on tagged release |
 | Contribute / conformance | Clone + `./benchmarks/scripts/download.sh` | Full engine set |
 
 **Default recommendation:** pin **`1.1.0`** on all `ontologos-*` crates and bump them together.
 
-## Published channel (1.1.0)
+## Published channel (v1.1.0)
 
 | Surface | Version | Install |
 |---------|---------|---------|
@@ -34,13 +34,23 @@ Single source of truth for **what you can install today**.
 
 | Language | Build from | Guide |
 |----------|------------|-------|
-| **Node.js** | `crates/ontologos-node` | [Node.js](node.md) |
+| **Node.js** | `crates/ontologos-node` | [Node.js](node.md) · [Bindings overview](bindings-overview.md) |
 | **WebAssembly** | `crates/ontologos-wasm` | [WASM](wasm.md) |
 | **Java** | `crates/ontologos-java` | [Java](java.md) |
 | **.NET** | `crates/ontologos-dotnet` | [.NET](dotnet.md) |
 | **C/C++** | `crates/ontologos-c` | [C/C++](c-cpp.md) |
 
 Native libraries: `cargo build -p ontologos-jni -p ontologos-dotnet -p ontologos-c --release`
+
+## What version am I running?
+
+| Surface | Command |
+|---------|---------|
+| **Python** | `python -c "import ontologos; print(ontologos.__version__)"` |
+| **CLI** | `ontologos --version` |
+| **Rust dependency** | `cargo tree -p ontologos-core \| head -1` |
+
+Expected: **1.1.0** from registries.
 
 ## Build from source
 
@@ -49,25 +59,18 @@ Use git when you need unreleased `main`, the CLI without a tag pin, or conforman
 ```bash
 git clone https://github.com/eddiethedean/ontologos.git
 cd ontologos
-./benchmarks/scripts/download.sh   # optional for Family; required for Pizza/HermiT
+./benchmarks/scripts/download.sh
 cargo build -p ontologos-cli --release
-bash scripts/ci-bindings.sh       # optional: Java, .NET, C/C++ smoke
+bash scripts/ci-bindings.sh
 ```
 
 ## CLI install (not on crates.io)
 
-See the dedicated [CLI installation](../getting-started/cli-install.md) guide.
+See [CLI installation](../getting-started/cli-install.md).
 
 ```bash
-# Tagged release (requires Rust 1.88+)
 cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli
-
-# Or from a clone
-cargo build -p ontologos-cli --release
-./target/release/ontologos --help
 ```
-
-See [CLI reference](../reference/cli.md) and [Troubleshooting](troubleshooting.md#command-not-found-ontologos).
 
 ## API documentation
 
@@ -85,8 +88,9 @@ See [CLI reference](../reference/cli.md) and [Troubleshooting](troubleshooting.m
 
 ## Related
 
-- [Release status](../project/release-status.md) — live metrics
-- [Profile stability matrix](profile-stability.md) — per-profile production guidance
-- [Known limitations](known-limitations.md) — imports, mapping, axiom counts
-- [Migration hub](../migration/index.md) — upgrade paths
-- [Prerequisites](prerequisites.md) — Rust 1.88+, Python 3.10+, JDK 17+ (Java), .NET 8+ (.NET)
+- [Release status](../project/release-status.md)
+- [Profile stability matrix](profile-stability.md)
+- [Known limitations](known-limitations.md)
+- [Before you integrate](before-you-integrate.md)
+- [Migration hub](../migration/index.md)
+- [Prerequisites](prerequisites.md)

@@ -1,5 +1,7 @@
 # Getting Started
 
+
+--8<-- "snippets/before-integrate-callout.md"
 Five-minute success paths for common goals. Install pins: [Install and channels](../guides/install-channels.md). Limitations: [Known limitations](../guides/known-limitations.md).
 
 --8<-- "snippets/channel-banner.md"

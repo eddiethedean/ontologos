@@ -4,22 +4,20 @@
   <div class="ol-hero-badges">
     <span class="ol-badge ol-badge--accent">v1.1.0</span>
     <span class="ol-badge">Rust 1.88+</span>
-    <span class="ol-badge">Java · .NET · C/C++ · Node · WASM</span>
+    <span class="ol-badge">Python · Rust · bindings (source-build)</span>
   </div>
   <p class="ol-hero-kicker">OntoLogos documentation</p>
   <p class="ol-hero-title">Embed OWL reasoning in your stack</p>
-  <p class="ol-lead">Load OWL files, detect profiles, and classify or materialize in-process — no JVM. Rust, Python, Node.js, Java, .NET, C/C++, and WASM on v1.1.0.</p>
+  <p class="ol-lead">Load OWL files, detect profiles, and classify or materialize in-process — no JVM. <strong>Rust</strong> and <strong>Python</strong> on crates.io/PyPI; Node, Java, .NET, C/C++, and WASM via <a href="guides/bindings-overview.html">source build</a>.</p>
   <div class="ol-hero-actions">
     <a class="ol-hero-cta" href="getting-started/">Try in 5 minutes →</a>
     <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/python/">Python quickstart</a>
-    <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/install-channels/">All bindings</a>
+    <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/bindings-overview/">Bindings overview</a>
   </div>
-  <p style="margin-top:1rem;margin-bottom:0"><a href="guides/install-channels/">Install channels</a> · <a href="getting-started/cli-install/">CLI install</a> · <a href="guides/evaluator-scope/">Evaluator scope</a> · <a href="guides/start-here/">Start here</a></p>
+  <p style="margin-top:1rem;margin-bottom:0"><a href="guides/install-channels/">Install channels</a> · <a href="project/release-status/">Release status</a> · <a href="guides/before-you-integrate/">Before you integrate</a> · <a href="guides/start-here/">Start here</a></p>
 </div>
 
 --8<-- "snippets/channel-banner.md"
-
-**v1.1.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/) — see [install channels](guides/install-channels.md) for Node, Java, .NET, C/C++, and WASM.
 
 Pick the path that matches how you work:
 
@@ -60,14 +58,14 @@ Pick the path that matches how you work:
 </div>
 
 !!! tip "No clone required for most users"
-    Use **crates.io** or **PyPI**. Clone only to contribute, run benchmarks, or build the CLI.
+    Use **crates.io** or **PyPI**. Clone only to contribute, run benchmarks, build bindings, or build the CLI.
 
 <div class="ol-callout" markdown="0">
   <strong>Rust 1.88+</strong> for library users — see the <a href="guides/prerequisites.html">Prerequisites decision table</a>.
 </div>
 
-!!! warning "Mapped axiom counts ≠ Protégé totals"
-    `axiom_count()` reflects **mapper output**, not every axiom Protégé displays. See [Supported constructs](reference/supported-constructs.md) and [Protégé axiom counts](guides/protege-axiom-counts.md).
+!!! warning "Before you integrate"
+    Read [Before you integrate](guides/before-you-integrate.md) — partial OWL mapping, import limits, and axiom count semantics.
 
 !!! tip "Rust integrators"
     See the [Rust integration contract](guides/rust-integration-contract.md) — one page for load, classify, and consistency rules.
@@ -87,11 +85,9 @@ Pick the path that matches how you work:
 
 ## Documentation map {#documentation-map}
 
-Use the sidebar for the full tree. Highlights:
-
 | Area | Start here |
 |------|------------|
-| New users | [Install channels](guides/install-channels.md) · [Start here](guides/start-here.md) · [Known limitations](guides/known-limitations.md) |
+| New users | [Before you integrate](guides/before-you-integrate.md) · [Install channels](guides/install-channels.md) · [Start here](guides/start-here.md) |
 | Examples | [Examples gallery](examples/index.md) |
 | API choice | [Choosing an API](guides/choosing-an-api.md) · [Profile stability](guides/profile-stability.md) |
 | Evaluate | [Evaluator playbook](guides/evaluator-playbook.md) · [Evaluator scope](guides/evaluator-scope.md) · [Comparison](comparison.md) |
@@ -99,19 +95,19 @@ Use the sidebar for the full tree. Highlights:
 
 ## Learning path
 
-1. [Getting started — crates.io quick start](getting-started/index.md#cratesio-only-no-clone)
-2. [Classify in five minutes](getting-started/classify-quickstart.md)
-3. [Load an OWL file](getting-started/load-owl-file.md)
-4. [RDFS materialization](getting-started/rdfs-materialization.md)
-5. [OWL RL saturation](getting-started/owl-rl-saturation.md)
-6. [OWL EL classification](getting-started/owl-el-classification.md)
-7. [SWRL](getting-started/swrl.md)
-8. [First ontology](getting-started/first-ontology.md)
-9. [Profile detection](guides/profile-detection.md)
-10. [JSON snapshots](json-snapshot-v3.md) ([v2 legacy](json-snapshot-v2.md))
-11. [Error reference](reference/errors.md)
+**New to OWL?** Start with the [Glossary](guides/glossary.md) and [When not to use OntoLogos](guides/when-not-to-use.md), then [Python guide](guides/python.md) or [Rust quickstart](getting-started/index.md#cratesio-only-no-clone).
 
-## Capability matrix (published v1.1.0)
+**Know OWL already:**
+
+1. [Before you integrate](guides/before-you-integrate.md)
+2. [Getting started — crates.io quick start](getting-started/index.md#cratesio-only-no-clone)
+3. [Classify in five minutes](getting-started/classify-quickstart.md)
+4. [Load an OWL file](getting-started/load-owl-file.md)
+5. Profile guides: [RDFS](getting-started/rdfs-materialization.md) · [RL](getting-started/owl-rl-saturation.md) · [EL](getting-started/owl-el-classification.md) · [SWRL](getting-started/swrl.md)
+6. [Profile detection](guides/profile-detection.md)
+7. [Error reference](reference/errors.md)
+
+## Capability matrix (v1.1.0)
 
 | Capability | Library | CLI | Python |
 |------------|---------|-----|--------|
