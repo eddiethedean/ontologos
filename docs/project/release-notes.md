@@ -21,7 +21,7 @@ Full history: [CHANGELOG](changelog.md) on GitHub.
 - **Node / WASM:** version bump; WASM JSON round-trip returns plain objects
 - **No breaking Rust/Python API changes** — bump pins to `"1.1.1"`
 
-See [v1.0.x → v1.1.1 migration](../migration/v1.0.x-to-v1.1.1.md) and [Install channels](../guides/install-channels.md).
+See [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md) and [Install channels](../guides/install-channels.md).
 
 ## v1.0.0 highlights
 
@@ -36,4 +36,4 @@ See [Facade API](../guides/facade-api.md) and [Architecture](../architecture.md)
 
 ## Latest upgrade
 
-Most users upgrading today: [v1.0.x → v1.1.1 migration](../migration/v1.0.x-to-v1.1.1.md).
+Most users upgrading today: [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md).

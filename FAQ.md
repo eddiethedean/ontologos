@@ -177,7 +177,7 @@ No. Each `Reasoner` instance should be used from one thread at a time. Create se
 | Channel | Version | When |
 |---------|---------|------|
 | crates.io / PyPI (production) | **1.1.1** | Default for `cargo add` and `pip install ontologos` |
-| Prior release | **1.0.0** | See [v1.0.x → v1.1.1 migration](https://ontologos.readthedocs.io/en/latest/migration/v1.0.x-to-v1.1.1/) |
+| Prior release | **1.0.0** | See [v1.0.x → v1.1.0 migration](https://ontologos.readthedocs.io/en/latest/migration/v1.0.x-to-v1.1.0/) |
 
 See [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).
 

@@ -83,5 +83,5 @@ cargo install ontologos-core --version 1.1.1
 ## Related
 
 - [Release status](release-status.md)
-- [v1.0.x → v1.1.1 migration](../migration/v1.0.x-to-v1.1.1.md)
+- [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md)
 - [Contributing](contributing.md) — release section

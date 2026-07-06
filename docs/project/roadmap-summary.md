@@ -12,7 +12,7 @@ Multi-language native bindings over shared FFI.
 | Java / .NET / C/C++ / Node / WASM | **Source-build** with CI smoke |
 | Rust / Python API | **Unchanged** — bump pins to `"1.1.1"` |
 
-See [v1.0.x → v1.1.1 migration](../migration/v1.0.x-to-v1.1.1.md) and [Bindings overview](../guides/bindings-overview.md).
+See [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md) and [Bindings overview](../guides/bindings-overview.md).
 
 ## v1.0.0 (2026-07-03)
 

@@ -81,7 +81,7 @@ python -c "from ontologos import Reasoner; r=Reasoner(path='family.owl',profile=
 
 ## I am upgrading an existing integration
 
-[Upgrade to latest](../migration/index.md) — **v1.1.1** published on crates.io and PyPI; see [v1.0.x → v1.1.1](../migration/v1.0.x-to-v1.1.1.md) if upgrading from 1.0.
+[Upgrade to latest](../migration/index.md) — **v1.1.1** published on crates.io and PyPI; see [v1.0.x → v1.1.0](../migration/v1.0.x-to-v1.1.0.md) if upgrading from 1.0.
 
 ## Common questions
 
