@@ -51,10 +51,7 @@ fn oversized_dl_literal_rejected() {
         .build()
         .expect("build");
     let dt = ontology
-        .entity_id(
-            "http://www.w3.org/2001/XMLSchema#string",
-            EntityKind::Class,
-        )
+        .entity_id("http://www.w3.org/2001/XMLSchema#string", EntityKind::Class)
         .expect("datatype");
     let _ = ontology.dl_mut().intern_de(DataExpr::Literal {
         lexical: "x".repeat(5000),
