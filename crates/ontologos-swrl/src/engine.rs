@@ -77,8 +77,15 @@ pub fn materialize_swrl_rules(ontology: &mut Ontology) -> ontologos_core::Result
 }
 
 fn rule_body_requires_el_taxonomy(body: &[SwrlAtom]) -> bool {
-    body.iter()
-        .any(|atom| matches!(atom, SwrlAtom::Class { .. }))
+    body.iter().any(|atom| {
+        matches!(
+            atom,
+            SwrlAtom::Class {
+                arg: SwrlIArg::Variable(_),
+                ..
+            }
+        )
+    })
 }
 
 fn swrl_el_taxonomy(
@@ -88,7 +95,9 @@ fn swrl_el_taxonomy(
     match ontologos_el::ElClassifier::new().classify_for_swrl(ontology) {
         Ok(taxonomy) => Ok(Some(taxonomy)),
         Err(ontologos_el::Error::NonElProfile { .. })
-            if rules.iter().any(|rule| rule_body_requires_el_taxonomy(&rule.body)) =>
+            if rules
+                .iter()
+                .any(|rule| rule_body_requires_el_taxonomy(&rule.body)) =>
         {
             Err(ontologos_core::Error::Message(
                 "SWRL forward chaining requires EL taxonomy; EL classification failed: \
@@ -750,7 +759,7 @@ fn same_individuals(same_as: &SameAsClosure, a: EntityId, b: EntityId) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ontologos_core::{ClassExpr, DlAxiom, Ontology, SwrlAtom, SwrlIArg, SwrlRule};
+    use ontologos_core::{ClassExpr, DlAxiom, EntityKind, Ontology, SwrlAtom, SwrlIArg, SwrlRule};
 
     #[test]
     fn swrl_does_not_silently_degrade_when_el_classify_fails() {
@@ -759,10 +768,21 @@ mod tests {
             .expect("class")
             .class("http://example.org/B")
             .expect("class")
+            .individual("http://example.org/i")
+            .expect("individual")
             .build()
             .expect("build");
         let a = ontology.lookup_entity("http://example.org/A").expect("A");
         let b = ontology.lookup_entity("http://example.org/B").expect("B");
+        let i = ontology
+            .lookup_entity("http://example.org/i")
+            .expect("individual");
+        ontology
+            .add_axiom(Axiom::ClassAssertion {
+                individual: i,
+                class: a,
+            })
+            .expect("assert");
 
         // Force a non-EL construct so EL classification fails.
         let ce_a = ontology.dl_mut().intern_ce(ClassExpr::Atomic(a));
@@ -776,12 +796,12 @@ mod tests {
         ontology
             .push_swrl_rule(SwrlRule {
                 body: vec![SwrlAtom::Class {
-                    class: a,
-                    arg: SwrlIArg::Individual(a),
+                    class: b,
+                    arg: SwrlIArg::Variable("x".into()),
                 }],
                 head: vec![SwrlAtom::Class {
                     class: b,
-                    arg: SwrlIArg::Individual(a),
+                    arg: SwrlIArg::Variable("x".into()),
                 }],
             })
             .expect("swrl");
