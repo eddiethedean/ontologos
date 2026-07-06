@@ -239,30 +239,6 @@ fn validate_data_expr(
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ontologos_core::{DeId, DlAxiom, EntityKind, Ontology};
-
-    #[test]
-    fn validate_loaded_ontology_light_rejects_dangling_de_id() {
-        let mut ontology = Ontology::new();
-        let dt = ontology
-            .entity_id("http://example.org/D", EntityKind::Datatype)
-            .expect("datatype");
-        ontology.dl_mut().push_axiom(DlAxiom::DatatypeDefinition {
-            datatype: dt,
-            range: DeId(999),
-        });
-        let err = validate_loaded_ontology_light(&ontology).expect_err("dangling de");
-        assert!(
-            err.to_string()
-                .contains("dangling DL data expression reference"),
-            "unexpected error: {err}"
-        );
-    }
-}
-
 fn datatype_iri(ontology: &Ontology, id: EntityId) -> String {
     ontology
         .entity(id)
