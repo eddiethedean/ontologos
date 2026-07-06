@@ -1,6 +1,6 @@
 # EL API Reference
 
-OWL EL classification via [`ontologos-el`](https://docs.rs/ontologos-el/1.1.0).
+OWL EL classification via [`ontologos-el`](https://docs.rs/ontologos-el/1.1.1).
 
 Tutorial: [OWL EL classification](../getting-started/owl-el-classification.md).
 
@@ -39,7 +39,7 @@ For file-based Pizza demos, fetch the corpus — see [OWL EL classification](../
 
 ## docs.rs
 
-Full API: [docs.rs/ontologos-el/1.1.0](https://docs.rs/ontologos-el/1.1.0)
+Full API: [docs.rs/ontologos-el/1.1.1](https://docs.rs/ontologos-el/1.1.1)
 
 ## Related
 

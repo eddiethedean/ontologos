@@ -18,7 +18,7 @@ async function loadWasm() {
 
 test("wasm builder classify el", async () => {
   const { OntologyBuilder, Reasoner, version } = await loadWasm();
-  assert.equal(version(), "1.1.0");
+  assert.equal(version(), "1.1.1");
 
   const builder = new OntologyBuilder();
   builder.addClass("http://example.org/Pizza");

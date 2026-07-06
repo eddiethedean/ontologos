@@ -29,13 +29,13 @@ API and CLI reference for OntoLogos. Install channels: [Install and channels](..
 
 ## Rust crates (docs.rs)
 
-Published API docs: [docs.rs/ontologos-core/1.1.0](https://docs.rs/ontologos-core/1.1.0). Local: `cargo doc --open -p ontologos-facade`.
+Published API docs: [docs.rs/ontologos-core/1.1.1](https://docs.rs/ontologos-core/1.1.1). Local: `cargo doc --open -p ontologos-facade`.
 
 | Crate | Reference |
 |-------|-----------|
-| `ontologos-core` | [core.md](core.md) · [docs.rs](https://docs.rs/ontologos-core/1.1.0) |
+| `ontologos-core` | [core.md](core.md) · [docs.rs](https://docs.rs/ontologos-core/1.1.1) |
 | `ontologos-parser` | [parser.md](parser.md) |
-| `ontologos-profile` | [profile.md](profile.md) · [docs.rs](https://docs.rs/ontologos-profile/1.1.0) |
+| `ontologos-profile` | [profile.md](profile.md) · [docs.rs](https://docs.rs/ontologos-profile/1.1.1) |
 | `ontologos-facade` | [facade.md](facade.md) |
 | `ontologos-rl` | [rl.md](rl.md) · [RL rules](rl-rules.md) |
 | `ontologos-el` | [el.md](el.md) |

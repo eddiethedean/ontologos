@@ -5,7 +5,7 @@
 [![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/en/latest/guides/python/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](https://github.com/eddiethedean/ontologos/blob/main/LICENSE-MIT)
 
-Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a Rust-native OWL reasoner for **RDFS**, **OWL RL**, **OWL EL**, **OWL 2 DL**, and **SWRL** on [PyPI](https://pypi.org/project/ontologos/) (**1.1.0** published).
+Python bindings for [OntoLogos](https://github.com/eddiethedean/ontologos) — a Rust-native OWL reasoner for **RDFS**, **OWL RL**, **OWL EL**, **OWL 2 DL**, and **SWRL** on [PyPI](https://pypi.org/project/ontologos/) (**1.1.1** published).
 
 > **Install:** `pip install ontologos`. Production profiles: `rdfs`, `rl`, `el`, `auto`, `dl`, `swrl`. Preview: `alc`, `dl-preview`. See [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/) and [Profile stability](https://ontologos.readthedocs.io/en/latest/guides/profile-stability.html).
 
@@ -91,7 +91,7 @@ reasoner = Reasoner(ontology=ontology, profile="el")
 taxonomy = reasoner.classify()
 ```
 
-Load from JSON dict instead of the builder (v2 or v3; writers on workspace 1.1.0 emit v3):
+Load from JSON dict instead of the builder (v2 or v3; writers on workspace 1.1.1 emit v3):
 
 ```python
 from ontologos import Ontology, Reasoner

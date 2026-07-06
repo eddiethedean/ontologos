@@ -4,7 +4,7 @@
 #include <string>
 
 int main() {
-    if (ontologos::version() != "1.1.0") {
+    if (ontologos::version() != "1.1.1") {
         std::cerr << "unexpected version\n";
         return 1;
     }

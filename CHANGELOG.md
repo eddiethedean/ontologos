@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-07-06
+
+### Fixed
+
+- **Parser:** Lenient import merge skips supplement axioms after non-punnable entity kind conflicts (#21)
+- **Parser:** `validate_loaded_ontology_light` rejects dangling DL class/data expression references (#23)
+- **DL:** Malformed XSD numeric literals no longer silently coerce to `0.0` (#25)
+- **SWRL:** Forward chaining propagates EL classify failures when rule bodies need class-variable subsumption; `classify_for_swrl` ignores SWRL rules for EL profile checks (#28)
+- **DL store:** `from_json_with_limits` validates via `validate_with_limits` (#29)
+- **RL:** `MaterializationReport` records sameAs/differentFrom clashes (#27)
+- **Parser:** Partial intersection decomposition fix (#20)
+- **Bindings:** Python/JS `query()` calls `rewrite_query`; QL handles `owl:Nothing`/unsat (#19)
+- **EL:** `Profile::Auto` incremental classification routes through EL engine (#17)
+
 ## [1.1.0] - 2026-07-04
 
 ### Added
@@ -377,7 +391,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/eddiethedean/ontologos/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...v1.1.0
 [1.0.1]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/eddiethedean/ontologos/compare/v0.9.0...v1.0.0

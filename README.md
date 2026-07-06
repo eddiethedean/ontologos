@@ -14,15 +14,15 @@ Built for services and data pipelines, not as a Protégé replacement.
 | Try now | Command |
 |---------|---------|
 | **Python** | `pip install ontologos` |
-| **Rust** | Add `ontologos-parser`, `ontologos-facade` @ `1.1.0` to `Cargo.toml` |
-| **CLI** | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.0 ontologos-cli` |
+| **Rust** | Add `ontologos-parser`, `ontologos-facade` @ `1.1.1` to `Cargo.toml` |
+| **CLI** | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.1 ontologos-cli` |
 | **Node.js** | Build `crates/ontologos-node` ([Bindings overview](https://ontologos.readthedocs.io/en/latest/guides/bindings-overview.html)) |
 | **Java / .NET / C/C++ / WASM** | Source-build ([Bindings overview](https://ontologos.readthedocs.io/en/latest/guides/bindings-overview.html)) |
 | **Evaluate** | [30-minute playbook](https://ontologos.readthedocs.io/en/latest/guides/evaluator-playbook.html) |
 
 **Requires Rust 1.88+** for library users · **Full docs:** [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/)
 
-**v1.1.0** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/). Install channels: [guide](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html).
+**v1.1.1** on [crates.io](https://crates.io/crates/ontologos-core) and [PyPI](https://pypi.org/project/ontologos/). Install channels: [guide](https://ontologos.readthedocs.io/en/latest/guides/install-channels.html).
 
 > **OWL DL:** passes the gated HermiT conformance catalog (889 in-scope cases) — not a guarantee for every ontology. [Validate on your corpus](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope.html) before production.
 
@@ -65,7 +65,7 @@ Rust, CLI, and profile-specific guides: [Getting started](https://ontologos.read
 
 ---
 
-## Capabilities (v1.1.0)
+## Capabilities (v1.1.1)
 
 | Profile | Use case | Status |
 |---------|----------|--------|

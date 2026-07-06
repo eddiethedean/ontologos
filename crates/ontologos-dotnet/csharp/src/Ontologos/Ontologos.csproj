@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Ontologos</RootNamespace>
     <AssemblyName>Ontologos</AssemblyName>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Description>.NET bindings for the OntoLogos OWL reasoner</Description>
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\..\..'))</RepoRoot>

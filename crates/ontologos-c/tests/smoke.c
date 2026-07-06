@@ -38,7 +38,7 @@ static ontologos_handle_t require_handle(ontologos_handle_t handle, const char *
 
 int main(void) {
     char *version = take_string(ontologos_version(), 0);
-    if (strcmp(version, "1.1.0") != 0) {
+    if (strcmp(version, "1.1.1") != 0) {
         fprintf(stderr, "unexpected version: %s\n", version);
         return 1;
     }

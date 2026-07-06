@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 WORKSPACE_VERSION="$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')"
-PUBLISHED_VERSION="1.1.0"
+PUBLISHED_VERSION="1.1.1"
 echo "Workspace version: ${WORKSPACE_VERSION}"
 echo "Published version: ${PUBLISHED_VERSION}"
 
@@ -107,7 +107,7 @@ fi
 # README and docs home must link install/release guidance.
 for file in README.md docs/index.md; do
   has_banner=0
-  if grep -q 'snippets/channel-banner.md\|install-channels\|release-status\|v1\.1\.0' "$file" 2>/dev/null; then
+  if grep -q 'snippets/channel-banner.md\|install-channels\|release-status\|v1\.1\.1' "$file" 2>/dev/null; then
     has_banner=1
   fi
   if [[ "$has_banner" -eq 0 ]]; then
@@ -117,12 +117,12 @@ for file in README.md docs/index.md; do
 done
 
 # PyPI / Python version alignment.
-if ! grep -q 'version = "1.1.0"' crates/ontologos-py/pyproject.toml; then
-  echo "ERROR: pyproject.toml version != 1.1.0"
+if ! grep -q "version = \"${PUBLISHED_VERSION}\"" crates/ontologos-py/pyproject.toml; then
+  echo "ERROR: pyproject.toml version != ${PUBLISHED_VERSION}"
   FAIL=1
 fi
-if ! grep -q '__version__ = "1.1.0"' crates/ontologos-py/python/ontologos/__init__.py; then
-  echo "ERROR: ontologos __init__.py __version__ != 1.1.0"
+if ! grep -q "__version__ = \"${PUBLISHED_VERSION}\"" crates/ontologos-py/python/ontologos/__init__.py; then
+  echo "ERROR: ontologos __init__.py __version__ != ${PUBLISHED_VERSION}"
   FAIL=1
 fi
 

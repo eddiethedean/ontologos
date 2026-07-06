@@ -156,8 +156,8 @@ Owns conversions between models for parsing and RL/RDFS adapters:
 | OWL RL | `ontologos-rl` | `reasonable` |
 | OWL EL | `ontologos-el` | In-house ELK-style completion |
 | ALC | `ontologos-alc` | Tableau-lite (preview) |
-| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (**stable on v1.1.0**) |
-| SWRL | `ontologos-swrl` | DLSafe SWRL + DL (**stable on v1.1.0**) |
+| DL | `ontologos-dl` | Hybrid EL + saturation + tableau (**stable on v1.1.1**) |
+| SWRL | `ontologos-swrl` | DLSafe SWRL + DL (**stable on v1.1.1**) |
 | Query | `ontologos-ql` | petgraph over `Taxonomy`; OWL QL conjunctive queries |
 | Explain | `ontologos-explain` | petgraph proof graphs; EL inference traces |
 

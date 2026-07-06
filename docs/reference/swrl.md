@@ -1,6 +1,6 @@
 # SWRL API Reference
 
-DLSafe SWRL + DL via [`ontologos-swrl`](https://docs.rs/ontologos-swrl/1.1.0).
+DLSafe SWRL + DL via [`ontologos-swrl`](https://docs.rs/ontologos-swrl/1.1.1).
 
 Tutorial: [SWRL quick start](../getting-started/swrl.md).
 
@@ -34,7 +34,7 @@ Wrapped as `ontologos_facade::Error::Swrl` or `Error::Dl` depending on failure p
 
 ## docs.rs
 
-Full API: [docs.rs/ontologos-swrl/1.1.0](https://docs.rs/ontologos-swrl/1.1.0)
+Full API: [docs.rs/ontologos-swrl/1.1.1](https://docs.rs/ontologos-swrl/1.1.1)
 
 ## Related
 

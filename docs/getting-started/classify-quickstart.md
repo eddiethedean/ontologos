@@ -23,9 +23,9 @@ cargo new ontologos-classify-demo && cd ontologos-classify-demo
 
 ```toml
 [dependencies]
-ontologos-core = "1.1.0"
-ontologos-parser = "1.1.0"
-ontologos-facade = "1.1.0"
+ontologos-core = "1.1.1"
+ontologos-parser = "1.1.1"
+ontologos-facade = "1.1.1"
 ```
 
 ## Classify with profile auto
@@ -65,7 +65,7 @@ For EL without the facade, use an **in-memory EL ontology** (Family.owl is RL-sh
 
 ```toml
 # Add to Cargo.toml
-ontologos-el = "1.1.0"
+ontologos-el = "1.1.1"
 ```
 
 ```rust

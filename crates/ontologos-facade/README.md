@@ -8,12 +8,12 @@ Unified OWL reasoner routing for OntoLogos — one `classify()` entry for EL, RL
 
 ```toml
 [dependencies]
-ontologos-core = "1.1.0"
-ontologos-parser = "1.1.0"
-ontologos-facade = "1.1.0"
+ontologos-core = "1.1.1"
+ontologos-parser = "1.1.1"
+ontologos-facade = "1.1.1"
 ```
 
-Bump all `ontologos-*` pins together. Published on crates.io: **1.1.0** — see [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).
+Bump all `ontologos-*` pins together. Published on crates.io: **1.1.1** — see [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).
 
 ## Quick start
 

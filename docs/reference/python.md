@@ -16,7 +16,7 @@ Requires **Python 3.10+**.
 
 ## Profiles
 
-Published on PyPI **1.1.0**: `"auto"`, `"rdfs"`, `"rl"`, `"el"`, `"dl"`, and `"swrl"` are production-supported. `"alc"` and `"dl-preview"` are preview only.
+Published on PyPI **1.1.1**: `"auto"`, `"rdfs"`, `"rl"`, `"el"`, `"dl"`, and `"swrl"` are production-supported. `"alc"` and `"dl-preview"` are preview only.
 
 Full matrix: [Profile stability](../guides/profile-stability.md).
 

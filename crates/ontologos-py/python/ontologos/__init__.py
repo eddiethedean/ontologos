@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 try:
     from ontologos._ontologos import (
