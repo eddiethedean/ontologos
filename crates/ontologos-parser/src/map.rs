@@ -457,6 +457,12 @@ impl Mapper<'_> {
         lookups.extend(existential.lookups());
 
         if self.map_dl_subclass_of(sub, sup) {
+            if let Some(sub_id) = sub_lookup.resolved_id() {
+                // Supplement DL storage with EL/core axioms when the full intersection
+                // decomposes cleanly (e.g. WG description-logic-040). Partial operands
+                // are rejected by `map_intersection_superclass`.
+                let _ = self.map_intersection_superclass(sub_id, sup);
+            }
             return;
         }
 

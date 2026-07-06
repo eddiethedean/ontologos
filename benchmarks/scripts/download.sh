@@ -45,6 +45,9 @@ verify_checksum() {
 download() {
   local url="$1"
   local dest="$2"
+  if [[ -f "${dest}" ]] && verify_checksum "${dest}"; then
+    return 0
+  fi
   echo "Downloading ${dest}..."
   curl -fsSL "${url}" -o "${dest}"
 }
