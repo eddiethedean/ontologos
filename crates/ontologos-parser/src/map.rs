@@ -453,27 +453,26 @@ impl Mapper<'_> {
             return;
         }
 
-        if let Some(sub_id) = sub_lookup.resolved_id()
-            && self.map_intersection_superclass(sub_id, sup)
-        {
-            // Keep the full DL subclass axiom when EL decomposition only maps a subset
-            // of intersection operands (e.g. cardinality restrictions in flower ontologies).
-            let _ = self.map_dl_subclass_of(sub, sup);
-            return;
-        }
-
         let mut lookups = vec![sub_lookup, sup_lookup];
         lookups.extend(existential.lookups());
+
         if self.map_dl_subclass_of(sub, sup) {
             return;
         }
+
+        if let Some(sub_id) = sub_lookup.resolved_id()
+            && self.map_intersection_superclass(sub_id, sup)
+        {
+            return;
+        }
+
         self.skip_if_unmapped(
             &lookups,
             "SubClassOf with complex class expression not mapped in v0.2",
         );
     }
 
-    /// Decompose `SubClassOf(C, Intersection(...))` and nested EL operands into core axioms.
+    /// Decompose `SubClassOf(C, Intersection(...))` when every operand maps to EL/core axioms.
     fn map_intersection_superclass(
         &mut self,
         sub_id: EntityId,
@@ -482,14 +481,32 @@ impl Mapper<'_> {
         let ClassExpression::ObjectIntersectionOf(ops) = sup else {
             return false;
         };
+        if !ops.iter().all(|op| self.el_superclass_operand_mappable(op)) {
+            return false;
+        }
         self.report
             .meta
             .note_construct(OwlConstruct::SubClassOfIntersection);
-        let mut mapped_any = false;
         for op in ops {
-            mapped_any |= self.map_el_superclass_operand(sub_id, op);
+            let mapped = self.map_el_superclass_operand(sub_id, op);
+            debug_assert!(mapped, "operand pre-checked as mappable");
         }
-        mapped_any
+        true
+    }
+
+    fn el_superclass_operand_mappable(&mut self, operand: &ClassExpression<RcStr>) -> bool {
+        match operand {
+            ClassExpression::ObjectIntersectionOf(ops) => {
+                ops.iter().all(|op| self.el_superclass_operand_mappable(op))
+            }
+            _ => {
+                self.named_class(operand).resolved_id().is_some()
+                    || self
+                        .try_existential_restriction(operand)
+                        .resolved()
+                        .is_some()
+            }
+        }
     }
 
     fn map_el_superclass_operand(

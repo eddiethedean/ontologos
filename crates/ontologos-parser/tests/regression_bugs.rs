@@ -183,3 +183,27 @@ fn mixed_datatype_literals_in_data_oneof_rejected() {
         "expected mixed-type DataOneOf to fail validation"
     );
 }
+
+/// Partial intersection decomposition must not emit weaker `SubClassOf` axioms.
+#[test]
+fn subclass_intersection_partial_operand_skipped_not_weakened() {
+    let ontology = load_ontology_lenient(&fixture("subclass_intersection_partial_unmapped.ofn"))
+        .expect("load");
+    let meta = ontology.parse_meta().expect("parse_meta");
+    assert_eq!(
+        ontology.axiom_count(),
+        0,
+        "must not store SubClassOf(A, B) when another conjunct is unmapped"
+    );
+    assert_eq!(meta.mapped_axiom_count, 0);
+    assert_eq!(meta.skipped_axiom_count, 1);
+    assert_eq!(meta.logical_axiom_count, 1);
+    assert!(
+        meta.warnings
+            .iter()
+            .any(|w| w.contains("complex class expression")),
+        "expected skip warning, got: {:?}",
+        meta.warnings
+    );
+    assert_eq!(ontology.dl().axiom_count(), 0);
+}
