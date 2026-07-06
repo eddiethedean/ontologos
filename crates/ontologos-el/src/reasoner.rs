@@ -15,6 +15,11 @@ pub fn classify_with_report(reasoner: &mut Reasoner) -> crate::Result<ElReport> 
             actual: reasoner.profile(),
         });
     }
+    classify_routed(reasoner)
+}
+
+/// Classify after profile routing selected EL (including [`Profile::Auto`]).
+pub fn classify_routed(reasoner: &mut Reasoner) -> crate::Result<ElReport> {
     let record_traces = reasoner.config().explanations;
     let incremental = reasoner.config().incremental;
 

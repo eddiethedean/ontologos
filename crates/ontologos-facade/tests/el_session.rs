@@ -56,3 +56,27 @@ fn non_incremental_el_after_incremental_uses_full_pass() {
         "non-incremental EL clears session"
     );
 }
+
+#[test]
+fn incremental_auto_profile_classifies_el() {
+    let ontology = chain_ontology();
+    let mut reasoner = Reasoner::builder()
+        .profile(Profile::Auto)
+        .config(ReasonerConfig {
+            incremental: true,
+            ..ReasonerConfig::default()
+        })
+        .build(ontology)
+        .unwrap();
+    let outcome = classify(&mut reasoner).unwrap();
+    let tax = taxonomy_from_outcome(&outcome).unwrap();
+    let a = reasoner
+        .ontology()
+        .lookup_entity("http://example.org/A")
+        .unwrap();
+    let c = reasoner
+        .ontology()
+        .lookup_entity("http://example.org/C")
+        .unwrap();
+    assert!(tax.is_subsumed(a, c));
+}
