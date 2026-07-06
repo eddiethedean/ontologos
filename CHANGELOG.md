@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Docs:** Restore `v1.0.x-to-v1.1.0` migration guide links broken in the v1.1.1 version bump (MkDocs strict build)
+- **Includes all v1.1.1 fixes** when upgrading from v1.1.0 (parser, DL, SWRL, RL, bindings) — see [1.1.1] below
 
 ## [1.1.1] - 2026-07-06
 

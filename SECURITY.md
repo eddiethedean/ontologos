@@ -4,6 +4,7 @@
 
 | Version | Supported |
 |---------|-----------|
+| 1.1.x   | Yes       |
 | 1.0.x   | Yes       |
 | 0.9.x   | Yes (security fixes only; upgrade to 1.0.x recommended) |
 | 0.4.x – 0.8.x | No |
