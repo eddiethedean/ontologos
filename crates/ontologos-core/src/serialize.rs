@@ -355,6 +355,7 @@ impl Ontology {
                     limits.max_entities
                 )));
             }
+            dl.validate_with_limits(limits)?;
             *Arc::make_mut(&mut ontology.dl) = dl;
             ontology.reindex_dl_abox();
         }

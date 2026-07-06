@@ -5,6 +5,8 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::EntityId;
+use crate::error::{Error, Result};
+use crate::limits::Limits;
 
 /// Interned class expression id.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -351,6 +353,18 @@ fn de_fingerprint(expr: &DataExpr) -> u64 {
     hasher.finish()
 }
 
+fn validate_data_expr_literal_with_limits(expr: &DataExpr, limits: Limits) -> Result<()> {
+    if let DataExpr::Literal { lexical, .. } = expr
+        && lexical.len() > limits.max_literal_bytes
+    {
+        return Err(Error::InvalidAxiom(format!(
+            "data literal exceeds maximum size of {} bytes",
+            limits.max_literal_bytes
+        )));
+    }
+    Ok(())
+}
+
 impl DlStore {
     /// Empty DL store.
     #[must_use]
@@ -460,6 +474,14 @@ impl DlStore {
             .iter()
             .enumerate()
             .map(|(i, e)| (DeId(i as u32), e))
+    }
+
+    /// Validate DL data literals against resource limits (JSON deserialization).
+    pub fn validate_with_limits(&self, limits: Limits) -> Result<()> {
+        for expr in &self.data_exprs {
+            validate_data_expr_literal_with_limits(expr, limits)?;
+        }
+        Ok(())
     }
 
     /// Iterate class expressions.
