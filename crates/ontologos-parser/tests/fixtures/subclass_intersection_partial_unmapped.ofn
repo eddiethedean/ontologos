@@ -1,0 +1,8 @@
+Prefix(:=<http://example.org/test#>)
+
+Ontology(<http://example.org/test>
+  Declaration(Class(:A))
+  Declaration(Class(:B))
+  Declaration(ObjectProperty(:p))
+  SubClassOf(:A ObjectIntersectionOf(:B ObjectHasSelf(ObjectInverseOf(:p))))
+)
