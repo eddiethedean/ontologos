@@ -372,7 +372,6 @@ fn existential_subsumption_with_filler_subclass() {
 
 /// sameAs/differentFrom clash should be reported once across saturation iterations.
 #[test]
-#[ignore = "reasonable does not surface sameAs/differentFrom clashes in MaterializationReport::clashes — see docs/reference/reasonable-limits.md"]
 fn same_as_different_from_clash_deduped_across_iterations() {
     let mut ontology = Ontology::builder()
         .individual(&iri("a"))

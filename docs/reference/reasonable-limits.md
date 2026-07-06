@@ -22,7 +22,7 @@ OntoLogos intentionally does **not** reimplement these rules in-tree. Gaps are t
 | Existential TBox subsumption between named classes | **Not implemented** | Use in-house EL for taxonomy; RL tests ignored |
 | Domain on subproperty typing superproperty assertions | **Not implemented** | ABox typing may differ from HermiT |
 | Rule-level explanation traces | **Not implemented** | Proof graphs seed asserted axioms only |
-| `sameAs` + `differentFrom` clash dedup across saturation iterations | **Not implemented** | `MaterializationReport::clashes` may be empty while the ontology is inconsistent; see `regression_bugs.rs` |
+| `sameAs` + `differentFrom` clash dedup across saturation iterations | **Implemented in OntoLogos** | Merged into `MaterializationReport::clashes` after reasonable saturation via `collect_same_as_clashes` |
 
 ## What still works
 
