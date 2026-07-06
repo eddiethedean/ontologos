@@ -233,7 +233,10 @@ impl JsReasoner {
         })?;
         let cq = ontologos_ql::parse_conjunctive_query(query)
             .map_err(|e| JsError::Other(e.to_string()))?;
-        let answers = ontologos_ql::answer_query(self.reasoner.ontology(), taxonomy, &cq)
+        let engine = ontologos_ql::TaxonomyHierarchy::new(self.reasoner.ontology(), taxonomy);
+        let rewritten = ontologos_ql::rewrite_query(&engine, taxonomy, &cq)
+            .map_err(|e| JsError::Other(e.to_string()))?;
+        let answers = ontologos_ql::answer_query(self.reasoner.ontology(), taxonomy, &rewritten)
             .map_err(|e| JsError::Other(e.to_string()))?;
         let bindings: Vec<Value> = answers
             .into_iter()

@@ -355,8 +355,10 @@ impl PyReasoner {
             .as_ref()
             .ok_or_else(|| py_err("query requires taxonomy classification outcome"))?;
         let cq = ontologos_ql::parse_conjunctive_query(query).map_err(py_err)?;
-        let answers =
-            ontologos_ql::answer_query(self.reasoner.ontology(), taxonomy, &cq).map_err(py_err)?;
+        let engine = ontologos_ql::TaxonomyHierarchy::new(self.reasoner.ontology(), taxonomy);
+        let rewritten = ontologos_ql::rewrite_query(&engine, taxonomy, &cq).map_err(py_err)?;
+        let answers = ontologos_ql::answer_query(self.reasoner.ontology(), taxonomy, &rewritten)
+            .map_err(py_err)?;
         let list = pyo3::types::PyList::empty(py);
         for answer in answers {
             let dict = PyDict::new(py);

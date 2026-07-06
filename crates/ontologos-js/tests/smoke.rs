@@ -122,6 +122,39 @@ fn query_after_classify() {
 }
 
 #[test]
+fn query_unsatisfiable_class_returns_empty() {
+    use ontologos_core::{Axiom, EntityKind, Ontology};
+
+    let mut ontology = Ontology::new();
+    let a = ontology
+        .entity_id("http://example.org/A", EntityKind::Class)
+        .expect("A");
+    let b = ontology
+        .entity_id("http://example.org/B", EntityKind::Class)
+        .expect("B");
+    let nothing = ontology
+        .entity_id("http://www.w3.org/2002/07/owl#Nothing", EntityKind::Class)
+        .expect("Nothing");
+    ontology
+        .add_axiom(Axiom::SubClassOf {
+            subclass: a,
+            superclass: nothing,
+        })
+        .expect("A sub Nothing");
+    ontology
+        .add_axiom(Axiom::SubClassOf {
+            subclass: b,
+            superclass: a,
+        })
+        .expect("B sub A");
+    let ontology = JsOntology::from_owned(ontology);
+    let mut reasoner = JsReasoner::from_ontology(&ontology, Some("el"), false, None).unwrap();
+    reasoner.classify().unwrap();
+    let answers = reasoner.query("Type(?x, http://example.org/A)").unwrap();
+    assert!(answers.as_array().unwrap().is_empty());
+}
+
+#[test]
 fn query_requires_classify() {
     let mut builder = JsOntologyBuilder::new();
     builder.add_class("http://example.org/A").unwrap();
