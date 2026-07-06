@@ -1052,6 +1052,75 @@ fn merge_supplement_ontology(
 ) -> Result<()> {
     use ontologos_core::EntityKind;
     use std::collections::HashMap;
+    use std::collections::HashSet;
+
+    fn axiom_mentions_any(axiom: &Axiom, ids: &HashSet<EntityId>) -> bool {
+        match axiom {
+            Axiom::SubClassOf {
+                subclass,
+                superclass,
+            } => ids.contains(subclass) || ids.contains(superclass),
+            Axiom::EquivalentClasses(classes) | Axiom::DisjointClasses(classes) => {
+                classes.iter().any(|id| ids.contains(id))
+            }
+            Axiom::ObjectPropertyDomain { property, domain } => {
+                ids.contains(property) || ids.contains(domain)
+            }
+            Axiom::ObjectPropertyRange { property, range } => {
+                ids.contains(property) || ids.contains(range)
+            }
+            Axiom::SubObjectPropertyOf {
+                sub_property,
+                super_property,
+            } => ids.contains(sub_property) || ids.contains(super_property),
+            Axiom::InverseObjectProperties { left, right } => {
+                ids.contains(left) || ids.contains(right)
+            }
+            Axiom::TransitiveObjectProperty(p)
+            | Axiom::SymmetricObjectProperty(p)
+            | Axiom::ReflexiveObjectProperty(p)
+            | Axiom::IrreflexiveObjectProperty(p)
+            | Axiom::AsymmetricObjectProperty(p)
+            | Axiom::FunctionalObjectProperty(p)
+            | Axiom::InverseFunctionalObjectProperty(p) => ids.contains(p),
+            Axiom::SubClassOfExistential {
+                subclass,
+                property,
+                filler,
+            } => ids.contains(subclass) || ids.contains(property) || ids.contains(filler),
+            Axiom::ClassAssertion { individual, class } => {
+                ids.contains(individual) || ids.contains(class)
+            }
+            Axiom::ObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => ids.contains(subject) || ids.contains(property) || ids.contains(object),
+            Axiom::NegativeObjectPropertyAssertion {
+                subject,
+                property,
+                object,
+            } => ids.contains(subject) || ids.contains(property) || ids.contains(object),
+            Axiom::EquivalentObjectProperties(properties) => {
+                properties.iter().any(|id| ids.contains(id))
+            }
+            Axiom::DataPropertyAssertion {
+                individual,
+                property,
+                ..
+            } => ids.contains(individual) || ids.contains(property),
+            Axiom::NegativeDataPropertyAssertion {
+                individual,
+                property,
+                ..
+            } => ids.contains(individual) || ids.contains(property),
+            Axiom::SameIndividual(individuals) | Axiom::DifferentIndividuals(individuals) => {
+                individuals.iter().any(|id| ids.contains(id))
+            }
+        }
+    }
+
+    let mut conflicting_source_entities: HashSet<EntityId> = HashSet::new();
     for (_, record) in source.entities().iter() {
         let iri = source
             .resolve_iri(record.iri)
@@ -1072,6 +1141,9 @@ fn merge_supplement_ontology(
                             "import entity kind conflict for {iri}: {:?} vs {:?}",
                             existing_kind, record.kind
                         ));
+                        // In lenient mode, treat this entity as unusable for supplements:
+                        // avoid importing axioms that would attach onto the wrong kind.
+                        conflicting_source_entities.insert(existing);
                     }
                 }
             }
@@ -1096,13 +1168,35 @@ fn merge_supplement_ontology(
             )));
         }
     }
-    target.dl_mut().import_axioms_from(source.dl(), |id| {
-        entity_map
-            .get(&id)
-            .copied()
-            .expect("supplement entities validated above")
-    });
+
+    // DL axioms may reference data/object property kinds that don't exist in the target after a
+    // non-punnable kind conflict. Because DL import remaps everything in one pass, we conservatively
+    // skip importing DL axioms for conflicting supplements in lenient mode.
+    if conflicting_source_entities.is_empty() || limits.strict {
+        target.dl_mut().import_axioms_from(source.dl(), |id| {
+            entity_map
+                .get(&id)
+                .copied()
+                .expect("supplement entities validated above")
+        });
+    } else {
+        report
+            .meta
+            .warn("skipping DL supplement axioms due to entity kind conflicts");
+        report.meta.skipped_axiom_count += source.dl().axiom_count();
+    }
+
     for (_, axiom) in source.axioms().iter() {
+        if !conflicting_source_entities.is_empty()
+            && axiom_mentions_any(axiom, &conflicting_source_entities)
+            && !limits.strict
+        {
+            report.meta.skipped_axiom_count += 1;
+            report
+                .meta
+                .warn("skipping supplement axiom due to entity kind conflict");
+            continue;
+        }
         let remapped = remap_supplement_axiom(axiom, &entity_map)?;
         if let Err(e) = target.add_axiom(remapped) {
             if matches!(axiom, Axiom::ObjectPropertyRange { .. }) {
@@ -1113,6 +1207,13 @@ fn merge_supplement_ontology(
                 if limits.strict {
                     return Err(Error::Parse(e.to_string()));
                 }
+                continue;
+            }
+            if !limits.strict {
+                report.meta.skipped_axiom_count += 1;
+                report.meta.warn(format!(
+                    "skipping conflicting supplement axiom during merge: {e}"
+                ));
                 continue;
             }
             return Err(Error::Parse(e.to_string()));
@@ -1635,6 +1736,55 @@ mod tests {
         );
         let ontology = load_ofn_from_str(ofn).expect("parse");
         assert!(ontology.axiom_count() > 0);
+    }
+
+    #[test]
+    fn lenient_merge_skips_dl_axioms_after_non_punnable_kind_conflict() {
+        let mut base = load_ofn_from_str(concat!(
+            "Prefix(:=<http://example.org/>)\n",
+            "Ontology(<http://example.org/base>\n",
+            "  Declaration(Class(:X))\n",
+            "  Declaration(Class(:A))\n",
+            ")\n"
+        ))
+        .expect("base");
+
+        let supplement = load_ofn_from_str(concat!(
+            "Prefix(:=<http://example.org/>)\n",
+            "Ontology(<http://example.org/supp>\n",
+            "  Declaration(DataProperty(:X))\n",
+            "  DataPropertyDomain(:X :A)\n",
+            ")\n"
+        ))
+        .expect("supplement");
+
+        let mut report = ParseReport::new();
+        merge_supplement_ontology(
+            &mut base,
+            &supplement,
+            &mut report,
+            ParseLimits {
+                strict: false,
+                ..ParseLimits::default()
+            },
+        )
+        .expect("merge");
+
+        assert!(
+            base.dl()
+                .axioms()
+                .all(|ax| !matches!(ax, DlAxiom::DataPropertyDomain { .. })),
+            "expected DataPropertyDomain to be skipped after kind conflict"
+        );
+        assert!(
+            report
+                .meta
+                .warnings
+                .iter()
+                .any(|w| w.contains("import entity kind conflict")),
+            "expected kind conflict warning, got: {:?}",
+            report.meta.warnings
+        );
     }
 
     #[test]
