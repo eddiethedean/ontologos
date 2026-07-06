@@ -13,7 +13,7 @@ const {
 } = require("..");
 
 test("version", () => {
-  assert.equal(version(), "1.1.1");
+  assert.equal(version(), "1.1.2");
 });
 
 test("builder classify el", () => {

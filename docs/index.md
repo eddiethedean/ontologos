@@ -2,7 +2,7 @@
 
 <div class="ol-hero" markdown="0">
   <div class="ol-hero-badges">
-    <span class="ol-badge ol-badge--accent">v1.1.1</span>
+    <span class="ol-badge ol-badge--accent">v1.1.2</span>
     <span class="ol-badge">Rust 1.88+</span>
     <span class="ol-badge">Python · Rust · bindings (source-build)</span>
   </div>
@@ -80,7 +80,7 @@ Pick the path that matches how you work:
 | **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 | **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
 | **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
-| **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.1.1) |
+| **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.1.2) |
 | **Changelog** | [project/changelog](project/changelog.md) · [GitHub](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) |
 
 ## Documentation map {#documentation-map}
@@ -107,7 +107,7 @@ Pick the path that matches how you work:
 6. [Profile detection](guides/profile-detection.md)
 7. [Error reference](reference/errors.md)
 
-## Capability matrix (v1.1.1)
+## Capability matrix (v1.1.2)
 
 | Capability | Library | CLI | Python |
 |------------|---------|-----|--------|

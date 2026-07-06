@@ -997,7 +997,7 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
 name = "ontologos-alc"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-core",
  "ontologos-parser",
@@ -1010,7 +1010,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-bridge"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "horned-owl",
  "ontologos-core",
@@ -1025,14 +1025,14 @@ dependencies = [
 
 [[package]]
 name = "ontologos-c"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-ffi",
 ]
 
 [[package]]
 name = "ontologos-cli"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -1055,7 +1055,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-conformance"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-alc",
  "ontologos-bridge",
@@ -1077,7 +1077,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-contract"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-conformance",
  "ontologos-core",
@@ -1087,7 +1087,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-core"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "criterion",
  "serde",
@@ -1098,7 +1098,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-dl"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "criterion",
  "horned-owl",
@@ -1116,14 +1116,14 @@ dependencies = [
 
 [[package]]
 name = "ontologos-dotnet"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-ffi",
 ]
 
 [[package]]
 name = "ontologos-el"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "criterion",
  "ontologos-core",
@@ -1135,7 +1135,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-explain"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-core",
  "ontologos-el",
@@ -1147,7 +1147,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-facade"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "criterion",
  "ontologos-bridge",
@@ -1166,7 +1166,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-ffi"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-js",
  "serde_json",
@@ -1174,7 +1174,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-jni"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "jni",
  "ontologos-js",
@@ -1183,7 +1183,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-js"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-alc",
  "ontologos-core",
@@ -1200,7 +1200,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-node"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "napi",
  "napi-build",
@@ -1211,7 +1211,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-parser"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "criterion",
  "horned-owl",
@@ -1224,7 +1224,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-profile"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-core",
  "serde",
@@ -1233,7 +1233,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-py"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-alc",
  "ontologos-core",
@@ -1250,7 +1250,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-ql"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-core",
  "ontologos-el",
@@ -1260,7 +1260,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-rl"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "criterion",
  "ontologos-bridge",
@@ -1274,7 +1274,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-swrl"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "ontologos-core",
  "ontologos-dl",
@@ -1287,7 +1287,7 @@ dependencies = [
 
 [[package]]
 name = "ontologos-wasm"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "getrandom 0.3.4",
  "js-sys",

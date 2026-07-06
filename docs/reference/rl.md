@@ -1,6 +1,6 @@
 # RL API Reference
 
-OWL RL saturation and RDFS materialization via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.1.1).
+OWL RL saturation and RDFS materialization via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.1.2).
 
 Tutorials: [RDFS materialization](../getting-started/rdfs-materialization.md) · [OWL RL saturation](../getting-started/owl-rl-saturation.md).
 
@@ -51,7 +51,7 @@ RDFS gaps in reasonable: [Reasonable adapter limits](reasonable-limits.md). RL r
 
 ## docs.rs
 
-Full API: [docs.rs/ontologos-rl/1.1.1](https://docs.rs/ontologos-rl/1.1.1)
+Full API: [docs.rs/ontologos-rl/1.1.2](https://docs.rs/ontologos-rl/1.1.2)
 
 ## Related
 

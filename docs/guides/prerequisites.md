@@ -1,6 +1,6 @@
 # Prerequisites
 
-OntoLogos is a **Rust workspace** with optional **Python bindings** and **source-build native bindings** (v1.1.1 on `main`). Pick the row that matches your task. Install channels: [Install and channels](install-channels.md).
+OntoLogos is a **Rust workspace** with optional **Python bindings** and **source-build native bindings** (v1.1.2 on `main`). Pick the row that matches your task. Install channels: [Install and channels](install-channels.md).
 
 Unfamiliar with OWL terms? See the [Glossary](glossary.md).
 
@@ -54,7 +54,7 @@ cargo build -p ontologos-cli --release
 ./target/release/ontologos --help
 ```
 
-Tagged install: [CLI installation](../getting-started/cli-install.md) (`--tag v1.1.1`).
+Tagged install: [CLI installation](../getting-started/cli-install.md) (`--tag v1.1.2`).
 
 ## Native bindings (source-build)
 
@@ -75,7 +75,7 @@ Family ontology is vendored. Pizza and other HermiT fixtures:
 | Protégé installed | Optional for authoring OWL; not required to run OntoLogos |
 | Java / HermiT | OntoLogos does not embed HermiT; conformance tests compare against ported fixtures |
 | Every crate on crates.io | `ontologos-cli` and `ontologos-conformance` are source-build only |
-| npm/Maven/NuGet packages | Bindings are source-build until v1.1.1 publishes |
+| npm/Maven/NuGet packages | Bindings are source-build until v1.1.2 publishes |
 
 ## Next step
 

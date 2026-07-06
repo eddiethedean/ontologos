@@ -6,7 +6,7 @@ Honest matrix for **published vs source-build** language bindings. Install chann
 
 | I want to… | Install today | Registry |
 |------------|---------------|----------|
-| Embed in **Rust** | `ontologos-* = "1.1.1"` on [crates.io](https://crates.io/crates/ontologos-core) | **Published** |
+| Embed in **Rust** | `ontologos-* = "1.1.2"` on [crates.io](https://crates.io/crates/ontologos-core) | **Published** |
 | Use from **Python** | `pip install ontologos` | **Published** (PyPI) |
 | Use from **Node.js** | Build `crates/ontologos-node` | Source-build |
 | Use from **Java** | Build `crates/ontologos-java` | Source-build (Maven local) |
@@ -14,7 +14,7 @@ Honest matrix for **published vs source-build** language bindings. Install chann
 | Use from **C/C++** | Build `crates/ontologos-c` | Source-build |
 | Use in **browser (WASM)** | Build `crates/ontologos-wasm` | Source-build |
 
-**v1.1.1** adds shared FFI and native bindings. Build bindings from a clone at tag **`v1.1.1`** or from `main`. See [Release status](../project/release-status.md).
+**v1.1.2** adds shared FFI and native bindings. Build bindings from a clone at tag **`v1.1.2`** or from `main`. See [Release status](../project/release-status.md).
 
 ## API parity
 
@@ -63,7 +63,7 @@ See [Java guide](java.md) for `Reasoner.fromPath("family.owl", "rl")`.
 
 ## Production profiles
 
-On **v1.1.1** (PyPI / crates.io): `rdfs`, `rl`, `el`, `auto`, `dl`, `swrl` are production-supported. Preview: `alc`, `dl-preview`.
+On **v1.1.2** (PyPI / crates.io): `rdfs`, `rl`, `el`, `auto`, `dl`, `swrl` are production-supported. Preview: `alc`, `dl-preview`.
 
 Full matrix: [Profile stability](profile-stability.md).
 

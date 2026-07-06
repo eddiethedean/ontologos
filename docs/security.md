@@ -1,6 +1,6 @@
 # Security Considerations
 
-OntoLogos v1.1.1 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
+OntoLogos v1.1.2 handles untrusted input through **JSON deserialization**, **OWL/RDF file parsing**, and **path validation**. This document describes defaults and recommended practices.
 
 ## JSON snapshots
 
@@ -45,7 +45,7 @@ Literal `datatype` IRIs in JSON snapshots are validated the same way as entity I
 ### Format integrity
 
 - **Format v1 is rejected** — positional `iris[]` / entity index binding is unsafe for untrusted input
-- **Format v3** (writers on v1.1.1) and **v2** (legacy) key axioms by IRI string; readers accept both
+- **Format v3** (writers on v1.1.2) and **v2** (legacy) key axioms by IRI string; readers accept both
 - Unknown JSON fields on snapshot structs are rejected
 - Duplicate entity IRIs are rejected
 - Duplicate axioms are deduplicated on load (idempotent)
@@ -58,7 +58,7 @@ Literal `datatype` IRIs in JSON snapshots are validated the same way as entity I
 - `load_ontology_lenient` — same as `load_ontology` but allows skipped axioms with warnings
 - `load_ontology_in(base, path)` — constrain loads to stay under `base` (untrusted uploads)
 
-Loads validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/1.1.1/ontologos_parser/struct.ParseLimits.html), run a lightweight axiom/component pre-scan, then parse via horned-owl. Post-load lightweight validation runs on every successful load; expensive blank-node graph checks run when `strict` is true. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
+Loads validate the path, enforce [`ParseLimits`](https://docs.rs/ontologos-parser/1.1.2/ontologos_parser/struct.ParseLimits.html), run a lightweight axiom/component pre-scan, then parse via horned-owl. Post-load lightweight validation runs on every successful load; expensive blank-node graph checks run when `strict` is true. Malformed RDF/XML that triggers horned-owl internal panics is converted to `Error::Parse`. Sandboxed loads open the file once with `O_NOFOLLOW` (Unix) and sniff plus parse from the same file descriptor so a symlink swap between validation and read cannot escape the base directory.
 
 ### Parser concurrency (server embedders)
 

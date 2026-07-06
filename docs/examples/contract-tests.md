@@ -25,7 +25,7 @@ Each case exercises classify, consistency, or entailment through the facade on a
 
 ## Evaluator use
 
-1. Run contract tests on your machine after installing from your target channel (`pip install ontologos==1.1.1` or `ontologos-* = "1.1.1"`).
+1. Run contract tests on your machine after installing from your target channel (`pip install ontologos==1.1.2` or `ontologos-* = "1.1.2"`).
 2. For HermiT catalog parity, run `cargo test -p ontologos-conformance --release` (longer; see [Conformance](../reference/conformance.md)).
 3. Compare taxonomy output using [Taxonomy tolerance](../reference/taxonomy-tolerance.md) when diffing against HermiT.
 

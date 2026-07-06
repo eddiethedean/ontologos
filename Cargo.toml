@@ -27,7 +27,7 @@ members = [
 ]
 
 [workspace.package]
-version = "1.1.1"
+version = "1.1.2"
 edition = "2024"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
@@ -57,20 +57,20 @@ napi-derive = "2"
 napi-build = "2"
 jni = "0.21"
 
-ontologos-js = { path = "crates/ontologos-js", version = "1.1.1" }
+ontologos-js = { path = "crates/ontologos-js", version = "1.1.2" }
 
-ontologos-core = { path = "crates/ontologos-core", version = "1.1.1" }
-ontologos-bridge = { path = "crates/ontologos-bridge", version = "1.1.1" }
-ontologos-parser = { path = "crates/ontologos-parser", version = "1.1.1" }
-ontologos-profile = { path = "crates/ontologos-profile", version = "1.1.1" }
-ontologos-rl = { path = "crates/ontologos-rl", version = "1.1.1" }
-ontologos-el = { path = "crates/ontologos-el", version = "1.1.1" }
-ontologos-alc = { path = "crates/ontologos-alc", version = "1.1.1" }
-ontologos-ql = { path = "crates/ontologos-ql", version = "1.1.1" }
-ontologos-dl = { path = "crates/ontologos-dl", version = "1.1.1" }
-ontologos-swrl = { path = "crates/ontologos-swrl", version = "1.1.1" }
-ontologos-facade = { path = "crates/ontologos-facade", version = "1.1.1" }
-ontologos-explain = { path = "crates/ontologos-explain", version = "1.1.1" }
+ontologos-core = { path = "crates/ontologos-core", version = "1.1.2" }
+ontologos-bridge = { path = "crates/ontologos-bridge", version = "1.1.2" }
+ontologos-parser = { path = "crates/ontologos-parser", version = "1.1.2" }
+ontologos-profile = { path = "crates/ontologos-profile", version = "1.1.2" }
+ontologos-rl = { path = "crates/ontologos-rl", version = "1.1.2" }
+ontologos-el = { path = "crates/ontologos-el", version = "1.1.2" }
+ontologos-alc = { path = "crates/ontologos-alc", version = "1.1.2" }
+ontologos-ql = { path = "crates/ontologos-ql", version = "1.1.2" }
+ontologos-dl = { path = "crates/ontologos-dl", version = "1.1.2" }
+ontologos-swrl = { path = "crates/ontologos-swrl", version = "1.1.2" }
+ontologos-facade = { path = "crates/ontologos-facade", version = "1.1.2" }
+ontologos-explain = { path = "crates/ontologos-explain", version = "1.1.2" }
 
 [workspace.lints.rust]
 unsafe_code = "deny"

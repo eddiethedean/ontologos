@@ -18,7 +18,7 @@ check() {
 }
 
 # Workspace must match the staged 1.0.x release version.
-check "workspace version is 1.1.1" grep -q 'version = "1.1.1"' "${ROOT}/Cargo.toml"
+check "workspace version is 1.1.2" grep -q 'version = "1.1.2"' "${ROOT}/Cargo.toml"
 
 # Conformance active test budget (target ≥400 at 1.0; nightly/release only).
 ACTIVE="$("${ROOT}/benchmarks/scripts/report-conformance-coverage.sh" 2>/dev/null | awk '/active parity \(nightly\)/ {print $NF}')"

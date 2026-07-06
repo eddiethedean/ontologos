@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-07-06
+
+### Fixed
+
+- **Docs:** Restore `v1.0.x-to-v1.1.0` migration guide links broken in the v1.1.1 version bump (MkDocs strict build)
+
 ## [1.1.1] - 2026-07-06
 
 ### Fixed
@@ -391,7 +397,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/eddiethedean/ontologos/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/eddiethedean/ontologos/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...v1.1.0
 [1.0.1]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...v1.0.1

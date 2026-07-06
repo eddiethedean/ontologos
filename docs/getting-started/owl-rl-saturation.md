@@ -2,7 +2,7 @@
 
 
 --8<-- "snippets/before-integrate-callout.md"
-OWL 2 RL forward-chaining via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.1.1). The engine runs RDFS materialization first, then applies RL TBox and ABox rules until a fixed point.
+OWL 2 RL forward-chaining via [`ontologos-rl`](https://docs.rs/ontologos-rl/1.1.2). The engine runs RDFS materialization first, then applies RL TBox and ABox rules until a fixed point.
 
 ## Prerequisites
 
@@ -42,9 +42,9 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "1.1.1"
-ontologos-parser = "1.1.1"
-ontologos-rl = "1.1.1"
+ontologos-core = "1.1.2"
+ontologos-parser = "1.1.2"
+ontologos-rl = "1.1.2"
 ```
 
 Load and saturate:

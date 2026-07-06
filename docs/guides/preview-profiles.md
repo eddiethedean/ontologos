@@ -3,7 +3,7 @@
 Limitations for **preview** profiles only. Stable profiles (EL, RL, RDFS, `dl`, SWRL on `main`) are documented in the [Profile stability matrix](profile-stability.md).
 
 !!! warning "Preview only (`alc`, `dl-preview`)"
-    Preview engines may return `PreviewLimit` or `ResourceLimit`. For production OWL DL, use `--profile dl` (stable on v1.1.1). See [Profile stability matrix](profile-stability.md).
+    Preview engines may return `PreviewLimit` or `ResourceLimit`. For production OWL DL, use `--profile dl` (stable on v1.1.2). See [Profile stability matrix](profile-stability.md).
 
 ## Profile summary (preview)
 
@@ -24,7 +24,7 @@ ontologos classify --profile dl-preview benchmarks/data/family.owl
 ontologos classify --profile alc ontology.owl
 ```
 
-For stable DL on v1.1.1:
+For stable DL on v1.1.2:
 
 ```bash
 ontologos classify --profile dl ontology.owl

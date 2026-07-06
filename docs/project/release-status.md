@@ -8,11 +8,11 @@
 
 | Channel | Version | Notes |
 |---------|---------|-------|
-| **crates.io** (12 library crates) | **1.1.1** | Publish with annotated **v1.1.1** tag |
-| **PyPI** | **1.1.1** | `pip install ontologos` |
-| **docs.rs** | **1.1.1** | Matches crates.io |
-| **Latest git tag** | **v1.1.1** | Annotated release on GitHub |
-| **`main` branch** | **1.1.1** workspace | Multi-language bindings + shared FFI |
+| **crates.io** (12 library crates) | **1.1.2** | Publish with annotated **v1.1.2** tag |
+| **PyPI** | **1.1.2** | `pip install ontologos` |
+| **docs.rs** | **1.1.2** | Matches crates.io |
+| **Latest git tag** | **v1.1.2** | Annotated release on GitHub |
+| **`main` branch** | **1.1.2** workspace | Multi-language bindings + shared FFI |
 
 Published library crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
@@ -28,7 +28,15 @@ Published library crates (12, dependency order in `.github/scripts/publish-crate
 | **crates.io latest** | [crates.io/crates/ontologos-core](https://crates.io/crates/ontologos-core) |
 | **PyPI latest** | [pypi.org/project/ontologos](https://pypi.org/project/ontologos/) |
 
-Expected: **1.1.1** from registries after publish.
+Expected: **1.1.2** from registries after publish.
+
+## v1.1.2 highlights
+
+| Area | What's fixed |
+|------|--------------|
+| **Docs** | Restore `v1.0.x-to-v1.1.0` migration guide links (MkDocs strict build) |
+
+Drop-in patch over **v1.1.1** — bump all `ontologos-*` pins together. See [CHANGELOG](../../CHANGELOG.md).
 
 ## v1.1.1 highlights
 
@@ -39,7 +47,7 @@ Expected: **1.1.1** from registries after publish.
 | **SWRL** | EL taxonomy dependency for class-variable rule bodies |
 | **RL / EL / bindings** | Materialization clash reporting; `Profile::Auto` incremental EL; Python/JS query rewrite |
 
-Drop-in patch over **v1.1.0** — bump all `ontologos-*` pins together. See [CHANGELOG](../../CHANGELOG.md).
+Drop-in patch over **v1.1.0**. See [CHANGELOG](../../CHANGELOG.md).
 
 ## v1.1.0 highlights
 
@@ -59,9 +67,9 @@ See [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md).
 **Rust:**
 
 ```toml
-ontologos-core = "1.1.1"
-ontologos-parser = "1.1.1"
-ontologos-facade = "1.1.1"
+ontologos-core = "1.1.2"
+ontologos-parser = "1.1.2"
+ontologos-facade = "1.1.2"
 # … bump all ontologos-* crates together
 ```
 
@@ -70,13 +78,13 @@ ontologos-facade = "1.1.1"
 ```bash
 pip install ontologos
 # or pin explicitly:
-pip install ontologos==1.1.1
+pip install ontologos==1.1.2
 ```
 
 **CLI (from git — not on crates.io):**
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.1 ontologos-cli
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.2 ontologos-cli
 ```
 
 Requires **Rust 1.88+**.
@@ -104,7 +112,7 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 
 | Area | Status |
 |------|--------|
-| OWL EL, RL, RDFS | **Stable** on **v1.1.1** |
+| OWL EL, RL, RDFS | **Stable** on **v1.1.2** |
 | OWL DL (`--profile dl`) | **Stable** — validate on your corpus |
 | SWRL | **Stable** |
 | ALC / `dl-preview` | **Preview** |
@@ -115,6 +123,7 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 
 | Tag | Theme |
 |-----|-------|
+| [v1.1.2](https://github.com/eddiethedean/ontologos/releases/tag/v1.1.2) | Docs migration link fixes |
 | [v1.1.1](https://github.com/eddiethedean/ontologos/releases/tag/v1.1.1) | Parser, DL, SWRL, RL, and binding bug fixes |
 | [v1.1.0](https://github.com/eddiethedean/ontologos/releases/tag/v1.1.0) | Multi-language bindings (Java, .NET, C/C++, shared FFI) |
 | [v1.0.0](https://github.com/eddiethedean/ontologos/releases/tag/v1.0.0) | HermiT parity milestone — OWL 2 DL + SWRL |

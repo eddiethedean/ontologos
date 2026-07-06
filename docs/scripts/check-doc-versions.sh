@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 WORKSPACE_VERSION="$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')"
-PUBLISHED_VERSION="1.1.1"
+PUBLISHED_VERSION="1.1.2"
 echo "Workspace version: ${WORKSPACE_VERSION}"
 echo "Published version: ${PUBLISHED_VERSION}"
 
@@ -107,7 +107,7 @@ fi
 # README and docs home must link install/release guidance.
 for file in README.md docs/index.md; do
   has_banner=0
-  if grep -q 'snippets/channel-banner.md\|install-channels\|release-status\|v1\.1\.1' "$file" 2>/dev/null; then
+  if grep -q 'snippets/channel-banner.md\|install-channels\|release-status\|v1\.1\.2' "$file" 2>/dev/null; then
     has_banner=1
   fi
   if [[ "$has_banner" -eq 0 ]]; then

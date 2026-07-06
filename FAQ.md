@@ -18,19 +18,19 @@ See [Load an OWL file](https://ontologos.readthedocs.io/en/latest/getting-starte
 
 ## Which crate should I depend on?
 
-Pin all `ontologos-*` crates to the **same version**. Check [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/) for the current crates.io version (**1.1.1**).
+Pin all `ontologos-*` crates to the **same version**. Check [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/) for the current crates.io version (**1.1.2**).
 
 ```toml
 [dependencies]
-ontologos-core = "1.1.1"
-ontologos-parser = "1.1.1"   # OWL/RDF file loading
-ontologos-profile = "1.1.1"  # EL / RL / QL / DL detection
-ontologos-rl = "1.1.1"       # OWL RL saturation + RDFS (`ontologos_rl::rdfs`)
-ontologos-el = "1.1.1"       # OWL EL classification
-ontologos-explain = "1.1.1"  # Proof graphs
-ontologos-ql = "1.1.1"        # Taxonomy queries and OWL QL
-ontologos-facade = "1.1.1"   # Unified classify routing
-ontologos-bridge = "1.1.1"   # Engine adapters (usually transitive)
+ontologos-core = "1.1.2"
+ontologos-parser = "1.1.2"   # OWL/RDF file loading
+ontologos-profile = "1.1.2"  # EL / RL / QL / DL detection
+ontologos-rl = "1.1.2"       # OWL RL saturation + RDFS (`ontologos_rl::rdfs`)
+ontologos-el = "1.1.2"       # OWL EL classification
+ontologos-explain = "1.1.2"  # Proof graphs
+ontologos-ql = "1.1.2"        # Taxonomy queries and OWL QL
+ontologos-facade = "1.1.2"   # Unified classify routing
+ontologos-bridge = "1.1.2"   # Engine adapters (usually transitive)
 ```
 
 Depend on **`ontologos-core` only** if you build ontologies programmatically or from JSON snapshots.
@@ -39,7 +39,7 @@ There is no umbrella `ontologos` crate on crates.io. The CLI binary is built fro
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
-**Published v1.1.1** — `ontologos-dl` passes the HermiT Tier A catalog (**450** runnable Java + **428** OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora** (`parity_pct = 100%` on **889 in-scope cases**), not a guarantee for every real-world ontology. Composite **`true_parity_pct`** is **100%** (blocking CI). See [Evaluator scope](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope/) for what each metric measures. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, use `classify --profile dl` (or `profile="dl"` in Python). Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
+**Published v1.1.2** — `ontologos-dl` passes the HermiT Tier A catalog (**450** runnable Java + **428** OWL WG cases) and Tier B/C classification gates at a 30s per-operation budget. That is **HermiT functional parity on the gated conformance corpora** (`parity_pct = 100%` on **889 in-scope cases**), not a guarantee for every real-world ontology. Composite **`true_parity_pct`** is **100%** (blocking CI). See [Evaluator scope](https://ontologos.readthedocs.io/en/latest/guides/evaluator-scope/) for what each metric measures. For ontologies within the [supported construct](https://ontologos.readthedocs.io/en/latest/reference/supported-constructs/) subset, use `classify --profile dl` (or `profile="dl"` in Python). Set `ONTOLOGOS_DL_BUDGET_SECS` if you need longer wall-clock limits. Outside the gated suite, validate results against HermiT/Konclude until you trust the engine on your corpus.
 
 OntoLogos is for adopters who want to embed the Rust data model, load ontologies natively, run RL saturation, or follow the [roadmap](https://github.com/eddiethedean/ontologos/blob/main/ROADMAP.md).
 
@@ -111,7 +111,7 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Where is the API reference?
 
-- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.1.1), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/1.1.1), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/1.1.1), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/1.1.1), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/1.1.1), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/1.1.1), [docs.rs/ontologos-ql](https://docs.rs/ontologos-ql/1.1.1), [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/1.1.1)
+- Hosted: [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.1.2), [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/1.1.2), [docs.rs/ontologos-profile](https://docs.rs/ontologos-profile/1.1.2), [docs.rs/ontologos-rl](https://docs.rs/ontologos-rl/1.1.2), [docs.rs/ontologos-el](https://docs.rs/ontologos-el/1.1.2), [docs.rs/ontologos-explain](https://docs.rs/ontologos-explain/1.1.2), [docs.rs/ontologos-ql](https://docs.rs/ontologos-ql/1.1.2), [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/1.1.2)
 - Site reference: [Explain API](https://ontologos.readthedocs.io/en/latest/reference/explain/) · [Query API](https://ontologos.readthedocs.io/en/latest/reference/query/) · [CLI](https://ontologos.readthedocs.io/en/latest/reference/cli/)
 - Guides: [Choosing an API](https://ontologos.readthedocs.io/en/latest/guides/choosing-an-api/) · [Architecture](https://ontologos.readthedocs.io/en/latest/architecture/)
 - Local: `cargo doc -p ontologos-core --open`
@@ -119,7 +119,7 @@ Or run `cargo run -p ontologos-core --example pizza_builder`.
 
 ## Does `pip install ontologos` work?
 
-Yes. The PyPI package is **v1.1.1**. It supports file and in-memory ontologies, incremental mutations, `explain()`, and optional pandas/polars export.
+Yes. The PyPI package is **v1.1.2**. It supports file and in-memory ontologies, incremental mutations, `explain()`, and optional pandas/polars export.
 
 **Profiles on PyPI:** `"auto"`, `"el"`, `"rl"`, `"rdfs"`, `"dl"`, and `"swrl"`.
 
@@ -176,7 +176,7 @@ No. Each `Reasoner` instance should be used from one thread at a time. Create se
 
 | Channel | Version | When |
 |---------|---------|------|
-| crates.io / PyPI (production) | **1.1.1** | Default for `cargo add` and `pip install ontologos` |
+| crates.io / PyPI (production) | **1.1.2** | Default for `cargo add` and `pip install ontologos` |
 | Prior release | **1.0.0** | See [v1.0.x → v1.1.0 migration](https://ontologos.readthedocs.io/en/latest/migration/v1.0.x-to-v1.1.0/) |
 
 See [Release status](https://ontologos.readthedocs.io/en/latest/project/release-status/).

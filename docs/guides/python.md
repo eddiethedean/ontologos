@@ -216,7 +216,7 @@ Read-only dict after load:
 | `skipped_axiom_count` | `int` | Logical components not mapped |
 | `logical_axiom_count` | `int` | Mapped + skipped |
 
-## Limitations (v1.1.1)
+## Limitations (v1.1.2)
 
 | Capability | Rust | Python |
 |------------|------|--------|

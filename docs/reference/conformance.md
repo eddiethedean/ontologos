@@ -69,7 +69,7 @@ The in-house EL engine may omit direct `C ⊑ owl:Thing` edges that other EL too
 
 | Area | Status |
 |------|--------|
-| Full OWL DL | Shipped on **crates.io/PyPI 1.1.1** (`ontologos-dl`) — see [Install channels](../guides/install-channels.md) |
+| Full OWL DL | Shipped on **crates.io/PyPI 1.1.2** (`ontologos-dl`) — see [Install channels](../guides/install-channels.md) |
 | Complete OWL RL rule set | Partial — see [RL rules](rl-rules.md) |
 | Explanations | Available (EL traces; RL/RDFS asserted-only until reasonable exposes diagnostics) |
 | Large DL corpora (GALEN, SNOMED) | Optional stress tests only |
