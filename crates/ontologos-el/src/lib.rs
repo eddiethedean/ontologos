@@ -88,6 +88,17 @@ impl ElClassifier {
         record_traces: bool,
     ) -> Result<ElReport> {
         normal_form::validate_el_profile(ontology)?;
+        self.classify_el_tbox(ontology, record_traces)
+    }
+
+    /// Classify the TBox for SWRL forward chaining (SWRL rules do not block EL).
+    pub fn classify_for_swrl(&self, ontology: &Ontology) -> Result<Taxonomy> {
+        normal_form::validate_el_profile_for_swrl(ontology)?;
+        self.classify_el_tbox(ontology, false)
+            .map(|report| report.taxonomy)
+    }
+
+    fn classify_el_tbox(&self, ontology: &Ontology, record_traces: bool) -> Result<ElReport> {
         let mut graph = graph::CompletionGraph::seed(ontology).with_traces(record_traces);
         graph.saturate();
         let mut taxonomy = taxonomy_extract::extract_taxonomy(ontology, &graph);

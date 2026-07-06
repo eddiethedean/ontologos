@@ -52,15 +52,9 @@ pub fn materialize_swrl_rules(ontology: &mut Ontology) -> ontologos_core::Result
         }
         changed = false;
         let same_as = ontologos_rl::same_as_closure(ontology);
-        let taxonomy = ontologos_el::ElClassifier::new()
-            .classify(ontology)
-            .map_err(|e| {
-                ontologos_core::Error::Message(format!(
-                    "SWRL forward chaining requires EL taxonomy; EL classification failed: {e}"
-                ))
-            })?;
+        let taxonomy = swrl_el_taxonomy(ontology, &rules)?;
         for rule in &rules {
-            let bindings = match_rule_body(ontology, &rule.body, &same_as, Some(&taxonomy));
+            let bindings = match_rule_body(ontology, &rule.body, &same_as, taxonomy.as_ref());
             if bindings.len() > MAX_BINDINGS_PER_RULE {
                 return Err(ontologos_core::Error::Message(format!(
                     "SWRL rule binding explosion exceeds {MAX_BINDINGS_PER_RULE} bindings"
@@ -80,6 +74,33 @@ pub fn materialize_swrl_rules(ontology: &mut Ontology) -> ontologos_core::Result
         }
     }
     Ok(report)
+}
+
+fn rule_body_requires_el_taxonomy(body: &[SwrlAtom]) -> bool {
+    body.iter()
+        .any(|atom| matches!(atom, SwrlAtom::Class { .. }))
+}
+
+fn swrl_el_taxonomy(
+    ontology: &Ontology,
+    rules: &[SwrlRule],
+) -> ontologos_core::Result<Option<Taxonomy>> {
+    match ontologos_el::ElClassifier::new().classify_for_swrl(ontology) {
+        Ok(taxonomy) => Ok(Some(taxonomy)),
+        Err(ontologos_el::Error::NonElProfile { .. })
+            if rules.iter().any(|rule| rule_body_requires_el_taxonomy(&rule.body)) =>
+        {
+            Err(ontologos_core::Error::Message(
+                "SWRL forward chaining requires EL taxonomy; EL classification failed: \
+                 ontology is not in OWL EL profile"
+                    .into(),
+            ))
+        }
+        Err(ontologos_el::Error::NonElProfile { .. }) => Ok(None),
+        Err(e) => Err(ontologos_core::Error::Message(format!(
+            "SWRL forward chaining requires EL taxonomy; EL classification failed: {e}"
+        ))),
+    }
 }
 
 fn match_rule_body(
@@ -112,53 +133,6 @@ fn atom_match_priority(atom: &SwrlAtom) -> u8 {
         SwrlAtom::DataRange { .. } => 1,
         SwrlAtom::SameIndividual(..) => 2,
         SwrlAtom::DifferentIndividuals(..) => 3,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use ontologos_core::{ClassExpr, DlAxiom, Ontology, SwrlAtom, SwrlIArg, SwrlRule};
-
-    #[test]
-    fn swrl_does_not_silently_degrade_when_el_classify_fails() {
-        let mut ontology = Ontology::builder()
-            .class("http://example.org/A")
-            .expect("class")
-            .class("http://example.org/B")
-            .expect("class")
-            .build()
-            .expect("build");
-        let a = ontology.lookup_entity("http://example.org/A").expect("A");
-        let b = ontology.lookup_entity("http://example.org/B").expect("B");
-
-        // Force a non-EL construct so EL classification fails.
-        let ce_a = ontology.dl_mut().intern_ce(ClassExpr::Atomic(a));
-        let ce_b = ontology.dl_mut().intern_ce(ClassExpr::Atomic(b));
-        let ce_not_b = ontology.dl_mut().intern_ce(ClassExpr::Not(ce_b));
-        ontology.dl_mut().push_axiom(DlAxiom::SubClassOf {
-            sub: ce_a,
-            sup: ce_not_b,
-        });
-
-        ontology
-            .push_swrl_rule(SwrlRule {
-                body: vec![SwrlAtom::Class {
-                    class: a,
-                    arg: SwrlIArg::Individual(a),
-                }],
-                head: vec![SwrlAtom::Class {
-                    class: b,
-                    arg: SwrlIArg::Individual(a),
-                }],
-            })
-            .expect("swrl");
-
-        let err = materialize_swrl_rules(&mut ontology).expect_err("expected error");
-        assert!(
-            err.to_string().contains("EL classification failed"),
-            "unexpected error: {err}"
-        );
     }
 }
 
@@ -771,4 +745,51 @@ fn has_different(ontology: &Ontology, a: EntityId, b: EntityId) -> bool {
 
 fn same_individuals(same_as: &SameAsClosure, a: EntityId, b: EntityId) -> bool {
     a == b || same_as.representative(a) == same_as.representative(b)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ontologos_core::{ClassExpr, DlAxiom, Ontology, SwrlAtom, SwrlIArg, SwrlRule};
+
+    #[test]
+    fn swrl_does_not_silently_degrade_when_el_classify_fails() {
+        let mut ontology = Ontology::builder()
+            .class("http://example.org/A")
+            .expect("class")
+            .class("http://example.org/B")
+            .expect("class")
+            .build()
+            .expect("build");
+        let a = ontology.lookup_entity("http://example.org/A").expect("A");
+        let b = ontology.lookup_entity("http://example.org/B").expect("B");
+
+        // Force a non-EL construct so EL classification fails.
+        let ce_a = ontology.dl_mut().intern_ce(ClassExpr::Atomic(a));
+        let ce_b = ontology.dl_mut().intern_ce(ClassExpr::Atomic(b));
+        let ce_not_b = ontology.dl_mut().intern_ce(ClassExpr::Not(ce_b));
+        ontology.dl_mut().push_axiom(DlAxiom::SubClassOf {
+            sub: ce_a,
+            sup: ce_not_b,
+        });
+
+        ontology
+            .push_swrl_rule(SwrlRule {
+                body: vec![SwrlAtom::Class {
+                    class: a,
+                    arg: SwrlIArg::Individual(a),
+                }],
+                head: vec![SwrlAtom::Class {
+                    class: b,
+                    arg: SwrlIArg::Individual(a),
+                }],
+            })
+            .expect("swrl");
+
+        let err = materialize_swrl_rules(&mut ontology).expect_err("expected error");
+        assert!(
+            err.to_string().contains("EL classification failed"),
+            "unexpected error: {err}"
+        );
+    }
 }
