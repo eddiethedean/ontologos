@@ -380,7 +380,9 @@ pub(crate) fn literal_in_datatype_value_space(
                 | "http://www.w3.org/2001/XMLSchema#long"
         )
     {
-        let numeric = parse_numeric(&lit.lexical);
+        let Some(numeric) = parse_numeric(&lit.lexical) else {
+            return false;
+        };
         if numeric.is_finite()
             && !numeric.is_nan()
             && numeric.fract() == 0.0
@@ -391,7 +393,9 @@ pub(crate) fn literal_in_datatype_value_space(
         }
     }
     if is_numeric_literal_type(ont, lit.datatype) {
-        let numeric = parse_numeric(&lit.lexical);
+        let Some(numeric) = parse_numeric(&lit.lexical) else {
+            return false;
+        };
         if numeric.is_finite()
             && !numeric.is_nan()
             && numeric.fract() == 0.0
@@ -410,13 +414,14 @@ pub(crate) fn literal_in_datatype_value_space(
                 }
                 return false;
             }
-            parse_numeric(&lit.lexical).is_finite()
+            parse_numeric(&lit.lexical).is_some_and(|n| n.is_finite())
         }
         "http://www.w3.org/2001/XMLSchema#float" | "http://www.w3.org/2001/XMLSchema#double" => {
-            let n = parse_numeric(&lit.lexical);
-            n.is_finite() || n.is_nan()
+            parse_numeric(&lit.lexical).is_some_and(|n| n.is_finite() || n.is_nan())
         }
-        "http://www.w3.org/2002/07/owl#real" => parse_numeric(&lit.lexical).is_finite(),
+        "http://www.w3.org/2002/07/owl#real" => {
+            parse_numeric(&lit.lexical).is_some_and(|n| n.is_finite())
+        }
         "http://www.w3.org/2002/07/owl#rational" => {
             lit.lexical.contains('/') || lit.lexical.parse::<i64>().is_ok()
         }
@@ -847,7 +852,9 @@ pub(crate) fn whole_number_lexical(lex: &str) -> Option<i128> {
         return None;
     }
     if trimmed.contains('.') {
-        let numeric = parse_numeric(trimmed);
+        let Some(numeric) = parse_numeric(trimmed) else {
+            return None;
+        };
         if !numeric.is_finite() || numeric.fract() != 0.0 {
             return None;
         }
@@ -861,8 +868,9 @@ fn numeric_values_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
         return false;
     }
     if a.lexical != b.lexical {
-        let fa = parse_numeric(&a.lexical);
-        let fb = parse_numeric(&b.lexical);
+        let (Some(fa), Some(fb)) = (parse_numeric(&a.lexical), parse_numeric(&b.lexical)) else {
+            return false;
+        };
         if !fa.is_finite() || !fb.is_finite() {
             return false;
         }
@@ -882,7 +890,10 @@ fn numeric_values_equal(a: &LiteralValue, b: &LiteralValue) -> bool {
     if let (Some(aq), Some(bq)) = (rational_pair(&a.lexical), rational_pair(&b.lexical)) {
         return aq.0 * bq.1 == bq.0 * aq.1;
     }
-    parse_numeric(&a.lexical).to_bits() == parse_numeric(&b.lexical).to_bits()
+    let (Some(fa), Some(fb)) = (parse_numeric(&a.lexical), parse_numeric(&b.lexical)) else {
+        return false;
+    };
+    fa.to_bits() == fb.to_bits()
 }
 
 /// Decimal/rational pairs compare equal only when the rational has a terminating
@@ -1098,8 +1109,9 @@ fn datetime_facet_compare(lit_lex: &str, facet_val: &str) -> Option<i32> {
 }
 
 fn numeric_facet_compare(lit_lex: &str, facet_val: &str) -> Option<i32> {
-    let fa = parse_numeric(lit_lex);
-    let fb = parse_numeric(facet_val);
+    let (Some(fa), Some(fb)) = (parse_numeric(lit_lex), parse_numeric(facet_val)) else {
+        return None;
+    };
     if fa.is_nan() || fb.is_nan() {
         return None;
     }
@@ -1211,27 +1223,38 @@ fn literal_in_data_range_value_space(
     true
 }
 
-fn parse_numeric(s: &str) -> f64 {
+fn parse_numeric(s: &str) -> Option<f64> {
     match s {
-        "INF" | "+INF" => f64::INFINITY,
-        "-INF" => f64::NEG_INFINITY,
-        "NaN" => f64::NAN,
+        "INF" | "+INF" => Some(f64::INFINITY),
+        "-INF" => Some(f64::NEG_INFINITY),
+        "NaN" => Some(f64::NAN),
         _ => {
             let trimmed = s.strip_prefix('+').unwrap_or(s);
             if trimmed == "-0" {
-                0.0
+                Some(0.0)
             } else if trimmed.contains('/') {
                 let parts: Vec<_> = trimmed.split('/').collect();
                 if parts.len() == 2 {
-                    let num: f64 = parts[0].parse().unwrap_or(0.0);
-                    let den: f64 = parts[1].parse().unwrap_or(1.0);
-                    return if den == 0.0 { f64::NAN } else { num / den };
+                    let num: f64 = parts[0].parse().ok()?;
+                    let den: f64 = parts[1].parse().ok()?;
+                    return Some(if den == 0.0 { f64::NAN } else { num / den });
                 }
-                0.0
+                None
             } else {
-                trimmed.parse().unwrap_or(0.0)
+                trimmed.parse().ok()
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod parse_numeric_tests {
+    use super::parse_numeric;
+
+    #[test]
+    fn malformed_numeric_does_not_coerce_to_zero() {
+        assert!(parse_numeric("not-a-number").is_none());
+        assert_eq!(parse_numeric("0"), Some(0.0));
     }
 }
 
