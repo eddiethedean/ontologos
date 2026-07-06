@@ -1,7 +1,7 @@
 //! Parser + DL consistency for OWL WG disjointWith-010 (moved from ontologos-parser).
 
 use ontologos_dl::is_consistent;
-use ontologos_parser::load_ontology;
+use ontologos_parser::load_ontology_lenient as load_ontology;
 
 #[test]
 fn disjoint_with_010_premise_is_inconsistent() {
