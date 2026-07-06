@@ -852,9 +852,7 @@ pub(crate) fn whole_number_lexical(lex: &str) -> Option<i128> {
         return None;
     }
     if trimmed.contains('.') {
-        let Some(numeric) = parse_numeric(trimmed) else {
-            return None;
-        };
+        let numeric = parse_numeric(trimmed)?;
         if !numeric.is_finite() || numeric.fract() != 0.0 {
             return None;
         }
