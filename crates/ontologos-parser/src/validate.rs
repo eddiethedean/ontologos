@@ -24,9 +24,10 @@ fn validate_ontology_datatypes(ontology: &Ontology, strict: bool) -> Result<(), 
             }
             DlAxiom::SubClassOf { sub, sup } => {
                 for id in [*sub, *sup] {
-                    if let Some(ce) = store.ce(id) {
-                        validate_ce_data(ontology, ce, strict)?;
-                    }
+                    let ce = store.ce(id).ok_or_else(|| {
+                        Error::Parse(format!("dangling DL class expression reference: {id:?}"))
+                    })?;
+                    validate_ce_data(ontology, ce, strict)?;
                 }
             }
             DlAxiom::SameIndividual(ids) | DlAxiom::DifferentIndividuals(ids)
@@ -71,9 +72,10 @@ fn validate_data_oneof_homogeneity(ontology: &Ontology) -> Result<(), Error> {
             }
             DlAxiom::SubClassOf { sub, sup } => {
                 for id in [*sub, *sup] {
-                    if let Some(ce) = store.ce(id) {
-                        validate_ce_oneof_homogeneity(ontology, ce)?;
-                    }
+                    let ce = store.ce(id).ok_or_else(|| {
+                        Error::Parse(format!("dangling DL class expression reference: {id:?}"))
+                    })?;
+                    validate_ce_oneof_homogeneity(ontology, ce)?;
                 }
             }
             _ => {}
@@ -93,15 +95,17 @@ fn validate_ce_oneof_homogeneity(ontology: &Ontology, ce: &ClassExpr) -> Result<
         }
         ClassExpr::And(ops) | ClassExpr::Or(ops) => {
             for op in ops {
-                if let Some(inner) = store.ce(*op) {
-                    validate_ce_oneof_homogeneity(ontology, inner)?;
-                }
+                let inner = store.ce(*op).ok_or_else(|| {
+                    Error::Parse(format!("dangling DL class expression reference: {op:?}"))
+                })?;
+                validate_ce_oneof_homogeneity(ontology, inner)?;
             }
         }
         ClassExpr::Not(inner) => {
-            if let Some(inner_ce) = store.ce(*inner) {
-                validate_ce_oneof_homogeneity(ontology, inner_ce)?;
-            }
+            let inner_ce = store.ce(*inner).ok_or_else(|| {
+                Error::Parse(format!("dangling DL class expression reference: {inner:?}"))
+            })?;
+            validate_ce_oneof_homogeneity(ontology, inner_ce)?;
         }
         _ => {}
     }
@@ -114,7 +118,9 @@ fn validate_data_expr_oneof_homogeneity(
 ) -> Result<(), Error> {
     let store = ontology.dl();
     let Some(expr) = store.de(de) else {
-        return Ok(());
+        return Err(Error::Parse(format!(
+            "dangling DL data expression reference: {de:?}"
+        )));
     };
     match expr {
         DataExpr::Or(ops) | DataExpr::And(ops) => {
@@ -183,15 +189,17 @@ fn validate_ce_data(ontology: &Ontology, ce: &ClassExpr, strict: bool) -> Result
         ClassExpr::DataHasValue { value, .. } => validate_data_expr(ontology, *value, strict)?,
         ClassExpr::And(ops) | ClassExpr::Or(ops) => {
             for op in ops {
-                if let Some(inner) = store.ce(*op) {
-                    validate_ce_data(ontology, inner, strict)?;
-                }
+                let inner = store.ce(*op).ok_or_else(|| {
+                    Error::Parse(format!("dangling DL class expression reference: {op:?}"))
+                })?;
+                validate_ce_data(ontology, inner, strict)?;
             }
         }
         ClassExpr::Not(inner) => {
-            if let Some(inner_ce) = store.ce(*inner) {
-                validate_ce_data(ontology, inner_ce, strict)?;
-            }
+            let inner_ce = store.ce(*inner).ok_or_else(|| {
+                Error::Parse(format!("dangling DL class expression reference: {inner:?}"))
+            })?;
+            validate_ce_data(ontology, inner_ce, strict)?;
         }
         _ => {}
     }
@@ -205,7 +213,9 @@ fn validate_data_expr(
 ) -> Result<(), Error> {
     let store = ontology.dl();
     let Some(expr) = store.de(de) else {
-        return Ok(());
+        return Err(Error::Parse(format!(
+            "dangling DL data expression reference: {de:?}"
+        )));
     };
     match expr {
         DataExpr::Literal { lexical, datatype } => {
@@ -227,6 +237,30 @@ fn validate_data_expr(
         DataExpr::Datatype(_) | DataExpr::Top => {}
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ontologos_core::{DeId, DlAxiom, EntityKind, Ontology};
+
+    #[test]
+    fn validate_loaded_ontology_light_rejects_dangling_de_id() {
+        let mut ontology = Ontology::new();
+        let dt = ontology
+            .entity_id("http://example.org/D", EntityKind::Datatype)
+            .expect("datatype");
+        ontology.dl_mut().push_axiom(DlAxiom::DatatypeDefinition {
+            datatype: dt,
+            range: DeId(999),
+        });
+        let err = validate_loaded_ontology_light(&ontology).expect_err("dangling de");
+        assert!(
+            err.to_string()
+                .contains("dangling DL data expression reference"),
+            "unexpected error: {err}"
+        );
+    }
 }
 
 fn datatype_iri(ontology: &Ontology, id: EntityId) -> String {
