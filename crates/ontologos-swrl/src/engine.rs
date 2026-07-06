@@ -759,7 +759,7 @@ fn same_individuals(same_as: &SameAsClosure, a: EntityId, b: EntityId) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ontologos_core::{ClassExpr, DlAxiom, EntityKind, Ontology, SwrlAtom, SwrlIArg, SwrlRule};
+    use ontologos_core::{ClassExpr, DlAxiom, Ontology, SwrlAtom, SwrlIArg, SwrlRule};
 
     #[test]
     fn swrl_does_not_silently_degrade_when_el_classify_fails() {
