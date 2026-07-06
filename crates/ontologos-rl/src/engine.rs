@@ -57,6 +57,7 @@ impl RlEngine {
         )
         .map_err(|boxed| crate::Error::Bridge(boxed.0))?;
         Ok(report_from_outcome(
+            ontology,
             initial_axiom_count,
             ontology.axiom_count(),
             outcome,
@@ -80,6 +81,7 @@ impl RlEngine {
             Ok((outcome, session)) => {
                 reasoner.set_session(Box::new(session));
                 Ok(report_from_outcome(
+                    reasoner.ontology(),
                     initial_axiom_count,
                     reasoner.ontology().axiom_count(),
                     outcome,
@@ -95,19 +97,23 @@ impl RlEngine {
 }
 
 fn report_from_outcome(
+    ontology: &Ontology,
     initial_axiom_count: usize,
     final_axiom_count: usize,
     outcome: MaterializeOutcome,
 ) -> MaterializationReport {
+    let (same_as_clashes, same_as_clash_keys) = crate::abox::collect_same_as_clashes(ontology);
+    let mut clashes = outcome.merge.clashes;
+    clashes.extend(same_as_clashes);
     MaterializationReport {
         initial_axiom_count,
         final_axiom_count,
         rdfs_inferred: 0,
         inferred_by_rule: std::collections::BTreeMap::new(),
         trace: ontologos_core::InferenceTrace::new(),
-        clashes: outcome.merge.clashes,
+        clashes,
         disjoint_clash_keys: std::collections::HashSet::new(),
-        same_as_clash_keys: std::collections::HashSet::new(),
+        same_as_clash_keys,
     }
 }
 

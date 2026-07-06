@@ -3,13 +3,60 @@
 mod closure;
 mod report;
 
-use ontologos_core::{EntityId, Ontology};
+use std::collections::HashSet;
+
+use ontologos_core::{EntityId, EntityKind, Ontology};
 
 pub use closure::{SameAsClosure, same_as_closure};
 pub use report::AboxReport;
 
 pub use crate::Error;
 pub type Result<T> = crate::Result<T>;
+
+/// Detect `sameAs` / `differentFrom` clashes after RL saturation.
+///
+/// Returns human-readable clash messages and canonical `(lo, hi)` pair keys for dedup.
+#[must_use]
+pub fn collect_same_as_clashes(
+    ontology: &Ontology,
+) -> (Vec<String>, HashSet<(EntityId, EntityId)>) {
+    let closure = same_as_closure(ontology);
+    let mut clashes = Vec::new();
+    let mut keys = HashSet::new();
+    let mut by_rep: std::collections::HashMap<EntityId, Vec<EntityId>> =
+        std::collections::HashMap::new();
+
+    for (id, record) in ontology.entities().iter() {
+        if record.kind == EntityKind::Individual {
+            by_rep
+                .entry(closure.representative(id))
+                .or_default()
+                .push(id);
+        }
+    }
+
+    for cluster in by_rep.values() {
+        for i in 0..cluster.len() {
+            for j in (i + 1)..cluster.len() {
+                let a = cluster[i];
+                let b = cluster[j];
+                if ontology
+                    .different_from(a)
+                    .is_some_and(|set| set.contains(&b))
+                {
+                    let (lo, hi) = if a.0 <= b.0 { (a, b) } else { (b, a) };
+                    if keys.insert((lo, hi)) {
+                        clashes.push(format!(
+                            "individuals {a:?} and {b:?} are sameAs but also differentFrom"
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
+    (clashes, keys)
+}
 
 /// Materialize ABox consequences (typing + `sameAs` closure) via RL saturation.
 pub fn materialize_abox(ontology: &mut Ontology) -> Result<AboxReport> {
@@ -170,21 +217,7 @@ fn transitive_subproperty_of(ontology: &Ontology, sub: EntityId, sup: EntityId) 
 }
 
 fn detect_clash(ontology: &Ontology) -> bool {
-    let closure = same_as_closure(ontology);
-    for (_, axiom) in ontology.axioms().iter() {
-        if let ontologos_core::Axiom::DifferentIndividuals(ids) = axiom {
-            for i in 0..ids.len() {
-                for j in (i + 1)..ids.len() {
-                    let a = closure.representative(ids[i]);
-                    let b = closure.representative(ids[j]);
-                    if a == b {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    false
+    !collect_same_as_clashes(ontology).0.is_empty()
 }
 
 #[cfg(test)]
@@ -205,6 +238,23 @@ mod tests {
         o.add_axiom(Axiom::SameIndividual(vec![a, b])).unwrap();
         let c = same_as_closure(&o);
         assert_eq!(c.representative(a), c.representative(b));
+    }
+
+    #[test]
+    fn same_as_different_from_clash_collected() {
+        let mut o = Ontology::new();
+        let a = o
+            .entity_id("http://ex.org/a", ontologos_core::EntityKind::Individual)
+            .unwrap();
+        let b = o
+            .entity_id("http://ex.org/b", ontologos_core::EntityKind::Individual)
+            .unwrap();
+        o.add_axiom(Axiom::SameIndividual(vec![a, b])).unwrap();
+        o.add_axiom(Axiom::DifferentIndividuals(vec![a, b]))
+            .unwrap();
+        let (clashes, keys) = collect_same_as_clashes(&o);
+        assert_eq!(clashes.len(), 1, "clashes: {clashes:?}");
+        assert_eq!(keys.len(), 1);
     }
 
     #[test]
