@@ -28,7 +28,7 @@ See [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md) and [Binding
 
 | Version | Theme |
 |---------|-------|
-| **1.2** | Performance, CLI polish, binding registry publish |
+| **1.2** | Performance, CLI polish, binding registry publish (incl. OntoEagle adapter) |
 | **1.3–1.4** | Ontocode LSP, Python maturity |
 | **2.0** | Beyond HermiT (Konclude-class performance, breaking API where needed) |
 

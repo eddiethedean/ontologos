@@ -1074,6 +1074,7 @@ flowchart LR
 - [ ] `ontologos --watch` for incremental file reload (uses v0.8 incremental APIs)
 - [ ] Shell completions (`clap_complete`)
 - [ ] `--timeout` and `--parallelism` flags on classify
+- [ ] **OntoEagle adapter** — ship a browser-friendly WASM bundle + JS glue that converts OntoLogos parse/reasoner outputs into OntoEagle’s `OntologyDocument` model (enables OntoEagle to use OntoLogos for in-browser parsing/reasoning)
 
 ### Exit criteria
 
