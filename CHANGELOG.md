@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Conformance nightly:** Soft-skip deferred WG cases under `cargo test -- --ignored`; convert Consistent-but-all-unsat regressions into active honesty tests; Keys-002 sample for guard/full agreement nightly
 - **Catalog:** Honor `deferred_wg_ids.txt` across activate-from-disk so HermiT catalog drift stays green
+- **CI:** Retry flaky corpus downloads (`curl` exit 35); bump `check-1.0-release-gates.sh` workspace pin to 1.1.4
 
 ### Changed
 
