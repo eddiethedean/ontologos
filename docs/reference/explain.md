@@ -1,6 +1,6 @@
 # Explain API Reference
 
-Proof graphs and explanation export via [`ontologos-explain`](https://docs.rs/ontologos-explain/1.1.3).
+Proof graphs and explanation export via [`ontologos-explain`](https://docs.rs/ontologos-explain/1.1.4).
 
 ## Overview
 

@@ -22,7 +22,7 @@ See [Security](../security.md) and [JSON snapshot v3](../json-snapshot-v3.md).
 | `max_file_bytes` | 64 MiB | `ParseLimits::max_file_bytes` |
 | `max_axioms` | 10,000,000 | `ParseLimits::max_axioms` |
 
-See [`ParseLimits`](https://docs.rs/ontologos-parser/1.1.3/ontologos_parser/struct.ParseLimits.html).
+See [`ParseLimits`](https://docs.rs/ontologos-parser/1.1.4/ontologos_parser/struct.ParseLimits.html).
 
 ## Engine behavior
 

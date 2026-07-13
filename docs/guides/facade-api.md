@@ -131,22 +131,22 @@ let limits = ParseLimits {
 let ontology = load_ontology_with_limits(path, limits)?;
 ```
 
-See `ParseLimits` on [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/1.1.3) for byte/entity/axiom caps.
+See `ParseLimits` on [docs.rs/ontologos-parser](https://docs.rs/ontologos-parser/1.1.4) for byte/entity/axiom caps.
 
 ## Dependencies
 
 ```toml
 [dependencies]
-ontologos-core = "1.1.3"
-ontologos-parser = "1.1.3"
-ontologos-facade = "1.1.3"
+ontologos-core = "1.1.4"
+ontologos-parser = "1.1.4"
+ontologos-facade = "1.1.4"
 ```
 
-On **`main`** (workspace **1.1.3**, pre-tag), use `"1.1.3"` pins or path/git dependencies after the release is published. The facade pulls in `ontologos-el`, `ontologos-dl`, `ontologos-alc`, `ontologos-swrl`, and `ontologos-rl` (including RDFS) transitively.
+On **`main`** (workspace **1.1.4**, pre-tag), use `"1.1.4"` pins or path/git dependencies after the release is published. The facade pulls in `ontologos-el`, `ontologos-dl`, `ontologos-alc`, `ontologos-swrl`, and `ontologos-rl` (including RDFS) transitively.
 
 ## Related
 
 - [Choosing an API](choosing-an-api.md)
 - [Preview profiles](preview-profiles.md)
 - [Architecture](../architecture.md)
-- [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/1.1.3)
+- [docs.rs/ontologos-facade](https://docs.rs/ontologos-facade/1.1.4)

@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 WORKSPACE_VERSION="$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')"
-PUBLISHED_VERSION="1.1.3"
+PUBLISHED_VERSION="1.1.4"
 echo "Workspace version: ${WORKSPACE_VERSION}"
 echo "Published version: ${PUBLISHED_VERSION}"
 

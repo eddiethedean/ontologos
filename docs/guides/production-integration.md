@@ -39,7 +39,7 @@ let ontology = load_ontology_with_limits_and_base(user_file, limits, Some(base))
 
 ## Untrusted JSON snapshots
 
-Use `from_json_with_limits` — format v1 is rejected. Writers emit **v3** on v1.1.3; readers accept v2 and v3.
+Use `from_json_with_limits` — format v1 is rejected. Writers emit **v3** on v1.1.4; readers accept v2 and v3.
 
 ```rust
 use ontologos_core::{Limits, Ontology};
@@ -94,7 +94,7 @@ match classify(&mut reasoner)? {
 
 ## OWL DL in production
 
-Stable **`--profile dl`** on v1.1.3 uses bounded tableau reasoning. Follow this checklist before serving DL in production:
+Stable **`--profile dl`** on v1.1.4 uses bounded tableau reasoning. Follow this checklist before serving DL in production:
 
 1. **Always use `check_consistency`** — not `is_consistent`. Inspect `ConsistencyResult { consistent, complete }`. When `complete == false`, the check hit a wall-clock or tableau budget; do not treat the ontology as proven consistent.
 2. **Set a wall-clock budget** — `ReasonerConfig { budget_secs: Some(30), .. }` or `ONTOLOGOS_DL_BUDGET_SECS`. Without a budget, DL consistency may run until natural completion (unbounded on pathological inputs).

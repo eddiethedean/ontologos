@@ -8,7 +8,7 @@ public sealed class SmokeTest
     [Fact]
     public void VersionMatchesRelease()
     {
-        Assert.Equal("1.1.3", OntologosInfo.Version());
+        Assert.Equal("1.1.4", OntologosInfo.Version());
     }
 
     [Fact]

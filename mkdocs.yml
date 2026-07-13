@@ -145,18 +145,18 @@ nav:
       - Contract tests: examples/contract-tests.md
       - Taxonomy tolerance: reference/taxonomy-tolerance.md
       - Rust API (docs.rs):
-          - ontologos-core: https://docs.rs/ontologos-core/1.1.3
-          - ontologos-profile: https://docs.rs/ontologos-profile/1.1.3
-          - ontologos-parser: https://docs.rs/ontologos-parser/1.1.3
-          - ontologos-bridge: https://docs.rs/ontologos-bridge/1.1.3
-          - ontologos-rl: https://docs.rs/ontologos-rl/1.1.3
-          - ontologos-el: https://docs.rs/ontologos-el/1.1.3
-          - ontologos-alc: https://docs.rs/ontologos-alc/1.1.3
-          - ontologos-dl: https://docs.rs/ontologos-dl/1.1.3
-          - ontologos-swrl: https://docs.rs/ontologos-swrl/1.1.3
-          - ontologos-explain: https://docs.rs/ontologos-explain/1.1.3
-          - ontologos-ql: https://docs.rs/ontologos-ql/1.1.3
-          - ontologos-facade: https://docs.rs/ontologos-facade/1.1.3
+          - ontologos-core: https://docs.rs/ontologos-core/1.1.4
+          - ontologos-profile: https://docs.rs/ontologos-profile/1.1.4
+          - ontologos-parser: https://docs.rs/ontologos-parser/1.1.4
+          - ontologos-bridge: https://docs.rs/ontologos-bridge/1.1.4
+          - ontologos-rl: https://docs.rs/ontologos-rl/1.1.4
+          - ontologos-el: https://docs.rs/ontologos-el/1.1.4
+          - ontologos-alc: https://docs.rs/ontologos-alc/1.1.4
+          - ontologos-dl: https://docs.rs/ontologos-dl/1.1.4
+          - ontologos-swrl: https://docs.rs/ontologos-swrl/1.1.4
+          - ontologos-explain: https://docs.rs/ontologos-explain/1.1.4
+          - ontologos-ql: https://docs.rs/ontologos-ql/1.1.4
+          - ontologos-facade: https://docs.rs/ontologos-facade/1.1.4
   - Migration:
       - Upgrade to latest: migration/index.md
       - Historical migrations: migration/historical.md
@@ -209,7 +209,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/eddiethedean/ontologos
     - icon: fontawesome/brands/rust
-      link: https://docs.rs/ontologos-core/1.1.3
+      link: https://docs.rs/ontologos-core/1.1.4
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/ontologos/
 

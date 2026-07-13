@@ -23,7 +23,7 @@ public final class ManualSmoke {
     private ManualSmoke() {}
 
     public static void main(String[] args) {
-        if (!"1.1.3".equals(Ontologos.version())) {
+        if (!"1.1.4".equals(Ontologos.version())) {
             throw new AssertionError("unexpected version: " + Ontologos.version());
         }
         try (OntologyBuilder builder = new OntologyBuilder()) {

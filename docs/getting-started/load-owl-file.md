@@ -2,7 +2,7 @@
 
 
 --8<-- "snippets/before-integrate-callout.md"
-Load OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser/1.1.3).
+Load OWL and RDF serializations into the core ontology model via [`ontologos-parser`](https://docs.rs/ontologos-parser/1.1.4).
 
 > **Important:** OntoLogos maps a **subset** of OWL axioms into its core model. `axiom_count()` reflects mapped axioms, not Protégé's total. See [Known limitations](../guides/known-limitations.md) and [Supported constructs](../reference/supported-constructs.md).
 
@@ -56,8 +56,8 @@ Add dependencies:
 
 ```toml
 [dependencies]
-ontologos-core = "1.1.3"
-ontologos-parser = "1.1.3"
+ontologos-core = "1.1.4"
+ontologos-parser = "1.1.4"
 ```
 
 Load and inspect:

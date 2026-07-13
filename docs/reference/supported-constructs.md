@@ -1,4 +1,4 @@
-# Supported OWL Constructs (v1.1.3)
+# Supported OWL Constructs (v1.1.4)
 
 The parser maps OWL into two layers:
 

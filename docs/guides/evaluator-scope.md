@@ -66,8 +66,8 @@ Composite minimum of:
 
 | Channel | DL evaluation | Command |
 |---------|---------------|---------|
-| PyPI / crates.io **1.1.3** | Full DL + SWRL | `pip install ontologos==1.1.3` or `ontologos-* = "1.1.3"` |
-| CLI (git) | Full profiles | `cargo install --git … --tag v1.1.3 ontologos-cli` |
+| PyPI / crates.io **1.1.4** | Full DL + SWRL | `pip install ontologos==1.1.4` or `ontologos-* = "1.1.4"` |
+| CLI (git) | Full profiles | `cargo install --git … --tag v1.1.4 ontologos-cli` |
 
 See [Evaluator playbook](evaluator-playbook.md) and [Comparison](../comparison.md).
 

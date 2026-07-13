@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-07-13
+
+### Fixed
+
+- **Conformance nightly:** Soft-skip deferred WG cases under `cargo test -- --ignored`; convert Consistent-but-all-unsat regressions into active honesty tests; Keys-002 sample for guard/full agreement nightly
+- **Catalog:** Honor `deferred_wg_ids.txt` across activate-from-disk so HermiT catalog drift stays green
+
+### Changed
+
+- Drop-in patch over **v1.1.3** — bump all `ontologos-*` pins together
+
 ## [1.1.3] - 2026-07-12
 
 ### Fixed
@@ -410,7 +421,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/eddiethedean/ontologos/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/eddiethedean/ontologos/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/eddiethedean/ontologos/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/eddiethedean/ontologos/compare/v1.1.0...v1.1.1

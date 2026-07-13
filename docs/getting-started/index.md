@@ -45,9 +45,9 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-ontologos-core = "1.1.3"
-ontologos-parser = "1.1.3"
-ontologos-rl = "1.1.3"
+ontologos-core = "1.1.4"
+ontologos-parser = "1.1.4"
+ontologos-rl = "1.1.4"
 ```
 
 `src/main.rs`:
@@ -73,7 +73,7 @@ Then `cargo run`.
 
 **Expected output (family.owl):** mapped axioms ~57; `inferred` > 0. Counts differ from Protégé — see [Known limitations](../guides/known-limitations.md).
 
-For OWL RL saturation, add `ontologos-rl = "1.1.3"` and see [OWL RL saturation](owl-rl-saturation.md).
+For OWL RL saturation, add `ontologos-rl = "1.1.4"` and see [OWL RL saturation](owl-rl-saturation.md).
 
 ## I want to try it from a clone
 

@@ -1,8 +1,8 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest release:** **v1.1.3** on crates.io/PyPI · See [Release status](release-status.md).
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest release:** **v1.1.4** on crates.io/PyPI · See [Release status](release-status.md).
 
-## v1.1.3 shipped (2026-07-12)
+## v1.1.4 shipped (2026-07-12)
 
 Test-suite verification and conformance guard honesty.
 
@@ -10,7 +10,7 @@ Test-suite verification and conformance guard honesty.
 |------|--------|
 | Conformance entailment guards | **Hardened** (weak IRI-shape shortcut removed) |
 | Shared semantic fixtures | **Added** (`benchmarks/data/semantic-fixtures.json`) |
-| Rust / Python API | **Unchanged** — bump pins to `"1.1.3"` |
+| Rust / Python API | **Unchanged** — bump pins to `"1.1.4"` |
 
 ## v1.1.0 shipped (2026-07-04)
 

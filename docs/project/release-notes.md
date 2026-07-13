@@ -4,6 +4,7 @@ Annotated release summaries live in the repository under [`.github/release/`](ht
 
 | Version | Theme | Notes |
 |---------|-------|-------|
+| [v1.1.4](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.4.md) | Nightly / deferred WG fix | Soft-skip deferred cases under `--ignored`; honesty tests |
 | [v1.1.3](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.3.md) | Test verification patch | Conformance guard honesty; stronger oracle-backed tests |
 | [v1.1.2](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.2.md) | Bug-fix patch | Parser, DL, SWRL, RL, bindings; docs migration links |
 | [v1.1.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.0.md) | Multi-language bindings | Java, .NET, C/C++, shared FFI; Node/WASM over `ontologos-js` |
@@ -15,6 +16,12 @@ Annotated release summaries live in the repository under [`.github/release/`](ht
 | [v0.5.0](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v0.5.0.md) | OWL EL & query | EL classification, CLI profile routing |
 
 Full history: [CHANGELOG](changelog.md) on GitHub.
+
+## v1.1.4 highlights
+
+- **Nightly:** soft-skip deferred WG under `cargo test -- --ignored`; Keys-002 for guard/full agreement sample
+- **Tests:** Consistent-but-all-unsat honesty asserts (deferred until DL proves ⊥)
+- **No breaking Rust/Python API changes** — bump pins to `"1.1.4"`
 
 ## v1.1.3 highlights
 
@@ -44,4 +51,4 @@ See [Facade API](../guides/facade-api.md) and [Architecture](../architecture.md)
 
 ## Latest upgrade
 
-Most users upgrading today: pin **1.1.3** or see [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md).
+Most users upgrading today: pin **1.1.4** or see [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md).

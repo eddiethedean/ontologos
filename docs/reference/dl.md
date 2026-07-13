@@ -1,6 +1,6 @@
 # OWL DL API Reference
 
-OWL 2 DL classification and consistency via [`ontologos-dl`](https://docs.rs/ontologos-dl/1.1.3), routed through [`ontologos-facade`](facade.md).
+OWL 2 DL classification and consistency via [`ontologos-dl`](https://docs.rs/ontologos-dl/1.1.4), routed through [`ontologos-facade`](facade.md).
 
 !!! note "Install channel"
     **PyPI / crates.io 1.0.0:** `Profile::Dl` is production-supported. Validate on your corpus — see [Evaluator scope](../guides/evaluator-scope.md) and [Install channels](../guides/install-channels.md).
@@ -67,7 +67,7 @@ Without a budget, DL may run until natural completion — risky on pathological 
 
 | Profile | Status | Behavior |
 |---------|--------|----------|
-| `Dl` | Stable on v1.1.3 | Full DL engine |
+| `Dl` | Stable on v1.1.4 | Full DL engine |
 | `DlPreview` | Preview | Same engine with explicit preview gating — see [Preview profiles](../guides/preview-profiles.md) |
 
 ## Hybrid routing (`Profile::Auto`)
@@ -76,7 +76,7 @@ Mixed EL/DL ontologies may route modules separately (MORe-style hybrid). CLI `pr
 
 ## Python
 
-On PyPI **1.1.3**:
+On PyPI **1.1.4**:
 
 ```python
 from ontologos import Reasoner

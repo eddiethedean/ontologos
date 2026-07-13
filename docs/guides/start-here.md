@@ -10,7 +10,7 @@
 
 ## Bindings (Node, Java, .NET, C, WASM)
 
-Source-build from a clone — see [Bindings overview](bindings-overview.md). Rust and Python are on crates.io/PyPI at **v1.1.3**.
+Source-build from a clone — see [Bindings overview](bindings-overview.md). Rust and Python are on crates.io/PyPI at **v1.1.4**.
 
 Pick the path that matches how you work. Each link is a single next step—not the full documentation map.
 
@@ -63,7 +63,7 @@ Prefer CLI **`materialize`** for explicit RDFS (same engine as `classify --profi
 **Evaluate with Python only (no Rust, no clone):**
 
 ```bash
-pip install ontologos==1.1.3
+pip install ontologos==1.1.4
 curl -L -o family.owl \
   https://raw.githubusercontent.com/eddiethedean/ontologos/main/benchmarks/data/family.owl
 python -c "from ontologos import Reasoner; r=Reasoner(path='family.owl',profile='rl').classify(); print(r)"
@@ -81,7 +81,7 @@ python -c "from ontologos import Reasoner; r=Reasoner(path='family.owl',profile=
 
 ## I am upgrading an existing integration
 
-[Upgrade to latest](../migration/index.md) — **v1.1.3** published on crates.io and PyPI; see [v1.0.x → v1.1.0](../migration/v1.0.x-to-v1.1.0.md) if upgrading from 1.0.
+[Upgrade to latest](../migration/index.md) — **v1.1.4** published on crates.io and PyPI; see [v1.0.x → v1.1.0](../migration/v1.0.x-to-v1.1.0.md) if upgrading from 1.0.
 
 ## Common questions
 

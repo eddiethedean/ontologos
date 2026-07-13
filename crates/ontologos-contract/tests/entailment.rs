@@ -33,13 +33,23 @@ fn wg_keys_002_entailment_via_user_runner() {
 }
 
 #[test]
-#[ignore = "DL incompleteness: named-class ⊥ not proven for Consistent-but-all-unsat (promoted via weak IRI guard pre-1.1.3); re-enable when classify/unsat probes succeed"]
-fn wg_consistent_but_all_unsat_entailment_via_user_runner() {
+fn wg_consistent_but_all_unsat_remains_deferred_via_user_runner() {
     let case = load_wg_catalog()
         .iter()
         .find(|c| c.id == "owl_wg_tests.Consistent-2Dbut-2Dall-2Dunsat")
         .expect("Consistent-but-all-unsat WG case");
-    check_user_wg_case(case).expect("consistent-but-all-unsat entailment");
+    assert_eq!(
+        case.status, "deferred",
+        "re-activate in deferred_wg_ids.txt only after named-class ⊥ is proven"
+    );
+    let err = check_user_wg_case(case)
+        .expect_err("deferred case must not pass via weak IRI shortcut");
+    assert!(
+        err.contains("entailment expected true")
+            || err.contains("not supported")
+            || err.contains("deferred"),
+        "unexpected error: {err}"
+    );
 }
 
 #[test]

@@ -1,6 +1,6 @@
 # Facade API Reference
 
-Unified classification, consistency, and entailment via [`ontologos-facade`](https://docs.rs/ontologos-facade/1.1.3).
+Unified classification, consistency, and entailment via [`ontologos-facade`](https://docs.rs/ontologos-facade/1.1.4).
 
 For narrative guidance see [Facade API guide](../guides/facade-api.md).
 

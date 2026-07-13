@@ -37,7 +37,7 @@ See [Evaluator scope](evaluator-scope.md) · [When not to use OntoLogos](when-no
 
 ## Release channel
 
-**Published today:** v1.1.3 on crates.io and PyPI. Pin install commands to [Release status](../project/release-status.md).
+**Published today:** v1.1.4 on crates.io and PyPI. Pin install commands to [Release status](../project/release-status.md).
 
 ## Next steps
 

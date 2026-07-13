@@ -1,6 +1,6 @@
 # Core API Reference
 
-In-memory ontology model via [`ontologos-core`](https://docs.rs/ontologos-core/1.1.3).
+In-memory ontology model via [`ontologos-core`](https://docs.rs/ontologos-core/1.1.4).
 
 Narrative: [First ontology](../getting-started/first-ontology.md) · [JSON snapshot v3](../json-snapshot-v3.md).
 
@@ -36,7 +36,7 @@ let ontology = Ontology::builder()
     .build()?;
 ```
 
-See builder methods on [docs.rs](https://docs.rs/ontologos-core/1.1.3/ontologos_core/struct.OntologyBuilder.html).
+See builder methods on [docs.rs](https://docs.rs/ontologos-core/1.1.4/ontologos_core/struct.OntologyBuilder.html).
 
 ## `Reasoner` and `ReasonerBuilder`
 

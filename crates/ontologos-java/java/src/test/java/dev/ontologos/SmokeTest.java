@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class SmokeTest {
     @Test
     void versionMatchesRelease() {
-        assertEquals("1.1.3", Ontologos.version());
+        assertEquals("1.1.4", Ontologos.version());
     }
 
     @Test

@@ -31,13 +31,20 @@ fn wg_keys_002_entailment_via_catalog_runner() {
 }
 
 #[test]
-#[ignore = "DL incompleteness: named-class ⊥ not proven for Consistent-but-all-unsat (promoted via weak IRI guard pre-1.1.3); re-enable when classify/unsat probes succeed"]
-fn wg_consistent_but_all_unsat_entailment_via_catalog_runner() {
+fn wg_consistent_but_all_unsat_remains_deferred() {
     let case = load_wg_catalog()
         .iter()
         .find(|c| c.id == "owl_wg_tests.Consistent-2Dbut-2Dall-2Dunsat")
         .expect("Consistent-but-all-unsat WG case");
-    check_wg_case(case).expect("consistent-but-all-unsat entailment");
+    assert_eq!(
+        case.status, "deferred",
+        "re-activate in deferred_wg_ids.txt only after named-class ⊥ is proven"
+    );
+    let err = check_wg_case(case).expect_err("deferred case must not pass via weak IRI shortcut");
+    assert!(
+        err.contains("entailment expected true"),
+        "unexpected error: {err}"
+    );
 }
 
 #[test]
@@ -68,6 +75,7 @@ fn wg_cardinality_003_via_catalog_runner() {
 }
 
 /// Full reasoner path agreement — nightly only (no positive guard shortcuts).
+/// Uses Keys-002 (not Consistent-but-all-unsat, which remains DL-incomplete).
 #[test]
 #[ignore = "slow DL merge — run in conformance nightly"]
 fn positive_entailment_guards_agree_with_full_reasoner_on_wg_samples() {
@@ -77,8 +85,8 @@ fn positive_entailment_guards_agree_with_full_reasoner_on_wg_samples() {
     use std::time::Duration;
 
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/hermit/wg");
-    let prem_path = root.join("Consistent-2Dbut-2Dall-2Dunsat/premise.rdf");
-    let conc_path = root.join("Consistent-2Dbut-2Dall-2Dunsat/conclusion.rdf");
+    let prem_path = root.join("New-2DFeature-2DKeys-2D002/premise.rdf");
+    let conc_path = root.join("New-2DFeature-2DKeys-2D002/conclusion.rdf");
     assert!(
         prem_path.is_file() && conc_path.is_file(),
         "missing WG fixture"
@@ -96,6 +104,6 @@ fn positive_entailment_guards_agree_with_full_reasoner_on_wg_samples() {
     );
     assert!(
         with_guards,
-        "expected positive entailment for Consistent-but-all-unsat"
+        "expected positive entailment for Keys-002"
     );
 }

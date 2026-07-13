@@ -2,13 +2,13 @@
 
 In-memory OWL ontology model: interned IRIs, typed axioms, JSON v3 snapshots (v2 readable), and `Reasoner` builder.
 
-**Docs:** [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) · [docs.rs](https://docs.rs/ontologos-core/1.1.3)
+**Docs:** [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) · [docs.rs](https://docs.rs/ontologos-core/1.1.4)
 
 ## Install
 
 ```toml
 [dependencies]
-ontologos-core = "1.1.3"
+ontologos-core = "1.1.4"
 ```
 
 ## Quick start

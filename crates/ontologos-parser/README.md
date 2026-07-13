@@ -8,7 +8,7 @@ OWL/RDF file loading for OntoLogos (`load_ontology`).
 
 ```toml
 [dependencies]
-ontologos-parser = "1.1.3"
+ontologos-parser = "1.1.4"
 ```
 
 ## Quick start

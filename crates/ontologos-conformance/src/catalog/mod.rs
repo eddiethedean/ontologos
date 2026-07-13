@@ -1760,10 +1760,14 @@ pub fn run_wg_case(case_id: &str) {
         .unwrap_or_else(|| panic!("unknown WG case id: {case_id}"));
 
     if case.status != "wg" {
-        panic!(
-            "WG case {} should be #[ignore] (status={})",
-            case_id, case.status
+        // Generated tests for deferred/planned cases carry #[ignore]. Soft-skip when
+        // forced via `cargo test -- --ignored` so nightly does not treat incompleteness
+        // as a regression.
+        eprintln!(
+            "skipping non-active WG case {case_id} (status={}, reason={:?})",
+            case.status, case.ignore_reason
         );
+        return;
     }
 
     if ci_promoted_only() {

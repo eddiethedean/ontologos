@@ -1,6 +1,6 @@
 # Examples gallery
 
-Copy-paste workflows for Rust and Python. Install pins use **v1.1.3** unless noted.
+Copy-paste workflows for Rust and Python. Install pins use **v1.1.4** unless noted.
 
 Workflow pages: [DL evaluation](dl-evaluation.md) · [Contract tests](contract-tests.md)
 
@@ -130,14 +130,14 @@ ontologos materialize family.owl
 ontologos explain --profile el pizza.owl
 ```
 
-## OWL DL evaluation (v1.1.3)
+## OWL DL evaluation (v1.1.4)
 
 Available on PyPI and crates.io **1.0.0**.
 
 --8<-- "snippets/pizza-owl-download.md"
 
 ```bash
-pip install ontologos==1.1.3
+pip install ontologos==1.1.4
 ontologos classify --profile dl --budget-secs 30 pizza.owl
 ```
 
@@ -160,8 +160,8 @@ See [Contract tests](../examples/contract-tests.md) in the Reference section.
 
 | Goal | Install |
 |------|---------|
-| All production profiles (EL, RL, RDFS, DL, SWRL) | `pip install ontologos==1.1.3` or `ontologos-* = "1.1.3"` |
-| CLI | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.3 ontologos-cli` |
+| All production profiles (EL, RL, RDFS, DL, SWRL) | `pip install ontologos==1.1.4` or `ontologos-* = "1.1.4"` |
+| CLI | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.4 ontologos-cli` |
 
 See [Install channels](../guides/install-channels.md).
 
