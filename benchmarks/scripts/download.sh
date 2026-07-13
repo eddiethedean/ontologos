@@ -49,7 +49,21 @@ download() {
     return 0
   fi
   echo "Downloading ${dest}..."
-  curl -fsSL "${url}" -o "${dest}"
+  # Retry transient TLS/network failures (CI occasionally sees curl exit 35).
+  local attempt=1
+  local max_attempts=5
+  local delay=2
+  until curl -fsSL --retry 3 --retry-all-errors --retry-delay 2 "${url}" -o "${dest}"; do
+    if (( attempt >= max_attempts )); then
+      echo "download failed after ${max_attempts} attempts: ${url}" >&2
+      rm -f "${dest}"
+      return 1
+    fi
+    echo "download attempt ${attempt} failed; retrying in ${delay}s..." >&2
+    sleep "${delay}"
+    attempt=$((attempt + 1))
+    delay=$((delay * 2))
+  done
 }
 
 # Pizza — EL tutorial corpus (owlcs/pizza-ontology, RDF/XML)

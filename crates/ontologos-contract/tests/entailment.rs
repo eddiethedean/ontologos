@@ -42,8 +42,8 @@ fn wg_consistent_but_all_unsat_remains_deferred_via_user_runner() {
         case.status, "deferred",
         "re-activate in deferred_wg_ids.txt only after named-class ⊥ is proven"
     );
-    let err = check_user_wg_case(case)
-        .expect_err("deferred case must not pass via weak IRI shortcut");
+    let err =
+        check_user_wg_case(case).expect_err("deferred case must not pass via weak IRI shortcut");
     assert!(
         err.contains("entailment expected true")
             || err.contains("not supported")

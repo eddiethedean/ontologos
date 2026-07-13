@@ -102,8 +102,5 @@ fn positive_entailment_guards_agree_with_full_reasoner_on_wg_samples() {
         with_guards, without_guards,
         "guard/full mismatch: guards={with_guards} full={without_guards}"
     );
-    assert!(
-        with_guards,
-        "expected positive entailment for Keys-002"
-    );
+    assert!(with_guards, "expected positive entailment for Keys-002");
 }
