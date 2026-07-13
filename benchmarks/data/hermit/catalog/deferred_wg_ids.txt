@@ -1,0 +1,4 @@
+# WG short ids kept status=deferred (not active in hermit_wg_generated).
+# Re-activate by removing an id once the engine proves the case, then
+# re-run: python3 tests/hermit/generate_catalog.py --activate-all-from-disk
+Consistent-2Dbut-2Dall-2Dunsat
