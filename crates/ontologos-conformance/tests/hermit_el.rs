@@ -61,6 +61,10 @@ fn hermit_classification_pizza_taxonomy() {
 
     let taxonomy = ElClassifier::new().classify(&ontology).expect("classify");
     assert_hierarchies(&ontology, &taxonomy, &golden);
+    assert!(
+        taxonomy.subsumption_count() >= golden.len(),
+        "taxonomy must cover HermiT golden edges"
+    );
 }
 
 #[test]

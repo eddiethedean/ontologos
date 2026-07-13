@@ -72,6 +72,7 @@ fn triage(case: &str) -> bool {
 }
 
 #[test]
+#[ignore = "manual debug — dump WG expression mapping"]
 fn debug_expressions() {
     for case in [
         "TestCase-3AWebOnt-2Ddescription-2Dlogic-2D017",

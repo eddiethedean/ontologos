@@ -6,7 +6,7 @@ See [Install and channels](install-channels.md) and [Release status](../project/
 
 ## Profile stability (published channel)
 
-Current published version: see [Release status](../project/release-status.md) (**1.1.2** on crates.io/PyPI today).
+Current published version: see [Release status](../project/release-status.md) (**1.1.3** on crates.io/PyPI today).
 
 | Profile | Status | Engine | Production recommendation |
 |---------|--------|--------|---------------------------|

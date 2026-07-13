@@ -24,6 +24,7 @@ fn check_consistency(rel: &str, expected: bool) -> Result<(), String> {
 }
 
 #[test]
+#[ignore = "manual debug — dump misc-203 axiom mapping"]
 fn diagnose_misc203_axioms() {
     let rel = "wg/TestCase-3AWebOnt-2Dmiscellaneous-2D203/premise.rdf";
     let ont = load_ontology(&wg_premise(rel)).expect("load");
@@ -43,6 +44,7 @@ fn diagnose_misc203_axioms() {
 }
 
 #[test]
+#[ignore = "manual debug — dump dl-650 unsatisfiable mapping"]
 fn diagnose_dl650_unsatisfiable() {
     use ontologos_alc::{
         DlOntology, TableauSeed, is_ce_intersection_satisfiable_with_seed,

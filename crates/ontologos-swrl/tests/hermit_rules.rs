@@ -13,7 +13,11 @@ fn hermit_ofn(name: &str) -> std::path::PathBuf {
 fn parses_swrl_rules_from_simple_rule() {
     let path = hermit_ofn("hermit_reasoner_rulestest_testsimplerule.ofn");
     let ontology = load_ontology(&path).expect("load");
-    assert_eq!(ontology.swrl_rules().len(), 1);
+    let rules = ontology.swrl_rules();
+    assert_eq!(rules.len(), 1);
+    let rule = &rules[0];
+    assert_eq!(rule.body.len(), 1, "SimpleRule body atom count");
+    assert_eq!(rule.head.len(), 1, "SimpleRule head atom count");
 }
 
 #[test]

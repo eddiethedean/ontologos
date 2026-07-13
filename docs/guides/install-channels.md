@@ -8,22 +8,22 @@ Single source of truth for **what you can install today**. Canonical version tab
 
 | I want to… | Install | Profiles for production |
 |------------|---------|-------------------------|
-| Embed in Rust (crates.io) | `ontologos-* = "1.1.2"` in `Cargo.toml` | **EL, RL, RDFS, DL, SWRL** |
+| Embed in Rust (crates.io) | `ontologos-* = "1.1.3"` in `Cargo.toml` | **EL, RL, RDFS, DL, SWRL** |
 | Use from Python (PyPI) | `pip install ontologos` | **EL, RL, RDFS, DL, SWRL** |
 | Use from Node.js | Build `crates/ontologos-node` | Same as Python |
 | Use from Java / .NET / C/C++ | Build binding crate (see [Bindings overview](bindings-overview.md)) | Same as Python |
-| Run the CLI | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.2 ontologos-cli` or clone + build | All profiles on tagged release |
+| Run the CLI | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.3 ontologos-cli` or clone + build | All profiles on tagged release |
 | Contribute / conformance | Clone + `./benchmarks/scripts/download.sh` | Full engine set |
 
-**Default recommendation:** pin **`1.1.2`** on all `ontologos-*` crates and bump them together.
+**Default recommendation:** pin **`1.1.3`** on all `ontologos-*` crates and bump them together.
 
-## Published channel (v1.1.2)
+## Published channel (v1.1.3)
 
 | Surface | Version | Install |
 |---------|---------|---------|
-| **crates.io** | 1.1.2 | `cargo add ontologos-core@1.1.2` (+ parser, facade, profile crates as needed) |
-| **PyPI** | 1.1.2 | `pip install ontologos` |
-| **docs.rs** | 1.1.2 | Links in [Reference](../reference/facade.md) reflect this channel |
+| **crates.io** | 1.1.3 | `cargo add ontologos-core@1.1.3` (+ parser, facade, profile crates as needed) |
+| **PyPI** | 1.1.3 | `pip install ontologos` |
+| **docs.rs** | 1.1.3 | Links in [Reference](../reference/facade.md) reflect this channel |
 | **Read the Docs** | latest | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 
 **Production-ready on this channel:** RDFS materialization, OWL RL saturation, OWL EL taxonomy, **OWL 2 DL**, **DLSafe SWRL**, profile detection, explanations (EL full), incremental sessions, OWL QL queries.
@@ -50,7 +50,7 @@ Native libraries: `cargo build -p ontologos-jni -p ontologos-dotnet -p ontologos
 | **CLI** | `ontologos --version` |
 | **Rust dependency** | `cargo tree -p ontologos-core \| head -1` |
 
-Expected: **1.1.2** from registries.
+Expected: **1.1.3** from registries.
 
 ## Build from source
 
@@ -69,14 +69,14 @@ bash scripts/ci-bindings.sh
 See [CLI installation](../getting-started/cli-install.md).
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.2 ontologos-cli
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.3 ontologos-cli
 ```
 
 ## API documentation
 
 | Channel | Rust API docs |
 |---------|---------------|
-| **Published 1.1.2** | [docs.rs](https://docs.rs/ontologos-core/1.1.2) |
+| **Published 1.1.3** | [docs.rs](https://docs.rs/ontologos-core/1.1.3) |
 | **`main` (development)** | `cargo doc --open -p ontologos-facade` from a clone |
 
 ## Upgrading

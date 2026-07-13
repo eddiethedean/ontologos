@@ -23,7 +23,7 @@ If `rustc` is too old, see [Troubleshooting — rustc version](../guides/trouble
 Tagged release (matches PyPI/crates.io **1.0.0**):
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.2 ontologos-cli
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.3 ontologos-cli
 ontologos --help
 ```
 

@@ -37,6 +37,31 @@ fn json_v4_round_trips_dl_and_swrl() {
     let restored = Ontology::from_json(&json).expect("from_json");
     assert_eq!(restored.dl().axiom_count(), 1);
     assert_eq!(restored.swrl_rules().len(), 1);
+    let restored_a = restored.lookup_entity("http://example.org/A").expect("A");
+    let restored_b = restored.lookup_entity("http://example.org/B").expect("B");
+    let has_subclass = restored.dl().axioms().any(|ax| {
+        matches!(
+            ax,
+            DlAxiom::SubClassOf { sub, sup }
+                if restored.dl().ce(*sub) == Some(&ClassExpr::Atomic(restored_a))
+                    && restored.dl().ce(*sup) == Some(&ClassExpr::Atomic(restored_b))
+        )
+    });
+    assert!(
+        has_subclass,
+        "round-trip must preserve DL SubClassOf payload"
+    );
+    let rule = &restored.swrl_rules()[0];
+    assert!(
+        matches!(
+            (&rule.body[0], &rule.head[0]),
+            (
+                SwrlAtom::Class { class: bc, arg: SwrlIArg::Individual(bi) },
+                SwrlAtom::Class { class: hc, arg: SwrlIArg::Individual(hi) },
+            ) if *bc == restored_a && *bi == restored_a && *hc == restored_b && *hi == restored_a
+        ),
+        "round-trip must preserve SWRL rule atoms"
+    );
     assert!(!restored.dirty().is_dirty());
 }
 

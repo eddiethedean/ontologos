@@ -9,14 +9,14 @@ body:
       value: |
         Check [Troubleshooting](https://ontologos.readthedocs.io/en/latest/guides/troubleshooting.html) and [FAQ](https://ontologos.readthedocs.io/en/latest/project/faq.html) first.
 
-        **Which release channel?** Latest release is **v1.1.2** on crates.io/PyPI. Say which version you used.
+        **Which release channel?** Latest release is **v1.1.3** on crates.io/PyPI. Say which version you used.
 
   - type: dropdown
     id: channel
     attributes:
       label: Release channel
       options:
-        - crates.io / PyPI 1.1.2
+        - crates.io / PyPI 1.1.3
         - crates.io / PyPI 1.0.0
         - git main (development)
         - Other / not sure

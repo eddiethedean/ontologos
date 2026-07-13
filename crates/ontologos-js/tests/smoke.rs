@@ -16,7 +16,22 @@ fn builder_classify_el() {
     let mut reasoner = JsReasoner::from_ontology(&ontology, Some("el"), false, None).unwrap();
     let report = reasoner.classify().unwrap();
     assert_eq!(report["status"], "classified");
-    assert!(report["subsumption_count"].as_u64().unwrap() >= 1);
+    assert_eq!(report["subsumption_count"].as_u64().unwrap(), 1);
+    let pairs: Vec<(String, String)> = report["subsumptions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| {
+            (
+                p[0].as_str().unwrap().to_string(),
+                p[1].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+    assert!(pairs.contains(&(
+        "http://example.org/Pizza".to_string(),
+        "http://example.org/Food".to_string()
+    )));
 }
 
 #[test]

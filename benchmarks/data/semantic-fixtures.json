@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "description": "Shared semantic expectations for Rust contract and language binding tests.",
+  "el_minimal_subclass": {
+    "fixture": "crates/ontologos-parser/tests/fixtures/minimal_subclass.owl",
+    "profile": "el",
+    "expected_subsumptions": [
+      ["http://example.org/test#A", "http://example.org/test#B"]
+    ]
+  },
+  "family_rl": {
+    "fixture": "benchmarks/data/family.owl",
+    "profile": "rl",
+    "expected_profile_detect": "RL",
+    "expected_subsumptions_after_rl": [],
+    "expected_property_ranges_after_rl": [
+      ["http://a.com/ontology#hasChild", "http://a.com/ontology#Person"]
+    ]
+  },
+  "pizza_el": {
+    "fixture": "benchmarks/data/pizza.owl",
+    "profile": "el",
+    "expected_subsumptions": [
+      [
+        "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#HamTopping",
+        "https://raw.githubusercontent.com/owlcs/pizza-ontology/refs/heads/master/pizza.owl#MeatTopping"
+      ]
+    ]
+  }
+}

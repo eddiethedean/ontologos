@@ -64,7 +64,6 @@ wg:owl_wg_tests.Bnode2somevaluesfrom
 wg:owl_wg_tests.Chain2trans
 wg:owl_wg_tests.Datatype-2Drestrictions-2Ddifferent-2Dtypes
 wg:owl_wg_tests.Owlreal-2Dplus-2DoneOf
-wg:owl_wg_tests.Consistent-2Dbut-2Dall-2Dunsat
 wg:owl_wg_tests.Consistent-2Ddataproperty-2Ddisjointness
 wg:owl_wg_tests.Consistent-2DdateTime
 wg:owl_wg_tests.Consistent-2Dinteger-2Dfiller

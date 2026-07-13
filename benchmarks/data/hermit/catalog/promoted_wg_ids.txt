@@ -2,7 +2,6 @@
 # Re-run: cargo run --release -p ontologos-conformance --bin promote_wg
 Bnode2somevaluesfrom
 Chain2trans
-Consistent-2Dbut-2Dall-2Dunsat
 Consistent-2Ddataproperty-2Ddisjointness
 Consistent-2DdateTime
 Consistent-2Dinteger-2Dfiller

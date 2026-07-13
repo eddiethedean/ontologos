@@ -38,7 +38,11 @@ fn detects_disjoint_unsatisfiable_class() {
         .add_axiom(ontologos_core::Axiom::EquivalentClasses(vec![a, b]))
         .unwrap();
     let taxonomy = classify(&ontology).expect("classify");
-    assert!(taxonomy.unsatisfiable.contains(&a) || taxonomy.unsatisfiable.contains(&b));
+    assert!(
+        taxonomy.unsatisfiable.contains(&a) && taxonomy.unsatisfiable.contains(&b),
+        "disjoint equivalent classes must both be ⊥, unsat={:?}",
+        taxonomy.unsatisfiable
+    );
 }
 
 #[test]

@@ -1,6 +1,6 @@
 # Incremental reasoning
 
-Incremental re-classification and materialization when ontologies change between runs. **Stable on v1.1.2** (introduced in v0.8).
+Incremental re-classification and materialization when ontologies change between runs. **Stable on v1.1.3** (introduced in v0.8).
 
 ## Enable incremental mode
 

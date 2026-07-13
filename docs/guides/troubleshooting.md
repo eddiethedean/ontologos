@@ -18,7 +18,7 @@ See [Prerequisites](prerequisites.md).
 The CLI is **not on crates.io**. See [CLI installation](../getting-started/cli-install.md).
 
 ```bash
-cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.2 ontologos-cli
+cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.3 ontologos-cli
 ```
 
 Or build from a clone: `cargo build -p ontologos-cli --release` → `./target/release/ontologos`.

@@ -172,7 +172,7 @@ See [OWL EL classification](../getting-started/owl-el-classification.md).
 
 ### Python
 
-**Package:** `pip install ontologos` (v1.1.2)
+**Package:** `pip install ontologos` (v1.1.3)
 
 ```python
 from ontologos import Reasoner

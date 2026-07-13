@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-07-12
+
+### Fixed
+
+- **Conformance:** Remove weak `consistent_but_all_unsat` IRI-shape entailment guard; defer `Consistent-but-all-unsat` (status=`deferred`) until DL proves named-class ⊥
+- **Tests:** Replace tautological / floor-only assertions (facade, contract, profile, EL, Python) with oracle-backed expectations
+- **Docs:** Track shared `benchmarks/data/semantic-fixtures.json` for cross-language binding parity
+
+### Changed
+
+- **Tests:** Demote dump-only DL triage tests behind `#[ignore]`; add EL negative subsumption, contract MUST-NOT, parser mapping oracle, catalog honesty, and maintainer oracle policy
+
 ## [1.1.2] - 2026-07-06
 
 ### Fixed
@@ -398,7 +410,8 @@ First release. Publishes **`ontologos-core`** to [crates.io](https://crates.io/c
 - `Ontology::from_file` now returns `Error::ParseNotAvailable` (parsing lands in v0.2)
 - Breaking: `AxiomKind` replaced by structured `Axiom` with entity references
 
-[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/eddiethedean/ontologos/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/eddiethedean/ontologos/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/eddiethedean/ontologos/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/eddiethedean/ontologos/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/eddiethedean/ontologos/compare/v1.0.0...v1.1.0

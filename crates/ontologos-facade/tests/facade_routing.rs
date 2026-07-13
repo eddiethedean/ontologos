@@ -477,24 +477,44 @@ fn is_subsumption_entailed_rdfs_after_classify() {
 fn getting_started_classify_family_auto() {
     let path =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/data/family.owl");
-    if !path.exists() {
-        return;
-    }
+    assert!(
+        path.is_file(),
+        "missing family.owl — run ./benchmarks/scripts/download.sh"
+    );
     let ontology = ontologos_parser::load_ontology(&path).expect("load family.owl");
     let mut reasoner = Reasoner::builder()
         .profile(Profile::Auto)
         .build(ontology)
         .expect("build");
     match classify(&mut reasoner).expect("classify") {
-        ClassifyOutcome::Taxonomy(t) => {
-            assert!(t.subsumption_count() > 0 || t.subsumptions.is_empty());
-        }
-        ClassifyOutcome::Rdfs(r) => {
-            let _ = r.inferred_total();
-        }
         ClassifyOutcome::Rl(r) => {
-            assert!(r.inferred_total() > 0);
+            assert!(
+                r.inferred_total() > 0,
+                "Family Auto/RL must materialize inferred axioms"
+            );
+            let ns = "http://a.com/ontology#";
+            let has_child = reasoner
+                .ontology()
+                .lookup_entity(&format!("{ns}hasChild"))
+                .expect("hasChild");
+            let person = reasoner
+                .ontology()
+                .lookup_entity(&format!("{ns}Person"))
+                .expect("Person");
+            let has_range = reasoner.ontology().axioms().iter().any(|(_, ax)| {
+                matches!(
+                    ax,
+                    ontologos_core::Axiom::ObjectPropertyRange {
+                        property: p,
+                        range: r
+                    } if *p == has_child && *r == person
+                )
+            });
+            assert!(
+                has_range,
+                "hasChild range Person after RL saturation (family corpus oracle)"
+            );
         }
-        _ => panic!("unexpected classify outcome"),
+        other => panic!("Family Auto must route to RL, got {other:?}"),
     }
 }

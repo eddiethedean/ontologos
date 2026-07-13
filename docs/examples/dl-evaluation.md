@@ -55,7 +55,7 @@ match classify(&mut reasoner)? {
 ## Python
 
 ```bash
-pip install ontologos==1.1.2
+pip install ontologos==1.1.3
 ```
 
 ```python

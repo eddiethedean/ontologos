@@ -20,11 +20,10 @@ fn empty_construct_set_detects_ql() {
 }
 
 #[test]
-fn object_all_values_from_is_not_el_or_rl() {
+fn object_all_values_from_detects_ql() {
     let ontology = ontology_with_profile_constructs(&[OwlConstruct::ObjectAllValuesFrom]);
     let report = detect_profile(&ontology).expect("detect");
-    assert_ne!(report.detected, Some(OwlProfile::El));
-    assert_ne!(report.detected, Some(OwlProfile::Rl));
+    assert_eq!(report.detected, Some(OwlProfile::Ql));
 }
 
 #[test]
@@ -66,24 +65,24 @@ fn both_el_and_rl_markers_without_el_markers_prefers_rl() {
 }
 
 #[test]
-fn ql_forbidden_construct_escalates_profile() {
+fn ql_forbidden_construct_escalates_to_dl() {
     let ontology = ontology_with_profile_constructs(&[OwlConstruct::ObjectUnionOf]);
     let report = detect_profile(&ontology).expect("detect");
-    assert_ne!(report.detected, Some(OwlProfile::Ql));
+    assert_eq!(report.detected, Some(OwlProfile::Dl));
 }
 
 #[test]
-fn functional_object_property_is_not_el() {
+fn functional_object_property_detects_rl() {
     let ontology = ontology_with_profile_constructs(&[OwlConstruct::FunctionalObjectProperty]);
     let report = detect_profile(&ontology).expect("detect");
-    assert_ne!(report.detected, Some(OwlProfile::El));
+    assert_eq!(report.detected, Some(OwlProfile::Rl));
 }
 
 #[test]
-fn inverse_object_properties_is_not_el() {
+fn inverse_object_properties_detects_rl() {
     let ontology = ontology_with_profile_constructs(&[OwlConstruct::InverseObjectProperties]);
     let report = detect_profile(&ontology).expect("detect");
-    assert_ne!(report.detected, Some(OwlProfile::El));
+    assert_eq!(report.detected, Some(OwlProfile::Rl));
 }
 
 #[test]

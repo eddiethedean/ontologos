@@ -1,6 +1,6 @@
 # Contributing to OntoLogos
 
-Thank you for your interest in contributing. OntoLogos is in active development: **v1.1.2** is the current release on crates.io/PyPI and the **`main`** workspace. See [Release status](docs/project/release-status.md). High-impact contributions include conformance, bindings, documentation, and incremental reasoning polish.
+Thank you for your interest in contributing. OntoLogos is in active development: **v1.1.3** is the current release on crates.io/PyPI and the **`main`** workspace. See [Release status](docs/project/release-status.md). High-impact contributions include conformance, bindings, documentation, and incremental reasoning polish.
 
 ## Prerequisites
 
@@ -144,7 +144,7 @@ pytest tests/ -q
 1. **Scope:** One logical change per PR when possible.
 2. **Tests:** Add or update tests for behavior changes (core, parser, profile, CLI, Python as appropriate).
 3. **Docs:** Update README, CHANGELOG, or `docs/` when user-visible behavior changes.
-4. **Version pins in docs:** Published install blocks must use **1.1.2** (`docs/scripts/check-doc-versions.sh` enforces this). Migration guides may reference older versions for upgrade paths.
+4. **Version pins in docs:** Published install blocks must use **1.1.3** (`docs/scripts/check-doc-versions.sh` enforces this). Migration guides may reference older versions for upgrade paths.
 5. **Breaking changes:** Note them in CHANGELOG under `[Unreleased]` or the target version.
 6. **No `unsafe`:** The workspace forbids unsafe code.
 
@@ -233,14 +233,14 @@ done
 
 Then:
 
-1. Confirm workspace [Cargo.toml](Cargo.toml) `version = "1.1.2"`.
-2. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated `[1.1.2]` section and empty `[Unreleased]`.
+1. Confirm workspace [Cargo.toml](Cargo.toml) `version = "1.1.3"`.
+2. Ensure [CHANGELOG.md](CHANGELOG.md) has a dated `[1.1.3]` section and empty `[Unreleased]`.
 3. Run `./docs/scripts/check-doc-versions.sh` and `./docs/scripts/check-doc-snippets.sh`.
 4. Commit release prep on `main`.
-5. Create an annotated tag: `git tag -a v1.1.2 -m "OntoLogos v1.1.2"`
-6. Push commit and tag: `git push origin main && git push origin v1.1.2`
+5. Create an annotated tag: `git tag -a v1.1.3 -m "OntoLogos v1.1.3"`
+6. Push commit and tag: `git push origin main && git push origin v1.1.3`
 7. The [release workflow](.github/workflows/release.yml) runs when the tag is pushed (requires GitHub secrets below).
-8. Create a GitHub Release from [`.github/release/v1.1.2.md`](.github/release/v1.1.2.md).
+8. Create a GitHub Release from [`.github/release/v1.1.3.md`](.github/release/v1.1.3.md).
 
 ### Release secrets
 

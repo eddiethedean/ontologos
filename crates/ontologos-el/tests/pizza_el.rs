@@ -46,5 +46,14 @@ fn minimal_el_fixture_classifies() {
         .join("../ontologos-parser/tests/fixtures/minimal_subclass.owl");
     let ontology = load_ontology(&path).expect("load");
     let taxonomy = ElClassifier::new().classify(&ontology).expect("classify");
-    assert!(!taxonomy.subsumptions.is_empty());
+    let a = ontology
+        .lookup_entity("http://example.org/test#A")
+        .expect("A");
+    let b = ontology
+        .lookup_entity("http://example.org/test#B")
+        .expect("B");
+    assert!(
+        taxonomy.is_subsumed(a, b),
+        "minimal EL fixture must infer A ⊑ B"
+    );
 }

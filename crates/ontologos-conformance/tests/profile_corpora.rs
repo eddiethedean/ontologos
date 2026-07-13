@@ -67,13 +67,13 @@ fn go_subset_hybrid_when_present() {
 }
 
 #[test]
-fn family_dl_profile_detected_or_rl() {
+fn family_detects_rl_profile() {
     let ontology = load_corpus("benchmarks/data/family.owl").expect("family");
     let report = detect_profile(&ontology).expect("profile");
-    assert!(
-        matches!(report.detected, Some(OwlProfile::Rl) | Some(OwlProfile::Dl)),
-        "family corpus profile: {:?}",
-        report.detected
+    assert_eq!(
+        report.detected,
+        Some(OwlProfile::Rl),
+        "family.owl profile per profile-detection guide"
     );
 }
 

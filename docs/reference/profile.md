@@ -1,6 +1,6 @@
 # Profile API Reference
 
-OWL profile detection via [`ontologos-profile`](https://docs.rs/ontologos-profile/1.1.2).
+OWL profile detection via [`ontologos-profile`](https://docs.rs/ontologos-profile/1.1.3).
 
 Guide: [Profile detection](../guides/profile-detection.md).
 
@@ -44,7 +44,7 @@ println!("{:?}", report.detected);
 
 ## docs.rs
 
-Full API: [docs.rs/ontologos-profile/1.1.2](https://docs.rs/ontologos-profile/1.1.2)
+Full API: [docs.rs/ontologos-profile/1.1.3](https://docs.rs/ontologos-profile/1.1.3)
 
 ## Related
 

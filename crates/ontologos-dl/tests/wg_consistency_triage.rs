@@ -120,6 +120,7 @@ fn wg_consistency_burndown_triage() {
 }
 
 #[test]
+#[ignore = "manual debug — dump dl-005 consistency steps"]
 fn diagnose_dl005_is_consistent_steps() {
     use ontologos_alc::{DlOntology, TableauSeed};
     use ontologos_core::CeId;
@@ -193,6 +194,7 @@ fn diagnose_dl005_is_consistent_steps() {
 }
 
 #[test]
+#[ignore = "manual debug — dump dl-018 tableau state"]
 fn diagnose_dl018_tableau() {
     use ontologos_alc::{
         DlOntology, TableauSeed, is_named_class_satisfiable_with_seed,
@@ -358,6 +360,7 @@ fn spot_check_consistency_fixes() {
 }
 
 #[test]
+#[ignore = "manual debug — dump dl-608 unsatisfiable mapping"]
 fn diagnose_dl608_unsatisfiable() {
     use ontologos_alc::{
         DlOntology, TableauSeed, is_ce_satisfiable_with_seed, is_named_class_satisfiable_with_seed,
@@ -500,6 +503,7 @@ fn dl608_equiv_and_should_be_unsatisfiable() {
 }
 
 #[test]
+#[ignore = "manual debug — dump flower/one-equals-two consistency"]
 fn diagnose_flower_and_one_equals_two() {
     let cases = [
         ("One_equals_two", "wg/One_equals_two/premise.rdf", false),
@@ -530,6 +534,7 @@ fn diagnose_flower_and_one_equals_two() {
 }
 
 #[test]
+#[ignore = "manual debug — dump satisfiable class sat for dl-005"]
 fn diagnose_satisfiable_class_sat() {
     use ontologos_alc::{DlOntology, TableauSeed, is_named_class_satisfiable_with_seed};
     use ontologos_core::EntityKind;
@@ -553,6 +558,7 @@ fn diagnose_satisfiable_class_sat() {
 }
 
 #[test]
+#[ignore = "manual debug — dump priority WG case axioms"]
 fn diagnose_priority_cases() {
     let cases = [
         (

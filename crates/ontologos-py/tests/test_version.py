@@ -30,7 +30,7 @@ PIZZA_MINIMAL_JSON = (
 def test_version_matches_release() -> None:
     import ontologos
 
-    assert ontologos.__version__ == "1.1.2"
+    assert ontologos.__version__ == "1.1.3"
 
 
 def test_reasoner_import() -> None:
@@ -77,8 +77,8 @@ def test_classify_rdfs_profile_materializes() -> None:
     assert FIXTURE.is_file(), f"missing fixture: {FIXTURE}"
     reasoner = Reasoner(path=str(FIXTURE), profile="rdfs", trusted=True, lenient=True)
     result = reasoner.classify()
-    assert result["inferred_axioms"] >= 0
-    assert result["final_axiom_count"] >= result["initial_axiom_count"]
+    assert result["inferred_axioms"] >= 1, "RDFS must infer transitive subclass on A ⊑ B chain"
+    assert result["final_axiom_count"] > result["initial_axiom_count"]
 
 
 def test_parse_meta_exposes_warnings_for_kind_clash() -> None:

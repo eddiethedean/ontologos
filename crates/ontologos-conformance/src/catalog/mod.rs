@@ -3247,51 +3247,18 @@ fn conclusion_only_class_assertions(conclusion: &Ontology) -> bool {
             .any(|(_, a)| matches!(a, ontologos_core::Axiom::ClassAssertion { .. }))
 }
 
-/// WG `Consistent-but-all-unsat`: consistent KB where each named class is individually ⊥.
-fn consistent_but_all_unsat_entailment_guard(premise: &Ontology, conclusion: &Ontology) -> bool {
-    if !premise_matches_consistent_but_all_unsat(premise) {
-        return false;
-    }
-    let Some(targets) = conclusion_nothing_subclass_entailment_targets(conclusion) else {
-        return false;
-    };
-    if targets.len() < 4 {
-        return false;
-    }
-    if !ontologos_dl::is_consistent(premise).unwrap_or(false) {
-        return false;
-    }
-    targets.iter().all(|sub_e| {
-        map_entity_by_iri(conclusion, premise, *sub_e)
-            .or_else(|| map_entity_by_local_iri(conclusion, premise, *sub_e))
-            .is_some()
-    })
-}
-
-fn premise_matches_consistent_but_all_unsat(premise: &Ontology) -> bool {
-    let mut has_2a = false;
-    let mut has_functional_pair = false;
-    for (_, record) in premise.entities().iter() {
-        let Ok(iri) = premise.resolve_iri(record.iri) else {
-            continue;
-        };
-        if iri.ends_with("/2a") || iri.ends_with("#2a") {
-            has_2a = true;
-        }
-        if record.kind == EntityKind::ObjectProperty
-            && (iri.ends_with("/2aTOa") || iri.ends_with("#2aTOa"))
-        {
-            has_functional_pair = true;
-        }
-    }
-    has_2a && has_functional_pair
-}
-
 /// Fast path for WG `Consistent-but-all-unsat` — avoids full merged classification.
+///
+/// Conclusion shape is only `C ⊑ Nothing` for several named classes. Returns
+/// `Some(true)` only when the reasoner proves each mapped class is ⊥.
+///
+/// Does **not** fall back to IRI-shape matching: as of 1.1.3 the DL engine does not
+/// yet prove unsatisfiability for this functional/inverse corpus within CI budgets,
+/// so the case is demoted from `promoted_wg_ids.txt` until the probes succeed.
 fn consistent_but_all_unsat_fast_entailment(
     premise: &Ontology,
     conclusion: &Ontology,
-    _budget: Duration,
+    budget: Duration,
 ) -> Result<Option<bool>, String> {
     let Some(targets_conc) = conclusion_nothing_subclass_entailment_targets(conclusion) else {
         return Ok(None);
@@ -3308,41 +3275,19 @@ fn consistent_but_all_unsat_fast_entailment(
         };
         targets.push(sub_p);
     }
-    let premise_for_consistency = premise.clone();
-    let consistent = with_default_tableau_limits(|| {
-        ontologos_dl::is_consistent(&premise_for_consistency).map_err(|e| e.to_string())
-    })?;
-    if !consistent {
-        return Ok(Some(false));
+    let premise = premise.clone();
+    // Only accept a positive result from a successful unsat proof. Do not call
+    // classify here: it routinely exceeds the CI budget on this corpus without
+    // proving ⊥, and empty-seed ALC probes are unsound for this shape.
+    let proven = with_default_tableau_limits(|| {
+        run_dl_bounded(budget, move || {
+            ontologos_dl::named_classes_unsatisfiable(&premise, &targets).map_err(|e| e.to_string())
+        })
+    });
+    match proven {
+        Ok(Ok(true)) => Ok(Some(true)),
+        Ok(Ok(false)) | Ok(Err(_)) | Err(_) => Ok(None),
     }
-    let premise_for_unsat = premise.clone();
-    let entailed = with_default_tableau_limits(|| {
-        if let Ok(tax) = ontologos_dl::classify(&premise_for_unsat)
-            && targets.iter().all(|c| tax.unsatisfiable.contains(c))
-        {
-            return Ok(true);
-        }
-        let dl = ontologos_alc::DlOntology::from_ontology(&premise_for_unsat)
-            .map_err(|e| e.to_string())?;
-        let mut cache = ontologos_alc::UnsatCache::new();
-        let default_seed = ontologos_alc::TableauSeed::default();
-        if targets.iter().all(|&class| {
-            matches!(
-                ontologos_alc::is_named_class_satisfiable_with_cache(
-                    &dl,
-                    class,
-                    &default_seed,
-                    &mut cache,
-                ),
-                Ok(false)
-            )
-        }) {
-            return Ok(true);
-        }
-        ontologos_dl::named_classes_unsatisfiable(&premise_for_unsat, &targets)
-            .map_err(|e| e.to_string())
-    })?;
-    Ok(Some(entailed))
 }
 
 fn entailment_via_subclass_nothing(
@@ -3479,20 +3424,18 @@ fn entailment_holds_with_budget(
     entailment_holds_with_budget_opts(premise, conclusion, budget, true)
 }
 
-fn entailment_holds_with_budget_opts(
+/// Entailment check with optional positive shortcut guards (used by conformance harness).
+pub fn entailment_holds_with_budget_opts(
     premise: &Ontology,
     conclusion: &Ontology,
     budget: Option<Duration>,
     allow_positive_guards: bool,
 ) -> Result<bool, String> {
     let budget = budget.unwrap_or(dl_classify_budget());
-    if allow_positive_guards {
-        if consistent_but_all_unsat_entailment_guard(premise, conclusion) {
-            return Ok(true);
-        }
-        if let Some(true) = consistent_but_all_unsat_fast_entailment(premise, conclusion, budget)? {
-            return Ok(true);
-        }
+    if allow_positive_guards
+        && let Some(true) = consistent_but_all_unsat_fast_entailment(premise, conclusion, budget)?
+    {
+        return Ok(true);
     }
     if allow_positive_guards
         && conclusion_nothing_subclass_entailment_targets(conclusion).is_some()
@@ -10328,14 +10271,30 @@ mod entailment_guard_tests {
         assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
     }
 
+    /// Honesty: never claim this HermiT-positive entailment via IRI shape alone.
+    /// When DL named-unsat / classify eventually proves ⊥, flip this to expect `Some(true)`
+    /// and re-add `Consistent-2Dbut-2Dall-2Dunsat` to `promoted_wg_ids.txt`.
     #[test]
-    fn consistent_but_all_unsat_entailment() {
+    fn consistent_but_all_unsat_rejects_iri_only_shortcut() {
         let prem = load_ontology(&wg("wg/Consistent-2Dbut-2Dall-2Dunsat/premise.rdf")).unwrap();
         let conc = load_ontology(&wg("wg/Consistent-2Dbut-2Dall-2Dunsat/conclusion.rdf")).unwrap();
         assert!(ontologos_dl::is_consistent(&prem).unwrap());
         let targets = conclusion_nothing_subclass_entailment_targets(&conc);
         assert!(targets.as_ref().is_some_and(|t| t.len() >= 4));
-        assert!(consistent_but_all_unsat_entailment_guard(&prem, &conc));
-        assert!(entailment_holds_with_budget(&prem, &conc, Some(dl_classify_budget())).unwrap());
+        assert!(
+            targets.as_ref().unwrap().iter().all(|sub_e| {
+                map_entity_by_iri(&conc, &prem, *sub_e)
+                    .or_else(|| map_entity_by_local_iri(&conc, &prem, *sub_e))
+                    .is_some()
+            }),
+            "premise/conclusion class IRIs must still map (shape alone is not entailment)"
+        );
+        let fast =
+            consistent_but_all_unsat_fast_entailment(&prem, &conc, dl_classify_budget()).unwrap();
+        assert_ne!(
+            fast,
+            Some(true),
+            "must not return Ok(Some(true)) without proving each class is ⊥"
+        );
     }
 }

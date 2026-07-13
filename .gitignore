@@ -27,6 +27,7 @@ dist/
 !/benchmarks/data/dl-taxonomy-golden.json
 !/benchmarks/data/tier-c-strict-status.json
 !/benchmarks/data/dl-perf-snapshot.json
+!/benchmarks/data/semantic-fixtures.json
 !/benchmarks/data/hermit/
 !/benchmarks/data/hermit/**
 

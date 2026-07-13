@@ -1,6 +1,6 @@
 # Query API Reference
 
-Taxonomy navigation and conjunctive queries via [`ontologos-ql`](https://docs.rs/ontologos-ql/1.1.2).
+Taxonomy navigation and conjunctive queries via [`ontologos-ql`](https://docs.rs/ontologos-ql/1.1.3).
 
 The `ontologos-query` crate is a **deprecated shim** — depend on `ontologos-ql` directly.
 
@@ -8,8 +8,8 @@ The `ontologos-query` crate is a **deprecated shim** — depend on `ontologos-ql
 
 | API | Purpose |
 |-----|---------|
-| [`TaxonomyHierarchy`](https://docs.rs/ontologos-ql/1.1.2/ontologos_ql/struct.TaxonomyHierarchy.html) | Subclass/superclass navigation after EL or DL classification |
-| [`answer_query`](https://docs.rs/ontologos-ql/1.1.2/ontologos_ql/fn.answer_query.html) | OWL QL conjunctive query answering |
+| [`TaxonomyHierarchy`](https://docs.rs/ontologos-ql/1.1.3/ontologos_ql/struct.TaxonomyHierarchy.html) | Subclass/superclass navigation after EL or DL classification |
+| [`answer_query`](https://docs.rs/ontologos-ql/1.1.3/ontologos_ql/fn.answer_query.html) | OWL QL conjunctive query answering |
 
 Use after `ElClassifier::classify`, `ontologos_facade::classify`, or CLI/Python classification.
 

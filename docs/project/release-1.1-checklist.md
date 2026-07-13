@@ -1,26 +1,27 @@
-# v1.1.1 release checklist
+# v1.1.3 release checklist
 
-Pre-tag verification for **OntoLogos v1.1.1** (multi-language bindings). Execute in order.
+Pre-tag verification for **OntoLogos v1.1.3** (test verification / conformance guard honesty). Execute in order.
 
 ## 1. Version alignment
 
 | Location | Expected |
 |----------|----------|
-| Workspace [`Cargo.toml`](../../Cargo.toml) | `version = "1.1.1"` |
-| [`crates/ontologos-py/pyproject.toml`](../../crates/ontologos-py/pyproject.toml) | `version = "1.1.1"` |
-| [`crates/ontologos-py/python/ontologos/__init__.py`](../../crates/ontologos-py/python/ontologos/__init__.py) | `__version__ = "1.1.1"` |
-| [`crates/ontologos-cli/src/main.rs`](../../crates/ontologos-cli/src/main.rs) | `after_help` advertises `v1.1.1` |
-| [`docs/scripts/check-doc-versions.sh`](../scripts/check-doc-versions.sh) | `PUBLISHED_VERSION="1.1.1"` |
+| Workspace [`Cargo.toml`](../../Cargo.toml) | `version = "1.1.3"` |
+| [`crates/ontologos-py/pyproject.toml`](../../crates/ontologos-py/pyproject.toml) | `version = "1.1.3"` |
+| [`crates/ontologos-py/python/ontologos/__init__.py`](../../crates/ontologos-py/python/ontologos/__init__.py) | `__version__ = "1.1.3"` |
+| [`crates/ontologos-cli/src/main.rs`](../../crates/ontologos-cli/src/main.rs) | `after_help` advertises `v1.1.3` |
+| [`docs/scripts/check-doc-versions.sh`](../scripts/check-doc-versions.sh) | `PUBLISHED_VERSION="1.1.3"` |
+| [`.github/release/v1.1.3.md`](../../.github/release/v1.1.3.md) | GitHub Release body ready |
 
 ## 2. Documentation
 
 | Location | Action |
 |----------|--------|
-| [channel banner (repo)](https://github.com/eddiethedean/ontologos/blob/main/docs/snippets/channel-banner.md) | Single-channel **v1.1.1** on crates.io/PyPI |
-| [`docs/project/release-status.md`](release-status.md) | Published **1.1.1**; remove staged language |
-| [README (repo)](https://github.com/eddiethedean/ontologos/blob/main/README.md) | Install pins **1.1.1**; CLI `--tag v1.1.1` |
-| [CHANGELOG (repo)](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) | Remove STAGED note from `[1.1.1]` section |
-| [`.github/release/v1.1.1.md`](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.1.md) | GitHub Release body ready |
+| [channel banner (repo)](https://github.com/eddiethedean/ontologos/blob/main/docs/snippets/channel-banner.md) | Single-channel **v1.1.3** on crates.io/PyPI |
+| [`docs/project/release-status.md`](release-status.md) | Published **1.1.3** |
+| [README (repo)](https://github.com/eddiethedean/ontologos/blob/main/README.md) | Install pins **1.1.3**; CLI `--tag v1.1.3` |
+| [CHANGELOG (repo)](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) | Dated `[1.1.3]` section; empty `[Unreleased]` |
+| [`.github/release/v1.1.3.md`](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.3.md) | GitHub Release body ready |
 
 Run:
 
@@ -45,25 +46,29 @@ bash scripts/ci-node.sh
 cargo build -p ontologos-cli --release
 ```
 
-**Full release verify** (includes ~26 min conformance — matches [release.yml](../../.github/workflows/release.yml)):
+**Full release verify** (includes ~26 min conformance — matches [release.yml](https://github.com/eddiethedean/ontologos/blob/main/.github/workflows/release.yml)):
 
 ```bash
+export ONTOLOGOS_DL_BUDGET_SECS=30 ONTOLOGOS_WG_SHORTCUTS=1 ONTOLOGOS_CONFORMANCE=1
+cargo test --workspace --locked
 cargo test -p ontologos-conformance --release --locked
 ```
 
+Note: `Consistent-but-all-unsat` is `deferred` / `#[ignore]` in 1.1.3 (weak IRI guard removed; DL does not yet prove named-class ⊥). Re-promote when `named_classes_unsatisfiable` succeeds.
+
 ## 4. Tag and publish
 
-1. Confirm [CHANGELOG](changelog.md) `[1.1.1]` section is complete; `[Unreleased]` empty.
+1. Confirm [CHANGELOG](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) `[1.1.3]` section is complete; `[Unreleased]` empty.
 2. Commit release prep on `main`.
 3. Annotated tag:
 
    ```bash
-   git tag -a v1.1.1 -m "OntoLogos v1.1.1"
-   git push origin main && git push origin v1.1.1
+   git tag -a v1.1.3 -m "OntoLogos v1.1.3"
+   git push origin main && git push origin v1.1.3
    ```
 
-4. [Release workflow](../../.github/workflows/release.yml) publishes crates.io (12 crates) + PyPI wheels on tag push.
-5. Create GitHub Release from [v1.1.1 release notes](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.1.md).
+4. [Release workflow](https://github.com/eddiethedean/ontologos/blob/main/.github/workflows/release.yml) publishes crates.io (12 crates) + PyPI wheels on tag push.
+5. Create GitHub Release from [v1.1.3 release notes](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.3.md).
 
 ## 5. Secrets required
 
@@ -75,13 +80,14 @@ cargo test -p ontologos-conformance --release --locked
 ## 6. Post-publish verification
 
 ```bash
-pip install ontologos==1.1.1
-python -c "import ontologos; assert ontologos.__version__ == '1.1.1'"
-cargo install ontologos-core --version 1.1.1
+pip install ontologos==1.1.3
+python -c "import ontologos; assert ontologos.__version__ == '1.1.3'"
+cargo install ontologos-core --version 1.1.3
 ```
 
 ## Related
 
 - [Release status](release-status.md)
 - [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md)
-- [Contributing](contributing.md) — release section
+- [Contributing](https://github.com/eddiethedean/ontologos/blob/main/CONTRIBUTING.md) — release section
+- [Test oracle policy](https://github.com/eddiethedean/ontologos/blob/main/docs/internal/test-oracle-policy.md)

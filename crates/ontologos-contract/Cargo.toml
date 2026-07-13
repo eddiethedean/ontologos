@@ -19,3 +19,6 @@ ontologos-conformance = { path = "../ontologos-conformance" }
 ontologos-core = { workspace = true }
 ontologos-facade = { workspace = true }
 ontologos-parser = { workspace = true }
+ontologos-profile = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
