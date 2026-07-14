@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Release CI:** Publish WASM module to Wasmer Registry as `eddiethedean/ontologos` (`WASMER_TOKEN`, `.github/scripts/publish-wasmer.sh`)
 - **CI:** Manual `Publish Wasmer` workflow (workflow_dispatch) to build and publish WASM without a full release
 - **Docs:** Wasmer badge and install links for [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) across README and docs
+- **Release CI:** Publish npm packages `ontologos` (multi-platform N-API) and `@ontologos/wasm` (`NPM_TOKEN`)
+- **CI:** Manual `Publish npm` workflow (workflow_dispatch) for on-demand npm publishes
+- **Docs:** npm install channels and badges for Node/WASM
 
 ## [1.1.4] - 2026-07-13
 

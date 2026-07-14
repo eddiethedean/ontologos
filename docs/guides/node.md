@@ -1,10 +1,18 @@
 # Node.js Guide
 
-Native Node.js bindings ship in the workspace crate **`ontologos-node`** (npm package name `ontologos`). They mirror the Python API via shared logic in `ontologos-js`.
+[![npm](https://img.shields.io/npm/v/ontologos.svg)](https://www.npmjs.com/package/ontologos)
 
-## Install and build
+Native Node.js bindings ship as the npm package **`ontologos`** (`crates/ontologos-node`). They mirror the Python API via shared logic in `ontologos-js`.
 
-Published npm releases are not yet on the registry — build from a clone:
+## Install
+
+```bash
+npm install ontologos
+```
+
+Prebuilt native addons ship for macOS (arm64/x64), Linux gnu (arm64/x64), and Windows x64. Requires **Node.js 18+**.
+
+### Build from source
 
 ```bash
 cd crates/ontologos-node
@@ -12,7 +20,7 @@ npm install
 npm run build
 ```
 
-Requires **Node.js 18+** and a Rust toolchain (napi-rs compiles a native addon).
+Requires a Rust toolchain (napi-rs compiles the native addon).
 
 ## Quick start
 

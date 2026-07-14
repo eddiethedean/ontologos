@@ -1,17 +1,23 @@
 # WebAssembly API Reference
 
+[![npm](https://img.shields.io/npm/v/@ontologos/wasm.svg)](https://www.npmjs.com/package/@ontologos/wasm)
 [![Wasmer](https://img.shields.io/badge/Wasmer-1.1.4-4946E5?logo=wasmer&logoColor=white)](https://wasmer.io/eddiethedean/ontologos)
 
-Browser bindings via **`@ontologos/wasm`** (`crates/ontologos-wasm`). The `.wasm` binary is published to Wasmer as **[`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos)**; JS glue is source-build — see [Bindings overview](../guides/bindings-overview.md) and [WASM guide](../guides/wasm.md).
+Browser bindings via **`@ontologos/wasm`**. Published on [npm](https://www.npmjs.com/package/@ontologos/wasm); `.wasm` also on [Wasmer](https://wasmer.io/eddiethedean/ontologos) — see [Bindings overview](../guides/bindings-overview.md) and [WASM guide](../guides/wasm.md).
 
 Tutorial: [WASM guide](../guides/wasm.md).
 
 ## Install
 
+```bash
+npm install @ontologos/wasm
+```
+
 | Channel | Link |
 |---------|------|
+| **npm** | [`@ontologos/wasm`](https://www.npmjs.com/package/@ontologos/wasm) |
 | **Wasmer** | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) |
-| **Source (JS glue)** | Build `crates/ontologos-wasm` |
+| **Source** | Build `crates/ontologos-wasm` |
 
 ## Build
 

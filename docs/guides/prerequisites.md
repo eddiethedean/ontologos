@@ -1,6 +1,6 @@
 # Prerequisites
 
-OntoLogos is a **Rust workspace** with optional **Python bindings**, a **Wasmer-published WASM module**, and **source-build native bindings** (v1.1.4). Pick the row that matches your task. Install channels: [Install and channels](install-channels.md).
+OntoLogos is a **Rust workspace** with optional **Python bindings**, **npm packages** (`ontologos`, `@ontologos/wasm`), a **Wasmer-published WASM module**, and **source-build** Java/.NET/C bindings (v1.1.4). Pick the row that matches your task. Install channels: [Install and channels](install-channels.md).
 
 Unfamiliar with OWL terms? See the [Glossary](glossary.md).
 
@@ -10,13 +10,15 @@ Unfamiliar with OWL terms? See the [Glossary](glossary.md).
 |------|------|--------|-----------------|-------------|
 | Embed reasoning in a Rust app (crates.io) | **1.88+** | — | — | No |
 | `pip install ontologos` | — | **3.10+** (wheels on Linux/macOS/Windows) | — | No |
+| `npm install ontologos` | — | — | **Node.js 18+** | No |
+| `npm install @ontologos/wasm` | — | — | **Node.js 18+** / browser bundler | No |
 | Build `ontologos-cli` from source | **1.88+** | — | — | Yes |
-| Build **Node.js** bindings | **1.88+** | — | **Node.js 18+**, npm | Yes |
+| Build **Node.js** bindings from source | **1.88+** | — | **Node.js 18+**, npm | Yes |
 | Build **Java** bindings | **1.88+** | — | **JDK 17+**, **Maven 3.9+** | Yes |
 | Build **.NET** bindings | **1.88+** | — | **.NET 8+** SDK | Yes |
 | Build **C/C++** bindings | **1.88+** | — | C/C++ compiler, CMake (optional) | Yes |
-| Use **Wasmer** WASM package | — | — | — | No ([package page](https://wasmer.io/eddiethedean/ontologos); JS glue still needs a build/clone) |
-| Build **WASM** bindings (JS glue) | **1.88+** + `wasm32-unknown-unknown` | — | **wasm-pack**, Node.js | Yes |
+| Use **Wasmer** WASM package | — | — | — | No ([package page](https://wasmer.io/eddiethedean/ontologos)) |
+| Build **WASM** bindings from source | **1.88+** + `wasm32-unknown-unknown` | — | **wasm-pack**, Node.js | Yes |
 | Run full conformance / benchmarks | **1.88+** | 3.10+ optional | JDK 17+ for Tier C (optional) | Yes + `./benchmarks/scripts/download.sh` |
 | MSRV CI gate | **1.88** exactly | — | — | Yes |
 | Contribute (fmt, clippy, tests) | **stable** (1.88+) | 3.10+ for `ontologos-py` | Per binding row above | Yes |
@@ -76,7 +78,7 @@ Family ontology is vendored. Pizza and other HermiT fixtures:
 | Protégé installed | Optional for authoring OWL; not required to run OntoLogos |
 | Java / HermiT | OntoLogos does not embed HermiT; conformance tests compare against ported fixtures |
 | Every crate on crates.io | `ontologos-cli` and `ontologos-conformance` are source-build only |
-| npm/Maven/NuGet packages | Node/Java/.NET remain source-build; WASM `.wasm` is on [Wasmer](https://wasmer.io/eddiethedean/ontologos) |
+| npm/Maven/NuGet packages | **npm** publishes `ontologos` and `@ontologos/wasm`; Java/.NET remain source-build; WASM also on [Wasmer](https://wasmer.io/eddiethedean/ontologos) |
 
 ## Next step
 

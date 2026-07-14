@@ -10,8 +10,9 @@
 
 ## Bindings (Node, Java, .NET, C, WASM)
 
-- **WASM:** [Wasmer `eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) + JS glue from `crates/ontologos-wasm` — [WASM guide](wasm.md)
-- **Node / Java / .NET / C:** source-build from a clone — [Bindings overview](bindings-overview.md)
+- **Node:** `npm install ontologos` — [Node guide](node.md)
+- **WASM:** `npm install @ontologos/wasm` · [Wasmer](https://wasmer.io/eddiethedean/ontologos) — [WASM guide](wasm.md)
+- **Java / .NET / C:** source-build from a clone — [Bindings overview](bindings-overview.md)
 
 Rust and Python are on crates.io/PyPI at **v1.1.4**.
 

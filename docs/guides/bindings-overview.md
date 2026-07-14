@@ -8,13 +8,13 @@ Honest matrix for **published vs source-build** language bindings. Install chann
 |------------|---------------|----------|
 | Embed in **Rust** | `ontologos-* = "1.1.4"` on [crates.io](https://crates.io/crates/ontologos-core) | **Published** |
 | Use from **Python** | `pip install ontologos` | **Published** (PyPI) |
-| Use from **Node.js** | Build `crates/ontologos-node` | Source-build |
+| Use from **Node.js** | `npm install ontologos` | **Published** (npm) |
 | Use from **Java** | Build `crates/ontologos-java` | Source-build (Maven local) |
 | Use from **.NET** | Build `crates/ontologos-dotnet` | Source-build |
 | Use from **C/C++** | Build `crates/ontologos-c` | Source-build |
-| Use in **browser (WASM)** | [Wasmer package](https://wasmer.io/eddiethedean/ontologos) + JS glue from `crates/ontologos-wasm` | **Published** on Wasmer; JS glue source-build |
+| Use in **browser (WASM)** | `npm install @ontologos/wasm` · [Wasmer](https://wasmer.io/eddiethedean/ontologos) | **Published** (npm + Wasmer) |
 
-**v1.1.4** ships shared FFI and native bindings. WASM (`.wasm`) is on [Wasmer](https://wasmer.io/eddiethedean/ontologos); Node/Java/.NET/C remain source-build. See [Release status](../project/release-status.md).
+**v1.1.4** ships shared FFI and native bindings. Node (`ontologos`) and WASM (`@ontologos/wasm`) are on npm; WASM `.wasm` is also on [Wasmer](https://wasmer.io/eddiethedean/ontologos). Java/.NET/C remain source-build. See [Release status](../project/release-status.md).
 
 ## API parity
 

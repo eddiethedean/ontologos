@@ -1,17 +1,21 @@
 # WebAssembly Guide
 
+[![npm @ontologos/wasm](https://img.shields.io/npm/v/@ontologos/wasm.svg)](https://www.npmjs.com/package/@ontologos/wasm)
 [![Wasmer](https://img.shields.io/badge/Wasmer-1.1.4-4946E5?logo=wasmer&logoColor=white)](https://wasmer.io/eddiethedean/ontologos)
 
-Browser bindings ship in **`@ontologos/wasm`** (`crates/ontologos-wasm`). Shared logic lives in `ontologos-js`; the WASM crate is a thin wasm-bindgen wrapper.
-
-The `.wasm` module is published to the Wasmer Registry as **[`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos)**. Browser apps still need this crate’s wasm-bindgen JS glue (`npm run build` locally, or consume the package sources).
+Browser bindings ship as **`@ontologos/wasm`** (`crates/ontologos-wasm`). Shared logic lives in `ontologos-js`; the WASM crate is a thin wasm-bindgen wrapper.
 
 ## Install
 
+```bash
+npm install @ontologos/wasm
+```
+
 | Channel | How |
 |---------|-----|
-| **Wasmer** | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) — published package **1.1.4** |
-| **Source** | Build with wasm-pack (below) for JS glue + local `.wasm` |
+| **npm** | `npm install @ontologos/wasm` — JS glue + `.wasm` |
+| **Wasmer** | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) — `.wasm` module **1.1.4** |
+| **Source** | Build with wasm-pack (below) |
 
 ## Build
 
@@ -25,13 +29,14 @@ npm test
 
 The release artifact is large when DL support is included — expect multi‑MB `.wasm` files. EL/RL-only browser builds may be slimmed in a future release.
 
-## Wasmer Registry
+## Registries
 
-On each `v*.*.*` tag (or via the manual **Publish Wasmer** workflow), CI builds with wasm-pack and runs `wasmer publish` for **`eddiethedean/ontologos`** (see [`wasmer.toml`](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-wasm/wasmer.toml)).
+On each `v*.*.*` tag (or via **Publish npm** / **Publish Wasmer** workflows), CI publishes:
 
-Package page: [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos)
+- **npm** `@ontologos/wasm` — see [npmjs.com/package/@ontologos/wasm](https://www.npmjs.com/package/@ontologos/wasm)
+- **Wasmer** `eddiethedean/ontologos` — see [`wasmer.toml`](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-wasm/wasmer.toml)
 
-This is a wasm-bindgen module (`abi = "none"`), not a WASI CLI — use it with the JS glue from this crate, not `wasmer run` alone.
+The Wasmer package is a wasm-bindgen module (`abi = "none"`), not a WASI CLI — use it with the JS glue from `@ontologos/wasm`, not `wasmer run` alone.
 
 ## Browser usage
 

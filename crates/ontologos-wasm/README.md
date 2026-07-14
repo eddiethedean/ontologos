@@ -1,18 +1,22 @@
 # @ontologos/wasm
 
+[![npm](https://img.shields.io/npm/v/@ontologos/wasm.svg)](https://www.npmjs.com/package/@ontologos/wasm)
 [![Wasmer](https://img.shields.io/badge/Wasmer-1.1.4-4946E5?logo=wasmer&logoColor=white)](https://wasmer.io/eddiethedean/ontologos)
 [![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/en/latest/guides/wasm/)
 ![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
 
 WebAssembly bindings for [OntoLogos](https://github.com/eddiethedean/ontologos).
 
-The `.wasm` module is published to the Wasmer Registry as **[`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos)** (see `wasmer.toml`). Browser usage still requires this package’s wasm-bindgen JS glue.
-
 ## Install
+
+```bash
+npm install @ontologos/wasm
+```
 
 | Channel | How |
 |---------|-----|
-| **Wasmer** | Package page: [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) |
+| **npm** | [`@ontologos/wasm`](https://www.npmjs.com/package/@ontologos/wasm) |
+| **Wasmer** | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) (`.wasm` module) |
 | **Source** | Build this crate with wasm-pack (below) |
 
 ## Build

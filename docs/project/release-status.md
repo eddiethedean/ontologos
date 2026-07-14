@@ -10,6 +10,7 @@
 |---------|---------|-------|
 | **crates.io** (12 library crates) | **1.1.4** | Publish with annotated **v1.1.4** tag |
 | **PyPI** | **1.1.4** | `pip install ontologos` |
+| **npm** | **1.1.4** | `ontologos` · `@ontologos/wasm` |
 | **Wasmer** | **1.1.4** | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) (wasm-bindgen module) |
 | **docs.rs** | **1.1.4** | Matches crates.io |
 | **Latest git tag** | **v1.1.4** | Annotated release on GitHub |
@@ -17,7 +18,7 @@
 
 Published library crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-**Source-build / registry wheels:** CLI (`ontologos-cli`), Python (`ontologos-py`), Node (`ontologos-node`), WASM (`ontologos-wasm` + Wasmer `eddiethedean/ontologos`), Java (`ontologos-jni`), .NET (`ontologos-dotnet`), C/C++ (`ontologos-c` + `ontologos-ffi`).
+**Source-build / registry wheels:** CLI (`ontologos-cli`), Python (`ontologos-py`), Node (`ontologos` on npm), WASM (`@ontologos/wasm` on npm + Wasmer `eddiethedean/ontologos`), Java (`ontologos-jni`), .NET (`ontologos-dotnet`), C/C++ (`ontologos-c` + `ontologos-ffi`).
 
 ## What version am I running?
 
@@ -27,6 +28,7 @@ Published library crates (12, dependency order in `.github/scripts/publish-crate
 | **CLI** | `ontologos --version` |
 | **Rust dependency** | `cargo tree -p ontologos-core \| head -1` |
 | **Wasmer** | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) |
+| **npm** | [npmjs.com/package/ontologos](https://www.npmjs.com/package/ontologos) · [@ontologos/wasm](https://www.npmjs.com/package/@ontologos/wasm) |
 | **crates.io latest** | [crates.io/crates/ontologos-core](https://crates.io/crates/ontologos-core) |
 | **PyPI latest** | [pypi.org/project/ontologos](https://pypi.org/project/ontologos/) |
 
@@ -137,8 +139,9 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 | SWRL | **Stable** |
 | ALC / `dl-preview` | **Preview** |
 | Python | **Stable** on PyPI |
-| WASM | **Stable** on [Wasmer](https://wasmer.io/eddiethedean/ontologos) (JS glue source-build) |
-| Node, Java, .NET, C/C++ | **Stable** (source-build) |
+| Node | **Stable** on npm (`ontologos`) |
+| WASM | **Stable** on npm (`@ontologos/wasm`) and [Wasmer](https://wasmer.io/eddiethedean/ontologos) |
+| Java, .NET, C/C++ | **Stable** (source-build) |
 
 ## Release history
 

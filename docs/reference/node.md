@@ -1,17 +1,27 @@
 # Node.js API Reference
 
-Native Node.js bindings via **`ontologos-node`** (npm package `ontologos`). Source-build only — see [Bindings overview](../guides/bindings-overview.md).
+[![npm](https://img.shields.io/npm/v/ontologos.svg)](https://www.npmjs.com/package/ontologos)
+
+Native Node.js bindings via npm package **`ontologos`** (`crates/ontologos-node`) — see [Bindings overview](../guides/bindings-overview.md).
 
 Tutorial: [Node.js guide](../guides/node.md).
 
 ## Install
 
 ```bash
+npm install ontologos
+```
+
+Prebuilt binaries for macOS (arm64/x64), Linux gnu (arm64/x64), and Windows x64. Requires **Node.js 18+**.
+
+### Build from source
+
+```bash
 cd crates/ontologos-node
 npm install && npm run build
 ```
 
-Requires **Node.js 18+** and Rust toolchain (napi-rs).
+Requires a Rust toolchain (napi-rs).
 
 ## Profiles
 

@@ -121,6 +121,112 @@ jobs:
           WASMER_TOKEN: ${{ secrets.WASMER_TOKEN }}
         run: ./.github/scripts/publish-wasmer.sh
 
+  publish-npm-wasm:
+    name: Publish npm @ontologos/wasm
+    if: github.event_name == 'push'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Publish @ontologos/wasm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: ./.github/scripts/publish-npm-wasm.sh
+
+  build-npm-node:
+    name: Build Node ${{ matrix.target }}
+    if: github.event_name == 'push'
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-15
+            target: x86_64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: npm-node-${{ matrix.target }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install and build native addon
+        working-directory: crates/ontologos-node
+        shell: bash
+        run: |
+          npm install
+          npx napi build --platform --release --target "${{ matrix.target }}"
+
+      - name: Upload native binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-node-${{ matrix.target }}
+          path: crates/ontologos-node/ontologos.*.node
+          if-no-files-found: error
+
+  publish-npm-node:
+    name: Publish npm ontologos
+    if: github.event_name == 'push'
+    needs: [verify, build-npm-node]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download native binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: npm-node-*
+          path: crates/ontologos-node
+          merge-multiple: true
+
+      - name: Publish ontologos
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: ./.github/scripts/publish-npm-node.sh
+
   pypi-linux:
     name: PyPI wheels (Linux ${{ matrix.target }})
     needs: verify

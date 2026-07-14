@@ -1,8 +1,20 @@
 # ontologos (Node.js)
 
+[![npm](https://img.shields.io/npm/v/ontologos.svg)](https://www.npmjs.com/package/ontologos)
+[![Documentation](https://readthedocs.org/projects/ontologos/badge/?version=latest)](https://ontologos.readthedocs.io/en/latest/guides/node/)
+![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)
+
 Native Node.js bindings for [OntoLogos](https://github.com/eddiethedean/ontologos).
 
-## Build
+## Install
+
+```bash
+npm install ontologos
+```
+
+Prebuilt binaries: macOS (arm64/x64), Linux gnu (arm64/x64), Windows x64.
+
+## Build from source
 
 ```bash
 cd crates/ontologos-node
