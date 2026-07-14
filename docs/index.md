@@ -4,11 +4,11 @@
   <div class="ol-hero-badges">
     <span class="ol-badge ol-badge--accent">v1.1.4</span>
     <span class="ol-badge">Rust 1.88+</span>
-    <span class="ol-badge">Python · Rust · bindings (source-build)</span>
+    <span class="ol-badge">Python · Rust · Wasmer</span>
   </div>
   <p class="ol-hero-kicker">OntoLogos documentation</p>
   <p class="ol-hero-title">Embed OWL reasoning in your stack</p>
-  <p class="ol-lead">Load OWL files, detect profiles, and classify or materialize in-process — no JVM. <strong>Rust</strong> and <strong>Python</strong> on crates.io/PyPI; Node, Java, .NET, C/C++, and WASM via <a href="guides/bindings-overview.html">source build</a>.</p>
+  <p class="ol-lead">Load OWL files, detect profiles, and classify or materialize in-process — no JVM. <strong>Rust</strong> and <strong>Python</strong> on crates.io/PyPI; <strong>WASM</strong> on <a href="https://wasmer.io/eddiethedean/ontologos">Wasmer</a>; Node, Java, .NET, and C/C++ via <a href="guides/bindings-overview.html">source build</a>.</p>
   <div class="ol-hero-actions">
     <a class="ol-hero-cta" href="getting-started/">Try in 5 minutes →</a>
     <a class="ol-hero-cta ol-hero-cta--secondary" href="guides/python/">Python quickstart</a>
@@ -58,7 +58,7 @@ Pick the path that matches how you work:
 </div>
 
 !!! tip "No clone required for most users"
-    Use **crates.io** or **PyPI**. Clone only to contribute, run benchmarks, build bindings, or build the CLI.
+    Use **crates.io**, **PyPI**, or [Wasmer](https://wasmer.io/eddiethedean/ontologos). Clone to contribute, run benchmarks, build Node/Java/.NET/C bindings or WASM JS glue, or build the CLI.
 
 <div class="ol-callout" markdown="0">
   <strong>Rust 1.88+</strong> for library users — see the <a href="guides/prerequisites.html">Prerequisites decision table</a>.
@@ -80,6 +80,7 @@ Pick the path that matches how you work:
 | **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 | **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
 | **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
+| **Wasmer** | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) |
 | **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.1.4) |
 | **Changelog** | [project/changelog](project/changelog.md) · [GitHub](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) |
 

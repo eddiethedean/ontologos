@@ -228,7 +228,7 @@ See [Node.js guide](node.md).
 
 ### WebAssembly
 
-**Package:** `@ontologos/wasm`
+**Registry:** [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) on Wasmer · **JS glue:** `@ontologos/wasm` (`crates/ontologos-wasm`)
 
 ```javascript
 import init, { OntologyBuilder, Reasoner } from "@ontologos/wasm";
@@ -264,7 +264,8 @@ See [C/C++ guide](c-cpp.md) and [Preview profiles](preview-profiles.md).
 | + OWL RL | `+ ontologos-rl` |
 | + OWL EL + queries | `+ ontologos-el`, `+ ontologos-ql` |
 | + Multi-profile / DL preview | `+ ontologos-facade` (pulls el, dl, alc, swrl) |
-| + Node / WASM / Java / .NET / C | Build `ontologos-js` + language crate (see guides) |
+| + Node / Java / .NET / C | Build `ontologos-js` + language crate (see guides) |
+| + WASM | [Wasmer package](https://wasmer.io/eddiethedean/ontologos) + `crates/ontologos-wasm` JS glue |
 
 There is no single `ontologos` meta-crate on crates.io.
 

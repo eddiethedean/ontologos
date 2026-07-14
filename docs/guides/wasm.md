@@ -1,8 +1,17 @@
 # WebAssembly Guide
 
+[![Wasmer](https://img.shields.io/badge/Wasmer-1.1.4-4946E5?logo=wasmer&logoColor=white)](https://wasmer.io/eddiethedean/ontologos)
+
 Browser bindings ship in **`@ontologos/wasm`** (`crates/ontologos-wasm`). Shared logic lives in `ontologos-js`; the WASM crate is a thin wasm-bindgen wrapper.
 
-Release tags also publish the `.wasm` module to the Wasmer Registry as **`eddiethedean/ontologos`**. Browser apps still need this crate’s wasm-bindgen JS glue (`npm run build` locally, or consume the package sources); Wasmer hosts the shared binary for download / registry loading.
+The `.wasm` module is published to the Wasmer Registry as **[`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos)**. Browser apps still need this crate’s wasm-bindgen JS glue (`npm run build` locally, or consume the package sources).
+
+## Install
+
+| Channel | How |
+|---------|-----|
+| **Wasmer** | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) — published package **1.1.4** |
+| **Source** | Build with wasm-pack (below) for JS glue + local `.wasm` |
 
 ## Build
 
@@ -18,7 +27,7 @@ The release artifact is large when DL support is included — expect multi‑MB 
 
 ## Wasmer Registry
 
-On each `v*.*.*` tag, release CI builds with wasm-pack and runs `wasmer publish` for **`eddiethedean/ontologos`** (see [`wasmer.toml`](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-wasm/wasmer.toml)).
+On each `v*.*.*` tag (or via the manual **Publish Wasmer** workflow), CI builds with wasm-pack and runs `wasmer publish` for **`eddiethedean/ontologos`** (see [`wasmer.toml`](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-wasm/wasmer.toml)).
 
 Package page: [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos)
 

@@ -10,7 +10,7 @@
 |---------|---------|-------|
 | **crates.io** (12 library crates) | **1.1.4** | Publish with annotated **v1.1.4** tag |
 | **PyPI** | **1.1.4** | `pip install ontologos` |
-| **Wasmer** | **1.1.4** | `eddiethedean/ontologos` (wasm-bindgen module) |
+| **Wasmer** | **1.1.4** | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) (wasm-bindgen module) |
 | **docs.rs** | **1.1.4** | Matches crates.io |
 | **Latest git tag** | **v1.1.4** | Annotated release on GitHub |
 | **`main` branch** | **1.1.4** workspace | Multi-language bindings + shared FFI |
@@ -26,6 +26,7 @@ Published library crates (12, dependency order in `.github/scripts/publish-crate
 | **Python** | `python -c "import ontologos; print(ontologos.__version__)"` |
 | **CLI** | `ontologos --version` |
 | **Rust dependency** | `cargo tree -p ontologos-core \| head -1` |
+| **Wasmer** | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) |
 | **crates.io latest** | [crates.io/crates/ontologos-core](https://crates.io/crates/ontologos-core) |
 | **PyPI latest** | [pypi.org/project/ontologos](https://pypi.org/project/ontologos/) |
 
@@ -136,7 +137,8 @@ See the canonical [Profile stability matrix](../guides/profile-stability.md). Su
 | SWRL | **Stable** |
 | ALC / `dl-preview` | **Preview** |
 | Python | **Stable** on PyPI |
-| Node, Java, .NET, C/C++, WASM | **Stable** (source-build) |
+| WASM | **Stable** on [Wasmer](https://wasmer.io/eddiethedean/ontologos) (JS glue source-build) |
+| Node, Java, .NET, C/C++ | **Stable** (source-build) |
 
 ## Release history
 

@@ -10,6 +10,7 @@ Single source of truth for **what you can install today**. Canonical version tab
 |------------|---------|-------------------------|
 | Embed in Rust (crates.io) | `ontologos-* = "1.1.4"` in `Cargo.toml` | **EL, RL, RDFS, DL, SWRL** |
 | Use from Python (PyPI) | `pip install ontologos` | **EL, RL, RDFS, DL, SWRL** |
+| Use from WASM / browser | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) + JS glue from `crates/ontologos-wasm` | Same as Python |
 | Use from Node.js | Build `crates/ontologos-node` | Same as Python |
 | Use from Java / .NET / C/C++ | Build binding crate (see [Bindings overview](bindings-overview.md)) | Same as Python |
 | Run the CLI | `cargo install --git https://github.com/eddiethedean/ontologos --tag v1.1.4 ontologos-cli` or clone + build | All profiles on tagged release |
@@ -23,7 +24,7 @@ Single source of truth for **what you can install today**. Canonical version tab
 |---------|---------|---------|
 | **crates.io** | 1.1.4 | `cargo add ontologos-core@1.1.4` (+ parser, facade, profile crates as needed) |
 | **PyPI** | 1.1.4 | `pip install ontologos` |
-| **Wasmer** | 1.1.4 | `eddiethedean/ontologos` (wasm-bindgen module; JS glue still from `crates/ontologos-wasm`) |
+| **Wasmer** | 1.1.4 | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) (wasm-bindgen module; JS glue from `crates/ontologos-wasm`) |
 | **docs.rs** | 1.1.4 | Links in [Reference](../reference/facade.md) reflect this channel |
 | **Read the Docs** | latest | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 
@@ -31,12 +32,18 @@ Single source of truth for **what you can install today**. Canonical version tab
 
 **Preview only:** `profile="alc"`, `profile="dl-preview"` — see [Preview profiles](preview-profiles.md).
 
+### WebAssembly (Wasmer + JS glue)
+
+| Piece | Source | Guide |
+|-------|--------|-------|
+| **`.wasm` module** | [Wasmer `eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) | [WASM](wasm.md) |
+| **JS glue (`@ontologos/wasm`)** | Build `crates/ontologos-wasm` | [WASM](wasm.md) |
+
 ### Language bindings (source-build)
 
 | Language | Build from | Guide |
 |----------|------------|-------|
 | **Node.js** | `crates/ontologos-node` | [Node.js](node.md) · [Bindings overview](bindings-overview.md) |
-| **WebAssembly** | `crates/ontologos-wasm` (+ Wasmer `eddiethedean/ontologos`) | [WASM](wasm.md) |
 | **Java** | `crates/ontologos-java` | [Java](java.md) |
 | **.NET** | `crates/ontologos-dotnet` | [.NET](dotnet.md) |
 | **C/C++** | `crates/ontologos-c` | [C/C++](c-cpp.md) |
@@ -50,6 +57,7 @@ Native libraries: `cargo build -p ontologos-jni -p ontologos-dotnet -p ontologos
 | **Python** | `python -c "import ontologos; print(ontologos.__version__)"` |
 | **CLI** | `ontologos --version` |
 | **Rust dependency** | `cargo tree -p ontologos-core \| head -1` |
+| **Wasmer** | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) (version on package page) |
 
 Expected: **1.1.4** from registries.
 

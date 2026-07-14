@@ -10,7 +10,10 @@
 
 ## Bindings (Node, Java, .NET, C, WASM)
 
-Source-build from a clone — see [Bindings overview](bindings-overview.md). Rust and Python are on crates.io/PyPI at **v1.1.4**.
+- **WASM:** [Wasmer `eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) + JS glue from `crates/ontologos-wasm` — [WASM guide](wasm.md)
+- **Node / Java / .NET / C:** source-build from a clone — [Bindings overview](bindings-overview.md)
+
+Rust and Python are on crates.io/PyPI at **v1.1.4**.
 
 Pick the path that matches how you work. Each link is a single next step—not the full documentation map.
 

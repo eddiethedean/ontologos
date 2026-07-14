@@ -22,7 +22,7 @@ API and CLI reference for OntoLogos. Install channels: [Install and channels](..
 | Java bindings | [Java API](java.md) · [Java guide](../guides/java.md) |
 | .NET bindings | [.NET API](dotnet.md) · [.NET guide](../guides/dotnet.md) |
 | C/C++ bindings | [C/C++ API](c.md) · [C/C++ guide](../guides/c-cpp.md) |
-| WebAssembly | [WASM API](wasm.md) · [WASM guide](../guides/wasm.md) |
+| WebAssembly | [WASM API](wasm.md) · [Wasmer package](https://wasmer.io/eddiethedean/ontologos) · [WASM guide](../guides/wasm.md) |
 | CLI | [CLI reference](cli.md) |
 | Errors | [Errors](errors.md) |
 | Supported OWL constructs | [Supported constructs](supported-constructs.md) |

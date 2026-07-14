@@ -1,6 +1,6 @@
 # Roadmap Summary
 
-OntoLogos follows [semantic versioning](https://semver.org/). **Latest release:** **v1.1.4** on crates.io/PyPI · See [Release status](release-status.md).
+OntoLogos follows [semantic versioning](https://semver.org/). **Latest release:** **v1.1.4** on crates.io/PyPI/Wasmer · See [Release status](release-status.md).
 
 ## v1.1.4 shipped (2026-07-12)
 
@@ -19,7 +19,8 @@ Multi-language native bindings over shared FFI.
 | Area | Status |
 |------|--------|
 | Shared FFI (`ontologos-ffi`) | **Shipped** |
-| Java / .NET / C/C++ / Node / WASM | **Source-build** with CI smoke |
+| Java / .NET / C/C++ / Node | **Source-build** with CI smoke |
+| WASM | **Published** on [Wasmer](https://wasmer.io/eddiethedean/ontologos) (JS glue source-build) |
 | Rust / Python API | **Unchanged** — bump pins to `"1.1.0"` |
 
 See [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md) and [Bindings overview](../guides/bindings-overview.md).
