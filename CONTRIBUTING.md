@@ -248,13 +248,15 @@ Then:
 |--------|---------|
 | `CARGO_REGISTRY_TOKEN` | Publish Rust crates to [crates.io](https://crates.io) |
 | `PYPI_API_TOKEN` | Publish the `ontologos` Python package to [PyPI](https://pypi.org/project/ontologos/) |
+| `WASMER_TOKEN` | Publish `eddiethedean/ontologos` to the [Wasmer Registry](https://wasmer.io/) |
 
-Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire account or project `ontologos`). Add it in the repo under **Settings → Secrets and variables → Actions**.
+Create a PyPI API token at https://pypi.org/manage/account/token/ (scope: entire account or project `ontologos`). Add it in the repo under **Settings → Secrets and variables → Actions**. Generate a Wasmer token from [Wasmer account settings](https://wasmer.io/settings/access-tokens) and store it as `WASMER_TOKEN`.
 
 On each release tag, CI publishes:
 
 - **crates.io** — crates listed in [.github/scripts/publish-crates.sh](.github/scripts/publish-crates.sh) (12 crates: `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`)
 - **PyPI** — `ontologos` via release CI (`maturin-action`): Linux (x86_64, aarch64), macOS (x86_64, aarch64), Windows (x64, aarch64), plus sdist. Manual upload: [.github/scripts/publish-pypi.sh](.github/scripts/publish-pypi.sh)
+- **Wasmer** — `eddiethedean/ontologos` via [.github/scripts/publish-wasmer.sh](.github/scripts/publish-wasmer.sh) (wasm-pack build of `crates/ontologos-wasm`)
 
 - **Tags:** Release tags follow semver (`v0.9.0`, …)
 - **CHANGELOG:** [Keep a Changelog](https://keepachangelog.com/) format in [CHANGELOG.md](CHANGELOG.md)

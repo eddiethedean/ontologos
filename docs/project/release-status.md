@@ -10,13 +10,14 @@
 |---------|---------|-------|
 | **crates.io** (12 library crates) | **1.1.4** | Publish with annotated **v1.1.4** tag |
 | **PyPI** | **1.1.4** | `pip install ontologos` |
+| **Wasmer** | **1.1.4** | `eddiethedean/ontologos` (wasm-bindgen module) |
 | **docs.rs** | **1.1.4** | Matches crates.io |
 | **Latest git tag** | **v1.1.4** | Annotated release on GitHub |
 | **`main` branch** | **1.1.4** workspace | Multi-language bindings + shared FFI |
 
 Published library crates (12, dependency order in `.github/scripts/publish-crates.sh`): `ontologos-core`, `ontologos-profile`, `ontologos-bridge`, `ontologos-parser`, `ontologos-rl`, `ontologos-alc`, `ontologos-el`, `ontologos-dl`, `ontologos-swrl`, `ontologos-explain`, `ontologos-ql`, `ontologos-facade`.
 
-**Source-build / PyPI wheels:** CLI (`ontologos-cli`), Python (`ontologos-py`), Node (`ontologos-node`), WASM (`ontologos-wasm`), Java (`ontologos-jni`), .NET (`ontologos-dotnet`), C/C++ (`ontologos-c` + `ontologos-ffi`).
+**Source-build / registry wheels:** CLI (`ontologos-cli`), Python (`ontologos-py`), Node (`ontologos-node`), WASM (`ontologos-wasm` + Wasmer `eddiethedean/ontologos`), Java (`ontologos-jni`), .NET (`ontologos-dotnet`), C/C++ (`ontologos-c` + `ontologos-ffi`).
 
 ## What version am I running?
 

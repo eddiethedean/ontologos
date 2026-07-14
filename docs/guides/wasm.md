@@ -2,6 +2,8 @@
 
 Browser bindings ship in **`@ontologos/wasm`** (`crates/ontologos-wasm`). Shared logic lives in `ontologos-js`; the WASM crate is a thin wasm-bindgen wrapper.
 
+Release tags also publish the `.wasm` module to the Wasmer Registry as **`eddiethedean/ontologos`**. Browser apps still need this crate’s wasm-bindgen JS glue (`npm run build` locally, or consume the package sources); Wasmer hosts the shared binary for download / registry loading.
+
 ## Build
 
 ```bash
@@ -13,6 +15,14 @@ npm test
 ```
 
 The release artifact is large when DL support is included — expect multi‑MB `.wasm` files. EL/RL-only browser builds may be slimmed in a future release.
+
+## Wasmer Registry
+
+On each `v*.*.*` tag, release CI builds with wasm-pack and runs `wasmer publish` for **`eddiethedean/ontologos`** (see [`wasmer.toml`](https://github.com/eddiethedean/ontologos/blob/main/crates/ontologos-wasm/wasmer.toml)).
+
+Package page: [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos)
+
+This is a wasm-bindgen module (`abi = "none"`), not a WASI CLI — use it with the JS glue from this crate, not `wasmer run` alone.
 
 ## Browser usage
 

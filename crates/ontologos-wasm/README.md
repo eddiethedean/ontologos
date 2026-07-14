@@ -2,6 +2,8 @@
 
 WebAssembly bindings for [OntoLogos](https://github.com/eddiethedean/ontologos).
 
+Release CI publishes the wasm-pack `.wasm` to the Wasmer Registry as [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) (see `wasmer.toml`). Browser usage still requires this package’s JS glue.
+
 ## Build
 
 ```bash

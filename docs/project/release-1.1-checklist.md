@@ -67,7 +67,7 @@ Note: `Consistent-but-all-unsat` is `deferred` / `#[ignore]` in 1.1.4 (weak IRI 
    git push origin main && git push origin v1.1.4
    ```
 
-4. [Release workflow](https://github.com/eddiethedean/ontologos/blob/main/.github/workflows/release.yml) publishes crates.io (12 crates) + PyPI wheels on tag push.
+4. [Release workflow](https://github.com/eddiethedean/ontologos/blob/main/.github/workflows/release.yml) publishes crates.io (12 crates), PyPI wheels, and Wasmer `eddiethedean/ontologos` on tag push.
 5. Create GitHub Release from [v1.1.4 release notes](https://github.com/eddiethedean/ontologos/blob/main/.github/release/v1.1.4.md).
 
 ## 5. Secrets required
@@ -76,6 +76,7 @@ Note: `Consistent-but-all-unsat` is `deferred` / `#[ignore]` in 1.1.4 (weak IRI 
 |--------|---------|
 | `CARGO_REGISTRY_TOKEN` | crates.io publish |
 | `PYPI_API_TOKEN` | PyPI `ontologos` wheels |
+| `WASMER_TOKEN` | Wasmer Registry `eddiethedean/ontologos` |
 
 ## 6. Post-publish verification
 

@@ -8,4 +8,4 @@
 >
 > Preview profiles (`alc`, `dl-preview`) remain experimental. See [Profile stability](/guides/profile-stability/).
 >
-> Node, Java, .NET, C/C++, and WASM bindings: [Bindings overview](/guides/bindings-overview/) (source-build).
+> Node, Java, .NET, C/C++ bindings: [Bindings overview](/guides/bindings-overview/) (source-build). WASM JS glue is source-build; `.wasm` publishes to Wasmer as `eddiethedean/ontologos`.

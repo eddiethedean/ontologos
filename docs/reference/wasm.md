@@ -1,6 +1,6 @@
 # WebAssembly API Reference
 
-Browser bindings via **`@ontologos/wasm`** (`crates/ontologos-wasm`). Source-build only — see [Bindings overview](../guides/bindings-overview.md).
+Browser bindings via **`@ontologos/wasm`** (`crates/ontologos-wasm`). JS glue is source-build; the `.wasm` binary is published to Wasmer as **`eddiethedean/ontologos`** on release tags — see [Bindings overview](../guides/bindings-overview.md) and [WASM guide](../guides/wasm.md).
 
 Tutorial: [WASM guide](../guides/wasm.md).
 

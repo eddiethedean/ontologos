@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Release CI:** Publish WASM module to Wasmer Registry as `eddiethedean/ontologos` (`WASMER_TOKEN`, `.github/scripts/publish-wasmer.sh`)
+
 ## [1.1.4] - 2026-07-13
 
 ### Fixed

@@ -1,0 +1,24 @@
+# Wasmer Registry package for the OntoLogos browser WASM module.
+# Built by wasm-pack into pkg/; published by .github/scripts/publish-wasmer.sh.
+#
+# This is a wasm-bindgen module (abi = "none"), not a WASI command.
+# Browser consumers still need the wasm-bindgen JS glue from this crate
+# (@ontologos/wasm). The registry hosts the shared .wasm binary.
+
+[package]
+name = "eddiethedean/ontologos"
+version = "1.1.4"
+description = "WebAssembly bindings for the OntoLogos OWL reasoner"
+license = "MIT OR Apache-2.0"
+readme = "./README.md"
+repository = "https://github.com/eddiethedean/ontologos"
+homepage = "https://ontologos.readthedocs.io/"
+
+[[module]]
+name = "ontologos"
+source = "pkg/ontologos_wasm_bg.wasm"
+abi = "none"
+
+[fs]
+"/pkg" = "./pkg"
+"/js" = "./js"

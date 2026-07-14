@@ -12,7 +12,7 @@ Honest matrix for **published vs source-build** language bindings. Install chann
 | Use from **Java** | Build `crates/ontologos-java` | Source-build (Maven local) |
 | Use from **.NET** | Build `crates/ontologos-dotnet` | Source-build |
 | Use from **C/C++** | Build `crates/ontologos-c` | Source-build |
-| Use in **browser (WASM)** | Build `crates/ontologos-wasm` | Source-build |
+| Use in **browser (WASM)** | Build `crates/ontologos-wasm` | `.wasm` on Wasmer (`eddiethedean/ontologos`); JS glue source-build |
 
 **v1.1.4** adds shared FFI and native bindings. Build bindings from a clone at tag **`v1.1.4`** or from `main`. See [Release status](../project/release-status.md).
 

@@ -23,6 +23,7 @@ Single source of truth for **what you can install today**. Canonical version tab
 |---------|---------|---------|
 | **crates.io** | 1.1.4 | `cargo add ontologos-core@1.1.4` (+ parser, facade, profile crates as needed) |
 | **PyPI** | 1.1.4 | `pip install ontologos` |
+| **Wasmer** | 1.1.4 | `eddiethedean/ontologos` (wasm-bindgen module; JS glue still from `crates/ontologos-wasm`) |
 | **docs.rs** | 1.1.4 | Links in [Reference](../reference/facade.md) reflect this channel |
 | **Read the Docs** | latest | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 
@@ -35,7 +36,7 @@ Single source of truth for **what you can install today**. Canonical version tab
 | Language | Build from | Guide |
 |----------|------------|-------|
 | **Node.js** | `crates/ontologos-node` | [Node.js](node.md) · [Bindings overview](bindings-overview.md) |
-| **WebAssembly** | `crates/ontologos-wasm` | [WASM](wasm.md) |
+| **WebAssembly** | `crates/ontologos-wasm` (+ Wasmer `eddiethedean/ontologos`) | [WASM](wasm.md) |
 | **Java** | `crates/ontologos-java` | [Java](java.md) |
 | **.NET** | `crates/ontologos-dotnet` | [.NET](dotnet.md) |
 | **C/C++** | `crates/ontologos-c` | [C/C++](c-cpp.md) |
