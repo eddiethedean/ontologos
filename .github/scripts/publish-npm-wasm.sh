@@ -45,6 +45,9 @@ echo "Building @ontologos/wasm (version ${version})..."
   cd crates/ontologos-wasm
   npm install
   npm run build
+  # wasm-pack writes pkg/.gitignore with "*"; that blocks npm pack even when
+  # package.json "files" lists pkg/. Remove it so the .wasm ships.
+  rm -f pkg/.gitignore
   npm version "${version}" --no-git-tag-version --allow-same-version
 )
 
@@ -54,6 +57,11 @@ if [ ! -f "${wasm_path}" ]; then
   exit 1
 fi
 
+# Sanity: refuse to publish a stub without the binary (files would be empty).
+if [ ! -s "${wasm_path}" ]; then
+  echo "ERROR: ${wasm_path} is empty" >&2
+  exit 1
+fi
 # Authenticate with NPM_TOKEN. setup-node --registry-url points NPM_CONFIG_USERCONFIG
 # at a temp npmrc that expands ${NODE_AUTH_TOKEN}; keep both in sync.
 export NODE_AUTH_TOKEN="${NPM_TOKEN}"

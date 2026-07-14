@@ -24,7 +24,7 @@ Single source of truth for **what you can install today**. Canonical version tab
 |---------|---------|---------|
 | **crates.io** | 1.1.4 | `cargo add ontologos-core@1.1.4` (+ parser, facade, profile crates as needed) |
 | **PyPI** | 1.1.4 | `pip install ontologos` |
-| **npm** | 1.1.4 | `npm install ontologos` · `npm install @ontologos/wasm` |
+| **npm** | 1.1.4 | `npm install ontologos` · `npm install @ontologos/wasm` ([ontologos](https://www.npmjs.com/package/ontologos), [@ontologos/wasm](https://www.npmjs.com/package/@ontologos/wasm)) |
 | **Wasmer** | 1.1.4 | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) (wasm-bindgen module) |
 | **docs.rs** | 1.1.4 | Links in [Reference](../reference/facade.md) reflect this channel |
 | **Read the Docs** | latest | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |

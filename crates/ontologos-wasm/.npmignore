@@ -1,0 +1,2 @@
+# Prefer package.json "files" over repo .gitignore so wasm-pack's pkg/ ships.
+# (An .npmignore present means npm does not fall back to .gitignore.)

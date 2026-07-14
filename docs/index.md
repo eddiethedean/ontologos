@@ -39,6 +39,22 @@ Pick the path that matches how you work:
 
     [:octicons-arrow-right-24: Python guide](guides/python.md)
 
+-   :material-nodejs: **Node.js (npm)**
+
+    ---
+
+    `npm install ontologos` — native N-API bindings (macOS, Linux, Windows).
+
+    [:octicons-arrow-right-24: Node.js guide](guides/node.md)
+
+-   :material-language-javascript: **WebAssembly**
+
+    ---
+
+    `npm install @ontologos/wasm` · [Wasmer `eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos).
+
+    [:octicons-arrow-right-24: WASM guide](guides/wasm.md)
+
 -   :material-console: **CLI** *(git install)*
 
     ---
@@ -80,8 +96,8 @@ Pick the path that matches how you work:
 | **Docs** | [ontologos.readthedocs.io](https://ontologos.readthedocs.io/en/latest/) |
 | **crates.io** | [ontologos-core](https://crates.io/crates/ontologos-core) and siblings |
 | **PyPI** | [`pip install ontologos`](https://pypi.org/project/ontologos/) |
-| **Wasmer** | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) |
 | **npm** | [`ontologos`](https://www.npmjs.com/package/ontologos) · [`@ontologos/wasm`](https://www.npmjs.com/package/@ontologos/wasm) |
+| **Wasmer** | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) |
 | **Rust API** | [docs.rs/ontologos-core](https://docs.rs/ontologos-core/1.1.4) |
 | **Changelog** | [project/changelog](project/changelog.md) · [GitHub](https://github.com/eddiethedean/ontologos/blob/main/CHANGELOG.md) |
 

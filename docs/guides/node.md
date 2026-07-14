@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/ontologos.svg)](https://www.npmjs.com/package/ontologos)
 
-Native Node.js bindings ship as the npm package **`ontologos`** (`crates/ontologos-node`). They mirror the Python API via shared logic in `ontologos-js`.
+Native Node.js bindings ship as the npm package **[`ontologos`](https://www.npmjs.com/package/ontologos)** (`crates/ontologos-node`). They mirror the Python API via shared logic in `ontologos-js`.
 
 ## Install
 
@@ -10,8 +10,7 @@ Native Node.js bindings ship as the npm package **`ontologos`** (`crates/ontolog
 npm install ontologos
 ```
 
-Prebuilt native addons ship for macOS (arm64/x64), Linux gnu (arm64/x64), and Windows x64. Requires **Node.js 18+**.
-
+Published **v1.1.4** with prebuilt native addons for macOS (arm64/x64), Linux gnu (arm64/x64), and Windows x64. Requires **Node.js 18+**.
 ### Build from source
 
 ```bash

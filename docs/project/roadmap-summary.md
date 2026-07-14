@@ -20,7 +20,7 @@ Multi-language native bindings over shared FFI.
 |------|--------|
 | Shared FFI (`ontologos-ffi`) | **Shipped** |
 | Java / .NET / C/C++ | **Source-build** with CI smoke |
-| Node / WASM | **Published** on [npm](https://www.npmjs.com/package/ontologos) (WASM also on [Wasmer](https://wasmer.io/eddiethedean/ontologos)) |
+| Node / WASM | **Published** on [npm](https://www.npmjs.com/package/ontologos) (`ontologos`, `@ontologos/wasm`; WASM also on [Wasmer](https://wasmer.io/eddiethedean/ontologos)) |
 | Rust / Python API | **Unchanged** — bump pins to `"1.1.0"` |
 
 See [v1.0.x → v1.1.0 migration](../migration/v1.0.x-to-v1.1.0.md) and [Bindings overview](../guides/bindings-overview.md).

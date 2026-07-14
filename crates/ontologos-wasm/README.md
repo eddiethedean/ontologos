@@ -17,7 +17,9 @@ npm install @ontologos/wasm
 |---------|-----|
 | **npm** | [`@ontologos/wasm`](https://www.npmjs.com/package/@ontologos/wasm) |
 | **Wasmer** | [`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos) (`.wasm` module) |
-| **Source** | Build this crate with wasm-pack (below) |
+| **Source** | Build this crate with wasm-pack (below) — preferred until the corrected npm tarball ships |
+
+> First `@ontologos/wasm@1.1.4` omitted `pkg/`; use source build or Wasmer for the `.wasm` binary for now.
 
 ## Build
 

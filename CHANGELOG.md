@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Release CI:** Publish npm packages `ontologos` (multi-platform N-API) and `@ontologos/wasm` (`NPM_TOKEN`)
 - **CI:** Manual `Publish npm` workflow (workflow_dispatch) for on-demand npm publishes
 - **Docs:** npm install channels and badges for Node/WASM
+- **npm:** Published `ontologos@1.1.4` and `@ontologos/wasm@1.1.4`; fix WASM pack to ship `pkg/` (remove wasm-pack `pkg/.gitignore` before publish)
 
 ## [1.1.4] - 2026-07-13
 

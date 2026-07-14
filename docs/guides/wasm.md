@@ -1,9 +1,9 @@
 # WebAssembly Guide
 
-[![npm @ontologos/wasm](https://img.shields.io/npm/v/@ontologos/wasm.svg)](https://www.npmjs.com/package/@ontologos/wasm)
+[![npm](https://img.shields.io/npm/v/@ontologos/wasm.svg)](https://www.npmjs.com/package/@ontologos/wasm)
 [![Wasmer](https://img.shields.io/badge/Wasmer-1.1.4-4946E5?logo=wasmer&logoColor=white)](https://wasmer.io/eddiethedean/ontologos)
 
-Browser bindings ship as **`@ontologos/wasm`** (`crates/ontologos-wasm`). Shared logic lives in `ontologos-js`; the WASM crate is a thin wasm-bindgen wrapper.
+Browser bindings ship as **`@ontologos/wasm`** on [npm](https://www.npmjs.com/package/@ontologos/wasm). Shared logic lives in `ontologos-js`; the WASM crate is a thin wasm-bindgen wrapper. The `.wasm` module is also on Wasmer as **[`eddiethedean/ontologos`](https://wasmer.io/eddiethedean/ontologos)**.
 
 ## Install
 
@@ -13,9 +13,11 @@ npm install @ontologos/wasm
 
 | Channel | How |
 |---------|-----|
-| **npm** | `npm install @ontologos/wasm` — JS glue + `.wasm` |
+| **npm** | [`@ontologos/wasm`](https://www.npmjs.com/package/@ontologos/wasm) — JS glue + `.wasm` |
 | **Wasmer** | [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos) — `.wasm` module **1.1.4** |
 | **Source** | Build with wasm-pack (below) |
+
+> **Note:** The first `@ontologos/wasm@1.1.4` npm tarball omitted `pkg/` (wasm-pack `pkg/.gitignore`). Prefer a **source build** or **Wasmer** for the `.wasm` binary until a corrected release ships. For Node, use [`ontologos`](https://www.npmjs.com/package/ontologos) on npm.
 
 ## Build
 

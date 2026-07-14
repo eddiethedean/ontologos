@@ -1,5 +1,25 @@
 # Frequently Asked Questions
 
+## How do I install from npm?
+
+**Node.js** (prebuilt native addon):
+
+```bash
+npm install ontologos
+```
+
+Package: [npmjs.com/package/ontologos](https://www.npmjs.com/package/ontologos) · Guide: [Node.js](https://ontologos.readthedocs.io/en/latest/guides/node/).
+
+**WebAssembly** (browser):
+
+```bash
+npm install @ontologos/wasm
+```
+
+Also on Wasmer: [wasmer.io/eddiethedean/ontologos](https://wasmer.io/eddiethedean/ontologos). Guide: [WebAssembly](https://ontologos.readthedocs.io/en/latest/guides/wasm/).
+
+Rust remains on crates.io (`ontologos-* = "1.1.4"`); Python on PyPI (`pip install ontologos`). See [Install channels](https://ontologos.readthedocs.io/en/latest/guides/install-channels/).
+
 ## Why does `Ontology::from_file` fail?
 
 `Ontology::from_file` on `ontologos-core` intentionally returns `Error::ParseNotAvailable` to keep the core crate free of parser dependencies.
@@ -35,7 +55,7 @@ ontologos-bridge = "1.1.4"   # Engine adapters (usually transitive)
 
 Depend on **`ontologos-core` only** if you build ontologies programmatically or from JSON snapshots.
 
-There is no umbrella `ontologos` crate on crates.io. The CLI binary is built from `ontologos-cli` in this repository.
+There is no umbrella `ontologos` crate on crates.io (use the listed `ontologos-*` crates). The **npm** package [`ontologos`](https://www.npmjs.com/package/ontologos) is the Node.js binding. The CLI binary is built from `ontologos-cli` in this repository.
 
 ## Can I use OntoLogos instead of Protégé + HermiT today?
 
