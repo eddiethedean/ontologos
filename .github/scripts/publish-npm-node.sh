@@ -52,7 +52,6 @@ fi
 echo "Native binaries to publish:"
 ls -la ontologos.*.node
 
-# Require the five release targets declared in package.json napi.triples.
 required=(
   ontologos.darwin-arm64.node
   ontologos.darwin-x64.node
@@ -69,8 +68,17 @@ done
 
 npm version "${version}" --no-git-tag-version --allow-same-version
 
-echo "Publishing ontologos@${version} to npm..."
-echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+# Authenticate with NPM_TOKEN. setup-node --registry-url points NPM_CONFIG_USERCONFIG
+# at a temp npmrc that expands ${NODE_AUTH_TOKEN}; keep both in sync.
+export NODE_AUTH_TOKEN="${NPM_TOKEN}"
+npmrc="${NPM_CONFIG_USERCONFIG:-${HOME}/.npmrc}"
+{
+  echo "registry=https://registry.npmjs.org/"
+  echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}"
+  echo "always-auth=true"
+} > "${npmrc}"
+
+echo "Publishing ontologos@${version} to npm (auth via NPM_TOKEN)..."
 if output="$(npm publish --access public 2>&1)"; then
   echo "${output}"
   echo "Published ontologos@${version}"

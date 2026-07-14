@@ -45,7 +45,6 @@ echo "Building @ontologos/wasm (version ${version})..."
   cd crates/ontologos-wasm
   npm install
   npm run build
-  # Keep package.json version aligned with workspace for the tarball.
   npm version "${version}" --no-git-tag-version --allow-same-version
 )
 
@@ -55,10 +54,19 @@ if [ ! -f "${wasm_path}" ]; then
   exit 1
 fi
 
-echo "Publishing @ontologos/wasm@${version} to npm..."
+# Authenticate with NPM_TOKEN. setup-node --registry-url points NPM_CONFIG_USERCONFIG
+# at a temp npmrc that expands ${NODE_AUTH_TOKEN}; keep both in sync.
+export NODE_AUTH_TOKEN="${NPM_TOKEN}"
+npmrc="${NPM_CONFIG_USERCONFIG:-${HOME}/.npmrc}"
+{
+  echo "registry=https://registry.npmjs.org/"
+  echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}"
+  echo "always-auth=true"
+} > "${npmrc}"
+
+echo "Publishing @ontologos/wasm@${version} to npm (auth via NPM_TOKEN)..."
 (
   cd crates/ontologos-wasm
-  echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
   if output="$(npm publish --access public 2>&1)"; then
     echo "${output}"
     echo "Published @ontologos/wasm@${version}"

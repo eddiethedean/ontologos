@@ -37,7 +37,7 @@
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/eddiethedean/ontologos.git",
+    "url": "git+https://github.com/eddiethedean/ontologos.git",
     "directory": "crates/ontologos-node"
   },
   "homepage": "https://ontologos.readthedocs.io/",
