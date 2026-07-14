@@ -1,0 +1,35 @@
+name: Publish Wasmer
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish-wasmer:
+    name: Build and publish Wasmer package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Setup Wasmer
+        uses: wasmerio/setup-wasmer@v3.1
+
+      - name: Publish to Wasmer Registry
+        env:
+          WASMER_TOKEN: ${{ secrets.WASMER_TOKEN }}
+        run: ./.github/scripts/publish-wasmer.sh
