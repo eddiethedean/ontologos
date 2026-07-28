@@ -24,7 +24,7 @@
 
 - `ontologos-facade::classify` with `Profile::Alc` delegates to `ontologos_alc::classify`.
 - `Profile::Dl` delegates to `ontologos-dl`, which uses ALC tableau internally plus DL extensions.
-- `Profile::Auto` on DL-detected ontologies uses MORe-style hybrid routing (v1.5), not ALC alone.
+- `Profile::Auto` on DL-detected ontologies uses MORe-style hybrid routing (pre-1.0 phase E1), not ALC alone.
 
 ## Exit tests
 

@@ -185,15 +185,20 @@ Features:
 
 For remaining phases (0.8–0.9, 1.0, 1.1–1.9, 2.0), see [ROADMAP.md](ROADMAP.md).
 
-## Phase 2 – Post-1.0 ladder (1.1 → 2.0)
+## Phase 2 – Post-1.1 ladder (1.2 → 2.0)
 
-After **1.0** stabilizes EL / RL / RDFS:
+The **1.1** release line is current. Hybrid routing, ABox, ALC, QL, and the DL
+foundation were pre-1.0 prerequisites and are tracked as phases **E1–E5** in
+the maintainer roadmap, not as future semantic versions.
 
-| Versions | Focus |
-|----------|--------|
-| **1.1–1.2** | Performance, CLI polish |
-| **1.3–1.4** | Ontocode LSP, Python maturity |
-| **1.5–1.7** | Hybrid profiles, ABox, ALC expressivity |
-| **1.8** | OWL QL and structured queries |
-| **1.9** | DL engine preview (`ontologos-dl`) |
-| **2.0** | Full OWL 2 DL (stable) |
+| Version | Focus |
+|---------|-------|
+| **1.2** | Unified realization plus CLI/performance polish |
+| **1.3** | Cross-engine explanations |
+| **1.4** | General incremental Datalog rules |
+| **1.5** | ELK-class EL performance and complex-expression queries |
+| **1.6** | OWL API adapter, Protégé, Python, and LSP maturity |
+| **1.7** | OWLlink reasoning service |
+| **1.8** | SPARQL subset and advanced-rule integration |
+| **1.9** | Compatibility soak and frozen 2.0 benchmarks |
+| **2.0** | Konclude-class DL performance and selected beyond-HermiT features |

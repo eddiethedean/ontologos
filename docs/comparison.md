@@ -48,7 +48,7 @@ CLI `classify --profile auto|el|rl|rdfs|alc|dl|dl-preview|swrl` routes via `onto
 | **petgraph** | Taxonomy and proof-graph algorithms |
 | **whelk-rs** | Ecosystem peer for EL conformance benchmarks only (not a runtime dependency) |
 
-OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid routing (v1.5), not reimplementing RL rule engines.
+OntoLogos targets a **maintained orchestration stack** with MORe-style hybrid routing (pre-1.0 phase E1), not reimplementing RL rule engines.
 
 ## When to use OntoLogos
 

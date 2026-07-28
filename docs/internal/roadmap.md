@@ -2,11 +2,11 @@
 
 OntoLogos is a Rust-native ontology reasoner built to replace JVM-bound reasoning workflows with an embeddable engine, CLI, Python bindings, and future IDE integration.
 
-Releases follow [semantic versioning](https://semver.org/). **0.x** builds profile engines and surfaces toward **1.0** (full HermiT parity); **1.1–1.4** harden the post-parity platform; expressivity tracks **v1.5–v1.9** block the 1.0 gate; **2.0** is beyond-HermiT (Konclude-class performance and breaking API evolution).
+Releases follow [semantic versioning](https://semver.org/). **0.x** built the profile engines and surfaces toward **1.0** (full HermiT parity); **1.1** shipped multi-language bindings and conformance hardening; future releases begin at **1.2**. Historical pre-1.0 expressivity prerequisites use phase IDs **E1–E5**, not semantic versions.
 
 For architecture and API details, see [SPEC.md](SPEC.md). For background and ecosystem vision, see [PLAN.md](PLAN.md).
 
-**Last updated:** 2026-06-29 · **Latest tagged release:** **v0.9.0** · **Workspace version:** **1.0.0** · **Current focus:** [Post–Phase 9 literal parity burndown](#postphase-9--literal-parity-burndown-tiers-bd) — in-scope gate **100%** green @ 30s; OWLLink Bob **20/101** landed; tag/publish + five workstreams below
+**Last updated:** 2026-07-28 · **Latest release line:** **1.1** (latest patch **v1.1.4**) · **Workspace version:** **1.1.4** · **Current focus:** post-HermiT parity capabilities beginning with **v1.2**
 
 ---
 
@@ -37,16 +37,16 @@ Checklists use GitHub task syntax (`- [x]` / `- [ ]`) so progress is visible in 
 | **0.8** | Incremental + petgraph polish | query, explain, bridge | — | — |
 | **0.9** | Python ecosystem | `+py` | — | PyPI `ontologos` |
 | **1.0** | Full HermiT parity | `+dl` stable | `classify --profile dl` | `ontologos-dl` + full set |
-| **1.1** | Performance & benchmarks | engines | — | patch releases |
-| **1.2** | CLI & export polish | cli | polish | — |
-| **1.3** | Ontocode / LSP | `ontologos-lsp`? | — | optional crate |
-| **1.4** | Python maturity | `ontologos-py` | — | PyPI |
-| **1.5** | Profile & hybrid corpora | `profile`, engines | `--profile auto+` | — |
-| **1.6** | ABox & individuals | core, `+abox`? | `instances` | TBD |
-| **1.7** | ALC expressivity | `ontologos-alc` | — | TBD |
-| **1.8** | OWL QL & queries | `ontologos-ql` | `query` | TBD |
-| **1.9** | DL foundations | `ontologos-dl` (preview) | `classify --profile dl-preview` | TBD |
-| **2.0** | Beyond HermiT | `ontologos-dl` evolution | — | breaking API where needed |
+| **1.1** | Bindings + conformance hardening | FFI and bindings | shared API surface | current release line |
+| **1.2** | Realization foundation + CLI/perf polish | `+realize` | `realize`, `types`, `instances` | planned |
+| **1.3** | Cross-engine explanations | `explain` | richer `explain` | planned |
+| **1.4** | General rule reasoning | `+rules` | `materialize --rules` | planned |
+| **1.5** | ELK-class EL performance | `el`, `realize` | complex-expression queries | planned |
+| **1.6** | OWL API + ecosystem maturity | `+owlapi`, Python/LSP | — | planned |
+| **1.7** | Reasoning service protocols | `+server` | `serve` | planned |
+| **1.8** | Query and rule integration | `ql`, `rules`, server | SPARQL subset | planned |
+| **1.9** | 2.0 readiness and compatibility soak | all engines | compatibility audit | planned |
+| **2.0** | Beyond HermiT | `dl` evolution | advanced DL services | breaking API where needed |
 
 Workspace-internal crates (`ontologos-cli`, `ontologos-conformance`) are not published; they consume the library crates above.
 
@@ -103,7 +103,7 @@ flowchart TB
 
 ## HermiT parity phases (path to v1.0.0 tag)
 
-The **v1.0.0 git tag** ships when **in-scope HermiT catalog parity reaches 100%**, [Phase 8–9](#phase-8--expressivity-prerequisites-v15v19) expressivity gates are met, and **`check-1.0-release-gates.sh`** is green on the full suite @ 30s (blocking in CI since Phase 9).
+The **v1.0.0 git tag** shipped after **in-scope HermiT catalog parity reached 100%**, [Phase 8–9](#phase-8--expressivity-prerequisites-e1e5) expressivity gates were met, and **`check-1.0-release-gates.sh`** was green on the full suite @ 30s.
 
 Live metrics: [hermit-parity-gap-report.md](docs/internal/hermit-parity-gap-report.md) · [honest parity assessment](docs/internal/hermit-parity-honest-assessment.md) (what 100% does *not* mean) · `bash benchmarks/scripts/hermit-burndown.sh status` · [Burndown guide](docs/guides/hermit-burndown.md) (contributors)
 
@@ -151,7 +151,7 @@ Regenerate counts: `bash benchmarks/scripts/report-conformance-coverage.sh`
 | **5** | Manual ports | **Complete** | `java_planned = 0`; **400** axiom promoted | `phase5_closure` · `generate_catalog.py` |
 | **6** | Tier B corpora | **Complete** | `ClassificationTest` in CI (4 fixtures) | `compare-classification-fixtures.sh` · `phase6_closure` |
 | **7** | Tier C proof | **Complete** | HermiT JAR cross-check nightly | `compare-tier-c-gate.sh` |
-| **8** | Expressivity v1.5–v1.9 | **Complete** | Hybrid, ABox, ALC, QL, DL stable | ROADMAP checklists below |
+| **8** | Expressivity E1–E5 | **Complete** | Hybrid, ABox, ALC, QL, DL stable | ROADMAP checklists below |
 | **9** | v1.0.0 tag | **Ready** (gates green) | Full suite + release gates @ 30s | `check-1.0-release-gates.sh` |
 
 ```mermaid
@@ -164,7 +164,7 @@ flowchart TB
   P5[P5 Manual ports]
   P6[P6 Tier B corpora]
   P7[P7 Tier C proof]
-  P8[P8 Expressivity v1.5-1.9]
+  P8[P8 Expressivity E1-E5]
   P9[P9 Tag v1.0.0]
 
   P0 --> P1 --> P2 --> P3
@@ -369,11 +369,11 @@ Hand-written ports: `hermit_rl.rs`, `hermit_rdfs.rs`, `hermit_el.rs`, or OFN axi
 
 **Exit (met):** Tier C checklist green; HermiT ⊆ OntoLogos on `namespace_prefix` corpora; zero missing edges on vendored goldens; nightly `tier-c-hermit-crosscheck` job.
 
-### Phase 8 — Expressivity prerequisites (v1.5–v1.9)
+### Phase 8 — Expressivity prerequisites (E1–E5)
 
-Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressivity tracks](#path-to-10--expressivity-tracks-v15v19) below.
+Runs in parallel with Phases 5–7 after Phase 3. See [Path to 1.0 — Expressivity tracks](#path-to-10--expressivity-tracks-e1e5) below.
 
-**Exit:** All unchecked v1.5–v1.9 items done or waived with ADR. **Status (2026-06-28):** **Complete** — v1.5–v1.8 done; v1.9 scaffold promoted to 1.0-stable via HermiT parity (277/277 DL OFN, 428/428 WG @ 30s). Remaining v1.9 preview/perf checklist items waived in [dependency-first ADR](docs/internal/design/dependency-first.md) (Konclude 10× benchmark and 3-month preview soak deferred to 1.1).
+**Exit:** All unchecked E1–E5 items done or waived with ADR. **Status (2026-06-28):** **Complete** — E1–E4 done; the E5 scaffold was promoted to 1.0-stable via HermiT parity (277/277 DL OFN, 428/428 WG @ 30s). Remaining E5 preview/perf checklist items were waived in [dependency-first ADR](docs/internal/design/dependency-first.md) (Konclude performance and soak moved to the post-1.1 roadmap).
 
 ### Phase 9 — v1.0.0 tag (100% in-scope parity)
 
@@ -390,7 +390,7 @@ The **in-scope catalog gate** (`parity_pct = 100%` on **916** cases) is met. Rem
 
 #### Phase 8 final gates (2026-06-29)
 
-Expressivity v1.5–v1.9 is complete. **Final** Phase 8 adds composite true-parity tracking and tightens literal-catalog budgets:
+Expressivity E1–E5 is complete. **Final** Phase 8 adds composite true-parity tracking and tightens literal-catalog budgets:
 
 | Gate | Script | CI |
 |------|--------|-----|
@@ -441,7 +441,7 @@ cargo test -p ontologos-conformance --release --test hermit_owllink owllink_bob_
 |---------|------------|
 | `check-1.0-release-gates.sh` vs catalog parity | Catalog **`parity_pct = 100%`** (Phases 0–6); Phase 9 makes release gates **blocking** in CI |
 | SWRL `RulesTest` deferred vs 19 active `swrl` tests | Phase 5d: semantic SWRL only; full JVM rules deferred |
-| v1.5–v1.9 block 1.0 | Phase 8 required alongside Phases 7–9 |
+| E1–E5 block 1.0 | Phase 8 required alongside Phases 7–9 |
 | Workspace `1.0.0` vs git tag `v0.9.0` | Phase 9 is when workspace version matches published tag |
 
 ---
@@ -705,7 +705,7 @@ First reasoning engine. v0.3 shipped a custom RDFS rule engine; **v0.7 replaces 
 - [x] `rdfs:subClassOf` propagation (transitive closure) — **reasonable rdfs11**
 - [ ] `rdfs:subPropertyOf` propagation — **upstream gap** (rdfs5–8 not in reasonable)
 - [ ] `rdfs:domain` / `rdfs:range` inheritance along `subPropertyOf` — **upstream gap**
-- [ ] `rdf:type` propagation where representable in core (deferred to v1.6 — requires ABox)
+- [ ] `rdf:type` propagation where representable in core (deferred to E2 — requires ABox)
 
 ### Implementation
 
@@ -931,7 +931,7 @@ Replace in-house RL/RDFS rule engines with **reasonable**; EL uses in-house comp
 
 # 1.0 — Full HermiT parity
 
-**Status: Planned** · **Gate for JVM-free DL replacement** · **Blocked by:** [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag) **Phase 7–9** (catalog parity **100%**; Tier C proof + expressivity remain) and [v1.5–v1.9 expressivity tracks](#path-to-10--expressivity-tracks-v15v19)
+**Status: Shipped (2026-07-03)** · **JVM-free DL replacement milestone** · **Prerequisites completed:** [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag) and [E1–E5 expressivity tracks](#path-to-10--expressivity-tracks-e1e5)
 
 **1.0** is the release where OntoLogos **replaces HermiT** as the default OWL 2 DL reasoner for batch classification, materialization, and explanation in Rust/Python/CLI workflows. Not a line-by-line hypertableau port — a **profile-modular** stack (EL, RL/RDFS, hybrid routing, `ontologos-dl`) that passes the HermiT conformance harness and matches classification results on standard corpora within documented tolerance.
 
@@ -962,7 +962,7 @@ Promoted from preview to **stable** in 1.0 (not deferred to 2.0).
 - [ ] Property chains, keys, full disjointness in DL semantics
 - [x] `classify --profile dl` — stable, no preview warning
 - [x] DL explanations at EL quality bar (`ontologos-explain`) — smoke on family corpus
-- [x] MORe-style hybrid routing (v1.5) for mixed EL/RL/DL ontologies — `classify_hybrid` + corpus tests
+- [x] MORe-style hybrid routing (E1) for mixed EL/RL/DL ontologies — `classify_hybrid` + corpus tests
 
 ### API & platform (HermiT-equivalent surface)
 
@@ -997,131 +997,241 @@ Promoted from preview to **stable** in 1.0 (not deferred to 2.0).
 Phase detail: [HermiT parity phases](#hermit-parity-phases-path-to-v100-tag). **Phase 9** checklist:
 
 - [x] `parity_pct = 100%` — `java_planned = 0` and `wg_planned = 0` in catalogs (`check-hermit-parity-phases.sh`)
-- [x] [Phase 8](#phase-8--expressivity-prerequisites-v15v19) complete (v1.5–v1.9 expressivity tracks)
+- [x] [Phase 8](#phase-8--expressivity-prerequisites-e1e5) complete (E1–E5 expressivity tracks)
 - [x] HermiT Tier A + B + C gates green and **blocking** in CI
 - [x] `cargo test -p ontologos-conformance` green (all in-scope active tests) @ 30s
-- [ ] `ontologos-dl` published to crates.io; `classify --profile dl` default for DL ontologies
-- [ ] Annotated git tag **v1.0.0** (workspace version matches published crates)
+- [x] `ontologos-dl` published to crates.io; `classify --profile dl` default for DL ontologies
+- [x] Annotated git tag **v1.0.0** (workspace version matches published crates)
 
 ---
 
-# 1.x — Post-1.0 hardening (1.1 → 1.4)
+# 1.x — Post-1.1 parity expansion (1.2 → 1.9)
 
-Incremental releases **after** HermiT parity. **API breaking changes require 2.0.** Versions 1.1–1.4 polish performance, CLI, IDE, and Python adoption on top of the 1.0 DL platform.
+The **1.1** release line is current. Future semantic versions start at **1.2**.
+API-breaking changes remain reserved for **2.0**.
 
-> **Expressivity tracks v1.5–v1.9** (hybrid profiles, ABox, ALC, QL, DL scaffolding) are **prerequisites for 1.0**, not post-1.0 releases. See sections below.
+> Historical expressivity prerequisites are phases **E1–E5**. They were completed
+> before 1.0 and are not future versions 1.5–1.9.
 
 ```mermaid
 flowchart LR
-  v09[0.9 Python]
-  v15[1.5 Hybrid]
-  v16[1.6 ABox]
-  v17[1.7 ALC]
-  v18[1.8 QL]
-  v19[1.9 DL scaffold]
-  v10[1.0 HermiT parity]
-  v11[1.1 Perf]
-  v12[1.2 CLI]
-  v13[1.3 LSP]
-  v14[1.4 Python]
-  v20[2.0 Beyond HermiT]
+  v11["1.1 Current: bindings and conformance"]
+  v12["1.2 Realization foundation"]
+  v13["1.3 Cross-engine explanations"]
+  v14["1.4 General rule reasoning"]
+  v15["1.5 ELK-class EL"]
+  v16["1.6 OWL API and ecosystem"]
+  v17["1.7 OWLlink service"]
+  v18["1.8 Query and rule integration"]
+  v19["1.9 Compatibility soak"]
+  v20["2.0 Konclude-class DL"]
 
-  v09 --> v15
-  v15 --> v16 --> v17
-  v17 --> v18
-  v17 --> v19
-  v18 --> v10
-  v19 --> v10
-  v10 --> v11 --> v12
-  v10 --> v13
-  v10 --> v14
-  v10 --> v20
+  v11 --> v12 --> v13 --> v14 --> v15
+  v15 --> v16 --> v17 --> v18 --> v19 --> v20
 ```
 
-| Phase | Versions | Theme |
-|-------|----------|-------|
-| **Expressivity (blocks 1.0)** | 1.5–1.9 | Hybrid routing, ABox, ALC, QL, DL engine |
-| **HermiT parity** | **1.0** | Full DL + conformance harness |
-| **Hardening** | 1.1–1.2 | Performance, CLI, ops |
-| **Ecosystem** | 1.3–1.4 | IDE and Python adoption |
-| **Beyond HermiT** | 2.0 | Konclude-class performance, API evolution |
+| Release | Primary parity target | Main deliverable |
+|---------|-----------------------|------------------|
+| **1.2** | ELK / Konclude / Openllet | Unified ABox realization |
+| **1.3** | Openllet / Stardog / ELK | Cross-engine explanations |
+| **1.4** | RDFox / GraphDB / Jena | General Datalog rule engine |
+| **1.5** | ELK | Parallel, goal-directed EL at scale |
+| **1.6** | ELK / Openllet / JFact | OWL API adapter and ecosystem maturity |
+| **1.7** | Konclude / RacerPro | OWLlink-compatible reasoning service |
+| **1.8** | RDFox / GraphDB / Konclude | SPARQL/rule/query integration |
+| **1.9** | All reference engines | Compatibility soak and 2.0 readiness |
+| **2.0** | Konclude | Large-ontology DL performance and advanced services |
 
 ---
 
-## v1.1 — Performance & benchmarks
+## v1.2 — Realization foundation
 
-**Status: Planned** · **Effort:** Medium · **Depends on:** 1.0
+**Status: Planned** · **Effort:** Large · **Depends on:** 1.1
 
-- [ ] Criterion benchmarks in CI with regression tracking (fail on > 5% regression)
-- [ ] Published results table for all standard corpora in [benchmarks/README.md](benchmarks/README.md)
-- [ ] Memory profiling and hot-path allocation reduction in **bridge + facades** (not custom engines)
-- [ ] `cargo bench` documented per published crate
-- [ ] Load-time budget: Pizza parse + classify < 500 ms on reference hardware
+**Primary references:** ELK for EL realization; Konclude for DL realization;
+Openllet as an independent OWL API oracle.
+
+- [ ] Add `ontologos-realize` with a profile-neutral `Realization` result
+- [ ] Direct and indirect `types(individual)` and `instances(class)` APIs
+- [ ] Most-specific named types and direct-instance reduction
+- [ ] `sameAs` canonicalization and equivalent-individual clusters
+- [ ] EL, RL, and DL realization adapters behind `ontologos-facade`
+- [ ] Complex class-expression instance queries for the mapped EL subset
+- [ ] Incremental ABox additions and removals with full-recompute fallback
+- [ ] Expose realization through CLI, Python, Node/WASM, Java, .NET, and C
+- [ ] Preserve existing CLI/performance work: `--watch`, shell completions,
+      parallelism/budget flags, Criterion regression tracking, and OntoEagle adapter
 
 ### Exit criteria
 
-- [ ] Benchmark CI job runs on every PR to `main`
-- [ ] Published numbers for Pizza, Family, and `go-subset`
+- [ ] Direct types and instances match ELK on the EL realization corpus
+- [ ] DL realization matches Konclude on Family, Pizza-DL, and gated ABox fixtures
+- [ ] Incremental realization equals a cold recomputation after every edit fixture
+- [ ] Cross-language semantic fixtures return identical realization JSON
 
 ---
 
-## v1.2 — CLI & export polish
+## v1.3 — Cross-engine explanations
 
-**Status: Planned** · **Effort:** Small · **Depends on:** 1.0
+**Status: Planned** · **Effort:** Large · **Depends on:** 1.2
 
-- [ ] YAML output format (`--format yaml`)
-- [ ] Richer text reporting for `classify` and `explain`
-- [ ] `ontologos --watch` for incremental file reload (uses v0.8 incremental APIs)
-- [ ] Shell completions (`clap_complete`)
-- [ ] `--timeout` and `--parallelism` flags on classify
-- [ ] **OntoEagle adapter** — ship a browser-friendly WASM bundle + JS glue that converts OntoLogos parse/reasoner outputs into OntoEagle’s `OntologyDocument` model (enables OntoEagle to use OntoLogos for in-browser parsing/reasoning)
+**Primary references:** Openllet and Stardog; ELK for EL proof shape.
+
+- [ ] Replace EL-only routing with `ExplanationRequest` for axioms,
+      subsumptions, class assertions, property assertions, and inconsistency
+- [ ] RL/RDFS rule derivations with asserted/inferred provenance
+- [ ] DL dependency-to-proof conversion and clash explanations
+- [ ] Minimal inconsistent subsets and minimal justification checks
+- [ ] Multiple justifications with result, depth, time, and memory limits
+- [ ] Stable versioned proof JSON shared by every binding
+- [ ] Source-document and import attribution for asserted premises
 
 ### Exit criteria
 
-- [ ] All four subcommands support `--format json|yaml|text`
-- [ ] Completions shipped for bash, zsh, and fish
+- [ ] Every returned justification is independently sufficient
+- [ ] Minimal-mode explanations contain no removable premise
+- [ ] EL explanations match ELK conclusions; DL/RL samples match Openllet
+- [ ] Inconsistency explanations are deterministic after canonicalization
 
 ---
 
-## v1.3 — Ontocode integration
+## v1.4 — General rule reasoning
 
-**Status: Planned** · **Effort:** Medium · **Depends on:** 1.0, v0.8 LSP APIs
+**Status: Planned** · **Effort:** Very large · **Depends on:** 1.3
 
-- [ ] Stable LSP protocol surface (versioned separately from core semver)
-- [ ] `ontologos-lsp` crate or documented `ontologos_core::lsp` module
-- [ ] Ontocode extension published to VS Code marketplace
-- [ ] Diagnostic and hover conformance test suite
-- [ ] Cancellation tokens for long classify runs in IDE
+**Crate:** `ontologos-rules`
+
+**Primary references:** RDFox for incremental Datalog, GraphDB for selectable
+rulesets and provenance, and Jena for extensible rule syntax.
+
+- [ ] Function-free positive Datalog IR over RDF-style atoms
+- [ ] Rule parser, validator, compiler, and safety diagnostics
+- [ ] Semi-naive fixed-point evaluation with predicate-indexed joins
+- [ ] Incremental additions and truth-maintained retractions
+- [ ] Headless constraint rules and structured violation reports
+- [ ] Built-ins for equality, ordering, numeric, string, and datatype predicates
+- [ ] Named derivations consumable by `ontologos-explain`
+- [ ] Predefined RDFS, OWL 2 RL, and OWL-Horst-compatible rulesets
+- [ ] Compile the supported DLSafe SWRL subset into the shared rule IR
+- [ ] Defer stratified negation and aggregates to 1.8
 
 ### Exit criteria
 
-- [ ] Ontocode v1 uses only documented OntoLogos APIs (no private crate internals)
-- [ ] Pizza ontology: unsat warning and hover superclass list verified in CI
+- [ ] Closure matches RDFox and GraphDB on the public positive-rule corpus
+- [ ] Add/remove sequences match full rematerialization
+- [ ] Existing RL and SWRL conformance gates remain green
+- [ ] Rule provenance produces valid explanation DAGs
 
 ---
 
-## v1.4 — Python maturity
+## v1.5 — ELK-class EL performance and queries
 
-**Status: Planned** · **Effort:** Medium · **Depends on:** 1.0, v0.9 Python bindings
+**Status: Planned** · **Effort:** Large · **Depends on:** 1.2, 1.4
 
-- [ ] Windows wheel support (x86_64)
-- [x] Type stubs (`py.typed`) and `mypy` clean in examples
-- [ ] Polars and pandas DataFrame export for taxonomies
-- [ ] Async-friendly classify API (optional `asyncio` feature)
-- [ ] Documented migration from owlready2 for batch EL workflows
+- [ ] Concurrent context saturation with bounded work stealing
+- [ ] Goal-directed classification and query contexts
+- [ ] Complex unnamed class-expression subclass and instance queries
+- [ ] Incremental realization integrated with EL partitions
+- [ ] Compact conclusion indexes and measured peak-memory budgets
+- [ ] Benchmark GO, GALEN-EL, OBO corpora, and available SNOMED subsets
 
 ### Exit criteria
 
-- [ ] `pip install ontologos` on Windows, Linux, macOS (aarch64 + x86_64)
-- [x] Python classify output matches Rust CLI on Pizza EL + family DL integration tests
+- [ ] Taxonomy and realization equality with ELK on the supported mapping subset
+- [ ] Median cold and incremental runtime no worse than 2× ELK on gated corpora
+- [ ] Published peak-memory comparison and no regression above the agreed budget
 
 ---
 
-# Path to 1.0 — Expressivity tracks (v1.5–v1.9)
+## v1.6 — OWL API and ecosystem maturity
 
-These milestones **block the 1.0 HermiT parity release**. They may ship as pre-1.0 workspace minors; semver labels v1.5–v1.9 are roadmap track IDs.
+**Status: Planned** · **Effort:** Large · **Depends on:** 1.2, 1.3
 
-## v1.5 — Profile completeness & hybrid corpora
+**Module:** `ontologos-owlapi` backed by the existing native Java binding.
+
+- [ ] Implement `OWLReasoner` and `OWLReasonerFactory`
+- [ ] Buffering/non-buffering modes, `flush()`, pending changes, and precompute
+- [ ] Class, individual, and object-property node-set queries
+- [ ] Timeouts, cancellation, interruption, and capability metadata
+- [ ] Protégé-compatible plugin packaging after contract compliance
+- [ ] Finish Python wheel/async maturity and versioned LSP surface
+- [ ] Ontocode diagnostics, hover, and cancellation use public APIs only
+
+### Exit criteria
+
+- [ ] OWL API contract suite passes against ELK/Openllet/JFact expectations
+- [ ] Protégé smoke covers classify, realize, explain, and incremental flush
+- [ ] Python wheels pass on supported Windows, Linux, and macOS targets
+
+---
+
+## v1.7 — OWLlink reasoning service
+
+**Status: Planned** · **Effort:** Large · **Depends on:** 1.2, 1.6
+
+**Crate:** `ontologos-server`
+
+- [ ] Session-oriented HTTP service with explicit resource budgets
+- [ ] OWLlink knowledge-base create/release/load/add/remove/flush lifecycle
+- [ ] Classification, realization, consistency, satisfiability, and entailment
+- [ ] Class, individual, and object-property hierarchy/value queries
+- [ ] Streaming or paginated large result sets
+- [ ] Request cancellation, concurrency limits, health, and metrics
+- [ ] Keep persistence, clustering, and distributed reasoning out of scope
+
+### Exit criteria
+
+- [ ] Supported OWLlink requests match Konclude on the protocol corpus
+- [ ] Concurrent session isolation and cancellation tests pass
+- [ ] Server never bypasses parser, reasoning, or output resource limits
+
+---
+
+## v1.8 — Query and advanced-rule integration
+
+**Status: Planned** · **Effort:** Large · **Depends on:** 1.4, 1.7
+
+- [ ] SPARQL basic graph-pattern and conjunctive-query subset
+- [ ] Reasoning-aware `types`, `instances`, and property-path queries
+- [ ] Stratified negation as failure with cycle rejection
+- [ ] Safe aggregate subset with deterministic semantics
+- [ ] SPARQL-style user-rule syntax compiled to `ontologos-rules`
+- [ ] Query and materialization provenance through the explanation API
+- [ ] Optional OntoIndex adapter; no built-in persistent triple store
+
+### Exit criteria
+
+- [ ] Query answers match RDFox/GraphDB/Konclude for the documented subset
+- [ ] Negation and aggregate programs pass stratification/safety fixtures
+- [ ] Materialized and query-rewritten answers agree where both apply
+
+---
+
+## v1.9 — Compatibility soak and 2.0 readiness
+
+**Status: Planned** · **Effort:** Medium · **Depends on:** 1.2–1.8
+
+- [ ] Versioned parity dashboard for ELK, Openllet, JFact, Konclude,
+      RDFox, GraphDB, and Jena reference corpora
+- [ ] Public compatibility manifests define supported tasks and tolerances
+- [ ] Performance baselines split by consistency, classification,
+      realization, query, explanation, and incremental update
+- [ ] API deprecation inventory and 2.0 migration preview
+- [ ] Fuzz service protocols, rule parsing, explanation limits, and sessions
+
+### Exit criteria
+
+- [ ] No unresolved soundness regression in any stable parity suite
+- [ ] 2.0 benchmark corpus and reference-engine versions are frozen
+- [ ] Breaking changes have published replacements and migration examples
+
+---
+
+# Path to 1.0 — Expressivity tracks (E1–E5)
+
+These milestones blocked the 1.0 HermiT parity release. Their old v1.5–v1.9 labels were internal planning identifiers, not shipped semantic versions; they are now named E1–E5 to keep the post-1.1 release sequence unambiguous.
+
+## E1 — Profile completeness & hybrid corpora
 
 **Status: Complete** · **Effort:** Large · **Depends on:** 0.9 · **Blocks:** 1.0
 
@@ -1132,7 +1242,7 @@ Real ontologies mix EL-safe TBox with RL/DL axioms. **MORe** (Oxford) proves mod
 - [x] ⊥-module or signature extraction over `ontologos-core` (structural `bottom_module_class_seeds` + dependency closure)
 - [x] Classify EL module with `ontologos-el`; RL residue with `ontologos-rl`; DL residue with `ontologos-dl` (1.9 scaffold → 1.0 stable)
 - [x] Merge taxonomies from module results
-- [x] TBox-first scope (ABox deferred to v1.6, matching MORe initial semantics) — see [more.md](docs/internal/research/more.md) § TBox-first hybrid scope
+- [x] TBox-first scope (ABox deferred to E2, matching MORe initial semantics) — see [more.md](docs/internal/research/more.md) § TBox-first hybrid scope
 
 ### `ontologos-profile`
 
@@ -1151,7 +1261,7 @@ Real ontologies mix EL-safe TBox with RL/DL axioms. **MORe** (Oxford) proves mod
 
 ---
 
-## v1.6 — ABox & individual reasoning
+## E2 — ABox & individual reasoning
 
 **Status: Complete** · **Effort:** Large · **Depends on:** 1.5
 
@@ -1180,7 +1290,7 @@ Full DL requires individual assertions. EL/RL pipelines also benefit from typed 
 
 ---
 
-## v1.7 — ALC expressivity (pre-DL TBox)
+## E3 — ALC expressivity (pre-DL TBox)
 
 **Status: Complete on `main`** · **Effort:** Large · **Depends on:** 1.6
 
@@ -1205,7 +1315,7 @@ Bridge between EL completion and full tableau: **ALC** (attributive language wit
 
 ---
 
-## v1.8 — OWL QL & structured queries
+## E4 — OWL QL & structured queries
 
 **Status: Complete** · **Effort:** Large · **Depends on:** 1.5, 1.7
 
@@ -1229,7 +1339,7 @@ OWL QL supports query answering via rewriting over EL/RL class hierarchies. Inte
 
 ---
 
-## v1.9 — DL engine foundations
+## E5 — DL engine foundations
 
 **Status: Complete on `main`** · **Effort:** Very large · **Depends on:** 1.7, 1.8 · **Blocks:** 1.0
 
@@ -1260,7 +1370,7 @@ Scaffolding for full DL — lands in **1.0** as the HermiT parity engine. Users 
 - [x] No panics on DL benchmark corpus; timeouts return structured errors — `ResourceLimit` + budget env
 - [x] All 1.9 checklist items complete — **required before 1.0 tag** (preview/perf soak waived per ADR)
 
-### Decision criteria (promote v1.9 scaffold → 1.0 stable)
+### Decision criteria (promote E5 scaffold → 1.0 stable)
 
 - [x] `ontologos-dl` preview stable for ≥ 3 months without breaking internal APIs — waived: 1.0 ships with documented API; soak continues post-tag
 - [x] Reference harness covers Pizza-DL, Galen-DL subset, and one OBO DL corpus — Tier B/C fixtures + Family DL
@@ -1278,10 +1388,15 @@ Scaffolding for full DL — lands in **1.0** as the HermiT parity engine. Users 
 ### Scope (beyond HermiT parity)
 
 - [ ] Konclude-class performance on standard DL corpora (≤ 2× Konclude median on gated benchmarks)
-- [ ] Hypertableau or advanced tableau optimizations (optional `ReasonerConfig` flag)
+- [ ] Parallel satisfiability jobs, absorption, lazy unfolding, model merging,
+      dependency-directed backtracking, and advanced tableau caching
+- [ ] Hypertableau or advanced tableau optimizations behind an explicit configuration
 - [ ] Breaking API cleanup where 1.0 carried compatibility shims
 - [ ] Extended datatype reasoning beyond OWL 2 DL subset in 1.0
-- [ ] SPARQL conjunctive query subset or OntoIndex integration (optional)
+- [ ] Large-ABox realization performance comparable to Konclude
+- [ ] Optional nominal-schema extension with a documented decidability boundary
+- [ ] Resource-bounded ABox abduction informed by RacerPro, initially for
+      class and property assertion explanations
 
 ### Performance targets
 
@@ -1292,7 +1407,11 @@ Scaffolding for full DL — lands in **1.0** as the HermiT parity engine. Users 
 
 ### Exit criteria
 
-- [ ] Performance guide: OntoLogos 2.0 vs Konclude on standard corpora (HermiT as secondary cross-check)
+- [ ] Performance guide: OntoLogos 2.0 vs Konclude on consistency,
+      classification, and realization corpora (HermiT/JFact secondary)
+- [ ] Median runtime ≤ 2× Konclude on the frozen supported benchmark set
+- [ ] Nominal-schema and abduction extensions are opt-in and cannot silently
+      change standard OWL 2 DL results
 - [ ] Documented migration from 1.0 → 2.0 for any breaking API changes
 
 ### Non-goals (carried forward)
